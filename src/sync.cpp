@@ -13,8 +13,6 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
-#include <boost/thread/mutex.hpp>
-
 #include <map>
 #include <mutex>
 #include <set>
@@ -224,24 +222,31 @@ template void EnterCritical(const char*, const char*, int, Mutex*, bool);
 template void EnterCritical(const char*, const char*, int, RecursiveMutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
-template void EnterCritical(const char*, const char*, int, boost::mutex*, bool);
 
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
-    {
-        LockData& lockdata = GetLockData();
-        std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    LockData& lockdata = GetLockData();
+    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
 
-        const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
-        if (!lock_stack.empty()) {
-            const auto& lastlock = lock_stack.back();
-            if (lastlock.first == cs) {
-                lockname = lastlock.second.Name();
-                return;
-            }
+    const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
+    if (!lock_stack.empty()) {
+        const auto& lastlock = lock_stack.back();
+        if (lastlock.first == cs) {
+            lockname = lastlock.second.Name();
+            return;
         }
     }
-    throw std::system_error(EPERM, std::generic_category(), strprintf("%s:%s %s was not most recent critical section locked", file, line, guardname));
+
+    LogPrintf("INCONSISTENT LOCK ORDER DETECTED\n");
+    LogPrintf("Current lock order (least recent first) is:\n");
+    for (const LockStackItem& i : lock_stack) {
+        LogPrintf(" %s\n", i.second.ToString());
+    }
+    if (g_debug_lockorder_abort) {
+        tfm::format(std::cerr, "%s:%s %s was not most recent critical section locked, details in debug log.\n", file, line, guardname);
+        abort();
+    }
+    throw std::logic_error(strprintf("%s was not most recent critical section locked", guardname));
 }
 
 void LeaveCritical()

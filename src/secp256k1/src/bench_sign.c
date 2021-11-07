@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2014 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2014 Pieter Wuille                                    *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #include "include/secp256k1.h"
 #include "util.h"
@@ -12,11 +12,11 @@ typedef struct {
     secp256k1_context* ctx;
     unsigned char msg[32];
     unsigned char key[32];
-} bench_sign;
+} bench_sign_data;
 
 static void bench_sign_setup(void* arg) {
     int i;
-    bench_sign *data = (bench_sign*)arg;
+    bench_sign_data *data = (bench_sign_data*)arg;
 
     for (i = 0; i < 32; i++) {
         data->msg[i] = i + 1;
@@ -28,7 +28,7 @@ static void bench_sign_setup(void* arg) {
 
 static void bench_sign_run(void* arg, int iters) {
     int i;
-    bench_sign *data = (bench_sign*)arg;
+    bench_sign_data *data = (bench_sign_data*)arg;
 
     unsigned char sig[74];
     for (i = 0; i < iters; i++) {
@@ -45,7 +45,7 @@ static void bench_sign_run(void* arg, int iters) {
 }
 
 int main(void) {
-    bench_sign data;
+    bench_sign_data data;
 
     int iters = get_iters(20000);
 

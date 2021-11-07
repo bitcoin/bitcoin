@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bitcoind.cpp" />
+    <ClCompile Include="..\..\src\init\bitcoind.cpp">
+      <ObjectFileName>$(IntDir)init_bitcoind.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">

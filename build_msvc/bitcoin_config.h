@@ -15,7 +15,7 @@
 #define CLIENT_VERSION_IS_RELEASE false
 
 /* Major version */
-#define CLIENT_VERSION_MAJOR 21
+#define CLIENT_VERSION_MAJOR 22
 
 /* Minor version */
 #define CLIENT_VERSION_MINOR 99
@@ -30,7 +30,7 @@
 #define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
 
 /* Copyright year */
-#define COPYRIGHT_YEAR 2019
+#define COPYRIGHT_YEAR 2021
 
 /* Define to 1 to enable wallet functions */
 #define ENABLE_WALLET 1
@@ -50,14 +50,11 @@
 /* define if the Boost::Filesystem library is available */
 #define HAVE_BOOST_FILESYSTEM /**/
 
-/* define if the Boost::Process library is available */
-#define HAVE_BOOST_PROCESS /**/
+/* define if external signer support is enabled (requires Boost::Process) */
+#define ENABLE_EXTERNAL_SIGNER /**/
 
 /* define if the Boost::System library is available */
 #define HAVE_BOOST_SYSTEM /**/
-
-/* define if the Boost::Thread library is available */
-#define HAVE_BOOST_THREAD /**/
 
 /* define if the Boost::Unit_Test_Framework library is available */
 #define HAVE_BOOST_UNIT_TEST_FRAMEWORK /**/
@@ -95,9 +92,9 @@
    don't. */
 #define HAVE_DECL_BSWAP_64 0
 
-/* Define to 1 if you have the declaration of `daemon', and to 0 if you don't.
+/* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
    */
-#define HAVE_DECL_DAEMON 0
+#define HAVE_DECL_FORK 0
 
 /* Define to 1 if you have the declaration of `htobe16', and to 0 if you
    don't. */
@@ -134,6 +131,10 @@
 /* Define to 1 if you have the declaration of `le64toh', and to 0 if you
    don't. */
 #define HAVE_DECL_LE64TOH 0
+
+/* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
+   */
+#define HAVE_DECL_SETSID 0
 
 /* Define to 1 if you have the declaration of `strerror_r', and to 0 if you
    don't. */
@@ -179,9 +180,6 @@
 
 /* Define to 1 if you have the <miniupnpc/miniupnpc.h> header file. */
 #define HAVE_MINIUPNPC_MINIUPNPC_H 1
-
-/* Define to 1 if you have the <miniupnpc/miniwget.h> header file. */
-#define HAVE_MINIUPNPC_MINIWGET_H 1
 
 /* Define to 1 if you have the <miniupnpc/upnpcommands.h> header file. */
 #define HAVE_MINIUPNPC_UPNPCOMMANDS_H 1
@@ -256,7 +254,7 @@
 #define PACKAGE_NAME "Bitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Bitcoin Core 21.99.0"
+#define PACKAGE_STRING "Bitcoin Core 22.99.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "bitcoin"
@@ -265,7 +263,7 @@
 #define PACKAGE_URL "https://bitcoincore.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "21.99.0"
+#define PACKAGE_VERSION "22.99.0"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */

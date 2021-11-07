@@ -38,7 +38,7 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
-#if HAVE_DECL_GETIFADDRS
+#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
 #include <ifaddrs.h>
 #endif
 #if HAVE_SYSCTL
@@ -69,7 +69,7 @@ void RandAddSeedPerfmon(CSHA512& hasher)
 
     // This can take up to 2 seconds, so only do it every 10 minutes.
     // Initialize last_perfmon to 0 seconds, we don't skip the first call.
-    static std::atomic<std::chrono::seconds> last_perfmon{std::chrono::seconds{0}};
+    static std::atomic<std::chrono::seconds> last_perfmon{0s};
     auto last_time = last_perfmon.load();
     auto current_time = GetTime<std::chrono::seconds>();
     if (current_time < last_time + std::chrono::minutes{10}) return;
@@ -361,7 +361,7 @@ void RandAddStaticEnv(CSHA512& hasher)
         hasher.Write((const unsigned char*)hname, strnlen(hname, 256));
     }
 
-#if HAVE_DECL_GETIFADDRS
+#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
     // Network interfaces
     struct ifaddrs *ifad = NULL;
     getifaddrs(&ifad);

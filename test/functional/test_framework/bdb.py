@@ -51,7 +51,6 @@ def dump_leaf_page(data):
     page_info['pgno'] = pgno
     page_info['prev_pgno'] = prev_pgno
     page_info['next_pgno'] = next_pgno
-    page_info['entries'] = entries
     page_info['hf_offset'] = hf_offset
     page_info['level'] = level
     page_info['pg_type'] = pg_type

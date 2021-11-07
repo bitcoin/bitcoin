@@ -3,6 +3,7 @@ Name "@PACKAGE_NAME@ (64-bit)"
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
 SetDateSave off
+Unicode true
 
 # Uncomment these lines when investigating reproducibility errors
 #SetCompress off

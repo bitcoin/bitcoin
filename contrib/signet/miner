@@ -1,0 +1,631 @@
+#!/usr/bin/env python3
+# Copyright (c) 2020 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+import argparse
+import base64
+import json
+import logging
+import math
+import os.path
+import re
+import struct
+import sys
+import time
+import subprocess
+
+from binascii import unhexlify
+from io import BytesIO
+
+PATH_BASE_CONTRIB_SIGNET = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNET, "..", "..", "test", "functional"))
+sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
+
+from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_hex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, tx_from_hex, uint256_from_str # noqa: E402
+from test_framework.script import CScriptOp # noqa: E402
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
+
+SIGNET_HEADER = b"\xec\xc7\xda\xa2"
+PSBT_SIGNET_BLOCK = b"\xfc\x06signetb"    # proprietary PSBT global field holding the block being signed
+RE_MULTIMINER = re.compile("^(\d+)(-(\d+))?/(\d+)$")
+
+# #### some helpers that could go into test_framework
+
+# like from_hex, but without the hex part
+def FromBinary(cls, stream):
+    """deserialize a binary stream (or bytes object) into an object"""
+    # handle bytes object by turning it into a stream
+    was_bytes = isinstance(stream, bytes)
+    if was_bytes:
+        stream = BytesIO(stream)
+    obj = cls()
+    obj.deserialize(stream)
+    if was_bytes:
+        assert len(stream.read()) == 0
+    return obj
+
+class PSBTMap:
+    """Class for serializing and deserializing PSBT maps"""
+
+    def __init__(self, map=None):
+        self.map = map if map is not None else {}
+
+    def deserialize(self, f):
+        m = {}
+        while True:
+            k = deser_string(f)
+            if len(k) == 0:
+                break
+            v = deser_string(f)
+            if len(k) == 1:
+                k = k[0]
+            assert k not in m
+            m[k] = v
+        self.map = m
+
+    def serialize(self):
+        m = b""
+        for k,v in self.map.items():
+            if isinstance(k, int) and 0 <= k and k <= 255:
+                k = bytes([k])
+            m += ser_compact_size(len(k)) + k
+            m += ser_compact_size(len(v)) + v
+        m += b"\x00"
+        return m
+
+class PSBT:
+    """Class for serializing and deserializing PSBTs"""
+
+    def __init__(self):
+        self.g = PSBTMap()
+        self.i = []
+        self.o = []
+        self.tx = None
+
+    def deserialize(self, f):
+        assert f.read(5) == b"psbt\xff"
+        self.g = FromBinary(PSBTMap, f)
+        assert 0 in self.g.map
+        self.tx = FromBinary(CTransaction, self.g.map[0])
+        self.i = [FromBinary(PSBTMap, f) for _ in self.tx.vin]
+        self.o = [FromBinary(PSBTMap, f) for _ in self.tx.vout]
+        return self
+
+    def serialize(self):
+        assert isinstance(self.g, PSBTMap)
+        assert isinstance(self.i, list) and all(isinstance(x, PSBTMap) for x in self.i)
+        assert isinstance(self.o, list) and all(isinstance(x, PSBTMap) for x in self.o)
+        assert 0 in self.g.map
+        tx = FromBinary(CTransaction, self.g.map[0])
+        assert len(tx.vin) == len(self.i)
+        assert len(tx.vout) == len(self.o)
+
+        psbt = [x.serialize() for x in [self.g] + self.i + self.o]
+        return b"psbt\xff" + b"".join(psbt)
+
+    def to_base64(self):
+        return base64.b64encode(self.serialize()).decode("utf8")
+
+    @classmethod
+    def from_base64(cls, b64psbt):
+        return FromBinary(cls, base64.b64decode(b64psbt))
+
+# #####
+
+def create_coinbase(height, value, spk):
+    cb = CTransaction()
+    cb.vin = [CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff)]
+    cb.vout = [CTxOut(value, spk)]
+    return cb
+
+def get_witness_script(witness_root, witness_nonce):
+    commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
+    return b"\x6a" + CScriptOp.encode_op_pushdata(WITNESS_COMMITMENT_HEADER + ser_uint256(commitment))
+
+def signet_txs(block, challenge):
+    # assumes signet solution has not been added yet so does not need
+    # to be removed
+
+    txs = block.vtx[:]
+    txs[0] = CTransaction(txs[0])
+    txs[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER)
+    hashes = []
+    for tx in txs:
+        tx.rehash()
+        hashes.append(ser_uint256(tx.sha256))
+    mroot = block.get_merkle_root(hashes)
+
+    sd = b""
+    sd += struct.pack("<i", block.nVersion)
+    sd += ser_uint256(block.hashPrevBlock)
+    sd += ser_uint256(mroot)
+    sd += struct.pack("<I", block.nTime)
+
+    to_spend = CTransaction()
+    to_spend.nVersion = 0
+    to_spend.nLockTime = 0
+    to_spend.vin = [CTxIn(COutPoint(0, 0xFFFFFFFF), b"\x00" + CScriptOp.encode_op_pushdata(sd), 0)]
+    to_spend.vout = [CTxOut(0, challenge)]
+    to_spend.rehash()
+
+    spend = CTransaction()
+    spend.nVersion = 0
+    spend.nLockTime = 0
+    spend.vin = [CTxIn(COutPoint(to_spend.sha256, 0), b"", 0)]
+    spend.vout = [CTxOut(0, b"\x6a")]
+
+    return spend, to_spend
+
+def do_createpsbt(block, signme, spendme):
+    psbt = PSBT()
+    psbt.g = PSBTMap( {0: signme.serialize(),
+                       PSBT_SIGNET_BLOCK: block.serialize()
+                     } )
+    psbt.i = [ PSBTMap( {0: spendme.serialize(),
+                         3: bytes([1,0,0,0])})
+             ]
+    psbt.o = [ PSBTMap() ]
+    return psbt.to_base64()
+
+def do_decode_psbt(b64psbt):
+    psbt = PSBT.from_base64(b64psbt)
+
+    assert len(psbt.tx.vin) == 1
+    assert len(psbt.tx.vout) == 1
+    assert PSBT_SIGNET_BLOCK in psbt.g.map
+
+    scriptSig = psbt.i[0].map.get(7, b"")
+    scriptWitness = psbt.i[0].map.get(8, b"\x00")
+
+    return FromBinary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK]), ser_string(scriptSig) + scriptWitness
+
+def finish_block(block, signet_solution, grind_cmd):
+    block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
+    block.vtx[0].rehash()
+    block.hashMerkleRoot = block.calc_merkle_root()
+    if grind_cmd is None:
+        block.solve()
+    else:
+        headhex = CBlockHeader.serialize(block).hex()
+        cmd = grind_cmd.split(" ") + [headhex]
+        newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
+        newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
+        block.nNonce = newhead.nNonce
+        block.rehash()
+    return block
+
+def generate_psbt(tmpl, reward_spk, *, blocktime=None):
+    signet_spk = tmpl["signet_challenge"]
+    signet_spk_bin = unhexlify(signet_spk)
+
+    cbtx = create_coinbase(height=tmpl["height"], value=tmpl["coinbasevalue"], spk=reward_spk)
+    cbtx.vin[0].nSequence = 2**32-2
+    cbtx.rehash()
+
+    block = CBlock()
+    block.nVersion = tmpl["version"]
+    block.hashPrevBlock = int(tmpl["previousblockhash"], 16)
+    block.nTime = tmpl["curtime"] if blocktime is None else blocktime
+    if block.nTime < tmpl["mintime"]:
+        block.nTime = tmpl["mintime"]
+    block.nBits = int(tmpl["bits"], 16)
+    block.nNonce = 0
+    block.vtx = [cbtx] + [tx_from_hex(t["data"]) for t in tmpl["transactions"]]
+
+    witnonce = 0
+    witroot = block.calc_witness_merkle_root()
+    cbwit = CTxInWitness()
+    cbwit.scriptWitness.stack = [ser_uint256(witnonce)]
+    block.vtx[0].wit.vtxinwit = [cbwit]
+    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witroot, witnonce)))
+
+    signme, spendme = signet_txs(block, signet_spk_bin)
+
+    return do_createpsbt(block, signme, spendme)
+
+def get_reward_address(args, height):
+    if args.address is not None:
+        return args.address
+
+    if '*' not in args.descriptor:
+        addr = json.loads(args.bcli("deriveaddresses", args.descriptor))[0]
+        args.address = addr
+        return addr
+
+    remove = [k for k in args.derived_addresses.keys() if k+20 <= height]
+    for k in remove:
+        del args.derived_addresses[k]
+
+    addr = args.derived_addresses.get(height, None)
+    if addr is None:
+        addrs = json.loads(args.bcli("deriveaddresses", args.descriptor, "[%d,%d]" % (height, height+20)))
+        addr = addrs[0]
+        for k, a in enumerate(addrs):
+            args.derived_addresses[height+k] = a
+
+    return addr
+
+def get_reward_addr_spk(args, height):
+    assert args.address is not None or args.descriptor is not None
+
+    if hasattr(args, "reward_spk"):
+        return args.address, args.reward_spk
+
+    reward_addr = get_reward_address(args, height)
+    reward_spk = unhexlify(json.loads(args.bcli("getaddressinfo", reward_addr))["scriptPubKey"])
+    if args.address is not None:
+        # will always be the same, so cache
+        args.reward_spk = reward_spk
+
+    return reward_addr, reward_spk
+
+def do_genpsbt(args):
+    tmpl = json.load(sys.stdin)
+    _, reward_spk = get_reward_addr_spk(args, tmpl["height"])
+    psbt = generate_psbt(tmpl, reward_spk)
+    print(psbt)
+
+def do_solvepsbt(args):
+    block, signet_solution = do_decode_psbt(sys.stdin.read())
+    block = finish_block(block, signet_solution, args.grind_cmd)
+    print(block.serialize().hex())
+
+def nbits_to_target(nbits):
+    shift = (nbits >> 24) & 0xff
+    return (nbits & 0x00ffffff) * 2**(8*(shift - 3))
+
+def target_to_nbits(target):
+    tstr = "{0:x}".format(target)
+    if len(tstr) < 6:
+        tstr = ("000000"+tstr)[-6:]
+    if len(tstr) % 2 != 0:
+        tstr = "0" + tstr
+    if int(tstr[0],16) >= 0x8:
+        # avoid "negative"
+        tstr = "00" + tstr
+    fix = int(tstr[:6], 16)
+    sz = len(tstr)//2
+    if tstr[6:] != "0"*(sz*2-6):
+        fix += 1
+
+    return int("%02x%06x" % (sz,fix), 16)
+
+def seconds_to_hms(s):
+    if s == 0:
+        return "0s"
+    neg = (s < 0)
+    if neg:
+        s = -s
+    out = ""
+    if s % 60 > 0:
+        out = "%ds" % (s % 60)
+    s //= 60
+    if s % 60 > 0:
+        out = "%dm%s" % (s % 60, out)
+    s //= 60
+    if s > 0:
+        out = "%dh%s" % (s, out)
+    if neg:
+        out = "-" + out
+    return out
+
+def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson):
+    # strategy:
+    #  1) work out how far off our desired target we are
+    #  2) cap it to a factor of 4 since that's the best we can do in a single retarget period
+    #  3) use that to work out the desired average interval in this retarget period
+    #  4) if doing poisson, use the last hash to pick a uniformly random number in [0,1), and work out a random multiplier to vary the average by
+    #  5) cap the resulting interval between 1 second and 1 hour to avoid extremes
+
+    INTERVAL = 600.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
+
+    current_target = nbits_to_target(last_nbits)
+    retarget_factor = ultimate_target / current_target
+    retarget_factor = max(0.25, min(retarget_factor, 4.0))
+
+    avg_interval = INTERVAL * retarget_factor
+
+    if do_poisson:
+        det_rand = int(last_hash[-8:], 16) * 2**-32
+        this_interval_variance = -math.log1p(-det_rand)
+    else:
+        this_interval_variance = 1
+
+    this_interval = avg_interval * this_interval_variance
+    this_interval = max(1, min(this_interval, 3600))
+
+    return this_interval
+
+def next_block_is_mine(last_hash, my_blocks):
+    det_rand = int(last_hash[-16:-8], 16)
+    return my_blocks[0] <= (det_rand % my_blocks[2]) < my_blocks[1]
+
+def do_generate(args):
+    if args.max_blocks is not None:
+        if args.ongoing:
+            logging.error("Cannot specify both --ongoing and --max-blocks")
+            return 1
+        if args.max_blocks < 1:
+            logging.error("N must be a positive integer")
+            return 1
+        max_blocks = args.max_blocks
+    elif args.ongoing:
+        max_blocks = None
+    else:
+        max_blocks = 1
+
+    if args.set_block_time is not None and max_blocks != 1:
+        logging.error("Cannot specify --ongoing or --max-blocks > 1 when using --set-block-time")
+        return 1
+    if args.set_block_time is not None and args.set_block_time < 0:
+        args.set_block_time = time.time()
+        logging.info("Treating negative block time as current time (%d)" % (args.set_block_time))
+
+    if args.min_nbits:
+        if args.nbits is not None:
+            logging.error("Cannot specify --nbits and --min-nbits")
+            return 1
+        args.nbits = "1e0377ae"
+        logging.info("Using nbits=%s" % (args.nbits))
+
+    if args.set_block_time is None:
+        if args.nbits is None or len(args.nbits) != 8:
+            logging.error("Must specify --nbits (use calibrate command to determine value)")
+            return 1
+
+    if args.multiminer is None:
+       my_blocks = (0,1,1)
+    else:
+        if not args.ongoing:
+            logging.error("Cannot specify --multiminer without --ongoing")
+            return 1
+        m = RE_MULTIMINER.match(args.multiminer)
+        if m is None:
+            logging.error("--multiminer argument must be k/m or j-k/m")
+            return 1
+        start,_,stop,total = m.groups()
+        if stop is None:
+            stop = start
+        start, stop, total = map(int, (start, stop, total))
+        if stop < start or start <= 0 or total < stop or total == 0:
+            logging.error("Inconsistent values for --multiminer")
+            return 1
+        my_blocks = (start-1, stop, total)
+
+    ultimate_target = nbits_to_target(int(args.nbits,16))
+
+    mined_blocks = 0
+    bestheader = {"hash": None}
+    lastheader = None
+    while max_blocks is None or mined_blocks < max_blocks:
+
+        # current status?
+        bci = json.loads(args.bcli("getblockchaininfo"))
+
+        if bestheader["hash"] != bci["bestblockhash"]:
+            bestheader = json.loads(args.bcli("getblockheader", bci["bestblockhash"]))
+
+        if lastheader is None:
+            lastheader = bestheader["hash"]
+        elif bestheader["hash"] != lastheader:
+            next_delta = next_block_delta(int(bestheader["bits"], 16), bestheader["hash"], ultimate_target, args.poisson)
+            next_delta += bestheader["time"] - time.time()
+            next_is_mine = next_block_is_mine(bestheader["hash"], my_blocks)
+            logging.info("Received new block at height %d; next in %s (%s)", bestheader["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
+            lastheader = bestheader["hash"]
+
+        # when is the next block due to be mined?
+        now = time.time()
+        if args.set_block_time is not None:
+            logging.debug("Setting start time to %d", args.set_block_time)
+            mine_time = args.set_block_time
+            action_time = now
+            is_mine = True
+        elif bestheader["height"] == 0:
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
+            time_delta *= 100 # 100 blocks
+            logging.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
+            mine_time = now - time_delta
+            action_time = now
+            is_mine = True
+        else:
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
+            mine_time = bestheader["time"] + time_delta
+
+            is_mine = next_block_is_mine(bci["bestblockhash"], my_blocks)
+
+            action_time = mine_time
+            if not is_mine:
+                action_time += args.backup_delay
+
+            if args.standby_delay > 0:
+                action_time += args.standby_delay
+            elif mined_blocks == 0:
+                # for non-standby, always mine immediately on startup,
+                # even if the next block shouldn't be ours
+                action_time = now
+
+        # don't want fractional times so round down
+        mine_time = int(mine_time)
+        action_time = int(action_time)
+
+        # can't mine a block 2h in the future; 1h55m for some safety
+        action_time = max(action_time, mine_time - 6900)
+
+        # ready to go? otherwise sleep and check for new block
+        if now < action_time:
+            sleep_for = min(action_time - now, 60)
+            if mine_time < now:
+                # someone else might have mined the block,
+                # so check frequently, so we don't end up late
+                # mining the next block if it's ours
+                sleep_for = min(20, sleep_for)
+            minestr = "mine" if is_mine else "backup"
+            logging.debug("Sleeping for %s, next block due in %s (%s)" % (seconds_to_hms(sleep_for), seconds_to_hms(mine_time - now), minestr))
+            time.sleep(sleep_for)
+            continue
+
+        # gbt
+        tmpl = json.loads(args.bcli("getblocktemplate", '{"rules":["signet","segwit"]}'))
+        if tmpl["previousblockhash"] != bci["bestblockhash"]:
+            logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
+            time.sleep(1)
+            continue
+
+        logging.debug("GBT template: %s", tmpl)
+
+        if tmpl["mintime"] > mine_time:
+            logging.info("Updating block time from %d to %d", mine_time, tmpl["mintime"])
+            mine_time = tmpl["mintime"]
+            if mine_time > now:
+                logging.error("GBT mintime is in the future: %d is %d seconds later than %d", mine_time, (mine_time-now), now)
+                return 1
+
+        # address for reward
+        reward_addr, reward_spk = get_reward_addr_spk(args, tmpl["height"])
+
+        # mine block
+        logging.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(mine_time-bestheader["time"]), mine_time, is_mine)
+        mined_blocks += 1
+        psbt = generate_psbt(tmpl, reward_spk, blocktime=mine_time)
+        psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=psbt.encode('utf8')))
+        if not psbt_signed.get("complete",False):
+            logging.debug("Generated PSBT: %s" % (psbt,))
+            sys.stderr.write("PSBT signing failed")
+            return 1
+        block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
+        block = finish_block(block, signet_solution, args.grind_cmd)
+
+        # submit block
+        r = args.bcli("-stdin", "submitblock", input=block.serialize().hex().encode('utf8'))
+
+        # report
+        bstr = "block" if is_mine else "backup block"
+
+        next_delta = next_block_delta(block.nBits, block.hash, ultimate_target, args.poisson)
+        next_delta += block.nTime - time.time()
+        next_is_mine = next_block_is_mine(block.hash, my_blocks)
+
+        logging.debug("Block hash %s payout to %s", block.hash, reward_addr)
+        logging.info("Mined %s at height %d; next in %s (%s)", bstr, tmpl["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
+        if r != "":
+            logging.warning("submitblock returned %s for height %d hash %s", r, tmpl["height"], block.hash)
+        lastheader = block.hash
+
+def do_calibrate(args):
+    if args.nbits is not None and args.seconds is not None:
+        sys.stderr.write("Can only specify one of --nbits or --seconds\n")
+        return 1
+    if args.nbits is not None and len(args.nbits) != 8:
+        sys.stderr.write("Must specify 8 hex digits for --nbits\n")
+        return 1
+
+    TRIALS = 600 # gets variance down pretty low
+    TRIAL_BITS = 0x1e3ea75f # takes about 5m to do 600 trials
+
+    header = CBlockHeader()
+    header.nBits = TRIAL_BITS
+    targ = nbits_to_target(header.nBits)
+
+    start = time.time()
+    count = 0
+    for i in range(TRIALS):
+        header.nTime = i
+        header.nNonce = 0
+        headhex = header.serialize().hex()
+        cmd = args.grind_cmd.split(" ") + [headhex]
+        newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
+
+    avg = (time.time() - start) * 1.0 / TRIALS
+
+    if args.nbits is not None:
+        want_targ = nbits_to_target(int(args.nbits,16))
+        want_time = avg*targ/want_targ
+    else:
+        want_time = args.seconds if args.seconds is not None else 25
+        want_targ = int(targ*(avg/want_time))
+
+    print("nbits=%08x for %ds average mining time" % (target_to_nbits(want_targ), want_time))
+    return 0
+
+def bitcoin_cli(basecmd, args, **kwargs):
+    cmd = basecmd + ["-signet"] + args
+    logging.debug("Calling bitcoin-cli: %r", cmd)
+    out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True).stdout
+    if isinstance(out, bytes):
+        out = out.decode('utf8')
+    return out.strip()
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cli", default="bitcoin-cli", type=str, help="bitcoin-cli command")
+    parser.add_argument("--debug", action="store_true", help="Print debugging info")
+    parser.add_argument("--quiet", action="store_true", help="Only print warnings/errors")
+
+    cmds = parser.add_subparsers(help="sub-commands")
+    genpsbt = cmds.add_parser("genpsbt", help="Generate a block PSBT for signing")
+    genpsbt.set_defaults(fn=do_genpsbt)
+
+    solvepsbt = cmds.add_parser("solvepsbt", help="Solve a signed block PSBT")
+    solvepsbt.set_defaults(fn=do_solvepsbt)
+
+    generate = cmds.add_parser("generate", help="Mine blocks")
+    generate.set_defaults(fn=do_generate)
+    generate.add_argument("--ongoing", action="store_true", help="Keep mining blocks")
+    generate.add_argument("--max-blocks", default=None, type=int, help="Max blocks to mine (default=1)")
+    generate.add_argument("--set-block-time", default=None, type=int, help="Set block time (unix timestamp)")
+    generate.add_argument("--nbits", default=None, type=str, help="Target nBits (specify difficulty)")
+    generate.add_argument("--min-nbits", action="store_true", help="Target minimum nBits (use min difficulty)")
+    generate.add_argument("--poisson", action="store_true", help="Simulate randomised block times")
+    generate.add_argument("--multiminer", default=None, type=str, help="Specify which set of blocks to mine (eg: 1-40/100 for the first 40%%, 2/3 for the second 3rd)")
+    generate.add_argument("--backup-delay", default=300, type=int, help="Seconds to delay before mining blocks reserved for other miners (default=300)")
+    generate.add_argument("--standby-delay", default=0, type=int, help="Seconds to delay before mining blocks (default=0)")
+
+    calibrate = cmds.add_parser("calibrate", help="Calibrate difficulty")
+    calibrate.set_defaults(fn=do_calibrate)
+    calibrate.add_argument("--nbits", type=str, default=None)
+    calibrate.add_argument("--seconds", type=int, default=None)
+
+    for sp in [genpsbt, generate]:
+        sp.add_argument("--address", default=None, type=str, help="Address for block reward payment")
+        sp.add_argument("--descriptor", default=None, type=str, help="Descriptor for block reward payment")
+
+    for sp in [solvepsbt, generate, calibrate]:
+        sp.add_argument("--grind-cmd", default=None, type=str, required=(sp==calibrate), help="Command to grind a block header for proof-of-work")
+
+    args = parser.parse_args(sys.argv[1:])
+
+    args.bcli = lambda *a, input=b"", **kwargs: bitcoin_cli(args.cli.split(" "), list(a), input=input, **kwargs)
+
+    if hasattr(args, "address") and hasattr(args, "descriptor"):
+        if args.address is None and args.descriptor is None:
+            sys.stderr.write("Must specify --address or --descriptor\n")
+            return 1
+        elif args.address is not None and args.descriptor is not None:
+            sys.stderr.write("Only specify one of --address or --descriptor\n")
+            return 1
+        args.derived_addresses = {}
+
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif args.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+    else:
+        logging.getLogger().setLevel(logging.INFO)
+
+    if hasattr(args, "fn"):
+        return args.fn(args)
+    else:
+        logging.error("Must specify command")
+        return 1
+
+if __name__ == "__main__":
+    main()
+
+

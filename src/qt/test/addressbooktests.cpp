@@ -63,8 +63,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     node.setContext(&test.m_node);
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", CreateMockWalletDatabase());
     wallet->SetupLegacyScriptPubKeyMan();
-    bool firstRun;
-    wallet->LoadWallet(firstRun);
+    wallet->LoadWallet();
 
     auto build_address = [&wallet]() {
         CKey key;
@@ -112,7 +111,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     ClientModel clientModel(node, &optionsModel);
     AddWallet(wallet);
     WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel, platformStyle.get());
-    RemoveWallet(wallet, nullopt);
+    RemoveWallet(wallet, std::nullopt);
     EditAddressDialog editAddressDialog(EditAddressDialog::NewSendingAddress);
     editAddressDialog.setModel(walletModel.getAddressTableModel());
 

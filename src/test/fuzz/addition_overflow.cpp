@@ -40,7 +40,7 @@ void TestAdditionOverflow(FuzzedDataProvider& fuzzed_data_provider)
 }
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(addition_overflow)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     TestAdditionOverflow<int64_t>(fuzzed_data_provider);

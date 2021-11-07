@@ -51,6 +51,7 @@ After running `./autogen.sh`, which generates the `./configure` file, use `./con
 
 ```sh
 --without-miniupnpc
+--without-natpmp
 --disable-bench
 --disable-wallet
 --without-gui

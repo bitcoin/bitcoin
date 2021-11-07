@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,14 +9,10 @@
 #include <chain.h>
 #include <flatfile.h>
 #include <index/base.h>
+#include <util/hasher.h>
 
 /** Interval between compact filter checkpoints. See BIP 157. */
 static constexpr int CFCHECKPT_INTERVAL = 1000;
-
-struct FilterHeaderHasher
-{
-    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
-};
 
 /**
  * BlockFilterIndex is used to store and retrieve block filters, hashes, and headers for a range of

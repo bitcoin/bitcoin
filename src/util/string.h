@@ -25,6 +25,14 @@
     return str.substr(front, end - front + 1);
 }
 
+[[nodiscard]] inline std::string RemovePrefix(const std::string& str, const std::string& prefix)
+{
+    if (str.substr(0, prefix.size()) == prefix) {
+        return str.substr(prefix.size());
+    }
+    return str;
+}
+
 /**
  * Join a list of items
  *

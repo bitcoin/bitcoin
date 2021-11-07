@@ -204,7 +204,7 @@ public:
 
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(prevector)
 {
     FuzzedDataProvider prov(buffer.data(), buffer.size());
     prevector_tester<8, int> test;

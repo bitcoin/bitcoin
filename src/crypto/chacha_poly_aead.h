@@ -17,12 +17,12 @@ static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
 /* A AEAD class for ChaCha20-Poly1305@bitcoin.
  *
  * ChaCha20 is a stream cipher designed by Daniel Bernstein and described in
- * <ref>[http://cr.yp.to/chacha/chacha-20080128.pdf ChaCha20]</ref>. It operates
+ * <ref>[https://cr.yp.to/chacha/chacha-20080128.pdf ChaCha20]</ref>. It operates
  * by permuting 128 fixed bits, 128 or 256 bits of key, a 64 bit nonce and a 64
  * bit counter into 64 bytes of output. This output is used as a keystream, with
  * any unused bytes simply discarded.
  *
- * Poly1305 <ref>[http://cr.yp.to/mac/poly1305-20050329.pdf Poly1305]</ref>, also
+ * Poly1305 <ref>[https://cr.yp.to/mac/poly1305-20050329.pdf Poly1305]</ref>, also
  * by Daniel Bernstein, is a one-time Carter-Wegman MAC that computes a 128 bit
  * integrity tag given a message and a single-use 256 bit secret key.
  *

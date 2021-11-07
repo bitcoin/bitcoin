@@ -6,7 +6,7 @@ template to create the initial release notes draft.*
 for the process.*
 
 *Create the draft, named* "*version* Release Notes Draft"
-*(e.g. "0.20.0 Release Notes Draft"), as a collaborative wiki in:*
+*(e.g. "22.0 Release Notes Draft"), as a collaborative wiki in:*
 
 https://github.com/bitcoin-core/bitcoin-devwiki/wiki/
 
@@ -51,10 +51,6 @@ Core should also work on most other Unix-like systems but is not as
 frequently tested on them.  It is not recommended to use Bitcoin Core on
 unsupported systems.
 
-From Bitcoin Core 0.22.0 onwards, macOS versions earlier than 10.14 are no
-longer supported. Additionally, Bitcoin Core does not yet change appearance
-when macOS "dark mode" is activated.
-
 Notable changes
 ===============
 
@@ -63,8 +59,6 @@ P2P and network changes
 
 Updated RPCs
 ------------
-
-Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section below.
 
 New RPCs
 --------
@@ -78,12 +72,10 @@ New settings
 Updated settings
 ----------------
 
-Changes to Wallet or GUI related settings can be found in the GUI or Wallet section below.
-
-- Passing an invalid `-rpcauth` argument now cause bitcoind to fail to start.  (#20461)
-
 Tools and Utilities
 -------------------
+
+- Update `-getinfo` to return data in a user-friendly format that also reduces vertical space. (#21832)
 
 Wallet
 ------
@@ -96,6 +88,8 @@ Low-level changes
 
 RPC
 ---
+
+- `getblockchaininfo` now returns a new `time` field, that provides the chain tip time. (#22407)
 
 Tests
 -----

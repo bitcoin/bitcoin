@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -6,22 +6,27 @@
 #include <util/system.h>
 #include <univalue.h>
 
-#ifdef HAVE_BOOST_PROCESS
+#ifdef ENABLE_EXTERNAL_SIGNER
+#if defined(WIN32) && !defined(__kernel_entry)
+// A workaround for boost 1.71 incompatibility with mingw-w64 compiler.
+// For details see https://github.com/bitcoin/bitcoin/pull/22348.
+#define __kernel_entry
+#endif
 #include <boost/process.hpp>
-#endif // HAVE_BOOST_PROCESS
+#endif // ENABLE_EXTERNAL_SIGNER
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
 
-// At least one test is required (in case HAVE_BOOST_PROCESS is not defined).
+// At least one test is required (in case ENABLE_EXTERNAL_SIGNER is not defined).
 // Workaround for https://github.com/bitcoin/bitcoin/issues/19128
 BOOST_AUTO_TEST_CASE(dummy)
 {
     BOOST_CHECK(true);
 }
 
-#ifdef HAVE_BOOST_PROCESS
+#ifdef ENABLE_EXTERNAL_SIGNER
 
 bool checkMessage(const std::runtime_error& ex)
 {
@@ -90,6 +95,6 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
 #endif
 }
-#endif // HAVE_BOOST_PROCESS
+#endif // ENABLE_EXTERNAL_SIGNER
 
 BOOST_AUTO_TEST_SUITE_END()

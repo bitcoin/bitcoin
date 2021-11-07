@@ -75,15 +75,10 @@ if test x"$has_libcrypto" = x"yes" && test x"$has_openssl_ec" = x; then
 fi
 ])
 
-dnl
-AC_DEFUN([SECP_GMP_CHECK],[
-if test x"$has_gmp" != x"yes"; then
+AC_DEFUN([SECP_VALGRIND_CHECK],[
+if test x"$has_valgrind" != x"yes"; then
   CPPFLAGS_TEMP="$CPPFLAGS"
-  CPPFLAGS="$GMP_CPPFLAGS $CPPFLAGS"
-  LIBS_TEMP="$LIBS"
-  LIBS="$GMP_LIBS $LIBS"
-  AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes; GMP_LIBS="$GMP_LIBS -lgmp"; AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])])])
-  CPPFLAGS="$CPPFLAGS_TEMP"
-  LIBS="$LIBS_TEMP"
+  CPPFLAGS="$VALGRIND_CPPFLAGS $CPPFLAGS"
+  AC_CHECK_HEADER([valgrind/memcheck.h], [has_valgrind=yes; AC_DEFINE(HAVE_VALGRIND,1,[Define this symbol if valgrind is installed])])
 fi
 ])

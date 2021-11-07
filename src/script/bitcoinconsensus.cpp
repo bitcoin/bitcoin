@@ -16,8 +16,7 @@ namespace {
 class TxInputStream
 {
 public:
-    TxInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
-    m_type(nTypeIn),
+    TxInputStream(int nVersionIn, const unsigned char *txTo, size_t txToLen) :
     m_version(nVersionIn),
     m_data(txTo),
     m_remaining(txToLen)
@@ -47,9 +46,7 @@ public:
     }
 
     int GetVersion() const { return m_version; }
-    int GetType() const { return m_type; }
 private:
-    const int m_type;
     const int m_version;
     const unsigned char* m_data;
     size_t m_remaining;
@@ -84,7 +81,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         return set_error(err, bitcoinconsensus_ERR_INVALID_FLAGS);
     }
     try {
-        TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
+        TxInputStream stream(PROTOCOL_VERSION, txTo, txToLen);
         CTransaction tx(deserialize, stream);
         if (nIn >= tx.vin.size())
             return set_error(err, bitcoinconsensus_ERR_TX_INDEX);
@@ -95,7 +92,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         set_error(err, bitcoinconsensus_ERR_OK);
 
         PrecomputedTransactionData txdata(tx);
-        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), &tx.vin[nIn].scriptWitness, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata), nullptr);
+        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), &tx.vin[nIn].scriptWitness, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata, MissingDataBehavior::FAIL), nullptr);
     } catch (const std::exception&) {
         return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }

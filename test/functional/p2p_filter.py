@@ -19,7 +19,13 @@ from test_framework.messages import (
     msg_mempool,
     msg_version,
 )
-from test_framework.p2p import P2PInterface, p2p_lock
+from test_framework.p2p import (
+    P2PInterface,
+    P2P_SERVICES,
+    P2P_SUBVERSION,
+    P2P_VERSION,
+    p2p_lock,
+)
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -81,7 +87,6 @@ class P2PBloomFilter(P2PInterface):
 
 class FilterTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 1
         self.extra_args = [[
             '-peerbloomfilters',
@@ -125,7 +130,7 @@ class FilterTest(BitcoinTestFramework):
         filter_peer = P2PBloomFilter()
 
         self.log.debug("Create a tx relevant to the peer before connecting")
-        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['addresses'][0]
+        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['address']
         txid = self.nodes[0].sendtoaddress(filter_address, 90)
 
         self.log.debug("Send a mempool msg after connecting and check that the tx is received")
@@ -137,7 +142,7 @@ class FilterTest(BitcoinTestFramework):
     def test_frelay_false(self, filter_peer):
         self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
         filter_peer.tx_received = False
-        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['addresses'][0]
+        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['address']
         self.nodes[0].sendtoaddress(filter_address, 90)
         # Sync to make sure the reason filter_peer doesn't receive the tx is not p2p delays
         filter_peer.sync_with_ping()
@@ -151,7 +156,7 @@ class FilterTest(BitcoinTestFramework):
         filter_peer.send_and_ping(filter_peer.watch_filter_init)
         # If fRelay is not already True, sending filterload sets it to True
         assert self.nodes[0].getpeerinfo()[0]['relaytxes']
-        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['addresses'][0]
+        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['address']
 
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
         block_hash = self.nodes[0].generatetoaddress(1, filter_address)[0]
@@ -169,8 +174,7 @@ class FilterTest(BitcoinTestFramework):
         filter_peer.merkleblock_received = False
         filter_peer.tx_received = False
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 90)
-        filter_peer.sync_with_ping()
-        filter_peer.sync_with_ping()
+        filter_peer.sync_send_with_ping()
         assert not filter_peer.merkleblock_received
         assert not filter_peer.tx_received
 
@@ -217,9 +221,12 @@ class FilterTest(BitcoinTestFramework):
         self.log.info('Test BIP 37 for a node with fRelay = False')
         # Add peer but do not send version yet
         filter_peer_without_nrelay = self.nodes[0].add_p2p_connection(P2PBloomFilter(), send_version=False, wait_for_verack=False)
-        # Send version with fRelay=False
+        # Send version with relay=False
         version_without_fRelay = msg_version()
-        version_without_fRelay.nRelay = 0
+        version_without_fRelay.nVersion = P2P_VERSION
+        version_without_fRelay.strSubVer = P2P_SUBVERSION
+        version_without_fRelay.nServices = P2P_SERVICES
+        version_without_fRelay.relay = 0
         filter_peer_without_nrelay.send_message(version_without_fRelay)
         filter_peer_without_nrelay.wait_for_verack()
         assert not self.nodes[0].getpeerinfo()[0]['relaytxes']

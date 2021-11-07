@@ -8,10 +8,9 @@ Test re-org scenarios with a mempool that contains transactions
 that spend (directly or indirectly) coinbase transactions.
 """
 
-from test_framework.blocktools import create_raw_transaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-
+from test_framework.wallet import MiniWallet
 
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -23,86 +22,90 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             []
         ]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
+        wallet = MiniWallet(self.nodes[0])
+
         # Start with a 200 block chain
         assert_equal(self.nodes[0].getblockcount(), 200)
 
-        # Mine four blocks. After this, nodes[0] blocks
-        # 101, 102, and 103 are spend-able.
-        new_blocks = self.nodes[1].generate(4)
-        self.sync_all()
-
-        node0_address = self.nodes[0].getnewaddress()
-        node1_address = self.nodes[1].getnewaddress()
+        self.log.info("Add 4 coinbase utxos to the miniwallet")
+        # Block 76 contains the first spendable coinbase txs.
+        first_block = 76
+        wallet.scan_blocks(start=first_block, num=4)
 
         # Three scenarios for re-orging coinbase spends in the memory pool:
-        # 1. Direct coinbase spend  :  spend_101
-        # 2. Indirect (coinbase spend in chain, child in mempool) : spend_102 and spend_102_1
-        # 3. Indirect (coinbase and child both in chain) : spend_103 and spend_103_1
-        # Use invalidatblock to make all of the above coinbase spends invalid (immature coinbase),
+        # 1. Direct coinbase spend  :  spend_1
+        # 2. Indirect (coinbase spend in chain, child in mempool) : spend_2 and spend_2_1
+        # 3. Indirect (coinbase and child both in chain) : spend_3 and spend_3_1
+        # Use invalidateblock to make all of the above coinbase spends invalid (immature coinbase),
         # and make sure the mempool code behaves correctly.
-        b = [self.nodes[0].getblockhash(n) for n in range(101, 105)]
+        b = [self.nodes[0].getblockhash(n) for n in range(first_block, first_block+4)]
         coinbase_txids = [self.nodes[0].getblock(h)['tx'][0] for h in b]
-        spend_101_raw = create_raw_transaction(self.nodes[0], coinbase_txids[1], node1_address, amount=49.99)
-        spend_102_raw = create_raw_transaction(self.nodes[0], coinbase_txids[2], node0_address, amount=49.99)
-        spend_103_raw = create_raw_transaction(self.nodes[0], coinbase_txids[3], node0_address, amount=49.99)
+        utxo_1 = wallet.get_utxo(txid=coinbase_txids[1])
+        utxo_2 = wallet.get_utxo(txid=coinbase_txids[2])
+        utxo_3 = wallet.get_utxo(txid=coinbase_txids[3])
+        self.log.info("Create three transactions spending from coinbase utxos: spend_1, spend_2, spend_3")
+        spend_1 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_1)
+        spend_2 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_2)
+        spend_3 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_3)
 
-        # Create a transaction which is time-locked to two blocks in the future
-        timelock_tx = self.nodes[0].createrawtransaction(
-            inputs=[{
-                "txid": coinbase_txids[0],
-                "vout": 0,
-            }],
-            outputs={node0_address: 49.99},
-            locktime=self.nodes[0].getblockcount() + 2,
-        )
-        timelock_tx = self.nodes[0].signrawtransactionwithwallet(timelock_tx)["hex"]
-        # This will raise an exception because the timelock transaction is too immature to spend
+        self.log.info("Create another transaction which is time-locked to two blocks in the future")
+        utxo = wallet.get_utxo(txid=coinbase_txids[0])
+        timelock_tx = wallet.create_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=utxo,
+            mempool_valid=False,
+            locktime=self.nodes[0].getblockcount() + 2
+        )['hex']
+
+        self.log.info("Check that the time-locked transaction is too immature to spend")
         assert_raises_rpc_error(-26, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
 
-        # Broadcast and mine spend_102 and 103:
-        spend_102_id = self.nodes[0].sendrawtransaction(spend_102_raw)
-        spend_103_id = self.nodes[0].sendrawtransaction(spend_103_raw)
+        self.log.info("Broadcast and mine spend_2 and spend_3")
+        wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_2['hex'])
+        wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_3['hex'])
+        self.log.info("Generate a block")
         self.nodes[0].generate(1)
-        # Time-locked transaction is still too immature to spend
+        self.log.info("Check that time-locked transaction is still too immature to spend")
         assert_raises_rpc_error(-26, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 
-        # Create 102_1 and 103_1:
-        spend_102_1_raw = create_raw_transaction(self.nodes[0], spend_102_id, node1_address, amount=49.98)
-        spend_103_1_raw = create_raw_transaction(self.nodes[0], spend_103_id, node1_address, amount=49.98)
+        self.log.info("Create spend_2_1 and spend_3_1")
+        spend_2_utxo = wallet.get_utxo(txid=spend_2['txid'])
+        spend_2_1 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=spend_2_utxo)
+        spend_3_utxo = wallet.get_utxo(txid=spend_3['txid'])
+        spend_3_1 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=spend_3_utxo)
 
-        # Broadcast and mine 103_1:
-        spend_103_1_id = self.nodes[0].sendrawtransaction(spend_103_1_raw)
+        self.log.info("Broadcast and mine spend_3_1")
+        spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])
+        self.log.info("Generate a block")
         last_block = self.nodes[0].generate(1)
         # Sync blocks, so that peer 1 gets the block before timelock_tx
         # Otherwise, peer 1 would put the timelock_tx in recentRejects
         self.sync_all()
 
-        # Time-locked transaction can now be spent
+        self.log.info("The time-locked transaction can now be spent")
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
 
-        # ... now put spend_101 and spend_102_1 in memory pools:
-        spend_101_id = self.nodes[0].sendrawtransaction(spend_101_raw)
-        spend_102_1_id = self.nodes[0].sendrawtransaction(spend_102_1_raw)
+        self.log.info("Add spend_1 and spend_2_1 to the mempool")
+        spend_1_id = self.nodes[0].sendrawtransaction(spend_1['hex'])
+        spend_2_1_id = self.nodes[0].sendrawtransaction(spend_2_1['hex'])
 
-        assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, timelock_tx_id})
+        assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, timelock_tx_id})
         self.sync_all()
 
+        self.log.info("invalidate the last block")
         for node in self.nodes:
             node.invalidateblock(last_block[0])
-        # Time-locked transaction is now too immature and has been removed from the mempool
-        # spend_103_1 has been re-orged out of the chain and is back in the mempool
-        assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, spend_103_1_id})
+        self.log.info("The time-locked transaction is now too immature and has been removed from the mempool")
+        self.log.info("spend_3_1 has been re-orged out of the chain and is back in the mempool")
+        assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, spend_3_1_id})
 
-        # Use invalidateblock to re-org back and make all those coinbase spends
-        # immature/invalid:
+        self.log.info("Use invalidateblock to re-org back and make all those coinbase spends immature/invalid")
+        b = self.nodes[0].getblockhash(first_block + 100)
         for node in self.nodes:
-            node.invalidateblock(new_blocks[0])
+            node.invalidateblock(b)
 
-        # mempool should be empty.
+        self.log.info("Check that the mempool is empty")
         assert_equal(set(self.nodes[0].getrawmempool()), set())
         self.sync_all()
 

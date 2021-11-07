@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@ class BanTableModel;
 class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
+class PeerTableSortProxy;
 enum class SynchronizationState;
 
 namespace interfaces {
@@ -54,6 +55,7 @@ public:
     interfaces::Node& node() const { return m_node; }
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
+    PeerTableSortProxy* peerTableSortProxy();
     BanTableModel *getBanTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
@@ -96,6 +98,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
+    PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
     BanTableModel *banTableModel;
 
     //! A thread to interact with m_node asynchronously

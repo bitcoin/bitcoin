@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+export LC_ALL=C
+set -e -o pipefail
+
+# Source the common prelude, which:
+#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   2. Defines a few common functions and variables
+#
+# shellcheck source=libexec/prelude.bash
+source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
+
+
+###################
+## Sanity Checks ##
+###################
+
+################
+# Required non-builtin commands should be invokable
+################
+
+check_tools cat diff gpg
+
+################
+# Required env vars should be non-empty
+################
+
+cmd_usage() {
+cat <<EOF
+Synopsis:
+
+    env GUIX_SIGS_REPO=<path/to/guix.sigs> ./contrib/guix/guix-verify
+
+EOF
+}
+
+if [ -z "$GUIX_SIGS_REPO" ]; then
+    cmd_usage
+    exit 1
+fi
+
+################
+# GUIX_SIGS_REPO should exist as a directory
+################
+
+if [ ! -d "$GUIX_SIGS_REPO" ]; then
+cat << EOF
+ERR: The specified GUIX_SIGS_REPO is not an existent directory:
+
+    '$GUIX_SIGS_REPO'
+
+Hint: Please clone the guix.sigs repository and point to it with the
+      GUIX_SIGS_REPO environment variable.
+
+EOF
+cmd_usage
+exit 1
+fi
+
+##############
+##  Verify  ##
+##############
+
+OUTSIGDIR_BASE="${GUIX_SIGS_REPO}/${VERSION}"
+echo "Looking for signature directories in '${OUTSIGDIR_BASE}'"
+echo ""
+
+# Usage: verify compare_manifest current_manifest
+verify() {
+    local compare_manifest="$1"
+    local current_manifest="$2"
+    if ! gpg --quiet --batch --verify "$current_manifest".asc "$current_manifest" 1>&2; then
+        echo "ERR: Failed to verify GPG signature in '${current_manifest}'"
+        echo ""
+        echo "Hint: Either the signature is invalid or the public key is missing"
+        echo ""
+    elif ! diff --report-identical "$compare_manifest" "$current_manifest" 1>&2; then
+        echo "ERR: The SHA256SUMS attestation in these two directories differ:"
+        echo "    '${compare_manifest}'"
+        echo "    '${current_manifest}'"
+        echo ""
+    else
+        echo "Verified: '${current_manifest}'"
+        echo ""
+    fi
+}
+
+shopt -s nullglob
+all_noncodesigned=( "$OUTSIGDIR_BASE"/*/noncodesigned.SHA256SUMS )
+shopt -u nullglob
+
+echo "--------------------"
+echo ""
+if (( ${#all_noncodesigned[@]} )); then
+    compare_noncodesigned="${all_noncodesigned[0]}"
+
+    for current_manifest in "${all_noncodesigned[@]}"; do
+        verify "$compare_noncodesigned" "$current_manifest"
+    done
+
+    echo "DONE: Checking output signatures for noncodesigned.SHA256SUMS"
+    echo ""
+else
+    echo "WARN: No signature directories with noncodesigned.SHA256SUMS found"
+    echo ""
+fi
+
+shopt -s nullglob
+all_all=( "$OUTSIGDIR_BASE"/*/all.SHA256SUMS )
+shopt -u nullglob
+
+echo "--------------------"
+echo ""
+if (( ${#all_all[@]} )); then
+    compare_all="${all_all[0]}"
+
+    for current_manifest in "${all_all[@]}"; do
+        verify "$compare_all" "$current_manifest"
+    done
+
+    # Sanity check: there should be no entries that exist in
+    # noncodesigned.SHA256SUMS that doesn't exist in all.SHA256SUMS
+    if [[ "$(comm -23 <(sort "$compare_noncodesigned") <(sort "$compare_all") | wc -c)" -ne 0 ]]; then
+        echo "ERR: There are unique lines in noncodesigned.SHA256SUMS which"
+        echo "     do not exist in all.SHA256SUMS, something went very wrong."
+        exit 1
+    fi
+
+    echo "DONE: Checking output signatures for all.SHA256SUMS"
+    echo ""
+else
+    echo "WARN: No signature directories with all.SHA256SUMS found"
+    echo ""
+fi
+
+echo "===================="
+echo ""
+if (( ${#all_noncodesigned[@]} + ${#all_all[@]} == 0 )); then
+    echo "ERR: Unable to perform any verifications as no signature directories"
+    echo "     were found"
+    echo ""
+    exit 1
+fi

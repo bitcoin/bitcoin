@@ -5,11 +5,11 @@
 #include <amount.h>
 #include <policy/fees.h>
 
-#include <test/util/setup_common.h>
-
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(policy_fee_tests, BasicTestingSetup)
+#include <set>
+
+BOOST_AUTO_TEST_SUITE(policy_fee_tests)
 
 BOOST_AUTO_TEST_CASE(FeeRounder)
 {

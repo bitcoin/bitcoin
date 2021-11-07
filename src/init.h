@@ -6,20 +6,20 @@
 #ifndef BITCOIN_INIT_H
 #define BITCOIN_INIT_H
 
+#include <any>
 #include <memory>
 #include <string>
+
+//! Default value for -daemon option
+static constexpr bool DEFAULT_DAEMON = false;
+//! Default value for -daemonwait option
+static constexpr bool DEFAULT_DAEMONWAIT = false;
 
 class ArgsManager;
 struct NodeContext;
 namespace interfaces {
 struct BlockAndHeaderTipInfo;
 }
-namespace boost {
-class thread_group;
-} // namespace boost
-namespace util {
-class Ref;
-} // namespace util
 
 /** Interrupt threads */
 void Interrupt(NodeContext& node);
@@ -33,7 +33,7 @@ void InitParameterInteraction(ArgsManager& args);
  *  @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInitBasicSetup(ArgsManager& args);
+bool AppInitBasicSetup(const ArgsManager& args);
 /**
  * Initialization: parameter interaction.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.
@@ -61,12 +61,12 @@ bool AppInitInterfaces(NodeContext& node);
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
+bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 
 /**
  * Register all arguments with the ArgsManager
  */
-void SetupServerArgs(NodeContext& node);
+void SetupServerArgs(ArgsManager& argsman);
 
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();

@@ -3,7 +3,7 @@ name: "bitcoin-core-linux-22"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -11,15 +11,19 @@ packages:
 - "autoconf"
 - "automake"
 - "binutils"
+- "bison"
 - "bsdmainutils"
 - "ca-certificates"
 - "curl"
 - "faketime"
+- "g++-8"
+- "gcc-8"
 - "git"
 - "libtool"
 - "patch"
 - "pkg-config"
 - "python3"
+- "python3-pip"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
@@ -27,6 +31,12 @@ packages:
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
+#  - powerpc64-linux-gnu
+- "binutils-powerpc64-linux-gnu"
+- "g++-8-powerpc64-linux-gnu"
+#  - powerpc64le-linux-gnu
+- "binutils-powerpc64le-linux-gnu"
+- "g++-8-powerpc64le-linux-gnu"
 #  - riscv64-linux-gnu
 - "binutils-riscv64-linux-gnu"
 - "g++-8-riscv64-linux-gnu"
@@ -38,16 +48,14 @@ script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  HOSTS="x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu riscv64-linux-gnu"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
   HOST_LDFLAGS_BASE="-static-libstdc++ -Wl,-O2"
 
-  export QT_RCC_TEST=1
-  export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
   export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
@@ -64,7 +72,7 @@ script: |
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
   }
@@ -78,12 +86,20 @@ script: |
             echo "REAL=\`which -a ${i}-${prog}-8 | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
             echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
             echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-            echo "\$REAL \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            if [ "${i:0:11}" = "powerpc64le" ]; then
+                echo "exec \"\$REAL\" -mcpu=power8 -mtune=power9 \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            elif [ "${i:0:9}" = "powerpc64" ]; then
+                echo "exec \"\$REAL\" -mcpu=970 -mtune=power9 \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            else
+                echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            fi
             chmod +x ${WRAP_DIR}/${i}-${prog}
         fi
     done
   done
   }
+
+  pip3 install lief==0.11.5
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
@@ -95,7 +111,7 @@ script: |
   BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do
-    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" CC=${i}-gcc-8 CXX=${i}-g++-8
   done
 
   # Faketime for binaries
@@ -118,7 +134,7 @@ script: |
   # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
-    if [ "${i}" = "riscv64-linux-gnu" ]; then
+    if [ "${i}" = "powerpc64-linux-gnu" ]; then
       # Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-8-cross-ports/+bug/1853740
       # TODO: remove this when no longer needed
       HOST_LDFLAGS="${HOST_LDFLAGS_BASE} -Wl,-z,noexecstack"
@@ -132,7 +148,7 @@ script: |
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     ./autogen.sh
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}" CC=${i}-gcc-8 CXX=${i}-g++-8
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols

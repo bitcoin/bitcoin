@@ -1,13 +1,12 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_GROUP_IMPL_H
 #define SECP256K1_GROUP_IMPL_H
 
-#include "num.h"
 #include "field.h"
 #include "group.h"
 
@@ -207,18 +206,14 @@ static void secp256k1_ge_clear(secp256k1_ge *r) {
     secp256k1_fe_clear(&r->y);
 }
 
-static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x) {
+static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd) {
     secp256k1_fe x2, x3;
     r->x = *x;
     secp256k1_fe_sqr(&x2, x);
     secp256k1_fe_mul(&x3, x, &x2);
     r->infinity = 0;
     secp256k1_fe_add(&x3, &secp256k1_fe_const_b);
-    return secp256k1_fe_sqrt(&r->y, &x3);
-}
-
-static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd) {
-    if (!secp256k1_ge_set_xquad(r, x)) {
+    if (!secp256k1_fe_sqrt(&r->y, &x3)) {
         return 0;
     }
     secp256k1_fe_normalize_var(&r->y);
@@ -591,7 +586,7 @@ static void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const
     secp256k1_fe_cmov(&n, &m, degenerate);              /* n = M^3 * Malt (2) */
     secp256k1_fe_sqr(&t, &rr_alt);                      /* t = Ralt^2 (1) */
     secp256k1_fe_mul(&r->z, &a->z, &m_alt);             /* r->z = Malt*Z (1) */
-    infinity = secp256k1_fe_normalizes_to_zero(&r->z) * (1 - a->infinity);
+    infinity = secp256k1_fe_normalizes_to_zero(&r->z) & ~a->infinity;
     secp256k1_fe_mul_int(&r->z, 2);                     /* r->z = Z3 = 2*Malt*Z (2) */
     secp256k1_fe_negate(&q, &q, 1);                     /* q = -Q (2) */
     secp256k1_fe_add(&t, &q);                           /* t = Ralt^2-Q (3) */
@@ -655,26 +650,12 @@ static void secp256k1_ge_mul_lambda(secp256k1_ge *r, const secp256k1_ge *a) {
     secp256k1_fe_mul(&r->x, &r->x, &beta);
 }
 
-static int secp256k1_gej_has_quad_y_var(const secp256k1_gej *a) {
-    secp256k1_fe yz;
-
-    if (a->infinity) {
-        return 0;
-    }
-
-    /* We rely on the fact that the Jacobi symbol of 1 / a->z^3 is the same as
-     * that of a->z. Thus a->y / a->z^3 is a quadratic residue iff a->y * a->z
-       is */
-    secp256k1_fe_mul(&yz, &a->y, &a->z);
-    return secp256k1_fe_is_quad_var(&yz);
-}
-
 static int secp256k1_ge_is_in_correct_subgroup(const secp256k1_ge* ge) {
 #ifdef EXHAUSTIVE_TEST_ORDER
     secp256k1_gej out;
     int i;
 
-    /* A very simple EC multiplication ladder that avoids a dependecy on ecmult. */
+    /* A very simple EC multiplication ladder that avoids a dependency on ecmult. */
     secp256k1_gej_set_infinity(&out);
     for (i = 0; i < 32; ++i) {
         secp256k1_gej_double_var(&out, &out, NULL);

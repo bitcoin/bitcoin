@@ -3,18 +3,21 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-A script to check that the executables produced by gitian only contain
-certain symbols and are only linked against allowed libraries.
+A script to check that release executables only contain certain symbols
+and are only linked against allowed libraries.
 
 Example usage:
 
-    find ../gitian-builder/build -type f -executable | xargs python3 contrib/devtools/symbol-check.py
+    find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
 import subprocess
-import re
 import sys
-import os
-from typing import List, Optional, Tuple
+from typing import List, Optional
+
+import lief
+import pixie
+
+from utils import determine_wellknown_cmd
 
 # Debian 8 (Jessie) EOL: 2020. https://wiki.debian.org/DebianReleases#Production_Releases
 #
@@ -39,8 +42,16 @@ from typing import List, Optional, Tuple
 #
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
-'GLIBC':     (2,17),
-'LIBATOMIC': (1,0)
+'GLIBC': {
+    pixie.EM_386:    (2,17),
+    pixie.EM_X86_64: (2,17),
+    pixie.EM_ARM:    (2,17),
+    pixie.EM_AARCH64:(2,17),
+    pixie.EM_PPC64:  (2,17),
+    pixie.EM_RISCV:  (2,27),
+},
+'LIBATOMIC': (1,0),
+'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
 # See here for a description of _IO_stdin_used:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
@@ -50,10 +61,6 @@ IGNORE_EXPORTS = {
 '_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__', '__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
 'environ', '_environ', '__environ',
 }
-READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
-CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
-OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
-OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
@@ -68,19 +75,16 @@ ELF_ALLOWED_LIBRARIES = {
 'ld-linux.so.2', # 32-bit dynamic linker
 'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
 'ld-linux-armhf.so.3', # 32-bit ARM dynamic linker
+'ld64.so.1', # POWER64 ABIv1 dynamic linker
+'ld64.so.2', # POWER64 ABIv2 dynamic linker
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
 'libxcb.so.1', # part of X11
+'libxkbcommon.so.0', # keyboard keymapping
+'libxkbcommon-x11.so.0', # keyboard keymapping
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2' # programming interface to dynamic linker
-}
-ARCH_MIN_GLIBC_VER = {
-'80386':  (2,1),
-'X86-64': (2,2,5),
-'ARM':    (2,4),
-'AArch64':(2,17),
-'RISC-V': (2,27)
 }
 
 MACHO_ALLOWED_LIBRARIES = {
@@ -95,10 +99,15 @@ MACHO_ALLOWED_LIBRARIES = {
 'CoreGraphics', # 2D rendering
 'CoreServices', # operating system services
 'CoreText', # interface for laying out text and handling fonts.
+'CoreVideo', # video processing
 'Foundation', # base layer functionality for apps/frameworks
 'ImageIO', # read and write image file formats.
 'IOKit', # user-space access to hardware devices and drivers.
+'IOSurface', # cross process image/drawing buffers
 'libobjc.A.dylib', # Objective-C runtime library
+'Metal', # 3D graphics
+'Security', # access control and authentication
+'QuartzCore', # animation
 }
 
 PE_ALLOWED_LIBRARIES = {
@@ -113,12 +122,15 @@ PE_ALLOWED_LIBRARIES = {
 'dwmapi.dll', # desktop window manager
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor
+'NETAPI32.dll',
 'ole32.dll', # component object model
 'OLEAUT32.dll', # OLE Automation API
 'SHLWAPI.dll', # light weight shell API
+'USERENV.dll',
 'UxTheme.dll',
 'VERSION.dll', # version checking
 'WINMM.dll', # WinMM audio API
+'WTSAPI32.dll',
 }
 
 class CPPFilt(object):
@@ -128,7 +140,7 @@ class CPPFilt(object):
     Use a pipe to the 'c++filt' command.
     '''
     def __init__(self):
-        self.proc = subprocess.Popen(CPPFILT_CMD, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+        self.proc = subprocess.Popen(determine_wellknown_cmd('CPPFILT', 'c++filt'), stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 
     def __call__(self, mangled):
         self.proc.stdin.write(mangled + '\n')
@@ -140,29 +152,6 @@ class CPPFilt(object):
         self.proc.stdout.close()
         self.proc.wait()
 
-def read_symbols(executable, imports=True) -> List[Tuple[str, str, str]]:
-    '''
-    Parse an ELF executable and return a list of (symbol,version, arch) tuples
-    for dynamic, imported symbols.
-    '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', '-h', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Could not read symbols for {}: {}'.format(executable, stderr.strip()))
-    syms = []
-    for line in stdout.splitlines():
-        line = line.split()
-        if 'Machine:' in line:
-            arch = line[-1]
-        if len(line)>7 and re.match('[0-9]+:$', line[0]):
-            (sym, _, version) = line[7].partition('@')
-            is_import = line[6] == 'UND'
-            if version.startswith('@'):
-                version = version[1:]
-            if is_import == imports:
-                syms.append((sym, version, arch))
-    return syms
-
 def check_version(max_versions, version, arch) -> bool:
     if '_' in version:
         (lib, _, ver) = version.rpartition('_')
@@ -172,91 +161,88 @@ def check_version(max_versions, version, arch) -> bool:
     ver = tuple([int(x) for x in ver.split('.')])
     if not lib in max_versions:
         return False
-    return ver <= max_versions[lib] or lib == 'GLIBC' and ver <= ARCH_MIN_GLIBC_VER[arch]
-
-def elf_read_libraries(filename) -> List[str]:
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
-    libraries = []
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(tokens)>2 and tokens[1] == '(NEEDED)':
-            match = re.match(r'^Shared library: \[(.*)\]$', ' '.join(tokens[2:]))
-            if match:
-                libraries.append(match.group(1))
-            else:
-                raise ValueError('Unparseable (NEEDED) specification')
-    return libraries
+    if isinstance(max_versions[lib], tuple):
+        return ver <= max_versions[lib]
+    else:
+        return ver <= max_versions[lib][arch]
 
 def check_imported_symbols(filename) -> bool:
+    elf = pixie.load(filename)
     cppfilt = CPPFilt()
-    ok = True
-    for sym, version, arch in read_symbols(filename, True):
-        if version and not check_version(MAX_VERSIONS, version, arch):
+    ok: bool = True
+
+    for symbol in elf.dyn_symbols:
+        if not symbol.is_import:
+            continue
+        sym = symbol.name.decode()
+        version = symbol.version.decode() if symbol.version is not None else None
+        if version and not check_version(MAX_VERSIONS, version, elf.hdr.e_machine):
             print('{}: symbol {} from unsupported version {}'.format(filename, cppfilt(sym), version))
             ok = False
     return ok
 
 def check_exported_symbols(filename) -> bool:
+    elf = pixie.load(filename)
     cppfilt = CPPFilt()
-    ok = True
-    for sym,version,arch in read_symbols(filename, False):
-        if arch == 'RISC-V' or sym in IGNORE_EXPORTS:
+    ok: bool = True
+    for symbol in elf.dyn_symbols:
+        if not symbol.is_export:
+            continue
+        sym = symbol.name.decode()
+        if elf.hdr.e_machine == pixie.EM_RISCV or sym in IGNORE_EXPORTS:
             continue
         print('{}: export of symbol {} not allowed'.format(filename, cppfilt(sym)))
         ok = False
     return ok
 
 def check_ELF_libraries(filename) -> bool:
-    ok = True
-    for library_name in elf_read_libraries(filename):
-        if library_name not in ELF_ALLOWED_LIBRARIES:
-            print('{}: NEEDED library {} is not allowed'.format(filename, library_name))
+    ok: bool = True
+    elf = pixie.load(filename)
+    for library_name in elf.query_dyn_tags(pixie.DT_NEEDED):
+        assert(isinstance(library_name, bytes))
+        if library_name.decode() not in ELF_ALLOWED_LIBRARIES:
+            print('{}: NEEDED library {} is not allowed'.format(filename, library_name.decode()))
             ok = False
     return ok
-
-def macho_read_libraries(filename) -> List[str]:
-    p = subprocess.Popen([OTOOL_CMD, '-L', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
-    libraries = []
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(tokens) == 1: # skip executable name
-            continue
-        libraries.append(tokens[0].split('/')[-1])
-    return libraries
 
 def check_MACHO_libraries(filename) -> bool:
-    ok = True
-    for dylib in macho_read_libraries(filename):
-        if dylib not in MACHO_ALLOWED_LIBRARIES:
-            print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
+    ok: bool = True
+    binary = lief.parse(filename)
+    for dylib in binary.libraries:
+        split = dylib.name.split('/')
+        if split[-1] not in MACHO_ALLOWED_LIBRARIES:
+            print(f'{split[-1]} is not in ALLOWED_LIBRARIES!')
             ok = False
     return ok
 
-def pe_read_libraries(filename) -> List[str]:
-    p = subprocess.Popen([OBJDUMP_CMD, '-x', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
-    libraries = []
-    for line in stdout.splitlines():
-        if 'DLL Name:' in line:
-            tokens = line.split(': ')
-            libraries.append(tokens[1])
-    return libraries
+def check_MACHO_min_os(filename) -> bool:
+    binary = lief.parse(filename)
+    if binary.build_version.minos == [10,14,0]:
+        return True
+    return False
+
+def check_MACHO_sdk(filename) -> bool:
+    binary = lief.parse(filename)
+    if binary.build_version.sdk == [10, 15, 6]:
+        return True
+    return False
 
 def check_PE_libraries(filename) -> bool:
-    ok = True
-    for dylib in pe_read_libraries(filename):
+    ok: bool = True
+    binary = lief.parse(filename)
+    for dylib in binary.libraries:
         if dylib not in PE_ALLOWED_LIBRARIES:
-            print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
+            print(f'{dylib} is not in ALLOWED_LIBRARIES!')
             ok = False
     return ok
+
+def check_PE_subsystem_version(filename) -> bool:
+    binary = lief.parse(filename)
+    major: int = binary.optional_header.major_subsystem_version
+    minor: int = binary.optional_header.minor_subsystem_version
+    if major == 6 and minor == 1:
+        return True
+    return False
 
 CHECKS = {
 'ELF': [
@@ -265,10 +251,13 @@ CHECKS = {
     ('LIBRARY_DEPENDENCIES', check_ELF_libraries)
 ],
 'MACHO': [
-    ('DYNAMIC_LIBRARIES', check_MACHO_libraries)
+    ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
+    ('MIN_OS', check_MACHO_min_os),
+    ('SDK', check_MACHO_sdk),
 ],
 'PE' : [
-    ('DYNAMIC_LIBRARIES', check_PE_libraries)
+    ('DYNAMIC_LIBRARIES', check_PE_libraries),
+    ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
 ]
 }
 
@@ -284,23 +273,23 @@ def identify_executable(executable) -> Optional[str]:
     return None
 
 if __name__ == '__main__':
-    retval = 0
+    retval: int = 0
     for filename in sys.argv[1:]:
         try:
             etype = identify_executable(filename)
             if etype is None:
-                print('{}: unknown format'.format(filename))
+                print(f'{filename}: unknown format')
                 retval = 1
                 continue
 
-            failed = []
+            failed: List[str] = []
             for (name, func) in CHECKS[etype]:
                 if not func(filename):
                     failed.append(name)
             if failed:
-                print('{}: failed {}'.format(filename, ' '.join(failed)))
+                print(f'{filename}: failed {" ".join(failed)}')
                 retval = 1
         except IOError:
-            print('{}: cannot open'.format(filename))
+            print(f'{filename}: cannot open')
             retval = 1
     sys.exit(retval)

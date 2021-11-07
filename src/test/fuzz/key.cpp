@@ -17,7 +17,6 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
 #include <util/strencodings.h>
 
 #include <cassert>
@@ -26,14 +25,14 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_key()
 {
     static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(key, initialize_key)
 {
     const CKey key = [&] {
         CKey k;
