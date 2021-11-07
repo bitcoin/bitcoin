@@ -10,7 +10,6 @@ export LC_ALL=C
 
 # Disabled warnings:
 disabled=(
-    SC2046 # Quote this to prevent word splitting.
     SC2162 # read without -r will mangle backslashes.
 )
 
@@ -25,7 +24,8 @@ SHELLCHECK_CMD=(shellcheck --external-sources --check-sourced)
 EXCLUDE="--exclude=$(IFS=','; echo "${disabled[*]}")"
 # Check shellcheck directive used for sourced files
 mapfile -t SOURCED_FILES < <(git ls-files | xargs gawk '/^# shellcheck shell=/ {print FILENAME} {nextfile}')
-if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" "${SOURCED_FILES[@]}" $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|minisketch|univalue)/'); then
+mapfile -t FILES < <(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|minisketch|univalue)/')
+if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" "${SOURCED_FILES[@]}" "${FILES[@]}"; then
     EXIT_CODE=1
 fi
 

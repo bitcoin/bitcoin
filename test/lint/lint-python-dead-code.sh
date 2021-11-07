@@ -15,9 +15,8 @@ fi
 
 # --min-confidence 100 will only report code that is guaranteed to be unused within the analyzed files.
 # Any value below 100 introduces the risk of false positives, which would create an unacceptable maintenance burden.
-if ! vulture \
-    --min-confidence 100 \
-    $(git ls-files -- "*.py"); then
+mapfile -t FILES < <(git ls-files -- "*.py")
+if ! vulture --min-confidence 100 "${FILES[@]}"; then
     echo "Python dead code detection found some issues"
     exit 1
 fi
