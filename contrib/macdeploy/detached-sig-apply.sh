@@ -22,6 +22,6 @@ if [ -z "$SIGNATURE" ]; then
   exit 1
 fi
 
-${SIGNAPPLE} apply ${UNSIGNED} ${SIGNATURE}
+${SIGNAPPLE} apply "${UNSIGNED}" "${SIGNATURE}"
 mv ${ROOTDIR} ${OUTDIR}
 echo "Signed: ${OUTDIR}"

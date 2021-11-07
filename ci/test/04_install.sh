@@ -12,6 +12,7 @@ fi
 
 if [ "$CI_OS_NAME" == "macos" ]; then
   sudo -H pip3 install --upgrade pip
+  # shellcheck disable=SC2086
   IN_GETOPT_BIN="/usr/local/opt/gnu-getopt/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
 fi
 
@@ -39,6 +40,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
     systemctl restart docker
   fi
 
+  # shellcheck disable=SC2086
   DOCKER_ID=$(docker run $DOCKER_ADMIN --rm --interactive --detach --tty \
                   --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
                   --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR \
@@ -54,7 +56,7 @@ else
 fi
 
 DOCKER_EXEC () {
-  $DOCKER_CI_CMD_PREFIX bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
+  $DOCKER_CI_CMD_PREFIX bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd \"$P_CI_DIR\" && $*"
 }
 export -f DOCKER_EXEC
 
@@ -64,11 +66,12 @@ fi
 
 if [[ $DOCKER_NAME_TAG == centos* ]]; then
   ${CI_RETRY_EXE} DOCKER_EXEC dnf -y install epel-release
-  ${CI_RETRY_EXE} DOCKER_EXEC dnf -y --allowerasing install $DOCKER_PACKAGES $PACKAGES
+  ${CI_RETRY_EXE} DOCKER_EXEC dnf -y --allowerasing install "$DOCKER_PACKAGES" "$PACKAGES"
 elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
-  ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
+  ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$DOCKER_PACKAGES"
   if [ -n "$PIP_PACKAGES" ]; then
+    # shellcheck disable=SC2086
     ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
   fi
 fi
@@ -85,8 +88,8 @@ DOCKER_EXEC echo "Free disk space:"
 DOCKER_EXEC df -h
 
 if [ "$RUN_FUZZ_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
-  if [ ! -d ${DIR_QA_ASSETS} ]; then
-    DOCKER_EXEC git clone --depth=1 https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
+  if [ ! -d "${DIR_QA_ASSETS}" ]; then
+    DOCKER_EXEC git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${DIR_QA_ASSETS}"
   fi
 
   export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
@@ -106,17 +109,17 @@ fi
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Create $BASE_ROOT_DIR"
-  DOCKER_EXEC rsync -a /ro_base/ $BASE_ROOT_DIR
+  DOCKER_EXEC rsync -a /ro_base/ "$BASE_ROOT_DIR"
 fi
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
   echo "Setup to use BusyBox utils"
-  DOCKER_EXEC mkdir -p $BASE_SCRATCH_DIR/bins/
+  DOCKER_EXEC mkdir -p "${BASE_SCRATCH_DIR}/bins/"
   # tar excluded for now because it requires passing in the exact archive type in ./depends (fixed in later BusyBox version)
   # find excluded for now because it does not recognize the -delete option in ./depends (fixed in later BusyBox version)
   # ar excluded for now because it does not recognize the -q option in ./depends (unknown if fixed)
   # shellcheck disable=SC1010
-  DOCKER_EXEC for util in \$\(busybox --list \| grep -v "^ar$" \| grep -v "^tar$" \| grep -v "^find$"\)\; do ln -s \$\(command -v busybox\) $BASE_SCRATCH_DIR/bins/\$util\; done
+  DOCKER_EXEC for util in \$\(busybox --list \| grep -v "^ar$" \| grep -v "^tar$" \| grep -v "^find$"\)\; do ln -s \$\(command -v busybox\) "${BASE_SCRATCH_DIR}/bins/\$util"\; done
   # Print BusyBox version
   DOCKER_EXEC patch --help
 fi
