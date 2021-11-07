@@ -197,7 +197,7 @@ bool TransactionRecord::updateTransactionRecord(const interfaces::WalletTx& wtx,
         }
         if (sub.debit < 0)
         {
-            sub.comment = ValueFromAmount(PointPayload::As(payload)->GetAmount()).get_str();
+            sub.comment = ValueFromAmount(PointPayload::As(payload)->GetAmount()).getValStr();
         }
     }
     else if (wtx.txout_payload_is_mine[nOut] & ISMINE_STAKING)
@@ -223,7 +223,7 @@ bool TransactionRecord::updateTransactionRecord(const interfaces::WalletTx& wtx,
         }
         if (sub.debit < 0)
         {
-            sub.comment = ValueFromAmount(StakingPayload::As(payload)->GetAmount()).get_str();
+            sub.comment = ValueFromAmount(StakingPayload::As(payload)->GetAmount()).getValStr();
         }
     }
     else
