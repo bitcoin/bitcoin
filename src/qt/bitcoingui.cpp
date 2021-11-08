@@ -9,6 +9,7 @@
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/mempoolstats.h>
 #include <qt/modaloverlay.h>
 #include <qt/networkstyle.h>
 #include <qt/notificator.h>
@@ -340,6 +341,11 @@ void BitcoinGUI::createActions()
     openRPCConsoleAction->setEnabled(false);
     openRPCConsoleAction->setObjectName("openRPCConsoleAction");
 
+    showMempoolStatsAction = new QAction(tr("&Mempool Statistics"), this);
+    showMempoolStatsAction->setStatusTip(tr("Mempool Statistics"));
+    // initially disable the mempool stats menu item
+    showMempoolStatsAction->setEnabled(false);
+
     usedSendingAddressesAction = new QAction(tr("&Sending addresses"), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
     usedReceivingAddressesAction = new QAction(tr("&Receiving addresses"), this);
@@ -379,6 +385,8 @@ void BitcoinGUI::createActions()
     connect(toggleHideAction, &QAction::triggered, this, &BitcoinGUI::toggleHidden);
     connect(showHelpMessageAction, &QAction::triggered, this, &BitcoinGUI::showHelpMessageClicked);
     connect(openRPCConsoleAction, &QAction::triggered, this, &BitcoinGUI::showDebugWindow);
+    connect(showMempoolStatsAction, &QAction::triggered, this, &BitcoinGUI::showMempoolStatsWindow);
+
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
 
@@ -525,6 +533,9 @@ void BitcoinGUI::createMenuBar()
         window_menu->addAction(usedSendingAddressesAction);
         window_menu->addAction(usedReceivingAddressesAction);
     }
+
+    window_menu->addSeparator();
+    window_menu->addAction(showMempoolStatsAction);
 
     window_menu->addSeparator();
     for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
@@ -817,6 +828,7 @@ void BitcoinGUI::createTrayIconMenu()
     }
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openRPCConsoleAction);
+    trayIconMenu->addAction(showMempoolStatsAction);
 #ifndef Q_OS_MAC // This is built-in on macOS
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
@@ -869,6 +881,19 @@ void BitcoinGUI::showDebugWindowActivateConsole()
 void BitcoinGUI::showHelpMessageClicked()
 {
     GUIUtil::bringToFront(helpMessageDialog);
+}
+
+void BitcoinGUI::showMempoolStatsWindow()
+{
+    // only build the mempool stats window if its requested
+    if (!mempoolStats)
+        mempoolStats = new MempoolStats(this);
+    if (clientModel)
+        mempoolStats->setClientModel(clientModel);
+    mempoolStats->showNormal();
+    mempoolStats->show();
+    mempoolStats->raise();
+    mempoolStats->activateWindow();
 }
 
 #ifdef ENABLE_WALLET
@@ -1235,6 +1260,7 @@ void BitcoinGUI::showEvent(QShowEvent *event)
 {
     // enable the debug window when the main window shows up
     openRPCConsoleAction->setEnabled(true);
+    showMempoolStatsAction->setEnabled(true);
     aboutAction->setEnabled(true);
     optionsAction->setEnabled(true);
 }
