@@ -91,7 +91,11 @@ public:
     {
         bool valid = false;
         CAmount val = value(&valid);
-        val = val + steps * singleStep;
+        CAmount currentSingleStep = singleStep;
+        if (!currentSingleStep) {
+            currentSingleStep = BitcoinUnits::singlestep(currentUnit);
+        }
+        val = val + steps * currentSingleStep;
         val = qBound(m_min_amount, val, m_max_amount);
         setValue(val);
     }
@@ -149,7 +153,7 @@ public:
 
 private:
     int currentUnit{BitcoinUnits::BTC};
-    CAmount singleStep{CAmount(100000)}; // satoshis
+    CAmount singleStep{CAmount(0)};
     mutable QSize cachedMinimumSizeHint;
     bool m_allow_empty{true};
     CAmount m_min_amount{CAmount(0)};
