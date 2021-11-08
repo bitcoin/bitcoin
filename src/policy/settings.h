@@ -15,6 +15,7 @@ class CTransaction;
 extern CFeeRate incrementalRelayFee;
 extern CFeeRate dustRelayFee;
 extern unsigned int nBytesPerSigOp;
+extern unsigned int nBytesPerSigOpStrict;
 extern bool fIsBareMultisigStd;
 extern bool fEnableReplacement;
 extern bool fReplacementHonourOptOut;

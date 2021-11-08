@@ -41,6 +41,8 @@ static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
 static const unsigned int DEFAULT_INCREMENTAL_RELAY_FEE = 1000;
 /** Default for -bytespersigop */
 static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
+/** Default for -bytespersigopstrict */
+static const unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT = 20;
 /** Default for -mempoolreplacement */
 static const bool DEFAULT_ENABLE_REPLACEMENT = true;
 static const bool DEFAULT_REPLACEMENT_HONOUR_OPTOUT = true;
