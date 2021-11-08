@@ -13,6 +13,8 @@
 #include <uint256.h>
 #include <util/vector.h>
 
+#include <optional>
+
 typedef std::vector<unsigned char> valtype;
 
 MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn)
@@ -629,7 +631,7 @@ bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
     return false;
 }
 
-bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, int nHashType, std::map<int, std::string>& input_errors)
+bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, int nHashType, std::map<int, std::string>& input_errors, std::optional<CAmount>* inputs_amount_sum)
 {
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
@@ -657,20 +659,37 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
     }
 
     // Sign what we can:
+    if (inputs_amount_sum) *inputs_amount_sum = 0;
     for (unsigned int i = 0; i < mtx.vin.size(); i++) {
         CTxIn& txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
         if (coin == coins.end() || coin->second.IsSpent()) {
+            if (inputs_amount_sum) {
+                inputs_amount_sum->reset();
+                inputs_amount_sum = nullptr;
+            }
             input_errors[i] = "Input not found or already spent";
             continue;
         }
         const CScript& prevPubKey = coin->second.out.scriptPubKey;
         const CAmount& amount = coin->second.out.nValue;
+        if (inputs_amount_sum && *inputs_amount_sum) {
+            if (amount > 0) {
+                **inputs_amount_sum += amount;
+            } else {
+                inputs_amount_sum->reset();
+                inputs_amount_sum = nullptr;
+            }
+        }
 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
             ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, &txdata, nHashType), prevPubKey, sigdata);
+            if ((!sigdata.witness) && inputs_amount_sum && *inputs_amount_sum) {
+                inputs_amount_sum->reset();
+                inputs_amount_sum = nullptr;
+            }
         }
 
         UpdateInput(txin, sigdata);

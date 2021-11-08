@@ -5,7 +5,10 @@
 #ifndef BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 #define BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 
+#include <amount.h>
+
 #include <map>
+#include <optional>
 #include <string>
 
 class FillableSigningProvider;
@@ -25,7 +28,7 @@ class SigningProvider;
  * @param result         JSON object where signed transaction results accumulate
  */
 void SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType, UniValue& result);
-void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, const std::map<int, std::string>& input_errors, UniValue& result);
+void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, const std::map<int, std::string>& input_errors, UniValue& result, const std::optional<CAmount>& inputs_amount_sum);
 
 /**
   * Parse a prevtxs UniValue array and get the map of coins from it
