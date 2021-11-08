@@ -37,10 +37,10 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
             else:
                 # split out some data
                 key_date_label, comment = line.split("#")
-                key_date_label = key_date_label.split(" ")
+                key_date_label = key_date_label.rstrip().split(" ")
                 # key = key_date_label[0]
                 date = key_date_label[1]
-                keytype = key_date_label[2]
+                key_params = dict(map(lambda x: x.split('=', 1), key_date_label[2:]))
 
                 imported_key = date == '1970-01-01T00:00:01Z'
                 if imported_key:
@@ -48,25 +48,25 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     # Skip them
                     continue
 
-                addr_keypath = comment.split(" addr=")[1]
-                addr = addr_keypath.split(" ")[0]
+                comment_params = dict(map(lambda x: x.split('=', 1), comment.strip().split(" ")))
+                addr = comment_params['addr']
                 keypath = None
-                if keytype == "inactivehdseed=1":
+                if key_params.get('inactivehdseed'):
                     # ensure the old master is still available
                     assert hd_master_addr_old == addr
-                elif keytype == "hdseed=1":
+                elif key_params.get('hdseed'):
                     # ensure we have generated a new hd master key
                     assert hd_master_addr_old != addr
                     hd_master_addr_ret = addr
-                elif keytype == "script=1":
+                elif key_params.get('script'):
                     # scripts don't have keypaths
                     keypath = None
                 else:
-                    keypath = addr_keypath.rstrip().split("hdkeypath=")[1]
+                    keypath = key_params['hdkeypath']
 
                 # count key types
                 for addrObj in addrs:
-                    if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and keytype == "label=":
+                    if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and key_params.get('label') == "":
                         if addr.startswith('m') or addr.startswith('n'):
                             # P2PKH address
                             found_legacy_addr += 1
@@ -76,16 +76,16 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                         elif addr.startswith('bcrt1'):
                             found_bech32_addr += 1
                         break
-                    elif keytype == "change=1":
+                    elif key_params.get('change'):
                         found_addr_chg += 1
                         break
-                    elif keytype == "reserve=1":
+                    elif key_params.get('reserve'):
                         found_addr_rsv += 1
                         break
 
                 # count scripts
                 for script_addr in script_addrs:
-                    if script_addr == addr.rstrip() and keytype == "script=1":
+                    if script_addr == addr.rstrip() and key_params.get('script'):
                         found_script_addr += 1
                         break
 
