@@ -2,7 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <crypto/common.h>
 #include <crypto/siphash.h>
+
+#include <algorithm>
 
 #define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
 
@@ -45,30 +48,57 @@ CSipHasher& CSipHasher::Write(uint64_t data)
     return *this;
 }
 
+
+/// Load a uint64_t from 0 to 7 bytes.
+inline uint64_t ReadU64ByLenLE(const unsigned char* data, size_t len)
+{
+    assert(len < 8);
+    uint64_t out = 0;
+    for (size_t i = 0; i < len; ++i) {
+        out |= (uint64_t)data[i] << (i * 8);
+    }
+    return out;
+}
+
 CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
 {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
-    uint64_t t = tmp;
-    uint8_t c = count;
+    auto ntail = count & 0x07;
+    count += size;
 
-    while (size--) {
-        t |= ((uint64_t)(*(data++))) << (8 * (c % 8));
-        c++;
-        if ((c & 7) == 0) {
-            v3 ^= t;
+    size_t needed = 0;
+
+    if (ntail != 0) {
+        needed = 8 - ntail;
+        tmp |= ReadU64ByLenLE(data, std::min(size, needed)) << 8 * ntail;
+        if (size < needed) {
+            return *this;
+        } else {
+            v3 ^= tmp;
             SIPROUND;
             SIPROUND;
-            v0 ^= t;
-            t = 0;
+            v0 ^= tmp;
         }
+    }
+
+    size_t len = size - needed;
+    auto left = len & 0x07;
+
+    auto i = needed;
+    while (i < len - left) {
+        uint64_t mi = ReadLE64(data + i);
+        v3 ^= mi;
+        SIPROUND;
+        SIPROUND;
+        v0 ^= mi;
+        i += 8;
     }
 
     v[0] = v0;
     v[1] = v1;
     v[2] = v2;
     v[3] = v3;
-    count = c;
-    tmp = t;
+    tmp = ReadU64ByLenLE(data + i, left);
 
     return *this;
 }
