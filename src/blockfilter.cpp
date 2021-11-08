@@ -11,6 +11,7 @@
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <script/standard.h>
 #include <streams.h>
 #include <util/golombrice.h>
 
@@ -22,6 +23,7 @@ static constexpr int GCS_SER_VERSION = 0;
 
 static const std::map<BlockFilterType, std::string> g_filter_types = {
     {BlockFilterType::BASIC, "basic"},
+    {BlockFilterType::V0, "v0"},
 };
 
 // Map a value x that is uniformly distributed in the range [0, 2^64) to a
@@ -225,8 +227,10 @@ const std::string& ListBlockFilterTypes()
     return type_list;
 }
 
-static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
-                                                 const CBlockUndo& block_undo)
+static GCSFilter::ElementSet BuildFilterElements(const CBlock& block,
+                                                 const CBlockUndo& block_undo,
+                                                 bool only_segwit = false,
+                                                 int witness_version = 0)
 {
     GCSFilter::ElementSet elements;
 
@@ -234,6 +238,13 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
         for (const CTxOut& txout : tx->vout) {
             const CScript& script = txout.scriptPubKey;
             if (script.empty() || script[0] == OP_RETURN) continue;
+            if (only_segwit) {
+                int witnessversion;
+                std::vector<unsigned char> witnessprogram;
+                if (!script.IsWitnessProgram(witnessversion, witnessprogram)) continue;
+                if (witnessversion != witness_version) continue;
+                if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE))) continue; // specific v0 checks
+            }
             elements.emplace(script.begin(), script.end());
         }
     }
@@ -242,6 +253,13 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
         for (const Coin& prevout : tx_undo.vprevout) {
             const CScript& script = prevout.out.scriptPubKey;
             if (script.empty()) continue;
+            if (only_segwit) {
+                int witnessversion;
+                std::vector<unsigned char> witnessprogram;
+                if (!script.IsWitnessProgram(witnessversion, witnessprogram)) continue;
+                if (witnessversion != witness_version) continue;
+                if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE))) continue; // specific v0 checks
+            }
             elements.emplace(script.begin(), script.end());
         }
     }
@@ -267,13 +285,24 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
     if (!BuildParams(params)) {
         throw std::invalid_argument("unknown filter_type");
     }
-    m_filter = GCSFilter(params, BasicFilterElements(block, block_undo));
+
+    switch (m_filter_type) {
+    case BlockFilterType::BASIC:
+        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo));
+        break;
+    case BlockFilterType::V0:
+        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo, true));
+        break;
+    case BlockFilterType::INVALID:
+        assert(false);
+    }
 }
 
 bool BlockFilter::BuildParams(GCSFilter::Params& params) const
 {
     switch (m_filter_type) {
     case BlockFilterType::BASIC:
+    case BlockFilterType::V0:
         params.m_siphash_k0 = m_block_hash.GetUint64(0);
         params.m_siphash_k1 = m_block_hash.GetUint64(1);
         params.m_P = BASIC_FILTER_P;
