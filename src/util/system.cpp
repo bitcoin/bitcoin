@@ -629,6 +629,11 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
 
+void ArgsManager::ForceSetArg(const std::string& strArg, int64_t nValue)
+{
+    ForceSetArg(strArg, ToString(nValue));
+}
+
 void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)
 {
     Assert(cmd.find('=') == std::string::npos);

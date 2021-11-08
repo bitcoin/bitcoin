@@ -2553,6 +2553,27 @@ bool CConnman::InitBinds(const Options& options)
         struct in6_addr inaddr6_any = IN6ADDR_ANY_INIT;
         fBound |= Bind(CService(inaddr6_any, GetListenPort()), BF_NONE, NetPermissionFlags::None);
         fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE, NetPermissionFlags::None);
+
+        if (!fBound) {
+            int defaultPort = Params().GetDefaultPort();
+            // If listening failed and another port than the standard port was specified,
+            // ask if the user wants to connect via the standard port for the network instead
+            if (GetListenPort() != defaultPort) {
+                bool fRet = uiInterface.ThreadSafeQuestion(
+                    strprintf(_("Do you want to use the standard network port for %s (port %s) instead?"), PACKAGE_NAME, defaultPort),
+                    strprintf(_("Listen on port %s failed.").translated, GetListenPort()),
+                    "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::MODAL | CClientUIInterface::BTN_OK | CClientUIInterface::BTN_ABORT);
+
+                if (fRet) {
+                    gArgs.ForceSetArg("-port", defaultPort);
+                    // Attempt to use standard port
+                    struct in_addr inaddr_any;
+                    inaddr_any.s_addr = INADDR_ANY;
+                    fBound |= Bind(CService(inaddr6_any, defaultPort), BF_NONE, NetPermissionFlags::None);
+                    fBound |= Bind(CService(inaddr_any, defaultPort), BF_NONE, NetPermissionFlags::None);
+                }
+            }
+        }
     }
     return fBound;
 }
