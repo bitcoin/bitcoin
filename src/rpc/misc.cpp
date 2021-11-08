@@ -381,8 +381,8 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
         }
     }
 
-    FlatSigningProvider provider;
-    auto desc = Parse(desc_str, provider, /* require_checksum = */ true);
+    FlatSigningProvider key_provider;
+    auto desc = Parse(desc_str, key_provider, /* require_checksum = */ true);
     if (!desc) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
     }
@@ -398,8 +398,9 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
     UniValue addresses(UniValue::VARR);
 
     for (int i = range_begin; i <= range_end; ++i) {
+        FlatSigningProvider provider;
         std::vector<CScript> scripts;
-        if (!desc->Expand(i, provider, scripts, provider)) {
+        if (!desc->Expand(i, key_provider, scripts, provider)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
         }
 
