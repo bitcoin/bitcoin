@@ -1026,11 +1026,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
     if (gArgs.IsArgSet("-walletnotify")) {
-#ifdef WIN32
-        const std::string walletname_escaped = "wallet_name_substitution_is_not_available_on_Windows";
-#else
         const std::string walletname_escaped = ShellEscape(GetName());
-#endif
         const std::string txid_hex = hash.GetHex();
         std::string blockhash_hex, blockheight_str;
         if (confirm.status == CWalletTx::Status::CONFIRMED) {

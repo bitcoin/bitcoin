@@ -1273,14 +1273,12 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 }
 #endif
 
-#ifndef WIN32
 std::string ShellEscape(const std::string& arg)
 {
     std::string escaped = arg;
-    boost::replace_all(escaped, "'", "'\"'\"'");
+    boost::replace_all(escaped, "'", "'\\''");
     return "'" + escaped + "'";
 }
-#endif
 
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand)
