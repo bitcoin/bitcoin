@@ -59,6 +59,8 @@ public:
     /** Set the best height */
     virtual void SetBestHeight(int height) = 0;
 
+    virtual bool FetchBlock(NodeId id, const uint256& hash, const CBlockIndex* pindex) = 0;
+
     /**
      * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
      * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
