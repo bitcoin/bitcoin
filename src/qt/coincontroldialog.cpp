@@ -55,7 +55,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
     contextMenu->addAction(tr("&Copy address"), this, &CoinControlDialog::copyAddress);
     contextMenu->addAction(tr("Copy &label"), this, &CoinControlDialog::copyLabel);
     contextMenu->addAction(tr("Copy &amount"), this, &CoinControlDialog::copyAmount);
-    copyTransactionHashAction = contextMenu->addAction(tr("Copy transaction &ID"), this, &CoinControlDialog::copyTransactionHash);
+    copyTransactionHashAction = contextMenu->addAction(tr("Copy transaction &ID and output index"), this, &CoinControlDialog::copyTransactionHash);
     contextMenu->addSeparator();
     lockAction = contextMenu->addAction(tr("L&ock unspent"), this, &CoinControlDialog::lockCoin);
     unlockAction = contextMenu->addAction(tr("&Unlock unspent"), this, &CoinControlDialog::unlockCoin);
@@ -231,7 +231,11 @@ void CoinControlDialog::copyAddress()
 // context menu action: copy transaction id
 void CoinControlDialog::copyTransactionHash()
 {
-    GUIUtil::setClipboard(contextMenuItem->data(COLUMN_ADDRESS, TxHashRole).toString());
+    const QString address = contextMenuItem->data(COLUMN_ADDRESS, TxHashRole).toString();
+    const QString vout = contextMenuItem->data(COLUMN_ADDRESS, VOutRole).toString();
+    const QString outpoint = QString("%1:%2").arg(address).arg(vout);
+
+    GUIUtil::setClipboard(outpoint);
 }
 
 // context menu action: lock coin
