@@ -612,79 +612,32 @@
       <attribute name="title">
        <string>&amp;Network Traffic</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <item>
-          <widget class="TrafficGraphWidget" name="trafficGraph" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <widget class="QSlider" name="sldGraphRange">
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>288</number>
-             </property>
-             <property name="pageStep">
-              <number>12</number>
-             </property>
-             <property name="value">
-              <number>6</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="lblGraphRange">
-             <property name="minimumSize">
-              <size>
-               <width>100</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnClearTrafficGraph">
-             <property name="text">
-              <string>&amp;Reset</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
+        <widget class="TrafficGraphWidget" name="trafficGraph" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout">
+        <layout class="QHBoxLayout" name="bottomFrame">
          <item>
           <widget class="QGroupBox" name="groupBox">
            <property name="title">
-            <string>Totals</string>
+            <string/>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_5">
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <layout class="QHBoxLayout" name="RecievedBox">
               <item>
-               <widget class="Line" name="line">
+               <widget class="Line" name="RecievedLine">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -740,7 +693,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_16">
+               <widget class="QLabel" name="Recieved">
                 <property name="text">
                  <string>Received</string>
                 </property>
@@ -762,9 +715,9 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <layout class="QHBoxLayout" name="SentBox">
               <item>
-               <widget class="Line" name="line_2">
+               <widget class="Line" name="SentLine">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -820,7 +773,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_17">
+               <widget class="QLabel" name="Sent">
                 <property name="text">
                  <string>Sent</string>
                 </property>
@@ -841,20 +794,55 @@
               </item>
              </layout>
             </item>
-            <item>
-             <spacer name="verticalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>407</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
            </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="sldGraphRange">
+           <property name="minimumSize">
+            <size>
+             <width>105</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>288</number>
+           </property>
+           <property name="pageStep">
+            <number>12</number>
+           </property>
+           <property name="value">
+            <number>6</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lblGraphRange">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnClearTrafficGraph">
+           <property name="text">
+            <string>&amp;Reset</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
         </layout>
