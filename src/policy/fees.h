@@ -213,6 +213,9 @@ public:
     /** Write estimation data to a file */
     bool Write(CAutoFile& fileout) const;
 
+    /** Write estimation data to the default file */
+    bool Write() const;
+
     /** Read estimation data from a file */
     bool Read(CAutoFile& filein);
 

@@ -883,12 +883,18 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
 void CBlockPolicyEstimator::Flush() {
     FlushUnconfirmed();
+    Write();
+}
 
+bool CBlockPolicyEstimator::Write() const
+{
     fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Write(est_file)) {
         LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
+        return false;
     }
+    return true;
 }
 
 bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
