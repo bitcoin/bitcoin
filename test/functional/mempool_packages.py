@@ -51,12 +51,17 @@ class MempoolPackagesTest(BitcoinTestFramework):
         txid = utxo[0]['txid']
         vout = utxo[0]['vout']
         value = utxo[0]['amount']
+        assert 'ancestorcount' not in utxo[0]
+        assert 'ancestorsize' not in utxo[0]
+        assert 'ancestorfees' not in utxo[0]
 
         fee = Decimal("0.0001")
         # MAX_ANCESTORS transactions off a confirmed tx should be fine
         chain = []
         witness_chain = []
-        for _ in range(MAX_ANCESTORS):
+        ancestor_vsize = 0
+        ancestor_fees = Decimal(0)
+        for i in range(MAX_ANCESTORS):
             (txid, sent_value) = chain_transaction(self.nodes[0], [txid], [0], value, fee, 1)
             value = sent_value
             chain.append(txid)
@@ -64,6 +69,15 @@ class MempoolPackagesTest(BitcoinTestFramework):
             fulltx = self.nodes[0].getrawtransaction(txid)
             witnesstx = self.nodes[0].decoderawtransaction(fulltx, True)
             witness_chain.append(witnesstx['hash'])
+
+            # Check that listunspent ancestor{count, size, fees} yield the correct results
+            wallet_unspent = self.nodes[0].listunspent(minconf=0)
+            this_unspent = next(utxo_info for utxo_info in wallet_unspent if utxo_info['txid'] == txid)
+            assert_equal(this_unspent['ancestorcount'], i + 1)
+            ancestor_vsize += self.nodes[0].getrawtransaction(txid=txid, verbose=True)['vsize']
+            assert_equal(this_unspent['ancestorsize'], ancestor_vsize)
+            ancestor_fees -= self.nodes[0].gettransaction(txid=txid)['fee']
+            assert_equal(this_unspent['ancestorfees'], ancestor_fees * COIN)
 
         # Wait until mempool transactions have passed initial broadcast (sent inv and received getdata)
         # Otherwise, getrawmempool may be inconsistent with getmempoolentry if unbroadcast changes in between
@@ -77,9 +91,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
         descendant_fees = 0
         descendant_vsize = 0
 
-        ancestor_vsize = sum([mempool[tx]['vsize'] for tx in mempool])
+        assert_equal(ancestor_vsize, sum([mempool[tx]['vsize'] for tx in mempool]))
         ancestor_count = MAX_ANCESTORS
-        ancestor_fees = sum([mempool[tx]['fee'] for tx in mempool])
+        assert_equal(ancestor_fees, sum([mempool[tx]['fee'] for tx in mempool]))
 
         descendants = []
         ancestors = list(chain)
