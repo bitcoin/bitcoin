@@ -173,7 +173,14 @@ protected:
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    /**
+     * Notifies the validation interface that it is being unregistered
+     */
+    virtual void ValidationInterfaceUnregistering() {};
+
     friend class CMainSignals;
+    friend void UnregisterValidationInterface(CValidationInterface*);
+    friend void UnregisterAllValidationInterfaces();
 };
 
 struct MainSignalsInstance;

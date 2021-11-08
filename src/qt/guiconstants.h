@@ -22,6 +22,8 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 #define STYLE_INVALID "background:#FF8080"
 /* "Warning" field background style */
 #define STYLE_INCORRECT "background:#FFFF80"
+/* Background style for active search in NetWatch */
+#define STYLE_ACTIVE "background:#80FF80"
 
 /* Transaction list -- unconfirmed transaction */
 #define COLOR_UNCONFIRMED QColor(128, 128, 128)
