@@ -58,6 +58,11 @@ const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
     },
 };
 
+/*
+ * Signal when transactions are added to wallet
+ */
+boost::signals2::signal<void (const CTransactionRef &ptxn, const uint256 &blockHash)> CWallet::TransactionAddedToWallet;
+
 RecursiveMutex cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
 static std::list<LoadWalletFn> g_load_wallet_fns GUARDED_BY(cs_wallets);
@@ -1014,6 +1019,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
 
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(hash, fInsertedNew ? CT_NEW : CT_UPDATED);
+
+    // Notify listeners on new wallet transaction
+    CWallet::TransactionAddedToWallet(wtx.tx, wtx.m_confirm.hashBlock);
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
