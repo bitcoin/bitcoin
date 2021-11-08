@@ -33,6 +33,7 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
                     return;
                 }
                 const CTransaction tx{*mtx};
+                if (!SanityCheckForConsumeTxMemPoolEntry(tx)) return;
                 block_policy_estimator.processTransaction(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx), fuzzed_data_provider.ConsumeBool());
                 if (fuzzed_data_provider.ConsumeBool()) {
                     (void)block_policy_estimator.removeTx(tx.GetHash(), /* inBlock */ fuzzed_data_provider.ConsumeBool());
@@ -46,6 +47,7 @@ FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
                         break;
                     }
                     const CTransaction tx{*mtx};
+                    if (!SanityCheckForConsumeTxMemPoolEntry(tx)) return;
                     mempool_entries.push_back(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
                 }
                 std::vector<const CTxMemPoolEntry*> ptrs;

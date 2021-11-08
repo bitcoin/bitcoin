@@ -456,9 +456,10 @@ static RPCHelpMan prioritisetransaction()
                 "Accepts the transaction into mined blocks at a higher (or lower) priority\n",
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id."},
-                    {"dummy", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "API-Compatibility for previous API. Must be zero or null.\n"
-            "                  DEPRECATED. For forward compatibility use named arguments and omit this parameter."},
-                    {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fee value (in satoshis) to add (or subtract, if negative).\n"
+                    {"priority_delta", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "The priority to add or subtract.\n"
+            "                  The transaction selection algorithm considers the tx as it would have a higher priority.\n"
+            "                  (priority of a transaction is calculated: coinage * value_in_satoshis / txsize)\n"},
+                    {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "The fee value (in satoshis) to add (or subtract, if negative).\n"
             "                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee."},
@@ -474,13 +475,17 @@ static RPCHelpMan prioritisetransaction()
     LOCK(cs_main);
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
-    CAmount nAmount = request.params[2].get_int64();
+    double priority_delta = 0;
+    CAmount nAmount = 0;
 
-    if (!(request.params[1].isNull() || request.params[1].get_real() == 0)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
+    if (!request.params[1].isNull()) {
+        priority_delta = request.params[1].get_real();
+    }
+    if (!request.params[2].isNull()) {
+        nAmount = request.params[2].get_int64();
     }
 
-    EnsureAnyMemPool(request.context).PrioritiseTransaction(hash, nAmount);
+    EnsureAnyMemPool(request.context).PrioritiseTransaction(hash, priority_delta, nAmount);
     return true;
 },
     };
@@ -815,6 +820,9 @@ static RPCHelpMan getblocktemplate()
         }
         entry.pushKV("sigops", nTxSigOps);
         entry.pushKV("weight", GetTransactionWeight(tx));
+        if (index_in_template && !pblocktemplate->vTxPriorities.empty()) {
+            entry.pushKV("priority", pblocktemplate->vTxPriorities[index_in_template]);
+        }
 
         transactions.push_back(entry);
     }

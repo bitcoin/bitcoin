@@ -470,6 +470,8 @@ static std::vector<RPCResult> MempoolEntryDescription() { return {
     RPCResult{RPCResult::Type::STR_AMOUNT, "modifiedfee", "transaction fee with fee deltas used for mining priority (DEPRECATED)"},
     RPCResult{RPCResult::Type::NUM_TIME, "time", "local time transaction entered pool in seconds since 1 Jan 1970 GMT"},
     RPCResult{RPCResult::Type::NUM, "height", "block height when transaction entered pool"},
+    RPCResult{RPCResult::Type::NUM, "startingpriority", "Priority when transaction entered pool"},
+    RPCResult{RPCResult::Type::NUM, "currentpriority", "Transaction priority now"},
     RPCResult{RPCResult::Type::NUM, "descendantcount", "number of in-mempool descendant transactions (including this one)"},
     RPCResult{RPCResult::Type::NUM, "descendantsize", "virtual transaction size of in-mempool descendants (including this one)"},
     RPCResult{RPCResult::Type::STR_AMOUNT, "descendantfees", "modified fees (see above) of in-mempool descendants (including this one) (DEPRECATED)"},
@@ -493,7 +495,7 @@ static std::vector<RPCResult> MempoolEntryDescription() { return {
     RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
 };}
 
-static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e, const int next_block_height) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     AssertLockHeld(pool.cs);
 
@@ -510,6 +512,8 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     info.pushKV("modifiedfee", ValueFromAmount(e.GetModifiedFee()));
     info.pushKV("time", count_seconds(e.GetTime()));
     info.pushKV("height", (int)e.GetHeight());
+    info.pushKV("startingpriority", e.GetStartingPriority());
+    info.pushKV("currentpriority", e.GetPriority(next_block_height));
     info.pushKV("descendantcount", e.GetCountWithDescendants());
     info.pushKV("descendantsize", e.GetSizeWithDescendants());
     info.pushKV("descendantfees", e.GetModFeesWithDescendants());
@@ -556,18 +560,23 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     info.pushKV("unbroadcast", pool.IsUnbroadcastTx(tx.GetHash()));
 }
 
-UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempool_sequence)
+UniValue MempoolToJSON(ChainstateManager &chainman, const CTxMemPool& pool, bool verbose, bool include_mempool_sequence)
 {
     if (verbose) {
         if (include_mempool_sequence) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Verbose results cannot contain mempool sequence values.");
         }
+        LOCK(::cs_main);
+        const CChain& active_chain = chainman.ActiveChain();
+        const int next_block_height = active_chain.Height() + 1;
         LOCK(pool.cs);
+        // TODO: Release cs_main after mempool.cs acquired
+
         UniValue o(UniValue::VOBJ);
         for (const CTxMemPoolEntry& e : pool.mapTx) {
             const uint256& hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(pool, info, e);
+            entryToJSON(pool, info, e, next_block_height);
             // Mempool has unique entries so there is no advantage in using
             // UniValue::pushKV, which checks if the key already exists in O(N).
             // UniValue::__pushKV is used instead which currently is O(1).
@@ -675,7 +684,9 @@ static RPCHelpMan getrawmempool()
         include_mempool_sequence = request.params[1].get_bool();
     }
 
-    return MempoolToJSON(EnsureAnyMemPool(request.context), fVerbose, include_mempool_sequence);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    return MempoolToJSON(chainman, EnsureAnyMemPool(request.context), fVerbose, include_mempool_sequence);
 },
     };
 }
@@ -711,7 +722,12 @@ static RPCHelpMan getmempoolancestors()
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(::cs_main);
+    const CChain& active_chain = chainman.ActiveChain();
+    const int next_block_height = active_chain.Height() + 1;
     LOCK(mempool.cs);
+    // TODO: Release cs_main after mempool.cs acquired
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -735,7 +751,7 @@ static RPCHelpMan getmempoolancestors()
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, e, next_block_height);
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -775,7 +791,12 @@ static RPCHelpMan getmempooldescendants()
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(::cs_main);
+    const CChain& active_chain = chainman.ActiveChain();
+    const int next_block_height = active_chain.Height() + 1;
     LOCK(mempool.cs);
+    // TODO: Release cs_main after mempool.cs acquired
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -800,7 +821,7 @@ static RPCHelpMan getmempooldescendants()
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, e, next_block_height);
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -827,7 +848,12 @@ static RPCHelpMan getmempoolentry()
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(::cs_main);
+    const CChain& active_chain = chainman.ActiveChain();
+    const int next_block_height = active_chain.Height() + 1;
     LOCK(mempool.cs);
+    // TODO: Release cs_main after mempool.cs acquired
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
     if (it == mempool.mapTx.end()) {
@@ -836,7 +862,7 @@ static RPCHelpMan getmempoolentry()
 
     const CTxMemPoolEntry &e = *it;
     UniValue info(UniValue::VOBJ);
-    entryToJSON(mempool, info, e);
+    entryToJSON(mempool, info, e, next_block_height);
     return info;
 },
     };

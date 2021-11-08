@@ -147,6 +147,8 @@ BASE_SCRIPTS = [
     'tool_wallet.py --descriptors',
     'wallet_txn_clone.py',
     'wallet_txn_clone.py --segwit',
+    'mining_coin_age_priority.py',
+    'mining_coin_age_priority.py --gbt',
     'rpc_getchaintips.py',
     'rpc_misc.py',
     'interface_rest.py',

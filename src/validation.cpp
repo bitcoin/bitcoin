@@ -25,6 +25,7 @@
 #include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <node/ui_interface.h>
+#include <policy/coin_age_priority.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
@@ -48,6 +49,7 @@
 #include <util/ioprio.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/serfloat.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -730,7 +732,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // nModifiedFees includes any fee deltas from PrioritiseTransaction
     nModifiedFees = ws.m_base_fees;
-    m_pool.ApplyDelta(hash, nModifiedFees);
+    double nPriorityDummy = 0;
+    m_pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
+
+    CAmount inChainInputValue;
+    // Since entries arrive *after* the tip's height, their priority is for the height+1
+    double dPriority = GetPriority(tx, m_view, m_active_chainstate.m_chain.Height() + 1, inChainInputValue);
 
     // Keep track of transactions that spend a coinbase, which we re-scan
     // during reorgs to ensure COINBASE_MATURITY is still met.
@@ -743,8 +750,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         }
     }
 
-    entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(),
-            fSpendsCoinbase, nSigOpsCost, lp));
+    entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, dPriority, m_active_chainstate.m_chain.Height(),
+            inChainInputValue, fSpendsCoinbase, nSigOpsCost, lp));
     unsigned int nSize = entry->GetTxSize();
 
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
@@ -2385,6 +2392,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     if (disconnectpool && m_mempool) {
         // Save transactions to re-add to mempool at end of reorg
         for (auto it = block.vtx.rbegin(); it != block.vtx.rend(); ++it) {
+            m_mempool->UpdateDependentPriorities(*(*it), pindexDelete->nHeight, false);
             disconnectpool->addTransaction(*it);
         }
         while (disconnectpool->DynamicMemoryUsage() > MAX_DISCONNECTED_TX_POOL_SIZE * 1000) {
@@ -4668,6 +4676,41 @@ bool CChainState::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 }
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
+static constexpr uint64_t MEMPOOL_KNOTS_DUMP_VERSION = 0;
+
+bool LoadMempoolKnots(CTxMemPool& pool, FopenFn mockable_fopen_function)
+{
+    const auto knots_filepath = gArgs.GetDataDirNet() / "mempool-knots.dat";
+    FILE* filestr{mockable_fopen_function(knots_filepath, "rb")};
+    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+    if (file.IsNull()) {
+        // Typically missing if there's nothing to save
+        return false;
+    }
+
+    try {
+        uint64_t version;
+        file >> version;
+        if (version != MEMPOOL_KNOTS_DUMP_VERSION) {
+            return false;
+        }
+
+        const unsigned int priority_deltas_count = ReadCompactSize(file);
+        uint256 txid;
+        uint64_t encoded_priority;
+        for (unsigned int i = 0; i < priority_deltas_count; ++i) {
+            Unserialize(file, txid);
+            Unserialize(file, encoded_priority);
+            const double priority = DecodeDouble(encoded_priority);
+            pool.PrioritiseTransaction(txid, priority, 0);
+        }
+    } catch (const std::exception& e) {
+        LogPrintf("Failed to deserialize mempool-knots data on disk: %s. Continuing anyway.\n", e.what());
+        return false;
+    }
+
+    return true;
+}
 
 bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mockable_fopen_function)
 {
@@ -4749,6 +4792,8 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
         return false;
     }
 
+    LoadMempoolKnots(pool, mockable_fopen_function);
+
     LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i expired, %i already there, %i waiting for initial broadcast\n", count, failed, expired, already_there, unbroadcast);
     return true;
 }
@@ -4758,6 +4803,7 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool s
     int64_t start = GetTimeMicros();
 
     std::map<uint256, CAmount> mapDeltas;
+    std::map<uint256, double> priority_deltas;
     std::vector<TxMempoolInfo> vinfo;
     std::set<uint256> unbroadcast_txids;
 
@@ -4767,7 +4813,12 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool s
     {
         LOCK(pool.cs);
         for (const auto &i : pool.mapDeltas) {
-            mapDeltas[i.first] = i.second;
+            if (i.second.first) {   // priority delta
+                priority_deltas[i.first] = i.second.first;
+            }
+            if (i.second.second) {  // fee delta
+                mapDeltas[i.first] = i.second.second;
+            }
         }
         vinfo = pool.infoAll();
         unbroadcast_txids = pool.GetUnbroadcastTxs();
@@ -4802,6 +4853,35 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool s
         if (!skip_file_commit && !FileCommit(file.Get()))
             throw std::runtime_error("FileCommit failed");
         file.fclose();
+
+        const auto knots_filepath = gArgs.GetDataDirNet() / "mempool-knots.dat";
+        if (priority_deltas.size()) {
+            auto knots_tmppath = knots_filepath;
+            knots_tmppath += ".new";
+
+            FILE* filestr{mockable_fopen_function(knots_tmppath, "wb")};
+            if (!filestr) return false;
+            CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+
+            uint64_t version = MEMPOOL_KNOTS_DUMP_VERSION;
+            file << version;
+
+            WriteCompactSize(file, priority_deltas.size());
+            for (const auto& [txid, priority] : priority_deltas) {
+                Serialize(file, txid);
+                const uint64_t encoded_priority = EncodeDouble(priority);
+                Serialize(file, encoded_priority);
+            }
+
+            if (!FileCommit(file.Get())) throw std::runtime_error("FileCommit failed");
+            file.fclose();
+            if (!RenameOver(knots_tmppath, knots_filepath)) {
+                throw std::runtime_error("Rename failed (mempool-knots.dat)");
+            }
+        } else {
+            fs::remove(knots_filepath);
+        }
+
         if (!RenameOver(gArgs.GetDataDirNet() / "mempool.dat.new", gArgs.GetDataDirNet() / "mempool.dat")) {
             throw std::runtime_error("Rename failed");
         }

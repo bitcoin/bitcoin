@@ -8,6 +8,7 @@
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <policy/coin_age_priority.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -22,16 +23,24 @@
 #include <optional>
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
-                                 int64_t _nTime, unsigned int _entryHeight,
+                                 int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
+                                 CAmount _inChainInputValue,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
-    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryHeight(_entryHeight),
-    spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), lockPoints(lp)
+    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
+    inChainInputValue(_inChainInputValue),
+    spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), nModSize(CalculateModifiedSize(*tx, GetTxSize())), lockPoints(lp)
 {
     nCountWithDescendants = 1;
     nSizeWithDescendants = GetTxSize();
     nModFeesWithDescendants = nFee;
+    CAmount nValueIn = tx->GetValueOut()+nFee;
+    assert(inChainInputValue <= nValueIn);
 
     feeDelta = 0;
+
+    // Since entries arrive *after* the tip's height, their entry priority is for the height+1
+    cachedHeight = entryHeight + 1;
+    cachedPriority = entryPriority;
 
     nCountWithAncestors = 1;
     nSizeWithAncestors = GetTxSize();
@@ -365,8 +374,10 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Update transaction for any feeDelta created by PrioritiseTransaction
     // TODO: refactor so that the fee delta is calculated before inserting
     // into mapTx.
+    double priority_delta{0.};
     CAmount delta{0};
-    ApplyDelta(entry.GetTx().GetHash(), delta);
+    ApplyDeltas(entry.GetTx().GetHash(), priority_delta, delta);
+    // NOTE: priority_delta is handled in addPriorityTxs
     if (delta) {
             mapTx.modify(newit, update_fee_delta(delta));
     }
@@ -581,6 +592,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(nBlockHeight, entries);}
     for (const auto& tx : vtx)
     {
+        UpdateDependentPriorities(*tx, nBlockHeight, true);
         txiter it = mapTx.find(tx->GetHash());
         if (it != mapTx.end()) {
             setEntries stage;
@@ -640,10 +652,18 @@ void CTxMemPool::check(CChainState& active_chainstate) const
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip));
     const int64_t spendheight = active_chainstate.m_chain.Height() + 1;
 
+    const unsigned int nBlockHeight = active_chainstate.m_chain.Height();
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         checkTotal += it->GetTxSize();
+        CAmount dummyValue;
+        double freshPriority = GetPriority(it->GetTx(), active_chainstate.CoinsTip(), nBlockHeight + 1, dummyValue);
+        double cachePriority = it->GetPriority(nBlockHeight + 1);
+        double priDiff = cachePriority > freshPriority ? cachePriority - freshPriority : freshPriority - cachePriority;
+        // Verify that the difference between the on the fly calculation and a fresh calculation
+        // is small enough to be a result of double imprecision.
+        assert(priDiff < .0001 * freshPriority + 1);
         check_total_fee += it->GetFee();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
@@ -853,15 +873,16 @@ TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 
 TxMempoolInfo CTxMemPool::info(const uint256& txid) const { return info(GenTxid{false, txid}); }
 
-void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
+void CTxMemPool::PrioritiseTransaction(const uint256& hash, double dPriorityDelta, const CAmount& nFeeDelta)
 {
     {
         LOCK(cs);
-        CAmount &delta = mapDeltas[hash];
-        delta += nFeeDelta;
+        std::pair<double, CAmount> &deltas = mapDeltas[hash];
+        deltas.first += dPriorityDelta;
+        deltas.second += nFeeDelta;
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
-            mapTx.modify(it, update_fee_delta(delta));
+            mapTx.modify(it, update_fee_delta(deltas.second));
             // Now update all ancestors' modified fees with descendants
             setEntries setAncestors;
             uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
@@ -880,17 +901,18 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             ++nTransactionsUpdated;
         }
     }
-    LogPrintf("PrioritiseTransaction: %s fee += %s\n", hash.ToString(), FormatMoney(nFeeDelta));
+    LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", hash.ToString(), dPriorityDelta, FormatMoney(nFeeDelta));
 }
 
-void CTxMemPool::ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const
+void CTxMemPool::ApplyDeltas(const uint256& hash, double &dPriorityDelta, CAmount &nFeeDelta) const
 {
     AssertLockHeld(cs);
-    std::map<uint256, CAmount>::const_iterator pos = mapDeltas.find(hash);
+    std::map<uint256, std::pair<double, CAmount> >::const_iterator pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
         return;
-    const CAmount &delta = pos->second;
-    nFeeDelta += delta;
+    const std::pair<double, CAmount> &deltas = pos->second;
+    dPriorityDelta += deltas.first;
+    nFeeDelta += deltas.second;
 }
 
 void CTxMemPool::ClearPrioritisation(const uint256& hash)
