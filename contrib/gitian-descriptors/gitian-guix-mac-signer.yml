@@ -1,0 +1,122 @@
+---
+name: "bitcoin-core-guix-mac-signer"
+enable_cache: true
+sudo: true
+distro: "ubuntu"
+suites:
+- "bionic"
+architectures:
+- "amd64"
+packages:
+- "ca-certificates"
+- "curl"
+- "gnupg"
+- "netbase"
+- "wget"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+- "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
+  "dir": "signature"
+files:
+- "bitcoin-osx-unsigned.tar.gz"
+script: |
+  set -e -o pipefail
+
+  export TZ="UTC"
+  export BUILD_DIR="$PWD"
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p "${BASE_CACHE}" "${SOURCES_PATH}"
+    GUIX_CACHE="${GBUILD_COMMON_CACHE}/guix"
+
+    GUIX_SCRIPT="${GUIX_CACHE}/guix-install.sh"
+    if [[ -f "${GUIX_SCRIPT}" ]]; then
+      cp "${GUIX_SCRIPT}" "${BUILD_DIR}"
+    fi
+    GUIX_TARBALL="${GUIX_CACHE}/guix-install-tarball-x86_64-linux.tar.gz"
+    if [[ -f "${GUIX_TARBALL}" ]]; then
+      export GUIX_BINARY_FILE_NAME=${GUIX_TARBALL}
+    fi
+    GUIX_CACHE_TARBALL="${GUIX_CACHE}/cache-guix.tar.gz"
+    if [[ -f "${GUIX_CACHE_TARBALL}" ]]; then
+      mkdir -p ~/.cache/guix
+      tar -xf "${GUIX_CACHE_TARBALL}" -C ~/.cache/guix/
+    fi
+  fi
+  export JOBS=${NUM_PROCS}
+
+  # Install guix with the installer script
+  if [[ ! -f "guix-install.sh" ]]; then
+    wget -nc -O "guix-install.sh" "https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh?h=version-1.3.0&id=aa34d4d28dfe25ba47d5800d05000fb7221788c0"
+  fi
+  echo "bcdeaa757cd42d2c9de4791272737e9ee0d518398403955f113611f4a893380a  guix-install.sh" | sha256sum -c -
+  # Remove /tmp cleanup from guix-install.sh
+  # shellcheck disable=SC2016
+  sed 's/rm -r "${tmp_path}"//g' guix-install.sh > our-guix-install.sh
+  chmod +x our-guix-install.sh
+  # We don't want SIGPIPE from running `yes`, so temporarily remove pipefail
+  set +o pipefail
+  yes | sudo -E ./our-guix-install.sh
+  set -o pipefail
+  if [[ -z "${GUIX_BINARY_FILE_NAME}" ]]; then
+    cp guix-install.sh "${GUIX_SCRIPT}"
+    GUIX_ORIG_TARBALL=$(sudo find /tmp -name "guix-binary-*.x86_64-linux.tar.xz")
+    sudo mv "${GUIX_ORIG_TARBALL}" "${GUIX_TARBALL}"
+  fi
+
+  # Check guix-daemon is running
+  if ! guix gc --list-failures > /dev/null; then
+    # Not running, try starting it
+    # Not all virtualization methods have systemd available, so start guix-daemon manually
+    sudo /var/guix/profiles/per-user/root/current-guix/bin/guix-daemon --build-users-group=guixbuild --substitute-urls="https://guix.carldong.io https://ci.guix.gnu.org"&
+  fi
+
+  # Import guix cache
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    mkdir -p "${GUIX_CACHE}"
+    KEYFILE="${GUIX_CACHE}/signing-key.pub"
+    STORE_FILE="${GUIX_CACHE}/guix_store.nar"
+    if [[ -f "$KEYFILE" && -f "$STORE_FILE" ]]; then
+      # shellcheck disable=SC2024
+      sudo -i guix archive --authorize < "${KEYFILE}"
+      guix archive --import < "${STORE_FILE}"
+    fi
+  fi
+
+  # Prep for build
+  cd bitcoin
+  export HOSTS="x86_64-apple-darwin18"
+
+  # Define DISTNAME variable.
+  # shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
+  # shellcheck disable=SC2034
+  source contrib/gitian-descriptors/assign_DISTNAME
+
+  # Prepare the unsigned tarball for codesigning
+  mkdir -p "guix-build-${VERSION}/output/${HOSTS}"
+  mkdir -p "guix-build-${VERSION}/var/profiles"
+  mv "${BUILD_DIR}/bitcoin-osx-unsigned.tar.gz" "guix-build-${VERSION}/output/${HOSTS}/bitcoin-${VERSION}-osx-unsigned.tar.gz"
+
+  # Do the build
+  export DETACHED_SIGS_REPO="${BUILD_DIR}/signature"
+  ./contrib/guix/guix-codesign
+
+  # Move all of the guix output to our output dir
+  mv "guix-build-${VERSION}/output/${HOSTS}-codesigned" "${OUTDIR}"
+
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    cd "${BUILD_DIR}"
+
+    # Find all of the items in the guix store and export them to the cache
+    STORE_FILES=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -not -name ".links" | sort)
+    sudo -i guix archive --generate-key
+    sudo cp /etc/guix/signing-key.pub "${KEYFILE}"
+    guix archive --export --recursive $STORE_FILES > "${STORE_FILE}"
+
+    # Cache guix cache
+    pushd ~/.cache/guix
+    tar -czf "${GUIX_CACHE_TARBALL}" ./*
+    popd
+  fi
