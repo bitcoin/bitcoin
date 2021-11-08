@@ -716,6 +716,9 @@ std::string ArgsManager::GetHelpMessage() const
             case OptionsCategory::REGISTER_COMMANDS:
                 usage += HelpMessageGroup("Register Commands:");
                 break;
+            case OptionsCategory::STATS:
+                usage += HelpMessageGroup("Statistic options:");
+                break;
             default:
                 break;
         }
