@@ -13,6 +13,7 @@
 #include <shutdown.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
+#include <util/system.h>
 #include <validation.h>
 
 #if defined(HAVE_CONFIG_H)
@@ -67,6 +68,14 @@ void AppTests::appTests()
         BasicTestingSetup test{CBaseChainParams::REGTEST}; // Create a temp data directory to backup the gui settings to
         return gArgs.GetDataDirNet() / "blocks";
     }());
+
+    {
+        // Need to ensure datadir is setup so resetting settings can delete the non-existent bitcoin_rw.conf
+        std::string error;
+        if (!gArgs.ReadConfigFiles(error, true)) {
+            QWARN("Error in readConfigFiles");
+        }
+    }
 
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
