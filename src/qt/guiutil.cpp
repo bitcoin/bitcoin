@@ -607,13 +607,13 @@ void openConfigfile()
 
     /* Open dash.conf with the associated application */
     if (fs::exists(pathConfig)) {
-        bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
-#ifdef Q_OS_MAC
         // Workaround for macOS-specific behavior; see #15409.
-        if (!res) {
-            res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", boostPathToQString(pathConfig)});
-        }
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)))) {
+#ifdef Q_OS_MAC
+            QProcess::startDetached("/usr/bin/open", QStringList{"-t", boostPathToQString(pathConfig)});
 #endif
+            return;
+        }
     }
 }
 
