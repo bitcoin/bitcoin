@@ -1241,9 +1241,12 @@ AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::w
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
-AC_SUBST(LEVELDB_CPPFLAGS)
-AC_SUBST(LIBLEVELDB)
-AC_SUBST(LIBMEMENV)
+AC_ARG_WITH([system-leveldb],
+  [AS_HELP_STRING([--with-system-leveldb],
+  [Build with system LevelDB (default is no; DANGEROUS; NOT SUPPORTED)])],
+  [system_leveldb=$withval],
+  [system_leveldb=no]
+)
 
 dnl SUPPRESSED_CPPFLAGS=SUPPRESS_WARNINGS([$SOME_CPPFLAGS])
 dnl Replace -I with -isystem in $SOME_CPPFLAGS to suppress warnings from
@@ -1369,7 +1372,63 @@ if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$b
   use_zmq=no
   build_leveldb=no
 fi
+
+if test x$build_leveldb = xno; then
+  system_leveldb=no
+fi
+dnl Check for leveldb, only if explicitly requested
+if test x$system_leveldb != xno; then
+  build_leveldb=no
+  LEVELDB_CPPFLAGS=
+  AC_CHECK_LIB([leveldb],[main],[
+    LIBLEVELDB=-lleveldb
+  ],[
+    AC_MSG_ERROR([leveldb library not found; using --with-system-leveldb is not supported anyway])
+  ])
+  AC_CHECK_HEADER([leveldb/filter_policy.h],[],[
+    AC_MSG_ERROR([LevelDB headers not found; using --with-system-leveldb is not supported anyway])
+  ])
+  AC_CHECK_HEADER([leveldb/helpers/memenv.h],[
+    AC_MSG_CHECKING([for memenv.h path])
+    BITCOIN_SUBDIR_TO_INCLUDE([LEVELDB_CPPFLAGS],[leveldb/helpers/],[memenv])
+  ],[
+    AC_CHECK_HEADER([memenv.h],[],[
+      AC_MSG_ERROR([LevelDB headers not found; using --with-system-leveldb is not supported anyway])
+    ])
+  ])
+
+  AC_MSG_CHECKING([library containing leveldb::NewMemEnv])
+  TEMP_LIBS="$LIBS"
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $LEVELDB_CPPFLAGS"
+  for searchlib in "" "-lmemenv" ERR; do
+    if test "x$searchlib" = "xERR"; then
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([LevelDB's memenv helper not found; using --with-system-leveldb is not supported anyway])
+    fi
+    searchlib="$searchlib $LIBLEVELDB"
+    LIBS="$searchlib $TEMP_LIBS"
+    AC_LINK_IFELSE([AC_LANG_SOURCE([
+        #include <leveldb/env.h>
+        #include <memenv.h>
+
+        int main() {
+            leveldb::Env *myenv = leveldb::NewMemEnv(leveldb::Env::Default());
+            delete myenv;
+        }
+    ])],[
+      AC_MSG_RESULT([$searchlib])
+      LIBMEMENV="$searchlib"
+      break
+    ])
+  done
+  LIBS="$TEMP_LIBS"
+  CPPFLAGS="$TEMP_CPPFLAGS"
+fi
 AM_CONDITIONAL([EMBEDDED_LEVELDB],[test x$build_leveldb = xyes])
+AC_SUBST(LEVELDB_CPPFLAGS)
+AC_SUBST(LIBLEVELDB)
+AC_SUBST(LIBMEMENV)
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
