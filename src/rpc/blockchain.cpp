@@ -2618,7 +2618,11 @@ static RPCHelpMan savemempool()
     return RPCHelpMan{"savemempool",
                 "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
                 {},
-                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "filename", "the directory and file where the mempool was saved"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("savemempool", "")
             + HelpExampleRpc("savemempool", "")
@@ -2626,6 +2630,8 @@ static RPCHelpMan savemempool()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     if (!mempool.IsLoaded()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
@@ -2635,7 +2641,10 @@ static RPCHelpMan savemempool()
         throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
     }
 
-    return NullUniValue;
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("filename", (node.args->GetDataDirNet() / "mempool.dat").string());
+
+    return ret;
 },
     };
 }
