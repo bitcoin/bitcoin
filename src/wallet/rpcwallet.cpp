@@ -967,7 +967,8 @@ static RPCHelpMan addmultisigaddress()
                 "Each key is a Bitcoin address or hex-encoded public key.\n"
                 "This functionality is only intended for use with non-watchonly addresses.\n"
                 "See `importaddress` for watchonly p2sh address support.\n"
-                "If 'label' is specified, assign address to that label.\n",
+                "If 'label' is specified, assign address to that label.\n"
+                "Public keys can be sorted according to BIP67 during the request if required.\n",
                 {
                     {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys or addresses."},
                     {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The bitcoin addresses or hex-encoded public keys",
@@ -975,8 +976,14 @@ static RPCHelpMan addmultisigaddress()
                             {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "bitcoin address or hex-encoded public key"},
                         },
                         },
-                    {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"options|label", {RPCArg::Type::OBJ, RPCArg::Type::STR}, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                        {
+                            {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                            {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the address to."},
+                            {"sort", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to sort public keys according to BIP67."},
+                        },
+                        "options"},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{""}, "", "", {}, /* hidden */ true},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1005,11 +1012,45 @@ static RPCHelpMan addmultisigaddress()
 
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
-    std::string label;
-    if (!request.params[2].isNull())
-        label = LabelFromValue(request.params[2]);
-
     int required = request.params[0].get_int();
+
+    std::string label;
+    OutputType output_type = pwallet->m_default_address_type;
+    bool sort = false;
+
+    if (!request.params[2].isNull()) {
+        if (request.params[2].type() == UniValue::VSTR) {
+            // Backward compatibility
+            label = LabelFromValue(request.params[2]);
+        } else {
+            const UniValue& options = request.params[2];
+            RPCTypeCheckArgument(options, UniValue::VOBJ);
+            RPCTypeCheckObj(options,
+                {
+                    {"address_type", UniValueType(UniValue::VSTR)},
+                    {"label", UniValueType(UniValue::VSTR)},
+                    {"sort", UniValueType(UniValue::VBOOL)},
+                },
+                true, true);
+
+            if (options.exists("address_type")) {
+                if (!request.params[3].isNull()) {
+                    throw JSONRPCError(RPC_MISC_ERROR, "address_type provided in both options and 4th parameter");
+                }
+                if (!ParseOutputType(options["address_type"].get_str(), output_type)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", options["address_type"].get_str()));
+                }
+            }
+
+            if (options.exists("label")) {
+                label = LabelFromValue(options["label"]);
+            }
+
+            if (options.exists("sort")) {
+                sort = options["sort"].get_bool();
+            }
+        }
+    }
 
     // Get the public keys
     const UniValue& keys_or_addrs = request.params[1].get_array();
@@ -1020,9 +1061,11 @@ static RPCHelpMan addmultisigaddress()
         } else {
             pubkeys.push_back(AddrToPubKey(spk_man, keys_or_addrs[i].get_str()));
         }
+        if (sort && !pubkeys.back().IsCompressed()) {
+            throw std::runtime_error(strprintf("Compressed key required for BIP67: %s", keys_or_addrs[i].get_str()));
+        }
     }
 
-    OutputType output_type = pwallet->m_default_address_type;
     if (!request.params[3].isNull()) {
         if (!ParseOutputType(request.params[3].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[3].get_str()));
@@ -1034,7 +1077,7 @@ static RPCHelpMan addmultisigaddress()
 
     // Construct using pay-to-script-hash:
     CScript inner;
-    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, spk_man, inner);
+    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, spk_man, inner, sort);
     pwallet->SetAddressBook(dest, label, "send");
 
     // Make the descriptor

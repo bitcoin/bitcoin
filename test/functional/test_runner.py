@@ -235,6 +235,7 @@ BASE_SCRIPTS = [
     'mempool_accept.py',
     'mempool_expiry.py',
     'mempool_fee_histogram.py',
+    'rpc_sort_multisig.py',
     'wallet_import_rescan.py --legacy-wallet',
     'wallet_import_with_label.py --legacy-wallet',
     'wallet_importdescriptors.py --descriptors',
