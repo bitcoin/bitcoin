@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bech32.h>
 #include <coins.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
@@ -49,6 +50,7 @@ static RPCHelpMan validateaddress()
                 "\nReturn information about the given bitcoin address.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to validate"},
+                    {"address_type", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "DEPRECATED AND IGNORED", "", {}, /* hidden */ true},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -61,6 +63,7 @@ static RPCHelpMan validateaddress()
                         {RPCResult::Type::NUM, "witness_version", /* optional */ true, "The version number of the witness program"},
                         {RPCResult::Type::STR_HEX, "witness_program", /* optional */ true, "The hex value of the witness program"},
                         {RPCResult::Type::STR, "error", /* optional */ true, "Error message, if any"},
+                        {RPCResult::Type::NUM, "error_index", /* optional */ true, "DEPRECATED. The index of the first invalid character (if the address type provided is bech32)"},
                         {RPCResult::Type::STR, "error_locations", /* optional */ true, "Indices of errors locations in address, if known (e.g. Bech32 errors)"},
                     }
                 },
@@ -92,6 +95,7 @@ static RPCHelpMan validateaddress()
             std::vector<int> error_locations;
             error_msg = LocateErrorsInDestinationString(address, error_locations);
             if (!error_locations.empty()) {
+                ret.pushKV("error_index", error_locations.at(0));
                 UniValue indices(UniValue::VARR);
                 for (int i : error_locations) indices.push_back(i);
                 ret.pushKV("error_locations", indices);
