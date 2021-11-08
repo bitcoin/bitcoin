@@ -86,6 +86,7 @@ class BumpFeeTest(BitcoinTestFramework):
 
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
+        test_invalid_parameters(rbf_node, dest_address)
         for mode in ["default", "fee_rate"]:
             test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address)
         self.test_invalid_parameters(rbf_node, peer_node, dest_address)
@@ -157,12 +158,44 @@ class BumpFeeTest(BitcoinTestFramework):
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
             assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
                 rbf_node.bumpfee, rbfid, {"estimate_mode": v})
-        for mode in ["foo", Decimal("3.1415"), "sat/B", "BTC/kB"]:
+        for mode in ["foo", Decimal("3.1415"), "sat/vB", "BTC/kvB"]:
             assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                 rbf_node.bumpfee, rbfid, {"estimate_mode": mode})
 
         self.clear_mempool()
 
+def test_invalid_parameters(node, dest_address):
+    txid = spend_one_input(node, dest_address)
+    # invalid estimate mode
+    assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", node.bumpfee, txid, {
+        "estimate_mode": "moo",
+    })
+    assert_raises_rpc_error(-3, "Expected type string", node.bumpfee, txid, {
+        "estimate_mode": 38,
+    })
+    assert_raises_rpc_error(-3, "Expected type string", node.bumpfee, txid, {
+        "estimate_mode": {
+            "foo": "bar",
+        },
+    })
+    assert_raises_rpc_error(-8, "Invalid estimate_mode parameter", node.bumpfee, txid, {
+        "estimate_mode": Decimal("3.141592"),
+    })
+    # confTarget and conf_target
+    assert_raises_rpc_error(-8, "confTarget and conf_target options should not both be set", node.bumpfee, txid, {
+        "confTarget": 123,
+        "conf_target": 456,
+    })
+    # confTarget and totalFee (depends on -deprecatedrpc=totalFee)
+    assert_raises_rpc_error(-3, "Unexpected key totalFee", node.bumpfee, txid, {
+        "confTarget": 123,
+        "totalFee": 456,
+    })
+    # conf_target and totalFee (depends on -deprecatedrpc=totalFee)
+    assert_raises_rpc_error(-3, "Unexpected key totalFee", node.bumpfee, txid, {
+        "conf_target": 123,
+        "totalFee": 456,
+    })
 
 def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     self.log.info('Test simple bumpfee: {}'.format(mode))
