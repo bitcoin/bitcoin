@@ -108,6 +108,16 @@ class PSBTTest(BitcoinTestFramework):
         psbtx = self.nodes[1].walletprocesspsbt(psbtx1)['psbt']
         assert_equal(psbtx1, psbtx)
 
+        # Node 0 should not be able to sign the transaction with the wallet is locked
+        self.nodes[0].encryptwallet("password")
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].walletprocesspsbt, psbtx)
+
+        # Node 0 should be able to process without signing though
+        unsigned_tx = self.nodes[0].walletprocesspsbt(psbtx, False)
+        assert_equal(unsigned_tx['complete'], False)
+
+        self.nodes[0].walletpassphrase(passphrase="password", timeout=1000000)
+
         # Sign the transaction and send
         signed_tx = self.nodes[0].walletprocesspsbt(psbtx)['psbt']
         final_tx = self.nodes[0].finalizepsbt(signed_tx)['hex']
