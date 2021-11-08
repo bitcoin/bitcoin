@@ -6,7 +6,7 @@ qt_linux_packages:=qt expat libxcb xcb_proto libXau xproto freetype fontconfig l
 qt_android_packages=qt
 
 qt_darwin_packages=qt
-qt_mingw32_packages=qt
+qt_mingw32_packages=qt qtwinextras
 
 bdb_packages=bdb
 sqlite_packages=sqlite

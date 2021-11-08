@@ -274,6 +274,20 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     AC_MSG_RESULT([$bitcoin_enable_qt])
   fi
 
+  AC_MSG_CHECKING([whether to build with QWinTaskbarProgress support])
+  BITCOIN_QT_CHECK([
+    if test "x$have_qt_winextras" != xyes; then
+      AC_MSG_RESULT([no, ${qt_lib_prefix}WinExtras $qt_version not found])
+    elif test "x$have_dwmapi" != xyes; then
+      AC_MSG_RESULT([no, dwmapi missing])
+    else
+      AC_MSG_RESULT([yes])
+      QT_INCLUDES="$QT_INCLUDES $QT_WINEXTRAS_CFLAGS"
+      QT_LIBS="$QT_LIBS $QT_WINEXTRAS_LIBS"
+      AC_DEFINE(BITCOIN_QT_WIN_TASKBAR, 1, [Define this symbol if building with QWinTaskbarProgress])
+    fi
+  ])
+
   AC_SUBST(QT_PIE_FLAGS)
   AC_SUBST(QT_INCLUDES)
   AC_SUBST(QT_LIBS)
@@ -393,6 +407,16 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
     PKG_CHECK_MODULES([QT_TEST], [${qt_lib_prefix}Test${qt_lib_suffix} $qt_version], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
     if test "x$use_dbus" != xno; then
       PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
+    fi
+  ])
+
+  BITCOIN_QT_CHECK([
+    if test "x$TARGET_OS" = xwindows; then
+      PKG_CHECK_MODULES([QT_WINEXTRAS], [${qt_lib_prefix}WinExtras $qt_version], [
+        have_qt_winextras=yes
+      ],[
+        have_qt_winextras=no
+      ])
     fi
   ])
 ])
