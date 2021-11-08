@@ -634,6 +634,7 @@ AC_ARG_WITH([daemon],
 case $host in
   *mingw*)
      TARGET_OS=windows
+     AC_CHECK_LIB([mingwthrd],[main],, AC_MSG_ERROR(libmingwthrd missing))
      AC_CHECK_LIB([kernel32], [GetModuleFileNameA],, AC_MSG_ERROR(libkernel32 missing))
      AC_CHECK_LIB([user32],   [main],, AC_MSG_ERROR(libuser32 missing))
      AC_CHECK_LIB([gdi32],    [main],, AC_MSG_ERROR(libgdi32 missing))
