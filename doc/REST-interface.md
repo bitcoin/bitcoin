@@ -52,6 +52,20 @@ With the /notxdetails/ option JSON response will only contain the transaction ha
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
+#### Blockfilter Headers
+`GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+
+Given a block hash: returns <COUNT> amount of blockfilter headers in upward
+direction for the filter type <FILTERTYPE>.
+Returns empty if the block doesn't exist or it isn't in the active chain.
+
+#### Blockfilters
+`GET /rest/blockfilter/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>`
+
+Given a block hash: returns the block filter of the given block of type
+<FILTERTYPE>.
+Responds with 404 if the block doesn't exist.
+
 #### Blockhash by height
 `GET /rest/blockhashbyheight/<HEIGHT>.<bin|hex|json>`
 
