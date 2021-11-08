@@ -215,7 +215,9 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
 {
-    FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
+    fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
+    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+
     // The value at each offset is the offset.
     for (uint8_t j = 0; j < 40; ++j) {
         fwrite(&j, 1, 1, file);
@@ -343,7 +345,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // We can explicitly close the file, or the destructor will do it.
     bf.fclose();
 
-    fs::remove("streams_test_tmp");
+    fs::remove(streams_test_filename);
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
@@ -351,8 +353,9 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
     // Make this test deterministic.
     SeedInsecureRand(SeedRand::ZEROS);
 
+    fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
-        FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
+        FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
         size_t fileSize = InsecureRandRange(256);
         for (uint8_t i = 0; i < fileSize; ++i) {
             fwrite(&i, 1, 1, file);
@@ -453,7 +456,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 maxPos = currentPos;
         }
     }
-    fs::remove("streams_test_tmp");
+    fs::remove(streams_test_filename);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
