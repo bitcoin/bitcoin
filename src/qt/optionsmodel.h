@@ -62,6 +62,7 @@ public:
         UseEmbeddedMonospacedFont, // bool
         PeersTabAlternatingRowColors, // bool
         CoinControlFeatures,    // bool
+        SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int
         Prune,                  // bool
         PruneSize,              // int
@@ -90,6 +91,7 @@ public:
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getPeersTabAlternatingRowColors() const { return m_peers_tab_alternating_row_colors; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -115,6 +117,7 @@ private:
     bool m_use_embedded_monospaced_font;
     bool m_peers_tab_alternating_row_colors;
     bool fCoinControlFeatures;
+    bool m_sub_fee_from_amount;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 
