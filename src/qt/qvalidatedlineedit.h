@@ -29,6 +29,7 @@ private:
     const QValidator *checkValidator;
 
 public Q_SLOTS:
+    void setText(const QString&);
     void setValid(bool valid);
     void setEnabled(bool enabled);
 
