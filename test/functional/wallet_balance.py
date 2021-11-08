@@ -11,6 +11,8 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
+    assert_is_hash_string,
     assert_raises_rpc_error,
 )
 
@@ -166,8 +168,13 @@ class WalletTest(BitcoinTestFramework):
                                                  'untrusted_pending': Decimal('30.0') - fee_node_1}}  # Doesn't include output of node 0's send since it was spent
             if self.options.descriptors:
                 del expected_balances_0["watchonly"]
-            assert_equal(self.nodes[0].getbalances(), expected_balances_0)
-            assert_equal(self.nodes[1].getbalances(), expected_balances_1)
+            balances_0 = self.nodes[0].getbalances()
+            balances_1 = self.nodes[1].getbalances()
+            # remove lastprocessedblock keys (they will be tested later)
+            del balances_0['lastprocessedblock']
+            del balances_1['lastprocessedblock']
+            assert_equal(balances_0, expected_balances_0)
+            assert_equal(balances_1, expected_balances_1)
             # getbalance without any arguments includes unconfirmed transactions, but not untrusted transactions
             assert_equal(self.nodes[0].getbalance(), Decimal('9.99'))  # change from node 0's send
             assert_equal(self.nodes[1].getbalance(), Decimal('0'))  # node 1's send had an unsafe input
@@ -267,6 +274,33 @@ class WalletTest(BitcoinTestFramework):
         self.sync_all()
         assert_equal(self.nodes[0].getbalances()['mine']['trusted'], total_amount + 1)  # The reorg recovered our fee of 1 coin
 
+
+        #Tests the lastprocessedblock JSON object in getbalances, getwalletinfo
+        #and gettransaction by checking for valid hex strings and by comparing
+        #the hashes & heights between generated blocks.
+        self.log.info("Test getbalances returns expected lastprocessedblock json object")
+        self.nodes[0].generatetoaddress(2, self.nodes[0].get_deterministic_priv_key().address)
+        balances = self.nodes[0].getbalances()
+        assert_greater_than(balances['mine']['immature'], 0)
+
+        prev_hash = self.nodes[0].getbestblockhash()
+        prev_height = self.nodes[0].getblock(prev_hash)['height']
+        self.nodes[0].generatetoaddress(5, self.nodes[0].get_deterministic_priv_key().address)
+        lastblock = self.nodes[0].getbalances()['lastprocessedblock']
+        assert_is_hash_string(lastblock['hash'])
+        assert_equal((prev_hash == lastblock['hash']), False)
+        assert_greater_than(lastblock['height'], prev_height)
+
+        self.log.info("Test getwalletinfo returns expected lastprocessedblock json object")
+        walletinfo = self.nodes[0].getwalletinfo()
+        assert_greater_than(walletinfo['lastprocessedblock']['height'], 0)
+        assert_is_hash_string(walletinfo['lastprocessedblock']['hash'])
+
+        self.log.info("Test gettransaction returns expected lastprocessedblock json object")
+        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        self.nodes[0].generatetoaddress(6, self.nodes[0].get_deterministic_priv_key().address)
+        tx_info = self.nodes[0].gettransaction(txid)
+        assert_is_hash_string(tx_info['lastprocessedblock']['hash'])
 
 if __name__ == '__main__':
     WalletTest().main()
