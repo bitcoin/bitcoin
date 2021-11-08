@@ -122,9 +122,12 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 
         uint256 expected_block_hash{pindex->pprev->GetBlockHash()};
         if (read_out.first != expected_block_hash) {
+            LogPrintf("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
+                      read_out.first.ToString(), expected_block_hash.ToString());
+
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
-                return error("%s: previous block header belongs to unexpected block %s; expected %s",
-                             __func__, read_out.first.ToString(), expected_block_hash.ToString());
+                return error("%s: previous block header not found; expected %s",
+                             __func__, expected_block_hash.ToString());
             }
         }
 
@@ -219,7 +222,10 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     m_muhash.Finalize(out);
     value.second.muhash = out;
 
-    return m_db->Write(DBHeightKey(pindex->nHeight), value) && m_db->Write(DB_MUHASH, m_muhash);
+    CDBBatch batch(*m_db);
+    batch.Write(DBHeightKey(pindex->nHeight), value);
+    batch.Write(DB_MUHASH, m_muhash);
+    return m_db->WriteBatch(batch);
 }
 
 static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
@@ -391,9 +397,12 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
 
         uint256 expected_block_hash{pindex->pprev->GetBlockHash()};
         if (read_out.first != expected_block_hash) {
+            LogPrintf("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
+                      read_out.first.ToString(), expected_block_hash.ToString());
+
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
-                return error("%s: previous block header belongs to unexpected block %s; expected %s",
-                             __func__, read_out.first.ToString(), expected_block_hash.ToString());
+                return error("%s: previous block header not found; expected %s",
+                             __func__, expected_block_hash.ToString());
             }
         }
     }
