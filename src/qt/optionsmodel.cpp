@@ -16,14 +16,17 @@
 #include <index/blockfilterindex.h>
 #include <interfaces/node.h>
 #include <mapport.h>
+#include <policy/policy.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netbase.h>
 #include <node/context.h>
 #include <outputtype.h>
+#include <policy/settings.h>
 #include <txdb.h>       // for -dbcache defaults
+#include <util/moneystr.h> // for FormatMoney
 #include <util/string.h>
-#include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
+#include <validation.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
@@ -36,6 +39,17 @@
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
 static const QString GetDefaultProxyAddress();
+
+static QString CanonicalMempoolReplacement()
+{
+    if (!fEnableReplacement) {
+        return "never";
+    } else if (fReplacementHonourOptOut) {
+        return "fee,optin";
+    } else {
+        return "fee,-optin";
+    }
+}
 
 OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
     QAbstractListModel(parent)
@@ -202,6 +216,7 @@ void OptionsModel::Init(bool resetSettings)
 
     // rwconf settings that require a restart
     f_peerbloomfilters = gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS);
+    f_rejectspkreuse = (SpkReuseMode != SRM_ALLOW);
 
     // Display
     if (!settings.contains("language"))
@@ -408,6 +423,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return m_use_embedded_monospaced_font;
         case PeersTabAlternatingRowColors:
             return m_peers_tab_alternating_row_colors;
+#ifdef ENABLE_WALLET
+        case walletrbf:
+            return gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
+#endif
         case CoinControlFeatures:
             return fCoinControlFeatures;
         case PruneMiB:
@@ -426,6 +445,56 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return f_peerbloomfilters;
         case peerblockfilters:
             return gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS);
+        case mempoolreplacement:
+            return CanonicalMempoolReplacement();
+        case maxorphantx:
+            return qlonglong(gArgs.GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
+        case maxmempool:
+            return qlonglong(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE));
+        case incrementalrelayfee:
+            return qlonglong(incrementalRelayFee.GetFeePerK());
+        case mempoolexpiry:
+            return qlonglong(gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY));
+        case rejectunknownscripts:
+            return fRequireStandard;
+        case rejectspkreuse:
+            return f_rejectspkreuse;
+        case minrelaytxfee:
+            return qlonglong(::minRelayTxFee.GetFeePerK());
+        case bytespersigop:
+            return nBytesPerSigOp;
+        case bytespersigopstrict:
+            return nBytesPerSigOpStrict;
+        case limitancestorcount:
+            return qlonglong(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT));
+        case limitancestorsize:
+            return qlonglong(gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT));
+        case limitdescendantcount:
+            return qlonglong(gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
+        case limitdescendantsize:
+            return qlonglong(gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT));
+        case rejectbaremultisig:
+            return !fIsBareMultisigStd;
+        case datacarriersize:
+            return fAcceptDatacarrier ? qlonglong(nMaxDatacarrierBytes) : qlonglong(0);
+        case dustrelayfee:
+            return qlonglong(dustRelayFee.GetFeePerK());
+        case blockmintxfee:
+            if (gArgs.IsArgSet("-blockmintxfee")) {
+                CAmount n = 0;
+                ParseMoney(gArgs.GetArg("-blockmintxfee", ""), n);
+                return qlonglong(n);
+            } else {
+                return qlonglong(DEFAULT_BLOCK_MIN_TX_FEE);
+            }
+        case blockmaxsize:
+            return qlonglong(gArgs.GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE) / 1000);
+        case blockprioritysize:
+            return qlonglong(gArgs.GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) / 1000);
+        case blockmaxweight:
+            return qlonglong(gArgs.GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT) / 1000);
+        case blockreconstructionextratxn:
+            return qlonglong(gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN));
         default:
             return QVariant();
         }
@@ -593,6 +662,21 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("PeersTabAlternatingRowColors", m_peers_tab_alternating_row_colors);
             Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
             break;
+#ifdef ENABLE_WALLET
+        case walletrbf:
+        {
+            const bool fNewValue = value.toBool();
+            if (fNewValue != gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF)) {
+                const std::string newvalue_str = strprintf("%d", fNewValue);
+                gArgs.ModifyRWConfigFile("walletrbf", newvalue_str);
+                gArgs.ForceSetArg("-walletrbf", newvalue_str);
+                for (auto& wallet : GetWallets()) {
+                    wallet->m_signal_rbf = fNewValue;
+                }
+            }
+            break;
+        }
+#endif
         case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
@@ -668,6 +752,253 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             }
             break;
         }
+        case mempoolreplacement:
+        {
+            QString nv = value.toString();
+            if (nv != CanonicalMempoolReplacement()) {
+                if (nv == "never") {
+                    fEnableReplacement = false;
+                    fReplacementHonourOptOut = true;
+                } else if (nv == "fee,optin") {
+                    fEnableReplacement = true;
+                    fReplacementHonourOptOut = true;
+                } else {  // "fee,-optin"
+                    fEnableReplacement = true;
+                    fReplacementHonourOptOut = false;
+                }
+                gArgs.ModifyRWConfigFile("mempoolreplacement", nv.toStdString());
+            }
+            break;
+        }
+        case maxorphantx:
+        {
+            unsigned int nMaxOrphanTx = gArgs.GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS);
+            unsigned int nNv = value.toLongLong();
+            if (nNv != nMaxOrphanTx) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-maxorphantx", strNv);
+                gArgs.ModifyRWConfigFile("maxorphantx", strNv);
+                if (nNv < nMaxOrphanTx) {
+                    assert(node().context() && node().context()->peerman);
+                    unsigned int nEvicted = node().context()->peerman->LimitOrphanTxSize(nNv);
+                    if (nEvicted > 0) {
+                        LogPrint(BCLog::MEMPOOL, "maxorphantx reduced from %d to %d, removed %u tx\n", nMaxOrphanTx, nNv, nEvicted);
+                    }
+                }
+            }
+            break;
+        }
+        case maxmempool:
+        {
+            long long nOldValue = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE);
+            long long nNv = value.toLongLong();
+            if (nNv != nOldValue) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-maxmempool", strNv);
+                gArgs.ModifyRWConfigFile("maxmempool", strNv);
+                if (nNv < nOldValue) {
+                    LOCK(cs_main);
+                    auto node_ctx = node().context();
+                    assert(node_ctx && node_ctx->mempool && node_ctx->chainman);
+                    auto& active_chainstate = node_ctx->chainman->ActiveChainstate();
+                    LimitMempoolSize(*node_ctx->mempool, active_chainstate.CoinsTip());
+                }
+            }
+            break;
+        }
+        case incrementalrelayfee:
+        {
+            CAmount nNv = value.toLongLong();
+            if (nNv != incrementalRelayFee.GetFeePerK()) {
+                gArgs.ModifyRWConfigFile("incrementalrelayfee", FormatMoney(nNv));
+                incrementalRelayFee = CFeeRate(nNv);
+            }
+            break;
+        }
+        case mempoolexpiry:
+        {
+            long long nOldValue = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY);
+            long long nNv = value.toLongLong();
+            if (nNv != nOldValue) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-mempoolexpiry", strNv);
+                gArgs.ModifyRWConfigFile("mempoolexpiry", strNv);
+                if (nNv < nOldValue) {
+                    LOCK(cs_main);
+                    auto node_ctx = node().context();
+                    assert(node_ctx && node_ctx->mempool && node_ctx->chainman);
+                    auto& active_chainstate = node_ctx->chainman->ActiveChainstate();
+                    LimitMempoolSize(*node_ctx->mempool, active_chainstate.CoinsTip());
+                }
+            }
+            break;
+        }
+        case rejectunknownscripts:
+        {
+            const bool fNewValue = value.toBool();
+            if (fNewValue != fRequireStandard) {
+                fRequireStandard = fNewValue;
+                // This option is inverted in the config:
+                gArgs.ModifyRWConfigFile("acceptnonstdtxn", strprintf("%d", ! fNewValue));
+            }
+            break;
+        }
+        case rejectspkreuse:
+        {
+            const bool fNewValue = value.toBool();
+            if (f_rejectspkreuse != fNewValue) {
+                gArgs.ModifyRWConfigFile("spkreuse", fNewValue ? "conflict" : "allow");
+                f_rejectspkreuse = fNewValue;
+                setRestartRequired(true);
+            }
+            break;
+        }
+        case minrelaytxfee:
+        {
+            CAmount nNv = value.toLongLong();
+            if (nNv != ::minRelayTxFee.GetFeePerK()) {
+                gArgs.ModifyRWConfigFile("minrelaytxfee", FormatMoney(nNv));
+                ::minRelayTxFee = CFeeRate(nNv);
+            }
+            break;
+        }
+        case bytespersigop:
+        {
+            unsigned int nNv = value.toLongLong();
+            if (nNv != nBytesPerSigOp) {
+                gArgs.ModifyRWConfigFile("bytespersigop", value.toString().toStdString());
+                nBytesPerSigOp = nNv;
+            }
+            break;
+        }
+        case bytespersigopstrict:
+        {
+            unsigned int nNv = value.toLongLong();
+            if (nNv != nBytesPerSigOpStrict) {
+                gArgs.ModifyRWConfigFile("bytespersigopstrict", value.toString().toStdString());
+                nBytesPerSigOpStrict = nNv;
+            }
+            break;
+        }
+        case limitancestorcount:
+        {
+            long long nOldValue = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+            long long nNv = value.toLongLong();
+            if (nNv != nOldValue) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-limitancestorcount", strNv);
+                gArgs.ModifyRWConfigFile("limitancestorcount", strNv);
+            }
+            break;
+        }
+        case limitancestorsize:
+        {
+            long long nOldValue = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT);
+            long long nNv = value.toLongLong();
+            if (nNv != nOldValue) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-limitancestorsize", strNv);
+                gArgs.ModifyRWConfigFile("limitancestorsize", strNv);
+            }
+            break;
+        }
+        case limitdescendantcount:
+        {
+            long long nOldValue = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+            long long nNv = value.toLongLong();
+            if (nNv != nOldValue) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-limitdescendantcount", strNv);
+                gArgs.ModifyRWConfigFile("limitdescendantcount", strNv);
+            }
+            break;
+        }
+        case limitdescendantsize:
+        {
+            long long nOldValue = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT);
+            long long nNv = value.toLongLong();
+            if (nNv != nOldValue) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-limitdescendantsize", strNv);
+                gArgs.ModifyRWConfigFile("limitdescendantsize", strNv);
+            }
+            break;
+        }
+        case rejectbaremultisig:
+        {
+            // The config and internal option is inverted
+            const bool fNewValue = ! value.toBool();
+            if (fNewValue != fIsBareMultisigStd) {
+                fIsBareMultisigStd = fNewValue;
+                gArgs.ModifyRWConfigFile("permitbaremultisig", strprintf("%d", fNewValue));
+            }
+            break;
+        }
+        case datacarriersize:
+        {
+            const int nNewSize = value.toInt();
+            const bool fNewEn = (nNewSize > 0);
+            if (fNewEn && unsigned(nNewSize) != nMaxDatacarrierBytes) {
+                gArgs.ModifyRWConfigFile("datacarriersize", value.toString().toStdString());
+                nMaxDatacarrierBytes = nNewSize;
+            }
+            if (fNewEn != fAcceptDatacarrier) {
+                gArgs.ModifyRWConfigFile("datacarrier", strprintf("%d", fNewEn));
+                fAcceptDatacarrier = fNewEn;
+            }
+            break;
+        }
+        case dustrelayfee:
+        {
+            CAmount nNv = value.toLongLong();
+            if (nNv != dustRelayFee.GetFeePerK()) {
+                gArgs.ModifyRWConfigFile("dustrelayfee", FormatMoney(nNv));
+                dustRelayFee = CFeeRate(nNv);
+            }
+            break;
+        }
+        case blockmintxfee:
+            if (value != data(index, role)) {
+                std::string strNv = FormatMoney(value.toLongLong());
+                gArgs.ForceSetArg("-blockmintxfee", strNv);
+                gArgs.ModifyRWConfigFile("blockmintxfee", strNv);
+            }
+            break;
+        case blockmaxsize:
+        case blockprioritysize:
+        case blockmaxweight:
+        {
+            const int nNewValue_kB = value.toInt();
+            const int nOldValue_kB = data(index, role).toInt();
+            if (nNewValue_kB != nOldValue_kB) {
+                std::string strNv = strprintf("%d000", nNewValue_kB);
+                std::string strKey;
+                switch(index.row()) {
+                    case blockmaxsize:
+                        strKey = "blockmaxsize";
+                        break;
+                    case blockprioritysize:
+                        strKey = "blockprioritysize";
+                        break;
+                    case blockmaxweight:
+                        strKey = "blockmaxweight";
+                        break;
+                }
+                gArgs.ForceSetArg("-" + strKey, strNv);
+                gArgs.ModifyRWConfigFile(strKey, strNv);
+            }
+            break;
+        }
+        case blockreconstructionextratxn:
+            if (value.toLongLong() != gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN)) {
+                std::string strNv = value.toString().toStdString();
+                gArgs.ForceSetArg("-blockreconstructionextratxn", strNv);
+                gArgs.ModifyRWConfigFile("blockreconstructionextratxn", strNv);
+            }
+            break;
+        case corepolicy:
+            gArgs.ModifyRWConfigFile("corepolicy", value.toString().toStdString());
+            break;
         default:
             break;
         }
