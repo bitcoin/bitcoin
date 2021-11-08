@@ -654,6 +654,17 @@ AC_ARG_WITH([daemon],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
+can_render_icons=yes
+AC_PATH_PROGS([RSVG_CONVERT],[rsvg-convert rsvg],no)
+AC_PATH_PROGS([IMAGEMAGICK_CONVERT],[convert],no)
+AC_PATH_PROGS([PNG2ICNS],[png2icns],no)
+
+if test x$RSVG_CONVERT = xno; then
+  can_render_icons='rsvg-convert'
+elif test x$IMAGEMAGICK_CONVERT = xno; then
+  can_render_icons='(ImageMagick) convert'
+fi
+
 case $host in
   *mingw*)
      TARGET_OS=windows
@@ -702,6 +713,10 @@ case $host in
      AX_CHECK_LINK_FLAG([[-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1]],[LDFLAGS="$LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"],,[[$LDFLAG_WERROR]])
      ;;
   *darwin*)
+     if test x$PNG2ICNS = xno; then
+       can_render_icons='png2icns'
+     fi
+
      TARGET_OS=darwin
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
@@ -740,8 +755,6 @@ case $host in
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([XORRISOFS], [xorrisofs], xorrisofs)
            AC_PATH_PROGS([DMG], [dmg], dmg)
-           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
-           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
            AC_PATH_PROGS([TIFFCP], [tiffcp],tiffcp)
 
            dnl libtool will try to strip the static lib, which is a problem for
@@ -780,6 +793,8 @@ case $host in
      TARGET_OS=linux
      ;;
 esac
+
+AM_CONDITIONAL([CAN_RENDER_ICONS], [test x$can_render_icons = xyes])
 
 if test x$use_extended_functional_tests != xno; then
   AC_SUBST(EXTENDED_FUNCTIONAL_TESTS, --extended)

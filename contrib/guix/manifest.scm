@@ -628,6 +628,9 @@ inspecting signatures in Mach-O binaries.")
         automake
         pkg-config
         bison
+        imagemagick
+        libicns
+        librsvg
         ;; Scripting
         perl
         python-3
