@@ -1306,6 +1306,7 @@ static RPCHelpMan gettxout()
                 {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "", {
                     {RPCResult::Type::STR, "asm", ""},
+                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output\n"},
                     {RPCResult::Type::STR_HEX, "hex", ""},
                     {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                     {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},

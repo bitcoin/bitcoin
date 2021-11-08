@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <key_io.h>
+#include <script/descriptor.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <serialize.h>
@@ -167,6 +168,8 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     int nRequired;
 
     out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
+    out.pushKV("desc", InferDescriptor(scriptPubKey, DUMMY_SIGNING_PROVIDER)->ToString());
+
     if (fIncludeHex)
         out.pushKV("hex", HexStr(scriptPubKey));
 
