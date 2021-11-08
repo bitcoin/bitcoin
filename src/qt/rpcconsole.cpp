@@ -38,6 +38,7 @@
 #include <QAbstractItemModel>
 #include <QDateTime>
 #include <QFont>
+#include <QFontMetrics>
 #include <QKeyEvent>
 #include <QLatin1String>
 #include <QLocale>
@@ -664,6 +665,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         connect(model, &ClientModel::mempoolSizeChanged, this, &RPCConsole::setMempoolSize);
 
         // set up peer table
+        clientModel->getPeerTableModel()->updatePalette();
         ui->peerWidget->setModel(model->peerTableSortProxy());
         ui->peerWidget->verticalHeader()->hide();
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -671,7 +673,14 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
         if (!ui->peerWidget->horizontalHeader()->restoreState(m_peer_widget_header_state)) {
+            const QFontMetrics fm = ui->peerWidget->fontMetrics();
+            ui->peerWidget->setColumnWidth(PeerTableModel::NetNodeId, GUIUtil::TextWidth(fm, "99999"));
+            ui->peerWidget->setColumnWidth(PeerTableModel::Direction, DIRECTION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
+            ui->peerWidget->setColumnWidth(PeerTableModel::ConnectionType, GUIUtil::TextWidth(fm, GUIUtil::ConnectionTypeToQString(ConnectionType::ADDR_FETCH /* TODO: Find the longest string? */, /* prepend_direction */ false)));
+            const auto bytesize_width = GUIUtil::TextWidth(fm, GUIUtil::formatBytes(999'000'000'000) + "x");
+            ui->peerWidget->setColumnWidth(PeerTableModel::Sent, bytesize_width);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Received, bytesize_width);
             ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
         }
@@ -898,6 +907,10 @@ void RPCConsole::changeEvent(QEvent* e)
                 QTextDocument::ImageResource,
                 QUrl(ICON_MAPPING[i].url),
                 platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(QSize(consoleFontSize * 2, consoleFontSize * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+        }
+
+        if (clientModel && clientModel->getPeerTableModel()) {
+            clientModel->getPeerTableModel()->updatePalette();
         }
     }
 
