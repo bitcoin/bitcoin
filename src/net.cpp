@@ -47,6 +47,7 @@
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <math.h>
 
@@ -111,6 +112,27 @@ RecursiveMutex cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
 static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
 std::string strSubVersion;
+
+/**
+ * Check if making an automatic outbound connection to the given address is allowed.
+ * Could be restricted by the `-onlynet` configuration option.
+ * @return true if allowed
+ */
+static bool OutboundConnectionAllowedTo(const CNetAddr& addr)
+{
+    if (!gArgs.IsArgSet("-onlynet")) {
+        return true;
+    }
+
+    const auto check_network = addr.GetNetwork();
+    for (const std::string& net : gArgs.GetArgs("-onlynet")) {
+        if (ParseNetwork(net) == check_network) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 void CConnman::AddAddrFetch(const std::string& strDest)
 {
@@ -2008,7 +2030,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 m_anchors.pop_back();
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
-                    setConnected.count(addr.GetGroup(addrman.m_asmap))) continue;
+                    setConnected.count(addr.GetGroup(addrman.m_asmap)) ||
+                    !OutboundConnectionAllowedTo(addr)) continue;
                 addrConnect = addr;
                 LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToString());
                 break;
@@ -2079,6 +2102,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // port, causing a DoS attack as nodes around the network attempt
             // to connect to it fruitlessly.
             if (addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && nTries < 50) {
+                continue;
+            }
+
+            if (!OutboundConnectionAllowedTo(addr)) {
                 continue;
             }
 
