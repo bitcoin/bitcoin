@@ -2,16 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Yeni bir adres oluşturun</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Yeni</translation>
+        <translation>&amp;Yeni</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,11 +15,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Kopyala</translation>
+        <translation>&amp;Kopyala</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">Kapat</translation>
+        <translation>Kapat</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -31,7 +27,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Aramak için adres veya etiket girin</translation>
+        <translation>Aramak için adres veya etiket girin</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -47,50 +43,44 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Coin gönderilecek adresi seçiniz</translation>
+        <translation>Coin gönderilecek adresi seçiniz</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Bitcoinleri alacağınız adresi seçin</translation>
+        <translation>Bitcoinleri alacağınız adresi seçin</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">S&amp;ç</translation>
+        <translation>S&amp;ç</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Gönderici adresler</translation>
+        <translation>Gönderici adresler</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">Alıcı adresler</translation>
+        <translation>Alıcı adresler</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Bunlar Bitcoinleriniz için gönderici adreslerinizdir.
+        <translation>Bunlar Bitcoinleriniz için gönderici adreslerinizdir.
 Gönderim yapmadan önce her zaman tutarı ve alıcı adresi kontrol ediniz.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Bunlar ödeme almak için kullanacağınız bitcoin adreslerinizdir. Yeni adres oluşturmak için ödeme alma sekmesindeki 'Yeni alıcı adresi oluşturun' kısmına tıklayın.
-İmzalama sadece 'legacy' tipindeki adreslerle mümkündür.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">Adresi kopyala</translation>
+        <translation>Adresi kopyala</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">Etiketi kopyala</translation>
+        <translation>Etiketi kopyala</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;Düzenle</translation>
+        <translation>&amp;Düzenle</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Adres Listesini Dışa Aktar</translation>
+        <translation>Adres Listesini Dışa Aktar</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -100,26 +90,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">Adres listesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi. Lütfen tekrar deneyin.</translation>
+        <translation>Adres listesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi. Lütfen tekrar deneyin.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Dışa Aktarım Başarısız Oldu</translation>
+        <translation>Dışa Aktarım Başarısız Oldu</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiket</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adres</translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(etiket yok)</translation>
+        <translation>(etiket yok)</translation>
     </message>
 </context>
 <context>
@@ -142,107 +132,107 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Parolayı göster</translation>
+        <translation>Parolayı göster</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">Cüzdan şifrele</translation>
+        <translation>Cüzdan şifrele</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Bu işlemi yapabilmek için cüzdan parolanızı girmeniz gerekmektedir
+        <translation>Bu işlemi yapabilmek için cüzdan parolanızı girmeniz gerekmektedir
 Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished">Cüzdan kilidini aç</translation>
+        <translation>Cüzdan kilidini aç</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">Parola değiştir</translation>
+        <translation>Parola değiştir</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">Cüzdan şifrelemeyi onayla</translation>
+        <translation>Cüzdan şifrelemeyi onayla</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Uyarı: Cüzdanınızı şifreler ve parolanızı unutursanız &lt;b&gt;TÜM BITCOINLERINIZI KAYBEDERSİNİZ&lt;/b&gt;!</translation>
+        <translation>Uyarı: Cüzdanınızı şifreler ve parolanızı unutursanız &lt;b&gt;TÜM BITCOINLERINIZI KAYBEDERSİNİZ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished">Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
+        <translation>Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">Cüzdan şifrelendi</translation>
+        <translation>Cüzdan şifrelendi</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">Cüzdan için yeni parolanızı girin. &lt;br/&gt;Lütfen &lt;b&gt;on veya daha fazla rastgele karakter&lt;/b&gt;ya da &lt;b&gt;sekiz veya daha fazla sözcük&lt;/b&gt; içeren bir parola kullanın.</translation>
+        <translation>Cüzdan için yeni parolanızı girin. &lt;br/&gt;Lütfen &lt;b&gt;on veya daha fazla rastgele karakter&lt;/b&gt;ya da &lt;b&gt;sekiz veya daha fazla sözcük&lt;/b&gt; içeren bir parola kullanın.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Cüzdanınızın eski ve yeni parolasını giriniz.</translation>
+        <translation>Cüzdanınızın eski ve yeni parolasını giriniz.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Cüzdanınızı şifrelemenin bilgisayarınıza bulaşan kötü amaçlı yazılımlar tarafından bitcoinlerinizin çalınmasına karşı tamamen koruyamayacağını unutmayın.</translation>
+        <translation>Cüzdanınızı şifrelemenin bilgisayarınıza bulaşan kötü amaçlı yazılımlar tarafından bitcoinlerinizin çalınmasına karşı tamamen koruyamayacağını unutmayın.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation type="unfinished">Şifrelenecek cüzdan</translation>
+        <translation>Şifrelenecek cüzdan</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation type="unfinished">Cüzdanınız şifrelenmek üzere</translation>
+        <translation>Cüzdanınız şifrelenmek üzere</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation type="unfinished">Cüzdanınız şu an şifrelenmiş</translation>
+        <translation>Cüzdanınız şu an şifrelenmiş</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished">ÖNEMLİ: Yedeklediğiniz cüzdan dosyalarını yeni ve şifrelenmiş cüzdan dosyası ile değiştirmelisiniz. Güvenlik nedeniyle şifrelenmiş cüzdanı kullanmaya başladığınızda eski şifrelenmemiş cüzdan dosyaları kullanılamaz hale gelecektir.</translation>
+        <translation>ÖNEMLİ: Yedeklediğiniz cüzdan dosyalarını yeni ve şifrelenmiş cüzdan dosyası ile değiştirmelisiniz. Güvenlik nedeniyle şifrelenmiş cüzdanı kullanmaya başladığınızda eski şifrelenmemiş cüzdan dosyaları kullanılamaz hale gelecektir.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished">Cüzdan şifreleme başarısız oldu</translation>
+        <translation>Cüzdan şifreleme başarısız oldu</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">Dahili bir hata nedeniyle cüzdan şifreleme başarısız oldu. Cüzdanınız şifrelenmedi.</translation>
+        <translation>Dahili bir hata nedeniyle cüzdan şifreleme başarısız oldu. Cüzdanınız şifrelenmedi.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished">Girilen parolalar eşleşmiyor.</translation>
+        <translation>Girilen parolalar eşleşmiyor.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished">Cüzdan kilidi açma başarız oldu</translation>
+        <translation>Cüzdan kilidi açma başarız oldu</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished">Cüzdan parolasının kaldırılması için girilen parola yanlış.</translation>
+        <translation>Cüzdan parolasının kaldırılması için girilen parola yanlış.</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished">Cüzdan parolası başarılı bir şekilde değiştirildi</translation>
+        <translation>Cüzdan parolası başarılı bir şekilde değiştirildi</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished">Uyarı: Caps lock açık</translation>
+        <translation>Uyarı: Caps lock açık</translation>
     </message>
 </context>
 <context>
     <name>BanTableModel</name>
     <message>
         <source>IP/Netmask</source>
-        <translation type="unfinished">İP/Ağ maskesi</translation>
+        <translation>İP/Ağ maskesi</translation>
     </message>
     <message>
         <source>Banned Until</source>
-        <translation type="unfinished">Kadar Yasaklı</translation>
+        <translation>Kadar Yasaklı</translation>
     </message>
 </context>
 <context>
@@ -252,115 +242,12 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Sızıntı istisnası</translation>
     </message>
     <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Ölümcül bir hata oluştu. %1 yazılımı artık güvenli bir şekilde çalışmaya devam edemediği için kapatılacaktır.</translation>
+    </message>
+    <message>
         <source>Internal error</source>
         <translation type="unfinished">İç hata</translation>
-    </message>
-    </context>
-<context>
-    <name>QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Hata: Belirtilen "%1" veri klasörü yoktur.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Hata: %1 yapılandırma dosyası ayrıştırılamadı. </translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation type="unfinished">Hata: %1</translation>
-    </message>
-    <message>
-        <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">%1  henüz güvenli bir şekilde çıkış yapmadı...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="unfinished">bilinmeyen</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation type="unfinished">Mitar</translation>
-    </message>
-    <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Bir bitcoin adresi giriniz (örneğin %1)</translation>
-    </message>
-    <message>
-        <source>Internal</source>
-        <translation type="unfinished">Dahili</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation type="unfinished">Gelen</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation type="unfinished">yurt dışı</translation>
-    </message>
-    <message>
-        <source>%1 d</source>
-        <translation type="unfinished">%1 g</translation>
-    </message>
-    <message>
-        <source>%1 h</source>
-        <translation type="unfinished">%1 sa</translation>
-    </message>
-    <message>
-        <source>%1 m</source>
-        <translation type="unfinished">%1 d</translation>
-    </message>
-    <message>
-        <source>%1 s</source>
-        <translation type="unfinished">%1 sn</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation type="unfinished">Boş</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation type="unfinished">Mevcut değil</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation>
-            <numerusform>%n saniye</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation>
-            <numerusform>%n dakika</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation type="unfinished">
-            <numerusform>%n saat</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform>%ngün</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation type="unfinished">
-            <numerusform>%n hafta</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation type="unfinished">%1 ve %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished">
-            <numerusform>%n yıl</numerusform>
-        </translation>
     </message>
     </context>
 <context>
@@ -391,11 +278,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">&amp;Hakkında %1</translation>
+        <translation>&amp;Hakkında %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation type="unfinished">%1 hakkındaki bilgileri göster</translation>
+        <translation>%1 hakkındaki bilgileri göster</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -407,24 +294,32 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished">%1 için yapılandırma seçeneklerini değiştirin</translation>
+        <translation>%1 için yapılandırma seçeneklerini değiştirin</translation>
+    </message>
+    <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation>&amp;PBT'yi panodan yükle…</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">Yeni bir cüzdan oluştur</translation>
+        <translation>Yeni bir cüzdan oluştur</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Küçült</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">Cüzdan:</translation>
+        <translation>Cüzdan:</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">Network aktivitesi devre dışı bırakıldı</translation>
+        <translation>Network aktivitesi devre dışı bırakıldı</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <translation type="unfinished">Proxy &lt;b&gt;etkinleştirildi&lt;/b&gt;: %1 </translation>
+        <translation>Proxy &lt;b&gt;etkinleştirildi&lt;/b&gt;: %1 </translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -495,10 +390,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">&amp;PSBT'yi dosyadan yükle...</translation>
     </message>
     <message>
-        <source>Load PSBT from clipboard…</source>
-        <translation type="unfinished">PBT'yi panodan yükle...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI…</source>
         <translation type="unfinished">&amp;URI 'ı Aç...</translation>
     </message>
@@ -531,8 +422,24 @@ Cüzdan kilidini aç.</translation>
         <translation>Araç çubuğu sekmeleri</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Başlıklar senkronize ediliyor (%1%)...</translation>
+    </message>
+    <message>
         <source>Synchronizing with network…</source>
         <translation type="unfinished">Ağ ile senkronize ediliyor...</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">Bloklar disk üzerinde indeksleniyor…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation type="unfinished">Diskteki bloklar işleniyor…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation type="unfinished">Diskteki blokları yeniden indeksleme …</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -540,25 +447,27 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Ödeme isteyin (QR kodları ve bitcoin: URI'ler üretir)</translation>
+        <translation>Ödeme isteyin (QR kodları ve bitcoin: URI'ler üretir)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Kullanılan gönderim adreslerinin ve etiketlerin listesini göster</translation>
+        <translation>Kullanılan gönderim adreslerinin ve etiketlerin listesini göster</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Kullanılan alım adreslerinin ve etiketlerin listesini göster</translation>
+        <translation>Kullanılan alım adreslerinin ve etiketlerin listesini göster</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Komut satırı seçenekleri</translation>
+        <translation>&amp;Komut satırı seçenekleri</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-        </translation>
+        <translation><numerusform>İşlem geçmişinin %n bloğu işlendi.</numerusform><numerusform>İşlem geçmişinin %n bloklar işlendi.</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 geride</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -590,90 +499,84 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Kısmen İmzalanmış Bitcoin İşlemini Yükle </translation>
+        <translation>Kısmen İmzalanmış Bitcoin İşlemini Yükle </translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Kısmen İmzalanmış Bitcoin işlemini panodan yükle</translation>
+        <translation>Kısmen İmzalanmış Bitcoin işlemini panodan yükle</translation>
     </message>
     <message>
         <source>Node window</source>
-        <translation type="unfinished">Düğüm penceresi</translation>
+        <translation>Düğüm penceresi</translation>
     </message>
     <message>
         <source>Open node debugging and diagnostic console</source>
-        <translation type="unfinished">Açık düğüm hata ayıklama ve tanılama konsolu</translation>
+        <translation>Açık düğüm hata ayıklama ve tanılama konsolu</translation>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
-        <translation type="unfinished">&amp; Adresleri gönderme</translation>
+        <translation>&amp; Adresleri gönderme</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp; Adresler alınıyor</translation>
+        <translation>&amp; Adresler alınıyor</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Bitcoin’i aç.</translation>
+        <translation>Bitcoin’i aç.</translation>
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">Cüzdanı Aç</translation>
+        <translation>Cüzdanı Aç</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation type="unfinished">Bir cüzdan aç</translation>
+        <translation>Bir cüzdan aç</translation>
     </message>
     <message>
         <source>Close wallet</source>
-        <translation type="unfinished">Cüzdan kapat</translation>
+        <translation>Cüzdan kapat</translation>
     </message>
     <message>
         <source>Close all wallets</source>
-        <translation type="unfinished">Tüm cüzdanları kapat</translation>
+        <translation>Tüm cüzdanları kapat</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Olası Bitcoin komut satırı seçeneklerinin listesini görmek için %1 yardım mesajını göster</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation type="unfinished">&amp; Değerleri maskele</translation>
+        <translation>&amp; Değerleri maskele</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
-        <translation type="unfinished">Genel Bakış sekmesindeki değerleri maskeleyin</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">varsayılan cüzdan</translation>
+        <translation>Genel Bakış sekmesindeki değerleri maskeleyin</translation>
     </message>
     <message>
         <source>No wallets available</source>
-        <translation type="unfinished">Erişilebilir cüzdan yok</translation>
+        <translation>Erişilebilir cüzdan yok</translation>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation type="unfinished">&amp;Pencere</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation type="unfinished">Küçült</translation>
+        <translation>&amp;Pencere</translation>
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished">Yakınlaştır</translation>
+        <translation>Yakınlaştır</translation>
     </message>
     <message>
         <source>Main Window</source>
-        <translation type="unfinished">Ana Pencere</translation>
+        <translation>Ana Pencere</translation>
     </message>
     <message>
         <source>%1 client</source>
-        <translation type="unfinished">%1 istemci</translation>
+        <translation>%1 istemci</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
+        <translation type="unfinished"><numerusform>Bitcoin şebekesine %n faal bağlantı</numerusform><numerusform>Bitcoin ağına %n etkin bağlantı var</numerusform><numerusform>Bitcoin şebekesine %n faal bağlantı</numerusform><numerusform>Bitcoin ağına %n etkin bağlantı var</numerusform></translation>
     </message>
     <message>
         <source>Click for more actions.</source>
@@ -681,47 +584,57 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">daha fazla seçenek için tıklayın.</translation>
     </message>
     <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">Ağ etkinliğini devre dışı bırak</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">Ağ etkinliğini etkinleştir</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
-        <translation type="unfinished">Hata: %1</translation>
+        <translation>Hata: %1</translation>
     </message>
     <message>
         <source>Warning: %1</source>
-        <translation type="unfinished">Uyarı: %1</translation>
+        <translation>Uyarı: %1</translation>
     </message>
     <message>
         <source>Date: %1
 </source>
-        <translation type="unfinished">Tarih: %1
+        <translation>Tarih: %1
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">Tutar: %1
+        <translation>Tutar: %1
 </translation>
     </message>
     <message>
         <source>Wallet: %1
 </source>
-        <translation type="unfinished">Cüzdan: %1
+        <translation>Cüzdan: %1
 </translation>
     </message>
     <message>
         <source>Type: %1
 </source>
-        <translation type="unfinished">Tür: %1
+        <translation>Tür: %1
 </translation>
     </message>
     <message>
         <source>Label: %1
 </source>
-        <translation type="unfinished">Etiket: %1
+        <translation>Etiket: %1
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation type="unfinished">Adres: %1
+        <translation>Adres: %1
 </translation>
     </message>
     <message>
@@ -734,15 +647,15 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation type="unfinished">HD anahtar üreticiler kullanilabilir</translation>
+        <translation>HD anahtar üreticiler kullanilabilir</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">HD anahtar üreticiler kullanılamaz</translation>
+        <translation>HD anahtar üreticiler kullanılamaz</translation>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">Gizli anahtar oluşturma &lt;b&gt;devre dışı&lt;/b&gt;</translation>
+        <translation>Gizli anahtar oluşturma &lt;b&gt;devre dışı&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -754,242 +667,227 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Original message:</source>
-        <translation type="unfinished">Orjinal mesaj:</translation>
-    </message>
-</context>
-<context>
-    <name>UnitDisplayStatusBarControl</name>
-    <message>
-        <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation type="unfinished">Tutarı göstermek için birim. Başka bir birim seçmek için tıklayınız.</translation>
+        <translation>Orjinal mesaj:</translation>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
-        <translation type="unfinished">Koin Seçimi</translation>
+        <translation>Koin Seçimi</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Miktar</translation>
+        <translation>Miktar</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished">Bayt:</translation>
+        <translation>Bayt:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Miktar</translation>
+        <translation>Miktar</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished">Ücret</translation>
+        <translation>Ücret</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation type="unfinished">Toz:</translation>
+        <translation>Toz:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">Ücret sonrası:</translation>
+        <translation>Ücret sonrası:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Değiştir</translation>
+        <translation>Değiştir</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished">tümünü seçmek</translation>
+        <translation>tümünü seçmek</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation type="unfinished">Ağaç kipi</translation>
+        <translation>Ağaç kipi</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation type="unfinished">Liste kipi</translation>
+        <translation>Liste kipi</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Mitar</translation>
+        <translation>Mitar</translation>
     </message>
     <message>
         <source>Received with label</source>
-        <translation type="unfinished">Şu etiketle alındı</translation>
+        <translation>Şu etiketle alındı</translation>
     </message>
     <message>
         <source>Received with address</source>
-        <translation type="unfinished">Şu adresle alındı</translation>
+        <translation>Şu adresle alındı</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Tarih</translation>
+        <translation>Tarih</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished">Doğrulamalar</translation>
+        <translation>Doğrulamalar</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Doğrulandı</translation>
+        <translation>Doğrulandı</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Miktar kopyala</translation>
+        <translation>Miktar kopyala</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Adresi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">&amp;Etiketi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">&amp;Miktar kopyala</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">&amp;Harcanmamışı kilitle</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Harcanmamışın kilidini aç</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished">Miktarı kopyala</translation>
+        <translation>Miktarı kopyala</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished">Ücreti kopyala</translation>
+        <translation>Ücreti kopyala</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Sonra ücret kopyası
+        <translation>Sonra ücret kopyası
 </translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Bitleri kopyala</translation>
+        <translation>Bitleri kopyala</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation type="unfinished">toz kopyala</translation>
+        <translation>toz kopyala</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Şansı kopyala</translation>
+        <translation>Şansı kopyala</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished">(%1'i kilitli)</translation>
+        <translation>(%1'i kilitli)</translation>
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished">evet</translation>
+        <translation>evet</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished">hayır</translation>
+        <translation>hayır</translation>
     </message>
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Herhangi bir alıcı mevcut toz eşiğinden daha düşük bir miktar alırsa bu etiket kırmızıya döner.</translation>
+        <translation>Herhangi bir alıcı mevcut toz eşiğinden daha düşük bir miktar alırsa bu etiket kırmızıya döner.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation type="unfinished">Her girdi için +/- %1 satoshi değişebilir.</translation>
+        <translation>Her girdi için +/- %1 satoshi değişebilir.</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(etiket yok)</translation>
+        <translation>(etiket yok)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished">%1 (%2)'den değişim</translation>
+        <translation>%1 (%2)'den değişim</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished">(değiştir)</translation>
+        <translation>(değiştir)</translation>
     </message>
 </context>
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation>Cüzdan Oluştur</translation>
+    </message>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
+        <translation type="unfinished">Cüzdan Oluşturuluyor &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
-        <translation type="unfinished">Cüzdan oluşturma başarısız</translation>
+        <translation>Cüzdan oluşturma başarısız</translation>
     </message>
     <message>
         <source>Create wallet warning</source>
-        <translation type="unfinished">Cüzdan oluşturma uyarısı</translation>
+        <translation>Cüzdan oluşturma uyarısı</translation>
     </message>
     </context>
-<context>
-    <name>OpenWalletActivity</name>
-    <message>
-        <source>Open wallet failed</source>
-        <translation type="unfinished">Cüzdan açma başarısız</translation>
-    </message>
-    <message>
-        <source>Open wallet warning</source>
-        <translation type="unfinished">Açık cüzdan uyarısı</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">varsayılan cüzdan</translation>
-    </message>
-    </context>
-<context>
-    <name>WalletController</name>
-    <message>
-        <source>Close wallet</source>
-        <translation type="unfinished">Cüzdan kapat</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation type="unfinished">&lt;i&gt;%1&lt;/i&gt; cüzdanını kapatmak istediğinizden emin misiniz?</translation>
-    </message>
-    <message>
-        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation type="unfinished">Cüzdanı çok uzun süre kapatmak, veri budama etkinleştirilmişse tüm zinciri yeniden senkronize etmek zorunda kalmanıza neden olabilir.</translation>
-    </message>
-    <message>
-        <source>Close all wallets</source>
-        <translation type="unfinished">Tüm cüzdanları kapat</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to close all wallets?</source>
-        <translation type="unfinished">Tüm cüzdanları kapatmak istediğinizden emin misiniz?</translation>
-    </message>
-</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
         <source>Create Wallet</source>
-        <translation type="unfinished">Cüzdan Oluştur</translation>
+        <translation>Cüzdan Oluştur</translation>
     </message>
     <message>
         <source>Wallet Name</source>
-        <translation type="unfinished">Cüzdan İsmi</translation>
+        <translation>Cüzdan İsmi</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Cüzdan</translation>
+        <translation>Cüzdan</translation>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation type="unfinished">Cüzdanı şifreleyin. Cüzdan seçtiğiniz bir anahtar parola kelimeleri ile şifrelenecektir.</translation>
+        <translation>Cüzdanı şifreleyin. Cüzdan seçtiğiniz bir anahtar parola kelimeleri ile şifrelenecektir.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
-        <translation type="unfinished">Cüzdanı Şifrele</translation>
+        <translation>Cüzdanı Şifrele</translation>
     </message>
     <message>
         <source>Advanced Options</source>
-        <translation type="unfinished">Ek Seçenekler</translation>
+        <translation>Ek Seçenekler</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
-        <translation type="unfinished">Bu cüzdan için özel anahtarları devre dışı bırakın. Özel anahtarları devre dışı bırakılan cüzdanların özel anahtarları olmayacak ve bir HD çekirdeği veya içe aktarılan özel anahtarları olmayacaktır. Bu, yalnızca saat cüzdanları için idealdir.</translation>
+        <translation>Bu cüzdan için özel anahtarları devre dışı bırakın. Özel anahtarları devre dışı bırakılan cüzdanların özel anahtarları olmayacak ve bir HD çekirdeği veya içe aktarılan özel anahtarları olmayacaktır. Bu, yalnızca saat cüzdanları için idealdir.</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>
-        <translation type="unfinished">Özel Kilidi (Private Key) kaldır</translation>
+        <translation>Özel Kilidi (Private Key) kaldır</translation>
     </message>
     <message>
         <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Boş bir cüzdan yapın. Boş cüzdanlar başlangıçta özel anahtarlara veya komut dosyalarına sahip değildir. Özel anahtarlar ve adresler içe aktarılabilir veya daha sonra bir HD tohum ayarlanabilir.</translation>
+        <translation>Boş bir cüzdan yapın. Boş cüzdanlar başlangıçta özel anahtarlara veya komut dosyalarına sahip değildir. Özel anahtarlar ve adresler içe aktarılabilir veya daha sonra bir HD tohum ayarlanabilir.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
-        <translation type="unfinished">Boş Cüzdan Oluştur</translation>
+        <translation>Boş Cüzdan Oluştur</translation>
     </message>
     <message>
         <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">scriptPubKey yönetimi için tanımlayıcıları kullanın</translation>
+        <translation>scriptPubKey yönetimi için tanımlayıcıları kullanın</translation>
     </message>
     <message>
         <source>Descriptor Wallet</source>
@@ -997,11 +895,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Create</source>
-        <translation type="unfinished">Oluştur</translation>
+        <translation>Oluştur</translation>
     </message>
     <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Sqlite desteği olmadan derlenmiş. (tanımlayıcı cüzdanlar için gereklidir)</translation>
+        <translation>Sqlite desteği olmadan derlenmiş. (tanımlayıcı cüzdanlar için gereklidir)</translation>
     </message>
     </context>
 <context>
@@ -1016,11 +914,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished">Bu adres listesi girişiyle ilişkili etiket</translation>
+        <translation>Bu adres listesi girişiyle ilişkili etiket</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished">Bu adres listesi girişiyle ilişkili adres. Bu sadece adreslerin gönderilmesi için değiştirilebilir</translation>
+        <translation>Bu adres listesi girişiyle ilişkili adres. Bu sadece adreslerin gönderilmesi için değiştirilebilir</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -1028,27 +926,35 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>New sending address</source>
-        <translation type="unfinished">Yeni gönderim adresi</translation>
+        <translation>Yeni gönderim adresi</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation type="unfinished">Alım adresini düzenle</translation>
+        <translation>Alım adresini düzenle</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation type="unfinished">Gönderme adresini  düzenleyin</translation>
+        <translation>Gönderme adresini  düzenleyin</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Girilen "%1" adresi geçerli bir Bitcoin adresi değildir.</translation>
+        <translation>Girilen "%1" adresi geçerli bir Bitcoin adresi değildir.</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>Adres "%1" adres "%2" etiketiyle alım adresiniz olarak mevcut ve bu sebepten gönderen adres olarak eklenemiyor.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>girilen "%1"  adresi "%2" etiketli adres defterinde zaten var.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Cüzdanın kilidi açılamadı.</translation>
+        <translation>Cüzdanın kilidi açılamadı.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation type="unfinished">Yeni anahtar oluşturma başarısız oldu.</translation>
+        <translation>Yeni anahtar oluşturma başarısız oldu.</translation>
     </message>
 </context>
 <context>
@@ -1062,6 +968,10 @@ Cüzdan kilidini aç.</translation>
         <translation>isim</translation>
     </message>
     <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>Klasör zaten mevcuttur. Burada yeni bir klasör oluşturmak istiyorsanız, %1 ekleyiniz.</translation>
+    </message>
+    <message>
         <source>Path already exists, and is not a directory.</source>
         <translation>Halihazırda bir yol var ve bu bir klasör değildir.</translation>
     </message>
@@ -1071,57 +981,48 @@ Cüzdan kilidini aç.</translation>
     </message>
 </context>
 <context>
+    <name>GuiNetWatch</name>
+    </context>
+<context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation>sürüm</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>%1 Hakkında</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>Komut-satırı seçenekleri</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation type="unfinished">Bu dizinde en az %1 GB veri depolanacak ve zamanla büyüyecek.</translation>
-    </message>
-    <message>
-        <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation type="unfinished">Yaklaşık %1 GB veri bu klasörde depolanacak.</translation>
-    </message>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1  Bitcoin blok zincirinin bir kopyasını indirecek ve depolayacak.</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation type="unfinished">Cüzdan da bu dizinde depolanacaktır.</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation type="unfinished">Hata: Belirtilen "%1" veri klasörü oluşturulamaz.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Hata</translation>
-    </message>
     <message>
         <source>Welcome</source>
         <translation>Hoş geldiniz </translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation type="unfinished">%1'e hoşgeldiniz.</translation>
+        <translation>%1'e hoşgeldiniz.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Bu programın ilk kez başlatılmasından dolayı %1 yazılımının verilerini nerede saklayacağını seçebilirsiniz.</translation>
+        <translation>Bu programın ilk kez başlatılmasından dolayı %1 yazılımının verilerini nerede saklayacağını seçebilirsiniz.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Bu ayarın geri döndürülmesi, tüm blok zincirinin yeniden indirilmesini gerektirir. Önce tüm zinciri indirmek ve daha sonra veri budamak daha hızlıdır. Bazı gelişmiş özellikleri devre dışı bırakır.</translation>
+        <translation>Bu ayarın geri döndürülmesi, tüm blok zincirinin yeniden indirilmesini gerektirir. Önce tüm zinciri indirmek ve daha sonra veri budamak daha hızlıdır. Bazı gelişmiş özellikleri devre dışı bırakır.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>Bu başlangıç senkronizasyonu çok zorlayıcıdır ve bilgisayarınızdaki daha önce fark edilmemiş olan donanım sorunlarını ortaya çıkarabilir. %1'i her çalıştırdığınızda, kaldığı yerden devam edecektir.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Blok zinciri depolamayı (veri budama) sınırlamayı seçtiyseniz, geçmiş veriler yine de indirilmeli ve işlenmelidir, ancak disk kullanımınızı düşük tutmak için daha sonra silinecektir.</translation>
+        <translation>Blok zinciri depolamayı (veri budama) sınırlamayı seçtiyseniz, geçmiş veriler yine de indirilmeli ve işlenmelidir, ancak disk kullanımınızı düşük tutmak için daha sonra silinecektir.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1131,42 +1032,68 @@ Cüzdan kilidini aç.</translation>
         <source>Use a custom data directory:</source>
         <translation>Özel bir veri klasörü kullan:</translation>
     </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin
+</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB boş alan kullanılabilir</numerusform><numerusform>%n GB boş alan mevcuttur</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(gereken %n GB alandan)</numerusform><numerusform>(gereken %n GB alandan)</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB tam zincir için gerekli)</numerusform><numerusform>(%n GB tam zincir için gerekli)</numerusform></translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Bu dizinde en az %1 GB veri depolanacak ve zamanla büyüyecek.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Yaklaşık %1 GB veri bu klasörde depolanacak.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <translation>%1  Bitcoin blok zincirinin bir kopyasını indirecek ve depolayacak.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Cüzdan da bu dizinde depolanacaktır.</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Hata: Belirtilen "%1" veri klasörü oluşturulamaz.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Hata</translation>
+    </message>
 </context>
 <context>
-    <name>HelpMessageDialog</name>
+    <name>MempoolStats</name>
     <message>
-        <source>version</source>
-        <translation type="unfinished">sürüm</translation>
+        <source>N/A</source>
+        <translation>Mevcut değil</translation>
     </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">%1 Hakkında</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Komut-satırı seçenekleri</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Bu pencere kalkıncaya dek bilgisayarı kapatmayınız.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Son işlemler henüz görünmeyebilir ve bu nedenle cüzdanınızın bakiyesi yanlış olabilir. Bu bilgiler, aşağıda detaylandırıldığı gibi, cüzdanınız bitcoin ağı ile senkronizasyonunu tamamladığında doğru olacaktır. </translation>
+        <translation>Son işlemler henüz görünmeyebilir ve bu nedenle cüzdanınızın bakiyesi yanlış olabilir. Bu bilgiler, aşağıda detaylandırıldığı gibi, cüzdanınız bitcoin ağı ile senkronizasyonunu tamamladığında doğru olacaktır. </translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Henüz görüntülenmeyen işlemlerden etkilenen bitcoinleri harcama girişiminde bulunmak ağ tarafından kabul edilmeyecektir.</translation>
+        <translation>Henüz görüntülenmeyen işlemlerden etkilenen bitcoinleri harcama girişiminde bulunmak ağ tarafından kabul edilmeyecektir.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
-        <translation type="unfinished">Kalan blok sayısı</translation>
+        <translation>Kalan blok sayısı</translation>
     </message>
     <message>
         <source>Unknown…</source>
@@ -1178,32 +1105,79 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation type="unfinished">Son blok zamanı</translation>
+        <translation>Son blok zamanı</translation>
     </message>
     <message>
         <source>Progress</source>
-        <translation type="unfinished">İlerleme</translation>
+        <translation>İlerleme</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
-        <translation type="unfinished">Saat başı ilerleme artışı</translation>
+        <translation>Saat başı ilerleme artışı</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation type="unfinished">Senkronize edilene kadar kalan tahmini süre</translation>
+        <translation>Senkronize edilene kadar kalan tahmini süre</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation type="unfinished">Gizle</translation>
+        <translation>Gizle</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Bilinmeyen. Başlıklar Eşitleniyor (%1, %2%)…</translation>
+    </message>
+</context>
+<context>
+    <name>NetWatchLogModel</name>
+    <message>
+        <source>Type</source>
+        <comment>NetWatch: Type header</comment>
+        <translation>Tür</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <comment>NetWatch: Address header</comment>
+        <translation>Adres</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open bitcoin URI</source>
-        <translation type="unfinished">Bitcoin URI aç</translation>
+        <translation>Bitcoin URI aç</translation>
     </message>
-    </context>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation>Panodaki adresi yapıştırın</translation>
+    </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Cüzdan açma başarısız</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Açık cüzdan uyarısı</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>varsayılan cüzdan</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation>Cüzdanı Aç</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
+        <translation type="unfinished">&lt;b&gt;%1&lt;/b&gt; cüzdanı açolıyor…</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1216,43 +1190,43 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
-        <translation type="unfinished">Sisteme giriş yaptıktan sonra otomatik olarak %1'i başlat.</translation>
+        <translation>Sisteme giriş yaptıktan sonra otomatik olarak %1'i başlat.</translation>
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation type="unfinished">&amp;Açılışta %1 açılsın</translation>
+        <translation>&amp;Açılışta %1 açılsın</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished">&amp;veritabanı önbellek boyutu</translation>
+        <translation>&amp;veritabanı önbellek boyutu</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished">Betik &amp;doğrulama iş parçacığı sayısı</translation>
+        <translation>Betik &amp;doğrulama iş parçacığı sayısı</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished">Proxy'nin IP Adresi (ör: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>Proxy'nin IP Adresi (ör: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation type="unfinished">Bu şebeke türü yoluyla eşlere bağlanmak için belirtilen varsayılan SOCKS5 vekil sunucusunun kullanılıp kullanılmadığını gösterir.</translation>
+        <translation>Bu şebeke türü yoluyla eşlere bağlanmak için belirtilen varsayılan SOCKS5 vekil sunucusunun kullanılıp kullanılmadığını gösterir.</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation type="unfinished">Pencere kapatıldığında uygulamadan çıkmak yerine uygulamayı küçültür. Bu seçenek etkinleştirildiğinde, uygulama sadece menüden çıkış seçildiğinde kapanacaktır.</translation>
+        <translation>Pencere kapatıldığında uygulamadan çıkmak yerine uygulamayı küçültür. Bu seçenek etkinleştirildiğinde, uygulama sadece menüden çıkış seçildiğinde kapanacaktır.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished">İşlemler sekmesinde bağlam menüsü unsurları olarak görünen üçüncü taraf bağlantıları (mesela bir blok tarayıcısı). URL'deki %s, işlem hash değeri ile değiştirilecektir. Birden çok bağlantılar düşey çubuklar | ile ayrılacaktır.</translation>
+        <translation>İşlemler sekmesinde bağlam menüsü unsurları olarak görünen üçüncü taraf bağlantıları (mesela bir blok tarayıcısı). URL'deki %s, işlem hash değeri ile değiştirilecektir. Birden çok bağlantılar düşey çubuklar | ile ayrılacaktır.</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
-        <translation type="unfinished">Çalışma dizininden %1  yapılandırma dosyasını aç.</translation>
+        <translation>Çalışma dizininden %1  yapılandırma dosyasını aç.</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
-        <translation type="unfinished">Yapılandırma Dosyasını Aç</translation>
+        <translation>Yapılandırma Dosyasını Aç</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1276,27 +1250,27 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished">(0 = otomatik, &lt;0 = bu kadar çekirdeği kullanma)</translation>
+        <translation>(0 = otomatik, &lt;0 = bu kadar çekirdeği kullanma)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished">&amp;Cüzdan</translation>
+        <translation>&amp;Cüzdan</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation type="unfinished">Gelişmiş</translation>
+        <translation>Gelişmiş</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">Para &amp;kontrolü özelliklerini etkinleştir</translation>
+        <translation>Para &amp;kontrolü özelliklerini etkinleştir</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished">Onaylanmamış bozuk para harcamasını devre dışı bırakırsanız, bir işlemdeki bozukl para, o işlem en az bir onay alana kadar kullanılamaz. Bu aynı zamanda bakiyenizin nasıl hesaplandığını da etkiler.</translation>
+        <translation>Onaylanmamış bozuk para harcamasını devre dışı bırakırsanız, bir işlemdeki bozukl para, o işlem en az bir onay alana kadar kullanılamaz. Bu aynı zamanda bakiyenizin nasıl hesaplandığını da etkiler.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished">&amp; Onaylanmamış bozuk parayı harcayın</translation>
+        <translation>&amp; Onaylanmamış bozuk parayı harcayın</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1308,19 +1282,23 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
-        <translation type="unfinished">Dışarıdan bağlantıları kabul et.</translation>
+        <translation>Dışarıdan bağlantıları kabul et.</translation>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
-        <translation type="unfinished">Gelen bağlantılara izin ver</translation>
+        <translation>Gelen bağlantılara izin ver</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Bitcoin ağına bir SOCKS5 vekil sunucusu aracılığıyla bağlan.</translation>
+        <translation>Bitcoin ağına bir SOCKS5 vekil sunucusu aracılığıyla bağlan.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
-        <translation type="unfinished">SOCKS5 vekil sunucusu aracılığıyla &amp;bağlan (varsayılan vekil sunucusu):</translation>
+        <translation>SOCKS5 vekil sunucusu aracılığıyla &amp;bağlan (varsayılan vekil sunucusu):</translation>
+    </message>
+    <message>
+        <source>Proxy &amp;IP:</source>
+        <translation>Vekil &amp;IP:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
@@ -1328,11 +1306,15 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
-        <translation type="unfinished">Eşlere ulaşmak için kullanılır, şu üzerinden:</translation>
+        <translation>Eşlere ulaşmak için kullanılır, şu üzerinden:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
         <translation>&amp;Pencere</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">Simgeyi &amp;Göster </translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1356,7 +1338,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation type="unfinished">Kullanıcı arayüzünün dili burada belirtilebilir. Bu ayar %1 tekrar başlatıldığında etkinleşecektir.</translation>
+        <translation>Kullanıcı arayüzünün dili burada belirtilebilir. Bu ayar %1 tekrar başlatıldığında etkinleşecektir.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1368,7 +1350,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished">Para kontrol özelliklerinin gösterilip gösterilmeyeceğini ayarlar.</translation>
+        <translation>Para kontrol özelliklerinin gösterilip gösterilmeyeceğini ayarlar.</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
@@ -1380,7 +1362,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
-        <translation type="unfinished">&amp;Üçüncü parti işlem URL'leri</translation>
+        <translation>&amp;Üçüncü parti işlem URL'leri</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1396,7 +1378,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished">hiçbiri</translation>
+        <translation>hiçbiri</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Çekirdeği</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1404,31 +1390,37 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished">Değişikliklerin uygulanması için istemcinin yeniden başlatılması lazımdır.</translation>
+        <translation>Değişikliklerin uygulanması için istemcinin yeniden başlatılması lazımdır.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
-        <translation type="unfinished">İstemci kapanacaktır. Devam etmek istiyor musunuz?</translation>
+        <translation>İstemci kapanacaktır. Devam etmek istiyor musunuz?</translation>
     </message>
     <message>
         <source>Configuration options</source>
-        <translation type="unfinished">Yapılandırma seçenekleri</translation>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
+        <translation>Yapılandırma seçenekleri</translation>
     </message>
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
-        <translation type="unfinished">Yapılandırma dosyası, grafik arayüzü ayarlarını geçersiz kılacak gelişmiş kullanıcı seçeneklerini belirtmek için kullanılır. Ayrıca, herhangi bir komut satırı seçeneği bu yapılandırma dosyasını geçersiz kılacaktır.</translation>
+        <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
+        <translation>Yapılandırma dosyası, grafik arayüzü ayarlarını geçersiz kılacak gelişmiş kullanıcı seçeneklerini belirtmek için kullanılır. Ayrıca, herhangi bir komut satırı seçeneği bu yapılandırma dosyasını geçersiz kılacaktır.</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>İptal</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Hata</translation>
+        <translation>Hata</translation>
     </message>
     <message>
         <source>The configuration file could not be opened.</source>
-        <translation type="unfinished">Yapılandırma dosyası açılamadı.</translation>
+        <translation>Yapılandırma dosyası açılamadı.</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished">Bu değişiklik istemcinin tekrar başlatılmasını gerektirir.</translation>
+        <translation>Bu değişiklik istemcinin tekrar başlatılmasını gerektirir.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1443,11 +1435,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
-        <translation type="unfinished">Sadece-izlenen:</translation>
+        <translation>Sadece-izlenen:</translation>
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished">Mevcut:</translation>
+        <translation>Mevcut:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1455,7 +1447,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished">Bekliyor:</translation>
+        <translation>Bekliyor:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1471,7 +1463,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Balances</source>
-        <translation type="unfinished">Hesaplar</translation>
+        <translation>Hesaplar</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -1483,46 +1475,46 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Sadece izlenen adreslerdeki güncel bakiyeniz</translation>
+        <translation>Sadece izlenen adreslerdeki güncel bakiyeniz</translation>
     </message>
     <message>
         <source>Spendable:</source>
-        <translation type="unfinished">Harcanabilir</translation>
+        <translation>Harcanabilir</translation>
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation type="unfinished">Yakın zamandaki işlemler</translation>
+        <translation>Yakın zamandaki işlemler</translation>
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Sadece izlenen adreslere gelen doğrulanmamış işlemler</translation>
+        <translation>Sadece izlenen adreslere gelen doğrulanmamış işlemler</translation>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Sadece izlenen adreslerin henüz olgunlaşmamış oluşturulan bakiyeleri</translation>
+        <translation>Sadece izlenen adreslerin henüz olgunlaşmamış oluşturulan bakiyeleri</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Sadece izlenen adreslerdeki güncel toplam bakiye</translation>
+        <translation>Sadece izlenen adreslerdeki güncel toplam bakiye</translation>
     </message>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
         <source>Dialog</source>
-        <translation type="unfinished">Diyalog</translation>
+        <translation>Diyalog</translation>
     </message>
     <message>
         <source>Sign Tx</source>
-        <translation type="unfinished">İşlemi İmzalayın</translation>
+        <translation>İşlemi İmzalayın</translation>
     </message>
     <message>
         <source>Broadcast Tx</source>
-        <translation type="unfinished">İşlemi Ağa Duyurun</translation>
+        <translation>İşlemi Ağa Duyurun</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
-        <translation type="unfinished">Panoya kopyala</translation>
+        <translation>Panoya kopyala</translation>
     </message>
     <message>
         <source>Save…</source>
@@ -1530,15 +1522,15 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Kapat</translation>
+        <translation>Kapat</translation>
     </message>
     <message>
         <source>Failed to load transaction: %1</source>
-        <translation type="unfinished">İşlem yüklenemedi: %1</translation>
+        <translation>İşlem yüklenemedi: %1</translation>
     </message>
     <message>
         <source>Failed to sign transaction: %1</source>
-        <translation type="unfinished">İşlem imzalanamadı: %1</translation>
+        <translation>İşlem imzalanamadı: %1</translation>
     </message>
     <message>
         <source>Could not sign any more inputs.</source>
@@ -1546,35 +1538,51 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation type="unfinished">İşlem imzalandı ve ağa duyurulmaya hazır.</translation>
+        <translation>İşlem imzalandı ve ağa duyurulmaya hazır.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation type="unfinished">İşlem sürerken bilinmeyen bir hata oluştu.</translation>
     </message>
     <message>
         <source>Transaction broadcast successfully! Transaction ID: %1</source>
-        <translation type="unfinished">İşlem ağa duyuruldu! İşlem kodu: %1</translation>
+        <translation>İşlem ağa duyuruldu! İşlem kodu: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
-        <translation type="unfinished">PSBT panoya kopyalandı.</translation>
+        <translation>PSBT panoya kopyalandı.</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">İşlem verilerini kaydet</translation>
+        <translation>İşlem verilerini kaydet</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
-        <translation type="unfinished">PSBT diske kaydedildi.</translation>
+        <translation>PSBT diske kaydedildi.</translation>
     </message>
     <message>
         <source>Pays transaction fee: </source>
         <translation type="unfinished">İşlem ücreti:&lt;br&gt;</translation>
     </message>
     <message>
+        <source>Total Amount</source>
+        <translation>Toplam Tutar</translation>
+    </message>
+    <message>
         <source>or</source>
-        <translation type="unfinished">veya</translation>
+        <translation>veya</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation type="unfinished">İşlem girdileri hakkında bazı bilgiler eksik. </translation>
     </message>
     <message>
         <source>Transaction still needs signature(s).</source>
         <translation type="unfinished">İşlemin hala imza(lar)a ihtiyacı var.</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation type="unfinished">(Ancak bu cüzdan işlemleri imzalayamaz.)</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>
@@ -1585,27 +1593,27 @@ Cüzdan kilidini aç.</translation>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
-        <translation type="unfinished">Ödeme isteği hatası</translation>
+        <translation>Ödeme isteği hatası</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Bitcoin başlatılamadı: tıkla-ve-öde yöneticisi</translation>
+        <translation>Bitcoin başlatılamadı: tıkla-ve-öde yöneticisi</translation>
     </message>
     <message>
         <source>URI handling</source>
-        <translation type="unfinished">URI yönetimi</translation>
+        <translation>URI yönetimi</translation>
     </message>
     <message>
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation type="unfinished">'bitcoin://' geçerli bir URI değil. Onun yerine 'bitcoin:' kullanın.</translation>
+        <translation>'bitcoin://' geçerli bir URI değil. Onun yerine 'bitcoin:' kullanın.</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI ayrıştırılamıyor! Bunun nedeni geçersiz bir Bitcoin adresi veya hatalı biçimlendirilmiş URI değişkenleri olabilir.</translation>
+        <translation>URI ayrıştırılamıyor! Bunun nedeni geçersiz bir Bitcoin adresi veya hatalı biçimlendirilmiş URI değişkenleri olabilir.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation type="unfinished">Ödeme talebi dosyası yönetimi</translation>
+        <translation>Ödeme talebi dosyası yönetimi</translation>
     </message>
 </context>
 <context>
@@ -1613,37 +1621,144 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>User Agent</source>
         <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
-        <translation type="unfinished">Kullanıcı Yazılımı</translation>
+        <translation>Kullanıcı Yazılımı</translation>
     </message>
     <message>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
-        <translation type="unfinished">Gecikme</translation>
+        <translation>Gecikme</translation>
     </message>
     <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
-        <translation type="unfinished">Gönderildi</translation>
+        <translation>Gönderildi</translation>
     </message>
     <message>
         <source>Received</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
-        <translation type="unfinished">Alınan</translation>
+        <translation>Alınan</translation>
     </message>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Adres</translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
-        <translation type="unfinished">Tür</translation>
+        <translation>Tür</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>Mitar</translation>
     </message>
     <message>
-        <source>Network</source>
-        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
-        <translation type="unfinished">Ağ</translation>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Bir bitcoin adresi giriniz (örneğin %1)</translation>
+    </message>
+    <message>
+        <source>Internal</source>
+        <translation type="unfinished">Dahili</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>Gelen</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>yurt dışı</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 g</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 sa</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 d</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 sn</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Boş</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation>Mevcut değil</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation>
+            <numerusform>%n saniye</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation>
+            <numerusform>%n dakika</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n saat</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform>%ngün</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n hafta</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 ve %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n yıl</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Hata: Belirtilen "%1" veri klasörü yoktur.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Hata: %1 yapılandırma dosyası ayrıştırılamadı. </translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Hata: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1  henüz güvenli bir şekilde çıkış yapmadı...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>bilinmeyen</translation>
+    </message>
+    <message>
+        <source>Txn</source>
+        <comment>Tx Watch: Transaction type abbreviation</comment>
+        <translation>İşlem</translation>
     </message>
 </context>
 <context>
@@ -1654,23 +1769,23 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished">Resmi &amp;Kopyala</translation>
+        <translation>Resmi &amp;Kopyala</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished">Sonuç URI çok uzun, etiket ya da ileti metnini kısaltmayı deneyiniz.</translation>
+        <translation>Sonuç URI çok uzun, etiket ya da ileti metnini kısaltmayı deneyiniz.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished">URI'nin QR koduna kodlanmasında hata oluştu.</translation>
+        <translation>URI'nin QR koduna kodlanmasında hata oluştu.</translation>
     </message>
     <message>
         <source>QR code support not available.</source>
-        <translation type="unfinished">QR kodu desteği mevcut değil.</translation>
+        <translation>QR kodu desteği mevcut değil.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation type="unfinished">QR Kodu Kaydet</translation>
+        <translation>QR Kodu Kaydet</translation>
     </message>
     <message>
         <source>PNG Image</source>
@@ -1694,11 +1809,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished">Genel</translation>
+        <translation>Genel</translation>
     </message>
     <message>
         <source>Datadir</source>
-        <translation type="unfinished">Veri konumu</translation>
+        <translation>Veri konumu</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1710,7 +1825,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">İsim</translation>
+        <translation>İsim</translation>
     </message>
     <message>
         <source>Number of connections</source>
@@ -1722,91 +1837,99 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Memory Pool</source>
-        <translation type="unfinished">Bellek Alanı</translation>
+        <translation>Bellek Alanı</translation>
     </message>
     <message>
         <source>Current number of transactions</source>
-        <translation type="unfinished">Güncel işlem sayısı</translation>
+        <translation>Güncel işlem sayısı</translation>
     </message>
     <message>
         <source>Memory usage</source>
-        <translation type="unfinished">Bellek kullanımı</translation>
+        <translation>Bellek kullanımı</translation>
     </message>
     <message>
         <source>Wallet: </source>
-        <translation type="unfinished">Cüzdan:</translation>
+        <translation>Cüzdan:</translation>
     </message>
     <message>
         <source>(none)</source>
-        <translation type="unfinished">(yok)</translation>
+        <translation>(yok)</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
-        <translation type="unfinished">&amp;Sıfırla</translation>
+        <translation>&amp;Sıfırla</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation type="unfinished">Alınan</translation>
+        <translation>Alınan</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation type="unfinished">Gönderildi</translation>
+        <translation>Gönderildi</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation type="unfinished">&amp;Eşler</translation>
+        <translation>&amp;Eşler</translation>
     </message>
     <message>
         <source>Banned peers</source>
-        <translation type="unfinished">Yasaklı eşler</translation>
+        <translation>Yasaklı eşler</translation>
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation type="unfinished">Ayrıntılı bilgi görmek için bir eş seçin.</translation>
+        <translation>Ayrıntılı bilgi görmek için bir eş seçin.</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="unfinished">Sürüm</translation>
+        <translation>Sürüm</translation>
     </message>
     <message>
         <source>Starting Block</source>
-        <translation type="unfinished">Başlangıç Bloku</translation>
+        <translation>Başlangıç Bloku</translation>
     </message>
     <message>
         <source>Synced Headers</source>
-        <translation type="unfinished">Eşleşmiş Üstbilgiler</translation>
+        <translation>Eşleşmiş Üstbilgiler</translation>
     </message>
     <message>
         <source>Synced Blocks</source>
-        <translation type="unfinished">Eşleşmiş Bloklar</translation>
+        <translation>Eşleşmiş Bloklar</translation>
+    </message>
+    <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Eş seçimini çeşitlendirmek için kullanılan haritalı Otonom Sistem.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Eşlenmiş OLARAK</translation>
     </message>
     <message>
         <source>User Agent</source>
-        <translation type="unfinished">Kullanıcı Yazılımı</translation>
+        <translation>Kullanıcı Yazılımı</translation>
     </message>
     <message>
         <source>Node window</source>
-        <translation type="unfinished">Düğüm penceresi</translation>
+        <translation>Düğüm penceresi</translation>
     </message>
     <message>
         <source>Current block height</source>
-        <translation type="unfinished">Şu anki blok yüksekliği</translation>
+        <translation>Şu anki blok yüksekliği</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished">Güncel veri klasöründen %1 hata ayıklama kütük dosyasını açar. Büyük kütük dosyaları için bu birkaç saniye alabilir.</translation>
+        <translation>Güncel veri klasöründen %1 hata ayıklama kütük dosyasını açar. Büyük kütük dosyaları için bu birkaç saniye alabilir.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
-        <translation type="unfinished">Font boyutunu küçült</translation>
+        <translation>Font boyutunu küçült</translation>
     </message>
     <message>
         <source>Increase font size</source>
-        <translation type="unfinished">Yazıtipi boyutunu büyült</translation>
+        <translation>Yazıtipi boyutunu büyült</translation>
     </message>
     <message>
         <source>Permissions</source>
-        <translation type="unfinished">İzinler</translation>
+        <translation>İzinler</translation>
     </message>
     <message>
         <source>Direction/Type</source>
@@ -1818,7 +1941,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Services</source>
-        <translation type="unfinished">Servisler</translation>
+        <translation>Servisler</translation>
     </message>
     <message>
         <source>High Bandwidth</source>
@@ -1826,35 +1949,35 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Connection Time</source>
-        <translation type="unfinished">Bağlantı Zamanı</translation>
+        <translation>Bağlantı Zamanı</translation>
     </message>
     <message>
         <source>Last Send</source>
-        <translation type="unfinished">Son Gönderme</translation>
+        <translation>Son Gönderme</translation>
     </message>
     <message>
         <source>Last Receive</source>
-        <translation type="unfinished">Son Alma</translation>
+        <translation>Son Alma</translation>
     </message>
     <message>
         <source>Ping Time</source>
-        <translation type="unfinished">Ping Süresi</translation>
+        <translation>Ping Süresi</translation>
     </message>
     <message>
         <source>The duration of a currently outstanding ping.</source>
-        <translation type="unfinished">Güncel olarak göze çarpan bir ping'in süresi.</translation>
+        <translation>Güncel olarak göze çarpan bir ping'in süresi.</translation>
     </message>
     <message>
         <source>Ping Wait</source>
-        <translation type="unfinished">Ping Beklemesi</translation>
+        <translation>Ping Beklemesi</translation>
     </message>
     <message>
         <source>Min Ping</source>
-        <translation type="unfinished">En Düşük Ping</translation>
+        <translation>En Düşük Ping</translation>
     </message>
     <message>
         <source>Time Offset</source>
-        <translation type="unfinished">Saat Farkı</translation>
+        <translation>Saat Farkı</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1870,11 +1993,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished">&amp;Ağ Trafiği</translation>
-    </message>
-    <message>
-        <source>Totals</source>
-        <translation type="unfinished">Toplamlar</translation>
+        <translation>&amp;Ağ Trafiği</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -1883,54 +2002,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Clear console</source>
         <translation>Konsolu temizle</translation>
-    </message>
-    <message>
-        <source>In:</source>
-        <translation type="unfinished">İçeri:</translation>
-    </message>
-    <message>
-        <source>Out:</source>
-        <translation type="unfinished">Dışarı:</translation>
-    </message>
-    <message>
-        <source>&amp;Disconnect</source>
-        <translation type="unfinished">&amp;Bağlantıyı Kes</translation>
-    </message>
-    <message>
-        <source>1 &amp;hour</source>
-        <translation type="unfinished">1 &amp;saat</translation>
-    </message>
-    <message>
-        <source>1 d&amp;ay</source>
-        <translation type="unfinished">1 g&amp;ün</translation>
-    </message>
-    <message>
-        <source>1 &amp;week</source>
-        <translation type="unfinished">1 &amp;hafta</translation>
-    </message>
-    <message>
-        <source>1 &amp;year</source>
-        <translation type="unfinished">1 &amp;yıl</translation>
-    </message>
-    <message>
-        <source>&amp;Unban</source>
-        <translation type="unfinished">&amp;Yasaklamayı Kaldır</translation>
-    </message>
-    <message>
-        <source>Network activity disabled</source>
-        <translation type="unfinished">Ağ etkinliği devre dışı bırakıldı</translation>
-    </message>
-    <message>
-        <source>Executing command without any wallet</source>
-        <translation type="unfinished">Komut cüzdan olmadan çalıştırılıyor.</translation>
-    </message>
-    <message>
-        <source>Executing command using "%1" wallet</source>
-        <translation type="unfinished">Komut "%1" cüzdanı kullanılarak çalıştırılıyor.</translation>
-    </message>
-    <message>
-        <source>via %1</source>
-        <translation type="unfinished">%1 vasıtasıyla</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -1942,172 +2013,225 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Alıcı</translation>
+        <translation>Alıcı</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">Gönderen</translation>
+        <translation>Gönderen</translation>
     </message>
     <message>
         <source>Ban for</source>
-        <translation type="unfinished">Yasakla</translation>
+        <translation>Yasakla</translation>
     </message>
     <message>
         <source>Never</source>
         <translation type="unfinished">Asla</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <translation type="unfinished">&amp;Adresi kopyala</translation>
+    </message>
+    <message>
+        <source>&amp;Disconnect</source>
+        <translation>&amp;Bağlantıyı Kes</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;saat</translation>
+    </message>
+    <message>
+        <source>1 d&amp;ay</source>
+        <translation type="unfinished">1 g&amp;ün</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;hafta</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;yıl</translation>
+    </message>
+    <message>
+        <source>&amp;Unban</source>
+        <translation>&amp;Yasaklamayı Kaldır</translation>
+    </message>
+    <message>
         <source>Unknown</source>
-        <translation type="unfinished">Bilinmeyen</translation>
+        <translation>Bilinmeyen</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation type="unfinished">miktar</translation>
+        <translation>miktar</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation type="unfinished">&amp;Etiket:</translation>
+        <translation>&amp;Etiket:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation type="unfinished">&amp;Mesaj:</translation>
+        <translation>&amp;Mesaj:</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Talep açıldığında gösterilecek, isteğinize dayalı, ödeme talebi ile ilişkilendirilecek bir ileti. Not: Bu ileti ödeme ile birlikte Bitcoin ağı üzerinden gönderilmeyecektir.</translation>
+        <translation>Talep açıldığında gösterilecek, isteğinize dayalı, ödeme talebi ile ilişkilendirilecek bir ileti. Not: Bu ileti ödeme ile birlikte Bitcoin ağı üzerinden gönderilmeyecektir.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished">Yeni alım adresi ile ilişkili, seçiminize dayalı etiket.</translation>
+        <translation>Yeni alım adresi ile ilişkili, seçiminize dayalı etiket.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished">Ödeme talep etmek için bu formu kullanın. Tüm alanlar &lt;b&gt;seçime dayalıdır&lt;/b&gt;.</translation>
+        <translation>Ödeme talep etmek için bu formu kullanın. Tüm alanlar &lt;b&gt;seçime dayalıdır&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished">Seçiminize dayalı talep edilecek tutar. Belli bir tutar talep etmemek için bunu boş bırakın veya sıfır değerini kullanın.</translation>
+        <translation>Seçiminize dayalı talep edilecek tutar. Belli bir tutar talep etmemek için bunu boş bırakın veya sıfır değerini kullanın.</translation>
     </message>
     <message>
-        <source>&amp;Create new receiving address</source>
-        <translation type="unfinished">Yeni alıcı adresi oluştur</translation>
+        <source>&amp;Request payment</source>
+        <translation>Ödeme &amp;talep et</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished">Formdaki tüm alanları temizle.</translation>
+        <translation>Formdaki tüm alanları temizle.</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished">Temizle</translation>
+        <translation>Temizle</translation>
     </message>
     <message>
         <source>Generate native segwit (Bech32) address</source>
-        <translation type="unfinished">Yerli segwit (Bech32) adresi oluştur</translation>
+        <translation>Yerli segwit (Bech32) adresi oluştur</translation>
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation type="unfinished">Talep edilen ödemelerin tarihçesi</translation>
+        <translation>Talep edilen ödemelerin tarihçesi</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished">Seçilen talebi göster (bir unsura çift tıklamakla aynı anlama gelir)</translation>
+        <translation>Seçilen talebi göster (bir unsura çift tıklamakla aynı anlama gelir)</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished">Göster</translation>
+        <translation>Göster</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished">Seçilen unsurları listeden kaldır</translation>
+        <translation>Seçilen unsurları listeden kaldır</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished">Kaldır</translation>
+        <translation>Kaldır</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished">&amp;URI'yi Kopyala</translation>
+        <translation>&amp;URI'yi Kopyala</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Adresi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">&amp;Etiketi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;message</source>
+        <translation type="unfinished">&amp;Mesajı kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">&amp;Miktar kopyala</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Cüzdanın kilidi açılamadı.</translation>
+        <translation>Cüzdanın kilidi açılamadı.</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Request payment to …</source>
+        <translation>… 'e ödeme talep et</translation>
+    </message>
+    <message>
         <source>Address:</source>
-        <translation type="unfinished">Adres:</translation>
+        <translation>Adres:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Miktar</translation>
+        <translation>Miktar</translation>
     </message>
     <message>
         <source>Label:</source>
-        <translation type="unfinished">Etiket:</translation>
+        <translation>Etiket:</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation type="unfinished">İleti:</translation>
+        <translation>İleti:</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">Cüzdan:</translation>
+        <translation>Cüzdan:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished">&amp;URI'yi Kopyala</translation>
+        <translation>&amp;URI'yi Kopyala</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished">&amp;Adresi Kopyala</translation>
+        <translation>&amp;Adresi Kopyala</translation>
+    </message>
+    <message>
+        <source>&amp;Verify</source>
+        <translation type="unfinished">&amp;Onayla</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
         <translation type="unfinished">&amp;Resmi Kaydet...</translation>
     </message>
     <message>
-        <source>Payment information</source>
-        <translation type="unfinished">Ödeme bilgisi</translation>
+        <source>Request payment to %1</source>
+        <translation>%1 'e ödeme talep et</translation>
     </message>
     <message>
-        <source>Request payment to %1</source>
-        <translation type="unfinished">%1 'e ödeme talep et</translation>
+        <source>Payment information</source>
+        <translation>Ödeme bilgisi</translation>
     </message>
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Tarih</translation>
+        <translation>Tarih</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiket</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished">Mesaj</translation>
+        <translation>Mesaj</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(etiket yok)</translation>
+        <translation>(etiket yok)</translation>
     </message>
     <message>
         <source>(no message)</source>
-        <translation type="unfinished">(mesaj yok)</translation>
+        <translation>(mesaj yok)</translation>
     </message>
     <message>
         <source>(no amount requested)</source>
-        <translation type="unfinished">(tutar talep edilmedi)</translation>
+        <translation>(tutar talep edilmedi)</translation>
     </message>
     <message>
         <source>Requested</source>
-        <translation type="unfinished">Talep edilen</translation>
+        <translation>Talep edilen</translation>
     </message>
 </context>
 <context>
@@ -2118,71 +2242,71 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation type="unfinished">Para kontrolü özellikleri</translation>
+        <translation>Para kontrolü özellikleri</translation>
     </message>
     <message>
         <source>automatically selected</source>
-        <translation type="unfinished">otomatik seçilmiş</translation>
+        <translation>otomatik seçilmiş</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished">Yetersiz fon!</translation>
+        <translation>Yetersiz fon!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Miktar</translation>
+        <translation>Miktar</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished">Bayt:</translation>
+        <translation>Bayt:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Miktar</translation>
+        <translation>Miktar</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished">Ücret</translation>
+        <translation>Ücret</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">Ücret sonrası:</translation>
+        <translation>Ücret sonrası:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Değiştir</translation>
+        <translation>Değiştir</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished">Bu etkinleştirildiyse fakat para üstü adresi boş ya da geçersizse para üstü yeni oluşturulan bir adrese gönderilecektir.</translation>
+        <translation>Bu etkinleştirildiyse fakat para üstü adresi boş ya da geçersizse para üstü yeni oluşturulan bir adrese gönderilecektir.</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation type="unfinished">Özel para üstü adresi</translation>
+        <translation>Özel para üstü adresi</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation type="unfinished">İşlem Ücreti:</translation>
+        <translation>İşlem Ücreti:</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
-        <translation type="unfinished">Uyarı: Ücret tahmini şu anda mümkün değildir.</translation>
+        <translation>Uyarı: Ücret tahmini şu anda mümkün değildir.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
-        <translation type="unfinished">kilobayt başı</translation>
+        <translation>kilobayt başı</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation type="unfinished">Gizle</translation>
+        <translation>Gizle</translation>
     </message>
     <message>
         <source>Recommended:</source>
-        <translation type="unfinished">Tavsiye edilen:</translation>
+        <translation>Tavsiye edilen:</translation>
     </message>
     <message>
         <source>Custom:</source>
-        <translation type="unfinished">Özel:</translation>
+        <translation>Özel:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2194,7 +2318,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished">Formdaki tüm alanları temizle.</translation>
+        <translation>Formdaki tüm alanları temizle.</translation>
     </message>
     <message>
         <source>Inputs…</source>
@@ -2202,7 +2326,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation type="unfinished">Toz:</translation>
+        <translation>Toz:</translation>
     </message>
     <message>
         <source>Choose…</source>
@@ -2213,8 +2337,12 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">İşlem ücreti ayarlarını gizle</translation>
     </message>
     <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation type="unfinished">(Zeki ücret henüz başlatılmadı. Bu genelde birkaç blok alır…)</translation>
+    </message>
+    <message>
         <source>Confirmation time target:</source>
-        <translation type="unfinished">Doğrulama süresi hedefi:</translation>
+        <translation>Doğrulama süresi hedefi:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2234,44 +2362,52 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished">Miktarı kopyala</translation>
+        <translation>Miktarı kopyala</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Miktar kopyala</translation>
+        <translation>Miktar kopyala</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished">Ücreti kopyala</translation>
+        <translation>Ücreti kopyala</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Sonra ücret kopyası
+        <translation>Sonra ücret kopyası
 </translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Bitleri kopyala</translation>
+        <translation>Bitleri kopyala</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation type="unfinished">toz kopyala</translation>
+        <translation>toz kopyala</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Şansı kopyala</translation>
+        <translation>Şansı kopyala</translation>
     </message>
     <message>
         <source>%1 (%2 blocks)</source>
-        <translation type="unfinished">%1(%2 blok)</translation>
+        <translation>%1(%2 blok)</translation>
+    </message>
+    <message>
+        <source> from wallet '%1'</source>
+        <translation> cüzdan %1'den</translation>
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation type="unfinished">%1 den %2'ye</translation>
+        <translation>%1 den %2'ye</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation type="unfinished">Bu işlemi taslak yapmak ister misiniz?</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished">Göndermek istediğinizden emin misiniz?</translation>
+        <translation>Göndermek istediğinizden emin misiniz?</translation>
     </message>
     <message>
         <source>Sign failed</source>
@@ -2279,85 +2415,87 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">İşlem verilerini kaydet</translation>
+        <translation>İşlem verilerini kaydet</translation>
     </message>
     <message>
         <source>PSBT saved</source>
-        <translation type="unfinished">PSBT kaydedildi.</translation>
+        <translation>PSBT kaydedildi.</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished">veya</translation>
+        <translation>veya</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
-        <translation type="unfinished">Lütfen işleminizi gözden geçirin.</translation>
+        <translation>Lütfen işleminizi gözden geçirin.</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">İşlem ücreti</translation>
+        <translation>İşlem ücreti</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Toplam Tutar</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation type="unfinished">Bitcoin gönderimini onaylayın</translation>
+        <translation>Bitcoin gönderimini onaylayın</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation type="unfinished">Alıcı adresi geçerli değildir. Lütfen tekrar kontrol ediniz.</translation>
+        <translation>Alıcı adresi geçerli değildir. Lütfen tekrar kontrol ediniz.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished">Ödeyeceğiniz tutarın 0'dan yüksek olması gerekir.</translation>
+        <translation>Ödeyeceğiniz tutarın 0'dan yüksek olması gerekir.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished">Tutar bakiyenizden yüksektir.</translation>
+        <translation>Tutar bakiyenizden yüksektir.</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Toplam, %1 işlem ücreti eklendiğinde bakiyenizi geçmektedir.</translation>
+        <translation>Toplam, %1 işlem ücreti eklendiğinde bakiyenizi geçmektedir.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation type="unfinished">Tekrarlayan adres bulundu: adresler sadece bir kez kullanılmalıdır.</translation>
+        <translation>Tekrarlayan adres bulundu: adresler sadece bir kez kullanılmalıdır.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished">İşlem oluşturma başarısız!</translation>
+        <translation>İşlem oluşturma başarısız!</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation type="unfinished">%1 tutarından yüksek bir ücret saçma derecede yüksek bir ücret olarak kabul edilir.</translation>
+        <translation>%1 tutarından yüksek bir ücret saçma derecede yüksek bir ücret olarak kabul edilir.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
-        <translation type="unfinished">Ödeme talebinin geçerlilik süresi bitti.</translation>
+        <translation>Ödeme talebinin geçerlilik süresi bitti.</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-        </translation>
+        <translation><numerusform>Tahmini %n blok içinde doğrulamaya başlanacaktır.</numerusform><numerusform>Tahmini %n blok içinde doğrulamaya başlanacaktır.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Uyarı: geçersiz Bitcoin adresi</translation>
+        <translation>Uyarı: geçersiz Bitcoin adresi</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished">Uyarı: Bilinmeyen para üstü adresi</translation>
+        <translation>Uyarı: Bilinmeyen para üstü adresi</translation>
     </message>
     <message>
         <source>Confirm custom change address</source>
-        <translation type="unfinished">Özel para üstü adresini onayla</translation>
+        <translation>Özel para üstü adresini onayla</translation>
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation type="unfinished">Para üstü için seçtiğiniz adres bu cüzdanın bir parçası değil. Cüzdanınızdaki bir miktar veya tüm para bu adrese gönderilebilir. Emin misiniz?</translation>
+        <translation>Para üstü için seçtiğiniz adres bu cüzdanın bir parçası değil. Cüzdanınızdaki bir miktar veya tüm para bu adrese gönderilebilir. Emin misiniz?</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(etiket yok)</translation>
+        <translation>(etiket yok)</translation>
     </message>
 </context>
 <context>
@@ -2376,11 +2514,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished">Önceden kullanılmış adres seç</translation>
+        <translation>Önceden kullanılmış adres seç</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Ödemenin yollanacağı Bitcoin adresi</translation>
+        <translation>Ödemenin yollanacağı Bitcoin adresi</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2388,47 +2526,58 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation type="unfinished">Bu ögeyi kaldır</translation>
+        <translation>Bu ögeyi kaldır</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished">Ücret yollanan tutardan alınacaktır. Alıcı tutar alanına girdiğinizden daha az bitcoin alacaktır. Eğer birden çok alıcı seçiliyse ücret eşit olarak bölünecektir.</translation>
+        <translation>Ücret yollanan tutardan alınacaktır. Alıcı tutar alanına girdiğinizden daha az bitcoin alacaktır. Eğer birden çok alıcı seçiliyse ücret eşit olarak bölünecektir.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
-        <translation type="unfinished">Ücreti tutardan düş</translation>
+        <translation>Ücreti tutardan düş</translation>
     </message>
     <message>
         <source>Use available balance</source>
-        <translation type="unfinished">Mevcut bakiyeyi kullan</translation>
+        <translation>Mevcut bakiyeyi kullan</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation type="unfinished">İleti:</translation>
+        <translation>İleti:</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">Bu, kimliği doğrulanmamış bir ödeme talebidir.</translation>
+        <translation>Bu, kimliği doğrulanmamış bir ödeme talebidir.</translation>
     </message>
     <message>
         <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">Bu, kimliği doğrulanmış bir ödeme talebidir.</translation>
+        <translation>Bu, kimliği doğrulanmış bir ödeme talebidir.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished">Kullanılmış adres listesine eklemek için bu adrese bir etiket girin</translation>
+        <translation>Kullanılmış adres listesine eklemek için bu adrese bir etiket girin</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Referans için bitcoin: URI'siyle iliştirilmiş işlemle birlikte depolanacak bir ileti. Not: Bu mesaj Bitcoin ağı üzerinden gönderilmeyecektir.</translation>
+        <translation>Referans için bitcoin: URI'siyle iliştirilmiş işlemle birlikte depolanacak bir ileti. Not: Bu mesaj Bitcoin ağı üzerinden gönderilmeyecektir.</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished">Şu adrese öde:</translation>
+        <translation>Şu adrese öde:</translation>
     </message>
     <message>
         <source>Memo:</source>
-        <translation type="unfinished">Not:</translation>
+        <translation>Not:</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 kapanıyor…</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>Bu pencere kalkıncaya dek bilgisayarı kapatmayınız.</translation>
     </message>
 </context>
 <context>
@@ -2443,15 +2592,15 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Adreslerinize yollanan bitcoinleri alabileceğiniz ispatlamak için adreslerinizle iletiler/anlaşmalar imzalayabilirsiniz. Oltalama saldırılarının kimliğinizi imzanızla elde etmeyi deneyebilecekleri için belirsiz ya da rastgele hiçbir şey imzalamamaya dikkat ediniz. Sadece ayrıntılı açıklaması olan ve tümüne katıldığınız ifadeleri imzalayınız.</translation>
+        <translation>Adreslerinize yollanan bitcoinleri alabileceğiniz ispatlamak için adreslerinizle iletiler/anlaşmalar imzalayabilirsiniz. Oltalama saldırılarının kimliğinizi imzanızla elde etmeyi deneyebilecekleri için belirsiz ya da rastgele hiçbir şey imzalamamaya dikkat ediniz. Sadece ayrıntılı açıklaması olan ve tümüne katıldığınız ifadeleri imzalayınız.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">İletinin imzalanmasında kullanılacak Bitcoin adresi</translation>
+        <translation>İletinin imzalanmasında kullanılacak Bitcoin adresi</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished">Önceden kullanılmış adres seç</translation>
+        <translation>Önceden kullanılmış adres seç</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2491,11 +2640,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation type="unfinished">Alıcının adresini, iletiyi (satır sonları, boşluklar, sekmeler vs. karakterleri tam olarak kopyaladığınızdan emin olunuz) ve imzayı aşağıya giriniz. Bir ortadaki adam saldırısı tarafından kandırılmaya engel olmak için imzadan, imzalı iletinin içeriğini aşan bir anlam çıkarmamaya dikkat ediniz. Bunun sadece imzalayan tarafın adres ile alım yapabildiğini ispatladığını ve herhangi bir işlemin gönderi tarafını kanıtlayamayacağını unutmayınız!</translation>
+        <translation>Alıcının adresini, iletiyi (satır sonları, boşluklar, sekmeler vs. karakterleri tam olarak kopyaladığınızdan emin olunuz) ve imzayı aşağıya giriniz. Bir ortadaki adam saldırısı tarafından kandırılmaya engel olmak için imzadan, imzalı iletinin içeriğini aşan bir anlam çıkarmamaya dikkat ediniz. Bunun sadece imzalayan tarafın adres ile alım yapabildiğini ispatladığını ve herhangi bir işlemin gönderi tarafını kanıtlayamayacağını unutmayınız!</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">İletinin imzalanmasında kullanılan Bitcoin adresi</translation>
+        <translation>İletinin imzalanmasında kullanılan Bitcoin adresi</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -2511,194 +2660,194 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation type="unfinished">İmzayı oluşturmak için "İletiyi İmzala"ya tıklayın</translation>
+        <translation>İmzayı oluşturmak için "İletiyi İmzala"ya tıklayın</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished">Girilen adres geçersizdir.</translation>
+        <translation>Girilen adres geçersizdir.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished">Lütfen adresi kontrol edip tekrar deneyiniz.</translation>
+        <translation>Lütfen adresi kontrol edip tekrar deneyiniz.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Girilen adres herhangi bir anahtara işaret etmemektedir.</translation>
+        <translation>Girilen adres herhangi bir anahtara işaret etmemektedir.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished">Cüzdan kilidinin açılması iptal edildi.</translation>
+        <translation>Cüzdan kilidinin açılması iptal edildi.</translation>
     </message>
     <message>
         <source>No error</source>
-        <translation type="unfinished">Hata yok</translation>
+        <translation>Hata yok</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished">Girilen adres için özel anahtar mevcut değildir.</translation>
+        <translation>Girilen adres için özel anahtar mevcut değildir.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
-        <translation type="unfinished">Mesaj imzalama başarısız.</translation>
+        <translation>Mesaj imzalama başarısız.</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation type="unfinished">Mesaj imzalandı.</translation>
+        <translation>Mesaj imzalandı.</translation>
     </message>
     <message>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished">İmzanın kodu çözülemedi.</translation>
+        <translation>İmzanın kodu çözülemedi.</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished">Lütfen imzayı kontrol edip tekrar deneyiniz.</translation>
+        <translation>Lütfen imzayı kontrol edip tekrar deneyiniz.</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished">İmza iletinin özeti ile eşleşmedi.</translation>
+        <translation>İmza iletinin özeti ile eşleşmedi.</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
-        <translation type="unfinished">İleti doğrulaması başarısız oldu.</translation>
+        <translation>İleti doğrulaması başarısız oldu.</translation>
     </message>
     <message>
         <source>Message verified.</source>
-        <translation type="unfinished">Mesaj doğrulandı.</translation>
+        <translation>Mesaj doğrulandı.</translation>
     </message>
 </context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
+        <translation><numerusform>%n taneden daha fazla blok için açık</numerusform><numerusform>%n taneden daha fazla blok için açık</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">%1 değerine dek açık</translation>
+        <translation>%1 değerine dek açık</translation>
     </message>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
-        <translation type="unfinished">%1 doğrulamalı bir işlem ile çelişti</translation>
+        <translation>%1 doğrulamalı bir işlem ile çelişti</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
-        <translation type="unfinished">0/doğrulanmamış, %1</translation>
+        <translation>0/doğrulanmamış, %1</translation>
     </message>
     <message>
         <source>in memory pool</source>
-        <translation type="unfinished">bellek alanında</translation>
+        <translation>bellek alanında</translation>
     </message>
     <message>
         <source>not in memory pool</source>
-        <translation type="unfinished">bellek alanında değil</translation>
+        <translation>bellek alanında değil</translation>
     </message>
     <message>
         <source>abandoned</source>
-        <translation type="unfinished">terk edilmiş</translation>
+        <translation>terk edilmiş</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished">%1/doğrulanmadı</translation>
+        <translation>%1/doğrulanmadı</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation type="unfinished">%1 doğrulama</translation>
+        <translation>%1 doğrulama</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Durum</translation>
+        <translation>Durum</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Tarih</translation>
+        <translation>Tarih</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished">Kaynak</translation>
+        <translation>Kaynak</translation>
     </message>
     <message>
         <source>Generated</source>
-        <translation type="unfinished">Oluşturuldu</translation>
+        <translation>Oluşturuldu</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">Gönderen</translation>
+        <translation>Gönderen</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation type="unfinished">bilinmeyen</translation>
+        <translation>bilinmeyen</translation>
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Alıcı</translation>
+        <translation>Alıcı</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation type="unfinished">kendi adresiniz</translation>
+        <translation>kendi adresiniz</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">sadece-izlenen</translation>
+        <translation>sadece-izlenen</translation>
     </message>
     <message>
         <source>label</source>
-        <translation type="unfinished">etiket</translation>
+        <translation>etiket</translation>
     </message>
     <message>
         <source>Credit</source>
-        <translation type="unfinished">Kredi</translation>
+        <translation>Kredi</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
+        <translation><numerusform>%n ek blok sonrasında olgunlaşacak</numerusform><numerusform>%n ek blok sonrasında olgunlaşacak</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
-        <translation type="unfinished">kabul edilmedi</translation>
+        <translation>kabul edilmedi</translation>
     </message>
     <message>
         <source>Debit</source>
-        <translation type="unfinished">Çekilen Tutar</translation>
+        <translation>Çekilen Tutar</translation>
     </message>
     <message>
         <source>Total debit</source>
-        <translation type="unfinished">Toplam gider</translation>
+        <translation>Toplam gider</translation>
     </message>
     <message>
         <source>Total credit</source>
-        <translation type="unfinished">Toplam gelir</translation>
+        <translation>Toplam gelir</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">İşlem ücreti</translation>
+        <translation>İşlem ücreti</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation type="unfinished">Net tutar</translation>
+        <translation>Net tutar</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished">Mesaj</translation>
+        <translation>Mesaj</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation type="unfinished">Yorum</translation>
+        <translation>Yorum</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation type="unfinished">İşlem ID'si</translation>
+        <translation>İşlem ID'si</translation>
     </message>
     <message>
         <source>Transaction total size</source>
-        <translation type="unfinished">İşlemin toplam boyutu</translation>
+        <translation>İşlemin toplam boyutu</translation>
+    </message>
+    <message>
+        <source>Transaction virtual size</source>
+        <translation>İşlem sanal boyutu</translation>
     </message>
     <message>
         <source>Output index</source>
-        <translation type="unfinished">Çıktı indeksi</translation>
+        <translation>Çıktı indeksi</translation>
     </message>
     <message>
         <source> (Certificate was not verified)</source>
@@ -2706,35 +2855,35 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Merchant</source>
-        <translation type="unfinished">Tüccar</translation>
+        <translation>Tüccar</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished">Oluşturulan bitcoin'lerin harcanabilmelerinden önce %1 blok beklemeleri gerekmektedir. Bu blok, oluşturduğunuzda, blok zincirine eklenmesi için ağda yayınlandı. Zincire eklenmesi başarısız olursa, durumu "kabul edilmedi" olarak değiştirilecek ve harcanamayacaktır. Bu, bazen başka bir düğüm sizden birkaç saniye önce ya da sonra blok oluşturursa meydana gelebilir.</translation>
+        <translation>Oluşturulan bitcoin'lerin harcanabilmelerinden önce %1 blok beklemeleri gerekmektedir. Bu blok, oluşturduğunuzda, blok zincirine eklenmesi için ağda yayınlandı. Zincire eklenmesi başarısız olursa, durumu "kabul edilmedi" olarak değiştirilecek ve harcanamayacaktır. Bu, bazen başka bir düğüm sizden birkaç saniye önce ya da sonra blok oluşturursa meydana gelebilir.</translation>
     </message>
     <message>
         <source>Debug information</source>
-        <translation type="unfinished">Hata ayıklama bilgisi</translation>
+        <translation>Hata ayıklama bilgisi</translation>
     </message>
     <message>
         <source>Transaction</source>
-        <translation type="unfinished">İşlem</translation>
+        <translation>İşlem</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation type="unfinished">Girdiler</translation>
+        <translation>Girdiler</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Mitar</translation>
+        <translation>Mitar</translation>
     </message>
     <message>
         <source>true</source>
-        <translation type="unfinished">doğru</translation>
+        <translation>doğru</translation>
     </message>
     <message>
         <source>false</source>
-        <translation type="unfinished">yanlış</translation>
+        <translation>yanlış</translation>
     </message>
 </context>
 <context>
@@ -2745,179 +2894,209 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Details for %1</source>
-        <translation type="unfinished">%1 için ayrıntılar</translation>
+        <translation>%1 için ayrıntılar</translation>
     </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Tarih</translation>
+        <translation>Tarih</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Tür</translation>
+        <translation>Tür</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiket</translation>
+        <translation>Etiket</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
+        <translation><numerusform>%n taneden daha fazla blok için açık</numerusform><numerusform>%n taneden daha fazla blok için açık</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">%1 değerine dek açık</translation>
+        <translation>%1 değerine dek açık</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished">Doğrulanmamış</translation>
+        <translation>Doğrulanmamış</translation>
     </message>
     <message>
         <source>Abandoned</source>
-        <translation type="unfinished">Terk edilmiş</translation>
+        <translation>Terk edilmiş</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished">Doğrulanıyor (%1 kere doğrulandı, önerilen doğrulama sayısı %2)</translation>
+        <translation>Doğrulanıyor (%1 kere doğrulandı, önerilen doğrulama sayısı %2)</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished">Doğrulandı (%1 doğrulama)</translation>
+        <translation>Doğrulandı (%1 doğrulama)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished">Çakıştı</translation>
+        <translation>Çakıştı</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished">Olgunlaşmamış (%1 doğrulama, %2 doğrulama sonra kullanılabilir olacaktır)</translation>
+        <translation>Olgunlaşmamış (%1 doğrulama, %2 doğrulama sonra kullanılabilir olacaktır)</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation type="unfinished">Oluşturuldu ama kabul edilmedi</translation>
+        <translation>Oluşturuldu ama kabul edilmedi</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Şununla alındı</translation>
+        <translation>Şununla alındı</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation type="unfinished">Alındığı kişi</translation>
+        <translation>Alındığı kişi</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Gönderildiği adres</translation>
+        <translation>Gönderildiği adres</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation type="unfinished">Kendinize ödeme</translation>
+        <translation>Kendinize ödeme</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Madenden</translation>
+        <translation>Madenden</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">sadece-izlenen</translation>
+        <translation>sadece-izlenen</translation>
     </message>
     <message>
         <source>(n/a)</source>
-        <translation type="unfinished">(mevcut değil)</translation>
+        <translation>(mevcut değil)</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(etiket yok)</translation>
+        <translation>(etiket yok)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished">İşlem durumu. Doğrulama sayısını görüntülemek için fare imlecini bu alanın üzerinde tutunuz.</translation>
+        <translation>İşlem durumu. Doğrulama sayısını görüntülemek için fare imlecini bu alanın üzerinde tutunuz.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished">İşlemin alındığı tarih ve zaman.</translation>
+        <translation>İşlemin alındığı tarih ve zaman.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation type="unfinished">İşlemin türü.</translation>
+        <translation>İşlemin türü.</translation>
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished">Bu işleme sadece-izlenen bir adresin dahil edilip, edilmediği.</translation>
+        <translation>Bu işleme sadece-izlenen bir adresin dahil edilip, edilmediği.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation type="unfinished">İşlemin kullanıcı tanımlı amacı.</translation>
+        <translation>İşlemin kullanıcı tanımlı amacı.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished">Bakiyeden kaldırılan ya da bakiyeye eklenen tutar.</translation>
+        <translation>Bakiyeden kaldırılan ya da bakiyeye eklenen tutar.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Tümü</translation>
+        <translation>Tümü</translation>
     </message>
     <message>
         <source>Today</source>
-        <translation type="unfinished">Bugün</translation>
+        <translation>Bugün</translation>
     </message>
     <message>
         <source>This week</source>
-        <translation type="unfinished">Bu hafta</translation>
+        <translation>Bu hafta</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation type="unfinished">Bu ay</translation>
+        <translation>Bu ay</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation type="unfinished">Geçen ay</translation>
+        <translation>Geçen ay</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation type="unfinished">Bu yıl</translation>
+        <translation>Bu yıl</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Şununla alındı</translation>
+        <translation>Şununla alındı</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Gönderildiği adres</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Kendinize</translation>
+        <translation>Gönderildiği adres</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Madenden</translation>
+        <translation>Madenden</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation type="unfinished">Diğer</translation>
+        <translation>Diğer</translation>
     </message>
     <message>
         <source>Enter address, transaction id, or label to search</source>
-        <translation type="unfinished">Aramak için adres, gönderim numarası ya da etiket yazınız</translation>
+        <translation>Aramak için adres, gönderim numarası ya da etiket yazınız</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation type="unfinished">En düşük tutar</translation>
+        <translation>En düşük tutar</translation>
     </message>
     <message>
         <source>Range…</source>
         <translation type="unfinished">Aralık...</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Adresi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">&amp;Etiketi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">&amp;Miktar kopyala</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">&amp;İşlem numarasını kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;raw transaction</source>
+        <translation type="unfinished">&amp;Ham işlemi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy full transaction &amp;details</source>
+        <translation type="unfinished">&amp;Tüm işlem ayrıntılarını kopyala</translation>
+    </message>
+    <message>
+        <source>&amp;Show transaction details</source>
+        <translation>İşlem ayrıntılarını &amp;göster</translation>
+    </message>
+    <message>
+        <source>Increase transaction &amp;fee</source>
+        <translation type="unfinished">&amp;İşlem ücretini artır</translation>
+    </message>
+    <message>
+        <source>A&amp;bandon transaction</source>
+        <translation type="unfinished">&amp;İşlemden vazgeç</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
-        <translation type="unfinished">İşlem Tarihçesini Dışarı Aktar</translation>
+        <translation>İşlem Tarihçesini Dışarı Aktar</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -2926,120 +3105,154 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Doğrulandı</translation>
+        <translation>Doğrulandı</translation>
     </message>
     <message>
         <source>Watch-only</source>
-        <translation type="unfinished">Sadece izlenen</translation>
+        <translation>Sadece izlenen</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Tarih</translation>
+        <translation>Tarih</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Tür</translation>
+        <translation>Tür</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiket</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adres</translation>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>Tanımlayıcı</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Dışa Aktarım Başarısız Oldu</translation>
+        <translation>Dışa Aktarım Başarısız Oldu</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished">İşlem tarihçesinin %1 konumuna kaydedilmeye çalışıldığı sırada bir hata meydana geldi.</translation>
+        <translation>İşlem tarihçesinin %1 konumuna kaydedilmeye çalışıldığı sırada bir hata meydana geldi.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation type="unfinished">Dışarı Aktarma Başarılı</translation>
+        <translation>Dışarı Aktarma Başarılı</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished">İşlem tarihçesi %1 konumuna başarıyla kaydedildi.</translation>
+        <translation>İşlem tarihçesi %1 konumuna başarıyla kaydedildi.</translation>
     </message>
     <message>
         <source>Range:</source>
-        <translation type="unfinished">Tarih Aralığı:</translation>
+        <translation>Tarih Aralığı:</translation>
     </message>
     <message>
         <source>to</source>
-        <translation type="unfinished">Alıcı</translation>
+        <translation>Alıcı</translation>
+    </message>
+</context>
+<context>
+    <name>UnitDisplayStatusBarControl</name>
+    <message>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation>Tutarı göstermek için birim. Başka bir birim seçmek için tıklayınız.</translation>
+    </message>
+</context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Cüzdan kapat</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>&lt;i&gt;%1&lt;/i&gt; cüzdanını kapatmak istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Cüzdanı çok uzun süre kapatmak, veri budama etkinleştirilmişse tüm zinciri yeniden senkronize etmek zorunda kalmanıza neden olabilir.</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Tüm cüzdanları kapat</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Tüm cüzdanları kapatmak istediğinizden emin misiniz?</translation>
     </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">Yeni bir cüzdan oluştur</translation>
+        <translation>Yeni bir cüzdan oluştur</translation>
     </message>
-</context>
+    <message>
+        <source>Error</source>
+        <translation>Hata</translation>
+    </message>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Bitcoini Gönder</translation>
+        <translation>Bitcoini Gönder</translation>
     </message>
     <message>
         <source>Increasing transaction fee failed</source>
-        <translation type="unfinished">İşlem ücreti artırma başarısız oldu</translation>
+        <translation>İşlem ücreti artırma başarısız oldu</translation>
     </message>
     <message>
         <source>Do you want to increase the fee?</source>
-        <translation type="unfinished">Ücreti artırmak istiyor musunuz?</translation>
+        <translation>Ücreti artırmak istiyor musunuz?</translation>
     </message>
     <message>
         <source>Current fee:</source>
-        <translation type="unfinished">Geçerli ücret:</translation>
+        <translation>Geçerli ücret:</translation>
     </message>
     <message>
         <source>Increase:</source>
-        <translation type="unfinished">Artış:</translation>
+        <translation>Artış:</translation>
     </message>
     <message>
         <source>New fee:</source>
-        <translation type="unfinished">Yeni ücret:</translation>
+        <translation>Yeni ücret:</translation>
     </message>
     <message>
         <source>PSBT copied</source>
-        <translation type="unfinished">PSBT kopyalandı</translation>
+        <translation>PSBT kopyalandı</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
-        <translation type="unfinished">İşlem imzalanamıyor.</translation>
+        <translation>İşlem imzalanamıyor.</translation>
     </message>
     <message>
         <source>Could not commit transaction</source>
-        <translation type="unfinished">Alışveriş taahüt edilemedi.</translation>
+        <translation>Alışveriş taahüt edilemedi.</translation>
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">varsayılan cüzdan</translation>
+        <translation>varsayılan cüzdan</translation>
     </message>
 </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">Dışa aktar</translation>
+        <translation>Dışa aktar</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Geçerli sekmedeki veriyi bir dosyaya dışa aktarın</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Hata</translation>
+        <translation>Geçerli sekmedeki veriyi bir dosyaya dışa aktarın</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Cüzdanı Yedekle</translation>
+        <translation>Cüzdanı Yedekle</translation>
     </message>
     <message>
         <source>Wallet Data</source>
@@ -3048,182 +3261,211 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished">Yedekleme Başarısız</translation>
+        <translation>Yedekleme Başarısız</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished">Cüzdan verisini %1'e kaydederken hata oluştu.</translation>
+        <translation>Cüzdan verisini %1'e kaydederken hata oluştu.</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1: %2</source>
+        <translation>Cüzdan verisini %1'e kaydederken hata oluştu: %2</translation>
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation type="unfinished">Yedekleme Başarılı</translation>
+        <translation>Yedekleme Başarılı</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished">Cüzdan verisi %1'e kaydedildi.</translation>
+        <translation>Cüzdan verisi %1'e kaydedildi.</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">İptal</translation>
+        <translation>İptal</translation>
     </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
         <source>The %s developers</source>
-        <translation type="unfinished">%s geliştiricileri</translation>
+        <translation>%s geliştiricileri</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">-maxtxfee çok yüksek bir değere ayarlanmış! Bu denli yüksek ücretler tek bir işlemde ödenebilir.</translation>
+        <translation>-maxtxfee çok yüksek bir değere ayarlanmış! Bu denli yüksek ücretler tek bir işlemde ödenebilir.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">%s veri dizininde kilit elde edilemedi. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
+        <translation>%s veri dizininde kilit elde edilemedi. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation type="unfinished">MIT yazılım lisansı altında dağıtılmıştır, beraberindeki %s ya da %s dosyasına bakınız.</translation>
+        <translation>MIT yazılım lisansı altında dağıtılmıştır, beraberindeki %s ya da %s dosyasına bakınız.</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">%s dosyasının okunması sırasında bir hata meydana geldi! Tüm anahtarlar doğru bir şekilde okundu, ancak işlem verileri ya da adres defteri ögeleri hatalı veya eksik olabilir.</translation>
+        <translation>%s dosyasının okunması sırasında bir hata meydana geldi! Tüm anahtarlar doğru bir şekilde okundu, ancak işlem verileri ya da adres defteri ögeleri hatalı veya eksik olabilir.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">Hata: İçeri gelen bağlantıların dinlenmesi başarısız oldu (dinleme %s hatasını verdi)</translation>
+        <translation>Hata: İçeri gelen bağlantıların dinlenmesi başarısız oldu (dinleme %s hatasını verdi)</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>İşlem ücreti hesaplama başarısız. Fallbackfee özelliği devre dışı. Lütfen bir kaç blok için bekleyiniz yada -fallbackfee özelliğini aktif ediniz.</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished">-maxtxfee=&lt;tutar&gt; için geçersiz tutar: '%s' (Sıkışmış işlemleri önlemek için en az %s değerinde en düşük aktarım ücretine eşit olmalıdır)</translation>
+        <translation>-maxtxfee=&lt;tutar&gt; için geçersiz tutar: '%s' (Sıkışmış işlemleri önlemek için en az %s değerinde en düşük aktarım ücretine eşit olmalıdır)</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Lütfen bilgisayarınızın tarih ve saatinin doğruluğunu kontrol edin. Hata varsa %s doğru çalışmayacaktır.</translation>
+        <translation>Lütfen bilgisayarınızın tarih ve saatinin doğruluğunu kontrol edin. Hata varsa %s doğru çalışmayacaktır.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation type="unfinished">%s programını faydalı buluyorsanız lütfen katkıda bulununuz. Yazılım hakkında daha fazla bilgi için %s adresini ziyaret ediniz.</translation>
+        <translation>%s programını faydalı buluyorsanız lütfen katkıda bulununuz. Yazılım hakkında daha fazla bilgi için %s adresini ziyaret ediniz.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished">Budama, en düşük değer olan %d MiB'den düşük olarak ayarlanmıştır. Lütfen daha yüksek bir sayı kullanınız.</translation>
+        <translation>Budama, en düşük değer olan %d MiB'den düşük olarak ayarlanmıştır. Lütfen daha yüksek bir sayı kullanınız.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Budama: son cüzdan eşleşmesi budanmış verilerin ötesine gitmektedir. -reindex kullanmanız gerekmektedir (Budanmış düğüm ise tüm blok zincirini tekrar indirmeniz gerekir.)</translation>
+        <translation>Budama: son cüzdan eşleşmesi budanmış verilerin ötesine gitmektedir. -reindex kullanmanız gerekmektedir (Budanmış düğüm ise tüm blok zincirini tekrar indirmeniz gerekir.)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation type="unfinished">Blok veritabanı gelecekten gibi görünen bir blok içermektedir. Bu, bilgisayarınızın saat ve tarihinin yanlış ayarlanmış olmasından kaynaklanabilir. Blok veritabanını sadece bilgisayarınızın tarih ve saatinin doğru olduğundan eminseniz yeniden derleyin.</translation>
+        <translation>Blok veritabanı gelecekten gibi görünen bir blok içermektedir. Bu, bilgisayarınızın saat ve tarihinin yanlış ayarlanmış olmasından kaynaklanabilir. Blok veritabanını sadece bilgisayarınızın tarih ve saatinin doğru olduğundan eminseniz yeniden derleyin.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation type="unfinished">Bu işlem, tutar düşüldükten sonra göndermek için çok düşük</translation>
+        <translation>Bu işlem, tutar düşüldükten sonra göndermek için çok düşük</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished">Bu kararlı sürümden önceki bir deneme sürümüdür. - risklerini bilerek kullanma sorumluluğu sizdedir - bitcoin oluşturmak ya da ticari uygulamalar için kullanmayınız</translation>
+        <translation>Bu kararlı sürümden önceki bir deneme sürümüdür. - risklerini bilerek kullanma sorumluluğu sizdedir - bitcoin oluşturmak ya da ticari uygulamalar için kullanmayınız</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">İşlem ücret tahminleri mevcut olmadığında ödeyebileceğiniz işlem ücreti budur.</translation>
+        <translation>İşlem ücret tahminleri mevcut olmadığında ödeyebileceğiniz işlem ücreti budur.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished">Ağ sürümü zincirinin toplam boyutu (%i) en yüksek boyutu geçmektedir (%i). Kullanıcı aracı açıklamasının sayısı veya boyutunu azaltınız.</translation>
+        <translation>Ağ sürümü zincirinin toplam boyutu (%i) en yüksek boyutu geçmektedir (%i). Kullanıcı aracı açıklamasının sayısı veya boyutunu azaltınız.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Uyarı: Ağ eşlerimizle tamamen anlaşamamışız gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
+        <translation>Uyarı: Ağ eşlerimizle tamamen anlaşamamışız gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation type="unfinished">Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
+        <translation>Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
-        <translation type="unfinished">%s çok yüksek ayarlanmış!</translation>
+        <translation>%s çok yüksek ayarlanmış!</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
-        <translation type="unfinished">-maxmempool en az %d MB olmalıdır</translation>
+        <translation>-maxmempool en az %d MB olmalıdır</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Ölümcül dahili bir hata meydana geldi, ayrıntılar için debug.log dosyasına bakınız</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
-        <translation type="unfinished">Çözümlenemedi - %s adres: '%s'</translation>
+        <translation>Çözümlenemedi - %s adres: '%s'</translation>
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Veriler '%s' klasörüne yazılamıyor ; yetkilendirmeyi kontrol edin.</translation>
+        <translation>Veriler '%s' klasörüne yazılamıyor ; yetkilendirmeyi kontrol edin.</translation>
     </message>
     <message>
         <source>Change index out of range</source>
-        <translation type="unfinished">Aralık dışında değişiklik indeksi</translation>
+        <translation>Aralık dışında değişiklik indeksi</translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>
-        <translation type="unfinished">Telif Hakkı (C) %i-%i</translation>
+        <translation>Telif Hakkı (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished">Bozuk blok veritabanı tespit edildi</translation>
+        <translation>Bozuk blok veritabanı tespit edildi</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
-        <translation type="unfinished">Disk alanı çok düşük!</translation>
+        <translation>Disk alanı çok düşük!</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Blok veritabanını şimdi yeniden inşa etmek istiyor musunuz?</translation>
+        <translation>Blok veritabanını şimdi yeniden inşa etmek istiyor musunuz?</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation type="unfinished">Yükleme tamamlandı</translation>
+        <translation>Yükleme tamamlandı</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation type="unfinished">Blok veritabanını başlatılırken bir hata meydana geldi</translation>
+        <translation>Blok veritabanını başlatılırken bir hata meydana geldi</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">%s cüzdan veritabanı ortamının başlatılmasında hata meydana geldi!</translation>
+        <translation>%s cüzdan veritabanı ortamının başlatılmasında hata meydana geldi!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
-        <translation type="unfinished">%s unsurunun yüklenmesinde hata oluştu</translation>
+        <translation>%s unsurunun yüklenmesinde hata oluştu</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>%s yüklenirken hata oluştu: Özel anahtarlar yalnızca oluşturma sırasında devre dışı bırakılabilir
+ </translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished">%s unsurunun yüklenmesinde hata oluştu: bozuk cüzdan</translation>
+        <translation>%s unsurunun yüklenmesinde hata oluştu: bozuk cüzdan</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished">%s unsurunun yüklenmesinde hata oluştu: cüzdan %s programının yeni bir sürümüne ihtiyaç duyuyor</translation>
+        <translation>%s unsurunun yüklenmesinde hata oluştu: cüzdan %s programının yeni bir sürümüne ihtiyaç duyuyor</translation>
     </message>
     <message>
         <source>Error loading block database</source>
-        <translation type="unfinished">Blok veritabanının yüklenmesinde hata</translation>
+        <translation>Blok veritabanının yüklenmesinde hata</translation>
     </message>
     <message>
         <source>Error opening block database</source>
-        <translation type="unfinished">Blok veritabanının açılışı sırasında hata</translation>
+        <translation>Blok veritabanının açılışı sırasında hata</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">Veritabanı okuma hatası, program kapatılıyor.</translation>
+        <translation>Veritabanı okuma hatası, program kapatılıyor.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">Zincirdurumu veritabanı yükseltme hatası</translation>
+        <translation>Zincirdurumu veritabanı yükseltme hatası</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Hata</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Keypool tükendi, lütfen önce keypoolrefill'i çağırın</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Herhangi bir portun dinlenmesi başarısız oldu. Bunu istiyorsanız -listen=0 seçeneğini kullanınız.</translation>
+        <translation>Herhangi bir portun dinlenmesi başarısız oldu. Bunu istiyorsanız -listen=0 seçeneğini kullanınız.</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished">Başlatma sırasında cüzdanı yeniden tarama işlemi başarısız oldu</translation>
+        <translation>Başlatma sırasında cüzdanı yeniden tarama işlemi başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation type="unfinished">Veritabanı doğrulanamadı</translation>
     </message>
     <message>
         <source>Importing…</source>
@@ -3231,43 +3473,43 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Yanlış ya da bulunamamış doğuş bloğu. Ağ için yanlış veri klasörü mü?</translation>
+        <translation>Yanlış ya da bulunamamış doğuş bloğu. Ağ için yanlış veri klasörü mü?</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished">Başlatma sınaması başarısız oldu. %s kapatılıyor.</translation>
+        <translation>Başlatma sınaması başarısız oldu. %s kapatılıyor.</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished">Yetersiz bakiye</translation>
+        <translation>Yetersiz bakiye</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">Geçersiz -onion adresi veya ana makine adı: '%s'</translation>
+        <translation>Geçersiz -onion adresi veya ana makine adı: '%s'</translation>
     </message>
     <message>
         <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">Geçersiz -proxy adresi veya ana makine adı: '%s'</translation>
+        <translation>Geçersiz -proxy adresi veya ana makine adı: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">-%s=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
+        <translation>-%s=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Geçersiz miktarda -discardfee=&lt;amount&gt;:'%s'</translation>
+        <translation>Geçersiz miktarda -discardfee=&lt;amount&gt;:'%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished"> -fallbackfee=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
+        <translation> -fallbackfee=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">-paytxfee=&lt;tutar&gt;:'%s' unsurunda geçersiz tutar (asgari %s olması lazımdır)</translation>
+        <translation>-paytxfee=&lt;tutar&gt;:'%s' unsurunda geçersiz tutar (asgari %s olması lazımdır)</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation type="unfinished">-whitelist: '%s' unsurunda geçersiz bir ağ maskesi belirtildi</translation>
+        <translation>-whitelist: '%s' unsurunda geçersiz bir ağ maskesi belirtildi</translation>
     </message>
     <message>
         <source>Loading P2P addresses…</source>
@@ -3287,23 +3529,31 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation type="unfinished">-whitebind: '%s' ile bir port belirtilmesi lazımdır</translation>
+        <translation>-whitebind: '%s' ile bir port belirtilmesi lazımdır</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
+        <translation>Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished">Budama negatif bir değerle yapılandırılamaz.</translation>
+        <translation>Budama negatif bir değerle yapılandırılamaz.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished">Budama kipi -txindex ile uyumsuzdur.</translation>
+        <translation>Budama kipi -txindex ile uyumsuzdur.</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore…</source>
+        <translation type="unfinished">Blockstore budanıyor…</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">Sistem sınırlamaları sebebiyle -maxconnections %d değerinden %d değerine düşürülmüştür.</translation>
+        <translation>Sistem sınırlamaları sebebiyle -maxconnections %d değerinden %d değerine düşürülmüştür.</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Bloklar tekrar işleniyor…</translation>
     </message>
     <message>
         <source>Rescanning…</source>
@@ -3311,75 +3561,79 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation type="unfinished">İşlemin imzalanması başarısız oldu</translation>
+        <translation>İşlemin imzalanması başarısız oldu</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Belirtilen -walletdir "%s" mevcut değil</translation>
+        <translation>Belirtilen -walletdir "%s" mevcut değil</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Belirtilen -walletdir "%s" göreceli bir yoldur</translation>
+        <translation>Belirtilen -walletdir "%s" göreceli bir yoldur</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Belirtilen -walletdir "%s" bir dizin değildir</translation>
+        <translation>Belirtilen -walletdir "%s" bir dizin değildir</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">Ağ dizisi başlatılıyor…</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
-        <translation type="unfinished">%s'in kaynak kodu ulaşılabilir.</translation>
+        <translation>%s'in kaynak kodu ulaşılabilir.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">İşlemdeki bitcoin tutarı ücreti ödemek için çok düşük</translation>
+        <translation>İşlemdeki bitcoin tutarı ücreti ödemek için çok düşük</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Cüzdan en az aktarma ücretinden daha az ödeme yapmaktan sakınacaktır.</translation>
+        <translation>Cüzdan en az aktarma ücretinden daha az ödeme yapmaktan sakınacaktır.</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
-        <translation type="unfinished">Bu deneysel bir uygulamadır.</translation>
+        <translation>Bu deneysel bir uygulamadır.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Bu her işlemde ödeceğiniz en düşük işlem ücretidir.</translation>
+        <translation>Bu her işlemde ödeceğiniz en düşük işlem ücretidir.</translation>
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Eğer bir gönderme işlemi yaparsanız ödeyeceğiniz işlem ücreti budur.</translation>
+        <translation>Eğer bir gönderme işlemi yaparsanız ödeyeceğiniz işlem ücreti budur.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation type="unfinished">İşlem tutarı çok düşük</translation>
+        <translation>İşlem tutarı çok düşük</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">İşlem tutarı negatif olmamalıdır.</translation>
+        <translation>İşlem tutarı negatif olmamalıdır.</translation>
     </message>
     <message>
         <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">İşlem çok uzun bir mempool zincirine sahip</translation>
+        <translation>İşlem çok uzun bir mempool zincirine sahip</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">İşlem en az bir adet alıcıya sahip olmalı.</translation>
+        <translation>İşlem en az bir adet alıcıya sahip olmalı.</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation type="unfinished">İşlem çok büyük</translation>
+        <translation>İşlem çok büyük</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">Bu bilgisayarda %s ögesine bağlanılamadı (bağlanma %s hatasını verdi)</translation>
+        <translation>Bu bilgisayarda %s ögesine bağlanılamadı (bağlanma %s hatasını verdi)</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished">Bu bilgisayarda %s unsuruna bağlanılamadı. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
+        <translation>Bu bilgisayarda %s unsuruna bağlanılamadı. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Başlangıç anahtarları üretilemiyor</translation>
+        <translation>Başlangıç anahtarları üretilemiyor</translation>
     </message>
     <message>
         <source>Unable to generate keys</source>
@@ -3387,27 +3641,31 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">HTTP sunucusu başlatılamadı. Ayrıntılar için debug.log dosyasına bakınız.</translation>
+        <translation>HTTP sunucusu başlatılamadı. Ayrıntılar için debug.log dosyasına bakınız.</translation>
     </message>
     <message>
         <source>Unknown address type '%s'</source>
-        <translation type="unfinished">Bilinmeyen adres türü '%s'</translation>
+        <translation>Bilinmeyen adres türü '%s'</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">-onlynet için bilinmeyen bir ağ belirtildi: '%s'</translation>
+        <translation>-onlynet için bilinmeyen bir ağ belirtildi: '%s'</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished">Desteklenmeyen günlük kategorisi %s=%s.</translation>
+        <translation>Desteklenmeyen günlük kategorisi %s=%s.</translation>
     </message>
     <message>
         <source>Upgrading UTXO database</source>
-        <translation type="unfinished">UTXO veritabanı yükseltiliyor</translation>
+        <translation>UTXO veritabanı yükseltiliyor</translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation>txindex veritabanı yükseltiliyor</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished">Kullanıcı Aracı açıklaması (%s) güvensiz karakterler içermektedir.</translation>
+        <translation>Kullanıcı Aracı açıklaması (%s) güvensiz karakterler içermektedir.</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>
@@ -3419,7 +3677,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Cüzdanın tekrar yazılması gerekiyordu: işlemi tamamlamak için %s programını yeniden başlatınız</translation>
+        <translation>Cüzdanın tekrar yazılması gerekiyordu: işlemi tamamlamak için %s programını yeniden başlatınız</translation>
     </message>
-</context>
+    </context>
 </TS>

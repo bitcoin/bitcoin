@@ -4,6 +4,7 @@ QT_TS = \
   qt/locale/bitcoin_az.ts \
   qt/locale/bitcoin_be.ts \
   qt/locale/bitcoin_bg.ts \
+  qt/locale/bitcoin_bn.ts \
   qt/locale/bitcoin_bs.ts \
   qt/locale/bitcoin_ca.ts \
   qt/locale/bitcoin_cs.ts \
@@ -66,11 +67,13 @@ QT_TS = \
   qt/locale/bitcoin_sc.ts \
   qt/locale/bitcoin_si.ts \
   qt/locale/bitcoin_sk.ts \
+  qt/locale/bitcoin_sl.ts \
   qt/locale/bitcoin_sn.ts \
   qt/locale/bitcoin_sq.ts \
   qt/locale/bitcoin_sr.ts \
   qt/locale/bitcoin_sr@latin.ts \
   qt/locale/bitcoin_sv.ts \
+  qt/locale/bitcoin_sw.ts \
   qt/locale/bitcoin_szl.ts \
   qt/locale/bitcoin_ta.ts \
   qt/locale/bitcoin_te.ts \

@@ -2,16 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">پتہ یا لیبل کی تصیح کیلیئے داہنا کلک</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>نیا پتہ تخلیق کریں</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;نیا</translation>
+        <translation>&amp;نیا</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,11 +15,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">نقل</translation>
+        <translation>نقل</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">بند</translation>
+        <translation>بند</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -31,7 +27,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">پتہ یا لیبل تلاشی کے لئے درج کریں</translation>
+        <translation>پتہ یا لیبل تلاشی کے لئے درج کریں</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -47,48 +43,43 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">کوئین وصول کرنے والے کا پتہ</translation>
+        <translation>کوئین وصول کرنے والے کا پتہ</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">کوئین وصول کرنے والے کا پتہ</translation>
+        <translation>کوئین وصول کرنے والے کا پتہ</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">چننا</translation>
+        <translation>چننا</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">پتے ارسال کیے جارہے ہیں</translation>
+        <translation>پتے ارسال کیے جارہے ہیں</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">پتے موصول ہورہے ہیں</translation>
+        <translation>پتے موصول ہورہے ہیں</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">یہ آپ کے ادائیگی بھیجنے کے لئے بٹ کوائن ایڈریس ہیں.سکے بھیجنے سے پہلے ہمیشہ رقم اور وصول کنندہ پتہ چیک کریں۔</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">ادائیگیوں کے لئے آپ کے بٹ کوائن ایڈریس ہیں۔ نئے پتے بنانے کے لئے وصول کنندہ ٹیب میں 'نیا وصول کنندہ پتہ بنائیں' بٹن کا استعمال کریں۔دستخط صرف 'میراثی' قسم کے پتے کے ساتھ ہی ممکن ہے۔</translation>
+        <translation>یہ آپ کے ادائیگی بھیجنے کے لئے بٹ کوائن ایڈریس ہیں.سکے بھیجنے سے پہلے ہمیشہ رقم اور وصول کنندہ پتہ چیک کریں۔</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;پتا نقل کریں</translation>
+        <translation>&amp;پتا نقل کریں</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">&amp;لیبل نقل کریں</translation>
+        <translation>&amp;لیبل نقل کریں</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;تدوین</translation>
+        <translation>&amp;تدوین</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">پتا فہرست ایکسپورٹ کریں</translation>
+        <translation>پتا فہرست ایکسپورٹ کریں</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -98,26 +89,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">پتا فہرست محفوظ کرتے ہوئے %1 نقص کا سامنا ہوا۔ دوبارہ کوشش کریں۔</translation>
+        <translation>پتا فہرست محفوظ کرتے ہوئے %1 نقص کا سامنا ہوا۔ دوبارہ کوشش کریں۔</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">ایکسپورٹ ناکام ہوا</translation>
+        <translation>ایکسپورٹ ناکام ہوا</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">لیبل</translation>
+        <translation>لیبل</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">پتہ</translation>
+        <translation>پتہ</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(کوئی لیبل نہیں)</translation>
+        <translation>(کوئی لیبل نہیں)</translation>
     </message>
 </context>
 <context>
@@ -140,11 +131,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">پاسفریز دکھائیں</translation>
+        <translation>پاسفریز دکھائیں</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">بٹوے کو خفیہ کریں</translation>
+        <translation>بٹوے کو خفیہ کریں</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -152,15 +143,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished">بستہ کھولیں</translation>
+        <translation>بستہ کھولیں</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">پاسفریز تبدیل کریں</translation>
+        <translation>پاسفریز تبدیل کریں</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">پرس کی خفیہ کاری کی تصدیق کریں</translation>
+        <translation>پرس کی خفیہ کاری کی تصدیق کریں</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -262,75 +253,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">خرابی: مخصوص ڈیٹا ڈائریکٹری ""  %1 موجود نہیں ہے۔</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">خرابی: کنفگریشن فائل کا تجزیہ نہیں کیا جاسکتا۔%1.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation type="unfinished">خرابی:%1</translation>
-    </message>
-    <message>
-        <source>Error initializing settings: %1</source>
-        <translation type="unfinished">ترتیبات کو شروع کرنے میں خرابی:%1</translation>
-    </message>
-    <message>
-        <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">%1ابھی تک سلامتی سے باہر نہیں نکلا…</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation type="unfinished">رقم</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -358,11 +280,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">&amp;معلومات%1</translation>
+        <translation>&amp;معلومات%1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation type="unfinished">%1 کے بارے میں معلومات دکھایں</translation>
+        <translation>%1 کے بارے میں معلومات دکھایں</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -375,6 +297,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Modify configuration options for %1</source>
         <translation type="unfinished">%1 اختیارات کے لئےترتیب ترمیم کریں</translation>
+    </message>
+    <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation type="unfinished">&amp;کلپ بورڈ سے پی ایس بی ٹی لوڈ کریں…</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -454,10 +380,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>پیغامات کی توثیق کریں تاکہ یہ یقینی بن سکے کہ ان پر بٹ کوائن کے مخصوص پتوں پر دستخط ہوئے ہیں</translation>
     </message>
     <message>
-        <source>Load PSBT from clipboard…</source>
-        <translation type="unfinished">کلپ بورڈ سے پی ایس بی ٹی لوڈ کریں…</translation>
-    </message>
-    <message>
         <source>Open &amp;URI…</source>
         <translation type="unfinished">کھولیں اور یو آر آئی…</translation>
     </message>
@@ -465,24 +387,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Close Wallet…</source>
         <translation type="unfinished">پرس بند کریں…</translation>
     </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>نقص</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
-        <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation type="unfinished">&amp;پتے ارسال کیے جارہے ہیں</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished">&amp;پتے موصول ہورہے ہیں</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -493,19 +408,38 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">رقم:</translation>
+        <translation>رقم:</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">رقم</translation>
+        <translation>رقم</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">تاریخ</translation>
+        <translation>تاریخ</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation>&amp;پتا نقل کریں</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>&amp;لیبل نقل کریں</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(کوئی لیبل نہیں)</translation>
+        <translation>(کوئی لیبل نہیں)</translation>
+    </message>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">پرس</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>بٹوے کو خفیہ کریں</translation>
     </message>
     </context>
 <context>
@@ -520,14 +454,39 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>FreespaceChecker</name>
+    </context>
+<context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">معلومات%1</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+    <message>
+        <source>Error</source>
+        <translation>نقص</translation>
+    </message>
+</context>
+<context>
+    <name>NetWatchLogModel</name>
+    <message>
+        <source>Address</source>
+        <comment>NetWatch: Address header</comment>
+        <translation>پتہ</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Options</source>
+        <translation type="unfinished">اختیارات</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation type="unfinished">&amp;پرس</translation>
     </message>
     <message>
         <source>Error</source>
@@ -535,10 +494,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>OptionsDialog</name>
+    <name>PSBTOperationsDialog</name>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">نقص</translation>
+        <source>Close</source>
+        <translation type="unfinished">بند</translation>
     </message>
     </context>
 <context>
@@ -546,14 +505,76 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">پتہ</translation>
+        <translation>پتہ</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>رقم</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation type="unfinished">خرابی: مخصوص ڈیٹا ڈائریکٹری ""  %1 موجود نہیں ہے۔</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation type="unfinished">خرابی: کنفگریشن فائل کا تجزیہ نہیں کیا جاسکتا۔%1.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">خرابی:%1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1ابھی تک سلامتی سے باہر نہیں نکلا…</translation>
+    </message>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <source>Wallet: </source>
+        <translation type="unfinished">پرس: </translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <translation>&amp;پتا نقل کریں</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation type="unfinished">&amp;رقم:</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;لیبل:</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation>&amp;پتا نقل کریں</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>&amp;لیبل نقل کریں</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Address:</source>
+        <translation type="unfinished">پتہ:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
-        <translation type="unfinished">رقم:</translation>
+        <translation>رقم:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation type="unfinished">لیبل:</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -561,99 +582,109 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished">کاپی پتہ</translation>
+        <translation>کاپی پتہ</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">تاریخ</translation>
+        <translation>تاریخ</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">لیبل</translation>
+        <translation>لیبل</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(کوئی لیبل نہیں)</translation>
+        <translation>(کوئی لیبل نہیں)</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished">ناکافی فنڈز</translation>
+        <translation>ناکافی فنڈز</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">رقم:</translation>
+        <translation>رقم:</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation type="unfinished">چننا…</translation>
     </message>
     <message>
         <source>Balance:</source>
         <translation>بیلنس:</translation>
     </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+    <message>
+        <source>S&amp;end</source>
+        <translation type="unfinished">&amp;بھیجیں</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(کوئی لیبل نہیں)</translation>
+        <translation>(کوئی لیبل نہیں)</translation>
     </message>
 </context>
 <context>
-    <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+    <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation type="unfinished">&amp;رقم:</translation>
     </message>
     <message>
-        <source>Date</source>
-        <translation type="unfinished">تاریخ</translation>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;لیبل:</translation>
     </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+    </context>
+<context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>&amp;Verify Message</source>
+        <translation>پیغام کی توثیق کریں</translation>
+    </message>
+    <message>
+        <source>Verify &amp;Message</source>
+        <translation type="unfinished">پیغام کی توثیق کریں</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>تاریخ</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">رقم</translation>
+        <translation>رقم</translation>
     </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">تاریخ</translation>
+        <translation>تاریخ</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">لیبل</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>لیبل</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(کوئی لیبل نہیں)</translation>
+        <translation>(کوئی لیبل نہیں)</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation>&amp;پتا نقل کریں</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>&amp;لیبل نقل کریں</translation>
+    </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
@@ -661,19 +692,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">تاریخ</translation>
+        <translation>تاریخ</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">لیبل</translation>
+        <translation>لیبل</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">پتہ</translation>
+        <translation>پتہ</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">ایکسپورٹ ناکام ہوا</translation>
+        <translation>ایکسپورٹ ناکام ہوا</translation>
     </message>
     </context>
 <context>
@@ -682,27 +713,35 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create a new wallet</source>
         <translation type="unfinished">ایک نیا پرس بنائیں</translation>
     </message>
-</context>
+    <message>
+        <source>Error</source>
+        <translation>نقص</translation>
+    </message>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">برآمد</translation>
+        <translation>برآمد</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
+        <translation>موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">نقص</translation>
+        <source>Backup Wallet</source>
+        <translation type="unfinished"> بیک اپ والیٹ</translation>
     </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Error</source>
+        <translation>نقص</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished">ناکافی فنڈز</translation>
+        <translation>ناکافی فنڈز</translation>
     </message>
     </context>
 </TS>

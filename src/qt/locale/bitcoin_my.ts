@@ -2,16 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">လိပ်စာ သို့မဟုတ် ခေါင်းစဉ်တပ်ရန် Right-click နှိပ်ပါ။</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>လိပ်စာအသစ်ယူမယ်။</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;အသစ်</translation>
+        <translation>&amp;အသစ်</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,7 +15,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;ကူးမယ်</translation>
+        <translation>&amp;ကူးမယ်</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation type="unfinished">ပိတ်မည်</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -46,6 +46,14 @@
         <translation type="unfinished">လိပ်စာကိုပေးပို့ဖို့လိပ်စာရွေးချယ်ပါ</translation>
     </message>
     <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">ဒင်္ဂါးများလက်ခံရယူမည့်လိပ်စာကို​​ရွေးပါ</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">​ရွေးပါ</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation type="unfinished">လိပ်စာပေးပို့နေသည်</translation>
     </message>
@@ -70,52 +78,13 @@
     </message>
     </context>
 <context>
-    <name>QObject</name>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
+    <name>AskPassphraseDialog</name>
+    </context>
+<context>
+    <name>BitcoinApplication</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>အမှား</translation>
@@ -133,15 +102,16 @@
         <translation>နောက်ဆုံးပေါ်</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation type="unfinished">&amp;လိပ်စာပေးပို့နေသည်</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished">&amp;လိပ်စာလက်ခံရရှိသည်</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished">ချဲ့</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
-        <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
     </message>
     </context>
 <context>
@@ -160,24 +130,46 @@
     </message>
     </context>
 <context>
-    <name>Intro</name>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation type="unfinished">&amp;တံဆိပ်</translation>
     </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation type="unfinished">&amp;လိပ်စာ</translation>
+    </message>
+    </context>
+<context>
+    <name>Intro</name>
+    <message>
+        <source>Error</source>
+        <translation>အမှား</translation>
+    </message>
+</context>
+<context>
+    <name>NetWatchLogModel</name>
+    <message>
+        <source>Address</source>
+        <comment>NetWatch: Address header</comment>
+        <translation type="unfinished">လိပ်စာ</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsDialog</name>
     <message>
         <source>Error</source>
         <translation>အမှား</translation>
     </message>
     </context>
 <context>
-    <name>OptionsDialog</name>
+    <name>PSBTOperationsDialog</name>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">အမှား</translation>
+        <source>Close</source>
+        <translation type="unfinished">ပိတ်မည်</translation>
     </message>
     </context>
 <context>
@@ -186,6 +178,31 @@
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
         <translation type="unfinished">လိပ်စာ</translation>
+    </message>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation type="unfinished">&amp;အချက်အလက်</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;တံဆိပ်:</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Address:</source>
+        <translation type="unfinished">လိပ်စာ:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation type="unfinished">တံဆိပ်:</translation>
     </message>
     </context>
 <context>
@@ -201,31 +218,27 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-        </translation>
+    <message>
+        <source>Choose…</source>
+        <translation type="unfinished">​ရွေးပါ…</translation>
+    </message>
+    </context>
+<context>
+    <name>SendCoinsEntry</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;တံဆိပ်:</translation>
     </message>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">နေ့စွဲ</translation>
     </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
+    </context>
+<context>
+    <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
@@ -237,15 +250,13 @@
         <source>Label</source>
         <translation type="unfinished">တံဆိပ်</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Other</source>
+        <translation type="unfinished">အခြား</translation>
+    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">နေ့စွဲ</translation>
@@ -264,18 +275,28 @@
     </message>
     </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation>အမှား</translation>
+    </message>
+    </context>
+<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;ထုတ်ယူသိမ်းဆည်း</translation>
+        <translation>&amp;ထုတ်ယူသိမ်းဆည်း</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
+        <translation>လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
     </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
     <message>
         <source>Error</source>
-        <translation type="unfinished">အမှား</translation>
+        <translation>အမှား</translation>
     </message>
     </context>
 </TS>

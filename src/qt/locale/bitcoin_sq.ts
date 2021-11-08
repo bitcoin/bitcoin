@@ -2,16 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen.</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Krijo një adresë të re</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;E re</translation>
+        <translation>&amp;E re</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,11 +15,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Kopjo</translation>
+        <translation>&amp;Kopjo</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">afer</translation>
+        <translation>afer</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -31,7 +27,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Vendos adresën ose etiketën për të kërkuar</translation>
+        <translation>Vendos adresën ose etiketën për të kërkuar</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -47,72 +43,67 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Zgjidh adresen ku do te dergoni monedhat</translation>
+        <translation>Zgjidh adresen ku do te dergoni monedhat</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Zgjidh adresën ku do të merrni monedhat</translation>
+        <translation>Zgjidh adresën ku do të merrni monedhat</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">Zgjidh</translation>
+        <translation>Zgjidh</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Duke derguar adresen</translation>
+        <translation>Duke derguar adresen</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">Duke marr adresen</translation>
+        <translation>Duke marr adresen</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Këto janë Bitcoin adresat e juaja për të dërguar pagesa. Gjithmon kontrolloni shumën dhe adresën pranuese para se të dërgoni monedha.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Këto janë adresat tuaja të Bitcoin për të marrë pagesa. Përdorni butonin 'Krijo adresë të re marrëse' në skedën e marrjes për të krijuar adresa të reja. Nënshkrimi është i mundur vetëm me adresa të tipit 'trashëgimi'.</translation>
+        <translation>Këto janë Bitcoin adresat e juaja për të dërguar pagesa. Gjithmon kontrolloni shumën dhe adresën pranuese para se të dërgoni monedha.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Kopjo adresen</translation>
+        <translation>&amp;Kopjo adresen</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">Kopjo &amp;Etiketë</translation>
+        <translation>Kopjo &amp;Etiketë</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;Ndrysho</translation>
+        <translation>&amp;Ndrysho</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Eksporto listën e adresave</translation>
+        <translation>Eksporto listën e adresave</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">Gabim gjatë ruajtjes së listës së adresave në %1. Ju lutem provoni prapë.</translation>
+        <translation>Gabim gjatë ruajtjes së listës së adresave në %1. Ju lutem provoni prapë.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Eksportimi dështoj</translation>
+        <translation>Eksportimi dështoj</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiketë</translation>
+        <translation>Etiketë</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adresë</translation>
+        <translation>Adresë</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(pa etiketë)</translation>
+        <translation>(pa etiketë)</translation>
     </message>
 </context>
 <context>
@@ -135,133 +126,82 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Shfaqe fjalëkalimin</translation>
+        <translation>Shfaqe fjalëkalimin</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">Kripto portofolin</translation>
+        <translation>Kripto portofolin</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Ky veprim ka nevojë per fjalëkalimin e portofolit tuaj që të hapë portofolin.</translation>
+        <translation>Ky veprim ka nevojë per fjalëkalimin e portofolit tuaj që të hapë portofolin.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished">Hap portofolin.</translation>
+        <translation>Hap portofolin.</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">Ndrysho fjalëkalimin</translation>
+        <translation>Ndrysho fjalëkalimin</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">Konfirmoni enkriptimin e portofolit</translation>
+        <translation>Konfirmoni enkriptimin e portofolit</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished">Jeni te sigurt te enkriptoni portofolin tuaj?</translation>
+        <translation>Jeni te sigurt te enkriptoni portofolin tuaj?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">Portofoli u enkriptua</translation>
+        <translation>Portofoli u enkriptua</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">Jepe fjalëkalimin e ri për portofolin. Ju lutemi të përdorni një fjalkalim prej dhjetë ose më shumë shkronjave të rëndomta, ose tetë e më shumë fjalë.</translation>
+        <translation>Jepe fjalëkalimin e ri për portofolin. Ju lutemi të përdorni një fjalkalim prej dhjetë ose më shumë shkronjave të rëndomta, ose tetë e më shumë fjalë.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Jepe fjalëkalimin e vjetër dhe fjalkalimin e ri për portofolin.</translation>
+        <translation>Jepe fjalëkalimin e vjetër dhe fjalkalimin e ri për portofolin.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation type="unfinished">Portofoli që duhet të enkriptohet</translation>
+        <translation>Portofoli që duhet të enkriptohet</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation type="unfinished">Portofoli juaj do të enkriptohet</translation>
+        <translation>Portofoli juaj do të enkriptohet</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation type="unfinished">Portofoli juaj është i enkriptuar.</translation>
+        <translation>Portofoli juaj është i enkriptuar.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished">Enkriptimi i portofolit dështoi</translation>
+        <translation>Enkriptimi i portofolit dështoi</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">Enkriptimi i portofolit dështoi për shkak të një gabimi të brëndshëm. portofoli juaj nuk u enkriptua.</translation>
+        <translation>Enkriptimi i portofolit dështoi për shkak të një gabimi të brëndshëm. portofoli juaj nuk u enkriptua.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished">Frazkalimet e plotësuara nuk përputhen.</translation>
+        <translation>Frazkalimet e plotësuara nuk përputhen.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished">ç'kyçja e portofolit dështoi</translation>
+        <translation>ç'kyçja e portofolit dështoi</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished">Frazkalimi i futur për dekriptimin e portofolit nuk ishte i saktë.</translation>
+        <translation>Frazkalimi i futur për dekriptimin e portofolit nuk ishte i saktë.</translation>
     </message>
     </context>
 <context>
-    <name>QObject</name>
-    <message>
-        <source>unknown</source>
-        <translation type="unfinished">i/e panjohur</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation type="unfinished">Sasia</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation type="unfinished">%1 dhe %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
+    <name>BanTableModel</name>
+    </context>
+<context>
+    <name>BitcoinApplication</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -286,8 +226,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Mbyllni aplikacionin</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Shfaq informacion rreth %1</translation>
+    </message>
+    <message>
         <source>Show information about Qt</source>
         <translation>Shfaq informacion rreth Qt</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Portofol:</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -302,8 +250,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>&amp;Merr</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Opsionet…</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Shfaq / Fsheh</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp;Kripto portofolin…</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -321,16 +277,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Tabs toolbar</source>
         <translation>Shiriti i mjeteve</translation>
     </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">Duke u sinkronizuar me rrjetin…</translation>
     </message>
     <message>
         <source>%1 behind</source>
         <translation>%1 Pas</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">Duke u azhornuar…</translation>
     </message>
     <message>
         <source>Error</source>
@@ -344,13 +301,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Up to date</source>
         <translation>I azhornuar</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
-        <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation type="unfinished">&amp;Duke derguar adresen</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished">&amp;Duke marr adresen</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -373,38 +330,50 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
-        <translation type="unfinished">Zgjedhja e monedhes</translation>
+        <translation>Zgjedhja e monedhes</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Shuma:</translation>
+        <translation>Shuma:</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Sasia</translation>
+        <translation>Sasia</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Data</translation>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopjo adresën</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>Kopjo &amp;Etiketë</translation>
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished">po</translation>
+        <translation>po</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished">jo</translation>
+        <translation>jo</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(pa etiketë)</translation>
+        <translation>(pa etiketë)</translation>
     </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Portofol</translation>
+        <translation>Portofol</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Kripto portofolin</translation>
     </message>
     </context>
 <context>
@@ -423,23 +392,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>New sending address</source>
-        <translation type="unfinished">Adresë e re dërgimi</translation>
+        <translation>Adresë e re dërgimi</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation type="unfinished">Ndrysho adresën pritëse</translation>
+        <translation>Ndrysho adresën pritëse</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation type="unfinished">ndrysho adresën dërguese</translation>
+        <translation>ndrysho adresën dërguese</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Nuk mund të ç'kyçet portofoli.</translation>
+        <translation>Nuk mund të ç'kyçet portofoli.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation type="unfinished">Krijimi i çelësit të ri dështoi.</translation>
+        <translation>Krijimi i çelësit të ri dështoi.</translation>
     </message>
 </context>
 <context>
@@ -450,38 +419,55 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation>versioni</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+    <message>
+        <source>Welcome</source>
+        <translation>Miresevini</translation>
     </message>
     <message>
         <source>Error</source>
         <translation>Problem</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation>Miresevini</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">versioni</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation type="unfinished">Formilarë</translation>
+        <translation>Formilarë</translation>
+    </message>
+    <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">i/e panjohur…</translation>
     </message>
     </context>
+<context>
+    <name>NetWatchLogModel</name>
+    <message>
+        <source>Type</source>
+        <comment>NetWatch: Type header</comment>
+        <translation>Lloji</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <comment>NetWatch: Address header</comment>
+        <translation>Adresë</translation>
+    </message>
+</context>
+<context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation>Ngjit nga memorja e sistemit</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -490,11 +476,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished">Portofol</translation>
+        <translation>Portofol</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Problem</translation>
+        <translation>Problem</translation>
     </message>
     </context>
 <context>
@@ -505,18 +495,45 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">afer</translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Adresë</translation>
+        <translation>Adresë</translation>
     </message>
     <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
-        <translation type="unfinished">Lloji</translation>
+        <translation>Lloji</translation>
     </message>
     </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>Sasia</translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 dhe %2</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>i/e panjohur</translation>
+    </message>
+    <message>
+        <source>Txn</source>
+        <comment>Tx Watch: Transaction type abbreviation</comment>
+        <translation>tst</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -524,57 +541,86 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Informacion</translation>
     </message>
     <message>
+        <source>Wallet: </source>
+        <translation type="unfinished">Portofol: </translation>
+    </message>
+    <message>
         <source>&amp;Open</source>
         <translation>&amp;Hap</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <translation type="unfinished">&amp;Kopjo adresën</translation>
+    </message>
+    <message>
         <source>Unknown</source>
-        <translation type="unfinished">i/e panjohur</translation>
+        <translation>i/e panjohur</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation type="unfinished">Shuma:</translation>
+        <translation>Shuma:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation type="unfinished">&amp;Etiketë:</translation>
+        <translation>&amp;Etiketë:</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished">Pastro</translation>
+        <translation>Pastro</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopjo adresën</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>Kopjo &amp;Etiketë</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Nuk mund të ç'kyçet portofoli.</translation>
+        <translation>Nuk mund të ç'kyçet portofoli.</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Address:</source>
+        <translation type="unfinished">Adresë:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
-        <translation type="unfinished">Shuma:</translation>
+        <translation>Shuma:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation type="unfinished">Etiketë:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Portofol:</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished">&amp;Kopjo adresen</translation>
+        <translation>&amp;Kopjo adresen</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Data</translation>
+        <translation>Data</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiketë</translation>
+        <translation>Etiketë</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(pa etiketë)</translation>
+        <translation>(pa etiketë)</translation>
     </message>
     </context>
 <context>
@@ -585,15 +631,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished">Fonde te pamjaftueshme</translation>
+        <translation>Fonde te pamjaftueshme</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Shuma:</translation>
+        <translation>Shuma:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
         <translation>Dërgo marrësve të ndryshëm njëkohësisht</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation type="unfinished">Zgjidh…</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -604,23 +654,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Konfirmo veprimin e dërgimit</translation>
     </message>
     <message>
+        <source>S&amp;end</source>
+        <translation type="unfinished">&amp;Dergo</translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
-        <translation type="unfinished">konfirmo dërgimin e monedhave</translation>
+        <translation>konfirmo dërgimin e monedhave</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished">Shuma e paguar duhet të jetë më e madhe se 0.</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>Shuma e paguar duhet të jetë më e madhe se 0.</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(pa etiketë)</translation>
+        <translation>(pa etiketë)</translation>
     </message>
 </context>
 <context>
@@ -643,7 +690,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished">Paguaj drejt:</translation>
+        <translation>Paguaj drejt:</translation>
     </message>
     </context>
 <context>
@@ -655,47 +702,33 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">Hapur deri më %1</translation>
+        <translation>Hapur deri më %1</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished">%1/I pakonfirmuar</translation>
+        <translation>%1/I pakonfirmuar</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation type="unfinished">%1 konfirmimet</translation>
+        <translation>%1 konfirmimet</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Data</translation>
+        <translation>Data</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation type="unfinished">i/e panjohur</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>i/e panjohur</translation>
     </message>
     <message>
         <source>Transaction</source>
-        <translation type="unfinished">transaksionit</translation>
+        <translation>transaksionit</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Sasia</translation>
+        <translation>Sasia</translation>
     </message>
     </context>
 <context>
@@ -709,122 +742,130 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Data</translation>
+        <translation>Data</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Lloji</translation>
+        <translation>Lloji</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiketë</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>Etiketë</translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">Hapur deri më %1</translation>
+        <translation>Hapur deri më %1</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished">I/E konfirmuar(%1 konfirmime)</translation>
+        <translation>I/E konfirmuar(%1 konfirmime)</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation type="unfinished">I krijuar por i papranuar</translation>
+        <translation>I krijuar por i papranuar</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Marrë me</translation>
+        <translation>Marrë me</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Dërguar drejt</translation>
+        <translation>Dërguar drejt</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation type="unfinished">Pagesë ndaj vetvetes</translation>
+        <translation>Pagesë ndaj vetvetes</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Minuar</translation>
+        <translation>Minuar</translation>
     </message>
     <message>
         <source>(n/a)</source>
-        <translation type="unfinished">(p/a)</translation>
+        <translation>(p/a)</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(pa etiketë)</translation>
+        <translation>(pa etiketë)</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Marrë me</translation>
+        <translation>Marrë me</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Dërguar drejt</translation>
+        <translation>Dërguar drejt</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Minuar</translation>
+        <translation>Minuar</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopjo adresën</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>Kopjo &amp;Etiketë</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Data</translation>
+        <translation>Data</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Lloji</translation>
+        <translation>Lloji</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Etiketë</translation>
+        <translation>Etiketë</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adresë</translation>
+        <translation>Adresë</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Eksportimi dështoj</translation>
+        <translation>Eksportimi dështoj</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation>Problem</translation>
     </message>
     </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Dërgo Monedha</translation>
+        <translation>Dërgo Monedha</translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Eksporto</translation>
+        <translation>&amp;Eksporto</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Eksporto të dhënat e skedës korrente në një skedar</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Problem</translation>
+        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
     </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Error</source>
+        <translation>Problem</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished">Fonde te pamjaftueshme</translation>
+        <translation>Fonde te pamjaftueshme</translation>
     </message>
     </context>
 </TS>

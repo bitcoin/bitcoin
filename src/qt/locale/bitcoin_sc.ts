@@ -2,28 +2,24 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Tastu deretu po cambiai s'incarreramentu o su nòmini</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Crea un'incarreramentu nou</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;nou</translation>
+        <translation>&amp;nou</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;còpia</translation>
+        <translation>&amp;còpia</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">S&amp;erra</translation>
+        <translation>S&amp;erra</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Poni s'incarreramentu o s'etiketa po circai</translation>
+        <translation>Poni s'incarreramentu o s'etiketa po circai</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -35,132 +31,80 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Scebera a cali incarreramentu bolis mandai is monedas</translation>
+        <translation>Scebera a cali incarreramentu bolis mandai is monedas</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Sciobera s'incarreramentu po arrici is monedas cun</translation>
+        <translation>Sciobera s'incarreramentu po arrici is monedas cun</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">S&amp;ciobera</translation>
+        <translation>S&amp;ciobera</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Incarreramentu de inviu</translation>
+        <translation>Incarreramentu de inviu</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">Incarreramentu destinatàriu</translation>
+        <translation>Incarreramentu destinatàriu</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Custus funt is incarreramentu Bitcoin tuus po mandai pagamentus. Càstia sempri sa cantidadi e s'incarreramentu destinatàriu antis de inviais is monedas</translation>
+        <translation>Custus funt is incarreramentu Bitcoin tuus po mandai pagamentus. Càstia sempri sa cantidadi e s'incarreramentu destinatàriu antis de inviais is monedas</translation>
     </message>
     </context>
 <context>
-    <name>QObject</name>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
-    </message>
+    <name>AddressTableModel</name>
+    </context>
+<context>
+    <name>BitcoinApplication</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-        </translation>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation type="unfinished">&amp;Incarreramentu de inviu</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
-        <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished">&amp;Incarreramentu destinatàriu</translation>
     </message>
     </context>
 <context>
     <name>Intro</name>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-        </translation>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Serra</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-        </translation>
+    <message>
+        <source>Choose…</source>
+        <translation type="unfinished">Sciobera…</translation>
     </message>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
+    </context>
+<context>
+    <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
+    </context>
+<context>
+    <name>WalletModel</name>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Esporta</translation>
+        <translation>&amp;Esporta</translation>
     </message>
     </context>
 </TS>

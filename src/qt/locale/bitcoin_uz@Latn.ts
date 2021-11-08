@@ -2,24 +2,20 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Manzil yoki yorliqni tahrirlash uchun oʻng tugmani bosing</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Yangi manzil yaratish</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Yangi</translation>
+        <translation>&amp;Yangi</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Nusxalash</translation>
+        <translation>&amp;Nusxalash</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">Yo&amp;pish</translation>
+        <translation>Yo&amp;pish</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -27,92 +23,57 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Manzillarni nusxalash</translation>
+        <translation>&amp;Manzillarni nusxalash</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
+        <translation>Yorliq</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Manzil</translation>
-    </message>
-    </context>
-<context>
-    <name>QObject</name>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>Manzil</translation>
     </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+    </context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation>&amp;Manzillarni nusxalash</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
-        <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+    </context>
+<context>
+    <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>&amp;Yorliq</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>&amp;Manzil</translation>
     </message>
     </context>
 <context>
     <name>Intro</name>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+    </context>
+<context>
+    <name>NetWatchLogModel</name>
+    <message>
+        <source>Address</source>
+        <comment>NetWatch: Address header</comment>
+        <translation>Manzil</translation>
+    </message>
+</context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Yopish</translation>
     </message>
     </context>
 <context>
@@ -120,66 +81,86 @@
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Manzil</translation>
+        <translation>Manzil</translation>
+    </message>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <translation>&amp;Manzillarni nusxalash</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;Yorliq:</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation>&amp;Manzillarni nusxalash</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Address:</source>
+        <translation type="unfinished">Manzil:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation type="unfinished">Yorliq:</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Manzillarni nusxalash</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
+        <translation>Yorliq</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+    </context>
+<context>
+    <name>SendCoinsEntry</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;Yorliq:</translation>
     </message>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
+    </context>
+<context>
+    <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>Yorliq</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>&amp;Copy address</source>
+        <translation>&amp;Manzillarni nusxalash</translation>
+    </message>
+    <message>
         <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
+        <translation>Yorliq</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Manzil</translation>
+        <translation>Manzil</translation>
     </message>
     </context>
 </TS>

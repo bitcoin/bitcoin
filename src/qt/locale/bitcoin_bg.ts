@@ -2,24 +2,24 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Клик с десен бутон на мишката за промяна на адрес или етикет</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Създай нов адрес</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">Нов</translation>
+        <translation>Нов</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Копирай текущо избрания адрес към клипборда</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>Копирай</translation>
+    </message>
+    <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">Затвори</translation>
+        <translation>Затвори</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Търсене по адрес или име</translation>
+        <translation>Търсене по адрес или име</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -43,67 +43,67 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Избери адреса на който да пратиш монети</translation>
+        <translation>Избери адреса на който да пратиш монети</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Избери адреса на който да получиш монети</translation>
+        <translation>Избери адреса на който да получиш монети</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">Избери</translation>
+        <translation>Избери</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Адрес за пращане</translation>
+        <translation>Адрес за пращане</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">Адрес за получаване</translation>
+        <translation>Адрес за получаване</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Тези са вашите Биткойн адреси за изпращане на монети. Винаги проверявайте количеството и получаващия адрес преди изпращане. </translation>
+        <translation>Тези са вашите Биткойн адреси за изпращане на монети. Винаги проверявайте количеството и получаващия адрес преди изпращане. </translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">Копирай адрес</translation>
+        <translation>Копирай адрес</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">Копирай етикет</translation>
+        <translation>Копирай етикет</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">Редактирай</translation>
+        <translation>Редактирай</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Изнеси лист с адреси</translation>
+        <translation>Изнеси лист с адреси</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">Получи се грешка при запазването на листа с адреси към %1. Моля опитайте пак.</translation>
+        <translation>Получи се грешка при запазването на листа с адреси към %1. Моля опитайте пак.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Изнасянето се провали</translation>
+        <translation>Изнасянето се провали</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Етикет</translation>
+        <translation>Етикет</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Адрес</translation>
+        <translation>Адрес</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(без етикет)</translation>
+        <translation>(без етикет)</translation>
     </message>
 </context>
 <context>
@@ -126,213 +126,107 @@
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Показване на парола</translation>
+        <translation>Показване на парола</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">Криптирай портфейл</translation>
+        <translation>Криптирай портфейл</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Тази операция изисква вашата парола на портфейла за отключването на портфейла.</translation>
+        <translation>Тази операция изисква вашата парола на портфейла за отключването на портфейла.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished">Отключи портфейла</translation>
+        <translation>Отключи портфейла</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">Промени парола</translation>
+        <translation>Промени парола</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">Потвърди криптирането на порфейла</translation>
+        <translation>Потвърди криптирането на порфейла</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">ВНИМАНИЕ: Ако шифрирате вашият портфейл и изгубите паролата си, &lt;b&gt;ЩЕ ИЗГУБИТЕ ВСИЧКИТЕ СИ БИТКОИНИ&lt;/b&gt;!</translation>
+        <translation>ВНИМАНИЕ: Ако шифрирате вашият портфейл и изгубите паролата си, &lt;b&gt;ЩЕ ИЗГУБИТЕ ВСИЧКИТЕ СИ БИТКОИНИ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished">Наистина ли желаете да шифрирате портфейла си?</translation>
+        <translation>Наистина ли желаете да шифрирате портфейла си?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">портфейлa е шифрован</translation>
+        <translation>портфейлa е шифрован</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Въведете новата парола към портфейла.&lt;br/&gt;Моля ползвайте парола съставена от &lt;b&gt;десет или повече произволни символа&lt;/b&gt;, или &lt;b&gt;осем или повече думи&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Въведете старата и новата паролна фраза за портфейла.</translation>
+        <translation>Въведете старата и новата паролна фраза за портфейла.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation type="unfinished">Портфейл за криптиране</translation>
+        <translation>Портфейл за криптиране</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation type="unfinished">Портфейлът ви е на път да бъде шифрован.</translation>
+        <translation>Портфейлът ви е на път да бъде шифрован.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation type="unfinished">Вашият портфейл сега е криптиран.</translation>
+        <translation>Вашият портфейл сега е криптиран.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished">ВАЖНО: Всички стари запазвания, които сте направили на Вашият портфейл трябва да замените с запазване на новополучения, шифриран портфейл. От съображения за сигурност, предишните запазвания на нешифрирани портфейли ще станат неизползваеми веднага, щом започнете да използвате новият, шифриран портфейл.</translation>
+        <translation>ВАЖНО: Всички стари запазвания, които сте направили на Вашият портфейл трябва да замените с запазване на новополучения, шифриран портфейл. От съображения за сигурност, предишните запазвания на нешифрирани портфейли ще станат неизползваеми веднага, щом започнете да използвате новият, шифриран портфейл.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished">Шифрирането беше неуспешно</translation>
+        <translation>Шифрирането беше неуспешно</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">Шифрирането на портфейла беше неуспешно, поради софтуерен проблем. Портфейлът не е шифриран.</translation>
+        <translation>Шифрирането на портфейла беше неуспешно, поради софтуерен проблем. Портфейлът не е шифриран.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished">Паролите не съвпадат</translation>
+        <translation>Паролите не съвпадат</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished">Отключването не бе успешно</translation>
+        <translation>Отключването не бе успешно</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished">Паролата въведена за дешифриране на портфейла е грешна.</translation>
+        <translation>Паролата въведена за дешифриране на портфейла е грешна.</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished">Паролата на портфейла беше променена успешно.</translation>
+        <translation>Паролата на портфейла беше променена успешно.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished">Внимание:Бутонът Caps Lock е включен.</translation>
+        <translation>Внимание:Бутонът Caps Lock е включен.</translation>
     </message>
 </context>
 <context>
     <name>BanTableModel</name>
     <message>
         <source>IP/Netmask</source>
-        <translation type="unfinished">IP/Мрежова маска</translation>
+        <translation>IP/Мрежова маска</translation>
     </message>
     <message>
         <source>Banned Until</source>
-        <translation type="unfinished">Блокиран до</translation>
+        <translation>Блокиран до</translation>
     </message>
 </context>
 <context>
-    <name>QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Грешка:Избраната "%1" директория не съществува.</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="unfinished">неизвестен</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation type="unfinished">Количество</translation>
-    </message>
-    <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Въведете Биткойн адрес (например: %1)</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation type="unfinished">Входящи</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation type="unfinished">Изходящи</translation>
-    </message>
-    <message>
-        <source>%1 d</source>
-        <translation type="unfinished">%1 ден</translation>
-    </message>
-    <message>
-        <source>%1 h</source>
-        <translation type="unfinished">%1 час</translation>
-    </message>
-    <message>
-        <source>%1 m</source>
-        <translation type="unfinished">%1 минута</translation>
-    </message>
-    <message>
-        <source>%1 s</source>
-        <translation type="unfinished">%1 секунда</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation type="unfinished">нито един</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation type="unfinished">Несъществуващ</translation>
-    </message>
-    <message>
-        <source>%1 ms</source>
-        <translation type="unfinished">%1 милисекунда</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n second(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation type="unfinished">%1 и %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation type="unfinished">%1 Байт</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation type="unfinished">%1 Мегабайт</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation type="unfinished">%1 Гигабайт</translation>
-    </message>
-</context>
+    <name>BitcoinApplication</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -361,11 +255,11 @@
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">За %1</translation>
+        <translation>За %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation type="unfinished">Покажи информация за %1</translation>
+        <translation>Покажи информация за %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -377,20 +271,24 @@
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished">Промени конфигурации за %1</translation>
+        <translation>Промени конфигурации за %1</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">Създай нов портфейл</translation>
+        <translation>Създай нов портфейл</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Минимизирай</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">Портфейл</translation>
+        <translation>Портфейл</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">Мрежата деактивирана</translation>
+        <translation>Мрежата деактивирана</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -413,6 +311,10 @@
         <translation>&amp;получавам</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Настроики…</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Показване / Скриване</translation>
     </message>
@@ -421,16 +323,48 @@
         <translation>Показване и скриване на основния прозорец</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp;Шифриране на портфейла…</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Шифроване на личните ключове,които принадлежат на портфейла Ви.</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">&amp;Запазване на портфейла…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">Промени паролата…</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">Подпиши съобщение…</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation>Пишете съобщения със своя Биткойн адрес за да докажете,че е ваш.</translation>
     </message>
     <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;Проверка на съобщение…</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените Биткойн адреси.</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Отвори &amp;URI…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Създай портфейл…</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Затвори Всички Портфейли…</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -449,31 +383,56 @@
         <translation>Лентата с инструменти</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation>Синхронизиране на хедъри (%1%)</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">Синхронизиране с мрежата…</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">Индексиране на блокове на диска…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation type="unfinished">Обработване на блокове на диска…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation type="unfinished">Повторно индексиране на блоковете на диска…</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation>Свързване с пиъри</translation>
+    </message>
+    <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
+        <translation>Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Показване на списъка с използвани адреси и имена</translation>
+        <translation>Показване на списъка с използвани адреси и имена</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Покажи списък с използваните адреси и имена.</translation>
+        <translation>Покажи списък с използваните адреси и имена.</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Налични команди</translation>
+        <translation>&amp;Налични команди</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation><numerusform>Преработен %n блок от историята с транзакции.</numerusform><numerusform>Преработени %n блокове от историята с транзакции.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
         <translation>%1 зад</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">Зарежда блокове…</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -501,84 +460,85 @@
     </message>
     <message>
         <source>Node window</source>
-        <translation type="unfinished">Прозорец на възела</translation>
+        <translation>Прозорец на възела</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Отворете конзолата за диагностика и отстраняване на грешки</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation type="unfinished">&amp;Изпращане на адресите</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished">&amp;Получаване на адресите</translation>
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">Отворете портфейл</translation>
+        <translation>Отворете портфейл</translation>
     </message>
     <message>
         <source>Close wallet</source>
-        <translation type="unfinished">Затвори портфейла</translation>
+        <translation>Затвори портфейла</translation>
     </message>
     <message>
         <source>Close all wallets</source>
-        <translation type="unfinished">Затвори всички портфейли</translation>
+        <translation>Затвори всички портфейли</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Портфейл по подразбиране</translation>
+        <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation type="unfinished">&amp;Прозорец</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation type="unfinished">Минимизирай</translation>
+        <translation>&amp;Прозорец</translation>
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished">Увеличи</translation>
+        <translation>Увеличи</translation>
     </message>
     <message>
         <source>Main Window</source>
-        <translation type="unfinished">Главен Прозорец</translation>
+        <translation>Главен Прозорец</translation>
     </message>
     <message>
         <source>%1 client</source>
-        <translation type="unfinished">%1 клиент</translation>
+        <translation>%1 клиент</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation type="unfinished"><numerusform>%n активна връзка към Биткойн мрежата</numerusform><numerusform>%n активни връзки към Биткойн мрежата</numerusform><numerusform>%n активна връзка към Биткойн мрежата</numerusform><numerusform>%n активни връзки към Биткойн мрежата</numerusform></translation>
     </message>
     <message>
         <source>Date: %1
 </source>
-        <translation type="unfinished">Дата: %1
+        <translation>Дата: %1
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">Сума: %1
+        <translation>Сума: %1
 </translation>
     </message>
     <message>
         <source>Type: %1
 </source>
-        <translation type="unfinished">Тип: %1
+        <translation>Тип: %1
 </translation>
     </message>
     <message>
         <source>Label: %1
 </source>
-        <translation type="unfinished">Етикет: %1
+        <translation>Етикет: %1
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation type="unfinished">Адрес: %1
+        <translation>Адрес: %1
 </translation>
     </message>
     <message>
@@ -602,163 +562,174 @@
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
-        <translation type="unfinished">Избор на монети</translation>
+        <translation>Избор на монети</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Количество:</translation>
+        <translation>Количество:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished">Байтове:</translation>
+        <translation>Байтове:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Количество:</translation>
+        <translation>Количество:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished">Такса:</translation>
+        <translation>Такса:</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation type="unfinished">прах:</translation>
+        <translation>прах:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">След такса:</translation>
+        <translation>След такса:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Промяна:</translation>
+        <translation>Промяна:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished">(Пре)махни всички</translation>
+        <translation>(Пре)махни всички</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation type="unfinished">Дървовиден режим</translation>
+        <translation>Дървовиден режим</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation type="unfinished">списък Режим</translation>
+        <translation>списък Режим</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Количество</translation>
+        <translation>Количество</translation>
     </message>
     <message>
         <source>Received with label</source>
-        <translation type="unfinished">Получени с име</translation>
+        <translation>Получени с име</translation>
     </message>
     <message>
         <source>Received with address</source>
-        <translation type="unfinished">Получени с адрес</translation>
+        <translation>Получени с адрес</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Дата</translation>
+        <translation>Дата</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished">потвърждения</translation>
+        <translation>потвърждения</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Потвърдено</translation>
+        <translation>Потвърдено</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Копиране на сумата</translation>
+        <translation>Копиране на сумата</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Копирайте адреса</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>Копиране на &amp;етикета</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation>Копиране на &amp;сумата</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation>&amp;Заключи неусвоени</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Отключете неизползваните</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished">Копиране на количеството</translation>
+        <translation>Копиране на количеството</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished">Копирай такса</translation>
+        <translation>Копирай такса</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Копирайте след такса</translation>
+        <translation>Копирайте след такса</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Копиране на байтовете</translation>
+        <translation>Копиране на байтовете</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation type="unfinished">Копирай прахта:</translation>
+        <translation>Копирай прахта:</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Промяна на копирането</translation>
+        <translation>Промяна на копирането</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished">(%1 заключен)</translation>
+        <translation>(%1 заключен)</translation>
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished">да</translation>
+        <translation>да</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished">не</translation>
+        <translation>не</translation>
     </message>
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Този етикет става червен ако някой получател получи количество, по-малко от текущия праг на прах</translation>
+        <translation>Този етикет става червен ако някой получател получи количество, по-малко от текущия праг на прах</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(без етикет)</translation>
+        <translation>(без етикет)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished">ресто от %1 (%2)</translation>
+        <translation>ресто от %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished">(промени)</translation>
+        <translation>(промени)</translation>
     </message>
 </context>
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation>Създайте портфейл</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
-        <translation type="unfinished">Създаването на портфейл не бе успешен</translation>
-    </message>
-    </context>
-<context>
-    <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Портфейл по подразбиране</translation>
-    </message>
-    </context>
-<context>
-    <name>WalletController</name>
-    <message>
-        <source>Close wallet</source>
-        <translation type="unfinished">Затвори портфейла</translation>
-    </message>
-    <message>
-        <source>Close all wallets</source>
-        <translation type="unfinished">Затвори всички портфейли</translation>
+        <translation>Създаването на портфейл не бе успешен</translation>
     </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
         <source>Create Wallet</source>
-        <translation type="unfinished">Създайте портфейл</translation>
+        <translation>Създайте портфейл</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">портфейл</translation>
+        <translation>портфейл</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation type="unfinished">Шифриране на портфейла</translation>
     </message>
     </context>
 <context>
@@ -773,11 +744,11 @@
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished">Етикетът свързан с това въведение в листа с адреси</translation>
+        <translation>Етикетът свързан с това въведение в листа с адреси</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished">Адресът свързан с това въведение в листа с адреси. Това може да бъде променено само за адреси за изпращане.</translation>
+        <translation>Адресът свързан с това въведение в листа с адреси. Това може да бъде променено само за адреси за изпращане.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -785,27 +756,27 @@
     </message>
     <message>
         <source>New sending address</source>
-        <translation type="unfinished">Нов адрес за изпращане</translation>
+        <translation>Нов адрес за изпращане</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation type="unfinished">Редактиране на получаващия адрес</translation>
+        <translation>Редактиране на получаващия адрес</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation type="unfinished">Редактиране на адрес за изпращане</translation>
+        <translation>Редактиране на адрес за изпращане</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">"%1" не е валиден Биткоин адрес.</translation>
+        <translation>"%1" не е валиден Биткоин адрес.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Не може да отключите портфейла.</translation>
+        <translation>Не може да отключите портфейла.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation type="unfinished">Създаването на ключ беше неуспешно.</translation>
+        <translation>Създаването на ключ беше неуспешно.</translation>
     </message>
 </context>
 <context>
@@ -832,42 +803,36 @@
     </message>
 </context>
 <context>
+    <name>GuiNetWatch</name>
+    </context>
+<context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation>версия</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>Относно %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>Списък с команди</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin</source>
-        <translation type="unfinished">Биткоин</translation>
-    </message>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation type="unfinished">Най малко %1 GB данни ще бъдат запаметени в тази директория, и ще нарастват през времето.</translation>
-    </message>
-    <message>
-        <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation type="unfinished">Около %1 GB данни ще бъдат запаметени в тази директория.</translation>
-    </message>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>грешка</translation>
-    </message>
     <message>
         <source>Welcome</source>
         <translation>Добре дошли</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation type="unfinished">Добре дошли в %1.</translation>
+        <translation>Добре дошли в %1.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Програмата се стартира за първи път вие може да изберете къде %1 ще се запаметят данните.</translation>
+        <translation>Програмата се стартира за първи път вие може да изберете къде %1 ще се запаметят данните.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -877,46 +842,96 @@
         <source>Use a custom data directory:</source>
         <translation>Използване на директория ръчно</translation>
     </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Биткоин</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB свободно пространство на разположение</numerusform><numerusform>%n GB свободно пространство на разположение</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(%n GB е нужен)</numerusform><numerusform>(%n GB са нужни)</numerusform></translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Най малко %1 GB данни ще бъдат запаметени в тази директория, и ще нарастват през времето.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Около %1 GB данни ще бъдат запаметени в тази директория.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>грешка</translation>
+    </message>
 </context>
 <context>
-    <name>HelpMessageDialog</name>
+    <name>MempoolStats</name>
     <message>
-        <source>version</source>
-        <translation type="unfinished">версия</translation>
+        <source>N/A</source>
+        <translation>Несъществуващ</translation>
     </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">Относно %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Списък с команди</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Не изключвайте компютъра докато този прозорец не изчезне.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation type="unfinished">форма</translation>
+        <translation>форма</translation>
+    </message>
+    <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">Неизвестен…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">Изчисляване…</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation type="unfinished">Време на последния блок</translation>
+        <translation>Време на последния блок</translation>
     </message>
     <message>
         <source>Progress</source>
-        <translation type="unfinished">прогрес</translation>
+        <translation>прогрес</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation type="unfinished">Скрий</translation>
+        <translation>Скрий</translation>
+    </message>
+    </context>
+<context>
+    <name>NetWatchLogModel</name>
+    <message>
+        <source>Type</source>
+        <comment>NetWatch: Type header</comment>
+        <translation>Тип</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <comment>NetWatch: Address header</comment>
+        <translation>Адрес</translation>
+    </message>
+</context>
+<context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation>Вмъкни от клипборда</translation>
+    </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>Портфейл по подразбиране</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation>Отворете портфейл</translation>
     </message>
     </context>
 <context>
@@ -931,19 +946,19 @@
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished">Размер на кеша в &amp;базата данни</translation>
+        <translation>Размер на кеша в &amp;базата данни</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished">Брой на скриптове и &amp;нишки за потвърждение</translation>
+        <translation>Брой на скриптове и &amp;нишки за потвърждение</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished">IP адрес на прокси (напр. за IPv4: 127.0.0.1 / за IPv6: ::1)</translation>
+        <translation>IP адрес на прокси (напр. за IPv4: 127.0.0.1 / за IPv6: ::1)</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
-        <translation type="unfinished">Отворете конфигурационния файл</translation>
+        <translation>Отворете конфигурационния файл</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -958,24 +973,20 @@
         <translation>&amp;Мрежа</translation>
     </message>
     <message>
-        <source>GB</source>
-        <translation type="unfinished">ГБ</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished">По&amp;ртфейл</translation>
+        <translation>По&amp;ртфейл</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation type="unfinished">Експерт</translation>
+        <translation>Експерт</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">Позволяване на монетите и &amp;техните възможности</translation>
+        <translation>Позволяване на монетите и &amp;техните възможности</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished">&amp;Похарчете непотвърденото ресто</translation>
+        <translation>&amp;Похарчете непотвърденото ресто</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -987,19 +998,19 @@
     </message>
     <message>
         <source>Accept connections from outside.</source>
-        <translation type="unfinished">Позволи външни връзки</translation>
+        <translation>Позволи външни връзки</translation>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
-        <translation type="unfinished">Позволи входящи връзки</translation>
+        <translation>Позволи входящи връзки</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
+        <translation>Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
-        <translation type="unfinished">&amp;Свързване чрез SOCKS5  прокси (прокси по подразбиране):</translation>
+        <translation>&amp;Свързване чрез SOCKS5  прокси (прокси по подразбиране):</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1015,7 +1026,7 @@
     </message>
     <message>
         <source>Tor</source>
-        <translation type="unfinished">Тор</translation>
+        <translation>Тор</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1051,7 +1062,11 @@
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished">Дали да покаже възможностите за контрол на монетите или не.</translation>
+        <translation>Дали да покаже възможностите за контрол на монетите или не.</translation>
+    </message>
+    <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation type="unfinished">&amp;URL адреси на трети страни</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1067,7 +1082,11 @@
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished">нищо</translation>
+        <translation>нищо</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Биткойн ядро</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1075,23 +1094,28 @@
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished">Изисква се рестартиране на клиента за активиране на извършените промени.</translation>
+        <translation>Изисква се рестартиране на клиента за активиране на извършените промени.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
-        <translation type="unfinished">Клиентът ще бъде изключен. Искате ли да продължите?</translation>
+        <translation>Клиентът ще бъде изключен. Искате ли да продължите?</translation>
     </message>
     <message>
         <source>Configuration options</source>
-        <translation type="unfinished">Опции за конфигуриране</translation>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
+        <translation>Опции за конфигуриране</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Отказ</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">грешка</translation>
+        <translation>грешка</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished">Тази промяна изисква рестартиране на клиента Ви.</translation>
+        <translation>Тази промяна изисква рестартиране на клиента Ви.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1110,11 +1134,11 @@
     </message>
     <message>
         <source>Watch-only:</source>
-        <translation type="unfinished">Гледайте само:</translation>
+        <translation>Гледайте само:</translation>
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished">На разположение:</translation>
+        <translation>На разположение:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1122,7 +1146,7 @@
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished">В очакване на:</translation>
+        <translation>В очакване на:</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -1134,7 +1158,7 @@
     </message>
     <message>
         <source>Balances</source>
-        <translation type="unfinished">баланс</translation>
+        <translation>баланс</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -1146,37 +1170,41 @@
     </message>
     <message>
         <source>Spendable:</source>
-        <translation type="unfinished">За харчене:</translation>
+        <translation>За харчене:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation type="unfinished">Последни транзакции</translation>
+        <translation>Последни транзакции</translation>
     </message>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Close</source>
+        <translation type="unfinished">Затвори</translation>
+    </message>
+    <message>
         <source>or</source>
-        <translation type="unfinished">или</translation>
+        <translation>или</translation>
     </message>
     </context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
-        <translation type="unfinished">Възникна грешка по време назаявката за плащане</translation>
+        <translation>Възникна грешка по време назаявката за плащане</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Биткойн не можe да се стартира: click-to-pay handler</translation>
+        <translation>Биткойн не можe да се стартира: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
-        <translation type="unfinished">Справяне с URI</translation>
+        <translation>Справяне с URI</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation type="unfinished">Файл за справяне със заявки</translation>
+        <translation>Файл за справяне със заявки</translation>
     </message>
 </context>
 <context>
@@ -1184,52 +1212,148 @@
     <message>
         <source>User Agent</source>
         <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
-        <translation type="unfinished">Потребителски агент</translation>
+        <translation>Потребителски агент</translation>
     </message>
     <message>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
-        <translation type="unfinished">пинг</translation>
+        <translation>пинг</translation>
     </message>
     <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
-        <translation type="unfinished">Изпратени</translation>
+        <translation>Изпратени</translation>
     </message>
     <message>
         <source>Received</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
-        <translation type="unfinished">Получени</translation>
+        <translation>Получени</translation>
     </message>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Адрес</translation>
+        <translation>Адрес</translation>
     </message>
     <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
-        <translation type="unfinished">Тип</translation>
+        <translation>Тип</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>Количество</translation>
     </message>
     <message>
-        <source>Network</source>
-        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
-        <translation type="unfinished">мрежа</translation>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Въведете Биткойн адрес (например: %1)</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>Входящи</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>Изходящи</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 ден</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 час</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 минута</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 секунда</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>нито един</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation>Несъществуващ</translation>
+    </message>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 милисекунда</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n час</numerusform><numerusform>%n часа</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n ден</numerusform><numerusform>%n дни</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n седмица</numerusform><numerusform>%n седмици</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 и %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n година</numerusform><numerusform>%n години</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 Байт</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 Мегабайт</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 Гигабайт</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Грешка:Избраната "%1" директория не съществува.</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>неизвестен</translation>
+    </message>
+    <message>
+        <source>Blk</source>
+        <comment>Tx Watch: Block type abbreviation</comment>
+        <translation>блок</translation>
+    </message>
+    <message>
+        <source>Txn</source>
+        <comment>Tx Watch: Transaction type abbreviation</comment>
+        <translation>Транзакция</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">&amp;Запиши изображение…</translation>
+    </message>
+    <message>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished">&amp;Копирай изображение</translation>
+        <translation>&amp;Копирай изображение</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished">Грешка при създаването на QR Code от URI.</translation>
+        <translation>Грешка при създаването на QR Code от URI.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation type="unfinished">Запази QR Код</translation>
+        <translation>Запази QR Код</translation>
     </message>
     </context>
 <context>
@@ -1248,7 +1372,7 @@
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished">Общ</translation>
+        <translation>Общ</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1260,59 +1384,63 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">име</translation>
+        <translation>име</translation>
     </message>
     <message>
         <source>Number of connections</source>
         <translation>Брой връзки</translation>
     </message>
     <message>
+        <source>Wallet: </source>
+        <translation type="unfinished">Портфейл: </translation>
+    </message>
+    <message>
         <source>Received</source>
-        <translation type="unfinished">Получени</translation>
+        <translation>Получени</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation type="unfinished">Изпратени</translation>
+        <translation>Изпратени</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation type="unfinished">&amp;Пиъри</translation>
+        <translation>&amp;Пиъри</translation>
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation type="unfinished">Избери пиър за детайлна информация.</translation>
+        <translation>Избери пиър за детайлна информация.</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="unfinished">Версия</translation>
+        <translation>Версия</translation>
     </message>
     <message>
         <source>User Agent</source>
-        <translation type="unfinished">Потребителски агент</translation>
+        <translation>Потребителски агент</translation>
     </message>
     <message>
         <source>Node window</source>
-        <translation type="unfinished">Прозорец на възела</translation>
+        <translation>Прозорец на възела</translation>
     </message>
     <message>
         <source>Services</source>
-        <translation type="unfinished">Услуги</translation>
+        <translation>Услуги</translation>
     </message>
     <message>
         <source>Connection Time</source>
-        <translation type="unfinished">Продължителност на връзката</translation>
+        <translation>Продължителност на връзката</translation>
     </message>
     <message>
         <source>Last Send</source>
-        <translation type="unfinished">Изпратени за последно</translation>
+        <translation>Изпратени за последно</translation>
     </message>
     <message>
         <source>Last Receive</source>
-        <translation type="unfinished">Получени за последно</translation>
+        <translation>Получени за последно</translation>
     </message>
     <message>
         <source>Ping Time</source>
-        <translation type="unfinished">Време за отговор</translation>
+        <translation>Време за отговор</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1328,11 +1456,7 @@
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished">&amp;Мрежов Трафик</translation>
-    </message>
-    <message>
-        <source>Totals</source>
-        <translation type="unfinished">Общо:</translation>
+        <translation>&amp;Мрежов Трафик</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -1343,145 +1467,170 @@
         <translation>Изчисти конзолата</translation>
     </message>
     <message>
-        <source>In:</source>
-        <translation type="unfinished">Входящи:</translation>
-    </message>
-    <message>
-        <source>Out:</source>
-        <translation type="unfinished">Изходящи</translation>
-    </message>
-    <message>
-        <source>via %1</source>
-        <translation type="unfinished">посредством %1</translation>
-    </message>
-    <message>
         <source>Yes</source>
-        <translation type="unfinished">Да</translation>
+        <translation>Да</translation>
     </message>
     <message>
         <source>No</source>
-        <translation type="unfinished">Не</translation>
+        <translation>Не</translation>
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">към</translation>
+        <translation>към</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">от</translation>
+        <translation>от</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <translation type="unfinished">&amp;Копирайте адреса</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation type="unfinished">Неизвестен</translation>
+        <translation>Неизвестен</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation type="unfinished">&amp;Сума</translation>
+        <translation>&amp;Сума</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation type="unfinished">&amp;Име:</translation>
+        <translation>&amp;Име:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation type="unfinished">&amp;Съобщение:</translation>
+        <translation>&amp;Съобщение:</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished">Използвате този формуляр за заявяване на плащания. Всички полета са &lt;b&gt;незадължителни&lt;/b&gt;.</translation>
+        <translation>Използвате този формуляр за заявяване на плащания. Всички полета са &lt;b&gt;незадължителни&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished">Незадължително заявяване на сума. Оставете полето празно или нулево, за да не заявите конкретна сума.</translation>
+        <translation>Незадължително заявяване на сума. Оставете полето празно или нулево, за да не заявите конкретна сума.</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>&amp;Изискване на плащане</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished">Изчисти всички полета от формуляра.</translation>
+        <translation>Изчисти всички полета от формуляра.</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished">Изчистване</translation>
+        <translation>Изчистване</translation>
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation type="unfinished">Изискана история на плащанията</translation>
+        <translation>Изискана история на плащанията</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished">Показване</translation>
+        <translation>Показване</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished">Премахване</translation>
+        <translation>Премахване</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished">Копиране на &amp;URI</translation>
+        <translation>Копиране на &amp;URI</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Копирайте адреса</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>Копиране на &amp;етикета</translation>
+    </message>
+    <message>
+        <source>Copy &amp;message</source>
+        <translation type="unfinished">&amp;Копиране на съобщението</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation>Копиране на &amp;сумата</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Не може да отключите портфейла.</translation>
+        <translation>Не може да отключите портфейла.</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Request payment to …</source>
+        <translation>Изискване на плащане от …</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation type="unfinished">Адрес:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
-        <translation type="unfinished">Количество:</translation>
+        <translation>Количество:</translation>
     </message>
     <message>
         <source>Label:</source>
-        <translation type="unfinished">Име:</translation>
+        <translation>Име:</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation type="unfinished">Съобщение:</translation>
+        <translation>Съобщение:</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">Портфейл</translation>
+        <translation>Портфейл</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished">Копиране на &amp;URI</translation>
+        <translation>Копиране на &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished">&amp;Копирай адрес</translation>
+        <translation>&amp;Копирай адрес</translation>
     </message>
     <message>
-        <source>Payment information</source>
-        <translation type="unfinished">Данни за плащането</translation>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">&amp;Запиши изображение…</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
-        <translation type="unfinished">Изискване на плащане от %1</translation>
+        <translation>Изискване на плащане от %1</translation>
+    </message>
+    <message>
+        <source>Payment information</source>
+        <translation>Данни за плащането</translation>
     </message>
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Дата</translation>
+        <translation>Дата</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Етикет</translation>
+        <translation>Етикет</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished">Съобщение</translation>
+        <translation>Съобщение</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(без етикет)</translation>
+        <translation>(без етикет)</translation>
     </message>
     <message>
         <source>(no message)</source>
-        <translation type="unfinished">(без съобщение)</translation>
+        <translation>(без съобщение)</translation>
     </message>
     </context>
 <context>
@@ -1492,63 +1641,63 @@
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation type="unfinished">Настройки за контрол на монетите</translation>
+        <translation>Настройки за контрол на монетите</translation>
     </message>
     <message>
         <source>automatically selected</source>
-        <translation type="unfinished">астоматично избран</translation>
+        <translation>астоматично избран</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished">Нямате достатъчно налични пари!</translation>
+        <translation>Нямате достатъчно налични пари!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Количество:</translation>
+        <translation>Количество:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished">Байтове:</translation>
+        <translation>Байтове:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Количество:</translation>
+        <translation>Количество:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished">Такса:</translation>
+        <translation>Такса:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">След такса:</translation>
+        <translation>След такса:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Промяна:</translation>
+        <translation>Промяна:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished">Ако тази опция е активирана,но адресът на промяна е празен или невалиден,промяната ще бъде изпратена на новосъздаден адрес.</translation>
+        <translation>Ако тази опция е активирана,но адресът на промяна е празен или невалиден,промяната ще бъде изпратена на новосъздаден адрес.</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation type="unfinished">Такса за транзакцията:</translation>
+        <translation>Такса за транзакцията:</translation>
     </message>
     <message>
         <source>per kilobyte</source>
-        <translation type="unfinished">за килобайт</translation>
+        <translation>за килобайт</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation type="unfinished">Скрий</translation>
+        <translation>Скрий</translation>
     </message>
     <message>
         <source>Recommended:</source>
-        <translation type="unfinished">Препоръчителна:</translation>
+        <translation>Препоръчителна:</translation>
     </message>
     <message>
         <source>Custom:</source>
-        <translation type="unfinished">По избор:</translation>
+        <translation>По избор:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1560,11 +1709,15 @@
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished">Изчисти всички полета от формуляра.</translation>
+        <translation>Изчисти всички полета от формуляра.</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation type="unfinished">прах:</translation>
+        <translation>прах:</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation type="unfinished">Избери…</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1584,86 +1737,79 @@
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished">Копиране на количеството</translation>
+        <translation>Копиране на количеството</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Копиране на сумата</translation>
+        <translation>Копиране на сумата</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished">Копирай такса</translation>
+        <translation>Копирай такса</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Копирайте след такса</translation>
+        <translation>Копирайте след такса</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Копиране на байтовете</translation>
+        <translation>Копиране на байтовете</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation type="unfinished">Копирай прахта:</translation>
+        <translation>Копирай прахта:</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Промяна на копирането</translation>
+        <translation>Промяна на копирането</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished">Наистина ли искате да изпратите?</translation>
+        <translation>Наистина ли искате да изпратите?</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished">или</translation>
+        <translation>или</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">Такса</translation>
+        <translation>Такса</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation type="unfinished">Потвърждаване</translation>
+        <translation>Потвърждаване</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished">Сумата трябва да е по-голяма от 0.</translation>
+        <translation>Сумата трябва да е по-голяма от 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished">Сумата надвишава текущия баланс</translation>
+        <translation>Сумата надвишава текущия баланс</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Сумата при добавяне на данък добавена стойност по %1 транзакцията надвишава сумата по вашата сметка.</translation>
+        <translation>Сумата при добавяне на данък добавена стойност по %1 транзакцията надвишава сумата по вашата сметка.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished">Грешка при създаването на транзакция!</translation>
+        <translation>Грешка при създаването на транзакция!</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
-        <translation type="unfinished">Заявката за плащане е изтекла.</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>Заявката за плащане е изтекла.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Внимание: Невалиден Биткойн адрес</translation>
+        <translation>Внимание: Невалиден Биткойн адрес</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished">Внимание:Неизвестен адрес за промяна</translation>
+        <translation>Внимание:Неизвестен адрес за промяна</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(без етикет)</translation>
+        <translation>(без етикет)</translation>
     </message>
 </context>
 <context>
@@ -1682,7 +1828,7 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished">Изберете използван преди адрес</translation>
+        <translation>Изберете използван преди адрес</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -1690,19 +1836,26 @@
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation type="unfinished">Премахване на този запис</translation>
+        <translation>Премахване на този запис</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation type="unfinished">Съобщение:</translation>
+        <translation>Съобщение:</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished">Плащане на:</translation>
+        <translation>Плащане на:</translation>
     </message>
     <message>
         <source>Memo:</source>
-        <translation type="unfinished">Бележка:</translation>
+        <translation>Бележка:</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>Не изключвайте компютъра докато този прозорец не изчезне.</translation>
     </message>
 </context>
 <context>
@@ -1717,7 +1870,7 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished">Изберете използван преди адрес</translation>
+        <translation>Изберете използван преди адрес</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -1761,184 +1914,170 @@
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation type="unfinished">Натиснете "Подписване на съобщение" за да създадете подпис</translation>
+        <translation>Натиснете "Подписване на съобщение" за да създадете подпис</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished">Въведеният адрес е невалиден.</translation>
+        <translation>Въведеният адрес е невалиден.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished">Моля проверете адреса и опитайте отново.</translation>
+        <translation>Моля проверете адреса и опитайте отново.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Въведеният адрес не може да се съпостави с валиден ключ.</translation>
+        <translation>Въведеният адрес не може да се съпостави с валиден ключ.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished">Отключването на портфейла беше отменено.</translation>
+        <translation>Отключването на портфейла беше отменено.</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished">Не е наличен частен ключ за въведеният адрес.</translation>
+        <translation>Не е наличен частен ключ за въведеният адрес.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
-        <translation type="unfinished">Подписването на съобщение беше неуспешно.</translation>
+        <translation>Подписването на съобщение беше неуспешно.</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation type="unfinished">Съобщението е подписано.</translation>
+        <translation>Съобщението е подписано.</translation>
     </message>
     <message>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished">Подписът не може да бъде декодиран.</translation>
+        <translation>Подписът не може да бъде декодиран.</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished">Проверете подписа и опитайте отново.</translation>
+        <translation>Проверете подписа и опитайте отново.</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished">Подписът не отговаря на комбинацията от съобщение и адрес.</translation>
+        <translation>Подписът не отговаря на комбинацията от съобщение и адрес.</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
-        <translation type="unfinished">Проверката на съобщението беше неуспешна.</translation>
+        <translation>Проверката на съобщението беше неуспешна.</translation>
     </message>
     <message>
         <source>Message verified.</source>
-        <translation type="unfinished">Съобщението е потвърдено.</translation>
+        <translation>Съобщението е потвърдено.</translation>
     </message>
 </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">Подлежи на промяна до %1</translation>
+        <translation>Подлежи на промяна до %1</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished">%1/непотвърдени</translation>
+        <translation>%1/непотвърдени</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation type="unfinished">включена в %1 блока</translation>
+        <translation>включена в %1 блока</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Статус</translation>
+        <translation>Статус</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Дата</translation>
+        <translation>Дата</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished">източник</translation>
+        <translation>източник</translation>
     </message>
     <message>
         <source>Generated</source>
-        <translation type="unfinished">Генериран</translation>
+        <translation>Генериран</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">от</translation>
+        <translation>от</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation type="unfinished">неизвестен</translation>
+        <translation>неизвестен</translation>
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">към</translation>
+        <translation>към</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation type="unfinished">собствен адрес</translation>
+        <translation>собствен адрес</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">само гледане</translation>
+        <translation>само гледане</translation>
     </message>
     <message>
         <source>label</source>
-        <translation type="unfinished">име</translation>
+        <translation>име</translation>
     </message>
     <message>
         <source>Credit</source>
-        <translation type="unfinished">кредит</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>кредит</translation>
     </message>
     <message>
         <source>not accepted</source>
-        <translation type="unfinished">не е приет</translation>
+        <translation>не е приет</translation>
     </message>
     <message>
         <source>Debit</source>
-        <translation type="unfinished">Дебит</translation>
+        <translation>Дебит</translation>
     </message>
     <message>
         <source>Total debit</source>
-        <translation type="unfinished">Общ дълг</translation>
+        <translation>Общ дълг</translation>
     </message>
     <message>
         <source>Total credit</source>
-        <translation type="unfinished">Общ дълг</translation>
+        <translation>Общ дълг</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">Такса</translation>
+        <translation>Такса</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation type="unfinished">Нетна сума</translation>
+        <translation>Нетна сума</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished">Съобщение</translation>
+        <translation>Съобщение</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation type="unfinished">Коментар</translation>
+        <translation>Коментар</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation type="unfinished">ID</translation>
+        <translation>ID</translation>
     </message>
     <message>
         <source>Merchant</source>
-        <translation type="unfinished">Търговец</translation>
+        <translation>Търговец</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished">Генерираните монети трябва да отлежат %1 блока преди да могат да бъдат похарчени. Когато генерираш блока, той се разпространява в мрежата, за да се добави в блок-веригата. Ако не успее да се добави във веригата, неговия статус  ще се стане "неприет" и няма да може да се похарчи. Това е възможно да се случи случайно, ако друг възел генерира блок няколко секунди след твоя.</translation>
+        <translation>Генерираните монети трябва да отлежат %1 блока преди да могат да бъдат похарчени. Когато генерираш блока, той се разпространява в мрежата, за да се добави в блок-веригата. Ако не успее да се добави във веригата, неговия статус  ще се стане "неприет" и няма да може да се похарчи. Това е възможно да се случи случайно, ако друг възел генерира блок няколко секунди след твоя.</translation>
     </message>
     <message>
         <source>Debug information</source>
-        <translation type="unfinished">Информация за грешките</translation>
+        <translation>Информация за грешките</translation>
     </message>
     <message>
         <source>Transaction</source>
-        <translation type="unfinished">Транзакция</translation>
+        <translation>Транзакция</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Количество</translation>
+        <translation>Количество</translation>
     </message>
     </context>
 <context>
@@ -1952,305 +2091,373 @@
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Дата</translation>
+        <translation>Дата</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Тип</translation>
+        <translation>Тип</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Етикет</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+        <translation>Етикет</translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">Подлежи на промяна до %1</translation>
+        <translation>Подлежи на промяна до %1</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished">Непотвърдено</translation>
+        <translation>Непотвърдено</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished">Потвърждаване (%1 от %2 препоръчвани потвърждения)</translation>
+        <translation>Потвърждаване (%1 от %2 препоръчвани потвърждения)</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished">Потвърдени (%1 потвърждения)</translation>
+        <translation>Потвърдени (%1 потвърждения)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished">Конфликтно</translation>
+        <translation>Конфликтно</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished">Неплатим (%1 потвърждения, ще бъде платим след %2)</translation>
+        <translation>Неплатим (%1 потвърждения, ще бъде платим след %2)</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation type="unfinished">Генерирана, но отхвърлена от мрежата</translation>
+        <translation>Генерирана, но отхвърлена от мрежата</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Получени</translation>
+        <translation>Получени</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation type="unfinished">Получен от</translation>
+        <translation>Получен от</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Изпратени на</translation>
+        <translation>Изпратени на</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation type="unfinished">Плащане към себе си</translation>
+        <translation>Плащане към себе си</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Емитирани</translation>
+        <translation>Емитирани</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">само гледане</translation>
+        <translation>само гледане</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(без етикет)</translation>
+        <translation>(без етикет)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished">Състояние на транзакцията. Задръжте върху това поле за брой потвърждения.</translation>
+        <translation>Състояние на транзакцията. Задръжте върху това поле за брой потвърждения.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished">Дата и час на получаване на транзакцията.</translation>
+        <translation>Дата и час на получаване на транзакцията.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation type="unfinished">Вид транзакция.</translation>
+        <translation>Вид транзакция.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished">Сума извадена или добавена към баланса.</translation>
+        <translation>Сума извадена или добавена към баланса.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Всички</translation>
+        <translation>Всички</translation>
     </message>
     <message>
         <source>Today</source>
-        <translation type="unfinished">Днес</translation>
+        <translation>Днес</translation>
     </message>
     <message>
         <source>This week</source>
-        <translation type="unfinished">Тази седмица</translation>
+        <translation>Тази седмица</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation type="unfinished">Този месец</translation>
+        <translation>Този месец</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation type="unfinished">Предния месец</translation>
+        <translation>Предния месец</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation type="unfinished">Тази година</translation>
+        <translation>Тази година</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Получени</translation>
+        <translation>Получени</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Изпратени на</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Собствени</translation>
+        <translation>Изпратени на</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Емитирани</translation>
+        <translation>Емитирани</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation type="unfinished">Други</translation>
+        <translation>Други</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation type="unfinished">Минимална сума</translation>
+        <translation>Минимална сума</translation>
+    </message>
+    <message>
+        <source>Range…</source>
+        <translation type="unfinished">От - до…</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Копирайте адреса</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation>Копиране на &amp;етикета</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation>Копиране на &amp;сумата</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation>&amp;Копиране на &amp;ID на транзакцията</translation>
+    </message>
+    <message>
+        <source>&amp;Show transaction details</source>
+        <translation type="unfinished">&amp;Подробности за транзакцията</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation type="unfinished">Изнасяне историята на транзакциите</translation>
+        <translation>Изнасяне историята на транзакциите</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Потвърдено</translation>
+        <translation>Потвърдено</translation>
     </message>
     <message>
         <source>Watch-only</source>
-        <translation type="unfinished">само гледане</translation>
+        <translation>само гледане</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Дата</translation>
+        <translation>Дата</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Тип</translation>
+        <translation>Тип</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Етикет</translation>
+        <translation>Етикет</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Адрес</translation>
+        <translation>Адрес</translation>
     </message>
     <message>
         <source>ID</source>
-        <translation type="unfinished">ИД</translation>
+        <translation>ИД</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Изнасянето се провали</translation>
+        <translation>Изнасянето се провали</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation type="unfinished">Изнасянето е успешна</translation>
+        <translation>Изнасянето е успешна</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished">Историята с транзакциите беше успешно запазена в %1.</translation>
+        <translation>Историята с транзакциите беше успешно запазена в %1.</translation>
     </message>
     <message>
         <source>Range:</source>
-        <translation type="unfinished">От:</translation>
+        <translation>От:</translation>
     </message>
     <message>
         <source>to</source>
-        <translation type="unfinished">до</translation>
+        <translation>до</translation>
     </message>
 </context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Затвори портфейла</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Затвори всички портфейли</translation>
+    </message>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">Създай нов портфейл</translation>
+        <translation>Създай нов портфейл</translation>
     </message>
-</context>
+    <message>
+        <source>Error</source>
+        <translation>грешка</translation>
+    </message>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Изпращане</translation>
+        <translation>Изпращане</translation>
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">Портфейл по подразбиране</translation>
+        <translation>Портфейл по подразбиране</translation>
     </message>
 </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">Изнеси</translation>
+        <translation>Изнеси</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Изнеси данните в избрания раздел към файл</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">грешка</translation>
+        <translation>Изнеси данните в избрания раздел към файл</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Запазване на портфейла</translation>
+        <translation>Запазване на портфейла</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished">Неуспешно запазване на портфейла</translation>
+        <translation>Неуспешно запазване на портфейла</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished">Възникна грешка при запазването на информацията за портфейла в %1.</translation>
+        <translation>Възникна грешка при запазването на информацията за портфейла в %1.</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1: %2</source>
+        <translation>Възникна грешка при запазването на информацията за портфейла в %1: %2</translation>
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation type="unfinished">Успешно запазване на портфейла</translation>
+        <translation>Успешно запазване на портфейла</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished">Информацията за портфейла беше успешно запазена в %1.</translation>
+        <translation>Информацията за портфейла беше успешно запазена в %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Отказ</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Желаете ли да пресъздадете базата данни с блокове сега?</translation>
+        <translation>Желаете ли да пресъздадете базата данни с блокове сега?</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation type="unfinished">Зареждането е завършено</translation>
+        <translation>Зареждането е завършено</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation type="unfinished">Грешка в пускането на базата данни с блокове</translation>
+        <translation>Грешка в пускането на базата данни с блокове</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>грешка</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Провалено "слушане" на всеки порт. Използвайте -listen=0 ако искате това.</translation>
+        <translation>Провалено "слушане" на всеки порт. Използвайте -listen=0 ако искате това.</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">Внасяне…</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished">Недостатъчно средства</translation>
+        <translation>Недостатъчно средства</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses…</source>
+        <translation type="unfinished">Зареждане на адреси…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation type="unfinished">Зареждане на блок индекса…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">Зареждане на портфейла…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">Преразглеждане на последовтелността от блокове…</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">Стартиране на мрежовите нишки…</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Портфейлът няма да плаша по-малко от миналата такса за препредаване.</translation>
+        <translation>Портфейлът няма да плаша по-малко от миналата такса за препредаване.</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
-        <translation type="unfinished">Това е експериментален софтуер.</translation>
+        <translation>Това е експериментален софтуер.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Това е минималната такса за транзакция, която плащате за всяка транзакция.</translation>
+        <translation>Това е минималната такса за транзакция, която плащате за всяка транзакция.</translation>
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Това е таксата за транзакцията която ще платите ако изпратите транзакция.</translation>
+        <translation>Това е таксата за транзакцията която ще платите ако изпратите транзакция.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation type="unfinished">Сумата на транзакцията е твърде малка</translation>
+        <translation>Сумата на транзакцията е твърде малка</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">Сумите на транзакциите не могат да бъдат отрицателни</translation>
+        <translation>Сумите на транзакциите не могат да бъдат отрицателни</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">Транзакцията трябва да има поне един получател.</translation>
+        <translation>Транзакцията трябва да има поне един получател.</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation type="unfinished">Транзакцията е твърде голяма</translation>
+        <translation>Транзакцията е твърде голяма</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">Проверка на блоковете…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">Проверка на портфейла…</translation>
     </message>
     </context>
 </TS>
