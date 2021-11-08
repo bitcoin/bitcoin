@@ -58,6 +58,7 @@ public:
         ProxyIPTor,             // QString
         ProxyPortTor,           // int
         DisplayUnit,            // BitcoinUnits::Unit
+        DisplayAddresses,       // bool
         ThirdPartyTxUrls,       // QString
         Language,               // QString
         UseEmbeddedMonospacedFont, // bool
@@ -92,6 +93,7 @@ public:
     bool getMinimizeToTray() const { return fMinimizeToTray; }
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
     int getDisplayUnit() const { return nDisplayUnit; }
+    bool getDisplayAddresses() const { return bDisplayAddresses; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getPeersTabAlternatingRowColors() const { return m_peers_tab_alternating_row_colors; }
@@ -117,6 +119,7 @@ private:
     bool fMinimizeOnClose;
     QString language;
     int nDisplayUnit;
+    bool bDisplayAddresses;
     QString strThirdPartyTxUrls;
     bool m_use_embedded_monospaced_font;
     bool m_peers_tab_alternating_row_colors;
