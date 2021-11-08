@@ -16,7 +16,7 @@ import re
 FOLDER_GREP = 'src'
 FOLDER_TEST = 'src/test/'
 REGEX_ARG = r'(?:ForceSet|SoftSet|Get|Is)(?:Bool)?Args?(?:Set)?\("(-[^"]+)"'
-REGEX_DOC = r'AddArg\("(-[^"=]+?)(?:=|")'
+REGEX_DOC = r'(?:AddArg|hidden_args\.emplace_back)\("(-[^"=]+?)(?:=|")'
 CMD_ROOT_DIR = '$(git rev-parse --show-toplevel)/{}'.format(FOLDER_GREP)
 CMD_GREP_ARGS = r"git grep --perl-regexp '{}' -- {} ':(exclude){}'".format(REGEX_ARG, CMD_ROOT_DIR, FOLDER_TEST)
 CMD_GREP_WALLET_ARGS = r"git grep --function-context 'void WalletInit::AddWalletOptions' -- {} | grep AddArg".format(CMD_ROOT_DIR)

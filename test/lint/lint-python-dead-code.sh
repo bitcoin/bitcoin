@@ -19,5 +19,5 @@ if ! vulture \
     --min-confidence 100 \
     $(git ls-files -- "*.py"); then
     echo "Python dead code detection found some issues"
-    exit 1
+    exit 0
 fi

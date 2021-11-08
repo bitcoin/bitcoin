@@ -24,6 +24,8 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "node/coinstats -> validation -> node/coinstats"
+)
+EXPECTED_CIRCULAR_DEPENDENCIES=(
     # Temporary circular dependencies that allow wallet.h/wallet.cpp to be
     # split up in a MOVEONLY commit. These are removed in #21206.
     "wallet/receive -> wallet/wallet -> wallet/receive"

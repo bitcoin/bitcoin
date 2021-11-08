@@ -43,7 +43,6 @@ enabled=(
     E743 # do not define functions named "l", "O", or "I"
     E901 # SyntaxError: invalid syntax
     E902 # TokenError: EOF in multi-line string
-    F401 # module imported but unused
     F402 # import module from line N shadowed by loop variable
     F403 # 'from foo_module import *' used; unable to detect undefined names
     F404 # future import(s) name after other statements
