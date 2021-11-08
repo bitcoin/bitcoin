@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-class UniValue;
+#include <univalue.h>
 
 namespace util {
 

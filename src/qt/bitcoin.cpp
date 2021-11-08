@@ -583,10 +583,9 @@ int GuiMain(int argc, char* argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    bool did_show_intro = false;
-    int64_t prune_MiB = 0;  // Intro dialog prune configuration
+    std::unique_ptr<Intro> intro;
     // Gracefully exit if the user cancels
-    if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
+    if (!Intro::showIfNeeded(intro)) return EXIT_SUCCESS;
 
     /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call gArgs.GetDataDirNet() before this step finishes
@@ -665,9 +664,10 @@ int GuiMain(int argc, char* argv[])
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
-    if (did_show_intro) {
+    if (intro) {
         // Store intro dialog settings other than datadir (network specific)
-        app.InitPruneSetting(prune_MiB);
+        app.InitPruneSetting(intro->getPruneMiB());
+        gArgs.ForceSetArg("-assumevalid", intro->getAssumeValid().toStdString());
     }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
@@ -683,6 +683,12 @@ int GuiMain(int argc, char* argv[])
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
         if (app.baseInitialize()) {
+            if (intro) {
+                // Store intro dialog settings other than datadir (network specific)
+                node->context()->chain->updateRwSetting("assumevalid", intro->getAssumeValid().toStdString());
+                // We can release the Intro widget now
+                intro.reset();
+            }
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(PACKAGE_NAME), (HWND)app.getMainWinId());
