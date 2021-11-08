@@ -9,6 +9,7 @@
 #include <QMap>
 
 class ClientModel;
+class PairingPage;
 class PlatformStyle;
 class SendCoinsRecipient;
 class WalletModel;
@@ -51,9 +52,12 @@ Q_SIGNALS:
     void message(const QString& title, const QString& message, unsigned int style);
 
 private:
+    QStackedWidget *m_global_stack;
     QStackedWidget *walletStack;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
+
+    PairingPage *m_page_pairing;
 
     bool bOutOfSync;
 
@@ -68,6 +72,8 @@ public:
 public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
+    /** Switch to pairing page */
+    void gotoPairingPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to receive coins page */

@@ -262,14 +262,19 @@ bool AddLocal(const CService& addr, int nScore)
 
     LogPrintf("AddLocal(%s,%i)\n", addr.ToString(), nScore);
 
+    bool fAlready;
     {
         LOCK(cs_mapLocalHost);
-        bool fAlready = mapLocalHost.count(addr) > 0;
+        fAlready = mapLocalHost.count(addr) > 0;
         LocalServiceInfo &info = mapLocalHost[addr];
         if (!fAlready || nScore >= info.nScore) {
             info.nScore = nScore + (fAlready ? 1 : 0);
             info.nPort = addr.GetPort();
         }
+    }
+
+    if (!fAlready) {
+        uiInterface.NotifyNetworkLocalChanged();
     }
 
     return true;
@@ -282,9 +287,12 @@ bool AddLocal(const CNetAddr &addr, int nScore)
 
 void RemoveLocal(const CService& addr)
 {
-    LOCK(cs_mapLocalHost);
-    LogPrintf("RemoveLocal(%s)\n", addr.ToString());
-    mapLocalHost.erase(addr);
+    {
+        LOCK(cs_mapLocalHost);
+        LogPrintf("RemoveLocal(%s)\n", addr.ToString());
+        mapLocalHost.erase(addr);
+    }
+    uiInterface.NotifyNetworkLocalChanged();
 }
 
 void SetReachable(enum Network net, bool reachable)

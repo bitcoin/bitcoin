@@ -88,6 +88,9 @@ public:
     /** Network activity state changed. */
     ADD_SIGNALS_DECL_WRAPPER(NotifyNetworkActiveChanged, void, bool networkActive);
 
+    /** Network local addresses changed. */
+    ADD_SIGNALS_DECL_WRAPPER(NotifyNetworkLocalChanged, void, );
+
     /**
      * Status bar alerts changed.
      */
