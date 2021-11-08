@@ -92,7 +92,8 @@ class PSBTTest(BitcoinTestFramework):
 
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
-        psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].walletcreatefundedpsbt, inputs=[], outputs={self.nodes[2].getnewaddress():1}, options={'min_conf': 201})
+        psbtx1 = self.nodes[0].walletcreatefundedpsbt(inputs=[], outputs={self.nodes[2].getnewaddress():11}, options={'min_conf': 200})['psbt']
 
         # If inputs are specified, do not automatically add more:
         utxo1 = self.nodes[0].listunspent()[0]
