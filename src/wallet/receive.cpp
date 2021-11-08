@@ -339,6 +339,59 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
     return ret;
 }
 
+// Calculate total balance in a different way from GetBalance. The biggest
+// difference is that GetBalance sums up all unspent TxOuts paying to the
+// wallet, while this sums up both spent and unspent TxOuts paying to the
+// wallet, and then subtracts the values of TxIns spending from the wallet. This
+// also has fewer restrictions on which unconfirmed transactions are considered
+// trusted.
+CAmount CWallet::GetLegacyBalance(const isminefilter& filter, int minDepth) const
+{
+    LOCK(cs_wallet);
+
+    CAmount balance = 0;
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        const int depth = wtx.GetDepthInMainChain();
+        if (depth < 0 || !chain().checkFinalTx(*wtx.tx) || wtx.IsImmatureCoinBase()) {
+            continue;
+        }
+
+        if (depth == 0) {
+            bool have_conflicts = false;
+            for (const CTxIn& txin : wtx.tx->vin) {
+                if (mapTxSpends.count(txin.prevout) > 1) {
+                    have_conflicts = true;
+                    break;
+                }
+            }
+            if (have_conflicts && !wtx.InMempool()) {
+                // Rather than include two conflicting unconfirmed transactions in the same balance, only include ones in our mempool (which cannot contain conflicts)
+                continue;
+            }
+        }
+
+        // Loop through tx outputs and add incoming payments. For outgoing txs,
+        // treat change outputs specially, as part of the amount debited.
+        CAmount debit = wtx.GetDebit(filter);
+        const bool outgoing = debit > 0;
+        for (const CTxOut& out : wtx.tx->vout) {
+            if (outgoing && IsChange(out)) {
+                debit -= out.nValue;
+            } else if (IsMine(out) & filter && depth >= minDepth) {
+                balance += out.nValue;
+            }
+        }
+
+        // For outgoing txs, subtract amount debited.
+        if (outgoing) {
+            balance -= debit;
+        }
+    }
+
+    return balance;
+}
+
 std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
 {
     std::map<CTxDestination, CAmount> balances;
