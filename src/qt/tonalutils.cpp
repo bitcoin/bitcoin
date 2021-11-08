@@ -33,8 +33,8 @@ bool TonalUtils::Supported()
 {
     QFont default_font;
     if (font_supports_tonal(default_font)) return true;
-    QFont last_resort_font(default_font.lastResortFamily());
-    if (font_supports_tonal(last_resort_font)) return true;
+    // FIXME: This will fail if the default font has some non-Tonal glyphs but a fallback supports Tonal
+    // TODO: Check other fonts and ensure their usage when appropriate
     return false;
 }
 
