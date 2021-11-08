@@ -103,7 +103,7 @@ public:
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     const CAmount& GetFee() const { return nFee; }
-    size_t GetTxSize() const { return nTxSize; }
+    size_t GetTxSize() const;
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
     unsigned int GetSigOpCount() const { return sigOpCount; }

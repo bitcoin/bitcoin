@@ -170,5 +170,16 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
+unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
 CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
 CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
+
+int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp)
+{
+    return std::max(nSize, nSigOp * nBytesPerSigOp);
+}
+
+int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOp)
+{
+    return GetVirtualTransactionSize(tx.GetTotalSize(), nSigOp);
+}

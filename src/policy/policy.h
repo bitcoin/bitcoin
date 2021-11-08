@@ -32,6 +32,8 @@ static const unsigned int MAX_STANDARD_TX_SIGOPS = 4000;
 static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
 /** Default for -incrementalrelayfee, which sets the minimum feerate increase for mempool limiting or BIP 125 replacement **/
 static const unsigned int DEFAULT_INCREMENTAL_RELAY_FEE = 1000;
+/** Default for -bytespersigop */
+static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 /** Min feerate for defining dust. Historically this has been based on the
  * minRelayTxFee, however changing the dust limit changes which transactions are
  * standard and should be done with care and ideally rarely. It makes sense to
@@ -80,6 +82,12 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason);
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+
+extern unsigned int nBytesPerSigOp;
+
+/** Compute the virtual transaction size (taking sigops into account). */
+int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp);
+int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOp = 0);
 
 extern CFeeRate incrementalRelayFee;
 extern CFeeRate dustRelayFee;
