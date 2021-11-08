@@ -3160,7 +3160,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
         // Get the extended key
         CExtKey master_key;
-        master_key.SetSeed(seed_key.begin(), seed_key.size());
+        master_key.SetSeed(seed_key);
 
         for (bool internal : {false, true}) {
             for (OutputType t : OUTPUT_TYPES) {
