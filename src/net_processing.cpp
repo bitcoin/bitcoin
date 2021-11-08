@@ -1815,7 +1815,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
         std::vector<uint8_t> block_data;
-        if (!ReadRawBlockFromDisk(block_data, pindex, m_chainparams.MessageStart())) {
+        if (!ReadRawBlockFromDisk(block_data, pindex, m_chainparams.MessageStart(), /* lowprio */ true)) {
             assert(!"cannot load block from disk");
         }
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, MakeSpan(block_data)));
@@ -1823,7 +1823,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     } else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus())) {
+        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus(), /* lowprio */ true)) {
             assert(!"cannot load block from disk");
         }
         pblock = pblockRead;
@@ -3103,7 +3103,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
             if (pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_BLOCKTXN_DEPTH) {
                 CBlock block;
-                bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus());
+                bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus(), /* lowprio */ true);
                 assert(ret);
 
                 SendBlockTransactions(pfrom, block, req);
@@ -3751,7 +3751,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
+            mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), /* lowprio */ true));
         }
         ProcessBlock(pfrom, pblock, forceProcessing);
         return;
@@ -4632,7 +4632,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
                     if (!fGotBlockFromCache) {
                         CBlock block;
-                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
+                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams, /* lowprio */ true);
                         assert(ret);
                         CBlockHeaderAndShortTxIDs cmpctblock(block, state.fWantsCmpctWitness);
                         m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
