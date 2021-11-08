@@ -306,7 +306,7 @@ static RPCHelpMan addnode()
                 {
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
-                    {"connection_type", RPCArg::Type::STR, RPCArg::Default{"manual"}, "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + "\nOnly supported for command \"onetry\" for now."},
+                    {"connection_type|privileged", RPCArg::Type::STR, RPCArg::Default{"manual"}, "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + "\nOnly supported for command \"onetry\" for now."},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -332,7 +332,12 @@ static RPCHelpMan addnode()
         if (strCommand == "remove") {
             throw std::runtime_error(self.ToString());
         }
-        connection_type = ConnectionTypeFromValue(request.params[2]);
+        if (request.params[2].isBool()) {
+            // Backward compatibility with v0.16.0.knots20180322-v0.20.1.knots20200815
+            connection_type = request.params[2].get_bool() ? ConnectionType::MANUAL : ConnectionType::OUTBOUND_FULL_RELAY;
+        } else {
+            connection_type = ConnectionTypeFromValue(request.params[2]);
+        }
     }
 
     if (strCommand == "onetry")
