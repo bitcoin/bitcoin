@@ -63,6 +63,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    fail,
 )
 
 class AddressTypeTest(BitcoinTestFramework):
@@ -178,12 +179,12 @@ class AddressTypeTest(BitcoinTestFramework):
         # Verify the descriptor checksum against the Python implementation
         assert descsum_check(info['desc'])
         # Verify that stripping the checksum and recreating it using Python roundtrips
-        assert info['desc'] == descsum_create(info['desc'][:-9])
+        assert_equal(info['desc'], descsum_create(info['desc'][:-9]))
         # Verify that stripping the checksum and feeding it to getdescriptorinfo roundtrips
-        assert info['desc'] == self.nodes[0].getdescriptorinfo(info['desc'][:-9])['descriptor']
+        assert_equal(info['desc'], self.nodes[0].getdescriptorinfo(info['desc'][:-9])['descriptor'])
         assert_equal(info['desc'][-8:], self.nodes[0].getdescriptorinfo(info['desc'][:-9])['checksum'])
         # Verify that keeping the checksum and feeding it to getdescriptorinfo roundtrips
-        assert info['desc'] == self.nodes[0].getdescriptorinfo(info['desc'])['descriptor']
+        assert_equal(info['desc'], self.nodes[0].getdescriptorinfo(info['desc'])['descriptor'])
         assert_equal(info['desc'][-8:], self.nodes[0].getdescriptorinfo(info['desc'])['checksum'])
 
         if not multisig and typ == 'legacy':
@@ -206,7 +207,7 @@ class AddressTypeTest(BitcoinTestFramework):
             assert_equal(info['desc'], descsum_create("wsh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]])))
         else:
             # Unknown type
-            assert False
+            fail("Unknown type")
 
     def test_change_output_type(self, node_sender, destinations, expected_type):
         txid = self.nodes[node_sender].sendmany(dummy="", amounts=dict.fromkeys(destinations, 0.001))
