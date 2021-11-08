@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
-    <height>440</height>
+    <width>646</width>
+    <height>529</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -833,6 +833,16 @@
            </layout>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="peersTabAlternatingRowColors">
+         <property name="toolTip">
+          <string>Alternate the row colors for the &quot;Peers&quot; and &quot;Banned peers&quot; tables in the Peers tab.</string>
+         </property>
+         <property name="text">
+          <string>Alternate row colors in the Peers tab</string>
+         </property>
         </widget>
        </item>
        <item>

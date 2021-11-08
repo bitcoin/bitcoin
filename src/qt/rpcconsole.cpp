@@ -14,6 +14,7 @@
 #include <netbase.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
+#include <qt/optionsmodel.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/platformstyle.h>
 #include <qt/walletmodel.h>
@@ -493,6 +494,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     m_peer_widget_header_state = settings.value("PeersTabPeerHeaderState").toByteArray();
     m_banlist_widget_header_state = settings.value("PeersTabBanlistHeaderState").toByteArray();
+    m_alternating_row_colors = settings.value("PeersTabAlternatingRowColors").toBool();
 
     constexpr QChar nonbreaking_hyphen(8209);
     const std::vector<QString> CONNECTION_TYPE_DOC{
@@ -664,6 +666,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         connect(model, &ClientModel::mempoolSizeChanged, this, &RPCConsole::setMempoolSize);
 
+        connect(model->getOptionsModel(), &OptionsModel::peersTabAlternatingRowColorsChanged, [this](bool alternating_row_colors) {
+            ui->peerWidget->setAlternatingRowColors(alternating_row_colors);
+            ui->banlistWidget->setAlternatingRowColors(alternating_row_colors);
+        });
+
         // set up peer table
         clientModel->getPeerTableModel()->updatePalette();
         ui->peerWidget->setModel(model->peerTableSortProxy());
@@ -686,6 +693,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         }
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
         ui->peerWidget->setItemDelegateForColumn(PeerTableModel::NetNodeId, new PeerIdViewDelegate(this));
+        ui->peerWidget->setAlternatingRowColors(m_alternating_row_colors);
 
         // create peer table context menu
         peersTableContextMenu = new QMenu(this);
@@ -712,6 +720,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
             ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
         }
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
+        ui->banlistWidget->setAlternatingRowColors(m_alternating_row_colors);
 
         // create ban table context menu
         banTableContextMenu = new QMenu(this);
