@@ -4747,6 +4747,94 @@ static RPCHelpMan upgradewallet()
     };
 }
 
+RPCHelpMan simulaterawtransaction()
+{
+    return RPCHelpMan{"simulaterawtransaction",
+        "\nCalculate the balance change resulting in the signing and broadcasting of the given transaction(s).\n" +
+        HELP_REQUIRING_PASSPHRASE,
+        {
+            {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "An array of hex strings of raw transactions.\n",
+                {
+                    {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                },
+            },
+            {"options", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED_NAMED_ARG, "Options",
+                {
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see 'importaddress')"},
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_AMOUNT, "balance_change", "The wallet balance change (negative means decrease)."},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("simulaterawtransaction", "[\"myhex\"]")
+            + HelpExampleRpc("simulaterawtransaction", "[\"myhex\"]")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<const CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    const CWallet* pwallet = wallet.get();
+
+    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VOBJ}, true);
+
+    LOCK(pwallet->cs_wallet);
+
+    CAmount changes{0};
+    std::set<COutPoint> spent;
+
+    isminefilter filter = ISMINE_SPENDABLE;
+    if (request.params[1].isObject()) {
+        UniValue options = request.params[1];
+        RPCTypeCheckObj(options,
+            {
+                {"include_watchonly", UniValueType(UniValue::VBOOL)},
+            },
+            true, true);
+
+        if (ParseIncludeWatchonly(options["include_watchonly"], *pwallet)) {
+            filter |= ISMINE_WATCH_ONLY;
+        }
+    }
+
+    const auto& txs = request.params[0].get_array();
+    for (size_t i = 0; i < txs.size(); ++i) {
+        CMutableTransaction mtx;
+        if (!DecodeHexTx(mtx, txs[i].get_str(), /* try_no_witness */ true, /* try_witness */ true)) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Transaction hex string decoding failure.");
+        }
+
+        // Fetch debit; we are *spending* these; if the transaction is signed and
+        // broadcast, we will lose everything in these
+        for (const auto& txin : mtx.vin) {
+            if (spent.count(txin.prevout)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Transaction(s) are spending the same output more than once");
+            }
+            spent.insert(txin.prevout);
+            changes -= pwallet->GetDebit(txin, filter);
+        }
+
+        // Iterate over outputs; we are *receiving* these, if the wallet considers
+        // them "mine"; if the transaction is signed and broadcast, we will receive
+        // everything in these
+        for (const auto& txout : mtx.vout) {
+            if (0 == (pwallet->IsMine(txout) & filter)) continue;
+            changes += txout.nValue;
+        }
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("balance_change", ValueFromAmount(changes));
+
+    return result;
+}
+    };
+}
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 static RPCHelpMan walletdisplayaddress()
 {
@@ -4863,6 +4951,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &setwalletflag,                  },
     { "wallet",             &signmessage,                    },
     { "wallet",             &signrawtransactionwithwallet,   },
+    { "wallet",             &simulaterawtransaction,         },
     { "wallet",             &unloadwallet,                   },
     { "wallet",             &upgradewallet,                  },
     { "wallet",             &walletcreatefundedpsbt,         },
