@@ -224,7 +224,7 @@ public:
      */
     bool IsRelayable() const
     {
-        return IsIPv4() || IsIPv6() || IsTor() || IsI2P();
+        return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS();
     }
 
     /**
@@ -550,6 +550,7 @@ public:
     }
 
     friend class CServiceHash;
+    friend CService MaybeFlipIPv6toCJDNS(const CService& service);
 };
 
 class CServiceHash
