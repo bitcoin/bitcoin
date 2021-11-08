@@ -167,8 +167,16 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         options.require_existing = true;
         std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (!wallet_instance) return false;
+
+        // Get the dumpfile
+        std::string dump_filename = gArgs.GetArg("-dumpfile", "");
+        if (dump_filename.empty()) {
+            tfm::format(std::cerr, "No dump file provided. To use dump, -dumpfile=<filename> must be provided.\n");
+            return false;
+        }
+
         bilingual_str error;
-        bool ret = DumpWallet(*wallet_instance, error);
+        bool ret = DumpWallet(*wallet_instance, error, dump_filename);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
             return ret;
