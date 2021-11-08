@@ -45,6 +45,14 @@ class RPCWhitelistTest(BitcoinTestFramework):
                         "f3d319f64b076012f75626c9d895fced$7f55381a24fda02c5de7c18fc377f56fc573149b4d6f83daa9fd584210b51f99",
                         "dummy2pwd",
                         "getbalance,getwalletinfo"]
+        self.settings3 = ["dummy3",
+                         "7afab69a70b08a1499a5a9031eaa5479$a3bcfa66a0050564afe4f86300f95be2432cf9581dc6f51eb831f8671650587a",
+                         "dummy3pwd",
+                         "getrpcwhitelist"]
+        self.settings4 = ["dummy4",
+                         "487024a6853066e1faecfd8a7bb46c63$3ac8b40945d1eeb735da6429db1fe6a179994ed8a0bc01590da1552935f41623",
+                         "dummy4pwd",
+                         "getrpcwhitelist"]
 
         # declare rpc-whitelisting entries
         with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "bitcoin.conf"), 'a', encoding='utf8') as f:
@@ -53,8 +61,17 @@ class RPCWhitelistTest(BitcoinTestFramework):
             f.write("rpcwhitelist={}:{}\n".format(self.settings[0], self.settings[3]))
             f.write("rpcauth={}:{}\n".format(self.settings_forbidden[0], self.settings_forbidden[1]))
             f.write("rpcwhitelist={}:{}\n".format(self.settings_forbidden[0], self.settings_forbidden[3]))
+            f.write("rpcauth={}:{}:-\n".format(self.settings3[0], self.settings3[1]))
+            f.write("rpcwhitelist={}:{}\n".format(self.settings3[0], self.settings3[3]))
+            f.write("rpcauth={}:{}:second\n".format(self.settings4[0], self.settings4[1]))
+            f.write("rpcwhitelist={}:{}\n".format(self.settings4[0], self.settings4[3]))
 
     def run_test(self):
+        if self.is_wallet_compiled():
+            if '' not in self.nodes[0].listwallets():
+                self.nodes[0].createwallet('')
+            self.nodes[0].createwallet('second')
+
         self.log.info("Test getrpcwhitelist")
         whitelisted = {method: None for method in self.settings[3].split(',')}
 
@@ -62,6 +79,23 @@ class RPCWhitelistTest(BitcoinTestFramework):
         result = call_rpc(self.nodes[0], self.settings, 'getrpcwhitelist')
         assert_equal(200, result['status'])
         assert_equal(result['json']['methods'], whitelisted)
+        if self.is_wallet_compiled():
+            assert_equal(result['json']['wallets'], {'':None, 'second':None})
+        else:
+            assert_equal(result['json']['wallets'], {})
+
+        whitelisted = {method: None for method in self.settings3[3].split(',')}
+        result = call_rpc(self.nodes[0], self.settings3, 'getrpcwhitelist')
+        assert_equal(200, result['status'])
+        assert_equal(result['json']['methods'], whitelisted)
+        assert_equal(result['json']['wallets'], {})
+
+        if self.is_wallet_compiled():
+            result = call_rpc(self.nodes[0], self.settings4, 'getrpcwhitelist')
+            assert_equal(200, result['status'])
+            assert_equal(result['json']['methods'], whitelisted)
+            assert_equal(result['json']['wallets'], {'second':None})
+
         # should fail because user has no rpcwhitelist-rpc entry in bitcoin.conf
         result = call_rpc(self.nodes[0], self.settings_forbidden, 'getrpcwhitelist')
         assert_equal(result['status'], 403)
