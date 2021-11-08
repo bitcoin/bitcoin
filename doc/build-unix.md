@@ -234,15 +234,6 @@ Otherwise, you can build Bitcoin Core from self-compiled [depends](/depends/READ
 
 **Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
 
-Boost
------
-If you need to build Boost yourself:
-
-    sudo su
-    ./bootstrap.sh
-    ./bjam install
-
-
 Security
 --------
 To help make your Bitcoin Core installation more secure by making certain attacks impossible to
