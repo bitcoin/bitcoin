@@ -43,7 +43,9 @@ static const int64_t nMaxCoinsDBCache = 8;
 // Actually declared in validation.cpp; can't include because of circular dependency.
 extern RecursiveMutex cs_main;
 
-/** CCoinsView backed by the coin database (chainstate/) */
+/** CCoinsView backed by the coin database (chainstate/)
+ * Cursor requires FlushStateToDisk for consistency.
+ */
 class CCoinsViewDB final : public CCoinsView
 {
 protected:

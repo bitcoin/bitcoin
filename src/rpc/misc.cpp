@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <coins.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
@@ -15,6 +16,7 @@
 #include <node/context.h>
 #include <outputtype.h>
 #include <policy/fees.h>
+#include <policy/settings.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -24,6 +26,14 @@
 #include <util/message.h> // For MessageSign(), MessageVerify()
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <validation.h>
+
+#ifdef ENABLE_WALLET
+#include <wallet/coincontrol.h>
+#include <wallet/fees.h>
+#include <wallet/rpcwallet.h>
+#include <wallet/wallet.h>
+#endif
 
 #include <stdint.h>
 #include <tuple>
@@ -509,6 +519,172 @@ static RPCHelpMan mockscheduler()
     };
 }
 
+#ifdef ENABLE_WALLET
+// defined in rpc/blockchain.cpp
+bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results, std::function<void()>& interruption_point);
+
+// defined in wallet/rpcwallet.cpp
+std::string LabelFromValue(const UniValue&);
+
+static RPCHelpMan sweepprivkeys()
+{
+    return RPCHelpMan{"sweepprivkeys",
+        "\nSends bitcoins controlled by private key to specified destinations.\n",
+        {
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::NO, "",
+                {
+                    {"privkeys", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of WIF private key(s)",
+                        {
+                            {"privkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                        },
+                        },
+
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Label for received bitcoins"},
+                },
+                "options"},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "", "The transaction id."},
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    // NOTE: It isn't safe to sweep-and-send in a single action, since this would leave the send missing from the transaction history
+
+    RPCTypeCheck(request.params, {UniValue::VOBJ});
+
+    // Parse options
+    std::set<CScript> needles;
+    CCoinControl coin_control;
+    FillableSigningProvider temp_keystore;
+    CMutableTransaction tx;
+    std::string label;
+    CAmount total_in = 0;
+    for (const std::string& optname : request.params[0].getKeys()) {
+        const UniValue& optval = request.params[0][optname];
+        if (optname == "privkeys") {
+            const UniValue& privkeys_a = optval.get_array();
+            for (size_t privkey_i = 0; privkey_i < privkeys_a.size(); ++privkey_i) {
+                const UniValue& privkey_wif = privkeys_a[privkey_i];
+                std::string wif_secret = privkey_wif.get_str();
+                CKey key = DecodeSecret(wif_secret);
+                if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+                CPubKey pubkey = key.GetPubKey();
+                CHECK_NONFATAL(key.VerifyPubKey(pubkey));
+
+                temp_keystore.AddKey(key);
+                CKeyID address = pubkey.GetID();
+                CScript script = GetScriptForDestination(PKHash(address));
+                if (!script.empty()) {
+                    needles.insert(script);
+                }
+                script = GetScriptForRawPubKey(pubkey);
+                if (!script.empty()) {
+                    needles.insert(script);
+                }
+            }
+        } else if (optname == "label") {
+            label = LabelFromValue(optval.get_str());
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unrecognised option '%s'", optname));
+        }
+    }
+
+    std::unique_ptr<ReserveDestination> reservedest;
+    CTxDestination dest;
+    {
+        LOCK(pwallet->cs_wallet);
+
+        // Reserve the key we will be using
+        reservedest.reset(new ReserveDestination(pwallet, pwallet->TransactionChangeType(pwallet->m_default_change_type, std::vector<CRecipient>())));
+        std::string dest_err;
+        if (!reservedest->GetReservedDestination(dest, false, dest_err)) {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, dest_err);
+        }
+    }
+
+    // Scan UTXO set for inputs
+    std::vector<CTxOut> input_txos;
+    {
+        // Collect all possible inputs
+        std::map<COutPoint, Coin> coins;
+        {
+            std::unique_ptr<CCoinsViewCursor> pcursor;
+            {
+                ChainstateManager& chainman = EnsureAnyChainman(request.context);
+                LOCK(cs_main);
+                if (node.mempool) {
+                    node.mempool->FindScriptPubKey(needles, coins);
+                }
+                CChainState& active_chainstate = chainman.ActiveChainstate();
+                active_chainstate.ForceFlushStateToDisk();
+                pcursor = std::unique_ptr<CCoinsViewCursor>(active_chainstate.CoinsDB().Cursor());
+                CHECK_NONFATAL(pcursor);
+            }
+            std::atomic<int> scan_progress;
+            const std::atomic<bool> should_abort{false};
+            int64_t count;
+            if (!FindScriptPubKey(scan_progress, should_abort, count, pcursor.get(), needles, coins, node.rpc_interruption_point)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "UTXO FindScriptPubKey failed");
+            }
+        }
+
+        // Add them as inputs to the transaction, and count the total value
+        for (auto& it : coins) {
+            const COutPoint& outpoint = it.first;
+            const Coin& coin = it.second;
+            const CTxOut& txo = coin.out;
+            tx.vin.emplace_back(outpoint.hash, outpoint.n);
+            input_txos.push_back(txo);
+            total_in += txo.nValue;
+        }
+    }
+
+    if (total_in == 0) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No value to sweep");
+    }
+
+    tx.vout.emplace_back(total_in, GetScriptForDestination(dest));
+
+    while (true) {
+        if (IsDust(tx.vout[0], ::dustRelayFee)) {
+            throw JSONRPCError(RPC_VERIFY_REJECTED, "Swept value would be dust");
+        }
+        for (size_t input_index = 0; input_index < tx.vin.size(); ++input_index) {
+            if (!SignSignature(temp_keystore, input_txos[input_index].scriptPubKey, tx, input_index, input_txos[input_index].nValue, SIGHASH_ALL)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Failed to sign");
+            }
+        }
+        int64_t tx_vsize = GetVirtualTransactionSize(CTransaction(tx));
+        CAmount fee_needed = GetMinimumFee(*wallet, tx_vsize, coin_control, nullptr /* FeeCalculation */);
+        const CAmount total_out = tx.vout[0].nValue;
+        if (fee_needed <= total_in - total_out) {
+            break;
+        }
+        tx.vout[0].nValue = total_in - fee_needed;
+    }
+
+    CTransactionRef final_tx(MakeTransactionRef(std::move(tx)));
+    pwallet->SetAddressBook(dest, label, "receive");
+
+    std::string err_string;
+    const TransactionError err = BroadcastTransaction(node, final_tx, err_string, pwallet->m_default_max_tx_fee, true /* relay */, true /* wait_callback */);
+    if (TransactionError::OK != err) {
+        pwallet->DelAddressBook(dest);
+        throw JSONRPCTransactionError(err, err_string);
+    }
+    reservedest->KeepDestination();
+
+    return final_tx->GetHash().GetHex();
+},
+    };
+}
+#endif // ENABLE_WALLET
+
 static UniValue RPCLockedMemoryInfo()
 {
     LockedPool::Stats stats = LockedPoolManager::Instance().stats();
@@ -829,6 +1005,11 @@ static const CRPCCommand commands[] =
     { "util",               &savefeeestimates,        },
     { "util",               &signmessagewithprivkey,  },
     { "util",               &getindexinfo,            },
+
+#ifdef ENABLE_WALLET
+    /* Minimal wallet dependency */
+    { "wallet",             &sweepprivkeys,           },
+#endif
 
     /* Not shown in help */
     { "hidden",             &setmocktime,             },
