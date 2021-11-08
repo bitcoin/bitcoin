@@ -989,6 +989,21 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
  [ AC_MSG_RESULT(no)]
 )
 
+AC_MSG_CHECKING(for compatible sysinfo call)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/sysinfo.h>]],
+ [[
+  struct sysinfo info;
+  int rv = sysinfo(&info);
+  unsigned long test = info.freeram + info.bufferram + info.mem_unit;
+ ]])],
+ [
+  AC_MSG_RESULT(yes);
+  AC_DEFINE(HAVE_LINUX_SYSINFO, 1, [Define this symbol if you have a Linux-compatible sysinfo call])
+ ],[
+  AC_MSG_RESULT(no)
+ ]
+)
+
 dnl Check for posix_fallocate
 AC_MSG_CHECKING(for posix_fallocate)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[

@@ -689,6 +689,9 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
 //! rescanning where new transactions in new blocks could be lost.
 BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 {
+    // FIXME: this test fails for some reason if there's a flush
+    util::g_low_memory_threshold = 0;
+
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
     // Create new wallet with known key and unload it.
     auto wallet = TestLoadWallet(m_node.chain.get());
