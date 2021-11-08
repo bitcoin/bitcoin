@@ -122,6 +122,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "walletcreatefundedpsbt", 2, "locktime" },
     { "walletcreatefundedpsbt", 3, "options" },
     { "walletcreatefundedpsbt", 4, "bip32derivs" },
+    { "walletprocesspsbt", 1, "options" },
     { "walletprocesspsbt", 1, "sign" },
     { "walletprocesspsbt", 3, "bip32derivs" },
     { "createpsbt", 0, "inputs" },

@@ -120,7 +120,9 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].walletpassphrase(passphrase="password", timeout=1000000)
 
         # Sign the transaction and send
-        signed_tx = self.nodes[0].walletprocesspsbt(psbtx)['psbt']
+        signed_tx = self.nodes[0].walletprocesspsbt(psbtx, {"finalize": False})['psbt']
+        finalized_tx = self.nodes[0].walletprocesspsbt(psbtx, {"finalize": True})['psbt']
+        assert signed_tx != finalized_tx
         final_tx = self.nodes[0].finalizepsbt(signed_tx)['hex']
         self.nodes[0].sendrawtransaction(final_tx)
 
@@ -328,11 +330,13 @@ class PSBTTest(BitcoinTestFramework):
 
         # Update psbts, should only have data for one input and not the other
         psbt1 = self.nodes[1].walletprocesspsbt(psbt_orig, False, "ALL")['psbt']
+        assert_equal(psbt1, self.nodes[1].walletprocesspsbt(psbt_orig, {"sign": False, "sighashtype": "ALL"})["psbt"])
         psbt1_decoded = self.nodes[0].decodepsbt(psbt1)
         assert psbt1_decoded['inputs'][0] and not psbt1_decoded['inputs'][1]
         # Check that BIP32 path was added
         assert "bip32_derivs" in psbt1_decoded['inputs'][0]
         psbt2 = self.nodes[2].walletprocesspsbt(psbt_orig, False, "ALL", False)['psbt']
+        assert_equal(psbt2, self.nodes[2].walletprocesspsbt(psbt_orig, {"sign": False, "sighashtype": "ALL", "bip32derivs": False})["psbt"])
         psbt2_decoded = self.nodes[0].decodepsbt(psbt2)
         assert not psbt2_decoded['inputs'][0] and psbt2_decoded['inputs'][1]
         # Check that BIP32 paths were not added
@@ -574,6 +578,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # After update with wallet, only needs signing
         updated = self.nodes[1].walletprocesspsbt(psbt, False, 'ALL', True)['psbt']
+        assert_equal(updated, self.nodes[1].walletprocesspsbt(psbt, {"sign": False, "sighashtype": 'ALL', "bip32derivs": True})["psbt"])
         analyzed = self.nodes[0].analyzepsbt(updated)
         assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer' and analyzed['inputs'][0]['missing']['signatures'][0] == addrinfo['embedded']['witness_program']
 
