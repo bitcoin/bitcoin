@@ -7,6 +7,13 @@
 #include <qt/bitcoinaddressvalidator.h>
 #include <qt/guiconstants.h>
 
+#include <QColor>
+#include <QCoreApplication>
+#include <QFont>
+#include <QInputMethodEvent>
+#include <QList>
+#include <QTextCharFormat>
+
 QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
     QLineEdit(parent),
     valid(true),
@@ -26,14 +33,16 @@ void QValidatedLineEdit::setText(const QString& text)
     checkValidity();
 }
 
-void QValidatedLineEdit::setValid(bool _valid, bool with_warning)
+void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vector<int>&error_locations)
 {
-    if(_valid == this->valid)
+    if(_valid && this->valid)
     {
-        if (with_warning == m_has_warning || !valid) {
+        if (with_warning == m_has_warning) {
             return;
         }
     }
+
+    QList<QInputMethodEvent::Attribute> attributes;
 
     if(_valid)
     {
@@ -47,7 +56,22 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning)
     else
     {
         setStyleSheet("QValidatedLineEdit { " STYLE_INVALID "}");
+        if (!error_locations.empty()) {
+            QTextCharFormat format;
+            format.setFontUnderline(true);
+            format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+            format.setUnderlineColor(Qt::yellow);
+            format.setForeground(Qt::yellow);
+            format.setFontWeight(QFont::Bold);
+            for (auto error_pos : error_locations) {
+                attributes.append(QInputMethodEvent::Attribute(QInputMethodEvent::TextFormat, error_pos - cursorPosition(), /*length=*/ 1, format));
+            }
+        }
     }
+
+    QInputMethodEvent event(QString(), attributes);
+    QCoreApplication::sendEvent(this, &event);
+
     this->valid = _valid;
 }
 
@@ -109,11 +133,20 @@ void QValidatedLineEdit::checkValidity()
         if (checkValidator)
         {
             QString address = text();
-            int pos = 0;
-            if (checkValidator->validate(address, pos) == QValidator::Acceptable)
+            const BitcoinAddressEntryValidator * const addressValidator = dynamic_cast<const BitcoinAddressEntryValidator*>(checkValidator);
+            QValidator::State validation_result;
+            std::vector<int> error_locations;
+            if (addressValidator) {
+                validation_result = addressValidator->validate(address, error_locations);
+            } else {
+                int pos = 0;
+                validation_result = checkValidator->validate(address, pos);
+                error_locations.push_back(pos);
+            }
+            if (validation_result == QValidator::Acceptable)
                 setValid(true, has_warning);
             else
-                setValid(false);
+                setValid(false, false, error_locations);
         }
     }
     else
