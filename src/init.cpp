@@ -552,6 +552,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-mempoolreplacement", strprintf("Enable transaction replacement in the memory pool (default: %u)", DEFAULT_ENABLE_REPLACEMENT), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kvB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-spkreuse", strprintf("Accept transactions reusing addresses or other pubkey scripts (default: %s)", DEFAULT_SPKREUSE), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
@@ -1010,6 +1011,16 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     fIsBareMultisigStd = args.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
     nMaxDatacarrierBytes = args.GetArg("-datacarriersize", nMaxDatacarrierBytes);
+
+    {
+        std::string strSpkReuse = gArgs.GetArg("-spkreuse", DEFAULT_SPKREUSE);
+        // Uses string values so future versions can implement other modes
+        if (strSpkReuse == "allow" || gArgs.GetBoolArg("-spkreuse", false)) {
+            SpkReuseMode = SRM_ALLOW;
+        } else {
+            SpkReuseMode = SRM_REJECT;
+        }
+    }
 
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(args.GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op

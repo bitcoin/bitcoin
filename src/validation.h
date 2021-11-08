@@ -121,6 +121,14 @@ extern bool g_parallel_script_checks;
 extern int nScriptCheckThreads;
 extern std::atomic_bool g_script_threads_enabled;
 extern bool fRequireStandard;
+
+enum SpkReuseModes {
+    SRM_ALLOW,
+    SRM_REJECT,
+};
+
+extern SpkReuseModes SpkReuseMode;
+
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
