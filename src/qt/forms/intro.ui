@@ -243,16 +243,16 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="pruneGB">
+      <widget class="QSpinBox" name="pruneMiB">
        <property name="suffix">
-        <string> GB</string>
+        <string> MiB</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLabel" name="lblPruneSuffix">
        <property name="buddy">
-        <cstring>pruneGB</cstring>
+        <cstring>pruneMiB</cstring>
        </property>
       </widget>
      </item>

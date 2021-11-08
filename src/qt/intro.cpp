@@ -140,24 +140,38 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(PACKAGE_NAME));
 
-    const int min_prune_target_GB = std::ceil(MIN_DISK_SPACE_FOR_BLOCK_FILES / 1e9);
-    ui->pruneGB->setRange(min_prune_target_GB, std::numeric_limits<int>::max());
-    if (gArgs.GetArg("-prune", 0) > 1) { // -prune=1 means enabled, above that it's a size in MiB
-        ui->prune->setChecked(true);
-        ui->prune->setEnabled(false);
+    const int min_prune_target_MiB = std::ceil(MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024.0 / 1024.0);
+    ui->pruneMiB->setRange(min_prune_target_MiB, std::numeric_limits<int>::max());
+
+    if (gArgs.IsArgSet("-prune")) {
+        int64_t prune_opt = gArgs.GetArg("-prune", 0);
+        if (prune_opt > 1) {  // -prune=1 means enabled, above that it's a size in MiB
+            ui->prune->setChecked(true);
+            ui->pruneMiB->setValue(prune_opt);
+        } else {
+            ui->prune->setChecked(false);
+            ui->pruneMiB->setValue(min_prune_target_MiB);
+
+            if (prune_opt == 1) {
+                // Manual pruning
+                ui->prune->setTristate();
+                ui->prune->setCheckState(Qt::PartiallyChecked);
+            }
+        }
+        m_prune_checkbox_is_default = false;
     }
-    ui->pruneGB->setValue(m_prune_target_gb);
-    ui->pruneGB->setToolTip(ui->prune->toolTip());
+    m_prune_target_gb = PruneMiBtoGB(ui->pruneMiB->value());
+    ui->pruneMiB->setToolTip(ui->prune->toolTip());
     ui->lblPruneSuffix->setToolTip(ui->prune->toolTip());
     UpdatePruneLabels(ui->prune->isChecked());
 
-    connect(ui->prune, &QCheckBox::toggled, [this](bool prune_checked) {
+    connect(ui->prune, &QCheckBox::stateChanged, [this](int prune_checked) {
         m_prune_checkbox_is_default = false;
         UpdatePruneLabels(prune_checked);
         UpdateFreeSpaceLabel();
     });
-    connect(ui->pruneGB, qOverload<int>(&QSpinBox::valueChanged), [this](int prune_GB) {
-        m_prune_target_gb = prune_GB;
+    connect(ui->pruneMiB, qOverload<int>(&QSpinBox::valueChanged), [this](int prune_MiB) {
+        m_prune_target_gb = PruneMiBtoGB(prune_MiB);
         UpdatePruneLabels(ui->prune->isChecked());
         UpdateFreeSpaceLabel();
     });
@@ -232,7 +246,9 @@ int64_t Intro::getPruneMiB() const
 {
     switch (ui->prune->checkState()) {
     case Qt::Checked:
-        return PruneGBtoMiB(m_prune_target_gb);
+        return ui->pruneMiB->value();
+    case Qt::PartiallyChecked:
+        return 1;
     case Qt::Unchecked: default:
         return 0;
     }
@@ -415,6 +431,9 @@ QString Intro::getPathToCheck()
 
 void Intro::UpdatePruneLabels(bool prune_checked)
 {
+    // Partially checked shouldn't pay attention to the size field
+    prune_checked = (ui->prune->checkState() == Qt::Checked);
+
     m_required_space_gb = m_blockchain_size_gb + m_chain_state_size_gb;
     QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
     if (prune_checked && m_prune_target_gb <= m_blockchain_size_gb) {
@@ -422,7 +441,7 @@ void Intro::UpdatePruneLabels(bool prune_checked)
         storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
     }
     ui->lblExplanation3->setVisible(prune_checked);
-    ui->pruneGB->setEnabled(prune_checked);
+    ui->pruneMiB->setEnabled(prune_checked);
     static constexpr uint64_t nPowTargetSpacing = 10 * 60;  // from chainparams, which we don't have at this stage
     static constexpr uint32_t expected_block_data_size = 2250000;  // includes undo data
     const uint64_t expected_backup_days = m_prune_target_gb * 1e9 / (uint64_t(expected_block_data_size) * 86400 / nPowTargetSpacing);

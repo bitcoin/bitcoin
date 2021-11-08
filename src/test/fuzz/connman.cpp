@@ -110,6 +110,9 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 }
             },
             [&] {
+                connman.SetMaxOutboundTarget(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+            },
+            [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
