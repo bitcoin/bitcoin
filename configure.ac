@@ -1241,7 +1241,6 @@ AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::w
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
-AM_CONDITIONAL([EMBEDDED_LEVELDB],[true])
 AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
@@ -1362,6 +1361,15 @@ if test x$use_ebpf != xno; then
     [AC_MSG_RESULT(no); have_sdt=no;]
   )
 fi
+
+build_leveldb=yes
+if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnonononononono; then
+  use_upnp=no
+  use_natpmp=no
+  use_zmq=no
+  build_leveldb=no
+fi
+AM_CONDITIONAL([EMBEDDED_LEVELDB],[test x$build_leveldb = xyes])
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
