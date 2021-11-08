@@ -627,6 +627,12 @@ class WalletTest(BitcoinTestFramework):
         assert not address_info["iswatchonly"]
         assert not address_info["isscript"]
         assert not address_info["ischange"]
+        assert_equal(address_info['use_txids'], [])
+
+        # Test getaddressinfo 'txids' field
+        txid = self.nodes[0].sendtoaddress("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ", 1)
+        address_info = self.nodes[0].getaddressinfo("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
+        assert_equal(address_info['use_txids'], [txid])
 
         # Test getaddressinfo 'ischange' field on change address.
         self.nodes[0].generate(1)
