@@ -1908,7 +1908,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+                return error_with_debug_log(BCLog::MEMPOOL, "%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
             }
             nFees += txfee;
             if (!MoneyRange(nFees)) {
@@ -3308,7 +3308,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         CBlockIndex* pindexPrev = nullptr;
         BlockMap::iterator mi = m_block_index.find(block.hashPrevBlock);
         if (mi == m_block_index.end()) {
-            LogPrintf("ERROR: %s: prev block not found\n", __func__);
+            LogPrint(BCLog::VALIDATION, "ERROR: %s: prev block not found\n", __func__);
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = (*mi).second;
@@ -3317,7 +3317,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
         if (!ContextualCheckBlockHeader(block, state, *this, chainparams, pindexPrev, GetAdjustedTime()))
-            return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
+            return error_with_debug_log(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
         /* Determine if this block descends from any block which has been found
          * invalid (m_failed_blocks), then mark pindexPrev and any blocks between
@@ -3502,7 +3502,7 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
         }
         if (!ret) {
             GetMainSignals().BlockChecked(*block, state);
-            return error("%s: AcceptBlock FAILED (%s)", __func__, state.ToString());
+            return error_with_debug_log(BCLog::VALIDATION, "%s: AcceptBlock FAILED (%s)", __func__, state.ToString());
         }
     }
 
