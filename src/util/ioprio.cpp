@@ -55,3 +55,25 @@ int ioprio_set_idle() {
 }
 
 #endif
+
+
+#ifdef HAVE_WINDOWS_IOPRIO
+
+#ifdef _WIN32_WINNT
+#undef _WIN32_WINNT
+#endif
+#define _WIN32_WINNT 0x0600
+
+#include <windows.h>
+#include <io.h>
+
+bool ioprio_set_file_idle(FILE * const F) {
+    static const FILE_IO_PRIORITY_HINT_INFO priorityHint = {
+        .PriorityHint = IoPriorityHintLow,
+    };
+    HANDLE hFile = _get_osfhandle(_fileno(F));
+
+    return SetFileInformationByHandle(hFile, FileIoPriorityHintInfo, &priorityHint, sizeof(priorityHint));
+}
+
+#endif
