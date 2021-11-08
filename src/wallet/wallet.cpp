@@ -5866,7 +5866,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
     // Get the extended key
     CExtKey master_key;
-    master_key.SetSeed(seed_key);
+    master_key.SetSeed(MakeByteSpan(seed_key));
 
     for (bool internal : {false, true}) {
         { // OUTPUT_TYPE is only one: LEGACY

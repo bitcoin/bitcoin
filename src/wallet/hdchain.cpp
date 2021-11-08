@@ -140,7 +140,7 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
     CExtKey changeKey;              //key at m/purpose'/coin_type'/account'/change
     CExtKey childKey;               //key at m/purpose'/coin_type'/account'/change/address_index
 
-    masterKey.SetSeed(vchSeed);
+    masterKey.SetSeed(MakeByteSpan(vchSeed));
 
     // Use hardened derivation for purpose, coin_type and account
     // (keys >= 0x80000000 are hardened after bip32)
