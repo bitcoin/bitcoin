@@ -406,6 +406,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     }
     // Process expected parameters.
     int hole = 0;
+    size_t skipped = 0;
     for (const std::string &argNamePattern: argNames) {
         std::vector<std::string> vargNames;
         boost::algorithm::split(vargNames, argNamePattern, boost::algorithm::is_any_of("|"));
@@ -429,6 +430,21 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
         } else {
             hole += 1;
         }
+        if (out.params.size() == 0) skipped += 1;
+    }
+    // If leftover "args" param was found, use it as a source of positional
+    // arguments and add named arguments after.
+    auto positional_args = argsIn.find("args");
+    if (positional_args != argsIn.end() && positional_args->second->isArray()) {
+        if (positional_args->second->size() > skipped && skipped < argNames.size()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + argNames[skipped] + " specified twice both as positional and named argument");
+        }
+        UniValue named_args = out.params;
+        out.params = *positional_args->second;
+        for (size_t i = out.params.size(); i < named_args.size(); ++i) {
+            out.params.push_back(named_args[i]);
+        }
+        argsIn.erase(positional_args);
     }
     // If there are still arguments in the argsIn map, this is an error.
     if (!argsIn.empty()) {
