@@ -486,6 +486,7 @@ enable_sse42=no
 enable_sse41=no
 enable_avx2=no
 enable_shani=no
+enable_power8=no
 
 if test "x$use_asm" = "xyes"; then
 
@@ -498,6 +499,7 @@ AX_CHECK_COMPILE_FLAG([-msse4.2],[[SSE42_CXXFLAGS="-msse4.2"]],,[[$CXXFLAG_WERRO
 AX_CHECK_COMPILE_FLAG([-msse4.1],[[SSE41_CXXFLAGS="-msse4.1"]],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-mavx -mavx2],[[AVX2_CXXFLAGS="-mavx -mavx2"]],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-msse4 -msha],[[SHANI_CXXFLAGS="-msse4 -msha"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-mpower8-vector],[[POWER8_CXXFLAGS="-mpower8-vector"]],,[[$CXXFLAG_WERROR]])
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$SSE42_CXXFLAGS $CXXFLAGS"
@@ -587,6 +589,22 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
   ]])],
  [ AC_MSG_RESULT(yes); enable_arm_crc=yes; ],
  [ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$TEMP_CXXFLAGS $POWER8_CXXFLAGS"
+AC_MSG_CHECKING(for POWER8 compiler support)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <altivec.h>
+    #include <stdint.h>
+  ]], [[
+    unsigned char src[16];
+    __builtin_crypto_vshasigmaw((__vector uint32_t)vec_vsx_ld(0, src), 1, 0xf);
+    return 0;
+  ]])],
+  [ AC_MSG_RESULT(yes); enable_power8=yes; AC_DEFINE(ENABLE_POWER8, 1, [Define if compiler supports POWER8 instructions.]) ],
+  [ AC_MSG_RESULT(no) ]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
@@ -1957,6 +1975,7 @@ AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
 AM_CONDITIONAL([ENABLE_AVX2],[test x$enable_avx2 = xyes])
 AM_CONDITIONAL([ENABLE_SHANI],[test x$enable_shani = xyes])
 AM_CONDITIONAL([ENABLE_ARM_CRC],[test x$enable_arm_crc = xyes])
+AM_CONDITIONAL([ENABLE_POWER8], [test x$enable_power8 = xyes])
 AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
 AM_CONDITIONAL([WORDS_BIGENDIAN],[test x$ac_cv_c_bigendian = xyes])
 AM_CONDITIONAL([USE_NATPMP],[test x$use_natpmp = xyes])
@@ -2009,6 +2028,7 @@ AC_SUBST(SSE41_CXXFLAGS)
 AC_SUBST(AVX2_CXXFLAGS)
 AC_SUBST(SHANI_CXXFLAGS)
 AC_SUBST(ARM_CRC_CXXFLAGS)
+AC_SUBST(POWER8_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_SQLITE)
 AC_SUBST(USE_BDB)
