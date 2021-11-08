@@ -12,6 +12,7 @@
 
 #include <qt/guiutil.h>
 
+#include <QMessageBox>
 #include <QPushButton>
 
 CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
@@ -94,9 +95,16 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         ui->external_signer_checkbox->setChecked(false);
 #endif
 
-#ifndef USE_BDB
-        ui->descriptor_checkbox->setEnabled(false);
-        ui->descriptor_checkbox->setChecked(true);
+#ifdef USE_BDB
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
+#else
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, [this]() {
+        if (!this->isDescriptorWalletChecked()) {
+            QMessageBox::critical(this, tr("Cannot create wallet"), tr("This build was compiled without BDB support, so only experimental descriptor wallets are supported."));
+            return;
+        }
+        this->accept();
+    });
 #endif
 
 #ifndef ENABLE_EXTERNAL_SIGNER
