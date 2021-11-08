@@ -796,7 +796,7 @@ RPCHelpMan dumpwallet()
         CKey seed;
         if (spk_man.GetKey(seed_id, seed)) {
             CExtKey masterKey;
-            masterKey.SetSeed(seed.begin(), seed.size());
+            masterKey.SetSeed(seed);
 
             file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
         }
