@@ -293,6 +293,7 @@ BASE_SCRIPTS = [
     'mempool_accept_wtxid.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
+    'rpc_validateaddress.py',
     'p2p_ping.py',
     'rpc_scanblockfilters.py',
     'rpc_scantxoutset.py',
