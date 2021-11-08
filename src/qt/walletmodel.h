@@ -151,6 +151,7 @@ public:
     void setClientModel(ClientModel* client_model);
 
     QString getWalletName() const;
+    static QString getDisplayName(QString name);
     QString getDisplayName() const;
 
     bool isMultiwallet();

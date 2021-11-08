@@ -590,10 +590,18 @@ QString WalletModel::getWalletName() const
     return QString::fromStdString(m_wallet->getWalletName());
 }
 
+QString WalletModel::getDisplayName(QString name)
+{
+    if (name.endsWith(".dat")) {
+        name.truncate(name.size() - 4);
+    }
+    return name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+}
+
 QString WalletModel::getDisplayName() const
 {
     const QString name = getWalletName();
-    return name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+    return getDisplayName(name);
 }
 
 bool WalletModel::isMultiwallet()
