@@ -38,7 +38,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     servicesflag_generated = 0
     for servicename in servicenames:
         servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
-    assert servicesflag_generated == servicesflag
+    assert_equal(servicesflag_generated, servicesflag)
 
 
 class NetTest(BitcoinTestFramework):
