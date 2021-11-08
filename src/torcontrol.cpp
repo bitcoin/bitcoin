@@ -378,7 +378,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
         // if -onion isn't set to something else.
         if (gArgs.GetArg("-onion", "") == "") {
             CService resolved(LookupNumeric("127.0.0.1", 9050));
-            proxyType addrOnion = proxyType(resolved, true);
+            Proxy addrOnion = Proxy(resolved, true);
             SetProxy(NET_ONION, addrOnion);
 
             const auto onlynets = gArgs.GetArgs("-onlynet");

@@ -1315,7 +1315,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = args.GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
-    proxyType onion_proxy;
+    Proxy onion_proxy;
 
     bool proxyRandomize = args.GetBoolArg("-proxyrandomize", DEFAULT_PROXYRANDOMIZE);
     // -proxy sets a proxy for all outgoing network traffic
@@ -1327,7 +1327,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
         }
 
-        proxyType addrProxy = proxyType(proxyAddr, proxyRandomize);
+        Proxy addrProxy = Proxy(proxyAddr, proxyRandomize);
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
 
@@ -1344,13 +1344,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     std::string onionArg = args.GetArg("-onion", "");
     if (onionArg != "") {
         if (onionArg == "0") { // Handle -noonion/-onion=0
-            onion_proxy = proxyType{};
+            onion_proxy = Proxy{};
         } else {
             CService addr;
             if (!Lookup(onionArg, addr, 9050, fNameLookup) || !addr.IsValid()) {
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
             }
-            onion_proxy = proxyType{addr, proxyRandomize};
+            onion_proxy = Proxy{addr, proxyRandomize};
         }
     }
 
@@ -1851,7 +1851,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!Lookup(i2psam_arg, addr, 7656, fNameLookup) || !addr.IsValid()) {
             return InitError(strprintf(_("Invalid -i2psam address or hostname: '%s'"), i2psam_arg));
         }
-        SetProxy(NET_I2P, proxyType{addr});
+        SetProxy(NET_I2P, Proxy{addr});
     } else {
         SetReachable(NET_I2P, false);
     }
