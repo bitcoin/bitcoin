@@ -170,6 +170,11 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
             return false;
         }
 
+        if (IsThisSoftwareExpired(GetTime())) {
+            tfm::format(std::cerr, "This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration.\n");
+            exit(EXIT_FAILURE);
+        }
+
         // -server defaults to true for bitcoind but not for the GUI so do this here
         args.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
