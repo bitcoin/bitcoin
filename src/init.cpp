@@ -1118,6 +1118,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     script_threads = std::min(script_threads, MAX_SCRIPTCHECK_THREADS);
 
     LogPrintf("Script verification uses %d additional threads\n", script_threads);
+    nScriptCheckThreads = script_threads;
     if (script_threads >= 1) {
         g_parallel_script_checks = true;
         StartScriptCheckWorkerThreads(script_threads);
