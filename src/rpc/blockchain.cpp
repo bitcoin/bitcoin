@@ -595,6 +595,39 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
     }
 }
 
+static RPCHelpMan maxmempool()
+{
+    return RPCHelpMan{"maxmempool",
+                "\nSets the allocated memory for the memory pool.\n",
+                {
+                    {"megabytes", RPCArg::Type::NUM, RPCArg::Optional::NO, "The memory allocated in MB"},
+                },
+                RPCResult{
+                    RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("maxmempool", "150") + HelpExampleRpc("maxmempool", "150")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    int64_t nSize = request.params[0].get_int64();
+    int64_t nMempoolSizeMax = nSize * 1000000;
+    int64_t nMempoolSizeMin = maxmempoolMinimum(gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT)) * 1000000;
+    if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("MaxMempool size %d is too small", nSize));
+    gArgs.ForceSetArg("-maxmempool", strprintf("%d", nSize));
+
+    auto node_context = util::AnyPtr<NodeContext>(request.context);
+    if (node_context && node_context->mempool && node_context->chainman) {
+        LOCK(cs_main);
+        CChainState& active_chainstate = node_context->chainman->ActiveChainstate();
+        LimitMempoolSize(*node_context->mempool, active_chainstate.CoinsTip());
+    }
+
+    return NullUniValue;
+}
+    };
+}
+
 static RPCHelpMan getrawmempool()
 {
     return RPCHelpMan{"getrawmempool",
@@ -3380,6 +3413,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         &setprunelock,                       },
     { "blockchain",         &pruneblockchain,                    },
     { "blockchain",         &savemempool,                        },
+    { "blockchain",         &maxmempool,                         },
     { "blockchain",         &verifychain,                        },
 
     { "blockchain",         &preciousblock,                      },

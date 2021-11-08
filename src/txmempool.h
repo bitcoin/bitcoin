@@ -36,6 +36,11 @@ extern RecursiveMutex cs_main;
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
+inline int64_t maxmempoolMinimum(const int64_t nLimitDescendantSize) {
+    int64_t nMempoolSizeMin = nLimitDescendantSize * 1000 * 40;
+    return std::max(int64_t(0), int64_t(std::ceil(nMempoolSizeMin / 1000000.0)));
+}
+
 struct LockPoints
 {
     // Will be set to the blockchain height and median time past
