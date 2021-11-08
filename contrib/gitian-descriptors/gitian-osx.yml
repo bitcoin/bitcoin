@@ -1,9 +1,9 @@
 ---
-name: "bitcoin-core-osx-22"
+name: "bitcoin-core-osx-22-bionic"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "focal"
+- "bionic"
 architectures:
 - "amd64"
 packages:
@@ -27,7 +27,6 @@ packages:
 - "python3-setuptools"
 - "fonts-tuffy"
 - "xorriso"
-- "libtinfo5"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"

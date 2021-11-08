@@ -1,9 +1,9 @@
 ---
-name: "bitcoin-core-win-22"
+name: "bitcoin-core-win-22-bionic"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "focal"
+- "bionic"
 architectures:
 - "amd64"
 packages:
@@ -128,6 +128,10 @@ script: |
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
+
+    # NSIS 2 (packaged by Ubuntu bionic) can't handle Unicode, so we have to disable it
+    # NOTE: Guix uses NSIS 3 which does; prefer that over this!
+    sed -i '/^Unicode true$/d' share/setup.nsi.in
 
     ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}"

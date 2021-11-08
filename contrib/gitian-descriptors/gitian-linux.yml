@@ -1,9 +1,9 @@
 ---
-name: "bitcoin-core-linux-22"
+name: "bitcoin-core-linux-22-bionic"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "focal"
+- "bionic"
 architectures:
 - "amd64"
 packages:
@@ -134,7 +134,7 @@ script: |
   # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
-    if [ "${i}" = "powerpc64-linux-gnu" ]; then
+    if [ "${i}" = "riscv64-linux-gnu" ] || [ "${i}" = "powerpc64-linux-gnu" ] || [ "${i}" = "powerpc64le-linux-gnu" ]; then
       # Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-8-cross-ports/+bug/1853740
       # TODO: remove this when no longer needed
       HOST_LDFLAGS="${HOST_LDFLAGS_BASE} -Wl,-z,noexecstack"
