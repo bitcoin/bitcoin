@@ -23,7 +23,7 @@ class KeyPoolTest(BitcoinTestFramework):
         addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
         if not self.options.descriptors:
-            assert addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid']
+            assert_equal(addr_before_encrypting_data['hdseedid'], wallet_info_old['hdseedid'])
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
@@ -78,7 +78,7 @@ class KeyPoolTest(BitcoinTestFramework):
         wallet_info = nodes[0].getwalletinfo()
         assert addr_before_encrypting_data['hdmasterfingerprint'] != addr_data['hdmasterfingerprint']
         if not self.options.descriptors:
-            assert addr_data['hdseedid'] == wallet_info['hdseedid']
+            assert_equal(addr_data['hdseedid'], wallet_info['hdseedid'])
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
@@ -111,7 +111,7 @@ class KeyPoolTest(BitcoinTestFramework):
         addr.add(nodes[0].getnewaddress(address_type="bech32"))
         addr.add(nodes[0].getnewaddress(address_type="bech32"))
         addr.add(nodes[0].getnewaddress(address_type="bech32"))
-        assert len(addr) == 6
+        assert_equal(len(addr), 6)
         # the next one should fail
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
