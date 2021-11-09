@@ -83,19 +83,20 @@ bool IsHexNumber(const std::string& str)
 
 std::vector<unsigned char> ParseHex(const char* psz)
 {
-    // convert hex dump to vector
     std::vector<unsigned char> vch;
-    while (true)
-    {
-        while (IsSpace(*psz))
+    while (true) {
+        while (IsSpace(*psz)) {
             psz++;
+        }
         signed char c = HexDigit(*psz++);
-        if (c == (signed char)-1)
+        if (c == (signed char)-1) {
             break;
+        }
         auto n{uint8_t(c << 4)};
         c = HexDigit(*psz++);
-        if (c == (signed char)-1)
+        if (c == (signed char)-1) {
             break;
+        }
         n |= c;
         vch.push_back(n);
     }
