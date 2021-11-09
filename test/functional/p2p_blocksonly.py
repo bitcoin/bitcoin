@@ -77,7 +77,7 @@ class P2PBlocksOnly(SyscoinTestFramework):
         self.log.info("Relay-permission peer's transaction is accepted and relayed")
 
         self.nodes[0].disconnect_p2ps()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
     def blocks_relay_conn_tests(self):
         self.log.info('Tests with node in normal mode with block-relay-only connections')

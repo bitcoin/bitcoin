@@ -169,7 +169,7 @@ class CoinStatsIndexTest(SyscoinTestFramework):
         self.nodes[0].sendrawtransaction(tx2_hex)
 
         # Include both txs in a block
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         for hash_option in index_hash_options:
@@ -228,7 +228,7 @@ class CoinStatsIndexTest(SyscoinTestFramework):
         res9 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res8, res9)
 
-        self.generate(index_node, 1)
+        self.generate(index_node, 1, sync_fun=self.no_op)
         res10 = index_node.gettxoutsetinfo('muhash')
         assert(res8['txouts'] < res10['txouts'])
 
@@ -254,7 +254,7 @@ class CoinStatsIndexTest(SyscoinTestFramework):
         assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 110)
 
         # Add two new blocks
-        block = self.generate(index_node, 2)[1]
+        block = self.generate(index_node, 2, sync_fun=self.no_op)[1]
         res = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
 
         # Test that the result of the reorged block is not returned for its old block height

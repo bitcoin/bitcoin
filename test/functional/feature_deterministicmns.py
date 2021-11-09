@@ -118,7 +118,6 @@ class DIP3Test(SyscoinTestFramework):
             dummy_txin = self.spend_mn_collateral(mns[i], with_dummy_input_output=True)
             dummy_txins.append(dummy_txin)
             self.generate(self.nodes[0], 1)
-            self.sync_all()
             mns_tmp.remove(mns[i])
             self.assert_mnlists(mns_tmp)
 
@@ -131,7 +130,6 @@ class DIP3Test(SyscoinTestFramework):
         self.log.info("cause a reorg with a double spend and check that mnlists are still correct on all nodes")
         self.mine_double_spend(self.nodes[0], dummy_txins, self.nodes[0].getnewaddress(), use_mnmerkleroot_from_tip=True)
         self.generate(self.nodes[0], spend_mns_count)
-        self.sync_all()
         self.assert_mnlists(mns_tmp)
 
         self.log.info("test mn payment enforcement with deterministic MNs")
@@ -139,7 +137,6 @@ class DIP3Test(SyscoinTestFramework):
             node = self.nodes[i % len(self.nodes)]
             self.test_invalid_mn_payment(node)
             self.generate(self.nodes[0], 1)
-            self.sync_all()
 
         self.log.info("testing ProUpServTx")
         for mn in mns:
@@ -162,7 +159,6 @@ class DIP3Test(SyscoinTestFramework):
             expected_payee = bt['masternode'][0]['payee']
             expected_amount = bt['masternode'][0]['amount']
             self.generate(self.nodes[0], 1)
-            self.sync_all()
             if expected_payee == multisig:
                 block = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
                 cbtx = self.nodes[0].getrawtransaction(block['tx'][0], 1, self.nodes[0].getbestblockhash())
@@ -185,7 +181,6 @@ class DIP3Test(SyscoinTestFramework):
             self.register_mn(self.nodes[0], new_mn)
             mns[i] = new_mn
             self.generate(self.nodes[0], 1)
-            self.sync_all()
             self.assert_mnlists(mns)
             self.log.info("restarting MN %s" % new_mn.alias)
             self.stop_node(new_mn.idx)
@@ -204,7 +199,6 @@ class DIP3Test(SyscoinTestFramework):
         node.sendtoaddress(mn.rewards_address, 0.001)
         node.protx_update_registrar(mn.protx_hash, "", new_voting_address, "")
         self.generate(node, 1)
-        self.sync_all()
         new_dmnState = mn.node.masternode_status()["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
         assert(new_voting_address_from_rpc == new_voting_address)
@@ -286,7 +280,6 @@ class DIP3Test(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
         self.nodes[0].protx_update_registrar(mn.protx_hash, '', '', payee, mn.fundsAddr)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         info = self.nodes[0].protx_info(mn.protx_hash)
         assert(info['state']['payoutAddress'] == payee)
 
@@ -294,7 +287,6 @@ class DIP3Test(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
         self.nodes[0].protx_update_service( mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         for node in self.nodes:
             protx_info = node.protx_info( mn.protx_hash)
             mn_list = node.masternode_list()

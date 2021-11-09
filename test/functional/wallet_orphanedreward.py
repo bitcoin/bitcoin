@@ -20,7 +20,7 @@ class OrphanedBlockRewardTest(SyscoinTestFramework):
         # some balance to node 1, which will hold it as a single coin.
         self.generate(self.nodes[0], 150)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # Get a block reward with node 1 and remember the block so we can orphan
         # it later.

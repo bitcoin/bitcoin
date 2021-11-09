@@ -41,7 +41,7 @@ class CreateWalletWatchonlyTest(SyscoinTestFramework):
 
         # send 1 sys to our watch-only address
         txid = def_wallet.sendtoaddress(wo_addr, 1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # getbalance
         self.log.info('include_watchonly should default to true for watch-only wallets')

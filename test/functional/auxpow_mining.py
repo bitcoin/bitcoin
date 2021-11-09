@@ -44,7 +44,6 @@ class AuxpowMiningTest (SyscoinTestFramework):
     # Activate segwit if requested.
     if self.options.segwit:
       self.generate(self.nodes[0], 500)
-      self.sync_all ()
 
     # Test with getauxblock and createauxblock/submitauxblock.
     self.test_getauxblock ()
@@ -70,7 +69,6 @@ class AuxpowMiningTest (SyscoinTestFramework):
     # If we receive a new block, the old hash will be replaced.
     self.sync_all ()
     self.generate(self.nodes[1], 1)
-    self.sync_all ()
     auxblock2 = create ()
     assert auxblock['hash'] != auxblock2['hash']
     assert_raises_rpc_error (-8, 'block hash unknown', submit,

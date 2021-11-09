@@ -174,7 +174,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # listunspent should show 1 single, unused 10 sys output
@@ -185,7 +185,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         assert("used" not in self.nodes[0].getbalances()["mine"])
 
         self.nodes[1].sendtoaddress(retaddr, 5)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # listunspent should show 1 single, unused 5 sys output
@@ -194,7 +194,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # listunspent should show 2 total outputs (5, 10 sys), one unused (5), one reused (10)
@@ -228,7 +228,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # listunspent should show 1 single, unused 10 sys output
@@ -237,7 +237,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 10})
 
         self.nodes[1].sendtoaddress(retaddr, 5)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # listunspent should show 1 single, unused 5 sys output
@@ -259,7 +259,7 @@ class AvoidReuseTest(SyscoinTestFramework):
                 assert_equal(second_addr_type, "legacy")
 
             self.nodes[0].sendtoaddress(new_fundaddr, 10)
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.sync_all()
 
             # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
@@ -302,7 +302,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         for _ in range(101):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # send transaction that should not use all the available outputs
@@ -334,7 +334,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         for _ in range(101):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # Sending a transaction that is smaller than each one of the
@@ -363,7 +363,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         for _ in range(202):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # Sending a transaction that needs to use the full groups

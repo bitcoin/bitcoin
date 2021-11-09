@@ -844,7 +844,7 @@ class CompactBlocksTest(SyscoinTestFramework):
 
     def run_test(self):
         # Get the nodes out of IBD
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # Setup the p2p connections
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))

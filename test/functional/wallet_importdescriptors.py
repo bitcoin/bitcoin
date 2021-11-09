@@ -582,7 +582,7 @@ class ImportDescriptorsTest(SyscoinTestFramework):
 
         addr = wmulti_priv_big.getnewaddress()
         w0.sendtoaddress(addr, 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         # It is standard and would relay.
         txid = wmulti_priv_big.sendtoaddress(w0.getnewaddress(), 9.999)

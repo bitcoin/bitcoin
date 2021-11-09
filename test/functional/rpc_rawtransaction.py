@@ -97,13 +97,13 @@ class RawTransactionsTest(SyscoinTestFramework):
     def getrawtransaction_tests(self):
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         vout = find_vout_for_address(self.nodes[1], txid, addr)
         rawTx = self.nodes[1].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): 9.999})
         rawTxSigned = self.nodes[1].signrawtransactionwithwallet(rawTx)
         txId = self.nodes[1].sendrawtransaction(rawTxSigned['hex'])
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         for n in [0, 3]:
@@ -436,7 +436,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         # send 1.2 BTC to msig adr
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         # node2 has both keys of the 2of2 ms addr, tx should affect the balance
         assert_equal(self.nodes[2].getbalance(), bal + Decimal('1.20000000'))
@@ -458,7 +458,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         decTx = self.nodes[0].gettransaction(txId)
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # THIS IS AN INCOMPLETE FEATURE
@@ -481,7 +481,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), bal + Decimal('50.00000000') + Decimal('2.19000000'))  # block reward + tx
 
@@ -501,7 +501,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         decTx = self.nodes[0].gettransaction(txId)
         rawTx2 = self.nodes[0].decoderawtransaction(decTx['hex'])
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         assert_equal(self.nodes[2].getbalance(), bal)  # the funds of a 2of2 multisig tx should not be marked as spendable
@@ -526,7 +526,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.nodes[2].sendrawtransaction(rawTxComb)
         rawTx2 = self.nodes[0].decoderawtransaction(rawTxComb)
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), bal + Decimal('50.00000000') + Decimal('2.19000000'))  # block reward + tx
 

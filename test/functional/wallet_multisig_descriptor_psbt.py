@@ -110,7 +110,7 @@ class WalletMultisigDescriptorPSBTTest(SyscoinTestFramework):
         multisig_receiving_address = participants["multisigs"][0].getnewaddress()
         self.log.info("Send funds to the resulting multisig receiving address...")
         coordinator_wallet.sendtoaddress(multisig_receiving_address, deposit_amount)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         for participant in participants["multisigs"]:
             assert_approx(participant.getbalance(), deposit_amount, vspan=0.001)
@@ -136,7 +136,7 @@ class WalletMultisigDescriptorPSBTTest(SyscoinTestFramework):
         coordinator_wallet.sendrawtransaction(finalized["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - value, vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value)
@@ -153,7 +153,7 @@ class WalletMultisigDescriptorPSBTTest(SyscoinTestFramework):
         coordinator_wallet.sendrawtransaction(finalized["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - (value * 2), vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value * 2)

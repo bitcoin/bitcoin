@@ -46,7 +46,7 @@ class CoinbaseCategoryTest(SyscoinTestFramework):
         self.assert_category("immature", address, txid, 99)
 
         # Mine one more block
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         # Coinbase transaction is now matured, so category is "generate"
         self.assert_category("generate", address, txid, 100)
 

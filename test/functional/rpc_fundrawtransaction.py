@@ -129,7 +129,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 5.0)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         wwatch.unloadwallet()
@@ -503,7 +503,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         # Send 1.2 SYS to msig addr.
         self.nodes[0].sendtoaddress(mSigObj, 1.2)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         oldBalance = self.nodes[1].getbalance()
@@ -592,7 +592,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         for _ in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # Fund a tx with ~20 small inputs.
@@ -620,7 +620,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         for _ in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # Fund a tx with ~20 small inputs.
@@ -710,7 +710,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         signedtx = self.nodes[0].signrawtransactionwithwallet(signedtx["hex"])
         assert signedtx["complete"]
         self.nodes[0].sendrawtransaction(signedtx["hex"])
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         wwatch.unloadwallet()
@@ -1016,7 +1016,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         wallet.sendrawtransaction(signedtx['hex'])
 
         # And we can also use them once they're confirmed.
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         rawtx = wallet.createrawtransaction([], [{self.nodes[2].getnewaddress(): 3}])
         fundedtx = wallet.fundrawtransaction(rawtx, {"include_unsafe": True})
         tx_dec = wallet.decoderawtransaction(fundedtx['hex'])
@@ -1033,7 +1033,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         addr = w.getnewaddress(address_type="bech32")
         self.nodes[0].sendtoaddress(addr, 1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # A P2WPKH input costs 68 vbytes; With a single P2WPKH output, the rest of the tx is 42 vbytes for a total of 110 vbytes.

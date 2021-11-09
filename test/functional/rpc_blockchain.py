@@ -374,7 +374,7 @@ class BlockchainTest(SyscoinTestFramework):
         self.log.debug('Node should not stop at this height')
         assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
         try:
-            self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_P2WSH_OP_TRUE)
+            self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_P2WSH_OP_TRUE, sync_fun=self.no_op)
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')

@@ -111,7 +111,7 @@ class WalletSignerTest(SyscoinTestFramework):
 
         self.log.info('Prepare mock PSBT')
         self.nodes[0].sendtoaddress(address1, 1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # Load private key into wallet to generate a signed PSBT for the mock

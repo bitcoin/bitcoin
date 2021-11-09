@@ -24,7 +24,7 @@ class ReceivedByTest(SyscoinTestFramework):
 
     def run_test(self):
         # Generate block to get out of IBD
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
 
         # save the number of coinbase reward addresses so far
@@ -78,7 +78,7 @@ class ReceivedByTest(SyscoinTestFramework):
         assert_equal(len(res), 2 + num_cb_reward_addresses)  # Right now 2 entries
         other_addr = self.nodes[1].getnewaddress()
         txid2 = self.nodes[0].sendtoaddress(other_addr, 0.1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         # Same test as above should still pass
         expected = {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 11, "txids": [txid, ]}

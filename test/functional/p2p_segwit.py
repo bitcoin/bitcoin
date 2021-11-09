@@ -324,7 +324,7 @@ class SegWitTest(SyscoinTestFramework):
         assert tx.hash in self.nodes[0].getrawmempool()
         # Save this transaction for later
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
     @subtest  # type: ignore
     def test_unnecessary_witness_before_segwit_activation(self):
@@ -554,7 +554,7 @@ class SegWitTest(SyscoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
         # Cleanup: mine the first transaction and update utxo
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         self.utxo.pop(0)
@@ -579,7 +579,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Mine it on test_node to create the confirmed output.
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_tx, with_witness=True, accepted=True)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
 
         # Now test standardness of v0 P2WSH outputs.
@@ -652,7 +652,7 @@ class SegWitTest(SyscoinTestFramework):
             )
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
@@ -665,7 +665,7 @@ class SegWitTest(SyscoinTestFramework):
         height = self.nodes[0].getblockcount()
         self.generate(self.nodes[0], SEGWIT_HEIGHT - height - 2)
         assert not softfork_active(self.nodes[0], 'segwit')
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert softfork_active(self.nodes[0], 'segwit')
         self.segwit_active = True
 
@@ -1305,7 +1305,7 @@ class SegWitTest(SyscoinTestFramework):
         assert vsize != raw_tx["size"]
 
         # Cleanup: mine the transactions and update utxo for next test
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         self.utxo.pop(0)
@@ -1355,7 +1355,7 @@ class SegWitTest(SyscoinTestFramework):
             self.utxo.pop(0)
             temp_utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
-        self.generate(self.nodes[0], 1)  # Mine all the transactions
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # Mine all the transactions
         self.sync_blocks()
         assert len(self.nodes[0].getrawmempool()) == 0
 
@@ -1433,7 +1433,7 @@ class SegWitTest(SyscoinTestFramework):
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=False, reason='bad-txns-premature-spend-of-coinbase')
 
         # Advancing one more block should allow the spend.
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=True)
@@ -1745,7 +1745,7 @@ class SegWitTest(SyscoinTestFramework):
         tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, script_pubkey))
         tx.rehash()
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, False, True)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
 
         # We'll add an unnecessary witness to this transaction that would cause
@@ -1774,7 +1774,7 @@ class SegWitTest(SyscoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, False, True)
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, False, True)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
 
         # Update our utxo list; we spent the first entry.
@@ -1809,7 +1809,7 @@ class SegWitTest(SyscoinTestFramework):
         txid = tx.sha256
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
 
         # Creating transactions for tests
@@ -1872,7 +1872,7 @@ class SegWitTest(SyscoinTestFramework):
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
 
-        self.generate(self.nodes[0], 1)  # Mine and clean up the mempool of non-standard node
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node
         self.sync_blocks()
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
@@ -2010,7 +2010,7 @@ class SegWitTest(SyscoinTestFramework):
                 return serialize_with_bogus_witness(self.tx)
 
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(address_type='bech32'), 5)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         unspent = next(u for u in self.nodes[0].listunspent() if u['spendable'] and u['address'].startswith('bcrt'))
 
         raw = self.nodes[0].createrawtransaction([{"txid": unspent['txid'], "vout": unspent['vout']}], {self.nodes[0].getnewaddress(): 1})

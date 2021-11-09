@@ -130,7 +130,7 @@ class WalletBackupTest(SyscoinTestFramework):
 
     def run_test(self):
         self.log.info("Generating initial blockchain")
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
         self.generate(self.nodes[1], 1)
         self.sync_blocks()

@@ -41,9 +41,8 @@ class MerkleBlockTest(SyscoinTestFramework):
         # This will raise an exception because the transaction is not yet in a block
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
-        self.sync_all()
 
         txlist = []
         blocktxn = self.nodes[0].getblock(blockhash, True)["tx"]
@@ -57,7 +56,7 @@ class MerkleBlockTest(SyscoinTestFramework):
         txin_spent = miniwallet.get_utxo()  # Get the change from txid2
         tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
         txid3 = tx3['txid']
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         txid_spent = txin_spent["txid"]

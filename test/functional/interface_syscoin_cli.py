@@ -174,7 +174,7 @@ class TestSyscoinCli(SyscoinTestFramework):
             w1.sendtoaddress(w3.getnewaddress(), amounts[2])
 
             # Mine a block to confirm; adds a block reward (50 BTC) to the default wallet.
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
             self.log.info("Test -getinfo with multiple wallets and -rpcwallet returns specified wallet balance")
             for i in range(len(wallets)):

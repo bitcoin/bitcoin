@@ -419,7 +419,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             # To ensure that all nodes are out of IBD, the most recent block
             # must have a timestamp not too old (see IsInitialBlockDownload()).
             self.log.debug('Generate a block with current time')
-            block_hash = self.generate(self.nodes[0], 1)[0]
+            block_hash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
             block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
                 n.submitblock(block)
@@ -651,20 +651,27 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         node.setnetworkactive(True)
         self.connect_nodes(node.index, node_num)
 
-    def generate(self, generator, *args, **kwargs):
+    def no_op(self):
+        pass
+
+    def generate(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generate(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generateblock(self, generator, *args, **kwargs):
+    def generateblock(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generateblock(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generatetoaddress(self, generator, *args, **kwargs):
+    def generatetoaddress(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generatetoaddress(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generatetodescriptor(self, generator, *args, **kwargs):
+    def generatetodescriptor(self, generator, *args, sync_fun=None, **kwargs):
         blocks = generator.generatetodescriptor(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
     def sync_blocks(self, nodes=None, wait=1, timeout=60):
@@ -989,7 +996,7 @@ class DashTestFramework(SyscoinTestFramework):
                     break
             if not found_unconfirmed:
                 break
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
 
     def bump_scheduler(self, t, nodes=None):
@@ -1037,12 +1044,11 @@ class DashTestFramework(SyscoinTestFramework):
             self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
             proTxHash = self.nodes[0].protx_register_fund(address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
         else:
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             proTxHash = self.nodes[0].protx_register(txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
 
         self.generate(self.nodes[0], 1)
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
-        self.sync_all()
 
         self.log.info("Prepared masternode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
 
@@ -1052,7 +1058,6 @@ class DashTestFramework(SyscoinTestFramework):
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         self.mninfo.remove(mn)
 
         self.log.info("Removed masternode %d", idx)
@@ -1137,8 +1142,6 @@ class DashTestFramework(SyscoinTestFramework):
 
         self.bump_mocktime(1)
         self.generate(self.nodes[0], 1)
-        # sync nodes
-        self.sync_all()
         # Enable ChainLocks by default
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
@@ -1450,7 +1453,6 @@ class DashTestFramework(SyscoinTestFramework):
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].getblocktemplate({"rules": ["segwit"]}) # this calls CreateNewBlock
         self.generate(self.nodes[0], 1)
-        self.sync_blocks(nodes)
 
         self.log.info("Waiting for quorum to appear in the list")
         self.wait_for_quorum_list(q, nodes)

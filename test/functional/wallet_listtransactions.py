@@ -36,9 +36,8 @@ class ListTransactionsTest(SyscoinTestFramework):
                             {"txid": txid},
                             {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0, "trusted": False})
         self.log.info("Test confirmations change after mining a block")
-        blockhash = self.generate(self.nodes[0], 1)[0]
+        blockhash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         blockheight = self.nodes[0].getblockheader(blockhash)['height']
-        self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid},
                             {"category": "send", "amount": Decimal("-0.1"), "confirmations": 1, "blockhash": blockhash, "blockheight": blockheight})
@@ -215,7 +214,7 @@ class ListTransactionsTest(SyscoinTestFramework):
             assert_equal(txs[txid_4], "unknown")
 
         self.log.info("Test mined transactions are no longer bip125-replaceable")
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert txid_3b not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
         assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")

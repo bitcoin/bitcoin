@@ -50,7 +50,7 @@ class ScantxoutsetTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress("mpQ8rokAhp1TAtJQR6F6TaUmjAWkAWYYBq", 16.384) # (m/1/1/1500)
 
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         self.log.info("Stop node, remove wallet, mine again some blocks...")
         self.stop_node(0)

@@ -153,7 +153,7 @@ class FilterTest(SyscoinTestFramework):
         assert not filter_peer.tx_received
 
         # Clear the mempool so that this transaction does not impact subsequent tests
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
     def test_filter(self, filter_peer):
         # Set the bloomfilter using filterload

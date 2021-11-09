@@ -202,7 +202,7 @@ class SignRawTransactionsTest(SyscoinTestFramework):
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         self.nodes[0].sendtoaddress(p2sh_p2wsh_address["address"], 49.999)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         # Get the UTXO info from scantxoutset
         unspent_output = self.nodes[1].scantxoutset('start', [p2sh_p2wsh_address['descriptor']])['unspents'][0]
@@ -237,7 +237,7 @@ class SignRawTransactionsTest(SyscoinTestFramework):
         # Fund that address
         txid = self.nodes[0].sendtoaddress(addr, 10)
         vout = find_vout_for_address(self.nodes[0], txid, addr)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
@@ -280,7 +280,7 @@ class SignRawTransactionsTest(SyscoinTestFramework):
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
@@ -315,7 +315,7 @@ class SignRawTransactionsTest(SyscoinTestFramework):
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(

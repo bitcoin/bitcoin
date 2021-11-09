@@ -176,7 +176,7 @@ class KeyPoolTest(SyscoinTestFramework):
         w1.walletpassphrase('test', 100)
 
         res = w1.sendtoaddress(address=address, amount=0.00010000)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         destination = addr.pop()
 
         # Using a fee rate (10 sat / byte) well above the minimum relay rate

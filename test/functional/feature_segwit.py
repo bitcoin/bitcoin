@@ -139,7 +139,7 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(tmpl['transactions'][0]['hash'], txid)
         assert_equal(tmpl['transactions'][0]['sigops'], 2)
         assert '!segwit' not in tmpl['rules']
-        self.generate(self.nodes[0], 1)  # block 162
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # block 162
 
         balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
@@ -191,7 +191,7 @@ class SegWitTest(SyscoinTestFramework):
                     wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))
                     p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
 
-        self.generate(self.nodes[0], 1)  # block 163
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # block 163
         self.sync_blocks()
 
         # Make sure all nodes recognize the transactions as theirs
@@ -276,7 +276,7 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(tmpl['transactions'][0]['sigops'], expected_sigops)
         assert '!segwit' in tmpl['rules']
 
-        self.generate(self.nodes[0], 1)  # Mine a block to clear the gbt cache
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # Mine a block to clear the gbt cache
 
         self.log.info("Non-segwit miners are able to use GBT response after activation.")
         # Create a 3-tx chain: tx1 (non-segwit input, paying to a segwit output) ->
@@ -339,7 +339,7 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], tx.get_weight())
 
         # Mine a block to clear the gbt cache again.
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         if not self.options.descriptors:
             self.log.info("Verify behaviour of importaddress and listunspent")
@@ -630,7 +630,7 @@ class SegWitTest(SyscoinTestFramework):
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
         txid = self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
-        txs_mined[txid] = self.generate(self.nodes[0], 1)[0]
+        txs_mined[txid] = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         self.sync_blocks()
         watchcount = 0
         spendcount = 0
@@ -680,7 +680,7 @@ class SegWitTest(SyscoinTestFramework):
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
         self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_blocks()
 
 

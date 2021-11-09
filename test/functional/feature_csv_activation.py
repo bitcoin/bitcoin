@@ -240,7 +240,7 @@ class BIP68_112_113Test(SyscoinTestFramework):
         bip113input = self.send_generic_input_tx(self.coinbase_blocks)
 
         self.nodes[0].setmocktime(self.last_block_time + 600)
-        inputblockhash = self.generate(self.nodes[0], 1)[0]  # 1 block generated for inputs to be in chain at height 431
+        inputblockhash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]  # 1 block generated for inputs to be in chain at height 431
         self.nodes[0].setmocktime(0)
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1

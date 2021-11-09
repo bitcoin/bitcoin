@@ -38,7 +38,7 @@ class CreateTxWalletTest(SyscoinTestFramework):
         assert_equal(tx['locktime'], 0)
 
         self.log.info('Check that anti-fee-sniping is enabled when we mine a recent block')
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
         assert 0 < tx['locktime'] <= 201

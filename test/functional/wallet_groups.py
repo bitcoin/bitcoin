@@ -45,7 +45,7 @@ class WalletGroupTest(SyscoinTestFramework):
         [self.nodes[0].sendtoaddress(addr, 1.0) for addr in addrs]
         [self.nodes[0].sendtoaddress(addr, 0.5) for addr in addrs]
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         # For each node, send 0.2 coins back to 0;
@@ -77,7 +77,7 @@ class WalletGroupTest(SyscoinTestFramework):
 
         self.log.info("Test avoiding partial spends if warranted, even if avoidpartialspends is disabled")
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         # Nodes 1-2 now have confirmed UTXOs (letters denote destinations):
         # Node #1:      Node #2:
         # - A  1.0      - D0 1.0
@@ -113,7 +113,7 @@ class WalletGroupTest(SyscoinTestFramework):
         addr_aps = self.nodes[3].getnewaddress()
         self.nodes[0].sendtoaddress(addr_aps, 1.0)
         self.nodes[0].sendtoaddress(addr_aps, 1.0)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         with self.nodes[3].assert_debug_log(['Fee non-grouped = 2820, grouped = 4160, using grouped']):
             txid4 = self.nodes[3].sendtoaddress(self.nodes[0].getnewaddress(), 0.1)
@@ -125,7 +125,7 @@ class WalletGroupTest(SyscoinTestFramework):
 
         addr_aps2 = self.nodes[3].getnewaddress()
         [self.nodes[0].sendtoaddress(addr_aps2, 1.0) for _ in range(5)]
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         with self.nodes[3].assert_debug_log(['Fee non-grouped = 5520, grouped = 8240, using non-grouped']):
             txid5 = self.nodes[3].sendtoaddress(self.nodes[0].getnewaddress(), 2.95)
@@ -139,7 +139,7 @@ class WalletGroupTest(SyscoinTestFramework):
         self.log.info("Test wallet option maxapsfee threshold from non-grouped to grouped")
         addr_aps3 = self.nodes[4].getnewaddress()
         [self.nodes[0].sendtoaddress(addr_aps3, 1.0) for _ in range(5)]
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         with self.nodes[4].assert_debug_log(['Fee non-grouped = 5520, grouped = 8240, using grouped']):
             txid6 = self.nodes[4].sendtoaddress(self.nodes[0].getnewaddress(), 2.95)
@@ -151,7 +151,7 @@ class WalletGroupTest(SyscoinTestFramework):
         # Empty out node2's wallet
         self.nodes[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), subtractfeefromamount=True)
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         self.log.info("Fill a wallet with 10,000 outputs corresponding to the same scriptPubKey")
         for _ in range(5):
@@ -162,7 +162,7 @@ class WalletGroupTest(SyscoinTestFramework):
             funded_tx = self.nodes[0].fundrawtransaction(tx.serialize().hex())
             signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx['hex'])
             self.nodes[0].sendrawtransaction(signed_tx['hex'])
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.sync_all()
 
         # Check that we can create a transaction that only requires ~100 of our

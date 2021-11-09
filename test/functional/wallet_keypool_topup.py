@@ -63,9 +63,9 @@ class KeypoolRestoreTest(SyscoinTestFramework):
 
             self.log.info("Send funds to wallet")
             self.nodes[0].sendtoaddress(addr_oldpool, 10)
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.nodes[0].sendtoaddress(addr_extpool, 5)
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.sync_blocks()
 
             self.log.info("Restart node with wallet backup")

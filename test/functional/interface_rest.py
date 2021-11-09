@@ -81,7 +81,7 @@ class RESTTest (SyscoinTestFramework):
         # Random address so node1's balance doesn't increase
         not_related_address = "2MxqoHEdNQTyYeX1mHcbrrpzgojbosTpCvJ"
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
         self.generatetoaddress(self.nodes[1], 100, not_related_address)
         self.sync_all()
@@ -183,7 +183,7 @@ class RESTTest (SyscoinTestFramework):
         json_obj = self.test_rest_request(f"/getutxos/checkmempool/{spent[0]}-{spent[1]}")
         assert_equal(len(json_obj['utxos']), 0)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.sync_all()
 
         json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
@@ -205,7 +205,7 @@ class RESTTest (SyscoinTestFramework):
         self.test_rest_request(f"/getutxos/checkmempool/{long_uri}", http_method='POST', status=200)
 
         mineAuxpowBlock(self.nodes[0])  # generate block to not affect upcoming tests
-        self.generate(self.nodes[0], 1)  # generate block to not affect upcoming tests
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # generate block to not affect upcoming tests
         self.sync_all()
 
         self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
