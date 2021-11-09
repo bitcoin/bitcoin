@@ -53,7 +53,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                 keypath = None
                 if keytype == "inactivehdseed=1":
                     # ensure the old master is still available
-                    assert hd_master_addr_old == addr
+                    assert_equal(hd_master_addr_old, addr)
                 elif keytype == "hdseed=1":
                     # ensure we have generated a new hd master key
                     assert hd_master_addr_old != addr
