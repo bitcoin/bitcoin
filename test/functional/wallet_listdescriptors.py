@@ -48,8 +48,8 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(4, len([d for d in result['descriptors'] if d['internal']]))
         for item in result['descriptors']:
             assert item['desc'] != ''
-            assert item['next'] == 0
-            assert item['range'] == [0, 0]
+            assert_equal(item['next'], 0)
+            assert_equal(item['range'], [0, 0])
             assert item['timestamp'] is not None
 
         self.log.info('Test descriptors with hardened derivations are listed in importable form.')
