@@ -84,7 +84,7 @@ class RpcMiscTest(BitcoinTestFramework):
 
         # Restart the node with indices and wait for them to sync
         self.restart_node(0, ["-txindex", "-blockfilterindex", "-coinstatsindex"])
-        self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
+        self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()), timeout=120)
 
         # Returns a list of all running indices by default
         values = {"synced": True, "best_block_height": 200}

@@ -722,7 +722,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         node.submitblock(block.serialize().hex())
 
         for l in listeners:
-            l.wait_until(lambda: "cmpctblock" in l.last_message, timeout=30)
+            l.wait_until(lambda: "cmpctblock" in l.last_message)
         with p2p_lock:
             for l in listeners:
                 l.last_message["cmpctblock"].header_and_shortids.header.calc_sha256()
