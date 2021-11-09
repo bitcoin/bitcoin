@@ -46,7 +46,7 @@ class TxnMallTest(BitcoinTestFramework):
         # blockchain sync later in the test when nodes are connected, due to
         # timing issues.
         for n in self.nodes:
-            assert n.getblockchaininfo()["initialblockdownload"] == False
+            assert_equal(n.getblockchaininfo()["initialblockdownload"], False)
 
         for i in range(3):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
