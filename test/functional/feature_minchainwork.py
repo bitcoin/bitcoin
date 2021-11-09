@@ -72,7 +72,7 @@ class MinimumChainWorkTest(SyscoinTestFramework):
         assert_equal(self.nodes[2].getblockcount(), starting_blockcount)
 
         self.log.info("Generating one more block")
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
 
         self.log.info("Verifying nodes are all synced")
 
