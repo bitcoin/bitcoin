@@ -54,7 +54,7 @@ enum class ByteUnit : uint64_t {
 * @return           A new string without unsafe chars
 */
 std::string SanitizeString(const std::string& str, int rule = SAFE_CHARS_DEFAULT);
-std::vector<unsigned char> ParseHex(const char* psz);
+/** Parse the hex string into bytes. Ignores whitespace. */
 std::vector<unsigned char> ParseHex(const std::string& str);
 signed char HexDigit(char c);
 /* Returns true if each character in str is a hex character, and has an even

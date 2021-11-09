@@ -81,8 +81,9 @@ bool IsHexNumber(const std::string& str)
     return (str.size() > starting_location);
 }
 
-std::vector<unsigned char> ParseHex(const char* psz)
+std::vector<unsigned char> ParseHex(const std::string& str)
 {
+    const char* psz{str.c_str()};
     std::vector<unsigned char> vch;
     while (true) {
         while (IsSpace(*psz)) {
@@ -101,11 +102,6 @@ std::vector<unsigned char> ParseHex(const char* psz)
         vch.push_back(n);
     }
     return vch;
-}
-
-std::vector<unsigned char> ParseHex(const std::string& str)
-{
-    return ParseHex(str.c_str());
 }
 
 void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
