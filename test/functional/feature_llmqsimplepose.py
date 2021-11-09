@@ -119,7 +119,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             t = time.time()
             while (not self.check_banned(mn)) and (time.time() - t) < 120:
                 self.reset_probe_timeouts()
-                self.generate(self.nodes[0], 1)
+                self.generate(self.nodes[0], 1, sync_fun=self.no_op)
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
             assert(self.check_banned(mn))
@@ -137,7 +137,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 self.nodes[0].protx_update_service(mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
                 # Make sure this tx "safe" to mine even when InstantSend and ChainLocks are no longer functional
                 self.bump_mocktime(60 * 10 + 1)
-                self.generate(self.nodes[0], 1)
+                self.generate(self.nodes[0], 1, sync_fun=self.no_op)
                 assert(not self.check_banned(mn))
 
                 if restart:
