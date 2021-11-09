@@ -237,7 +237,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Mine
         while len(node.getrawmempool()) > 0:
-            self.generate(node, 1)
+            self.generate(node, 1, sync_fun=self.no_op)
 
         # Repeatedly split those 2 outputs, doubling twice for each rep
         # Use txouts to monitor the available utxo, since these won't be tracked in wallet
@@ -247,12 +247,12 @@ class EstimateFeeTest(BitcoinTestFramework):
             while len(self.txouts) > 0:
                 split_inputs(node, self.txouts, self.txouts2)
             while len(node.getrawmempool()) > 0:
-                self.generate(node, 1)
+                self.generate(node, 1, sync_fun=self.no_op)
             # Double txouts2 to txouts
             while len(self.txouts2) > 0:
                 split_inputs(node, self.txouts2, self.txouts)
             while len(node.getrawmempool()) > 0:
-                self.generate(node, 1)
+                self.generate(node, 1, sync_fun=self.no_op)
             reps += 1
 
     def sanity_check_estimates_range(self):

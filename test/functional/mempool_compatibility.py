@@ -38,8 +38,8 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
         old_node, new_node = self.nodes
         new_wallet = MiniWallet(new_node)
-        self.generate(new_wallet, 1)
-        self.generate(new_node, COINBASE_MATURITY)
+        self.generate(new_wallet, 1, sync_fun=self.no_op)
+        self.generate(new_node, COINBASE_MATURITY, sync_fun=self.no_op)
         # Sync the nodes to ensure old_node has the block that contains the coinbase that new_wallet will spend.
         # Otherwise, because coinbases are only valid in a block and not as loose txns, if the nodes aren't synced
         # unbroadcasted_tx won't pass old_node's `MemPoolAccept::PreChecks`.
