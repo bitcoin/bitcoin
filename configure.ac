@@ -289,7 +289,7 @@ AC_ARG_ENABLE(man,
     [AS_HELP_STRING([--disable-man],
                     [do not install man pages (default is to install)])],,
     enable_man=yes)
-AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
+AM_CONDITIONAL([ENABLE_MAN], [test "$enable_man" != no])
 
 dnl Enable debug
 AC_ARG_ENABLE([debug],
@@ -1551,7 +1551,7 @@ else
   build_multiprocess=no
 fi
 
-AM_CONDITIONAL([BUILD_MULTIPROCESS],[test "x$build_multiprocess" = xyes])
+AM_CONDITIONAL([BUILD_MULTIPROCESS], [test "x$build_multiprocess" = xyes])
 AM_CONDITIONAL([BUILD_BITCOIN_NODE], [test "x$build_multiprocess" = xyes])
 AM_CONDITIONAL([BUILD_BITCOIN_GUI], [test "x$build_multiprocess" = xyes])
 
@@ -1755,33 +1755,33 @@ AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_LINUX], [test x$TARGET_OS = xlinux])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
-AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
+AM_CONDITIONAL([ENABLE_WALLET], [test x$enable_wallet = xyes])
 AM_CONDITIONAL([USE_SQLITE], [test "x$use_sqlite" = "xyes"])
 AM_CONDITIONAL([USE_BDB], [test "x$use_bdb" = "xyes"])
-AM_CONDITIONAL([ENABLE_TRACING],[test x$have_sdt = xyes])
-AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
-AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
-AM_CONDITIONAL([ENABLE_FUZZ_BINARY],[test x$enable_fuzz_binary = xyes])
-AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
-AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
-AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
+AM_CONDITIONAL([ENABLE_TRACING], [test x$have_sdt = xyes])
+AM_CONDITIONAL([ENABLE_TESTS], [test x$BUILD_TEST = xyes])
+AM_CONDITIONAL([ENABLE_FUZZ], [test x$enable_fuzz = xyes])
+AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test x$enable_fuzz_binary = xyes])
+AM_CONDITIONAL([ENABLE_QT], [test x$bitcoin_enable_qt = xyes])
+AM_CONDITIONAL([ENABLE_QT_TESTS], [test x$BUILD_TEST_QT = xyes])
+AM_CONDITIONAL([ENABLE_BENCH], [test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
-AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
-AM_CONDITIONAL([USE_LIBEVENT],[test x$use_libevent = xyes])
-AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
-AM_CONDITIONAL([ENABLE_SSE42],[test x$enable_sse42 = xyes])
-AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
-AM_CONDITIONAL([ENABLE_AVX2],[test x$enable_avx2 = xyes])
-AM_CONDITIONAL([ENABLE_SHANI],[test x$enable_shani = xyes])
-AM_CONDITIONAL([ENABLE_ARM_CRC],[test x$enable_arm_crc = xyes])
-AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
-AM_CONDITIONAL([WORDS_BIGENDIAN],[test x$ac_cv_c_bigendian = xyes])
-AM_CONDITIONAL([USE_NATPMP],[test x$use_natpmp = xyes])
-AM_CONDITIONAL([USE_UPNP],[test x$use_upnp = xyes])
+AM_CONDITIONAL([USE_LCOV], [test x$use_lcov = xyes])
+AM_CONDITIONAL([USE_LIBEVENT], [test x$use_libevent = xyes])
+AM_CONDITIONAL([HARDEN], [test x$use_hardening = xyes])
+AM_CONDITIONAL([ENABLE_SSE42], [test x$enable_sse42 = xyes])
+AM_CONDITIONAL([ENABLE_SSE41], [test x$enable_sse41 = xyes])
+AM_CONDITIONAL([ENABLE_AVX2], [test x$enable_avx2 = xyes])
+AM_CONDITIONAL([ENABLE_SHANI], [test x$enable_shani = xyes])
+AM_CONDITIONAL([ENABLE_ARM_CRC], [test x$enable_arm_crc = xyes])
+AM_CONDITIONAL([USE_ASM], [test x$use_asm = xyes])
+AM_CONDITIONAL([WORDS_BIGENDIAN], [test x$ac_cv_c_bigendian = xyes])
+AM_CONDITIONAL([USE_NATPMP], [test x$use_natpmp = xyes])
+AM_CONDITIONAL([USE_UPNP], [test x$use_upnp = xyes])
 
 dnl for minisketch
-AM_CONDITIONAL([ENABLE_CLMUL],[test x$enable_clmul = xyes])
-AM_CONDITIONAL([HAVE_CLZ],[test x$have_clzl$have_clzll = xyesyes])
+AM_CONDITIONAL([ENABLE_CLMUL], [test x$enable_clmul = xyes])
+AM_CONDITIONAL([HAVE_CLZ], [test x$have_clzl$have_clzll = xyesyes])
 
 AC_DEFINE([CLIENT_VERSION_MAJOR], [_CLIENT_VERSION_MAJOR], [Major version])
 AC_DEFINE([CLIENT_VERSION_MINOR], [_CLIENT_VERSION_MINOR], [Minor version])
