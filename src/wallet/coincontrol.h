@@ -53,6 +53,8 @@ public:
     bool m_avoid_partial_spends = DEFAULT_AVOIDPARTIALSPENDS;
     //! Forbids inclusion of dirty (previously used) addresses
     bool m_avoid_address_reuse = false;
+    //! Prioritize a solution that doesn't generate change when selecting coins
+    bool m_avoid_change = false;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode = FeeEstimateMode::UNSET;
     //! Minimum chain depth value for coin availability

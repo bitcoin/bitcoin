@@ -73,6 +73,7 @@ static void CoinSelection(benchmark::Bench& bench)
         /*discard_feerate=*/ CFeeRate(0),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
+        /*avoid_change=*/ false
     };
     bench.run([&] {
         auto result = AttemptSelection(wallet, 1003 * COIN, filter_standard, coins, coin_selection_params);

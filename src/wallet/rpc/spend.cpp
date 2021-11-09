@@ -519,6 +519,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"change_type", UniValueType(UniValue::VSTR)},
                 {"includeWatching", UniValueType(UniValue::VBOOL)},
                 {"include_watching", UniValueType(UniValue::VBOOL)},
+                {"avoid_change", UniValueType(UniValue::VBOOL)},
                 {"inputs", UniValueType(UniValue::VARR)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
                 {"lock_unspents", UniValueType(UniValue::VBOOL)},
@@ -575,6 +576,10 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
 
         if (options.exists("include_unsafe")) {
             coinControl.m_include_unsafe_inputs = options["include_unsafe"].get_bool();
+        }
+
+        if (options.exists("avoid_change")) {
+            coinControl.m_avoid_change = options["avoid_change"].get_bool();
         }
 
         if (options.exists("feeRate")) {
@@ -767,6 +772,7 @@ RPCHelpMan fundrawtransaction()
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
                                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
+                            {"avoid_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Prioritize a solution that doesn't generate change when selecting coins."},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
@@ -1165,6 +1171,7 @@ RPCHelpMan send()
                     {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
+                    {"avoid_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Prioritize a solution that doesn't generate change when selecting coins."},
                     {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Specify inputs instead of adding them automatically. A JSON array of JSON objects",
                         {
                             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
@@ -1241,6 +1248,11 @@ RPCHelpMan send()
             // be overridden by options.add_inputs.
             coin_control.m_add_inputs = rawTx.vin.size() == 0;
             SetOptionsInputWeights(options["inputs"], options);
+
+            if (options.exists("avoid_change")) {
+                coin_control.m_avoid_change = options["avoid_change"].get_bool();
+            }
+
             FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/false);
 
             return FinishTransaction(pwallet, options, rawTx);

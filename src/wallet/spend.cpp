@@ -384,6 +384,10 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
     std::vector<OutputGroup> positive_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, true /* positive_only */);
     if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
+        bnb_result->ComputeAndSetWaste(CAmount(0));
+        if (coin_selection_params.m_avoid_change) {
+            return *bnb_result;
+        }
         results.push_back(*bnb_result);
     }
 
@@ -669,6 +673,8 @@ static bool CreateTransactionInternal(
 
     CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
+
+    coin_selection_params.m_avoid_change = coin_control.m_avoid_change;
 
     // Set the long term feerate estimate to the wallet's consolidate feerate
     coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;

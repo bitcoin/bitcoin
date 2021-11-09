@@ -156,6 +156,7 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const std::vector<COutput>
         /*discard_feerate=*/ CFeeRate(0),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
+        /* avoid_change= */ false
     };
     static std::vector<OutputGroup> static_groups;
     static_groups = GroupOutputs(wallet, coins, coin_selection_params, filter, /*positive_only=*/false);
@@ -301,6 +302,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*discard_feerate=*/ CFeeRate(1000),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
+        /*avoid_change=*/ false
     };
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), "", m_args, CreateMockWalletDatabase());
@@ -725,6 +727,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
             /*discard_feerate=*/ CFeeRate(0),
             /*tx_noinputs_size=*/ 0,
             /*avoid_partial=*/ false,
+            /*avoid_change=*/ false
         };
         CCoinControl cc;
         const auto result = SelectCoins(*wallet, coins, target, cc, cs_params);

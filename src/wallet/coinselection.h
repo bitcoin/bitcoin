@@ -118,10 +118,13 @@ struct CoinSelectionParams {
      * associated with the same address. This helps reduce privacy leaks resulting from address
      * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
     bool m_avoid_partial_spends = false;
+    /** When true, a solution that doesn't generate change will be prioritized when selecting coins. */
+    bool m_avoid_change = false;
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
+                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial,
+                        bool avoid_change)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
           change_spend_size(change_spend_size),
@@ -130,7 +133,8 @@ struct CoinSelectionParams {
           m_long_term_feerate(long_term_feerate),
           m_discard_feerate(discard_feerate),
           tx_noinputs_size(tx_noinputs_size),
-          m_avoid_partial_spends(avoid_partial)
+          m_avoid_partial_spends(avoid_partial),
+          m_avoid_change(avoid_change)
     {
     }
     CoinSelectionParams(FastRandomContext& rng_fast)
