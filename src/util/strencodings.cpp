@@ -78,7 +78,6 @@ bool IsHexNumber(std::string_view str)
 
 std::vector<unsigned char> ParseHex(std::string_view str)
 {
-    // convert hex dump to vector
     std::vector<unsigned char> vch;
     auto it = str.begin();
     while (it != str.end() && it + 1 != str.end()) {
