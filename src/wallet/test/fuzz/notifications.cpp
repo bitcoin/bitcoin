@@ -32,6 +32,36 @@ void initialize_setup()
     g_setup = testing_setup.get();
 }
 
+void ImportDescriptors(CWallet& wallet, const std::string& seed_insecure)
+{
+    const std::vector<std::tuple<std::string, bool>> DESCS{
+        {"pkh(%s/44'/1'/0'/%s/*)", false},
+        {"sh(wpkh(%s/49'/1'/0'/%s/*))", false},
+        {"wpkh(%s/84'/1'/0'/%s/*)", false},
+        {"pkh(%s/44'/1'/0'/%s/*)", true},
+        {"sh(wpkh(%s/49'/1'/0'/%s/*))", true},
+        {"wpkh(%s/84'/1'/0'/%s/*)", true},
+    };
+    for (const auto& [desc_fmt, internal] : DESCS) {
+        const auto descriptor{(strprintf)(desc_fmt, seed_insecure, int{internal})};
+
+        FlatSigningProvider keys;
+        std::string error;
+        auto parsed_desc = Parse(descriptor, keys, error, /*require_checksum=*/false);
+        assert(parsed_desc);
+        assert(error.empty());
+        assert(parsed_desc->IsRange());
+        assert(parsed_desc->IsSingleType());
+        assert(!keys.keys.empty());
+        WalletDescriptor w_desc{std::move(parsed_desc), /*timestamp=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/0};
+        assert(!wallet.GetDescriptorScriptPubKeyMan(w_desc));
+        LOCK(wallet.cs_wallet);
+        auto spk_manager{wallet.AddWalletDescriptor(w_desc, keys, /*label=*/"", internal)};
+        assert(spk_manager);
+        wallet.AddActiveScriptPubKeyMan(spk_manager->GetID(), *Assert(w_desc.descriptor->GetOutputType()), internal);
+    }
+}
+
 /**
  * Wraps a descriptor wallet for fuzzing. The constructor writes the sqlite db
  * to disk, the destructor deletes it.
@@ -40,14 +70,14 @@ struct FuzzedWallet {
     ArgsManager args;
     WalletContext context;
     std::shared_ptr<CWallet> wallet;
-    FuzzedWallet(const std::string& name)
+    FuzzedWallet(const std::string& name, const std::string& seed_insecure)
     {
         context.args = &args;
         context.chain = g_setup->m_node.chain.get();
 
         DatabaseOptions options;
         options.require_create = true;
-        options.create_flags = WALLET_FLAG_DESCRIPTORS;
+        options.create_flags = WALLET_FLAG_DESCRIPTORS | WALLET_FLAG_BLANK_WALLET;
         const std::optional<bool> load_on_start;
         gArgs.ForceSetArg("-keypool", "0"); // Avoid timeout in TopUp()
 
@@ -59,6 +89,7 @@ struct FuzzedWallet {
         assert(error.empty());
         assert(warnings.empty());
         assert(wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+        ImportDescriptors(*wallet, seed_insecure);
     }
     ~FuzzedWallet()
     {
@@ -143,8 +174,14 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
     // without fee. Thus, the balance of the wallets should always equal the
     // total amount.
     const auto total_amount{ConsumeMoney(fuzzed_data_provider)};
-    FuzzedWallet a{"fuzzed_wallet_a"};
-    FuzzedWallet b{"fuzzed_wallet_b"};
+    FuzzedWallet a{
+        "fuzzed_wallet_a",
+        "tprv8ZgxMBicQKsPfCunYTF18sEmEyjz8TfhGnZ3BoVAhkqLv7PLkQgmoG2Ecsp4JuqciWnkopuEwShit7st743fdmB9cMD4tznUkcs33vK51K9",
+    };
+    FuzzedWallet b{
+        "fuzzed_wallet_b",
+        "tprv8ZgxMBicQKsPd1QwsGgzfu2pcPYbBosZhJknqreRHgsWx32nNEhMjGQX2cgFL8n6wz9xdDYwLcs78N4nsCo32cxEX8RBtwGsEGgybLiQJfk",
+    };
 
     // Keep track of all coins in this test.
     // Each tuple in the chain represents the coins and the block created with
