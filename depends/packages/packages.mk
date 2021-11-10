@@ -1,4 +1,4 @@
-packages:=boost openssl libevent zeromq gmp bls-dash backtrace cmake immer
+packages:=boost openssl libevent gmp bls-dash backtrace cmake immer
 
 qt_native_packages = native_protobuf
 qt_packages = qrencode protobuf zlib
@@ -9,6 +9,8 @@ qt_darwin_packages=qt
 qt_mingw32_packages=qt
 
 wallet_packages=bdb
+
+zmq_packages=zeromq
 
 upnp_packages=miniupnpc
 
