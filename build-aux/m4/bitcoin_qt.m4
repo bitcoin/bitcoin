@@ -192,8 +192,8 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
         choke
         #endif
       ]])],
-      [ AC_MSG_RESULT(yes); QT_PIE_FLAGS=$PIE_FLAGS ],
-      [ AC_MSG_RESULT(no); QT_PIE_FLAGS=$PIC_FLAGS]
+      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIE_FLAGS ],
+      [ AC_MSG_RESULT([no]); QT_PIE_FLAGS=$PIC_FLAGS]
     )
     CPPFLAGS=$TEMP_CPPFLAGS
     CXXFLAGS=$TEMP_CXXFLAGS
@@ -214,8 +214,8 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
         choke
         #endif
       ]])],
-      [ AC_MSG_RESULT(no)],
-      [ AC_MSG_RESULT(yes); QT_PIE_FLAGS=$PIC_FLAGS]
+      [ AC_MSG_RESULT([no])],
+      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIC_FLAGS]
     )
     CPPFLAGS=$TEMP_CPPFLAGS
     ])
@@ -239,7 +239,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     ;;
     *mingw*)
        BITCOIN_QT_CHECK([
-         AX_CHECK_LINK_FLAG([-mwindows], [QT_LDFLAGS="$QT_LDFLAGS -mwindows"], [AC_MSG_WARN(-mwindows linker support not detected)])
+         AX_CHECK_LINK_FLAG([-mwindows], [QT_LDFLAGS="$QT_LDFLAGS -mwindows"], [AC_MSG_WARN([-mwindows linker support not detected])])
        ])
   esac
 
