@@ -532,6 +532,15 @@ public:
     const value_type* data() const {
         return item_ptr(0);
     }
+
+    std::string ToString() const {
+        std::stringstream rtr;
+        for (int i = 0; i < size(); i++) {
+            unsigned char c = this[i];
+            rtr << c;
+        }
+        return rtr.str();
+    }
 };
 
 #endif // BITCOIN_PREVECTOR_H

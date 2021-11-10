@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- This DTD is used for the output of Spirit parse tree's through          -->
+<!-- the boost::spirit::tree_to_xml functions.                               -->
+<!-- Copyright (c) 2001-2007 Hartmut Kaiser                                  -->
+<!-- Distribution under the Boost Software                                   -->
+<!-- License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at -->
+<!-- http://www.boost.org/LICENSE_1_0.txt)                                   -->
+<!ELEMENT parsetree (parsenode)>
+<!ATTLIST parsetree
+    version CDATA "1.0"
+>
+<!ELEMENT parsenode ((value | token)?, parsenode*)>
+<!ATTLIST parsenode
+    rule CDATA #IMPLIED
+>
+<!ELEMENT value (#PCDATA | token)*>
+<!ELEMENT token (#PCDATA)>
+<!ATTLIST token
+    id CDATA #REQUIRED
+    is_root CDATA "0"
+>
