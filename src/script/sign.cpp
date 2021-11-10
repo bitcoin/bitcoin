@@ -243,6 +243,11 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
                 sigdata.taproot_key_path_sig = sig;
             }
         }
+        if (sigdata.taproot_key_path_sig.size() == 0) {
+            if (creator.CreateSchnorrSig(provider, sig, output, nullptr, nullptr, SigVersion::TAPROOT)) {
+                sigdata.taproot_key_path_sig = sig;
+            }
+        }
         if (sigdata.taproot_key_path_sig.size()) {
             result = Vector(sigdata.taproot_key_path_sig);
             return true;
