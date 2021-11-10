@@ -6,6 +6,7 @@
 #define BITCOIN_ADDRMAN_IMPL_H
 
 #include <logging.h>
+#include <logging/timer.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <serialize.h>
@@ -265,12 +266,13 @@ private:
 
     std::pair<CAddress, int64_t> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    //! Consistency check, taking into account m_consistency_check_ratio. Will std::abort if an inconsistency is detected.
+    //! Consistency check, taking into account m_consistency_check_ratio.
+    //! Will std::abort if an inconsistency is detected.
     void Check() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Perform consistency check, regardless of m_consistency_check_ratio.
     //! @returns an error code or zero.
-    int ForceCheckAddrman() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int CheckAddrman() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 #endif // BITCOIN_ADDRMAN_IMPL_H
