@@ -50,9 +50,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
-                                                     int64_t nCoinCacheUsage,
-                                                     unsigned int check_blocks,
-                                                     unsigned int check_level)
+                                                     int64_t nCoinCacheUsage)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
@@ -232,6 +230,21 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         return ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
     }
 
+    return std::nullopt;
+}
+
+std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManager& chainman,
+                                                                CEvoDB& evodb,
+                                                                bool fReset,
+                                                                bool fReindexChainState,
+                                                                const CChainParams& chainparams,
+                                                                unsigned int check_blocks,
+                                                                unsigned int check_level)
+{
+    auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
+    };
+
     try {
         LOCK(cs_main);
 
@@ -246,7 +259,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 const CBlockIndex* tip = chainstate->m_chain.Tip();
                 RPCNotifyBlockChange(tip);
                 if (tip && tip->nTime > GetTime() + MAX_FUTURE_BLOCK_TIME) {
-                    return ChainstateLoadingError::ERROR_BLOCK_FROM_FUTURE;
+                    return ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE;
                 }
                 const bool v19active{DeploymentActiveAfter(tip, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V19)};
                 if (v19active) {
@@ -256,10 +269,10 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
                 if (!CVerifyDB().VerifyDB(
                         *chainstate, chainparams, chainstate->CoinsDB(),
-                        *evodb,
+                        evodb,
                         check_level,
                         check_blocks)) {
-                    return ChainstateLoadingError::ERROR_CORRUPTED_BLOCK_DB;
+                    return ChainstateLoadVerifyError::ERROR_CORRUPTED_BLOCK_DB;
                 }
 
                 // VerifyDB() disconnects blocks which might result in us switching back to legacy.
@@ -277,15 +290,15 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 // TODO: CEvoDB instance should probably be a part of CChainState
                 // (for multiple chainstates to actually work in parallel)
                 // and not a global
-                if (&chainman.ActiveChainstate() == chainstate && !evodb->IsEmpty()) {
+                if (&chainman.ActiveChainstate() == chainstate && !evodb.IsEmpty()) {
                     // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
-                    return ChainstateLoadingError::ERROR_EVO_DB_SANITY_FAILED;
+                    return ChainstateLoadVerifyError::ERROR_EVO_DB_SANITY_FAILED;
                 }
             }
         }
     } catch (const std::exception& e) {
         LogPrintf("%s\n", e.what());
-        return ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
+        return ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
     }
 
     return std::nullopt;

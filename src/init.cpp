@@ -1892,9 +1892,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                  fReindexChainState,
                                  nBlockTreeDBCache,
                                  nCoinDBCache,
-                                 nCoinCacheUsage,
-                                 args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
-                                 args.GetArg("-checklevel", DEFAULT_CHECKLEVEL));
+                                 nCoinCacheUsage);
         if (rv.has_value()) {
             switch (rv.value()) {
             case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
@@ -1932,19 +1930,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             case ChainstateLoadingError::ERROR_LOADCHAINTIP_FAILED:
                 strLoadError = _("Error initializing block database");
                 break;
-            case ChainstateLoadingError::ERROR_EVO_DB_SANITY_FAILED:
-                strLoadError = _("Error initializing block database");
-                break;
             case ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED:
                 strLoadError = _("Error opening block database");
-                break;
-            case ChainstateLoadingError::ERROR_BLOCK_FROM_FUTURE:
-                strLoadError = _("The block database contains a block which appears to be from the future. "
-                                 "This may be due to your computer's date and time being set incorrectly. "
-                                 "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                break;
-            case ChainstateLoadingError::ERROR_CORRUPTED_BLOCK_DB:
-                strLoadError = _("Corrupted block database detected");
                 break;
             case ChainstateLoadingError::ERROR_COMMITING_EVO_DB:
                 strLoadError = _("Failed to commit Evo database");
@@ -1959,8 +1946,34 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 break;
             }
         } else {
-            fLoaded = true;
-            LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
+            auto rv2 = VerifyLoadedChainstate(chainman,
+                                              *Assert(node.evodb.get()),
+                                              fReset,
+                                              fReindexChainState,
+                                              chainparams,
+                                              args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+                                              args.GetArg("-checklevel", DEFAULT_CHECKLEVEL));
+            if (rv2.has_value()) {
+                switch (rv2.value()) {
+                case ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE:
+                    strLoadError = _("The block database contains a block which appears to be from the future. "
+                                     "This may be due to your computer's date and time being set incorrectly. "
+                                     "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                    break;
+                case ChainstateLoadVerifyError::ERROR_CORRUPTED_BLOCK_DB:
+                    strLoadError = _("Corrupted block database detected");
+                    break;
+                case ChainstateLoadVerifyError::ERROR_EVO_DB_SANITY_FAILED:
+                    strLoadError = _("Error initializing block database");
+                    break;
+                case ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE:
+                    strLoadError = _("Error opening block database");
+                    break;
+                }
+            } else {
+                fLoaded = true;
+                LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
+            }
         }
 
         if (!fLoaded && !ShutdownRequested()) {
