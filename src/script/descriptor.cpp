@@ -1015,6 +1015,24 @@ public:
     bool IsSingleType() const final { return true; }
 };
 
+/** A parsed rawtr(...) descriptor. */
+class RawTRDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts, FlatSigningProvider& out) const override
+    {
+        assert(keys.size() == 1);
+        XOnlyPubKey xpk(keys[0]);
+        if (!xpk.IsFullyValid()) return {};
+        WitnessV1Taproot output{xpk};
+        return Vector(GetScriptForDestination(output));
+    }
+public:
+    RawTRDescriptor(std::unique_ptr<PubkeyProvider> output_key) : DescriptorImpl(Vector(std::move(output_key)), "rawtr") {}
+    std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
+    bool IsSingleType() const final { return true; }
+};
+
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
 ////////////////////////////////////////////////////////////////////////////
@@ -1453,6 +1471,16 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "Can only have tr at top level";
         return nullptr;
     }
+    if (ctx == ParseScriptContext::TOP && Func("rawtr", expr)) {
+        auto arg = Expr(expr);
+        auto output_key = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
+        if (!output_key) return nullptr;
+        ++key_exp_index;
+        return std::make_unique<RawTRDescriptor>(std::move(output_key));
+    } else if (Func("rawtr", expr)) {
+        error = "Can only have rawtr at top level";
+        return nullptr;
+    }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
         if (!IsHex(str)) {
@@ -1624,6 +1652,13 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
                     auto key = InferXOnlyPubkey(tap.internal_key, ParseScriptContext::P2TR, provider);
                     return std::make_unique<TRDescriptor>(std::move(key), std::move(subscripts), std::move(depths));
                 }
+            }
+        }
+        // If the above doesn't work, construct a rawtr() descriptor with just the encoded x-only pubkey.
+        if (pubkey.IsFullyValid()) {
+            auto key = InferXOnlyPubkey(pubkey, ParseScriptContext::P2TR, provider);
+            if (key) {
+                return std::make_unique<RawTRDescriptor>(std::move(key));
             }
         }
     }
