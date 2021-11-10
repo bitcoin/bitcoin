@@ -24,10 +24,10 @@ class AssetReOrgTest(SyscoinTestFramework):
         self.disconnect_nodes(0, 2)
         self.basic_asset()
         # create fork
-        self.generate(self.nodes[0], 11)
+        self.generate(self.nodes[0], 11, sync_fun=self.no_op)
         # won't exist on node 0 because it was created on node 2 and we are disconnected
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[0].assetinfo, self.asset)
-        self.generate(self.nodes[2], 10)
+        self.generate(self.nodes[2], 10, sync_fun=self.no_op)
         assetInfo = self.nodes[2].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
         # still won't exist on node 0 yet
@@ -41,7 +41,6 @@ class AssetReOrgTest(SyscoinTestFramework):
         assert_raises_rpc_error(-20, 'Failed to read from asset DB', self.nodes[2].assetinfo, self.asset)
         # node 2 should have the asset in mempool again
         self.generate(self.nodes[2], 1)
-        self.sync_blocks()
         # asset is there now
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
@@ -51,11 +50,9 @@ class AssetReOrgTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], self.asset)
         # increase total supply
         self.generate(self.nodes[2], 1)
-        self.sync_blocks()
         self.nodes[2].assetsend(self.asset, self.nodes[1].getnewaddress(), 100)
         blockhash = self.nodes[2].getbestblockhash()
         self.generate(self.nodes[2], 1)
-        self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
         assert_equal(assetInfo['total_supply'], 100.00000000)
