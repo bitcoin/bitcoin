@@ -300,6 +300,9 @@ private:
     //! Unset the blank wallet flag and saves it to disk
     void UnsetBlankWalletFlag(WalletBatch& batch) override;
 
+    /** Provider of aplication-wide arguments. */
+    const ArgsManager& m_args;
+
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -364,8 +367,9 @@ public:
     std::map<uint256, CGovernanceObject> m_gobjects;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
-        : m_chain(chain),
+    CWallet(interfaces::Chain* chain, const std::string& name, const ArgsManager& args, std::unique_ptr<WalletDatabase> database)
+        : m_args(args),
+          m_chain(chain),
           m_name(name),
           m_database(std::move(database))
     {
