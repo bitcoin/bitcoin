@@ -25,7 +25,6 @@ import http.client
 import os
 import subprocess
 
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
@@ -64,6 +63,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
         self.mine_chain()
         self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1'])  # Set extra args with pruning after rescan is complete
 
@@ -82,7 +82,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info(f"Generate {HEIGHT} blocks after the genesis block in ten-minute steps")
         for t in range(TIME_GENESIS_BLOCK, TIME_RANGE_END, TIME_RANGE_STEP):
             self.nodes[0].setmocktime(t)
-            self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_P2WSH_OP_TRUE)
+            self.generate(self.wallet, 1)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], HEIGHT)
 
     def _test_getblockchaininfo(self):
@@ -371,12 +371,12 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_stopatheight(self):
         self.log.info("Test stopping at height")
         assert_equal(self.nodes[0].getblockcount(), HEIGHT)
-        self.generatetoaddress(self.nodes[0], 6, ADDRESS_BCRT1_P2WSH_OP_TRUE)
+        self.generate(self.wallet, 6)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 6)
         self.log.debug('Node should not stop at this height')
         assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
         try:
-            self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_P2WSH_OP_TRUE, sync_fun=self.no_op)
+            self.generatetoaddress(self.nodes[0], 1, self.wallet.get_address(), sync_fun=self.no_op)
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
@@ -424,14 +424,10 @@ class BlockchainTest(BitcoinTestFramework):
 
     def _test_getblock(self):
         node = self.nodes[0]
-
-        miniwallet = MiniWallet(node)
-        miniwallet.rescan_utxos()
-
         fee_per_byte = Decimal('0.00000010')
         fee_per_kb = 1000 * fee_per_byte
 
-        miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
+        self.wallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
         blockhash = self.generate(node, 1)[0]
 
         def assert_fee_not_in_block(verbosity):
