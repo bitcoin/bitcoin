@@ -36,7 +36,7 @@ class ListTransactionsTest(SyscoinTestFramework):
                             {"txid": txid},
                             {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0, "trusted": False})
         self.log.info("Test confirmations change after mining a block")
-        blockhash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
+        blockhash = self.generate(self.nodes[0], 1)[0]
         blockheight = self.nodes[0].getblockheader(blockhash)['height']
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid},
