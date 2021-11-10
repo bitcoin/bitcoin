@@ -675,7 +675,7 @@ case $host in
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
        AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
-       AC_CHECK_PROG([BREW],brew, brew)
+       AC_CHECK_PROG([BREW], [brew], [brew])
        if test x$BREW = xbrew; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
          dnl in expected paths because they may conflict with system files. Ask
