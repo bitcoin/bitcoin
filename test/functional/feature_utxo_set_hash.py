@@ -69,8 +69,8 @@ class UTXOSetHashTest(SyscoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
         self.log.info("Test deterministic UTXO set hash results")
-        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "311e79f2306b4c7f43fb508a6c4b76b7b0816156c88a12c2595c0ef065cef678")
-        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "4b8803075d7151d06fad3e88b68ba726886794873fbfa841d12aefb2cc2b881b")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "1e0d6006c6ea254e6591ef3f7951a5106881a8cba77d734735d6b9c4c40514a5")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "7c0890c68501f7630d36aeb3999dc924e63af084ae1bbfba11dd462144637635")
 
     def run_test(self):
         self.test_muhash_implementation()
