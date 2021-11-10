@@ -22,8 +22,6 @@ enum class ChainstateLoadingError {
     ERROR_LOADCHAINTIP_FAILED,
     ERROR_GENERIC_BLOCKDB_OPEN_FAILED,
     ERROR_BLOCKS_WITNESS_INSUFFICIENTLY_VALIDATED,
-    ERROR_BLOCK_FROM_FUTURE,
-    ERROR_CORRUPTED_BLOCK_DB,
     SHUTDOWN_PROBED,
 };
 
@@ -61,8 +59,19 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
-                                                     int64_t nCoinCacheUsage,
-                                                     unsigned int check_blocks,
-                                                     unsigned int check_level);
+                                                     int64_t nCoinCacheUsage);
+
+enum class ChainstateLoadVerifyError {
+    ERROR_BLOCK_FROM_FUTURE,
+    ERROR_CORRUPTED_BLOCK_DB,
+    ERROR_GENERIC_FAILURE,
+};
+
+std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManager& chainman,
+                                                                bool fReset,
+                                                                bool fReindexChainState,
+                                                                const CChainParams& chainparams,
+                                                                unsigned int check_blocks,
+                                                                unsigned int check_level);
 
 #endif // BITCOIN_NODE_CHAINSTATE_H
