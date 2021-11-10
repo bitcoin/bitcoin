@@ -628,20 +628,20 @@ AC_ARG_WITH([daemon],
 case $host in
   *mingw*)
      TARGET_OS=windows
-     AC_CHECK_LIB([kernel32], [GetModuleFileNameA],, AC_MSG_ERROR([libkernel32 missing]))
-     AC_CHECK_LIB([user32],   [main],, AC_MSG_ERROR([libuser32 missing]))
-     AC_CHECK_LIB([gdi32],    [main],, AC_MSG_ERROR([libgdi32 missing]))
-     AC_CHECK_LIB([comdlg32], [main],, AC_MSG_ERROR([libcomdlg32 missing]))
-     AC_CHECK_LIB([winmm],    [main],, AC_MSG_ERROR([libwinmm missing]))
-     AC_CHECK_LIB([shell32],  [SHGetSpecialFolderPathW],, AC_MSG_ERROR([libshell32 missing]))
-     AC_CHECK_LIB([comctl32], [main],, AC_MSG_ERROR([libcomctl32 missing]))
-     AC_CHECK_LIB([ole32],    [CoCreateInstance],, AC_MSG_ERROR([libole32 missing]))
-     AC_CHECK_LIB([oleaut32], [main],, AC_MSG_ERROR([liboleaut32 missing]))
-     AC_CHECK_LIB([uuid],     [main],, AC_MSG_ERROR([libuuid missing]))
-     AC_CHECK_LIB([advapi32], [CryptAcquireContextW],, AC_MSG_ERROR([libadvapi32 missing]))
-     AC_CHECK_LIB([ws2_32],   [WSAStartup],, AC_MSG_ERROR([libws2_32 missing]))
-     AC_CHECK_LIB([shlwapi],  [PathRemoveFileSpecW],, AC_MSG_ERROR([libshlwapi missing]))
-     AC_CHECK_LIB([iphlpapi], [GetAdaptersAddresses],, AC_MSG_ERROR([libiphlpapi missing]))
+     AC_CHECK_LIB([kernel32], [GetModuleFileNameA],      [], [AC_MSG_ERROR([libkernel32 missing])])
+     AC_CHECK_LIB([user32],   [main],                    [], [AC_MSG_ERROR([libuser32 missing])])
+     AC_CHECK_LIB([gdi32],    [main],                    [], [AC_MSG_ERROR([libgdi32 missing])])
+     AC_CHECK_LIB([comdlg32], [main],                    [], [AC_MSG_ERROR([libcomdlg32 missing])])
+     AC_CHECK_LIB([winmm],    [main],                    [], [AC_MSG_ERROR([libwinmm missing])])
+     AC_CHECK_LIB([shell32],  [SHGetSpecialFolderPathW], [], [AC_MSG_ERROR([libshell32 missing])])
+     AC_CHECK_LIB([comctl32], [main],                    [], [AC_MSG_ERROR([libcomctl32 missing])])
+     AC_CHECK_LIB([ole32],    [CoCreateInstance],        [], [AC_MSG_ERROR([libole32 missing])])
+     AC_CHECK_LIB([oleaut32], [main],                    [], [AC_MSG_ERROR([liboleaut32 missing])])
+     AC_CHECK_LIB([uuid],     [main],                    [], [AC_MSG_ERROR([libuuid missing])])
+     AC_CHECK_LIB([advapi32], [CryptAcquireContextW],    [], [AC_MSG_ERROR([libadvapi32 missing])])
+     AC_CHECK_LIB([ws2_32],   [WSAStartup],              [], [AC_MSG_ERROR([libws2_32 missing])])
+     AC_CHECK_LIB([shlwapi],  [PathRemoveFileSpecW],     [], [AC_MSG_ERROR([libshlwapi missing])])
+     AC_CHECK_LIB([iphlpapi], [GetAdaptersAddresses],    [], [AC_MSG_ERROR([libiphlpapi missing])])
 
      dnl -static is interpreted by libtool, where it has a different meaning.
      dnl In libtool-speak, it's -all-static.
@@ -927,7 +927,7 @@ if test x$use_hardening != xno; then
 
   case $host in
     *mingw*)
-       AC_CHECK_LIB([ssp],      [main],, AC_MSG_ERROR([libssp missing]))
+       AC_CHECK_LIB([ssp], [main], [], [AC_MSG_ERROR([libssp missing])])
     ;;
   esac
 fi
