@@ -1095,7 +1095,7 @@ static void ParseGetInfoResult(UniValue& result)
     	double size3 = result["feerate_dist3"].get_real();
     	double size4 = result["feerate_dist4"].get_real();
 
-    	//Removing zero from numbers used in std::min to avoid division by zero in GetFeerateBar()
+    	// Removing zero from numbers used in std::min to avoid division by zero in GetFeeRateBar()
     	auto const ignore_zero = [](auto const& a, auto const& b) -> bool {
         	if(0 == a || 0 == b)
         	{
