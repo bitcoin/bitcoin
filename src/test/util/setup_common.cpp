@@ -17,8 +17,8 @@
 #include <net_processing.h>
 #include <node/miner.h>
 #include <noui.h>
-#include <node/blockstorage.h> // for fReindex, fPruneMode
-#include <node/chainstate.h> // for LoadChainstate
+#include <node/blockstorage.h>
+#include <node/chainstate.h>
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
@@ -26,7 +26,7 @@
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
-#include <shutdown.h> // for ShutdownRequested
+#include <shutdown.h>
 #include <streams.h>
 #include <txdb.h>
 #include <util/strencodings.h>

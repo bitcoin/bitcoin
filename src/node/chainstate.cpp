@@ -4,9 +4,9 @@
 
 #include <node/chainstate.h>
 
-#include <consensus/params.h> // for Consensus::Params
-#include <node/blockstorage.h> // for CleanupBlockRevFiles, fHavePruned, fReindex
-#include <validation.h> // for a lot of things
+#include <consensus/params.h>
+#include <node/blockstorage.h>
+#include <validation.h>
 
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,

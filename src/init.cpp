@@ -34,8 +34,8 @@
 #include <net_processing.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
-#include <node/caches.h> // for CalculateCacheSizes
-#include <node/chainstate.h> // for LoadChainstate
+#include <node/caches.h>
+#include <node/chainstate.h>
 #include <node/context.h>
 #include <node/miner.h>
 #include <node/ui_interface.h>
