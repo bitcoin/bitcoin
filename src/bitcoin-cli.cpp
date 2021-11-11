@@ -1128,7 +1128,7 @@ static void ParseGetInfoResult(UniValue& result)
     		GetFeerateBar(fee_size, size_bar, inc_size, max_size);
     		size_bar += " ";
 
-    		if (fee_size > 0){
+    		if (fee_size > 0) {
         	result_string += strprintf("%s %s %d\n", fee_rate, size_bar, fee_size);
         	size_bar = "";
      	 }
