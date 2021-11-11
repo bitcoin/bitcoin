@@ -101,6 +101,23 @@ class UTXO():
         self.n = n
         self.nValue = value
 
+
+def subtest(func):
+    """Wraps the subtests for logging and state assertions."""
+    def func_wrapper(self, *args, **kwargs):
+        self.log.info("Subtest: {} (Segwit active = {})".format(func.__name__, self.segwit_active))
+        # Assert segwit status is as expected
+        assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
+        func(self, *args, **kwargs)
+        # Each subtest should leave some utxos for the next subtest
+        assert self.utxo
+        self.sync_blocks()
+        # Assert segwit status is as expected at end of subtest
+        assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
+
+    return func_wrapper
+
+
 def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness script."""
     tx_hash = SegwitV0SignatureHash(script, tx_to, in_idx, hashtype, value)
@@ -280,22 +297,7 @@ class SegWitTest(BitcoinTestFramework):
 
     # Individual tests
 
-    def subtest(func):  # noqa: N805
-        """Wraps the subtests for logging and state assertions."""
-        def func_wrapper(self, *args, **kwargs):
-            self.log.info("Subtest: {} (Segwit active = {})".format(func.__name__, self.segwit_active))
-            # Assert segwit status is as expected
-            assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
-            func(self, *args, **kwargs)
-            # Each subtest should leave some utxos for the next subtest
-            assert self.utxo
-            self.sync_blocks()
-            # Assert segwit status is as expected at end of subtest
-            assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
-
-        return func_wrapper
-
-    @subtest  # type: ignore
+    @subtest
     def test_non_witness_transaction(self):
         """See if sending a regular transaction works, and create a utxo to use in later tests."""
         # Mine a block with an anyone-can-spend coinbase,
@@ -324,7 +326,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
         self.generate(self.nodes[0], 1)
 
-    @subtest  # type: ignore
+    @subtest
     def test_unnecessary_witness_before_segwit_activation(self):
         """Verify that blocks with witnesses are rejected before activation."""
 
@@ -355,7 +357,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_block_relay(self):
         """Test that block requests to NODE_WITNESS peer are with MSG_WITNESS_FLAG.
 
@@ -444,7 +446,7 @@ class SegWitTest(BitcoinTestFramework):
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
             assert block4.sha256 not in self.old_node.getdataset
 
-    @subtest  # type: ignore
+    @subtest
     def test_v0_outputs_arent_spendable(self):
         """Test that v0 outputs aren't spendable before segwit activation.
 
@@ -516,7 +518,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(txid, 2, value))
 
-    @subtest  # type: ignore
+    @subtest
     def test_witness_tx_relay_before_segwit_activation(self):
 
         # Generate a transaction that doesn't require a witness, but send it
@@ -558,7 +560,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx_hash, 0, tx_value))
 
-    @subtest  # type: ignore
+    @subtest
     def test_standardness_v0(self):
         """Test V0 txout standardness.
 
@@ -656,7 +658,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
 
-    @subtest  # type: ignore
+    @subtest
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
         assert not softfork_active(self.nodes[0], 'segwit')
@@ -667,7 +669,7 @@ class SegWitTest(BitcoinTestFramework):
         assert softfork_active(self.nodes[0], 'segwit')
         self.segwit_active = True
 
-    @subtest  # type: ignore
+    @subtest
     def test_p2sh_witness(self):
         """Test P2SH wrapped witness programs."""
 
@@ -734,7 +736,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(spend_tx.sha256, 0, spend_tx.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_witness_commitments(self):
         """Test witness commitments.
 
@@ -823,7 +825,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_block_malleability(self):
 
         # Make sure that a block that has too big a virtual size
@@ -863,7 +865,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(0)]
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
-    @subtest  # type: ignore
+    @subtest
     def test_witness_block_size(self):
         # TODO: Test that non-witness carrying blocks can't exceed 1MB
         # Skipping this test for now; this is covered in feature_block.py
@@ -938,7 +940,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_submit_block(self):
         """Test that submitblock adds the nonce automatically when possible."""
         block = self.build_next_block()
@@ -974,7 +976,7 @@ class SegWitTest(BitcoinTestFramework):
         # Tip should not advance!
         assert self.nodes[0].getbestblockhash() != block_2.hash
 
-    @subtest  # type: ignore
+    @subtest
     def test_extra_witness_data(self):
         """Test extra witness data in a transaction."""
 
@@ -1049,7 +1051,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_max_witness_push_length(self):
         """Test that witness stack can only allow up to 520 byte pushes."""
 
@@ -1086,7 +1088,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop()
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_max_witness_script_length(self):
         """Test that witness outputs greater than 10kB can't be spent."""
 
@@ -1133,7 +1135,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop()
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_witness_input_length(self):
         """Test that vin length must match vtxinwit length."""
 
@@ -1217,7 +1219,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop()
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_tx_relay_after_segwit_activation(self):
         """Test transaction relay after segwit activation.
 
@@ -1309,7 +1311,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_segwit_versions(self):
         """Test validity of future segwit version transactions.
 
@@ -1403,7 +1405,7 @@ class SegWitTest(BitcoinTestFramework):
         # Add utxo to our list
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_premature_coinbase_witness_spend(self):
 
         block = self.build_next_block()
@@ -1437,7 +1439,7 @@ class SegWitTest(BitcoinTestFramework):
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=True)
         self.sync_blocks()
 
-    @subtest  # type: ignore
+    @subtest
     def test_uncompressed_pubkey(self):
         """Test uncompressed pubkey validity in segwit transactions.
 
@@ -1540,7 +1542,7 @@ class SegWitTest(BitcoinTestFramework):
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
         self.utxo.append(UTXO(tx5.sha256, 0, tx5.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_signature_version_1(self):
 
         key = ECKey()
@@ -1726,7 +1728,7 @@ class SegWitTest(BitcoinTestFramework):
         for i in range(len(tx.vout)):
             self.utxo.append(UTXO(tx.sha256, i, tx.vout[i].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_non_standard_witness_blinding(self):
         """Test behavior of unnecessary witnesses in transactions does not blind the node for the transaction"""
 
@@ -1779,7 +1781,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_non_standard_witness(self):
         """Test detection of non-standard P2WSH witness"""
         pad = chr(1).encode('latin-1')
@@ -1878,7 +1880,7 @@ class SegWitTest(BitcoinTestFramework):
 
         self.utxo.pop(0)
 
-    @subtest  # type: ignore
+    @subtest
     def test_witness_sigops(self):
         """Test sigop counting is correct inside witnesses."""
 
@@ -1980,7 +1982,7 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
-    @subtest  # type: ignore
+    @subtest
     def test_superfluous_witness(self):
         # Serialization of tx that puts witness flag to 3 always
         def serialize_with_bogus_witness(tx):
@@ -2024,7 +2026,7 @@ class SegWitTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(['Unknown transaction optional data']):
             self.test_node.send_and_ping(msg_bogus_tx(tx))
 
-    @subtest  # type: ignore
+    @subtest
     def test_wtxid_relay(self):
         # Use brand new nodes to avoid contamination from earlier tests
         self.wtx_node = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
