@@ -1436,6 +1436,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 strLoadError = _("Error loading block database");
                 break;
             case ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK:
+                // If the loaded chain has a wrong genesis, bail out immediately
+                // (we're likely using a testnet datadir, or the other way around).
                 return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
             case ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX:
                 strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
