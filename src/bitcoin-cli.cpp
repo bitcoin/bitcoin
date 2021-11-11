@@ -942,9 +942,9 @@ static void GetProgressBar(double progress, std::string& progress_bar)
  * GetFeerateBar constructs fee rate distribution bars using dynamic increment based on size.
  *
  * @param[in]  size      Size of fee rate group in bytes.
- * @param[out] size_bar  String representation of the distribution bar.
  * @param[in]  inc_size  Minimum size of fee rate groups in bytes.
  * @param[in]  max_size  Maximum size of fee rate groups in bytes.
+ * @param[out] size_bar  String representation of the distribution bar.
  */
 static void GetFeerateBar(double size, std::string& size_bar, double inc_size, double max_size)
 {
