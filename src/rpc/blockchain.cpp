@@ -1590,7 +1590,9 @@ static RPCHelpMan getdeploymentinfo()
 {
     return RPCHelpMan{"getdeploymentinfo",
         "Returns an object containing various state info regarding soft-forks.",
-        {},
+        {
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Default{"chain tip"}, "The block hash at which to query fork state"},
+        },
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::OBJ, "deployments", "", {
@@ -1605,8 +1607,18 @@ static RPCHelpMan getdeploymentinfo()
             LOCK(cs_main);
             CChainState& active_chainstate = chainman.ActiveChainstate();
 
-            const CBlockIndex* tip = active_chainstate.m_chain.Tip();
-            CHECK_NONFATAL(tip);
+            const CBlockIndex* tip;
+            if (request.params[0].isNull()) {
+                tip = active_chainstate.m_chain.Tip();
+                CHECK_NONFATAL(tip);
+            } else {
+                uint256 hash(ParseHashV(request.params[0], "blockhash"));
+                tip = chainman.m_blockman.LookupBlockIndex(hash);
+                if (!tip) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+                }
+            }
+
             const Consensus::Params& consensusParams = Params().GetConsensus();
 
             UniValue deploymentinfo(UniValue::VOBJ);
