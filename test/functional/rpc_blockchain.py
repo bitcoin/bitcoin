@@ -202,6 +202,7 @@ class BlockchainTest(BitcoinTestFramework):
                         'count': height - 143,
                         'possible': True,
                     },
+                    'signalling': '#'*(height-143),
                 },
                 'active': False
             },

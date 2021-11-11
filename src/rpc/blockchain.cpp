@@ -1448,7 +1448,8 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& 
     // BIP9 signalling status, if applicable
     if (has_signal) {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = g_versionbitscache.Statistics(active_chain_tip, consensusParams, id);
+        std::vector<bool> signals;
+        BIP9Stats statsStruct = g_versionbitscache.Statistics(active_chain_tip, consensusParams, id, &signals);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
@@ -1457,6 +1458,13 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& 
             statsUV.pushKV("possible", statsStruct.possible);
         }
         bip9.pushKV("statistics", statsUV);
+
+        std::string sig;
+        sig.reserve(signals.size());
+        for (const bool s : signals) {
+            sig.push_back(s ? '#' : '-');
+        }
+        bip9.pushKV("signalling", sig);
     }
 
     UniValue rv(UniValue::VOBJ);
@@ -1585,6 +1593,7 @@ const std::vector<RPCResult> RPCHelpForDeployment{
             {RPCResult::Type::NUM, "count", "the number of blocks with the version bit set in the current period"},
             {RPCResult::Type::BOOL, "possible", /*optional=*/true, "returns false if there are not enough blocks left in this period to pass activation threshold (only for \"started\" status)"},
         }},
+        {RPCResult::Type::STR, "signalling", "indicates blocks that signalled with a # and blocks that did not with a -"},
     }},
 };
 
