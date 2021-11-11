@@ -1082,7 +1082,7 @@ static void ParseGetInfoResult(UniValue& result)
 
     const double mempool_bytes{result["mempool_bytes"].get_real()};
 
-    if (mempool_bytes >0){
+    if (mempool_bytes > 0) {
 
     	result_string += strprintf("%sMempool:%s\n", MAGENTA, RESET);
 
