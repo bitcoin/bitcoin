@@ -1097,7 +1097,7 @@ static void ParseGetInfoResult(UniValue& result)
 
     	// Removing zero from numbers used in std::min to avoid division by zero in GetFeeRateBar()
     	auto const ignore_zero = [](auto const& a, auto const& b) -> bool {
-        	if(0 == a || 0 == b)
+        	if (0 == a || 0 == b)
         	{
             	return false;
         	}
