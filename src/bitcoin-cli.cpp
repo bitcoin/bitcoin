@@ -969,7 +969,7 @@ static void GetFeerateBar(double size, std::string& size_bar, double inc_size, d
     	for (int i = 0; i < size / (INCREMENT*1000); ++i) {
             size_bar += BAR;
         }
-    } else if (max_size > 10000000 && max_size < 100000000){
+    } else if (max_size > 10000000 && max_size < 100000000) {
     	for (int i = 0; i < size / (INCREMENT*10000); ++i) {
             size_bar += BAR;
         }
