@@ -345,7 +345,9 @@ uint256 CInstantSendDb::GetInstantSendLockHashByTxid(const uint256& txid) const
     LOCK(cs_db);
     uint256 islockHash;
     if (!txidCache.get(txid, islockHash)) {
-        db->Read(std::make_tuple(DB_HASH_BY_TXID, txid), islockHash);
+        if (!db->Read(std::make_tuple(DB_HASH_BY_TXID, txid), islockHash)) {
+            return {};
+        }
         txidCache.insert(txid, islockHash);
     }
     return islockHash;
@@ -362,7 +364,9 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByInput(const COutPoint& o
     LOCK(cs_db);
     uint256 islockHash;
     if (!outpointCache.get(outpoint, islockHash)) {
-        db->Read(std::make_tuple(DB_HASH_BY_OUTPOINT, outpoint), islockHash);
+        if (!db->Read(std::make_tuple(DB_HASH_BY_OUTPOINT, outpoint), islockHash)) {
+            return nullptr;
+        }
         outpointCache.insert(outpoint, islockHash);
     }
     return GetInstantSendLockByHash(islockHash);
@@ -435,6 +439,17 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
     db->WriteBatch(batch);
 
     return result;
+}
+
+void CInstantSendDb::RemoveAndArchiveInstantSendLock(const CInstantSendLockPtr& islock, int nHeight)
+{
+    LOCK(cs_db);
+
+    CDBBatch batch(*db);
+    const auto hash = ::SerializeHash(*islock);
+    RemoveInstantSendLock(batch, hash, islock, false);
+    WriteInstantSendLockArchived(batch, hash, nHeight);
+    db->WriteBatch(batch);
 }
 
 ////////////////
@@ -1047,16 +1062,27 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         }
     }
 
-    CInstantSendLockPtr otherIsLock = db.GetInstantSendLockByTxid(islock->txid);
-    if (otherIsLock != nullptr) {
-        LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: duplicate islock, other islock=%s, peer=%d\n", __func__,
-                  islock->txid.ToString(), hash.ToString(), ::SerializeHash(*otherIsLock).ToString(), from);
-    }
-    for (const auto& in : islock->inputs) {
-        otherIsLock = db.GetInstantSendLockByInput(in);
-        if (otherIsLock != nullptr) {
-            LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: conflicting input in islock. input=%s, other islock=%s, peer=%d\n", __func__,
-                      islock->txid.ToString(), hash.ToString(), in.ToStringShort(), ::SerializeHash(*otherIsLock).ToString(), from);
+    const auto sameTxIsLock = db.GetInstantSendLockByTxid(islock->txid);
+    if (sameTxIsLock != nullptr) {
+        if (sameTxIsLock->IsDeterministic() == islock->IsDeterministic()) {
+            // shouldn't happen, investigate
+            LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: duplicate islock, other islock=%s, peer=%d\n", __func__,
+                      islock->txid.ToString(), hash.ToString(), ::SerializeHash(*sameTxIsLock).ToString(), from);
+        }
+        if (sameTxIsLock->IsDeterministic()) {
+            // can happen, nothing to do
+            return;
+        } else if (islock->IsDeterministic()) {
+            // can happen, remove and archive the non-deterministic sameTxIsLock
+            db.RemoveAndArchiveInstantSendLock(sameTxIsLock, WITH_LOCK(::cs_main, return ::ChainActive().Height()));
+        }
+    } else {
+        for (const auto& in : islock->inputs) {
+            const auto sameOutpointIsLock = db.GetInstantSendLockByInput(in);
+            if (sameOutpointIsLock != nullptr) {
+                LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: conflicting outpoint in islock. input=%s, other islock=%s, peer=%d\n", __func__,
+                          islock->txid.ToString(), hash.ToString(), in.ToStringShort(), ::SerializeHash(*sameOutpointIsLock).ToString(), from);
+            }
         }
     }
 
@@ -1657,7 +1683,14 @@ bool IsInstantSendMempoolSigningEnabled()
 
 bool RejectConflictingBlocks()
 {
-    return !fReindex && !fImporting && sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING);
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return false;
+    }
+    if (!sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+        LogPrint(BCLog::INSTANTSEND, "%s: spork3 is off, skipping transaction locking checks\n", __func__);
+        return false;
+    }
+    return true;
 }
 
 } // namespace llmq

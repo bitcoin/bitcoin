@@ -13,7 +13,7 @@ Checks LLMQs based ChainLocks
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import connect_nodes, isolate_node, reconnect_isolated_node
+from test_framework.util import connect_nodes, force_finish_mnsync, isolate_node, reconnect_isolated_node
 
 
 class LLMQChainLocksTest(DashTestFramework):
@@ -128,6 +128,7 @@ class LLMQChainLocksTest(DashTestFramework):
         assert self.nodes[0].getbestblockhash() == good_tip
 
         self.log.info("Isolate a node and let it create some transactions which won't get IS locked")
+        force_finish_mnsync(self.nodes[0])
         isolate_node(self.nodes[0])
         txs = []
         for i in range(3):
