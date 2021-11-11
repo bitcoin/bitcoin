@@ -128,8 +128,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 return ChainstateLoadingError::ERROR_TXINDEX_DISABLED_WHEN_GOV_ENABLED;
             }
 
-            // If the loaded chain has a wrong genesis, bail out immediately
-            // (we're likely using a testnet datadir, or the other way around).
             if (!chainman.BlockIndex().empty() &&
                     !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                 return ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK;
