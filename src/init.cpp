@@ -38,8 +38,8 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/blockstorage.h>
-#include <node/caches.h> // for CalculateCacheSizes
-#include <node/chainstate.h> // for LoadChainstate
+#include <node/caches.h>
+#include <node/chainstate.h>
 #include <node/context.h>
 #include <node/ui_interface.h>
 #include <node/txreconciliation.h>

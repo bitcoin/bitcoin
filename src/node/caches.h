@@ -5,8 +5,8 @@
 #ifndef BITCOIN_NODE_CACHES_H
 #define BITCOIN_NODE_CACHES_H
 
-#include <cstddef> // for size_t
-#include <cstdint> // for int64_t
+#include <cstddef>
+#include <cstdint>
 
 class ArgsManager;
 
