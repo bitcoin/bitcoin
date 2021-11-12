@@ -125,6 +125,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     const TrafficGraphData::SampleQueue& queue = trafficGraphData.getCurrentRangeQueueWithAverageBandwidth();
 
     if(!queue.empty()) {
+        painter.setRenderHint(QPainter::Antialiasing);
         QPainterPath pIn;
         QColor lucentGreen = green;
         lucentGreen.setAlpha(128);
@@ -142,6 +143,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         painter.fillPath(pOut, lucentRed);
         painter.setPen(red);
         painter.drawPath(pOut);
+        painter.setRenderHint(QPainter::Antialiasing, false);
     }
 
     // draw text

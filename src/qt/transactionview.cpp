@@ -33,7 +33,6 @@
 #include <QPoint>
 #include <QScrollBar>
 #include <QSettings>
-#include <QSignalMapper>
 #include <QTableView>
 #include <QTextCharFormat>
 #include <QTimer>
@@ -173,11 +172,6 @@ transactionView(nullptr), abandonAction(nullptr), columnResizingFixer(nullptr)
     contextMenu->addAction(abandonAction);
     contextMenu->addAction(editLabelAction);
 
-    mapperThirdPartyTxUrls = new QSignalMapper(this);
-
-    // Connect actions
-    connect(mapperThirdPartyTxUrls, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped), this, &TransactionView::openThirdPartyTxUrl);
-
     connect(dateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseDate);
     connect(typeWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseType);
     connect(watchOnlyWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseWatchonly);
@@ -244,15 +238,15 @@ void TransactionView::setModel(WalletModel *_model)
             QStringList listUrls = _model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
             for (int i = 0; i < listUrls.size(); ++i)
             {
-                QString host = QUrl(listUrls[i].trimmed(), QUrl::StrictMode).host();
+                QString url = listUrls[i].trimmed();
+                QString host = QUrl(url, QUrl::StrictMode).host();
                 if (!host.isEmpty())
                 {
                     QAction *thirdPartyTxUrlAction = new QAction(host, this); // use host as menu item label
                     if (i == 0)
                         contextMenu->addSeparator();
                     contextMenu->addAction(thirdPartyTxUrlAction);
-                    connect(thirdPartyTxUrlAction, &QAction::triggered, mapperThirdPartyTxUrls, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-                    mapperThirdPartyTxUrls->setMapping(thirdPartyTxUrlAction, listUrls[i].trimmed());
+                    connect(thirdPartyTxUrlAction, &QAction::triggered, [this, url] { openThirdPartyTxUrl(url); });
                 }
             }
 

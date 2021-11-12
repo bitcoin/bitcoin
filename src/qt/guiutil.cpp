@@ -606,8 +606,15 @@ void openConfigfile()
     fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
 
     /* Open dash.conf with the associated application */
-    if (fs::exists(pathConfig))
-        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    if (fs::exists(pathConfig)) {
+        // Workaround for macOS-specific behavior; see #15409.
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)))) {
+#ifdef Q_OS_MAC
+            QProcess::startDetached("/usr/bin/open", QStringList{"-t", boostPathToQString(pathConfig)});
+#endif
+            return;
+        }
+    }
 }
 
 void showBackups()
