@@ -22,7 +22,10 @@ from test_framework.blocktools import (
     create_transaction,
 )
 from test_framework.messages import CTransaction
-from test_framework.script import CScript
+from test_framework.script import (
+    OP_0,
+    OP_TRUE,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -33,15 +36,10 @@ NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argumen
 
 
 def trueDummy(tx):
-    scriptSig = CScript(tx.vin[0].scriptSig)
-    newscript = []
-    for i in scriptSig:
-        if len(newscript) == 0:
-            assert len(i) == 0
-            newscript.append(b'\x51')
-        else:
-            newscript.append(i)
-    tx.vin[0].scriptSig = CScript(newscript)
+    """Transform a NULLDUMMY compliant tx (i.e. scriptSig starts with OP_0)
+    to be non-NULLDUMMY compliant by replacing the dummy with OP_TRUE"""
+    assert_equal(tx.vin[0].scriptSig[0], OP_0)
+    tx.vin[0].scriptSig = bytes([OP_TRUE]) + tx.vin[0].scriptSig[1:]
     tx.rehash()
 
 
