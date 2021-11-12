@@ -35,6 +35,9 @@
 #include <QSettings>
 #include <QTextDocument>
 
+using wallet::CCoinControl;
+using wallet::DEFAULT_PAY_TX_FEE;
+
 static constexpr std::array confTargets{2, 4, 6, 12, 24, 48, 144, 504, 1008};
 int getConfTargetForIndex(int index) {
     if (index+1 > static_cast<int>(confTargets.size())) {

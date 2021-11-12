@@ -13,6 +13,7 @@
 
 using interfaces::FoundBlock;
 
+namespace wallet {
 static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
 {
     interfaces::Chain& chain = wallet.chain();
@@ -958,3 +959,4 @@ RPCHelpMan abortrescan()
 },
     };
 }
+} // namespace wallet

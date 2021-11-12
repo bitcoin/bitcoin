@@ -12,12 +12,14 @@
 #include <QString>
 #include <QTimer>
 
-class CCoinControl;
 class ClientModel;
 class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 enum class SynchronizationState;
+namespace wallet {
+class CCoinControl;
+} // namespace wallet
 
 namespace Ui {
     class SendCoinsDialog;
@@ -62,7 +64,7 @@ private:
     Ui::SendCoinsDialog *ui;
     ClientModel *clientModel;
     WalletModel *model;
-    std::unique_ptr<CCoinControl> m_coin_control;
+    std::unique_ptr<wallet::CCoinControl> m_coin_control;
     std::unique_ptr<WalletModelTransaction> m_current_transaction;
     bool fNewRecipientAllowed;
     bool fFeeMinimized;

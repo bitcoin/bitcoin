@@ -7,6 +7,7 @@
 #include <util/translation.h>
 #include <wallet/wallet.h>
 
+namespace wallet {
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
 uint32_t DUMP_VERSION = 1;
 
@@ -284,3 +285,4 @@ bool CreateFromDump(const std::string& name, const fs::path& wallet_path, biling
 
     return ret;
 }
+} // namespace wallet

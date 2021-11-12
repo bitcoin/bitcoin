@@ -31,6 +31,9 @@
 #include <QSettings>
 #include <QTreeWidget>
 
+using wallet::CCoinControl;
+using wallet::MIN_CHANGE;
+
 QList<CAmount> CoinControlDialog::payAmounts;
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
