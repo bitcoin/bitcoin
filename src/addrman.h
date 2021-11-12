@@ -53,6 +53,7 @@ static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
  */
 class AddrMan
 {
+protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
@@ -136,9 +137,6 @@ public:
     void SetServices(const CService& addr, ServiceFlags nServices);
 
     const std::vector<bool>& GetAsmap() const;
-
-    friend class AddrManTest;
-    friend class AddrManDeterministic;
 };
 
 #endif // SYSCOIN_ADDRMAN_H
