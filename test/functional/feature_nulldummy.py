@@ -121,14 +121,9 @@ class NULLDUMMYTest(BitcoinTestFramework):
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         assert_equal(tmpl['previousblockhash'], self.lastblockhash)
         assert_equal(tmpl['height'], self.lastblockheight + 1)
-        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1)
-        for tx in txs:
-            tx.rehash()
-            block.vtx.append(tx)
-        block.hashMerkleRoot = block.calc_merkle_root()
+        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1, txlist=txs)
         if with_witness:
             add_witness_commitment(block)
-        block.rehash()
         block.solve()
         assert_equal(None if accept else NULLDUMMY_ERROR, node.submitblock(block.serialize().hex()))
         if accept:
