@@ -1029,6 +1029,9 @@ Current subtrees include:
   - Subtree at https://github.com/bitcoin-core/univalue-subtree ; maintained by Core contributors.
   - Deviates from upstream https://github.com/jgarzik/univalue.
 
+- src/minisketch
+  - Upstream at https://github.com/sipa/minisketch ; maintained by Core contributors.
+
 Upgrading LevelDB
 ---------------------
 
