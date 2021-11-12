@@ -33,4 +33,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif //BITCOIN_THREADINTERRUPT_H
+#endif // BITCOIN_THREADINTERRUPT_H
