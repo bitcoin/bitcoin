@@ -100,7 +100,7 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
     using Coins = std::set<std::tuple<CAmount, COutPoint>>;
     std::vector<std::tuple<Coins, CBlock>> chain;
     {
-        // Add the inital entry
+        // Add the initial entry
         chain.emplace_back();
         auto& [coins, block]{chain.back()};
         coins.emplace(total_amount, COutPoint{uint256::ONE, 1});
