@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <minisketch.h>
-#include <minisketchwrapper.h>
+#include <node/minisketchwrapper.h>
 #include <random.h>
 #include <test/util/setup_common.h>
 
