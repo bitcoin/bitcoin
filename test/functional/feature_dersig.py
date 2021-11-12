@@ -88,7 +88,6 @@ class BIP66Test(BitcoinTestFramework):
         block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block.solve()
 
         assert_equal(self.nodes[0].getblockcount(), DERSIG_HEIGHT - 2)
@@ -103,7 +102,6 @@ class BIP66Test(BitcoinTestFramework):
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
         block.nVersion = 2
-        block.rehash()
         block.solve()
 
         with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash}, bad-version(0x00000002)']):
@@ -133,7 +131,6 @@ class BIP66Test(BitcoinTestFramework):
         # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block.solve()
 
         with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)']):
@@ -144,7 +141,6 @@ class BIP66Test(BitcoinTestFramework):
         self.log.info("Test that a block with a DERSIG-compliant transaction is accepted")
         block.vtx[1] = self.create_tx(self.coinbase_txids[1])
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block.solve()
 
         self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules

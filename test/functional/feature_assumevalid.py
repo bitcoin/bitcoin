@@ -126,7 +126,6 @@ class AssumeValidTest(BitcoinTestFramework):
         self.block_time += 1
         block102.vtx.extend([tx])
         block102.hashMerkleRoot = block102.calc_merkle_root()
-        block102.rehash()
         block102.solve()
         self.blocks.append(block102)
         self.tip = block102.sha256
