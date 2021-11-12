@@ -31,7 +31,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     do {
         try {
             LOCK(cs_main);
-            chainman.InitializeChainstate(Assert(mempool));
+            chainman.InitializeChainstate(mempool);
             chainman.m_total_coinstip_cache = nCoinCacheUsage;
             chainman.m_total_coinsdb_cache = nCoinDBCache;
 
