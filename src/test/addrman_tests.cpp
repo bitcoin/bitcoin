@@ -949,9 +949,7 @@ static CDataStream AddrmanToStream(const AddrMan& addrman)
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << Params().MessageStart();
     ssPeersIn << addrman;
-    std::string str = ssPeersIn.str();
-    std::vector<unsigned char> vchData(str.begin(), str.end());
-    return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
+    return ssPeersIn;
 }
 
 BOOST_AUTO_TEST_CASE(load_addrman)
@@ -1023,9 +1021,7 @@ static CDataStream MakeCorruptPeersDat()
     AddrInfo info = AddrInfo(addr, resolved);
     s << info;
 
-    std::string str = s.str();
-    std::vector<unsigned char> vchData(str.begin(), str.end());
-    return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
+    return s;
 }
 
 BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
