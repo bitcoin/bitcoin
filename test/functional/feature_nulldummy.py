@@ -35,7 +35,7 @@ from test_framework.util import (
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
 
 
-def trueDummy(tx):
+def invalidate_nulldummy_tx(tx):
     """Transform a NULLDUMMY compliant tx (i.e. scriptSig starts with OP_0)
     to be non-NULLDUMMY compliant by replacing the dummy with OP_TRUE"""
     assert_equal(tx.vin[0].scriptSig[0], OP_0)
@@ -92,7 +92,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
 
         self.log.info("Test 2: Non-NULLDUMMY base multisig transaction should not be accepted to mempool before activation")
         test2tx = create_transaction(self.nodes[0], txid2, self.ms_address, amount=47)
-        trueDummy(test2tx)
+        invalidate_nulldummy_tx(test2tx)
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, test2tx.serialize_with_witness().hex(), 0)
 
         self.log.info(f"Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [{COINBASE_MATURITY + 4}]")
@@ -101,7 +101,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
         test4tx = create_transaction(self.nodes[0], test2tx.hash, self.address, amount=46)
         test6txs = [CTransaction(test4tx)]
-        trueDummy(test4tx)
+        invalidate_nulldummy_tx(test4tx)
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, test4tx.serialize_with_witness().hex(), 0)
         self.block_submit(self.nodes[0], [test4tx], accept=False)
 
