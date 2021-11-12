@@ -28,7 +28,9 @@ enum class RBFTransactionState;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+namespace node {
 struct NodeContext;
+} // namespace node
 
 namespace interfaces {
 
@@ -316,7 +318,7 @@ public:
 };
 
 //! Return implementation of Chain interface.
-std::unique_ptr<Chain> MakeChain(NodeContext& node);
+std::unique_ptr<Chain> MakeChain(node::NodeContext& node);
 
 } // namespace interfaces
 

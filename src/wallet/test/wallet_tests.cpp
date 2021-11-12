@@ -30,6 +30,9 @@
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
 
+using node::MAX_BLOCKFILE_SIZE;
+using node::UnlinkPrunedFiles;
+
 RPCHelpMan importmulti();
 RPCHelpMan dumpwallet();
 RPCHelpMan importwallet();

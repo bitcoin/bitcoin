@@ -23,6 +23,8 @@
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
+using node::NodeContext;
+
 class WalletInit : public WalletInitInterface
 {
 public:

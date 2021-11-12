@@ -21,7 +21,7 @@ public:
     bool HasWalletSupport() const override {return false;}
     void AddWalletOptions(ArgsManager& argsman) const override;
     bool ParameterInteraction() const override {return true;}
-    void Construct(NodeContext& node) const override {LogPrintf("No wallet support compiled in!\n");}
+    void Construct(node::NodeContext& node) const override {LogPrintf("No wallet support compiled in!\n");}
 };
 
 void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const

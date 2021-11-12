@@ -18,6 +18,10 @@
 #include <string>
 #include <vector>
 
+using node::AnalyzePSBT;
+using node::PSBTAnalysis;
+using node::PSBTInputAnalysis;
+
 void initialize_psbt()
 {
     static const ECCVerifyHandle verify_handle;

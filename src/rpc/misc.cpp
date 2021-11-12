@@ -35,6 +35,8 @@
 
 #include <univalue.h>
 
+using node::NodeContext;
+
 static RPCHelpMan validateaddress()
 {
     return RPCHelpMan{

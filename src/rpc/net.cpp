@@ -32,6 +32,8 @@
 
 #include <univalue.h>
 
+using node::NodeContext;
+
 const std::vector<std::string> CONNECTION_TYPE_DOC{
         "outbound-full-relay (default automatic connections)",
         "block-relay-only (does not relay transactions or addresses)",

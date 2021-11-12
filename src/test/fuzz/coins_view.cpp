@@ -26,6 +26,10 @@
 #include <string>
 #include <vector>
 
+using node::CCoinsStats;
+using node::CoinStatsHashType;
+using node::GetUTXOStats;
+
 namespace {
 const TestingSetup* g_setup;
 const Coin EMPTY_COIN{};

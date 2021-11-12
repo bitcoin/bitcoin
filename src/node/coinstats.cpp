@@ -17,6 +17,7 @@
 
 #include <map>
 
+namespace node {
 // Database-independent metric indicating the UTXO set size
 uint64_t GetBogoSize(const CScript& script_pub_key)
 {
@@ -181,3 +182,4 @@ static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
     stats.hashSerialized = out;
 }
 static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
+} // namespace node

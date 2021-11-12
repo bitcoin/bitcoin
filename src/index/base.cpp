@@ -14,6 +14,8 @@
 #include <validation.h> // For g_chainman
 #include <warnings.h>
 
+using node::ReadBlockFromDisk;
+
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
 constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
