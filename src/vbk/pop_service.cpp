@@ -27,6 +27,8 @@
 
 namespace VeriBlock {
 
+static uint64_t popScoreComparisons = 0ULL;
+
 template <typename T>
 void onAcceptedToMempool(const T& t) {
     assert(g_rpc_node);
@@ -317,6 +319,7 @@ int compareForks(const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip
         assert(false && "current tip is invalid");
     }
 
+    popScoreComparisons++;
     return pop.getAltBlockTree().comparePopScore(left.hash, right.hash);
 }
 
@@ -376,6 +379,13 @@ bool isPopActive(int32_t height)
         return false;
     }
     return Params().isPopActive(height);
+}
+
+// get stats on POP score comparisons
+uint64_t getPopScoreComparisons() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+    return popScoreComparisons;
 }
 
 

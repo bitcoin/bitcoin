@@ -119,6 +119,7 @@ BASE_SCRIPTS = [
     'feature_pop_enable.py',
     'feature_pop_enable_sync.py',
     'feature_pop_fork_resolution.py',
+    'feature_pop_fork_resolution_on_unconnected.py',
     'feature_pop_init.py',
     'feature_pop_mempool_getpop.py',
     'feature_pop_mempool_reorg.py',

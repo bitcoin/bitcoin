@@ -208,4 +208,18 @@ BOOST_FIXTURE_TEST_CASE(extractblockinfo_inavlid_test, E2eFixture)
     BOOST_CHECK_NE(find_value(result, "code").get_int64(), 0);
 }
 
+BOOST_FIXTURE_TEST_CASE(getpopscorestats_test, E2eFixture)
+{
+    auto result = CallRPC(std::string("getpopscorestats"));
+    auto stats = find_value(result.get_obj(), "stats").get_obj();
+    auto comparisons = find_value(stats, "popScoreComparisons").get_int64();
+    CreateAndProcessBlock({}, ChainActive().Tip()->GetBlockHash(), cbKey);
+
+    result = CallRPC(std::string("getpopscorestats"));
+    stats = find_value(result.get_obj(), "stats").get_obj();
+    auto comparisons_after = find_value(stats, "popScoreComparisons").get_int64();
+
+    BOOST_CHECK_EQUAL(comparisons + 1, comparisons_after);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

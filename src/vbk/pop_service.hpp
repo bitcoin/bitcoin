@@ -60,6 +60,9 @@ bool isCrossedBootstrapBlock(int32_t height);
 bool isPopActive();
 bool isPopActive(int32_t height);
 
+// get stats on POP score comparisons
+uint64_t getPopScoreComparisons();
+
 } // namespace VeriBlock
 
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_HPP

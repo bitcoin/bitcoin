@@ -872,6 +872,32 @@ UniValue setmempooldostalledcheck(const JSONRPCRequest& req)
     return UniValue{};
 }
 
+UniValue getpopscorestats(const JSONRPCRequest& req)
+{
+    std::string cmdname = "getpopscorestats";
+    // clang-format off
+    RPCHelpMan{
+        cmdname,
+        "\nReturns POP-related fork resolution statistics.\n",
+        {},
+        RPCResult{"TODO"},
+        RPCExamples{
+            HelpExampleCli(cmdname, "") +
+            HelpExampleRpc(cmdname, "")},
+    }
+        .Check(req);
+    // clang-format on
+
+    auto ret = UniValue(UniValue::VOBJ);
+    UniValue stats(UniValue::VOBJ);
+    {
+        LOCK(cs_main);
+        stats.pushKV("popScoreComparisons", getPopScoreComparisons());
+    }
+    ret.pushKV("stats", stats);
+    return ret;
+}
+
 const CRPCCommand commands[] = {
     {"pop_mining", "getpopparams", &getpopparams, {}},
     {"pop_mining", "submitpopatv", &submitpopatv, {"atv"}},
@@ -891,7 +917,8 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getrawvbkblock", &getrawvbkblock, {"id"}},
     {"pop_mining", "getrawpopmempool", &getrawpopmempool, {"verbosity"}},
     {"pop_mining", "setmempooldostalledcheck", &setmempooldostalledcheck, {"flag"}},
-    {"pop_mining", "extractblockinfo", &extractblockinfo, {"data_array"}}};
+    {"pop_mining", "extractblockinfo", &extractblockinfo, {"data_array"}},
+    {"pop_mining", "getpopscorestats", &getpopscorestats, {}}};
 
 void RegisterPOPMiningRPCCommands(CRPCTable& t)
 {
