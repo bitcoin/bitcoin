@@ -295,4 +295,4 @@ template<typename C>
     return span.end();
 }
 
-#endif
+#endif // BITCOIN_SPAN_H

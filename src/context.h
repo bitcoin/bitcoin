@@ -33,4 +33,4 @@ T* GetContext(const CoreContext& context) noexcept
                 : nullptr;
 }
 
-#endif // BITCOIN_CONTEXT_VARIANT_H
+#endif // BITCOIN_CONTEXT_H

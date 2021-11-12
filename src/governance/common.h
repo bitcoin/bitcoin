@@ -81,6 +81,6 @@ public:
         }
     }
 };
-
 } // namespace Governance
-#endif
+
+#endif // BITCOIN_GOVERNANCE_COMMON_H

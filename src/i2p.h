@@ -286,4 +286,4 @@ private:
 } // namespace sam
 } // namespace i2p
 
-#endif /* BITCOIN_I2P_H */
+#endif // BITCOIN_I2P_H

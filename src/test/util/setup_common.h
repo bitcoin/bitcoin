@@ -250,4 +250,4 @@ private:
 // define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
 std::ostream& operator<<(std::ostream& os, const uint256& num);
 
-#endif
+#endif // BITCOIN_TEST_UTIL_SETUP_COMMON_H

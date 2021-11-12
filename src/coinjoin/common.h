@@ -132,4 +132,4 @@ constexpr int CalculateAmountPriority(CAmount nInputAmount)
 
 } // namespace CoinJoin
 
-#endif
+#endif // BITCOIN_COINJOIN_COMMON_H

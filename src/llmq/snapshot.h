@@ -233,4 +233,4 @@ extern std::unique_ptr<CQuorumSnapshotManager> quorumSnapshotManager;
 
 } // namespace llmq
 
-#endif //BITCOIN_LLMQ_SNAPSHOT_H
+#endif // BITCOIN_LLMQ_SNAPSHOT_H

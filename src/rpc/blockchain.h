@@ -64,4 +64,4 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
  */
 UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile);
 
-#endif
+#endif // BITCOIN_RPC_BLOCKCHAIN_H

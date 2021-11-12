@@ -11,4 +11,4 @@ template <typename E>
     return static_cast<typename std::underlying_type<E>::type>(e);
 }
 
-#endif //BITCOIN_UTIL_UNDERLYING_H
+#endif // BITCOIN_UTIL_UNDERLYING_H

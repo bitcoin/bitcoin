@@ -159,4 +159,4 @@ public:
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
-#endif /* BITCOIN_TORCONTROL_H */
+#endif // BITCOIN_TORCONTROL_H

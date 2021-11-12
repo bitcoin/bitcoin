@@ -59,4 +59,4 @@ private:
     int m_fd{-1};
 };
 
-#endif /* BITCOIN_UTIL_EDGE_H */
+#endif // BITCOIN_UTIL_EDGE_H

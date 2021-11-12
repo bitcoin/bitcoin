@@ -66,4 +66,4 @@ public:
     SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
 };
 
-#endif //  BITCOIN_POLICY_FEERATE_H
+#endif // BITCOIN_POLICY_FEERATE_H
