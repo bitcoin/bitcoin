@@ -552,8 +552,10 @@ static RPCHelpMan decodescript()
                 {RPCResult::Type::STR, "asm", "Script public key"},
                 {RPCResult::Type::STR, "type", "The output type (e.g. " + GetAllOutputTypes() + ")"},
                 {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
-                {RPCResult::Type::STR, "p2sh", /* optional */ true, "address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH)"},
-                {RPCResult::Type::OBJ, "segwit", /* optional */ true, "Result of a witness script public key wrapping this redeem script (not returned if the script is a P2SH or witness)",
+                {RPCResult::Type::STR, "p2sh", /*optional=*/true,
+                 "address of P2SH script wrapping this redeem script (not returned for types that should not be wrapped)"},
+                {RPCResult::Type::OBJ, "segwit", /*optional=*/true,
+                 "Result of a witness script public key wrapping this redeem script (not returned for types that should not be wrapped)",
                  {
                      {RPCResult::Type::STR, "asm", "String representation of the script public key"},
                      {RPCResult::Type::STR_HEX, "hex", "Hex string of the script public key"},
@@ -584,22 +586,68 @@ static RPCHelpMan decodescript()
     std::vector<std::vector<unsigned char>> solutions_data;
     const TxoutType which_type{Solver(script, solutions_data)};
 
-    if (which_type != TxoutType::SCRIPTHASH) {
-        // P2SH cannot be wrapped in a P2SH. If this script is already a P2SH,
-        // don't return the address for a P2SH of the P2SH.
+    const bool can_wrap{[&] {
+        switch (which_type) {
+        case TxoutType::MULTISIG:
+        case TxoutType::NONSTANDARD:
+        case TxoutType::PUBKEY:
+        case TxoutType::PUBKEYHASH:
+        case TxoutType::WITNESS_V0_KEYHASH:
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+            // Can be wrapped if the checks below pass
+            break;
+        case TxoutType::NULL_DATA:
+        case TxoutType::SCRIPTHASH:
+        case TxoutType::WITNESS_UNKNOWN:
+        case TxoutType::WITNESS_V1_TAPROOT:
+            // Should not be wrapped
+            return false;
+        } // no default case, so the compiler can warn about missing cases
+        if (!script.HasValidOps() || script.IsUnspendable()) {
+            return false;
+        }
+        for (CScript::const_iterator it{script.begin()}; it != script.end();) {
+            opcodetype op;
+            CHECK_NONFATAL(script.GetOp(it, op));
+            if (op == OP_CHECKSIGADD || IsOpSuccess(op)) {
+                return false;
+            }
+        }
+        return true;
+    }()};
+
+    if (can_wrap) {
         r.pushKV("p2sh", EncodeDestination(ScriptHash(script)));
         // P2SH and witness programs cannot be wrapped in P2WSH, if this script
         // is a witness program, don't return addresses for a segwit programs.
-        if (which_type == TxoutType::PUBKEY || which_type == TxoutType::PUBKEYHASH || which_type == TxoutType::MULTISIG || which_type == TxoutType::NONSTANDARD) {
+        const bool can_wrap_P2WSH{[&] {
+            switch (which_type) {
+            case TxoutType::MULTISIG:
+            case TxoutType::PUBKEY:
             // Uncompressed pubkeys cannot be used with segwit checksigs.
             // If the script contains an uncompressed pubkey, skip encoding of a segwit program.
-            if ((which_type == TxoutType::PUBKEY) || (which_type == TxoutType::MULTISIG)) {
                 for (const auto& solution : solutions_data) {
                     if ((solution.size() != 1) && !CPubKey(solution).IsCompressed()) {
-                        return r;
+                        return false;
                     }
                 }
-            }
+                return true;
+            case TxoutType::NONSTANDARD:
+            case TxoutType::PUBKEYHASH:
+                // Can be P2WSH wrapped
+                return true;
+            case TxoutType::NULL_DATA:
+            case TxoutType::SCRIPTHASH:
+            case TxoutType::WITNESS_UNKNOWN:
+            case TxoutType::WITNESS_V0_KEYHASH:
+            case TxoutType::WITNESS_V0_SCRIPTHASH:
+            case TxoutType::WITNESS_V1_TAPROOT:
+                // Should not be wrapped
+                return false;
+            } // no default case, so the compiler can warn about missing cases
+            CHECK_NONFATAL(false);
+        }()};
+        if (can_wrap_P2WSH) {
             UniValue sr(UniValue::VOBJ);
             CScript segwitScr;
             if (which_type == TxoutType::PUBKEY) {
@@ -608,7 +656,6 @@ static RPCHelpMan decodescript()
                 segwitScr = GetScriptForDestination(WitnessV0KeyHash(uint160{solutions_data[0]}));
             } else {
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
-                // Newer segwit program versions should be considered when then become available.
                 segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
             ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
