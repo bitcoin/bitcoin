@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_MINISKETCHWRAPPER_H
 
 #include <minisketch.h>
+
 #include <cstddef>
 #include <cstdint>
 

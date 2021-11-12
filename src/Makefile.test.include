@@ -63,11 +63,10 @@ endif
 
 # test_bitcoin binary #
 BITCOIN_TESTS =\
-  test/arith_uint256_tests.cpp \
-  test/scriptnum10.h \
   test/addrman_tests.cpp \
-  test/amount_tests.cpp \
   test/allocator_tests.cpp \
+  test/amount_tests.cpp \
+  test/arith_uint256_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
@@ -75,8 +74,8 @@ BITCOIN_TESTS =\
   test/bip32_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
-  test/blockfilter_tests.cpp \
   test/blockfilter_index_tests.cpp \
+  test/blockfilter_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
@@ -86,6 +85,7 @@ BITCOIN_TESTS =\
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
+  test/dbwrapper_tests.cpp \
   test/denialofservice_tests.cpp \
   test/descriptor_tests.cpp \
   test/flatfile_tests.cpp \
@@ -97,13 +97,11 @@ BITCOIN_TESTS =\
   test/key_io_tests.cpp \
   test/key_tests.cpp \
   test/logging_tests.cpp \
-  test/dbwrapper_tests.cpp \
-  test/validation_tests.cpp \
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
   test/merkleblock_tests.cpp \
-  test/minisketch_tests.cpp \
   test/miner_tests.cpp \
+  test/minisketch_tests.cpp \
   test/multisig_tests.cpp \
   test/net_peer_eviction_tests.cpp \
   test/net_tests.cpp \
@@ -123,6 +121,7 @@ BITCOIN_TESTS =\
   test/script_parse_tests.cpp \
   test/script_standard_tests.cpp \
   test/script_tests.cpp \
+  test/scriptnum10.h \
   test/scriptnum_tests.cpp \
   test/serfloat_tests.cpp \
   test/serialize_tests.cpp \
@@ -134,21 +133,22 @@ BITCOIN_TESTS =\
   test/streams_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \
-  test/util_threadnames_tests.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
   test/txindex_tests.cpp \
-  test/txrequest_tests.cpp \
   test/txpackage_tests.cpp \
+  test/txrequest_tests.cpp \
   test/txvalidation_tests.cpp \
   test/txvalidationcache_tests.cpp \
   test/uint256_tests.cpp \
   test/util_tests.cpp \
+  test/util_threadnames_tests.cpp \
   test/validation_block_tests.cpp \
   test/validation_chainstate_tests.cpp \
   test/validation_chainstatemanager_tests.cpp \
   test/validation_flush_tests.cpp \
+  test/validation_tests.cpp \
   test/validationinterface_tests.cpp \
   test/versionbits_tests.cpp
 
