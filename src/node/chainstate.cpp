@@ -113,14 +113,13 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 assert(chainstate->m_chain.Tip() != nullptr);
             }
         }
-    }
 
-    if (!fReset) {
-        LOCK(cs_main);
-        auto chainstates{chainman.GetAll()};
-        if (std::any_of(chainstates.begin(), chainstates.end(),
-                        [](const CChainState* cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {
-            return ChainstateLoadingError::ERROR_BLOCKS_WITNESS_INSUFFICIENTLY_VALIDATED;
+        if (!fReset) {
+            auto chainstates{chainman.GetAll()};
+            if (std::any_of(chainstates.begin(), chainstates.end(),
+                            [](const CChainState* cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {
+                return ChainstateLoadingError::ERROR_BLOCKS_WITNESS_INSUFFICIENTLY_VALIDATED;
+            }
         }
     }
 
