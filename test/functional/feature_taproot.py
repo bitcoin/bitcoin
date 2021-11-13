@@ -1260,7 +1260,7 @@ class TaprootTest(BitcoinTestFramework):
         if self.options.previous_release:
             self.wallet_names = [None, self.default_wallet_name]
         else:
-            self.extra_args[0].append("-vbparams=taproot:1:1")
+            self.extra_args[0].append("-testactivationheight=taproot@999999")
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args, versions=[

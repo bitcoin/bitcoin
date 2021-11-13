@@ -148,6 +148,7 @@ class BlockchainTest(BitcoinTestFramework):
             '-testactivationheight=cltv@4',
             '-testactivationheight=csv@5',
             '-testactivationheight=segwit@6',
+            '-testactivationheight=taproot@7',
         ])
 
         res = self.nodes[0].getblockchaininfo()
@@ -167,6 +168,7 @@ class BlockchainTest(BitcoinTestFramework):
             'bip65': {'type': 'buried', 'active': True, 'height': 4},
             'csv': {'type': 'buried', 'active': True, 'height': 5},
             'segwit': {'type': 'buried', 'active': True, 'height': 6},
+            'taproot': {'type': 'buried', 'active': True, 'height': 7},
             'testdummy': {
                 'type': 'bip9',
                 'bip9': {
@@ -186,18 +188,6 @@ class BlockchainTest(BitcoinTestFramework):
                 },
                 'active': False
             },
-            'taproot': {
-                'type': 'bip9',
-                'bip9': {
-                    'status': 'active',
-                    'start_time': -1,
-                    'timeout': 9223372036854775807,
-                    'since': 0,
-                    'min_activation_height': 0,
-                },
-                'height': 0,
-                'active': True
-            }
         })
 
     def _test_getchaintxstats(self):
