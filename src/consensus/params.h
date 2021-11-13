@@ -7,6 +7,8 @@
 #define BITCOIN_CONSENSUS_PARAMS_H
 
 #include <uint256.h>
+
+#include <cassert>
 #include <limits>
 
 namespace Consensus {
@@ -118,18 +120,13 @@ struct Params {
     int DeploymentHeight(BuriedDeployment dep) const
     {
         switch (dep) {
-        case DEPLOYMENT_HEIGHTINCB:
-            return BIP34Height;
-        case DEPLOYMENT_CLTV:
-            return BIP65Height;
-        case DEPLOYMENT_DERSIG:
-            return BIP66Height;
-        case DEPLOYMENT_CSV:
-            return CSVHeight;
-        case DEPLOYMENT_SEGWIT:
-            return SegwitHeight;
+        case DEPLOYMENT_HEIGHTINCB: return BIP34Height;
+        case DEPLOYMENT_CLTV: return BIP65Height;
+        case DEPLOYMENT_DERSIG: return BIP66Height;
+        case DEPLOYMENT_CSV: return CSVHeight;
+        case DEPLOYMENT_SEGWIT: return SegwitHeight;
         } // no default case, so the compiler can warn about missing cases
-        return std::numeric_limits<int>::max();
+        assert(false);
     }
 };
 
