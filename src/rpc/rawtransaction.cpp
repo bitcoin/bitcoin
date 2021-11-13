@@ -51,13 +51,14 @@ using node::GetTransaction;
 using node::NodeContext;
 using node::PSBTAnalysis;
 
-static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, Chainstate& active_chainstate)
+static UniValue TxToJSON(const CTransaction& tx, const uint256 hashBlock, Chainstate& active_chainstate)
 {
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
     // Blockchain contextual information (confirmations and blocktime) is not
     // available to code in bitcoin-common, so we query them here and push the
     // data into the returned UniValue.
+    UniValue entry(UniValue::VOBJ);
     TxToUniv(tx, /*block_hash=*/uint256(), entry, /*include_hex=*/true, RPCSerializationFlags());
 
     if (!hashBlock.IsNull()) {
@@ -75,6 +76,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
                 entry.pushKV("confirmations", 0);
         }
     }
+    return entry;
 }
 
 static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
@@ -266,9 +268,8 @@ static RPCHelpMan getrawtransaction()
         return EncodeHexTx(*tx, RPCSerializationFlags());
     }
 
-    UniValue result(UniValue::VOBJ);
+    UniValue result{TxToJSON(*tx, hash_block, chainman.ActiveChainstate())};
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
-    TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
     return result;
 },
     };
