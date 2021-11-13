@@ -55,12 +55,12 @@ static RPCHelpMan gettxoutproof()
             }
 
             const CBlockIndex* pblockindex = nullptr;
-            uint256 hashBlock;
+            uint256 block_hash;
             ChainstateManager& chainman = EnsureAnyChainman(request.context);
             if (!request.params[1].isNull()) {
                 LOCK(cs_main);
-                hashBlock = ParseHashV(request.params[1], "blockhash");
-                pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
+                block_hash = ParseHashV(request.params[1], "blockhash");
+                pblockindex = chainman.m_blockman.LookupBlockIndex(block_hash);
                 if (!pblockindex) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
                 }
@@ -87,11 +87,11 @@ static RPCHelpMan gettxoutproof()
             LOCK(cs_main);
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.GetConsensus(), hashBlock);
-                if (!tx || hashBlock.IsNull()) {
+                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.GetConsensus(), block_hash);
+                if (!tx || block_hash.IsNull()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
-                pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
+                pblockindex = chainman.m_blockman.LookupBlockIndex(block_hash);
                 if (!pblockindex) {
                     throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
                 }

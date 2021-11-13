@@ -51,7 +51,7 @@ using node::GetTransaction;
 using node::NodeContext;
 using node::PSBTAnalysis;
 
-static UniValue TxToJSON(const CTransaction& tx, const uint256 hashBlock, Chainstate& active_chainstate)
+static UniValue TxToJSON(const CTransaction& tx, const uint256 block_hash, Chainstate& active_chainstate)
 {
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
@@ -60,11 +60,11 @@ static UniValue TxToJSON(const CTransaction& tx, const uint256 hashBlock, Chains
     // data into the returned UniValue.
     UniValue entry{TxToUniv(tx, /*block_hash=*/uint256(), /*include_hex=*/true, RPCSerializationFlags())};
 
-    if (!hashBlock.IsNull()) {
+    if (!block_hash.IsNull()) {
         LOCK(cs_main);
 
-        entry.pushKV("blockhash", hashBlock.GetHex());
-        const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hashBlock);
+        entry.pushKV("blockhash", block_hash.GetHex());
+        const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(block_hash);
         if (pindex) {
             if (active_chainstate.m_chain.Contains(pindex)) {
                 entry.pushKV("confirmations", 1 + active_chainstate.m_chain.Height() - pindex->nHeight);
