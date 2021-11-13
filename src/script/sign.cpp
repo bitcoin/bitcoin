@@ -226,6 +226,11 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
         sigdata.tr_builder = builder;
     }
 
+    // Detect if this is the dummy signer. If so, we want to choose the largest stack size for worst case size estimation
+    bool use_largest = creator.UseLargest();
+    std::vector<std::vector<unsigned char>> largest_result_stack;
+    uint64_t largest_result_stack_size = 0;
+
     // Try key path spending.
     {
         KeyOriginInfo info;
@@ -248,26 +253,43 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
             }
         }
         if (sigdata.taproot_key_path_sig.size()) {
-            result = Vector(sigdata.taproot_key_path_sig);
-            return true;
+            if (use_largest) {
+                largest_result_stack = Vector(sigdata.taproot_key_path_sig);
+                largest_result_stack_size = GetSerializeSize(largest_result_stack, PROTOCOL_VERSION);
+            } else {
+                result = Vector(sigdata.taproot_key_path_sig);
+                return true;
+            }
         }
     }
 
     // Try script path spending.
     std::vector<std::vector<unsigned char>> smallest_result_stack;
+    uint64_t smallest_result_stack_size = 0;
     for (const auto& [key, control_blocks] : sigdata.tr_spenddata.scripts) {
         const auto& [script, leaf_ver] = key;
         std::vector<std::vector<unsigned char>> result_stack;
         if (SignTaprootScript(provider, creator, sigdata, leaf_ver, script, result_stack)) {
             result_stack.emplace_back(std::begin(script), std::end(script)); // Push the script
             result_stack.push_back(*control_blocks.begin()); // Push the smallest control block
-            if (smallest_result_stack.size() == 0 ||
-                GetSerializeSize(result_stack, PROTOCOL_VERSION) < GetSerializeSize(smallest_result_stack, PROTOCOL_VERSION)) {
-                smallest_result_stack = std::move(result_stack);
+            uint64_t stack_size = GetSerializeSize(result_stack, PROTOCOL_VERSION);
+            if (smallest_result_stack.empty() ||
+                stack_size < smallest_result_stack_size) {
+                smallest_result_stack = result_stack;
+                smallest_result_stack_size = stack_size;
+            }
+            if (use_largest && (largest_result_stack.empty() ||
+                stack_size > largest_result_stack_size)) {
+                largest_result_stack = result_stack;
+                largest_result_stack_size = stack_size;
             }
         }
     }
-    if (smallest_result_stack.size() != 0) {
+    if (use_largest && !largest_result_stack.empty()) {
+        result = std::move(largest_result_stack);
+        return true;
+    }
+    if (!smallest_result_stack.empty()) {
         result = std::move(smallest_result_stack);
         return true;
     }
