@@ -117,7 +117,8 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 random_mutable_transaction = *opt_mutable_transaction;
             },
             [&] {
-                CCoinsMap coins_map;
+                CCoinsMapFactory::MemoryResourceType cacheCoinsMemoryResource{};
+                auto coins_map = CCoinsMapFactory::CreateContainer(&cacheCoinsMemoryResource);
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                     CCoinsCacheEntry coins_cache_entry;
                     coins_cache_entry.flags = fuzzed_data_provider.ConsumeIntegral<unsigned char>();

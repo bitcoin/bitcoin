@@ -81,7 +81,7 @@ public:
     void SelfTest() const
     {
         // Manually recompute the dynamic usage of the whole data, and compare it.
-        size_t ret = memusage::DynamicUsage(cacheCoins);
+        size_t ret = memusage::DynamicUsage(cacheCoins) + cacheCoinsMemoryResource.DynamicMemoryUsage();
         size_t count = 0;
         for (const auto& entry : cacheCoins) {
             ret += entry.second.coin.DynamicMemoryUsage();
@@ -609,7 +609,8 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags)
 
 void WriteCoinsViewEntry(CCoinsView& view, CAmount value, char flags)
 {
-    CCoinsMap map;
+    CCoinsMapFactory::MemoryResourceType memory_resource{};
+    auto map = CCoinsMapFactory::CreateContainer(&memory_resource);
     InsertCoinsMapEntry(map, value, flags);
     BOOST_CHECK(view.BatchWrite(map, {}));
 }
