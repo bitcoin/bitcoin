@@ -260,10 +260,11 @@ static std::vector<RPCResult> MempoolEntryDescription()
     };
 }
 
-static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static UniValue entryToJSON(const CTxMemPool& pool, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     AssertLockHeld(pool.cs);
 
+    UniValue info(UniValue::VOBJ);
     info.pushKV("vsize", (int)e.GetTxSize());
     info.pushKV("weight", (int)e.GetTxWeight());
     info.pushKV("time", count_seconds(e.GetTime()));
@@ -317,6 +318,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
 
     info.pushKV("bip125-replaceable", rbfStatus);
     info.pushKV("unbroadcast", pool.IsUnbroadcastTx(tx.GetHash()));
+    return info;
 }
 
 UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempool_sequence)
@@ -329,12 +331,10 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
         UniValue o(UniValue::VOBJ);
         for (const CTxMemPoolEntry& e : pool.mapTx) {
             const uint256& hash = e.GetTx().GetHash();
-            UniValue info(UniValue::VOBJ);
-            entryToJSON(pool, info, e);
             // Mempool has unique entries so there is no advantage in using
             // UniValue::pushKV, which checks if the key already exists in O(N).
             // UniValue::__pushKV is used instead which currently is O(1).
-            o.__pushKV(hash.ToString(), info);
+            o.__pushKV(hash.ToString(), entryToJSON(pool, e));
         }
         return o;
     } else {
@@ -464,9 +464,7 @@ static RPCHelpMan getmempoolancestors()
         for (CTxMemPool::txiter ancestorIt : setAncestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
-            UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
-            o.pushKV(_hash.ToString(), info);
+            o.pushKV(_hash.ToString(), entryToJSON(mempool, e));
         }
         return o;
     }
@@ -529,9 +527,7 @@ static RPCHelpMan getmempooldescendants()
         for (CTxMemPool::txiter descendantIt : setDescendants) {
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
-            UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
-            o.pushKV(_hash.ToString(), info);
+            o.pushKV(_hash.ToString(), entryToJSON(mempool, e));
         }
         return o;
     }
@@ -565,9 +561,7 @@ static RPCHelpMan getmempoolentry()
     }
 
     const CTxMemPoolEntry &e = *it;
-    UniValue info(UniValue::VOBJ);
-    entryToJSON(mempool, info, e);
-    return info;
+    return entryToJSON(mempool, e);
 },
     };
 }
