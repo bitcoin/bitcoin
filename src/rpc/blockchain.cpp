@@ -1072,9 +1072,7 @@ static RPCHelpMan gettxout()
         ret.pushKV("confirmations", (int64_t)(pindex->nHeight - coin.nHeight + 1));
     }
     ret.pushKV("value", ValueFromAmount(coin.out.nValue));
-    UniValue o(UniValue::VOBJ);
-    ScriptToUniv(coin.out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
-    ret.pushKV("scriptPubKey", o);
+    ret.pushKV("scriptPubKey", ScriptToUniv(coin.out.scriptPubKey, /*include_hex=*/true, /*include_address=*/true));
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
 
     return ret;

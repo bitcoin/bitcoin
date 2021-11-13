@@ -147,9 +147,10 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
     return HexStr(ssTx);
 }
 
-void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool include_address)
+UniValue ScriptToUniv(const CScript& script, bool include_hex, bool include_address)
 {
     CTxDestination address;
+    UniValue out(UniValue::VOBJ);
 
     out.pushKV("asm", ScriptToAsmStr(script));
     if (include_address) {
@@ -166,6 +167,7 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
         out.pushKV("address", EncodeDestination(address));
     }
     out.pushKV("type", GetTxnOutputType(type));
+    return out;
 }
 
 void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
@@ -215,14 +217,11 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             amt_total_in += prev_txout.nValue;
 
             if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
-                UniValue o_script_pub_key(UniValue::VOBJ);
-                ScriptToUniv(prev_txout.scriptPubKey, /*out=*/o_script_pub_key, /*include_hex=*/true, /*include_address=*/true);
-
                 UniValue p(UniValue::VOBJ);
                 p.pushKV("generated", bool(prev_coin.fCoinBase));
                 p.pushKV("height", uint64_t(prev_coin.nHeight));
                 p.pushKV("value", ValueFromAmount(prev_txout.nValue));
-                p.pushKV("scriptPubKey", o_script_pub_key);
+                p.pushKV("scriptPubKey", ScriptToUniv(prev_txout.scriptPubKey, /*include_hex=*/true, /*include_address=*/true));
                 in.pushKV("prevout", p);
             }
         }
@@ -239,10 +238,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
 
         out.pushKV("value", ValueFromAmount(txout.nValue));
         out.pushKV("n", (int64_t)i);
-
-        UniValue o(UniValue::VOBJ);
-        ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
-        out.pushKV("scriptPubKey", o);
+        out.pushKV("scriptPubKey", ScriptToUniv(txout.scriptPubKey, /*include_hex=*/true, /*include_address=*/true));
         vout.push_back(out);
 
         if (have_undo) {

@@ -855,11 +855,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
             UniValue utxo(UniValue::VOBJ);
             utxo.pushKV("height", (int32_t)coin.nHeight);
             utxo.pushKV("value", ValueFromAmount(coin.out.nValue));
-
-            // include the script in a json output
-            UniValue o(UniValue::VOBJ);
-            ScriptToUniv(coin.out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
-            utxo.pushKV("scriptPubKey", o);
+            utxo.pushKV("scriptPubKey", ScriptToUniv(coin.out.scriptPubKey, /*include_hex=*/true, /*include_address=*/true));
             utxos.push_back(utxo);
         }
         objGetUTXOResponse.pushKV("utxos", utxos);

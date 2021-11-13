@@ -393,7 +393,6 @@ static RPCHelpMan decodescript()
 {
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
-    UniValue r(UniValue::VOBJ);
     CScript script;
     if (request.params[0].get_str().size() > 0){
         std::vector<unsigned char> scriptData(ParseHexV(request.params[0], "argument"));
@@ -401,7 +400,7 @@ static RPCHelpMan decodescript()
     } else {
         // Empty scripts are valid
     }
-    ScriptToUniv(script, /*out=*/r, /*include_hex=*/false, /*include_address=*/true);
+    UniValue r{ScriptToUniv(script, /*include_hex=*/false, /*include_address=*/true)};
 
     std::vector<std::vector<unsigned char>> solutions_data;
     const TxoutType which_type{Solver(script, solutions_data)};
@@ -468,7 +467,6 @@ static RPCHelpMan decodescript()
             NONFATAL_UNREACHABLE();
         }()};
         if (can_wrap_P2WSH) {
-            UniValue sr(UniValue::VOBJ);
             CScript segwitScr;
             if (which_type == TxoutType::PUBKEY) {
                 segwitScr = GetScriptForDestination(WitnessV0KeyHash(Hash160(solutions_data[0])));
@@ -478,7 +476,7 @@ static RPCHelpMan decodescript()
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
                 segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
-            ScriptToUniv(segwitScr, /*out=*/sr, /*include_hex=*/true, /*include_address=*/true);
+            UniValue sr{ScriptToUniv(segwitScr, /*include_hex=*/true, /*include_address=*/true)};
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
@@ -989,13 +987,9 @@ static RPCHelpMan decodepsbt()
         if (!input.witness_utxo.IsNull()) {
             txout = input.witness_utxo;
 
-            UniValue o(UniValue::VOBJ);
-            ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
-
             UniValue out(UniValue::VOBJ);
             out.pushKV("amount", ValueFromAmount(txout.nValue));
-            out.pushKV("scriptPubKey", o);
-
+            out.pushKV("scriptPubKey", ScriptToUniv(txout.scriptPubKey, /*include_hex=*/true, /*include_address=*/true));
             in.pushKV("witness_utxo", out);
 
             have_a_utxo = true;
@@ -1036,14 +1030,10 @@ static RPCHelpMan decodepsbt()
 
         // Redeem script and witness script
         if (!input.redeem_script.empty()) {
-            UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.redeem_script, /*out=*/r);
-            in.pushKV("redeem_script", r);
+            in.pushKV("redeem_script", ScriptToUniv(input.redeem_script));
         }
         if (!input.witness_script.empty()) {
-            UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, /*out=*/r);
-            in.pushKV("witness_script", r);
+            in.pushKV("witness_script", ScriptToUniv(input.witness_script));
         }
 
         // keypaths
@@ -1212,14 +1202,10 @@ static RPCHelpMan decodepsbt()
         UniValue out(UniValue::VOBJ);
         // Redeem script and witness script
         if (!output.redeem_script.empty()) {
-            UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.redeem_script, /*out=*/r);
-            out.pushKV("redeem_script", r);
+            out.pushKV("redeem_script", ScriptToUniv(output.redeem_script));
         }
         if (!output.witness_script.empty()) {
-            UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, /*out=*/r);
-            out.pushKV("witness_script", r);
+            out.pushKV("witness_script", ScriptToUniv(output.witness_script));
         }
 
         // keypaths
