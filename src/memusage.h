@@ -7,6 +7,7 @@
 
 #include <indirectmap.h>
 #include <prevector.h>
+#include <support/allocators/node_allocator/node_size.h>
 
 #include <stdlib.h>
 
@@ -161,10 +162,11 @@ static inline size_t DynamicUsage(const std::unordered_set<X, Y>& s)
     return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(sizeof(void*) * s.bucket_count());
 }
 
-template<typename X, typename Y, typename Z>
-static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
+template <typename Key, typename Value, typename Hash, typename Equals>
+static inline size_t DynamicUsage(const std::unordered_map<Key, Value, Hash, Equals>& m)
 {
-    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
+    static constexpr auto node_size = node_allocator::NodeSize<std::unordered_map<Key, Value, Hash, Equals>>::VALUE;
+    return MallocUsage(node_size) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
 }
 
 }
