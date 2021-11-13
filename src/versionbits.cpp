@@ -105,22 +105,23 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     stats.period = Period(params);
     stats.threshold = Threshold(params);
 
-    if (pindex == nullptr)
-        return stats;
+    if (pindex == nullptr) return stats;
 
     // Find beginning of period
-    const CBlockIndex* pindexEndOfPrevPeriod = pindex->GetAncestor(pindex->nHeight - ((pindex->nHeight + 1) % stats.period));
-    stats.elapsed = pindex->nHeight - pindexEndOfPrevPeriod->nHeight;
+    int start_height = pindex->nHeight - (pindex->nHeight % stats.period);
 
     // Count from current block to beginning of period
+    int elapsed = 0;
     int count = 0;
     const CBlockIndex* currentIndex = pindex;
-    while (pindexEndOfPrevPeriod->nHeight != currentIndex->nHeight){
-        if (Condition(currentIndex, params))
-            count++;
+    for(;;) {
+        ++elapsed;
+        if (Condition(currentIndex, params)) ++count;
+        if (currentIndex->nHeight <= start_height) break;
         currentIndex = currentIndex->pprev;
     }
 
+    stats.elapsed = elapsed;
     stats.count = count;
     stats.possible = (stats.period - stats.threshold ) >= (stats.elapsed - count);
 
@@ -196,9 +197,9 @@ ThresholdState VersionBitsCache::State(const CBlockIndex* pindexPrev, const Cons
     return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, m_caches[pos]);
 }
 
-BIP9Stats VersionBitsCache::Statistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
+BIP9Stats VersionBitsCache::Statistics(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
-    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindexPrev, params);
+    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindex, params);
 }
 
 int VersionBitsCache::StateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)

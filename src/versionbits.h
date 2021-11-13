@@ -64,7 +64,7 @@ protected:
     virtual int Threshold(const Consensus::Params& params) const =0;
 
 public:
-    /** Returns the numerical statistics of an in-progress BIP9 softfork in the current period */
+    /** Returns the numerical statistics of an in-progress BIP9 softfork in the period including pindex */
     BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const;
     /** Returns the state for pindex A based on parent pindexPrev B. Applies any state transition if conditions are present.
      *  Caches state from first block of period. */
@@ -82,8 +82,8 @@ private:
     ThresholdConditionCache m_caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] GUARDED_BY(m_mutex);
 
 public:
-    /** Get the numerical statistics for a given deployment for the signalling period that includes the block after pindexPrev. */
-    static BIP9Stats Statistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
+    /** Get the numerical statistics for a given deployment for the signalling period that includes pindex. */
+    static BIP9Stats Statistics(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos);
 
     static uint32_t Mask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
