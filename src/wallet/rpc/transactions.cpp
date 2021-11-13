@@ -784,9 +784,7 @@ RPCHelpMan gettransaction()
     entry.pushKV("hex", strHex);
 
     if (verbose) {
-        UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, /*block_hash=*/uint256(), /*entry=*/decoded, /*include_hex=*/false);
-        entry.pushKV("decoded", decoded);
+        entry.pushKV("decoded", TxToUniv(*wtx.tx, /*block_hash=*/uint256(), /*include_hex=*/false));
     }
 
     return entry;

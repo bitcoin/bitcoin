@@ -58,8 +58,7 @@ static UniValue TxToJSON(const CTransaction& tx, const uint256 hashBlock, Chains
     // Blockchain contextual information (confirmations and blocktime) is not
     // available to code in bitcoin-common, so we query them here and push the
     // data into the returned UniValue.
-    UniValue entry(UniValue::VOBJ);
-    TxToUniv(tx, /*block_hash=*/uint256(), entry, /*include_hex=*/true, RPCSerializationFlags());
+    UniValue entry{TxToUniv(tx, /*block_hash=*/uint256(), /*include_hex=*/true, RPCSerializationFlags())};
 
     if (!hashBlock.IsNull()) {
         LOCK(cs_main);
@@ -349,10 +348,7 @@ static RPCHelpMan decoderawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
 
-    UniValue result(UniValue::VOBJ);
-    TxToUniv(CTransaction(std::move(mtx)), /*block_hash=*/uint256(), /*entry=*/result, /*include_hex=*/false);
-
-    return result;
+    return TxToUniv(CTransaction(std::move(mtx)), /*block_hash=*/uint256(), /*include_hex=*/false);
 },
     };
 }
@@ -932,9 +928,7 @@ static RPCHelpMan decodepsbt()
     UniValue result(UniValue::VOBJ);
 
     // Add the decoded tx
-    UniValue tx_univ(UniValue::VOBJ);
-    TxToUniv(CTransaction(*psbtx.tx), /*block_hash=*/uint256(), /*entry=*/tx_univ, /*include_hex=*/false);
-    result.pushKV("tx", tx_univ);
+    result.pushKV("tx", TxToUniv(CTransaction(*psbtx.tx), /*block_hash=*/uint256(), /*include_hex=*/false));
 
     // Add the global xpubs
     UniValue global_xpubs(UniValue::VARR);
@@ -998,9 +992,7 @@ static RPCHelpMan decodepsbt()
         if (input.non_witness_utxo) {
             txout = input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n];
 
-            UniValue non_wit(UniValue::VOBJ);
-            TxToUniv(*input.non_witness_utxo, /*block_hash=*/uint256(), /*entry=*/non_wit, /*include_hex=*/false);
-            in.pushKV("non_witness_utxo", non_wit);
+            in.pushKV("non_witness_utxo", TxToUniv(*input.non_witness_utxo, /*block_hash=*/uint256(), /*include_hex=*/false));
 
             have_a_utxo = true;
         }

@@ -170,8 +170,9 @@ UniValue ScriptToUniv(const CScript& script, bool include_hex, bool include_addr
     return out;
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
+UniValue TxToUniv(const CTransaction& tx, const uint256& block_hash, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
 {
+    UniValue entry(UniValue::VOBJ);
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
     // Transaction version is actually unsigned in consensus checks, just signed in memory,
@@ -260,4 +261,5 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     if (include_hex) {
         entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
     }
+    return entry;
 }
