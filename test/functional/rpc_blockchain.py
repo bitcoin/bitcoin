@@ -177,6 +177,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert height >= 144 and height <= 287
 
         assert_equal(gdi_result, {
+          "hash": blockhash,
+          "height": height,
           "deployments": {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
             'bip66': {'type': 'buried', 'active': True, 'height': 3},
