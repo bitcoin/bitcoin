@@ -20,12 +20,13 @@ if ! command -v shellcheck > /dev/null; then
     exit $EXIT_CODE
 fi
 
-SHELLCHECK_CMD=(shellcheck --external-sources --check-sourced)
+SHELLCHECK_CMD=(shellcheck --external-sources --check-sourced --source-path=SCRIPTDIR)
 EXCLUDE="--exclude=$(IFS=','; echo "${disabled[*]}")"
 # Check shellcheck directive used for sourced files
 mapfile -t SOURCED_FILES < <(git ls-files | xargs gawk '/^# shellcheck shell=/ {print FILENAME} {nextfile}')
+mapfile -t GUIX_FILES < <(git ls-files contrib/guix contrib/shell | xargs gawk '/^#!\/usr\/bin\/env bash/ {print FILENAME} {nextfile}')
 mapfile -t FILES < <(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|minisketch|univalue)/')
-if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" "${SOURCED_FILES[@]}" "${FILES[@]}"; then
+if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" "${SOURCED_FILES[@]}" "${GUIX_FILES[@]}" "${FILES[@]}"; then
     EXIT_CODE=1
 fi
 
