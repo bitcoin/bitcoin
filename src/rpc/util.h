@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/variant.hpp>
+
 class CKeyStore;
 class CPubKey;
 class CScript;
@@ -49,11 +51,28 @@ struct RPCArg {
         AMOUNT,        //!< Special type representing a floating point amount (can be either NUM or STR)
         STR_HEX,       //!< Special type that is a STR with only hex chars
     };
+
+    enum class Optional {
+        /** Required arg */
+        NO,
+        /**
+         * Optinal arg that is a named argument and has a default value of
+         * `null`. When possible, the default value should be specified.
+         */
+        OMITTED_NAMED_ARG,
+        /**
+         * Optional argument with default value omitted because they are
+         * implicitly clear. That is, elements in an array or object may not
+         * exist by default.
+         * When possible, the default value should be specified.
+         */
+        OMITTED,
+    };
+    using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
     const std::string m_name; //!< The name of the arg (can be empty for inner args)
     const Type m_type;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
-    const bool m_optional;
-    const std::string m_default_value; //!< Only used for optional args
+    const Fallback m_fallback;
     const std::string m_description;
     const std::string m_oneline_description; //!< Should be empty unless it is supposed to override the auto-generated summary line
     const std::vector<std::string> m_type_str; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_type_str.at(0) will override the type of the value in a key-value pair, m_type_str.at(1) will override the type in the argument description.
@@ -61,15 +80,13 @@ struct RPCArg {
     RPCArg(
         const std::string& name,
         const Type& type,
-        const bool opt,
-        const std::string& default_val,
+        const Fallback& fallback,
         const std::string& description,
         const std::string& oneline_description = "",
         const std::vector<std::string>& type_str = {})
         : m_name{name},
           m_type{type},
-          m_optional{opt},
-          m_default_value{default_val},
+          m_fallback{fallback},
           m_description{description},
           m_oneline_description{oneline_description},
           m_type_str{type_str}
@@ -80,8 +97,7 @@ struct RPCArg {
     RPCArg(
         const std::string& name,
         const Type& type,
-        const bool opt,
-        const std::string& default_val,
+        const Fallback& fallback,
         const std::string& description,
         const std::vector<RPCArg>& inner,
         const std::string& oneline_description = "",
@@ -89,8 +105,7 @@ struct RPCArg {
         : m_name{name},
           m_type{type},
           m_inner{inner},
-          m_optional{opt},
-          m_default_value{default_val},
+          m_fallback{fallback},
           m_description{description},
           m_oneline_description{oneline_description},
           m_type_str{type_str}
@@ -111,15 +126,66 @@ struct RPCArg {
     /**
      * Return the description string, including the argument type and whether
      * the argument is required.
-     * implicitly_required is set for arguments in an array, which are neither optional nor required.
      */
-    std::string ToDescriptionString(bool implicitly_required = false) const;
+    std::string ToDescriptionString() const;
+};
+
+struct RPCResult {
+    const std::string m_cond;
+    const std::string m_result;
+
+    explicit RPCResult(std::string result)
+        : m_cond{}, m_result{std::move(result)}
+    {
+        assert(!m_result.empty());
+    }
+
+    RPCResult(std::string cond, std::string result)
+        : m_cond{std::move(cond)}, m_result{std::move(result)}
+    {
+        assert(!m_cond.empty());
+        assert(!m_result.empty());
+    }
+};
+
+struct RPCResults {
+    const std::vector<RPCResult> m_results;
+
+    RPCResults()
+        : m_results{}
+    {
+    }
+
+    RPCResults(RPCResult result)
+        : m_results{{result}}
+    {
+    }
+
+    RPCResults(std::initializer_list<RPCResult> results)
+        : m_results{results}
+    {
+    }
+
+    /**
+     * Return the description string.
+     */
+    std::string ToDescriptionString() const;
+};
+
+struct RPCExamples {
+    const std::string m_examples;
+    RPCExamples(
+        std::string examples)
+        : m_examples(std::move(examples))
+    {
+    }
+    std::string ToDescriptionString() const;
 };
 
 class RPCHelpMan
 {
 public:
-    RPCHelpMan(const std::string& name, const std::string& description, const std::vector<RPCArg>& args);
+    RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
 
     std::string ToString() const;
 
@@ -127,6 +193,8 @@ private:
     const std::string m_name;
     const std::string m_description;
     const std::vector<RPCArg> m_args;
+    const RPCResults m_results;
+    const RPCExamples m_examples;
 };
 
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);

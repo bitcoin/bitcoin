@@ -29,21 +29,22 @@ static void quorum_list_help()
         RPCHelpMan{"quorum list",
             "List of on-chain quorums\n",
             {
-                {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "Number of quorums to list. Will list active quorums if \"count\" is not specified."},
-            }}
-            .ToString() +
-        "\nResult:\n"
+                {"count", RPCArg::Type::NUM, /* default */ "", "Number of quorums to list. Will list active quorums if \"count\" is not specified."},
+            },
+            RPCResult{
         "{\n"
         "  \"quorumName\" : [                    (array of strings) List of quorum hashes per some quorum type.\n"
         "     \"quorumHash\"                     (string) Quorum hash. Note: most recent quorums come first.\n"
         "     ,...\n"
         "  ],\n"
         "}\n"
-        "\nExamples:\n"
-        + HelpExampleCli("quorum", "list")
+            },
+            RPCExamples{
+                HelpExampleCli("quorum", "list")
         + HelpExampleCli("quorum", "list 10")
         + HelpExampleRpc("quorum", "list, 10")
-    );
+            },
+        }.ToString());
 }
 
 static UniValue quorum_list(const JSONRPCRequest& request)
@@ -85,11 +86,13 @@ static void quorum_info_help()
         RPCHelpMan{"quorum info",
             "Return information about a quorum\n",
             {
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "LLMQ type."},
-                {"quorumHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Block hash of quorum."},
-                {"includeSkShare", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "", "Include secret key share in output."},
-            }}
-            .ToString());
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+                {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash of quorum."},
+                {"includeSkShare", RPCArg::Type::BOOL, /* default */ "", "Include secret key share in output."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
@@ -159,11 +162,13 @@ static void quorum_dkgstatus_help()
             "Return the status of the current DKG process.\n"
             "Works only when SPORK_17_QUORUM_DKG_ENABLED spork is ON.\n",
             {
-                {"detail_level", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0",
+                {"detail_level", RPCArg::Type::NUM, /* default */ "0",
                     "Detail level of output.\n"
                     "0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes."},
-            }}
-            .ToString());
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
@@ -242,12 +247,14 @@ static void quorum_memberof_help()
         RPCHelpMan{"quorum memberof",
             "Checks which quorums the given masternode is a member of.\n",
             {
-                {"proTxHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "ProTxHash of the masternode."},
-                {"scanQuorumsCount", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "",
+                {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "ProTxHash of the masternode."},
+                {"scanQuorumsCount", RPCArg::Type::NUM, /* default */ "",
                     "Number of quorums to scan for. If not specified,\n"
                     "the active quorum count for each specific quorum type is used."},
-            }}
-            .ToString());
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue quorum_memberof(const JSONRPCRequest& request)
@@ -301,15 +308,17 @@ static void quorum_sign_help()
         RPCHelpMan{"quorum sign",
             "Threshold-sign a message\n",
             {
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "LLMQ type."},
-                {"id", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Request id."},
-                {"msgHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Message hash."},
-                {"quorumHash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "The quorum identifier."},
-                {"submit", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Submits the signature share to the network if this is true."},
-            }}
-            .ToString() +
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+                {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+                {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
+                {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "", "The quorum identifier."},
+                {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true."},
+            },
+            RPCResult{
         "\nReturns an object containing the signature share if this is false.\n"
-    );
+            },
+            RPCExamples{""},
+        }.ToString());
 }
 
 static void quorum_verify_help()
@@ -318,18 +327,20 @@ static void quorum_verify_help()
         RPCHelpMan{"quorum verify",
             "Test if a quorum signature is valid for a request id and a message hash\n",
             {
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "LLMQ type."},
-                {"id", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Request id."},
-                {"msgHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Message hash."},
-                {"signature", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "Quorum signature to verify."},
-                {"quorumHash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "",
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+                {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+                {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
+                {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "Quorum signature to verify."},
+                {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "",
                     "The quorum identifier.\n"
                     "Set to \"\" if you want to specify signHeight instead."},
-                {"signHeight", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "",
+                {"signHeight", RPCArg::Type::NUM, /* default */ "",
                     "The height at which the message was signed.\n"
                     "Only works when quorumHash is \"\"."},
-            }}
-            .ToString());
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static void quorum_hasrecsig_help()
@@ -338,11 +349,13 @@ static void quorum_hasrecsig_help()
         RPCHelpMan{"quorum hasrecsig",
             "Test if a valid recovered signature is present\n",
             {
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "LLMQ type."},
-                {"id", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Request id."},
-                {"msgHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Message hash."},
-            }}
-            .ToString());
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+                {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+                {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static void quorum_getrecsig_help()
@@ -351,11 +364,13 @@ static void quorum_getrecsig_help()
         RPCHelpMan{"quorum getrecsig",
             "Get a recovered signature\n",
             {
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "LLMQ type."},
-                {"id", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Request id."},
-                {"msgHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Message hash."},
-            }}
-            .ToString());
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+                {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+                {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static void quorum_isconflicting_help()
@@ -364,11 +379,13 @@ static void quorum_isconflicting_help()
         RPCHelpMan{"quorum isconflicting",
             "Test if a conflict exists\n",
             {
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "LLMQ type."},
-                {"id", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Request id."},
-                {"msgHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Message hash."},
-            }}
-            .ToString());
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+                {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+                {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
@@ -496,10 +513,12 @@ static void quorum_selectquorum_help()
         RPCHelpMan{"quorum selectquorum",
             "Returns the quorum that would/should sign a request\n",
             {
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "LLMQ type."},
-                {"id", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Request id."},
-            }}
-            .ToString());
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+                {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue quorum_selectquorum(const JSONRPCRequest& request)
@@ -540,10 +559,12 @@ static void quorum_dkgsimerror_help()
             "This enables simulation of errors and malicious behaviour in the DKG. Do NOT use this on mainnet\n"
             "as you will get yourself very likely PoSe banned for this.\n",
             {
-                {"type", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "Error type."},
-                {"rate", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Rate at which to simulate this error type."},
-            }}
-            .ToString());
+                {"type", RPCArg::Type::STR, RPCArg::Optional::NO, "Error type."},
+                {"rate", RPCArg::Type::NUM, RPCArg::Optional::NO, "Rate at which to simulate this error type."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
@@ -570,17 +591,19 @@ static void quorum_getdata_help()
         RPCHelpMan{"quorum getdata",
             "Send a QGETDATA message to the specified peer.\n",
             {
-                {"nodeId", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The internal nodeId of the peer to request quorum data from."},
-                {"llmqType", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The quorum type related to the quorum data being requested."},
-                {"quorumHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The quorum hash related to the quorum data being requested."},
-                {"dataMask", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "",
+                {"nodeId", RPCArg::Type::NUM, RPCArg::Optional::NO, "The internal nodeId of the peer to request quorum data from."},
+                {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quorum type related to the quorum data being requested."},
+                {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The quorum hash related to the quorum data being requested."},
+                {"dataMask", RPCArg::Type::NUM, RPCArg::Optional::NO,
                     "Specify what data to request.\n"
                     "Possible values: 1 - Request quorum verification vector\n"
                     "2 - Request encrypted contributions for member defined by \"proTxHash\". \"proTxHash\" must be specified if this option is used.\n"
                     "3 - Request both, 1 and 2"},
-                {"proTxHash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "The proTxHash the contributions will be requested for. Must be member of the specified LLMQ."},
-            }}
-            .ToString());
+                {"proTxHash", RPCArg::Type::STR_HEX, /* default */ "", "The proTxHash the contributions will be requested for. Must be member of the specified LLMQ."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue quorum_getdata(const JSONRPCRequest& request)
@@ -619,25 +642,26 @@ static UniValue quorum_getdata(const JSONRPCRequest& request)
     throw std::runtime_error(
         RPCHelpMan{"quorum",
             "Set of commands for quorums/LLMQs.\n"
-            "To get help on individual commands, use \"help quorum command\".\n",
+            "To get help on individual commands, use \"help quorum command\".\n"
+            "\nAvailable commands:\n"
+            "  list              - List of on-chain quorums\n"
+            "  info              - Return information about a quorum\n"
+            "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
+            "  dkgstatus         - Return the status of the current DKG process\n"
+            "  memberof          - Checks which quorums the given masternode is a member of\n"
+            "  sign              - Threshold-sign a message\n"
+            "  verify            - Test if a quorum signature is valid for a request id and a message hash\n"
+            "  hasrecsig         - Test if a valid recovered signature is present\n"
+            "  getrecsig         - Get a recovered signature\n"
+            "  isconflicting     - Test if a conflict exists\n"
+            "  selectquorum      - Return the quorum that would/should sign a request\n"
+            "  getdata           - Request quorum data from other masternodes in the quorum\n",
             {
-                {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
-            }}
-            .ToString() +
-        "\nAvailable commands:\n"
-        "  list              - List of on-chain quorums\n"
-        "  info              - Return information about a quorum\n"
-        "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
-        "  dkgstatus         - Return the status of the current DKG process\n"
-        "  memberof          - Checks which quorums the given masternode is a member of\n"
-        "  sign              - Threshold-sign a message\n"
-        "  verify            - Test if a quorum signature is valid for a request id and a message hash\n"
-        "  hasrecsig         - Test if a valid recovered signature is present\n"
-        "  getrecsig         - Get a recovered signature\n"
-        "  isconflicting     - Test if a conflict exists\n"
-        "  selectquorum      - Return the quorum that would/should sign a request\n"
-        "  getdata           - Request quorum data from other masternodes in the quorum\n"
-    );
+                {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue _quorum(const JSONRPCRequest& request)
@@ -678,11 +702,13 @@ static void verifychainlock_help()
         RPCHelpMan{"verifychainlock",
             "Test if a quorum signature is valid for a ChainLock.\n",
             {
-                {"blockHash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash of the ChainLock."},
-                {"signature", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The signature of the ChainLock."},
-                {"blockHeight", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The height of the ChainLock. There will be an internal lookup of \"blockHash\" if this is not provided."},
-            }}
-            .ToString());
+                {"blockHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash of the ChainLock."},
+                {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature of the ChainLock."},
+                {"blockHeight", RPCArg::Type::NUM, /* default */ "", "The height of the ChainLock. There will be an internal lookup of \"blockHash\" if this is not provided."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue verifychainlock(const JSONRPCRequest& request)
@@ -720,12 +746,14 @@ static void verifyislock_help()
         RPCHelpMan{"verifyislock",
             "Test if a quorum signature is valid for an InstantSend Lock\n",
             {
-                {"id", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Request id."},
-                {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id."},
-                {"signature", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The InstantSend Lock signature to verify."},
-                {"maxHeight", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The maximum height to search quorums from."},
-            }}
-            .ToString());
+                {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+                {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id."},
+                {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The InstantSend Lock signature to verify."},
+                {"maxHeight", RPCArg::Type::NUM, /* default */ "", "The maximum height to search quorums from."},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }.ToString());
 }
 
 static UniValue verifyislock(const JSONRPCRequest& request)

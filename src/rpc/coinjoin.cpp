@@ -26,16 +26,16 @@ static UniValue coinjoin(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             RPCHelpMan{"coinjoin",
-                "",
+                "\nAvailable commands:\n"
+                "  start       - Start mixing\n"
+                "  stop        - Stop mixing\n"
+                "  reset       - Reset mixing",
                 {
-                    {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
-                }}
-                .ToString() +
-            "\nAvailable commands:\n"
-            "  start       - Start mixing\n"
-            "  stop        - Stop mixing\n"
-            "  reset       - Reset mixing\n"
-        );
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+                },
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString());
 
     if (fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
@@ -87,9 +87,10 @@ static UniValue getpoolinfo(const JSONRPCRequest& request)
     throw std::runtime_error(
             RPCHelpMan{"getpoolinfo",
                 "DEPRECATED. Please use getcoinjoininfo instead.\n",
-            {}}
-            .ToString()
-    );
+                {},
+                RPCResults{},
+                RPCExamples{""}}
+            .ToString());
 }
 
 static UniValue getcoinjoininfo(const JSONRPCRequest& request)
@@ -98,9 +99,9 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"getcoinjoininfo",
                 "Returns an object containing an information about CoinJoin settings and state.\n",
-                {}}
-                .ToString() +
-            "\nResult (for regular nodes):\n"
+                {},
+                RPCResults{
+                    {"for regular nodes",
             "{\n"
             "  \"enabled\": true|false,             (bool) Whether mixing functionality is enabled\n"
             "  \"multisession\": true|false,        (bool) Whether CoinJoin Multisession option is enabled\n"
@@ -126,17 +127,19 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
             "  \"keys_left\": xxx,                  (numeric) How many new keys are left since last automatic backup\n"
             "  \"warnings\": \"...\"                  (string) Warnings if any\n"
             "}\n"
-            "\nResult (for masternodes):\n"
+                    }, {"for masternodes",
             "{\n"
             "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
             "  \"denomination\": xxx,               (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
             "  \"state\": \"...\",                    (string) Current state of the mixing session\n"
             "  \"entries_count\": xxx,              (numeric) The number of entries in the mixing session\n"
             "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getcoinjoininfo", "")
+                }},
+                RPCExamples{
+                    HelpExampleCli("getcoinjoininfo", "")
             + HelpExampleRpc("getcoinjoininfo", "")
-        );
+                },
+            }.ToString());
     }
 
     UniValue obj(UniValue::VOBJ);
