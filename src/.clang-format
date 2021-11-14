@@ -37,13 +37,9 @@ IndentWidth:     4
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: None
-ObjCSpaceAfterProperty: false
-ObjCSpaceBeforeProtocolList: false
 PackConstructorInitializers: Never
 PenaltyBreakBeforeFirstCallParameter: 100
 PenaltyBreakAssignment: 100
-PenaltyBreakComment: 300
-PenaltyBreakFirstLessLess: 120
 PenaltyBreakString: 100
 PenaltyExcessCharacter: 5
 PenaltyReturnTypeOnItsOwnLine: 200
@@ -57,5 +53,4 @@ SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 Standard: c++20
-TabWidth:        8
 UseTab:          Never
