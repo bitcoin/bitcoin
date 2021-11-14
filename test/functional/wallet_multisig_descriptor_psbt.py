@@ -85,7 +85,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             # This wallet will be the participant's `signer` for the resulting multisig. Avoid reusing this wallet for any other purpose (for privacy reasons).
             "signers": [node.get_wallet_rpc(node.createwallet(wallet_name=f"participant_{self.nodes.index(node)}", descriptors=True)["name"]) for node in self.nodes],
             # After participants generate and exchange their xpubs they will each create their own watch-only multisig.
-            # Note: these multisigs are all the same, this justs highlights that each participant can independently verify everything on their own node.
+            # Note: these multisigs are all the same, this just highlights that each participant can independently verify everything on their own node.
             "multisigs": []
         }
 
