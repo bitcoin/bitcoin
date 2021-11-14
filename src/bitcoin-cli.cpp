@@ -897,18 +897,17 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
 
 /**
  * GetWalletBalances calls listwallets; if more than one wallet is loaded, it then
- * fetches mine.trusted balances for each loaded wallet and pushes them to `result`.
+ * fetches mine.trusted balances for each loaded wallet and returns them.
  *
- * @param result  Reference to UniValue object the wallet names and balances are pushed to.
+ * @return std::optional<UniValue> Optional object containing wallet names and balances.
  */
-static void GetWalletBalances(UniValue& result)
+static std::optional<UniValue> GetWalletBalances()
 {
     DefaultRequestHandler rh;
     const UniValue listwallets = ConnectAndCallRPC(&rh, "listwallets", /* args=*/{});
-    if (!find_value(listwallets, "error").isNull()) return;
+    if (!find_value(listwallets, "error").isNull()) return std::nullopt;
     const UniValue& wallets = find_value(listwallets, "result");
-    if (wallets.size() <= 1) return;
-
+    if (wallets.size() <= 1) return std::nullopt;
     UniValue balances(UniValue::VOBJ);
     for (const UniValue& wallet : wallets.getValues()) {
         const std::string& wallet_name = wallet.get_str();
@@ -916,7 +915,7 @@ static void GetWalletBalances(UniValue& result)
         const UniValue& balance = find_value(getbalances, "result")["mine"]["trusted"];
         balances.pushKV(wallet_name, balance);
     }
-    result.pushKV("balances", balances);
+    return balances;
 }
 
 /**
@@ -1189,7 +1188,9 @@ static int CommandLineRPC(int argc, char *argv[])
             if (error.isNull()) {
                 if (gArgs.GetBoolArg("-getinfo", false)) {
                     if (!gArgs.IsArgSet("-rpcwallet")) {
-                        GetWalletBalances(result); // fetch multiwallet balances and append to result
+                        if (const std::optional<UniValue> balances = GetWalletBalances()) {
+                            result.pushKV("balances", balances.value());
+                        }
                     }
                     ParseGetInfoResult(result);
                 }
