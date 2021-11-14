@@ -943,13 +943,13 @@ static void GetProgressBar(double progress, std::string& progress_bar)
 
 /**
  * ParseGetInfoResult takes in -getinfo result in UniValue object and parses it
- * into a user friendly UniValue string to be printed on the console.
- * @param[out] result  Reference to UniValue result containing the -getinfo output.
+ * into a string.
+ * @param[in] result  Reference to UniValue result containing the -getinfo output.
+ *
+ * @return A user friendly string to be printed on the console.
  */
-static void ParseGetInfoResult(UniValue& result)
+static std::string ParseGetInfoResult(const UniValue& result)
 {
-    if (!find_value(result, "error").isNull()) return;
-
     std::string RESET, GREEN, BLUE, YELLOW, MAGENTA, CYAN;
     bool should_colorize = false;
 
@@ -1062,7 +1062,7 @@ static void ParseGetInfoResult(UniValue& result)
     const std::string warnings{result["warnings"].getValStr()};
     result_string += strprintf("%sWarnings:%s %s", YELLOW, RESET, warnings.empty() ? "(none)" : warnings);
 
-    result.setStr(result_string);
+    return result_string;
 }
 
 /**
@@ -1192,7 +1192,9 @@ static int CommandLineRPC(int argc, char *argv[])
                             result.pushKV("balances", balances.value());
                         }
                     }
-                    ParseGetInfoResult(result);
+                    if (find_value(result, "error").isNull()) {
+                        result.setStr(ParseGetInfoResult(result));
+                    }
                 }
 
                 ParseResult(result, strPrint);
