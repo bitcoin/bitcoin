@@ -445,7 +445,7 @@ void RPCExecutor::request(const QString &command, const WalletModel* wallet_mode
 
         Q_EMIT reply(RPCConsole::CMD_REPLY, QString::fromStdString(result));
     }
-    catch (UniValue& objError)
+    catch (const UniValue& objError)
     {
         try // Nice formatting for standard-format error
         {
