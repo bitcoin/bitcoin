@@ -3299,7 +3299,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain::Lock& locked_chain)
     if (::ChainstateActive().IsInitialBlockDownload()) {
         return false;
     }
-    constexpr int64_t MAX_ANTI_FEE_SNIPING_TIP_AGE = 4 * 60; // in seconds
+    constexpr int64_t MAX_ANTI_FEE_SNIPING_TIP_AGE = 8 * 60 * 60; // in seconds
     if (::ChainActive().Tip()->GetBlockTime() < (GetTime() - MAX_ANTI_FEE_SNIPING_TIP_AGE)) {
         return false;
     }
