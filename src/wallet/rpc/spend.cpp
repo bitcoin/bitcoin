@@ -923,9 +923,7 @@ RPCHelpMan signrawtransactionwithwallet()
     std::map<int, bilingual_str> input_errors;
 
     bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors);
-    UniValue result(UniValue::VOBJ);
-    SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
-    return result;
+    return SignTransactionResultToJSON(mtx, complete, coins, input_errors);
 },
     };
 }

@@ -27,7 +27,7 @@ class SigningProvider;
  * @return               UniValue object containing JSON where signed transaction results accumulate
  */
 UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType);
-void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, const std::map<int, bilingual_str>& input_errors, UniValue& result);
+UniValue SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, const std::map<int, bilingual_str>& input_errors);
 
 /**
   * Parse a prevtxs UniValue array and get the map of coins from it

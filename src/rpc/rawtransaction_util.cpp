@@ -280,20 +280,18 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
 
 UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType)
 {
-    UniValue result(UniValue::VOBJ);
     int nHashType = ParseSighashString(hashType);
 
     // Script verification errors
     std::map<int, bilingual_str> input_errors;
 
     bool complete = SignTransaction(mtx, keystore, coins, nHashType, input_errors);
-    SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
-    return result;
+    return SignTransactionResultToJSON(mtx, complete, coins, input_errors);
 }
 
-void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, const std::map<int, bilingual_str>& input_errors, UniValue& result)
+UniValue SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, const std::map<int, bilingual_str>& input_errors)
 {
-    // Make errors UniValue
+    UniValue result(UniValue::VOBJ);
     UniValue vErrors(UniValue::VARR);
     for (const auto& err_pair : input_errors) {
         if (err_pair.second.original == "Missing amount") {
@@ -311,4 +309,5 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
         }
         result.pushKV("errors", vErrors);
     }
+    return result;
 }
