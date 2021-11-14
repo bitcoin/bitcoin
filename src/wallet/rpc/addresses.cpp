@@ -392,8 +392,9 @@ class DescribeWalletAddressVisitor
 public:
     const SigningProvider * const provider;
 
-    void ProcessSubScript(const CScript& subscript, UniValue& obj) const
+    UniValue ProcessSubScript(const CScript& subscript) const
     {
+        UniValue obj(UniValue::VOBJ);
         // Always present: script type and redeemscript
         std::vector<std::vector<unsigned char>> solutions_data;
         TxoutType which_type = Solver(subscript, solutions_data);
@@ -423,6 +424,7 @@ public:
             }
             obj.pushKV("pubkeys", std::move(pubkeys));
         }
+        return obj;
     }
 
     explicit DescribeWalletAddressVisitor(const SigningProvider* _provider) : provider(_provider) {}
@@ -444,12 +446,8 @@ public:
     UniValue operator()(const ScriptHash& scripthash) const
     {
         CScriptID scriptID(scripthash);
-        UniValue obj(UniValue::VOBJ);
         CScript subscript;
-        if (provider && provider->GetCScript(scriptID, subscript)) {
-            ProcessSubScript(subscript, obj);
-        }
-        return obj;
+        return (provider && provider->GetCScript(scriptID, subscript)) ? ProcessSubScript(subscript) : UniValue(UniValue::VOBJ);
     }
 
     UniValue operator()(const WitnessV0KeyHash& id) const
@@ -464,15 +462,11 @@ public:
 
     UniValue operator()(const WitnessV0ScriptHash& id) const
     {
-        UniValue obj(UniValue::VOBJ);
         CScript subscript;
         CRIPEMD160 hasher;
         uint160 hash;
         hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (provider && provider->GetCScript(CScriptID(hash), subscript)) {
-            ProcessSubScript(subscript, obj);
-        }
-        return obj;
+        return (provider && provider->GetCScript(CScriptID(hash), subscript)) ? ProcessSubScript(subscript) : UniValue(UniValue::VOBJ);
     }
 
     UniValue operator()(const WitnessV1Taproot& id) const { return UniValue(UniValue::VOBJ); }
