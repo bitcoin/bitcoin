@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include <string>
 
-class CWallet;
 class CBlockIndex;
 class CDeterministicMNList;
 namespace boost {
@@ -19,6 +18,10 @@ namespace signals2 {
 class connection;
 }
 } // namespace boost
+
+namespace interfaces {
+class Wallet;
+} // namespace interfaces
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -102,7 +105,7 @@ public:
     ADD_SIGNALS_DECL_WRAPPER(NotifyAlertChanged, void, );
 
     /** A wallet has been loaded. */
-    ADD_SIGNALS_DECL_WRAPPER(LoadWallet, void, std::shared_ptr<CWallet> wallet);
+    ADD_SIGNALS_DECL_WRAPPER(LoadWallet, void, std::unique_ptr<interfaces::Wallet>& wallet);
 
     /**
      * Show progress e.g. for verifychain.

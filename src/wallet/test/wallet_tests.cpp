@@ -373,7 +373,7 @@ public:
         CCoinControl dummy;
         BOOST_CHECK(wallet->CreateTransaction(*m_locked_chain, {recipient}, tx, reservekey, fee, changePos, error, dummy));
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reservekey, nullptr, state));
+        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reservekey, state));
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -581,7 +581,7 @@ public:
         CCoinControl coinControl;
         BOOST_CHECK(wallet->CreateTransaction(*wallet->chain().lock(), GetRecipients(vecEntries), tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reserveKey, nullptr, state));
+        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reserveKey, state));
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -927,7 +927,7 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
                                             tx2, reservekey2, fee, changePos, error, dummy));
     }
     CValidationState state;
-    BOOST_CHECK(wallet->CommitTransaction(tx1, {}, {}, reservekey1, nullptr, state));
+    BOOST_CHECK(wallet->CommitTransaction(tx1, {}, {}, reservekey1, state));
     reservekey2.KeepKey();
     BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 0);
     CreateAndProcessBlock({CMutableTransaction(*tx2)}, GetScriptForRawPubKey({}));
