@@ -253,6 +253,7 @@ BASE_SCRIPTS = [
     'wallet_bumpfee.py --descriptors',
     'wallet_implicitsegwit.py --legacy-wallet',
     'rpc_named_arguments.py',
+    'feature_startupnotify.py',
     'wallet_listsinceblock.py --legacy-wallet',
     'wallet_listsinceblock.py --descriptors',
     'wallet_listdescriptors.py --descriptors',
