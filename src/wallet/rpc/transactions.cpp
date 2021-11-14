@@ -14,9 +14,10 @@
 using interfaces::FoundBlock;
 
 namespace wallet {
-static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
+static UniValue WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
+    UniValue entry(UniValue::VOBJ);
     interfaces::Chain& chain = wallet.chain();
     int confirms = wallet.GetTxDepthInMainChain(wtx);
     entry.pushKV("confirmations", confirms);
@@ -56,6 +57,7 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
 
     for (const std::pair<const std::string, std::string>& item : wtx.mapValue)
         entry.pushKV(item.first, item.second);
+    return entry;
 }
 
 struct tallyitem
@@ -333,7 +335,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     {
         for (const COutputEntry& s : listSent)
         {
-            UniValue entry(UniValue::VOBJ);
+            UniValue entry = fLong ? WalletTxToJSON(wallet, wtx) : UniValue(UniValue::VOBJ);
             if (involvesWatchonly || (wallet.IsMine(s.destination) & ISMINE_WATCH_ONLY)) {
                 entry.pushKV("involvesWatchonly", true);
             }
@@ -346,8 +348,6 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
-            if (fLong)
-                WalletTxToJSON(wallet, wtx, entry);
             entry.pushKV("abandoned", wtx.isAbandoned());
             ret.push_back(entry);
         }
@@ -365,7 +365,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             if (filter_label && label != *filter_label) {
                 continue;
             }
-            UniValue entry(UniValue::VOBJ);
+            UniValue entry = fLong ? WalletTxToJSON(wallet, wtx) : UniValue(UniValue::VOBJ);
             if (involvesWatchonly || (wallet.IsMine(r.destination) & ISMINE_WATCH_ONLY)) {
                 entry.pushKV("involvesWatchonly", true);
             }
@@ -389,8 +389,6 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 entry.pushKV("label", label);
             }
             entry.pushKV("vout", r.vout);
-            if (fLong)
-                WalletTxToJSON(wallet, wtx, entry);
             ret.push_back(entry);
         }
     }
@@ -758,7 +756,6 @@ RPCHelpMan gettransaction()
 
     bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
 
-    UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
     if (it == pwallet->mapWallet.end()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
@@ -770,11 +767,10 @@ RPCHelpMan gettransaction()
     CAmount nNet = nCredit - nDebit;
     CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx, filter) ? wtx.tx->GetValueOut() - nDebit : 0);
 
+    UniValue entry{WalletTxToJSON(*pwallet, wtx)};
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     if (CachedTxIsFromMe(*pwallet, wtx, filter))
         entry.pushKV("fee", ValueFromAmount(nFee));
-
-    WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
     ListTransactions(*pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
