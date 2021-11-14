@@ -664,10 +664,7 @@ static RPCHelpMan signrawtransactionwithkey()
 
     // Parse the prevtxs array
     ParsePrevouts(request.params[2], &keystore, coins);
-
-    UniValue result(UniValue::VOBJ);
-    SignTransaction(mtx, &keystore, coins, request.params[3], result);
-    return result;
+    return SignTransaction(mtx, &keystore, coins, request.params[3]);
 },
     };
 }
