@@ -473,7 +473,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             versions = [None] * num_nodes
         if self.is_syscall_sandbox_compiled() and not self.disable_syscall_sandbox:
             for i in range(len(extra_args)):
-                if versions[i] is None or versions[i] >= 219900:
+                # The -sandbox argument is not present in the v22.0 release.
+                if versions[i] is None or versions[i] >= 229900:
                     extra_args[i] = extra_args[i] + ["-sandbox=log-and-abort"]
         if binary is None:
             binary = [get_bin_from_version(v, 'bitcoind', self.options.bitcoind) for v in versions]
