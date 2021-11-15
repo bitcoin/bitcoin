@@ -62,6 +62,7 @@ IGNORED_WARNINGS=(
 )
 
 # We should attempt to update this with all dash specific code
+# shellcheck disable=SC2046
 FILES=$(git ls-files -- $(cat test/util/data/non-backported.txt))
 
 
@@ -86,12 +87,12 @@ if [[ -n "$CACHE_DIR" ]]; then
 else
     CPPCHECK_DIR=$SCRIPT_DIR/.cppcheck/
 fi
-if [ ! -d $CPPCHECK_DIR ]
+if [ ! -d "$CPPCHECK_DIR" ]
 then
-    mkdir -p $CPPCHECK_DIR
+    mkdir -p "$CPPCHECK_DIR"
 fi
 WARNINGS=$(echo "${FILES}" | \
-    xargs cppcheck --enable=all --inline-suppr --suppress=missingIncludeSystem --cppcheck-build-dir=$CPPCHECK_DIR -j "$(getconf _NPROCESSORS_ONLN)" --language=c++ --std=c++20 --template=gcc -D__cplusplus -DENABLE_WALLET -DCLIENT_VERSION_BUILD -DCLIENT_VERSION_IS_RELEASE -DCLIENT_VERSION_MAJOR -DCLIENT_VERSION_MINOR -DCOPYRIGHT_YEAR -DDEBUG -DUSE_EPOLL -DCHAR_BIT=8 -I src/ -q 2>&1 | sort -u | \
+    xargs cppcheck --enable=all --inline-suppr --suppress=missingIncludeSystem --cppcheck-build-dir="$CPPCHECK_DIR" -j "$(getconf _NPROCESSORS_ONLN)" --language=c++ --std=c++20 --template=gcc -D__cplusplus -DENABLE_WALLET -DCLIENT_VERSION_BUILD -DCLIENT_VERSION_IS_RELEASE -DCLIENT_VERSION_MAJOR -DCLIENT_VERSION_MINOR -DCOPYRIGHT_YEAR -DDEBUG -DUSE_EPOLL -DCHAR_BIT=8 -I src/ -q 2>&1 | sort -u | \
     grep -E "${ENABLED_CHECKS_REGEXP}" | \
     grep -vE "${IGNORED_WARNINGS_REGEXP}" | \
     grep -E "${FILES_REGEXP}")

@@ -16,13 +16,13 @@ if [ "$RUN_UNIT_TESTS" != "true" ] && [ "$RUN_UNIT_TESTS_SEQUENTIAL" != "true" ]
   exit 0
 fi
 
-export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
-export LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib
+export BOOST_TEST_RANDOM="${BOOST_TEST_RANDOM:-1}"
+export LD_LIBRARY_PATH="$DEPENDS_DIR/$HOST/lib"
 
 export WINEDEBUG=fixme-all
 export BOOST_TEST_LOG_LEVEL=test_suite
 
-cd build-ci/dashcore-$BUILD_TARGET
+cd "build-ci/dashcore-$BUILD_TARGET"
 
 export WINEPREFIX="/tmp/wine"
 mkdir -p "$WINEPREFIX"
@@ -34,6 +34,6 @@ else
   if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
     ./src/test/test_dash --catch_system_errors=no -l test_suite
   else
-      make $MAKEJOBS check VERBOSE=1
+      make "$MAKEJOBS" check VERBOSE=1
   fi
 fi

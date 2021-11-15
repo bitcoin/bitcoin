@@ -14,14 +14,14 @@ source ./ci/dash/matrix.sh
 unset CC; unset CXX
 unset DISPLAY
 
-mkdir -p $CACHE_DIR/depends
-mkdir -p $CACHE_DIR/sdk-sources
+mkdir -p "$CACHE_DIR/depends"
+mkdir -p "$CACHE_DIR/sdk-sources"
 
-ln -s $CACHE_DIR/depends ${DEPENDS_DIR}/built
-ln -s $CACHE_DIR/sdk-sources ${DEPENDS_DIR}/sdk-sources
+ln -s "$CACHE_DIR/depends" "${DEPENDS_DIR}/built"
+ln -s "$CACHE_DIR/sdk-sources" "${DEPENDS_DIR}/sdk-sources"
 
 if [[ "${HOST}" == "x86_64-apple-darwin" ]]; then
     ./contrib/containers/guix/scripts/setup-sdk
 fi
 
-make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+make "$MAKEJOBS" -C depends HOST="$HOST" "$DEP_OPTS"
