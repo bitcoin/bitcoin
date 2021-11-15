@@ -247,7 +247,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     CReserveKey reservekey(pwallet);
     // -- send the tx to the network
     CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, reservekey, g_connman.get(), state)) {
+    if (!pwallet->CommitTransaction(tx, {}, {}, reservekey, state)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
     }
 

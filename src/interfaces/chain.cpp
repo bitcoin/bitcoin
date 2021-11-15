@@ -6,11 +6,29 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <coinjoin/coinjoin.h>
+#include <interfaces/handler.h>
+#include <interfaces/wallet.h>
+#include <net.h>
+#include <node/coin.h>
+#include <policy/fees.h>
+#include <policy/policy.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <protocol.h>
+#include <rpc/protocol.h>
+#include <rpc/server.h>
+#include <shutdown.h>
 #include <sync.h>
+#include <threadsafety.h>
+#include <timedata.h>
+#include <txmempool.h>
+#include <ui_interface.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/system.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <memory>
 #include <utility>
@@ -146,11 +164,110 @@ class LockImpl : public Chain::Lock
         }
         return nullopt;
     }
+    bool checkFinalTx(const CTransaction& tx) override
+    {
+        LockAnnotation lock(::cs_main);
+        return CheckFinalTx(tx);
+    }
+    bool submitToMemoryPool(CTransactionRef tx, CAmount absurd_fee, CValidationState& state) override
+    {
+        LockAnnotation lock(::cs_main);
+        return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */,
+            false /* bypass limits */, absurd_fee);
+    }
 };
 
 class LockingStateImpl : public LockImpl, public UniqueLock<CCriticalSection>
 {
     using UniqueLock::UniqueLock;
+};
+
+class NotificationsHandlerImpl : public Handler, CValidationInterface
+{
+public:
+    explicit NotificationsHandlerImpl(Chain& chain, Chain::Notifications& notifications)
+        : m_chain(chain), m_notifications(&notifications)
+    {
+        RegisterValidationInterface(this);
+    }
+    ~NotificationsHandlerImpl() override { disconnect(); }
+    void disconnect() override
+    {
+        if (m_notifications) {
+            m_notifications = nullptr;
+            UnregisterValidationInterface(this);
+        }
+    }
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) override
+    {
+        m_notifications->TransactionAddedToMempool(tx, nAcceptTime);
+    }
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override
+    {
+        m_notifications->TransactionRemovedFromMempool(tx, reason);
+    }
+    void BlockConnected(const std::shared_ptr<const CBlock>& block,
+        const CBlockIndex* index,
+        const std::vector<CTransactionRef>& tx_conflicted) override
+    {
+        m_notifications->BlockConnected(*block, tx_conflicted);
+    }
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexDisconnected) override
+    {
+        m_notifications->BlockDisconnected(*block);
+    }
+    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->ChainStateFlushed(locator); }
+    void ResendWalletTransactions(int64_t best_block_time, CConnman*) override
+    {
+        // `cs_main` is always held when this method is called, so it is safe to
+        // call `assumeLocked`. This is awkward, and the `assumeLocked` method
+        // should be able to be removed entirely if `ResendWalletTransactions`
+        // is replaced by a wallet timer as suggested in
+        // https://github.com/bitcoin/bitcoin/issues/15619
+        auto locked_chain = m_chain.assumeLocked();
+        m_notifications->ResendWalletTransactions(*locked_chain, best_block_time);
+    }
+    Chain& m_chain;
+    Chain::Notifications* m_notifications;
+};
+
+class RpcHandlerImpl : public Handler
+{
+public:
+    RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
+    {
+        m_command.actor = [this](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
+            if (!m_wrapped_command) return false;
+            try {
+                return m_wrapped_command->actor(request, result, last_handler);
+            } catch (const UniValue& e) {
+                // If this is not the last handler and a wallet not found
+                // exception was thrown, return false so the next handler can
+                // try to handle the request. Otherwise, reraise the exception.
+                if (!last_handler) {
+                    const UniValue& code = e["code"];
+                    if (code.isNum() && code.get_int() == RPC_WALLET_NOT_FOUND) {
+                        return false;
+                    }
+                }
+                throw;
+            }
+        };
+        ::tableRPC.appendCommand(m_command.name, &m_command);
+    }
+
+    void disconnect() override final
+    {
+        if (m_wrapped_command) {
+            m_wrapped_command = nullptr;
+            ::tableRPC.removeCommand(m_command.name, &m_command);
+        }
+    }
+
+    ~RpcHandlerImpl() override { disconnect(); }
+
+    CRPCCommand m_command;
+    const CRPCCommand* m_wrapped_command;
 };
 
 class ChainImpl : public Chain
@@ -186,13 +303,80 @@ public:
         }
         return true;
     }
+    void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
         return GuessVerificationProgress(Params().TxData(), LookupBlockIndex(block_hash));
     }
+    bool hasDescendantsInMempool(const uint256& txid) override
+    {
+        LOCK(::mempool.cs);
+        auto it_mp = ::mempool.mapTx.find(txid);
+        return it_mp != ::mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1;
+    }
+    void relayTransaction(const uint256& txid) override
+    {
+        CInv inv(CCoinJoin::GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid);
+        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+    }
+    void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
+    {
+        ::mempool.GetTransactionAncestry(txid, ancestors, descendants);
+    }
+    bool checkChainLimits(CTransactionRef tx) override
+    {
+        LockPoints lp;
+        CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
+        CTxMemPool::setEntries ancestors;
+        auto limit_ancestor_count = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+        auto limit_ancestor_size = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT) * 1000;
+        auto limit_descendant_count = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+        auto limit_descendant_size = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000;
+        std::string unused_error_string;
+        LOCK(::mempool.cs);
+        return ::mempool.CalculateMemPoolAncestors(entry, ancestors, limit_ancestor_count, limit_ancestor_size,
+            limit_descendant_count, limit_descendant_size, unused_error_string);
+    }
+    CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
+    {
+        return ::feeEstimator.estimateSmartFee(num_blocks, calc, conservative);
+    }
+    unsigned int estimateMaxBlocks() override
+    {
+        return ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+    }
+    CFeeRate mempoolMinFee() override
+    {
+        return ::mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    }
+    CFeeRate relayMinFee() override { return ::minRelayTxFee; }
+    CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
+    CFeeRate relayDustFee() override { return ::dustRelayFee; }
+    CAmount maxTxFee() override { return ::maxTxFee; }
+    bool getPruneMode() override { return ::fPruneMode; }
+    bool p2pEnabled() override { return g_connman != nullptr; }
+    bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
+    bool shutdownRequested() override { return ShutdownRequested(); }
+    int64_t getAdjustedTime() override { return GetAdjustedTime(); }
+    void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }
+    void initWarning(const std::string& message) override { InitWarning(message); }
+    void initError(const std::string& message) override { InitError(message); }
+    void loadWallet(std::unique_ptr<Wallet> wallet) override { ::uiInterface.LoadWallet(wallet); }
+    void showProgress(const std::string& title, int progress, bool resume_possible) override
+    {
+        ::uiInterface.ShowProgress(title, progress, resume_possible);
+    }
+    std::unique_ptr<Handler> handleNotifications(Notifications& notifications) override
+    {
+        return MakeUnique<NotificationsHandlerImpl>(*this, notifications);
+    }
+    void waitForNotifications() override { SyncWithValidationInterfaceQueue(); }
+    std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
+    {
+        return MakeUnique<RpcHandlerImpl>(command);
+    }
 };
-
 } // namespace
 
 std::unique_ptr<Chain> MakeChain() { return MakeUnique<ChainImpl>(); }
