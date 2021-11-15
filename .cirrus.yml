@@ -164,7 +164,7 @@ task:
     - netsh int ipv4 set dynamicport tcp start=1025 num=64511
     - netsh int ipv6 set dynamicport tcp start=1025 num=64511
     # Exclude feature_dbcrash for now due to timeout
-    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --failfast --extended --exclude feature_dbcrash
+    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --extended --exclude feature_dbcrash
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
