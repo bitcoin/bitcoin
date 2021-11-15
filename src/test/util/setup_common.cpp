@@ -13,7 +13,7 @@
 #include <crypto/sha256.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <net.h>
 #include <net_processing.h>
 #include <noui.h>

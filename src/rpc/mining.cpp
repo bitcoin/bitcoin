@@ -13,7 +13,7 @@
 #include <deploymentinfo.h>
 #include <deploymentstatus.h>
 #include <key_io.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <net.h>
 #include <node/context.h>
 #include <policy/fees.h>

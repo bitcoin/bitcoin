@@ -29,7 +29,7 @@
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>

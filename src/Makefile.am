@@ -166,7 +166,7 @@ BITCOIN_CORE_H = \
   mapport.h \
   memusage.h \
   merkleblock.h \
-  miner.h \
+  node/miner.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -334,7 +334,7 @@ libbitcoin_server_a_SOURCES = \
   index/txindex.cpp \
   init.cpp \
   mapport.cpp \
-  miner.cpp \
+  node/miner.cpp \
   net.cpp \
   net_processing.cpp \
   node/blockstorage.cpp \
