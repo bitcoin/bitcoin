@@ -174,7 +174,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def create_test_block(self, txs):
         block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600)
-        block.nVersion = 4
         block.vtx.extend(txs)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()

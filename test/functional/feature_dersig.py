@@ -100,8 +100,7 @@ class BIP66Test(BitcoinTestFramework):
         self.log.info("Test that blocks must now be at least version 3")
         tip = block.sha256
         block_time += 1
-        block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
-        block.nVersion = 2
+        block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time, version=2)
         block.solve()
 
         with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash}, bad-version(0x00000002)']):
