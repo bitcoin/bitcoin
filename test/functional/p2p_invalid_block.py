@@ -66,15 +66,11 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # For more information on merkle-root malleability see src/consensus/merkle.cpp.
         self.log.info("Test merkle root malleability.")
 
-        block2 = create_block(tip, create_coinbase(height), block_time)
-        block_time += 1
-
         # b'0x51' is OP_TRUE
         tx1 = create_tx_with_script(block1.vtx[0], 0, script_sig=b'\x51', amount=50 * COIN)
         tx2 = create_tx_with_script(tx1, 0, script_sig=b'\x51', amount=50 * COIN)
-
-        block2.vtx.extend([tx1, tx2])
-        block2.hashMerkleRoot = block2.calc_merkle_root()
+        block2 = create_block(tip, create_coinbase(height), block_time, txlist=[tx1, tx2])
+        block_time += 1
         block2.solve()
         orig_hash = block2.sha256
         block2_orig = copy.deepcopy(block2)
@@ -99,12 +95,8 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
 
         self.log.info("Test very broken block.")
 
-        block3 = create_block(tip, create_coinbase(height), block_time)
+        block3 = create_block(tip, create_coinbase(height, nValue=100), block_time)
         block_time += 1
-        block3.vtx[0].vout[0].nValue = 100 * COIN  # Too high!
-        block3.vtx[0].sha256 = None
-        block3.vtx[0].calc_sha256()
-        block3.hashMerkleRoot = block3.calc_merkle_root()
         block3.solve()
 
         peer.send_blocks_and_test([block3], node, success=False, reject_reason='bad-cb-amount')
@@ -123,14 +115,10 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
 
         # Complete testing of CVE-2018-17144, by checking for the inflation bug.
         # Create a block that spends the output of a tx in a previous block.
-        block4 = create_block(tip, create_coinbase(height), block_time)
         tx3 = create_tx_with_script(tx2, 0, script_sig=b'\x51', amount=50 * COIN)
-
-        # Duplicates input
-        tx3.vin.append(tx3.vin[0])
+        tx3.vin.append(tx3.vin[0])  # Duplicates input
         tx3.rehash()
-        block4.vtx.append(tx3)
-        block4.hashMerkleRoot = block4.calc_merkle_root()
+        block4 = create_block(tip, create_coinbase(height), block_time, txlist=[tx3])
         block4.solve()
         self.log.info("Test inflation by duplicating input")
         peer.send_blocks_and_test([block4], node, success=False,  reject_reason='bad-txns-inputs-duplicate')
@@ -140,7 +128,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         node.setmocktime(t)
         # Set block time +1 second past max future validity
         block = create_block(tip, create_coinbase(height), t + MAX_FUTURE_BLOCK_TIME + 1)
-        block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
         # Need force_send because the block will get rejected without a getdata otherwise
         peer.send_blocks_and_test([block], node, force_send=True, success=False, reject_reason='time-too-new')

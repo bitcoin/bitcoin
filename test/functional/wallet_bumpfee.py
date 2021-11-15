@@ -24,7 +24,6 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
-    tx_from_hex,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -588,13 +587,10 @@ def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
 
 
 def submit_block_with_tx(node, tx):
-    ctx = tx_from_hex(tx)
     tip = node.getbestblockhash()
     height = node.getblockcount() + 1
     block_time = node.getblockheader(tip)["mediantime"] + 1
-    block = create_block(int(tip, 16), create_coinbase(height), block_time)
-    block.vtx.append(ctx)
-    block.hashMerkleRoot = block.calc_merkle_root()
+    block = create_block(int(tip, 16), create_coinbase(height), block_time, txlist=[tx])
     add_witness_commitment(block)
     block.solve()
     node.submitblock(block.serialize().hex())
