@@ -208,7 +208,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: '[depends, sanitizers: thread (TSan), no gui] [jammy]'
+  name: '[TSan, depends, no gui] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
@@ -220,7 +220,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: '[depends, sanitizers: memory (MSan)] [focal]'
+  name: '[MSan, depends] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -229,7 +229,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [jammy]'
+  name: '[ASan + LSan + UBSan + integer, no depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
@@ -238,7 +238,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: '[no depends, sanitizers: fuzzer,address,undefined,integer] [focal]'
+  name: '[fuzzer,address,undefined,integer, no depends] [focal]'
   only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_BASE_BRANCH == $CIRRUS_DEFAULT_BRANCH
   << : *GLOBAL_TASK_TEMPLATE
   container:
