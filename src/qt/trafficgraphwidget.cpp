@@ -50,7 +50,7 @@ int TrafficGraphWidget::getGraphRangeMins() const
 int TrafficGraphWidget::y_value(float value)
 {
     int h = height() - YMARGIN * 2;
-    return YMARGIN + h - (h * 1.0 * value / fMax);
+    return YMARGIN + h - (h * 1.0 * (fToggle ? (pow(value, 0.30102) / pow(fMax, 0.30102)) : (value / fMax)));
 }
 
 void TrafficGraphWidget::paintPath(QPainterPath &path, QQueue<float> &samples)
@@ -67,6 +67,13 @@ void TrafficGraphWidget::paintPath(QPainterPath &path, QQueue<float> &samples)
         }
         path.lineTo(x, YMARGIN + h);
     }
+}
+
+void TrafficGraphWidget::mousePressEvent(QMouseEvent *event)
+{
+    QWidget::mousePressEvent(event);
+    fToggle = !fToggle;
+    update();
 }
 
 void TrafficGraphWidget::paintEvent(QPaintEvent *)
@@ -88,28 +95,33 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     const QString units = tr("kB/s");
     const float yMarginText = 2.0;
 
-    // draw lines
-    painter.setPen(axisCol);
-    painter.drawText(XMARGIN, y_value(val)-yMarginText, QString("%1 %2").arg(val).arg(units));
-    for(float y = val; y < fMax; y += val) {
-        int yy = YMARGIN + h - h * y / fMax;
-        painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
-    }
-    // if we drew 3 or fewer lines, break them up at the next lower order of magnitude
-    if(fMax / val <= 3.0f) {
-        axisCol = axisCol.darker();
+    // if we drew 10 or 3 fewer lines, break them up at the next lower order of magnitude
+    if(fMax / val <= (fToggle ? 10.0f : 3.0f)) {
+        float oldval = val;
         val = pow(10.0f, base - 1);
-        painter.setPen(axisCol);
+        painter.setPen(axisCol.darker());
         painter.drawText(XMARGIN, y_value(val)-yMarginText, QString("%1 %2").arg(val).arg(units));
+        if (fToggle) {
+            int yy = y_value(val*0.1);
+            painter.drawText(XMARGIN, yy-yMarginText, QString("%1 %2").arg(val*0.1).arg(units));
+            painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
+        }
         int count = 1;
-        for(float y = val; y < fMax; y += val, count++) {
-            // don't overwrite lines drawn above
+        for(float y = val; y < (!fToggle || fMax / val < 20 ? fMax : oldval); y += val, count++) {
             if(count % 10 == 0)
                 continue;
             int yy = y_value(y);
             painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
         }
+        val = oldval;
     }
+    // draw lines
+    painter.setPen(axisCol);
+    for(float y = val; y < fMax; y += val) {
+        int yy = y_value(y);
+        painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
+    }
+    painter.drawText(XMARGIN, y_value(val)-yMarginText, QString("%1 %2").arg(val).arg(units));
 
     painter.setRenderHint(QPainter::Antialiasing);
     if(!vSamplesIn.empty()) {

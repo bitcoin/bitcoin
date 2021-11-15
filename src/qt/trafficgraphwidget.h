@@ -27,6 +27,8 @@ public:
 protected:
     void paintEvent(QPaintEvent *) override;
     int y_value(float value);
+    void mousePressEvent(QMouseEvent *event) override;
+    bool fToggle = true;
 
 public Q_SLOTS:
     void updateRates();
