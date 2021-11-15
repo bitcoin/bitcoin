@@ -747,7 +747,7 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
         }
 
         // Get the Sighash type
-        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
+        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
             return TransactionError::SIGHASH_MISMATCH;
         }
 
@@ -2243,7 +2243,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
         }
 
         // Get the Sighash type
-        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
+        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
             return TransactionError::SIGHASH_MISMATCH;
         }
 
