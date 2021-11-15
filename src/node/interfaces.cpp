@@ -296,6 +296,10 @@ public:
     {
         return MakeHandler(::uiInterface.ShowProgress_connect(fn));
     }
+    std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
+    {
+        return MakeHandler(::uiInterface.InitWallet_connect(fn));
+    }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
         return MakeHandler(::uiInterface.NotifyNumConnectionsChanged_connect(fn));

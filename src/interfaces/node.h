@@ -206,6 +206,10 @@ public:
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
 
+    //! Register handler for wallet client constructed messages.
+    using InitWalletFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) = 0;
+
     //! Register handler for number of connections changed messages.
     using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;
     virtual std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) = 0;
