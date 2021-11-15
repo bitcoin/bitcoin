@@ -22,7 +22,7 @@ FUZZ_TARGET(netbase_dns_lookup)
 
     auto fuzzed_dns_lookup_function = [&](const std::string&, bool) {
         std::vector<CNetAddr> resolved_addresses;
-        while (fuzzed_data_provider.ConsumeBool()) {
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
             resolved_addresses.push_back(ConsumeNetAddr(fuzzed_data_provider));
         }
         return resolved_addresses;

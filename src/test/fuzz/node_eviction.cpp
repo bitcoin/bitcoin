@@ -18,7 +18,7 @@ FUZZ_TARGET(node_eviction)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     std::vector<NodeEvictionCandidate> eviction_candidates;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         eviction_candidates.push_back({
             /* id */ fuzzed_data_provider.ConsumeIntegral<NodeId>(),
             /* nTimeConnected */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
