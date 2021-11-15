@@ -7,8 +7,8 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <key_io.h>
-#include <node/miner.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <script/standard.h>
 #include <test/util/script.h>
