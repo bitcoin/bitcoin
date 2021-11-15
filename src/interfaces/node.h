@@ -6,7 +6,6 @@
 #define BITCOIN_INTERFACES_NODE_H
 
 #include <consensus/amount.h>
-#include <external_signer.h>
 #include <net.h>        // For NodeId
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
@@ -48,6 +47,16 @@ struct BlockAndHeaderTipInfo
     int header_height;
     int64_t header_time;
     double verification_progress;
+};
+
+//! External signer interface used by the GUI.
+class ExternalSigner
+{
+public:
+    virtual ~ExternalSigner() {};
+
+    //! Get signer display name
+    virtual std::string getName() = 0;
 };
 
 //! Top-level interface for a bitcoin node (bitcoind process).
@@ -111,8 +120,8 @@ public:
     //! Disconnect node by id.
     virtual bool disconnectById(NodeId id) = 0;
 
-    //! List external signers
-    virtual std::vector<ExternalSigner> externalSigners() = 0;
+    //! Return list of external signers (attached devices which can sign transactions).
+    virtual std::vector<std::unique_ptr<ExternalSigner>> listExternalSigners() = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
