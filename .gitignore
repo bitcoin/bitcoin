@@ -10,6 +10,7 @@ src/dash
 src/dashd
 src/dash-cli
 src/dash-tx
+src/dash-wallet
 src/test/fuzz
 !src/test/fuzz/*.*
 src/test/test_dash
