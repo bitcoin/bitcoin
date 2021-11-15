@@ -52,7 +52,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
     COutPoint random_out_point;
     Coin random_coin;
     CMutableTransaction random_mutable_transaction;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -119,7 +119,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
             [&] {
                 CCoinsMapMemoryResource resource;
                 CCoinsMap coins_map{0, SaltedOutpointHasher{/*deterministic=*/true}, CCoinsMap::key_equal{}, &resource};
-                while (fuzzed_data_provider.ConsumeBool()) {
+                LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
                     CCoinsCacheEntry coins_cache_entry;
                     coins_cache_entry.flags = fuzzed_data_provider.ConsumeIntegral<unsigned char>();
                     if (fuzzed_data_provider.ConsumeBool()) {

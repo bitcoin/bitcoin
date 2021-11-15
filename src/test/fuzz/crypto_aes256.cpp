@@ -19,7 +19,7 @@ FUZZ_TARGET(crypto_aes256)
     AES256Encrypt encrypt{key.data()};
     AES256Decrypt decrypt{key.data()};
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         const std::vector<uint8_t> plaintext = ConsumeFixedLengthByteVector(fuzzed_data_provider, AES_BLOCKSIZE);
         std::vector<uint8_t> ciphertext(AES_BLOCKSIZE);
         encrypt.Encrypt(ciphertext.data(), plaintext.data());

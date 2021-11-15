@@ -47,7 +47,7 @@ FUZZ_TARGET(net, .init = initialize_net)
     CNode node{ConsumeNode(fuzzed_data_provider)};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

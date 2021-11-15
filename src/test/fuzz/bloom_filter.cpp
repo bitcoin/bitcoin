@@ -24,7 +24,7 @@ FUZZ_TARGET(bloom_filter)
         1.0 / fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, std::numeric_limits<unsigned int>::max()),
         fuzzed_data_provider.ConsumeIntegral<unsigned int>(),
         static_cast<unsigned char>(fuzzed_data_provider.PickValueInArray({BLOOM_UPDATE_NONE, BLOOM_UPDATE_ALL, BLOOM_UPDATE_P2PUBKEY_ONLY, BLOOM_UPDATE_MASK}))};
-    while (fuzzed_data_provider.remaining_bytes() > 0) {
+    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
