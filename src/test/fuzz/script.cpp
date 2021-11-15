@@ -41,9 +41,7 @@ void initialize_script()
 FUZZ_TARGET_INIT(script, initialize_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const std::optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
-    if (!script_opt) return;
-    const CScript script{*script_opt};
+    const CScript script{ConsumeScript(fuzzed_data_provider)};
 
     CompressedScript compressed;
     if (CompressScript(script, compressed)) {
