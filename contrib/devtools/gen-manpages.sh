@@ -17,7 +17,7 @@ WALLET_TOOL=${WALLET_TOOL:-$BINDIR/syscoin-wallet}
 SYSCOINUTIL=${SYSCOINQT:-$BINDIR/syscoin-util}
 SYSCOINQT=${SYSCOINQT:-$BINDIR/qt/syscoin-qt}
 
-[ ! -x $SYSCOIND ] && echo "$SYSCOIND not found or not executable." && exit 1
+[ ! -x "$SYSCOIND" ] && echo "$SYSCOIND not found or not executable." && exit 1
 
 # Don't allow man pages to be generated for binaries built from a dirty tree
 DIRTY=""
@@ -30,7 +30,7 @@ done
 if [ -n "$DIRTY" ]
 then
   echo -e "WARNING: the following binaries were built from a dirty tree:\n"
-  echo -e $DIRTY
+  echo -e "$DIRTY"
   echo "man pages generated from dirty binaries should NOT be committed."
   echo "To properly generate man pages, please commit your changes to the above binaries, rebuild them, then run this script again."
 fi
@@ -46,8 +46,8 @@ $SYSCOIND --version | sed -n '1!p' >> footer.h2m
 
 for cmd in $SYSCOIND $SYSCOINCLI $SYSCOINTX $WALLET_TOOL $SYSCOINUTIL $SYSCOINQT; do
   cmdname="${cmd##*/}"
-  help2man -N --version-string=${SYSVER[0]} --include=footer.h2m -o ${MANDIR}/${cmdname}.1 ${cmd}
-  sed -i "s/\\\-${SYSVER[1]}//g" ${MANDIR}/${cmdname}.1
+  help2man -N --version-string="${SYSVER[0]}" --include=footer.h2m -o "${MANDIR}/${cmdname}.1" "${cmd}"
+  sed -i "s/\\\-${SYSVER[1]}//g" "${MANDIR}/${cmdname}.1"
 done
 
 rm -f footer.h2m

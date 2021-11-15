@@ -20,7 +20,7 @@ expand_path() {
   cd "${1}" && pwd -P
 }
 
-BDB_PREFIX="$(expand_path ${1})/db4"; shift;
+BDB_PREFIX="$(expand_path "${1}")/db4"; shift;
 BDB_VERSION='db-4.8.30.NC'
 BDB_HASH='12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef'
 BDB_URL="https://download.oracle.com/berkeley-db/${BDB_VERSION}.tar.gz"
