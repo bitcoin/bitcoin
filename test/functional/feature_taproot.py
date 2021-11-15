@@ -1241,7 +1241,6 @@ class TaprootTest(SyscoinTestFramework):
             block.vtx.append(tx)
         block.hashMerkleRoot = block.calc_merkle_root()
         witness and add_witness_commitment(block)
-        block.rehash()
         block.solve()
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
@@ -1492,7 +1491,6 @@ class TaprootTest(SyscoinTestFramework):
         # Mine a block with the transaction
         block = create_block(tmpl=self.nodes[1].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS), txlist=[rawtx])
         add_witness_commitment(block)
-        block.rehash()
         block.solve()
         assert_equal(None, self.nodes[1].submitblock(block.serialize().hex()))
         self.sync_blocks()
