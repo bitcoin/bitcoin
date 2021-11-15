@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 if [ -n "$ANDROID_TOOLS_URL" ]; then
   DOCKER_EXEC make distclean || true
   DOCKER_EXEC ./autogen.sh
-  DOCKER_EXEC ./configure $BITCOIN_CONFIG --prefix=$DEPENDS_DIR/aarch64-linux-android || ( (DOCKER_EXEC cat config.log) && false)
+  DOCKER_EXEC ./configure "$BITCOIN_CONFIG" --prefix="${DEPENDS_DIR}/aarch64-linux-android" || ( (DOCKER_EXEC cat config.log) && false)
   DOCKER_EXEC "make $MAKEJOBS && cd src/qt && ANDROID_HOME=${ANDROID_HOME} ANDROID_NDK_HOME=${ANDROID_NDK_HOME} make apk"
   exit 0
 fi
@@ -29,13 +29,13 @@ fi
 DOCKER_EXEC mkdir -p "${BASE_BUILD_DIR}"
 export P_CI_DIR="${BASE_BUILD_DIR}"
 
-DOCKER_EXEC "${BASE_ROOT_DIR}/configure" --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
+DOCKER_EXEC "${BASE_ROOT_DIR}/configure" --cache-file=config.cache "$BITCOIN_CONFIG_ALL" "$BITCOIN_CONFIG" || ( (DOCKER_EXEC cat config.log) && false)
 
-DOCKER_EXEC make distdir VERSION=$HOST
+DOCKER_EXEC make distdir VERSION="$HOST"
 
 export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST"
 
-DOCKER_EXEC ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
+DOCKER_EXEC ./configure --cache-file=../config.cache "$BITCOIN_CONFIG_ALL" "$BITCOIN_CONFIG" || ( (DOCKER_EXEC cat config.log) && false)
 
 set -o errtrace
 trap 'DOCKER_EXEC "cat ${BASE_SCRATCH_DIR}/sanitizer-output/* 2> /dev/null"' ERR
@@ -48,7 +48,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   DOCKER_EXEC 'grep -v HAVE_SYS_GETRANDOM src/config/bitcoin-config.h > src/config/bitcoin-config.h.tmp && mv src/config/bitcoin-config.h.tmp src/config/bitcoin-config.h'
 fi
 
-DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false )
+DOCKER_EXEC make "$MAKEJOBS" "$GOAL" || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make "$GOAL" V=1 ; false )
 
 DOCKER_EXEC "ccache --version | head -n 1 && ccache --show-stats"
 DOCKER_EXEC du -sh "${DEPENDS_DIR}"/*/
