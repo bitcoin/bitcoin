@@ -604,8 +604,9 @@ class DummySignatureCreator final : public BaseSignatureCreator {
 private:
     char m_r_len = 32;
     char m_s_len = 32;
+    bool m_include_sighash = false;
 public:
-    DummySignatureCreator(char r_len, char s_len) : m_r_len(r_len), m_s_len(s_len) {}
+    DummySignatureCreator(char r_len, char s_len, bool include_sighash) : m_r_len(r_len), m_s_len(s_len), m_include_sighash(include_sighash) {}
     const BaseSignatureChecker& Checker() const override { return DUMMY_CHECKER; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override
     {
@@ -625,14 +626,17 @@ public:
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* tweak, SigVersion sigversion) const override
     {
         sig.assign(64, '\000');
+        if (m_include_sighash) {
+            sig.push_back((unsigned char)SIGHASH_ALL);
+        }
         return true;
     }
 };
 
 }
 
-const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator(32, 32);
-const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCreator(33, 32);
+const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator(32, 32, /*include_sighash=*/false);
+const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCreator(33, 32, /*include_sighash=*/true);
 
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
 {
