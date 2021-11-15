@@ -21,6 +21,7 @@
 #include <timedata.h>
 #include <util/moneystr.h>
 #include <util/system.h>
+#include <validation.h>
 
 #include <algorithm>
 #include <utility>

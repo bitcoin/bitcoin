@@ -8,15 +8,15 @@
 
 #include <primitives/block.h>
 #include <txmempool.h>
-#include <validation.h>
 
 #include <memory>
 #include <optional>
 #include <stdint.h>
 
-#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
 
+class ChainstateManager;
 class CBlockIndex;
 class CChainParams;
 class CScript;
