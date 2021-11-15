@@ -81,7 +81,8 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
     uint256 hash;
     if (!SignatureHashSchnorr(hash, execdata, *txTo, nIn, nHashType, sigversion, *m_txdata, MissingDataBehavior::FAIL)) return false;
     sig.resize(64);
-    if (!key.SignSchnorr(hash, sig, merkle_root, nullptr)) return false;
+    // Use uint256{} as aux_rnd for now.
+    if (!key.SignSchnorr(hash, sig, merkle_root, {})) return false;
     if (nHashType) sig.push_back(nHashType);
     return true;
 }

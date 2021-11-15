@@ -16,6 +16,7 @@ FUZZ_BINARY=test/fuzz/fuzz$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
+  test/data/bip341_wallet_vectors.json \
   test/data/base58_encode_decode.json \
   test/data/blockfilters.json \
   test/data/key_io_valid.json \

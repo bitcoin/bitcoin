@@ -275,7 +275,7 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     return true;
 }
 
-bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256* aux) const
+bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const
 {
     assert(sig.size() == 64);
     secp256k1_keypair keypair;
@@ -288,7 +288,7 @@ bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint2
         uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
         if (!secp256k1_keypair_xonly_tweak_add(GetVerifyContext(), &keypair, tweak.data())) return false;
     }
-    bool ret = secp256k1_schnorrsig_sign(secp256k1_context_sign, sig.data(), hash.data(), &keypair, aux ? (unsigned char*)aux->data() : nullptr);
+    bool ret = secp256k1_schnorrsig_sign(secp256k1_context_sign, sig.data(), hash.data(), &keypair, (unsigned char*)aux.data());
     if (ret) {
         // Additional verification step to prevent using a potentially corrupted signature
         secp256k1_xonly_pubkey pubkey_verify;

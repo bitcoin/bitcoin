@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
         key.Set(sec.begin(), sec.end(), true);
         XOnlyPubKey pubkey(key.GetPubKey());
         BOOST_CHECK(std::equal(pubkey.begin(), pubkey.end(), pub.begin(), pub.end()));
-        bool ok = key.SignSchnorr(msg256, sig64, nullptr, &aux256);
+        bool ok = key.SignSchnorr(msg256, sig64, nullptr, aux256);
         BOOST_CHECK(ok);
         BOOST_CHECK(std::vector<unsigned char>(sig64, sig64 + 64) == sig);
         // Verify those signatures for good measure.
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
             BOOST_CHECK(tweaked);
             XOnlyPubKey tweaked_key = tweaked->first;
             aux256 = InsecureRand256();
-            bool ok = key.SignSchnorr(msg256, sig64, &merkle_root, &aux256);
+            bool ok = key.SignSchnorr(msg256, sig64, &merkle_root, aux256);
             BOOST_CHECK(ok);
             BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
         }
