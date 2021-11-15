@@ -335,7 +335,6 @@ class BIP68Test(BitcoinTestFramework):
         # tx3 to be removed.
         for i in range(2):
             block = create_block(tmpl=tmpl, ntime=cur_time)
-            block.rehash()
             block.solve()
             tip = block.sha256
             assert_equal(None if i == 1 else 'inconclusive', self.nodes[0].submitblock(block.serialize().hex()))
@@ -392,7 +391,6 @@ class BIP68Test(BitcoinTestFramework):
         block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         add_witness_commitment(block)
         block.solve()
 

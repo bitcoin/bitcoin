@@ -790,7 +790,6 @@ class SegWitTest(BitcoinTestFramework):
         block_3.vtx[0].vout.append(CTxOut(0, CScript([OP_RETURN, WITNESS_COMMITMENT_HEADER + ser_uint256(2), 10])))
         block_3.vtx[0].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
-        block_3.rehash()
         block_3.solve()
 
         test_witness_block(self.nodes[0], self.test_node, block_3, accepted=False, reason='bad-witness-merkle-match')
@@ -804,7 +803,6 @@ class SegWitTest(BitcoinTestFramework):
         block_3.vtx[0].vout[-1].nValue += 1
         block_3.vtx[0].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
-        block_3.rehash()
         assert len(block_3.vtx[0].vout) == 4  # 3 OP_returns
         block_3.solve()
         test_witness_block(self.nodes[0], self.test_node, block_3, accepted=True)
