@@ -10,11 +10,11 @@ Previous releases are required by this test, see test/README.md.
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.wallet import MiniWallet
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class MempoolCompatibilityTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
