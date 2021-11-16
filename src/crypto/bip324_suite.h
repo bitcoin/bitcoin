@@ -12,11 +12,12 @@
 #include <array>
 #include <cstddef>
 
-static constexpr size_t BIP324_KEY_LEN = 32;         // bytes
-static constexpr size_t BIP324_HEADER_LEN = 1;       // bytes
-static constexpr size_t BIP324_LENGTH_FIELD_LEN = 3; // bytes
-static constexpr size_t REKEY_INTERVAL = 224;        // packets
-static constexpr size_t NONCE_LENGTH = 12;           // bytes
+static constexpr size_t BIP324_KEY_LEN = 32;                // bytes
+static constexpr size_t BIP324_GARBAGE_TERMINATOR_LEN = 16; // bytes
+static constexpr size_t BIP324_HEADER_LEN = 1;              // bytes
+static constexpr size_t BIP324_LENGTH_FIELD_LEN = 3;        // bytes
+static constexpr size_t REKEY_INTERVAL = 224;               // packets
+static constexpr size_t NONCE_LENGTH = 12;                  // bytes
 
 enum BIP324HeaderFlags : uint8_t {
     BIP324_NONE = 0,

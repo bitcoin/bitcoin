@@ -9,20 +9,23 @@
 #include <chainparams.h>
 #include <common/bloom.h>
 #include <compat/compat.h>
-#include <node/connection_types.h>
 #include <consensus/amount.h>
+#include <crypto/bip324_suite.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <i2p.h>
+#include <key.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/connection_types.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
 #include <span.h>
 #include <streams.h>
+#include <support/allocators/secure.h>
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
@@ -31,6 +34,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <functional>
@@ -343,6 +347,18 @@ struct CNodeOptions
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
 };
+
+struct BIP324Session {
+    BIP324Key initiator_L;
+    BIP324Key initiator_P;
+    BIP324Key responder_L;
+    BIP324Key responder_P;
+    BIP324Key session_id;
+    std::array<std::byte, BIP324_GARBAGE_TERMINATOR_LEN> initiator_garbage_terminator;
+    std::array<std::byte, BIP324_GARBAGE_TERMINATOR_LEN> responder_garbage_terminator;
+};
+
+void DeriveBIP324Session(ECDHSecret&& ecdh_secret, BIP324Session& session);
 
 /** Information about a peer */
 class CNode
