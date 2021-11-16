@@ -228,7 +228,6 @@ SYSCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   miner.h \
-  minisketchwrapper.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -240,6 +239,7 @@ SYSCOIN_CORE_H = \
   node/coin.h \
   node/coinstats.h \
   node/context.h \
+  node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
   node/ui_interface.h \
@@ -498,7 +498,6 @@ libsyscoin_server_a_SOURCES = \
   init.cpp \
   mapport.cpp \
   miner.cpp \
-  minisketchwrapper.cpp \
   net.cpp \
   netfulfilledman.cpp \
   net_processing.cpp \
@@ -507,6 +506,7 @@ libsyscoin_server_a_SOURCES = \
   node/coinstats.cpp \
   node/context.cpp \
   node/interfaces.cpp \
+  node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/ui_interface.cpp \
