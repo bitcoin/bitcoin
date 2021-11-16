@@ -13,6 +13,7 @@ Test plan:
     - `-onion` (proxy just onions)
     - `-proxyrandomize` Circuit randomization
     - `-cjdnsreachable`
+    - `-yggdrasilreachable`
 - Proxy configurations to test on proxy side,
     - support no authentication (other proxy)
     - support no authentication + user/pass authentication (Tor)
@@ -28,6 +29,7 @@ addnode connect to IPv6
 addnode connect to onion
 addnode connect to generic DNS name
 addnode connect to a CJDNS address
+addnode connect to a Yggdrasil address
 
 - Test getnetworkinfo for each node
 
@@ -56,14 +58,15 @@ NET_IPV6 = "ipv6"
 NET_ONION = "onion"
 NET_I2P = "i2p"
 NET_CJDNS = "cjdns"
+NET_YGGDRASIL = "yggdrasil"
 
 # Networks returned by RPC getnetworkinfo, defined in src/rpc/net.cpp::GetNetworksInfo()
-NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS})
+NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS, NET_YGGDRASIL})
 
 
 class ProxyTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 5
+        self.num_nodes = 6
         self.setup_clean_chain = True
 
     def setup_nodes(self):
@@ -109,7 +112,9 @@ class ProxyTest(BitcoinTestFramework):
             ['-listen', f'-proxy={self.conf2.addr[0]}:{self.conf2.addr[1]}','-proxyrandomize=1'],
             [],
             ['-listen', f'-proxy={self.conf1.addr[0]}:{self.conf1.addr[1]}','-proxyrandomize=1',
-                '-cjdnsreachable']
+                '-cjdnsreachable'],
+            ['-listen', f'-proxy={self.conf1.addr[0]}:{self.conf1.addr[1]}','-proxyrandomize=1',
+                '-yggdrasilreachable'],
         ]
         if self.have_ipv6:
             args[3] = ['-listen', f'-proxy=[{self.conf3.addr[0]}]:{self.conf3.addr[1]}','-proxyrandomize=0', '-noonion']
@@ -121,7 +126,7 @@ class ProxyTest(BitcoinTestFramework):
             if peer["addr"] == addr:
                 assert_equal(peer["network"], network)
 
-    def node_test(self, node, *, proxies, auth, test_onion, test_cjdns):
+    def node_test(self, node, *, proxies, auth, test_onion, test_cjdns, test_yggdrasil):
         rv = []
         addr = "15.61.23.23:1234"
         self.log.debug(f"Test: outgoing IPv4 connection through node for address {addr}")
@@ -184,6 +189,21 @@ class ProxyTest(BitcoinTestFramework):
             rv.append(cmd)
             self.network_test(node, addr, network=NET_CJDNS)
 
+        if test_yggdrasil:
+            addr = "[200:1:2:3:4:5:6:7]:8888"
+            self.log.debug(f"Test: outgoing Yggdrasil connection through node for address {addr}")
+            node.addnode(addr, "onetry")
+            cmd = proxies[1].queue.get()
+            assert isinstance(cmd, Socks5Command)
+            assert_equal(cmd.atyp, AddressType.DOMAINNAME)
+            assert_equal(cmd.addr, b"200:1:2:3:4:5:6:7")
+            assert_equal(cmd.port, 8888)
+            if not auth:
+                assert_equal(cmd.username, None)
+                assert_equal(cmd.password, None)
+            rv.append(cmd)
+            self.network_test(node, addr, network=NET_YGGDRASIL)
+
         addr = "node.noumenon:8333"
         self.log.debug(f"Test: outgoing DNS name connection through node for address {addr}")
         node.addnode(addr, "onetry")
@@ -204,17 +224,17 @@ class ProxyTest(BitcoinTestFramework):
         # basic -proxy
         self.node_test(self.nodes[0],
             proxies=[self.serv1, self.serv1, self.serv1, self.serv1],
-            auth=False, test_onion=True, test_cjdns=False)
+            auth=False, test_onion=True, test_cjdns=False, test_yggdrasil=False)
 
         # -proxy plus -onion
         self.node_test(self.nodes[1],
             proxies=[self.serv1, self.serv1, self.serv2, self.serv1],
-            auth=False, test_onion=True, test_cjdns=False)
+            auth=False, test_onion=True, test_cjdns=False, test_yggdrasil=False)
 
         # -proxy plus -onion, -proxyrandomize
         rv = self.node_test(self.nodes[2],
             proxies=[self.serv2, self.serv2, self.serv2, self.serv2],
-            auth=True, test_onion=True, test_cjdns=False)
+            auth=True, test_onion=True, test_cjdns=False, test_yggdrasil=False)
         # Check that credentials as used for -proxyrandomize connections are unique
         credentials = set((x.username,x.password) for x in rv)
         assert_equal(len(credentials), len(rv))
@@ -223,12 +243,17 @@ class ProxyTest(BitcoinTestFramework):
             # proxy on IPv6 localhost
             self.node_test(self.nodes[3],
                 proxies=[self.serv3, self.serv3, self.serv3, self.serv3],
-                auth=False, test_onion=False, test_cjdns=False)
+                auth=False, test_onion=False, test_cjdns=False, test_yggdrasil=False)
 
         # -proxy=unauth -proxyrandomize=1 -cjdnsreachable
         self.node_test(self.nodes[4],
             proxies=[self.serv1, self.serv1, self.serv1, self.serv1],
-            auth=False, test_onion=True, test_cjdns=True)
+            auth=False, test_onion=True, test_cjdns=True, test_yggdrasil=False)
+
+        # -proxy=unauth -proxyrandomize=1 -yggdrasilreachable
+        self.node_test(self.nodes[5],
+            proxies=[self.serv1, self.serv1, self.serv1, self.serv1],
+            auth=False, test_onion=True, test_cjdns=False, test_yggdrasil=True)
 
         def networks_dict(d):
             r = {}
@@ -259,6 +284,7 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n0['onion']['reachable'], True)
         assert_equal(n0['i2p']['reachable'], False)
         assert_equal(n0['cjdns']['reachable'], False)
+        assert_equal(n0['yggdrasil']['reachable'], False)
 
         n1 = networks_dict(nodes_network_info[1])
         assert_equal(NETWORKS, n1.keys())
@@ -287,6 +313,7 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n2['onion']['reachable'], True)
         assert_equal(n2['i2p']['reachable'], False)
         assert_equal(n2['cjdns']['reachable'], False)
+        assert_equal(n2['yggdrasil']['reachable'], False)
 
         if self.have_ipv6:
             n3 = networks_dict(nodes_network_info[3])
@@ -299,6 +326,7 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(n3['onion']['reachable'], False)
             assert_equal(n3['i2p']['reachable'], False)
             assert_equal(n3['cjdns']['reachable'], False)
+            assert_equal(n3['yggdrasil']['reachable'], False)
 
         n4 = networks_dict(nodes_network_info[4])
         assert_equal(NETWORKS, n4.keys())
@@ -314,6 +342,7 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n4['onion']['reachable'], True)
         assert_equal(n4['i2p']['reachable'], False)
         assert_equal(n4['cjdns']['reachable'], True)
+        assert_equal(n4['yggdrasil']['reachable'], False)
 
         self.stop_node(1)
 
