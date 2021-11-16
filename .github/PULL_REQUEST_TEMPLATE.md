@@ -31,7 +31,7 @@ significantly:
   are useful, what downsides they have and why they *significantly* improve
   developer experience or avoid serious programming bugs. Note that code style
   is often a subjective matter. Unless they are explicitly mentioned to be
-  preferred in the [developer notes](/doc/developer-notes.md), stylistic code
+  preferred in the [developer notes](/doc/developer/developer-notes.md), stylistic code
   changes are usually rejected.
 -->
 

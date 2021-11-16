@@ -22,7 +22,7 @@ To run:
 
 #### locale/
 
-- Contains translations. They are periodically updated and an effort is made to support as many languages as possible. The process of contributing translations is described in [doc/translation_process.md](/doc/translation_process.md).
+- Contains translations. They are periodically updated and an effort is made to support as many languages as possible. The process of contributing translations is described in [translation_process.md](/doc/developer/translation_process.md).
 
 #### res/
 
@@ -72,7 +72,7 @@ To run:
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for general guidelines.
 
-**Note:** Do not change `local/bitcoin_en.ts`. It is updated [automatically](/doc/translation_process.md#writing-code-with-translations).
+**Note:** Do not change `local/bitcoin_en.ts`. It is updated [automatically](/doc/developer/translation_process.md#writing-code-with-translations).
 
 ## Using Qt Creator as an IDE
 

@@ -105,7 +105,7 @@ recommended to first open a pull request against the GUI repository. When there
 is agreement to proceed with the changes, a pull request with the build system
 and interfaces changes can be submitted to the node repository.
 
-The project coding conventions in the [developer notes](doc/developer-notes.md)
+The project coding conventions in the [developer notes](doc/developer/developer-notes.md)
 must be followed.
 
 ### Committing Patches
@@ -176,7 +176,7 @@ subsequent comment to the PR.
 ### Translation changes
 
 Note that translations should not be submitted as pull requests. Please see
-[Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md)
+[Translation Process](/doc/developer/translation_process.md)
 for more information on helping with translations.
 
 ### Work in Progress Changes and Requests for Comments
@@ -235,7 +235,7 @@ and the resulting git tree hash must be deterministic and reproducible. The scri
 
 After a rebase, reviewers are encouraged to sign off on the force push. This should be relatively straightforward with
 the `git range-diff` tool explained in the [productivity
-notes](/doc/productivity.md#diff-the-diffs-with-git-range-diff). To avoid needless review churn, maintainers will
+notes](/doc/developer/productivity.md#diff-the-diffs-with-git-range-diff). To avoid needless review churn, maintainers will
 generally merge pull requests that received the most review attention first.
 
 Pull Request Philosophy
@@ -299,7 +299,7 @@ In general, all pull requests must:
     the project (for example refactoring for modularisation);
   - Be well peer-reviewed;
   - Have unit tests, functional tests, and fuzz tests, where appropriate;
-  - Follow code style guidelines ([C++](doc/developer-notes.md), [functional tests](test/functional/README.md));
+  - Follow code style guidelines ([C++](doc/developer/developer-notes.md), [functional tests](test/functional/README.md));
   - Not break the existing test suite;
   - Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
@@ -380,7 +380,7 @@ about:
     (because people don't assume *others* won't actually like the proposal). Don't take
     that personally, though! Instead, take another critical look at what you are suggesting
     and see if it: changes too much, is too broad, doesn't adhere to the
-    [developer notes](doc/developer-notes.md), is dangerous or insecure, is messily written, etc.
+    [developer notes](doc/developer/developer-notes.md), is dangerous or insecure, is messily written, etc.
     Identify and address any of the issues you find. Then ask e.g. on IRC if someone could give
     their opinion on the concept itself.
   - It may be because your code is too complex for all but a few people, and those people

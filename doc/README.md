@@ -51,19 +51,19 @@ Development
 ---------------------
 The Bitcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
-- [Developer Notes](developer-notes.md)
-- [Productivity Notes](productivity.md)
+- [Developer Notes](developer/developer-notes.md)
+- [Productivity Notes](developer/productivity.md)
 - [Release Notes](release-notes.md)
-- [Release Process](release-process.md)
+- [Release Process](developer/release-process.md)
 - [Source Code Documentation (External Link)](https://doxygen.bitcoincore.org/)
-- [Translation Process](translation_process.md)
-- [Translation Strings Policy](translation_strings_policy.md)
+- [Translation Process](developer/translation_process.md)
+- [Translation Strings Policy](developer/translation_strings_policy.md)
 - [JSON-RPC Interface](JSON-RPC-interface.md)
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Shared Libraries](shared-libraries.md)
 - [BIPS](bips.md)
-- [Dnsseed Policy](dnsseed-policy.md)
-- [Benchmarking](benchmarking.md)
+- [Dnsseed Policy](developer/dnsseed-policy.md)
+- [Benchmarking](developer/benchmarking.md)
 
 ### Resources
 * Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
@@ -71,10 +71,10 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [Assumeutxo design](assumeutxo.md)
+- [Assumeutxo design](developer/assumeutxo.md)
 - [bitcoin.conf Configuration File](bitcoin-conf.md)
 - [Files](files.md)
-- [Fuzz-testing](fuzzing.md)
+- [Fuzz-testing](developer/fuzzing.md)
 - [I2P Support](i2p.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 - [Managing Wallets](managing-wallets.md)

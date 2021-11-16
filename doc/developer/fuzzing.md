@@ -10,7 +10,7 @@ $ cd bitcoin/
 $ ./autogen.sh
 $ CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
-# libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
+# libFuzzer" in the #macos-hints-for-libfuzzer section below
 $ make
 $ FUZZ=process_message src/test/fuzz/fuzz
 # abort fuzzing using ctrl-c
@@ -120,7 +120,7 @@ example using `brew install llvm`.
 
 Should you run into problems with the address sanitizer, it is possible you
 may need to run `./configure` with `--disable-asm` to avoid errors
-with certain assembly code from Bitcoin Core's code. See [developer notes on sanitizers](https://github.com/bitcoin/bitcoin/blob/master/doc/developer-notes.md#sanitizers)
+with certain assembly code from Bitcoin Core's code. See [developer notes on sanitizers](/doc/developer/developer-notes.md#sanitizers)
 for more information.
 
 You may also need to take care of giving the correct path for `clang` and

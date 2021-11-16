@@ -30,7 +30,7 @@
 /doc/*[a-zA-Z-].md                          @harding
 /doc/Doxyfile.in                            @fanquake
 /doc/REST-interface.md                      @jonasschnelli
-/doc/benchmarking.md                        @ariard
+/doc/developer/benchmarking.md              @ariard
 /doc/bitcoin-conf.md                        @hebasto
 /doc/build-freebsd.md                       @fanquake
 /doc/build-netbsd.md                        @fanquake
@@ -39,12 +39,12 @@
 /doc/build-unix.md                          @laanwj
 /doc/build-windows.md                       @sipsorcery
 /doc/dependencies.md                        @fanquake
-/doc/developer-notes.md                     @laanwj
+/doc/developer/developer-notes.md           @laanwj
 /doc/files.md                               @hebasto
 /doc/reduce-memory.md                       @fanquake
 /doc/reduce-traffic.md                      @jonasschnelli
-/doc/release-process.md                     @laanwj
-/doc/translation_strings_policy.md          @laanwj
+/doc/developer/release-process.md           @laanwj
+/doc/developer/translation_strings_policy.md    @laanwj
 
 # Build aux
 /build-aux/m4/bitcoin_qt.m4                 @hebasto

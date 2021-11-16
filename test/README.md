@@ -22,7 +22,7 @@ Before tests can be run locally, Bitcoin Core must be built.  See the [building 
 
 ## Fuzz tests
 
-See [/doc/fuzzing.md](/doc/fuzzing.md)
+See [fuzzing.md](/doc/developer/fuzzing.md)
 
 ### Functional tests
 
