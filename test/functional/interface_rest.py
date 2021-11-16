@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
@@ -81,10 +81,8 @@ class RESTTest (SyscoinTestFramework):
         # Random address so node1's balance doesn't increase
         not_related_address = "2MxqoHEdNQTyYeX1mHcbrrpzgojbosTpCvJ"
 
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
         self.generatetoaddress(self.nodes[1], 100, not_related_address)
-        self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
 
@@ -109,7 +107,6 @@ class RESTTest (SyscoinTestFramework):
         self.log.info("Query an unspent TXO using the /getutxos URI")
 
         self.generatetoaddress(self.nodes[1], 1, not_related_address)
-        self.sync_all()
         bb_hash = self.nodes[0].getbestblockhash()
 
         assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))
@@ -183,8 +180,7 @@ class RESTTest (SyscoinTestFramework):
         json_obj = self.test_rest_request(f"/getutxos/checkmempool/{spent[0]}-{spent[1]}")
         assert_equal(len(json_obj['utxos']), 0)
 
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
         assert_equal(len(json_obj['utxos']), 1)
@@ -205,8 +201,7 @@ class RESTTest (SyscoinTestFramework):
         self.test_rest_request(f"/getutxos/checkmempool/{long_uri}", http_method='POST', status=200)
 
         mineAuxpowBlock(self.nodes[0])  # generate block to not affect upcoming tests
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # generate block to not affect upcoming tests
-        self.sync_all()
+        self.generate(self.nodes[0], 1)  # generate block to not affect upcoming tests
 
         self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
         bb_hash = self.nodes[0].getbestblockhash()
@@ -277,7 +272,6 @@ class RESTTest (SyscoinTestFramework):
 
         # See if we can get 5 headers in one response
         self.generate(self.nodes[1], 5)
-        self.sync_all()
         json_obj = self.test_rest_request(f"/headers/5/{bb_hash}")
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
 
@@ -312,7 +306,6 @@ class RESTTest (SyscoinTestFramework):
 
         # Now mine the transactions
         newblockhash = self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         # Check if the 3 tx show up in the new block
         json_obj = self.test_rest_request(f"/block/{newblockhash[0]}")

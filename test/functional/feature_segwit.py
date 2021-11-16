@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2019 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the SegWit changeover logic."""
@@ -191,8 +191,7 @@ class SegWitTest(SyscoinTestFramework):
                     wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))
                     p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
 
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # block 163
-        self.sync_blocks()
+        self.generate(self.nodes[0], 1)  # block 163
 
         # Make sure all nodes recognize the transactions as theirs
         assert_equal(self.nodes[0].getbalance(), balance_presetup - 60 * 50 + 20 * Decimal("49.999") + 50)
@@ -200,7 +199,6 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 20 * Decimal("49.999"))
 
         self.generate(self.nodes[0], 260)  # block 423
-        self.sync_blocks()
 
         self.log.info("Verify witness txs are skipped for mining before the fork")
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][P2WPKH][0], True)  # block 424
@@ -217,7 +215,6 @@ class SegWitTest(SyscoinTestFramework):
         self.log.info("Verify previous witness txs skipped for mining can now be mined")
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
         blockhash = self.generate(self.nodes[2], 1)[0]  # block 432 (first block with new rules; 432 = 144 * 3)
-        self.sync_blocks()
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
         segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"]
         assert_equal(len(segwit_tx_list), 5)
@@ -630,8 +627,7 @@ class SegWitTest(SyscoinTestFramework):
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
         txid = self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
-        txs_mined[txid] = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
-        self.sync_blocks()
+        txs_mined[txid] = self.generate(self.nodes[0], 1)[0]
         watchcount = 0
         spendcount = 0
         for i in self.nodes[0].listunspent():
@@ -680,8 +676,7 @@ class SegWitTest(SyscoinTestFramework):
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
         self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 1)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test HD Wallet keypool restore function.
@@ -65,8 +65,7 @@ class KeypoolRestoreTest(SyscoinTestFramework):
             self.nodes[0].sendtoaddress(addr_oldpool, 10)
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.nodes[0].sendtoaddress(addr_extpool, 5)
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1)
 
             self.log.info("Restart node with wallet backup")
             self.stop_node(idx)

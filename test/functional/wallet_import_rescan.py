@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet import RPCs.
@@ -188,8 +188,7 @@ class ImportRescanTest(SyscoinTestFramework):
             self.nodes,
             self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + TIMESTAMP_WINDOW + 1,
         )
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # For each variation of wallet key import, invoke the import RPC and
         # check the results from getbalance and listtransactions.

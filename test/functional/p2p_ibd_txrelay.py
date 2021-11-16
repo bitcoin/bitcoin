@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee filters during and after IBD."""
@@ -29,8 +29,7 @@ class P2PIBDTxRelayTest(SyscoinTestFramework):
             self.wait_until(lambda: all(peer['minfeefilter'] == MAX_FEE_FILTER for peer in node.getpeerinfo()))
 
         # Come out of IBD by generating a block
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         self.log.info("Check that nodes reset minfilter after coming out of IBD")
         for node in self.nodes:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the send RPC command."""
@@ -245,8 +245,7 @@ class WalletSendTest(SyscoinTestFramework):
                 assert_equal(res, [{"success": True}, {"success": True}])
 
         w0.sendtoaddress(a2_receive, 10) # fund w3
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 1)
 
         if not self.options.descriptors:
             # w4 has private keys enabled, but only contains watch-only keys (from w2)
@@ -264,8 +263,7 @@ class WalletSendTest(SyscoinTestFramework):
                 assert_equal(res, [{"success": True}])
 
             w0.sendtoaddress(a2_receive, 10) # fund w4
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1)
 
         self.log.info("Send to address...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1)
@@ -502,7 +500,6 @@ class WalletSendTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(addr, 10)
         self.nodes[0].sendtoaddress(ext_wallet.getnewaddress(), 10)
         self.generate(self.nodes[0], 6)
-        self.sync_all()
         ext_utxo = ext_fund.listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error

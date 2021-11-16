@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
@@ -66,9 +66,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.fee_tolerance = 2 * self.min_relay_tx_fee / 1000
 
         self.generate(self.nodes[2], 1)
-        self.sync_all()
         self.generate(self.nodes[0], 121)
-        self.sync_all()
 
         self.test_change_position()
         self.test_simple()
@@ -129,8 +127,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 5.0)
 
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         wwatch.unloadwallet()
 
@@ -503,8 +500,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         # Send 1.2 SYS to msig addr.
         self.nodes[0].sendtoaddress(mSigObj, 1.2)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         oldBalance = self.nodes[1].getbalance()
         inputs = []
@@ -515,7 +511,6 @@ class RawTransactionsTest(SyscoinTestFramework):
         final_psbt = w2.finalizepsbt(signed_psbt['psbt'])
         self.nodes[2].sendrawtransaction(final_psbt['hex'])
         self.generate(self.nodes[2], 1)
-        self.sync_all()
 
         # Make sure funds are received at node1.
         assert_equal(oldBalance+Decimal('1.10000000'), self.nodes[1].getbalance())
@@ -576,7 +571,6 @@ class RawTransactionsTest(SyscoinTestFramework):
         signedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         self.nodes[1].sendrawtransaction(signedTx['hex'])
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         # Make sure funds are received at node1.
         assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
@@ -588,12 +582,10 @@ class RawTransactionsTest(SyscoinTestFramework):
         # Empty node1, send some small coins from node0 to node1.
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         for _ in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # Fund a tx with ~20 small inputs.
         inputs = []
@@ -616,12 +608,10 @@ class RawTransactionsTest(SyscoinTestFramework):
         # Again, empty node1, send some small coins from node0 to node1.
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         for _ in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # Fund a tx with ~20 small inputs.
         oldBalance = self.nodes[0].getbalance()
@@ -633,7 +623,6 @@ class RawTransactionsTest(SyscoinTestFramework):
         fundedAndSignedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
         self.generate(self.nodes[1], 1)
-        self.sync_all()
         assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
 
     def test_op_return(self):
@@ -710,8 +699,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         signedtx = self.nodes[0].signrawtransactionwithwallet(signedtx["hex"])
         assert signedtx["complete"]
         self.nodes[0].sendrawtransaction(signedtx["hex"])
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         wwatch.unloadwallet()
 
@@ -963,7 +951,6 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.nodes[0].sendtoaddress(addr, 10)
         self.nodes[0].sendtoaddress(wallet.getnewaddress(), 10)
         self.generate(self.nodes[0], 6)
-        self.sync_all()
         ext_utxo = self.nodes[0].listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error
@@ -1033,8 +1020,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         addr = w.getnewaddress(address_type="bech32")
         self.nodes[0].sendtoaddress(addr, 1)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # A P2WPKH input costs 68 vbytes; With a single P2WPKH output, the rest of the tx is 42 vbytes for a total of 110 vbytes.
         # At a feerate of 1.85 sat/vb, the input will need a fee of 125.8 sats and the rest 77.7 sats
