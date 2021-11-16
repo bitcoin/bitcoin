@@ -39,9 +39,9 @@ class SpendGenesisCoinbase(BitcoinTestFramework):
         """Main test logic"""
         assert_equal(self.nodes[0].getbalance(), 0)
         self.log.info("Improrting priv keys")
-        self.nodes[0].importprivkey("cPpSkxEXoBHU9acsY7g6cGuaE3hGpykaFXDnRQgW3LqAwUc42Eqj")
-        self.nodes[0].importprivkey("cVcEjKTCz2px6oBhW95Mb9XHTgaPT5XGyJdsmzhcFQsA7sQYXwE7")
-        self.nodes[0].importprivkey("cUPeA8u6pqbR3Z2PK1rA88uevY8nbJSp8B1ucbXmNn2ivx6jLuFR")
+        self.nodes[0].importprivkey("cU1QaDgufU6FH24feZJ3f7RToVVbriuw7cZ91427mgbVA4Sk1kAi")
+        self.nodes[0].importprivkey("cUNUxiqMtffurfGu9BKocHTvvnujynZh1Yrc4CVhgTBeQJfC9MqU")
+        self.nodes[0].importprivkey("cTD9hmreLGnNPBPTz4TY4YbKCXZXfC6cyEXhcZTCzzycVmWwS643")
         expectedAmount = 30
         remaining = 1
         assert_equal(self.nodes[0].getbalance(), expectedAmount)
