@@ -142,7 +142,7 @@ void StartScriptCheckWorkerThreads(int threads_num);
 /** Stop all of the script checking worker threads */
 void StopScriptCheckWorkerThreads();
 
-CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& chainparams, bool fSuperblockPartOnly = false);
+CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& chainparams, bool fSuperblockPartOnly = false);
 
 bool AbortNode(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = bilingual_str{});
 

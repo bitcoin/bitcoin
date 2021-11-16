@@ -1300,9 +1300,8 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
     return true;
 }
 
-CAmount GetBlockSubsidyRegtest(int nHeight, const CChainParams& params)
+CAmount GetBlockSubsidyRegtest(int nHeight, const Consensus::Params& consensusParams)
 {
-    const Consensus::Params& consensusParams = params.GetConsensus();
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
@@ -1313,11 +1312,10 @@ CAmount GetBlockSubsidyRegtest(int nHeight, const CChainParams& params)
     nSubsidy >>= halvings;
     return nSubsidy;
 }
-CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& params, bool fSuperblockPartOnly)
+CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
 {
-    const Consensus::Params& consensusParams = params.GetConsensus();
     if(fRegTest) {
-        return GetBlockSubsidyRegtest(nHeight, params);
+        return GetBlockSubsidyRegtest(nHeight, consensusParams);
     }
     if (nHeight == 0)
         return 50*COIN;
@@ -2216,7 +2214,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     }
 
     // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
-    const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, m_params);
+    const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, m_params.GetConsensus());
     CAmount nMNSeniorityRet = 0;
     CAmount nMNFloorDiffRet = 0;
     // detect MN was paid properly, accounting for seniority which is added to subsidy

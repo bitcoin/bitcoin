@@ -380,7 +380,7 @@ RPCHelpMan masternode_payments()
         }
 
         std::vector<CTxOut> voutMasternodePayments, voutDummy;
-        CAmount blockReward = nBlockFees + GetBlockSubsidy(pindex->pprev->nHeight, Params());
+        CAmount blockReward = nBlockFees + GetBlockSubsidy(pindex->pprev->nHeight, Params().GetConsensus());
         CMutableTransaction coinbaseTx;
         coinbaseTx.vout.resize(1);
         coinbaseTx.vout[0].nValue = blockReward + nBlockFees;
