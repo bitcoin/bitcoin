@@ -82,8 +82,8 @@ class PopFrUnconnected(BitcoinTestFramework):
         compares_before = self.nodes[0].getpopscorestats()['stats']['popScoreComparisons']
 
         # connect to fake node
-        bn = BaseNode(self.log)
-        self.nodes[0].add_p2p_connection(bn)
+        self.bn = BaseNode(self.log)
+        self.nodes[0].add_p2p_connection(self.bn)
 
         # generate 2 blocks to send from the fake node
 
@@ -95,6 +95,7 @@ class PopFrUnconnected(BitcoinTestFramework):
 
         block1 = create_block(self.popctx, tip, create_coinbase(height), block_time)
         block1.solve()
+        self.missing_block = block1
 
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(block1)]
@@ -107,6 +108,7 @@ class PopFrUnconnected(BitcoinTestFramework):
 
         block2 = create_block(self.popctx, tip, create_coinbase(height + 1), block_time + 1)
         block2.solve()
+        self.connecting_block = block2
 
         block_message = msg_block(block2)
         self.nodes[0].p2p.send_and_ping(block_message)
@@ -117,11 +119,35 @@ class PopFrUnconnected(BitcoinTestFramework):
 
         compares_after = self.nodes[0].getpopscorestats()['stats']['popScoreComparisons']
         test_comparisons = compares_after - compares_before
-        assert test_comparisons == self.orphans_to_generate, "Expected {} comparisons, got {}".format(self.orphans_to_generate, test_comparisons)
+        assert test_comparisons == 0, "Expected {} comparisons, got {}".format(self.orphans_to_generate, test_comparisons)
         self.log.info("node0 made {} POP score comparisons".format(test_comparisons))
 
         assert self.get_best_block(self.nodes[0])['height'] == lastblock + 1
         self.log.warning("_find_best_chain_on_unconnected_block() succeeded!")
+
+    def _find_best_chain_on_filling_gap_block(self):
+        self.log.warning("starting _find_best_chain_on_unconnected_block()")
+        lastblock = self.nodes[0].getblockcount()
+        best = self.nodes[0].getbestblockhash()
+        assert best != self.connecting_block.hash
+
+        compares_before = self.nodes[0].getpopscorestats()['stats']['popScoreComparisons']
+
+        block_message = msg_block(self.missing_block)
+        self.nodes[0].p2p.send_and_ping(block_message)
+
+        newlastblock = self.nodes[0].getblockcount()
+        assert newlastblock == lastblock + 1, "bad tip. \n\tExpected height : {}\n\tGot      : {}".format(lastblock + 1, newlastblock)
+
+        best = self.nodes[0].getbestblockhash()
+        assert best == self.connecting_block.hash, "bad tip. \n\tExpected : {}\n\tGot      : {}".format(self.connecting_block.hash, best)
+
+        compares_after = self.nodes[0].getpopscorestats()['stats']['popScoreComparisons']
+        test_comparisons = compares_after - compares_before
+        assert test_comparisons == 1, "Expected {} comparisons, got {}".format(1, test_comparisons)
+        self.log.info("node0 made {} POP score comparisons".format(test_comparisons))
+
+        self.log.warning("_find_best_chain_on_filling_gap_block() succeeded!")
 
     def run_test(self):
         """Main test logic"""
@@ -130,6 +156,7 @@ class PopFrUnconnected(BitcoinTestFramework):
         self.apm = MockMiner()
 
         self._find_best_chain_on_unconnected_block()
+        self._find_best_chain_on_filling_gap_block()
 
 
 if __name__ == '__main__':

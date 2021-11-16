@@ -2927,13 +2927,24 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, const CChainPar
                         assert(blockindex);
 
                         auto tmp_set = setBlockIndexCandidates;
+                        bool canBeConnected = false;
                         for (auto* candidate : tmp_set) {
+                            bool hasTxsAndValid = candidate->HaveTxsDownloaded() && TestBlockIndex(candidate);
                             // if candidate has txs downloaded & currently arrived block is ancestor of `candidate`
-                            if (candidate->HaveTxsDownloaded() && TestBlockIndex(candidate) &&
-                                candidate->GetAncestor(blockindex->nHeight) == blockindex) {
+                            if (hasTxsAndValid && candidate->GetAncestor(blockindex->nHeight) == blockindex) {
                                 // then do pop fr with candidate, instead of blockindex
                                 pindexBestChain = VeriBlock::compareTipToBlock(candidate);
+                                canBeConnected = true;
                             }
+
+                            if (hasTxsAndValid && blockindex->GetAncestor(candidate->nHeight) == candidate) {
+                                canBeConnected = true;
+                            }
+                        }
+
+                        // do not try connecting block if there are no candidates
+                        if (!canBeConnected) {
+                            break;
                         }
                     }
                 }
