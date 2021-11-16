@@ -1,17 +1,17 @@
-Bitcoin Core integration/staging tree
+Fat pikapi coin Core integration/staging tree
 =====================================
 
-https://bitcoincore.org
+https://fatpikapicoin.netlify.ap
 
 For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+https://github.com/Vinamr-Anand/Fat-pikapi-coin
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
 
-What is Bitcoin?
+What is Fat pikapi coin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
+Fat pikapi coin is an experimental digital currency that enables instant payments to
 anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Bitcoin Core is the name of open source
