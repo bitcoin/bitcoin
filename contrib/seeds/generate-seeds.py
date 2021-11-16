@@ -41,6 +41,7 @@ class BIP155Network(Enum):
     TORV3 = 4
     I2P = 5
     CJDNS = 6
+    YGGDRASIL = 7
 
 def name_to_bip155(addr):
     '''Convert address string to BIP155 (networkID, addr) tuple.'''
@@ -61,7 +62,7 @@ def name_to_bip155(addr):
             raise ValueError(f'Invalid I2P {vchAddr}')
     elif '.' in addr: # IPv4
         return (BIP155Network.IPV4, bytes((int(x) for x in addr.split('.'))))
-    elif ':' in addr: # IPv6 or CJDNS
+    elif ':' in addr: # IPv6 or CJDNS or Yggdrasil
         sub = [[], []] # prefix, suffix
         x = 0
         addr = addr.split(':')
@@ -83,6 +84,10 @@ def name_to_bip155(addr):
             # not to the publicly unroutable "Unique Local Unicast" network, see
             # RFC4193: https://datatracker.ietf.org/doc/html/rfc4193#section-8
             return (BIP155Network.CJDNS, addr_bytes)
+        elif addr_bytes[0] == 0x02:
+            # Assume that seeds with 0200::/8 addresses belong to Yggdrasil.
+            # See https://yggdrasil-network.github.io/faq.html#will-yggdrasil-conflict-with-my-network-routing
+            return (BIP155Network.YGGDRASIL, addr_bytes)
         else:
             return (BIP155Network.IPV6, addr_bytes)
     else:
