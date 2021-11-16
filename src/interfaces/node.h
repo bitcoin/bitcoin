@@ -32,6 +32,7 @@ class proxyType;
 // SYSCOIN
 class CDeterministicMNList;
 enum class SynchronizationState;
+enum class TransactionError;
 struct CNodeStateStats;
 struct NodeContext;
 struct bilingual_str;
@@ -206,6 +207,9 @@ public:
 
     //! Get unspent outputs associated with a transaction.
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
+
+    //! Broadcast transaction.
+    virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
 
     //! Get wallet client.
     virtual WalletClient& walletClient() = 0;
