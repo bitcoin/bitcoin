@@ -6,6 +6,7 @@
 #ifndef INTEGRATION_REFERENCE_BTC_BTCSQ_PARAMS_HPP
 #define INTEGRATION_REFERENCE_BTC_BTCSQ_PARAMS_HPP
 
+#include <limits>
 #include <primitives/block.h>
 #include <veriblock/pop.hpp>
 
@@ -37,6 +38,7 @@ struct AltChainParamsBTCSQ : public altintegration::AltChainParams {
         this->mMaxVTBsInAltBlock = 50;
         this->mMaxATVsInAltBlock = 100;
         this->mPreserveBlocksBehindFinal = mEndorsementSettlementInterval;
+        this->mMaxReorgDistance = std::numeric_limits<int>::max(); // disable finalization for now
 
         //! copying all parameters here to make sure that
         //! if anyone changes them in alt-int-cpp, they
@@ -65,7 +67,6 @@ struct AltChainParamsBTCSQ : public altintegration::AltChainParams {
             0.02193952, 0.02134922};
 
         // altchain params
-        this->mMaxReorgDistance = 2500;              // blocks
         this->mMaxAltchainFutureBlockTime = 10 * 60; // 10 min
         this->mKeystoneInterval = 5;
         this->mFinalityDelay = 100;
