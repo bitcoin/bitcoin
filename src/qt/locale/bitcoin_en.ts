@@ -3011,7 +3011,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <location line="+23"/>
-        <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
+        <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, CJDNS, or Yggdrasil.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

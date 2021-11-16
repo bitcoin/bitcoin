@@ -1087,7 +1087,7 @@
                <item row="2" column="0">
                 <widget class="QLabel" name="peerNetworkLabel">
                  <property name="toolTip">
-                  <string>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</string>
+                  <string>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, CJDNS, or Yggdrasil.</string>
                  </property>
                  <property name="text">
                   <string>Network</string>
