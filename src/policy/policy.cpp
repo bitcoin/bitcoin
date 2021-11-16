@@ -9,6 +9,7 @@
 
 #include <validation.h>
 #include <coins.h>
+#include <policy/settings.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -169,10 +170,6 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
     return true;
 }
-
-unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
-CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
-CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 
 int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp)
 {

@@ -18,7 +18,7 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <rpc/mining.h>
-#include <rpc/rawtransaction.h>
+#include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>

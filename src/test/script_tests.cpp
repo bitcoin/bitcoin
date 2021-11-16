@@ -12,6 +12,7 @@
 #include <script/sign.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <rpc/util.h>
 #include <test/setup_common.h>
 
 #if defined(HAVE_CONSENSUS_LIB)

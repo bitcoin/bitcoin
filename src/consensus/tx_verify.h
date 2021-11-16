@@ -17,9 +17,6 @@ class CValidationState;
 
 /** Transaction validation functions */
 
-/** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state);
-
 namespace Consensus {
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)

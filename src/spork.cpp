@@ -16,7 +16,7 @@
 #include <protocol.h>
 #include <script/standard.h>
 #include <timedata.h>
-#include <validation.h>
+#include <util/validation.h> // for strMessageMagic
 
 #include <string>
 

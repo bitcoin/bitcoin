@@ -17,6 +17,20 @@
 
 #include <string>
 
+enum class TransactionError {
+    OK, //!< No error
+    MISSING_INPUTS,
+    ALREADY_IN_CHAIN,
+    P2P_DISABLED,
+    MEMPOOL_REJECTED,
+    MEMPOOL_ERROR,
+    INVALID_PSBT,
+    PSBT_MISMATCH,
+    SIGHASH_MISMATCH,
+};
+
+std::string TransactionErrorString(const TransactionError error);
+
 std::string AmountHighWarn(const std::string& optname);
 std::string AmountErrMsg(const char* const optname, const std::string& strValue);
 
