@@ -24,6 +24,7 @@
 #include <span.h>
 
 #include <vbk/adaptors/univalue_json.hpp>
+#include <vbk/pop_common.hpp>
 
 #include <veriblock/pop.hpp>
 
@@ -627,6 +628,15 @@ void UnserializeOrThrow(const std::vector<uint8_t>& in, T& out) {
     }
 }
 
+template <typename T>
+void UnserializeOrThrowParams(const std::vector<uint8_t>& in, T& out) {
+    altintegration::ValidationState state;
+    altintegration::ReadStream stream(in);
+    if(!altintegration::DeserializeFromVbkEncoding(stream, out, state, VeriBlock::GetPop().getConfig().getAltParams())) {
+        throw std::invalid_argument(state.toString());
+    }
+}
+
 template<typename Stream> inline void Unserialize(Stream& s, altintegration::PopData& pop_data) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
@@ -660,7 +670,7 @@ template<typename Stream> inline void Serialize(Stream& s, const altintegration:
 template<typename Stream> inline void Unserialize(Stream& s, altintegration::StoredBlockIndex<altintegration::BtcBlock>& b) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
-    UnserializeOrThrow(bytes_data, b);
+    UnserializeOrThrowParams(bytes_data, b);
 }
 template<typename Stream> inline void Serialize(Stream& s, const altintegration::StoredBlockIndex<altintegration::VbkBlock>& b) {
     std::vector<uint8_t> bytes_data = b.toVbkEncoding();
@@ -669,7 +679,7 @@ template<typename Stream> inline void Serialize(Stream& s, const altintegration:
 template<typename Stream> inline void Unserialize(Stream& s, altintegration::StoredBlockIndex<altintegration::VbkBlock>& b) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
-    UnserializeOrThrow(bytes_data, b);
+    UnserializeOrThrowParams(bytes_data, b);
 }
 template<typename Stream> inline void Serialize(Stream& s, const altintegration::StoredBlockIndex<altintegration::AltBlock>& b) {
     std::vector<uint8_t> bytes_data = b.toVbkEncoding();
@@ -678,7 +688,7 @@ template<typename Stream> inline void Serialize(Stream& s, const altintegration:
 template<typename Stream> inline void Unserialize(Stream& s, altintegration::StoredBlockIndex<altintegration::AltBlock>& b) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
-    UnserializeOrThrow(bytes_data, b);
+    UnserializeOrThrowParams(bytes_data, b);
 }
 template<typename Stream, size_t N> inline void Serialize(Stream& s, const altintegration::Blob<N>& b) {
     Serialize(s, b.asVector());
@@ -700,7 +710,7 @@ template<typename Stream> inline void Serialize(Stream& s, const altintegration:
 template<typename Stream> inline void Unserialize(Stream& s, altintegration::VbkBlock& block) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
-    UnserializeOrThrow(bytes_data, block);
+    UnserializeOrThrowParams(bytes_data, block);
 }
 
 

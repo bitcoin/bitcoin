@@ -52,13 +52,6 @@ std::vector<uint8_t> AltChainParamsBTCSQ::getHash(const std::vector<uint8_t>& by
     }
 }
 
-static std::vector<std::string> parseBlocks(const std::string& s)
-{
-    std::vector<std::string> strs;
-    boost::split(strs, s, boost::is_any_of(","));
-    return strs;
-}
-
 void printConfig(const altintegration::Config& config)
 {
     std::string btclast = config.btc.blocks.empty() ? "<empty>" : config.btc.blocks.rbegin()->getHash().toHex();
