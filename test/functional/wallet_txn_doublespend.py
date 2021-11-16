@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there is a double-spend conflict."""
@@ -124,7 +124,6 @@ class TxnMallTest(BitcoinTestFramework):
         # Reconnect the split network, and sync chain:
         self.connect_nodes(1, 2)
         self.generate(self.nodes[2], 1)  # Mine another block to make sure we sync
-        self.sync_blocks()
         assert_equal(self.nodes[0].gettransaction(doublespend_txid)["confirmations"], 2)
 
         # Re-fetch transaction info:

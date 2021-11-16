@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listsinceblock RPC."""
@@ -31,7 +31,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         # only one connection. (See fPreferredDownload in net_processing)
         self.connect_nodes(1, 2)
         self.generate(self.nodes[2], COINBASE_MATURITY + 1)
-        self.sync_all()
 
         self.test_no_blockhash()
         self.test_invalid_blockhash()
@@ -198,7 +197,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         address = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
         self.nodes[2].sendtoaddress(address, 10)
         self.generate(self.nodes[2], 6)
-        self.sync_all()
         self.nodes[2].importprivkey(privkey)
         utxos = self.nodes[2].listunspent()
         utxo = [u for u in utxos if u["address"] == address][0]

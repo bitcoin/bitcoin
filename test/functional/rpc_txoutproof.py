@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test gettxoutproof and verifytxoutproof RPCs."""
@@ -31,7 +31,6 @@ class MerkleBlockTest(BitcoinTestFramework):
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
         self.generate(miniwallet, 5)
         self.generate(self.nodes[0], COINBASE_MATURITY)
-        self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
         assert_equal(chain_height, 105)
@@ -57,7 +56,6 @@ class MerkleBlockTest(BitcoinTestFramework):
         tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
         txid3 = tx3['txid']
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         txid_spent = txin_spent["txid"]
         txid_unspent = txid1  # Input was change from txid2, so txid1 should be unspent

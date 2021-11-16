@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test blockfilterindex in conjunction with prune."""
@@ -26,9 +26,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         assert_greater_than(len(self.nodes[0].getblockfilter(self.nodes[0].getbestblockhash())['filter']), 0)
         # Mine two batches of blocks to avoid hitting NODE_NETWORK_LIMITED_MIN_BLOCKS disconnection
         self.generate(self.nodes[0], 250)
-        self.sync_all()
         self.generate(self.nodes[0], 250)
-        self.sync_all()
         self.sync_index(height=700)
 
         self.log.info("prune some blocks")

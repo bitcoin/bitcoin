@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
@@ -342,7 +342,6 @@ class WalletTest(BitcoinTestFramework):
 
         self.sync_all()
         self.generate(self.nodes[1], 1)  # mine a block
-        self.sync_all()
 
         unspent_txs = self.nodes[0].listunspent()  # zero value tx must be in listunspents output
         found = False

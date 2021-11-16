@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test coinstatsindex across nodes.
@@ -71,8 +71,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         address = self.nodes[0].get_deterministic_priv_key().address
         node.sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
         self.generate(node, 1)
-
-        self.sync_blocks(timeout=120)
 
         self.log.info("Test that gettxoutsetinfo() output is consistent with or without coinstatsindex option")
         res0 = node.gettxoutsetinfo('none')
@@ -170,7 +168,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         # Include both txs in a block
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         for hash_option in index_hash_options:
             # Check all amounts were registered correctly
@@ -271,7 +268,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Add another block, so we don't depend on reconsiderblock remembering which
         # blocks were touched by invalidateblock
         self.generate(index_node, 1)
-        self.sync_all()
 
         # Ensure that removing and re-adding blocks yields consistent results
         block = index_node.getblockhash(99)
