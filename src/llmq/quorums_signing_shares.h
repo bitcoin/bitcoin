@@ -452,4 +452,4 @@ extern CSigSharesManager* quorumSigSharesManager;
 
 } // namespace llmq
 
-#endif //SYSCOIN_LLMQ_QUORUMS_SIGNING_SHARES_H
+#endif // SYSCOIN_LLMQ_QUORUMS_SIGNING_SHARES_H

@@ -83,4 +83,4 @@ extern CDKGSessionManager* quorumDKGSessionManager;
 
 } // namespace llmq
 
-#endif //SYSCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H
+#endif // SYSCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H

@@ -51,4 +51,4 @@ public:
 };
 
 
-#endif //SYSCOIN_EVO_MNAUTH_H
+#endif // SYSCOIN_EVO_MNAUTH_H

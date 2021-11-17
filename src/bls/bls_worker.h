@@ -190,4 +190,4 @@ private:
     }
 };
 
-#endif //SYSCOIN_BLS_BLS_WORKER_H
+#endif // SYSCOIN_BLS_BLS_WORKER_H

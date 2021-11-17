@@ -55,4 +55,4 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockV
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, CCoinsViewCache& view, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-#endif //SYSCOIN_EVO_CBTX_H
+#endif // SYSCOIN_EVO_CBTX_H

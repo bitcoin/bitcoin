@@ -384,4 +384,4 @@ private:
 
 bool AreSuperblocksEnabled();
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_GOVERNANCE_H

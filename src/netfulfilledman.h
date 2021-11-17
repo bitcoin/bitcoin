@@ -48,4 +48,4 @@ public:
     void DoMaintenance();
 };
 
-#endif
+#endif // SYSCOIN_NETFULFILLEDMAN_H

@@ -15,4 +15,4 @@ public:
     static void DoMaintenance(CConnman &connman);
 };
 
-#endif//SYSCOIN_MASTERNODE_MASTERNODEUTILS_H
+#endif // SYSCOIN_MASTERNODE_MASTERNODEUTILS_H

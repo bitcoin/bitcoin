@@ -101,4 +101,4 @@ public:
 
 } // namespace llmq
 
-#endif//SYSCOIN_LLMQ_QUORUMS_UTILS_H
+#endif // SYSCOIN_LLMQ_QUORUMS_UTILS_H

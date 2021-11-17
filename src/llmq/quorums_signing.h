@@ -205,4 +205,4 @@ extern CSigningManager* quorumSigningManager;
 
 } // namespace llmq
 
-#endif //SYSCOIN_LLMQ_QUORUMS_SIGNING_H
+#endif // SYSCOIN_LLMQ_QUORUMS_SIGNING_H

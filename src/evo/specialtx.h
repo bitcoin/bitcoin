@@ -62,4 +62,4 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
         tx.vout.push_back(CTxOut(0, scriptData));
 }
 uint256 CalcTxInputsHash(const CTransaction& tx);
-#endif //SYSCOIN_EVO_SPECIALTX_H
+#endif // SYSCOIN_EVO_SPECIALTX_H

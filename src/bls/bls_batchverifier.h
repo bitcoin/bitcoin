@@ -237,4 +237,4 @@ private:
     }
 };
 
-#endif //SYSCOIN_BLS_BLS_BATCHVERIFIER_H
+#endif // SYSCOIN_BLS_BLS_BATCHVERIFIER_H

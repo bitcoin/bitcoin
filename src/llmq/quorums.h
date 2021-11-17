@@ -135,4 +135,4 @@ extern CQuorumManager* quorumManager;
 
 } // namespace llmq
 
-#endif //SYSCOIN_LLMQ_QUORUMS_H
+#endif // SYSCOIN_LLMQ_QUORUMS_H

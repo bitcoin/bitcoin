@@ -294,4 +294,4 @@ public:
     std::string ToString() const;
 };
 
-#endif
+#endif // SYSCOIN_SPORK_H

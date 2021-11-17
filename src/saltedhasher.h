@@ -72,4 +72,4 @@ struct StaticSaltedHasher
     }
 };
 
-#endif//SYSCOIN_SALTEDHASHER_H
+#endif // SYSCOIN_SALTEDHASHER_H

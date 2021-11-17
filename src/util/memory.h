@@ -17,4 +17,4 @@ std::unique_ptr<T> MakeUnique(Args&&... args)
     return std::make_unique<T>(std::forward<Args>(args)...);
 }
 
-#endif
+#endif // SYSCOIN_UTIL_MEMORY_H

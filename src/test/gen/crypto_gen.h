@@ -60,4 +60,4 @@ struct Arbitrary<uint256> {
     };
 };
 } //namespace rc
-#endif
+#endif // SYSCOIN_TEST_GEN_CRYPTO_GEN_H

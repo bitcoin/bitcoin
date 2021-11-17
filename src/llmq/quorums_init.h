@@ -26,4 +26,4 @@ void StopLLMQSystem();
 void InterruptLLMQSystem();
 } // namespace llmq
 
-#endif //SYSCOIN_LLMQ_QUORUMS_INIT_H
+#endif // SYSCOIN_LLMQ_QUORUMS_INIT_H

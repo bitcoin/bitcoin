@@ -30,4 +30,4 @@ public:
     void Flush();
 };
 
-#endif//SYSCOIN_BATCHEDLOGGER_H
+#endif // SYSCOIN_BATCHEDLOGGER_H

@@ -121,4 +121,4 @@ public:
 
 bool BuildSimplifiedMNListDiff(ChainstateManager& chainman, const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
 
-#endif //SYSCOIN_EVO_SIMPLIFIEDMNS_H
+#endif // SYSCOIN_EVO_SIMPLIFIEDMNS_H
