@@ -27,6 +27,7 @@ $(package)_cxxflags+=-std=c++17
 $(package)_cxxflags_linux=-fPIC
 $(package)_cxxflags_android=-fPIC
 $(package)_cxxflags_x86_64_darwin=-fcf-protection=full
+$(package)_cxxflags_mingw32=-fcf-protection=full
 endef
 
 define $(package)_preprocess_cmds
