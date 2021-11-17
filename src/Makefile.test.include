@@ -51,6 +51,7 @@ FUZZ_SUITE_LD_COMMON = \
  $(BOOST_LIBS) \
  $(LIBMEMENV) \
  $(LIBSECP256K1) \
+ $(MINISKETCH_LIBS) \
  $(EVENT_LIBS) \
  $(EVENT_PTHREADS_LIBS)
 
@@ -259,6 +260,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/locale.cpp \
  test/fuzz/merkleblock.cpp \
  test/fuzz/message.cpp \
+ test/fuzz/minisketch.cpp \
  test/fuzz/muhash.cpp \
  test/fuzz/multiplication_overflow.cpp \
  test/fuzz/net.cpp \
