@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 from itertools import product
+from math import ceil
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
@@ -19,6 +20,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     count_bytes,
     find_vout_for_address,
+    satoshi_round,
 )
 from test_framework.wallet_util import bytes_to_wif
 
@@ -135,6 +137,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_external_inputs()
         self.test_22670()
         self.test_feerate_rounding()
+        self.test_sffo_with_negative_ev()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -1150,6 +1153,41 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = w.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(address_type="bech32"): 1 - 0.00000202}])
         assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, rawtx, {"fee_rate": 1.85})
 
+    def test_sffo_with_negative_ev(self):
+        self.log.info("Test that enable subtractFeeFromOutputs will include negative effective value UTXOs")
+
+        self.nodes[1].createwallet("negevsffotest")
+        w = self.nodes[1].get_wallet_rpc("negevsffotest")
+        assert_equal(w.getbalance(), 0)
+
+        addr = w.getnewaddress(address_type="bech32")
+        low_amt = satoshi_round(0.00001000)
+        low_txid = self.nodes[0].sendtoaddress(addr, low_amt)
+        low_vout = find_vout_for_address(self.nodes[0], low_txid, addr)
+        high_txid = self.nodes[0].sendtoaddress(addr, 1)
+        high_vout = find_vout_for_address(self.nodes[0], high_txid, addr)
+
+        self.generate(self.nodes[0], 1)
+
+        ret_addr = self.nodes[0].getnewaddress(address_type="bech32")
+
+        # Calculate the size of the low value input by creating a tx without it, another with, and computing the difference in vsize
+        tx_high = w.createrawtransaction([{"txid": high_txid, "vout": high_vout}], [{ret_addr: 1}])
+        tx_high = w.signrawtransactionwithwallet(tx_high)["hex"]
+        tx_both = w.createrawtransaction([{"txid": low_txid, "vout": low_vout}, {"txid": high_txid, "vout": high_vout}], [{ret_addr: 1}])
+        tx_both = w.signrawtransactionwithwallet(tx_both)["hex"]
+        low_input_vsize = w.decoderawtransaction(tx_both)["vsize"] - w.decoderawtransaction(tx_high)["vsize"]
+
+        # Calculate a negative EV feerate by first calculating the feerate for 0 EV, then increasing it
+        zero_feerate = low_amt * 100000000 / low_input_vsize
+        neg_feerate = int(ceil(zero_feerate + 1))
+
+        created = w.createrawtransaction([], [{ret_addr: 1.00001000}])
+
+        # With neg_feerate, the low value input is negative ev. This should still fund when subtractFeeFromOutputs
+        w.fundrawtransaction(created, {"subtractFeeFromOutputs":[0], "fee_rate": neg_feerate})
+        # But it fails without subtractFeeFromOutputs
+        assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, created, {"fee_rate": neg_feerate})
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
