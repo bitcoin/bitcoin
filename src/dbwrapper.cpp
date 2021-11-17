@@ -136,6 +136,10 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         TryCreateDirectories(path);
         LogPrintf("Opening LevelDB in %s\n", fs::PathToString(path));
     }
+    // PathToString() return value is safe to pass to leveldb open function,
+    // because on POSIX leveldb passes the byte string directly to ::open(), and
+    // on Windows it converts from UTF-8 to UTF-16 before calling ::CreateFileW
+    // (see env_posix.cc and env_windows.cc).
     leveldb::Status status = leveldb::DB::Open(options, fs::PathToString(path), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
