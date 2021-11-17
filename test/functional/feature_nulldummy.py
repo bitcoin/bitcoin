@@ -22,7 +22,10 @@ from test_framework.blocktools import (
     create_transaction,
 )
 from test_framework.messages import CTransaction
-from test_framework.script import CScript
+from test_framework.script import (
+    OP_0,
+    OP_TRUE,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -32,16 +35,11 @@ from test_framework.util import (
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
 
 
-def trueDummy(tx):
-    scriptSig = CScript(tx.vin[0].scriptSig)
-    newscript = []
-    for i in scriptSig:
-        if len(newscript) == 0:
-            assert len(i) == 0
-            newscript.append(b'\x51')
-        else:
-            newscript.append(i)
-    tx.vin[0].scriptSig = CScript(newscript)
+def invalidate_nulldummy_tx(tx):
+    """Transform a NULLDUMMY compliant tx (i.e. scriptSig starts with OP_0)
+    to be non-NULLDUMMY compliant by replacing the dummy with OP_TRUE"""
+    assert_equal(tx.vin[0].scriptSig[0], OP_0)
+    tx.vin[0].scriptSig = bytes([OP_TRUE]) + tx.vin[0].scriptSig[1:]
     tx.rehash()
 
 
@@ -94,7 +92,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
 
         self.log.info("Test 2: Non-NULLDUMMY base multisig transaction should not be accepted to mempool before activation")
         test2tx = create_transaction(self.nodes[0], txid2, self.ms_address, amount=47)
-        trueDummy(test2tx)
+        invalidate_nulldummy_tx(test2tx)
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, test2tx.serialize_with_witness().hex(), 0)
 
         self.log.info(f"Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [{COINBASE_MATURITY + 4}]")
@@ -103,7 +101,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
         test4tx = create_transaction(self.nodes[0], test2tx.hash, self.address, amount=46)
         test6txs = [CTransaction(test4tx)]
-        trueDummy(test4tx)
+        invalidate_nulldummy_tx(test4tx)
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, test4tx.serialize_with_witness().hex(), 0)
         self.block_submit(self.nodes[0], [test4tx], accept=False)
 
@@ -123,11 +121,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         assert_equal(tmpl['previousblockhash'], self.lastblockhash)
         assert_equal(tmpl['height'], self.lastblockheight + 1)
-        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1)
-        for tx in txs:
-            tx.rehash()
-            block.vtx.append(tx)
-        block.hashMerkleRoot = block.calc_merkle_root()
+        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1, txlist=txs)
         if with_witness:
             add_witness_commitment(block)
         block.solve()
