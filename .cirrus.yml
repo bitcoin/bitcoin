@@ -103,7 +103,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: '[depends, sanitizers: thread (TSan), no gui] [lunar]'
+  name: '[TSan, depends, no gui] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:lunar
@@ -114,7 +114,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: '[depends, sanitizers: memory (MSan)] [jammy]'
+  name: '[MSan, depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
@@ -122,7 +122,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [jammy]'
+  name: '[ASan + LSan + UBSan + integer, no depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
@@ -130,7 +130,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: '[no depends, sanitizers: fuzzer,address,undefined,integer] [jammy]'
+  name: '[fuzzer,address,undefined,integer, no depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
