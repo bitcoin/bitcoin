@@ -345,7 +345,7 @@ CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-man
 
-doc/doxygen/.stamp: doc/Doxyfile FORCE
+doc/doxygen/.stamp: doc/developer/Doxyfile FORCE
 	$(MKDIR_P) $(@D)
 	$(DOXYGEN) $^
 	$(AM_V_at) touch $@

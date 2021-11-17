@@ -28,7 +28,7 @@
 
 # Docs
 /doc/*[a-zA-Z-].md                          @harding
-/doc/Doxyfile.in                            @fanquake
+/doc/developer/Doxyfile.in                  @fanquake
 /doc/REST-interface.md                      @jonasschnelli
 /doc/developer/benchmarking.md              @ariard
 /doc/bitcoin-conf.md                        @hebasto
