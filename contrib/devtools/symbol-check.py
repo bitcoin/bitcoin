@@ -19,35 +19,31 @@ import lief #type:ignore
 # https://github.com/lief-project/LIEF/pull/562
 LIEF_ELF_ARCH_RISCV = lief.ELF.ARCH(243)
 
-# Debian 8 (Jessie) EOL: 2020. https://wiki.debian.org/DebianReleases#Production_Releases
+# Debian 9 (Stretch) EOL: 2022. https://wiki.debian.org/DebianReleases#Production_Releases
 #
-# - g++ version 4.9.2 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=g%2B%2B)
-# - libc version 2.19 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=libc6)
+# - g++ version 6.3.0 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=g%2B%2B)
+# - libc version 2.24 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=libc6)
 #
-# Ubuntu 16.04 (Xenial) EOL: 2024. https://wiki.ubuntu.com/Releases
+# Ubuntu 16.04 (Xenial) EOL: 2026. https://wiki.ubuntu.com/Releases
 #
-# - g++ version 5.3.1 (https://packages.ubuntu.com/search?keywords=g%2B%2B&searchon=names&suite=xenial&section=all)
-# - libc version 2.23.0 (https://packages.ubuntu.com/search?keywords=libc6&searchon=names&suite=xenial&section=all)
+# - g++ version 5.3.1
+# - libc version 2.23
 #
-# CentOS 7 EOL: 2024. https://wiki.centos.org/FAQ/General
+# CentOS Stream 8 EOL: 2024. https://wiki.centos.org/About/Product
 #
-# - g++ version 4.8.5 (http://mirror.centos.org/centos/7/os/x86_64/Packages/)
-# - libc version 2.17 (http://mirror.centos.org/centos/7/os/x86_64/Packages/)
+# - g++ version 8.5.0 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
+# - libc version 2.28 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
 #
-# Taking the minimum of these as our target.
-#
-# According to GNU ABI document (https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html) this corresponds to:
-#   GCC 4.8.5: GCC_4.8.0
-#   (glibc)    GLIBC_2_17
-#
+# See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
+
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC': {
-    lief.ELF.ARCH.i386:   (2,17),
-    lief.ELF.ARCH.x86_64: (2,17),
-    lief.ELF.ARCH.ARM:    (2,17),
-    lief.ELF.ARCH.AARCH64:(2,17),
-    lief.ELF.ARCH.PPC64:  (2,17),
+    lief.ELF.ARCH.i386:   (2,18),
+    lief.ELF.ARCH.x86_64: (2,18),
+    lief.ELF.ARCH.ARM:    (2,18),
+    lief.ELF.ARCH.AARCH64:(2,18),
+    lief.ELF.ARCH.PPC64:  (2,18),
     LIEF_ELF_ARCH_RISCV:  (2,27),
 },
 'LIBATOMIC': (1,0),
