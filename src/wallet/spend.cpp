@@ -729,12 +729,13 @@ static bool CreateTransactionInternal(
     // For creating the change output now, we use the effective feerate.
     // For spending the change output in the future, we use the discard feerate for now.
     // So cost of change = (change output size * effective feerate) + (size of spending change output * discard feerate)
-    coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
-    coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
+    CAmount change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
+    coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + change_fee;
 
     // vouts to the payees
     if (!coin_selection_params.m_subtract_fee_outputs) {
         coin_selection_params.tx_noinputs_size = 11; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 output count, 1 witness overhead (dummy, flag, stack size)
+        coin_selection_params.m_change_fee = change_fee;
     }
     for (const auto& recipient : vecSend)
     {
