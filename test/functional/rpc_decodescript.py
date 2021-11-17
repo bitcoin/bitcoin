@@ -176,6 +176,14 @@ class DecodeScriptTest(BitcoinTestFramework):
         # a nested segwit script should not be returned in the results.
         assert 'segwit' not in rpc_result
 
+        self.log.info("- P2TR")
+        # 1 <x-only pubkey>
+        xonly_public_key = '01'*32  # first ever P2TR output on mainnet
+        rpc_result = self.nodes[0].decodescript('5120' + xonly_public_key)
+        assert_equal('witness_v1_taproot', rpc_result['type'])
+        assert_equal('1 ' + xonly_public_key, rpc_result['asm'])
+        assert 'segwit' not in rpc_result
+
     def decoderawtransaction_asm_sighashtype(self):
         """Test decoding scripts via RPC command "decoderawtransaction".
 
