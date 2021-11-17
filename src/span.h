@@ -248,4 +248,4 @@ template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename s
 /** Like MakeSpan, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(MakeSpan(std::forward<V>(v)))) { return UCharSpanCast(MakeSpan(std::forward<V>(v))); }
 
-#endif
+#endif // BITCOIN_SPAN_H
