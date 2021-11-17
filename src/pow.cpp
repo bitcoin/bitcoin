@@ -46,6 +46,55 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
 }
 
+unsigned int GetBurnRate(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    assert(pindexLast != nullptr);
+    // return 0 for blocks befare hardfork
+    if ((pindexLast->nHeight+1)<params.BurnFeeHeight) {
+        return 0;
+    }
+
+    unsigned int minBurnFeeRate = 10;
+    unsigned int maxBurnFeeRate = 90;
+    unsigned int step=10;
+    unsigned int multiplicator=4;
+
+    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() == 0) {
+        //return minBurnFeeRate at the start of new difficulty epoch
+        return minBurnFeeRate;
+    }
+
+    int nHeightFirst = (pindexLast->nHeight/params.DifficultyAdjustmentInterval())*params.DifficultyAdjustmentInterval();
+    assert(nHeightFirst >= 0);
+    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
+    assert(pindexFirst);
+
+    if (params.fPowNoRetargeting)
+        return minBurnFeeRate;
+
+    int blocksToRetarget = params.DifficultyAdjustmentInterval() - pindexLast->nHeight % params.DifficultyAdjustmentInterval();
+
+    int64_t nActualTimespan = pindexLast->GetBlockTime() + blocksToRetarget*params.nPowTargetSpacing - pindexFirst->GetBlockTime();
+
+    if (nActualTimespan < params.nPowTargetTimespan/4)
+        nActualTimespan = params.nPowTargetTimespan/4;
+    if (nActualTimespan > params.nPowTargetTimespan*4)
+        nActualTimespan = params.nPowTargetTimespan*4;
+
+    if (nActualTimespan >= params.nPowTargetTimespan) {
+          //return minBurnFeeRate if current block time<= target
+          return minBurnFeeRate;
+    } else {
+        unsigned int burnFeeRate = 100*(params.nPowTargetTimespan-nActualTimespan)*multiplicator/params.nPowTargetTimespan;
+        burnFeeRate = burnFeeRate/step*step;
+        if (burnFeeRate<minBurnFeeRate)
+            burnFeeRate=minBurnFeeRate;
+        if (burnFeeRate>maxBurnFeeRate)
+            burnFeeRate=maxBurnFeeRate;
+        return burnFeeRate;
+    }
+}
+
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
     if (params.fPowNoRetargeting)
