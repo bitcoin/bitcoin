@@ -20,4 +20,4 @@ void SetfLargeWorkInvalidChainFound(bool flag);
  */
 bilingual_str GetWarnings(bool verbose);
 
-#endif //  SYSCOIN_WARNINGS_H
+#endif // SYSCOIN_WARNINGS_H

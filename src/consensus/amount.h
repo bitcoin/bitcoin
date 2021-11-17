@@ -51,4 +51,4 @@ struct AssetMapOutput {
 };
 typedef std::unordered_map<uint64_t, AssetMapOutput> CAssetsMap;
 typedef std::unordered_set<uint64_t> CAssetsSet;
-#endif //  BITCOIN_CONSENSUS_AMOUNT_H
+#endif //  SYSCOIN_CONSENSUS_AMOUNT_H

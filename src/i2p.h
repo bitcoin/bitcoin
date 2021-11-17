@@ -267,4 +267,4 @@ private:
 } // namespace sam
 } // namespace i2p
 
-#endif /* SYSCOIN_I2P_H */
+#endif // SYSCOIN_I2P_H

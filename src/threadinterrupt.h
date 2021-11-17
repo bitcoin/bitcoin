@@ -33,4 +33,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif //SYSCOIN_THREADINTERRUPT_H
+#endif // SYSCOIN_THREADINTERRUPT_H

@@ -9,4 +9,4 @@ class CRPCTable;
 
 void RegisterZMQRPCCommands(CRPCTable& t);
 
-#endif // SYSCOIN_ZMQ_ZMRRPC_H
+#endif // SYSCOIN_ZMQ_ZMQRPC_H

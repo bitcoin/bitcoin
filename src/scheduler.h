@@ -146,4 +146,4 @@ public:
     size_t CallbacksPending();
 };
 
-#endif
+#endif // SYSCOIN_SCHEDULER_H

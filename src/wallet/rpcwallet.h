@@ -43,5 +43,4 @@ const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wal
 RPCHelpMan listunspent();
 RPCHelpMan getaddressinfo();
 RPCHelpMan signrawtransactionwithwallet();
-RPCHelpMan sendrawtransaction();
-#endif //SYSCOIN_WALLET_RPCWALLET_H
+#endif // SYSCOIN_WALLET_RPCWALLET_H

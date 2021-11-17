@@ -69,4 +69,4 @@ CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
  */
 UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile, FILE* filejson = nullptr);
 
-#endif
+#endif // SYSCOIN_RPC_BLOCKCHAIN_H

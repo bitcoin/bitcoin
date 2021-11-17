@@ -103,4 +103,4 @@ template <typename T1, size_t PREFIX_LEN>
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
-#endif // SYSCOIN_UTIL_STRENCODINGS_H
+#endif // SYSCOIN_UTIL_STRING_H

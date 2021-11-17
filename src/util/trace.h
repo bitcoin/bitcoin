@@ -42,4 +42,4 @@
 #endif
 
 
-#endif /* SYSCOIN_UTIL_TRACE_H */
+#endif // SYSCOIN_UTIL_TRACE_H

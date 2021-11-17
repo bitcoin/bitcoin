@@ -179,4 +179,4 @@ private:
 };
 
 
-#endif // SYSCOIN_TEST_BIGNUM_H
+#endif // SYSCOIN_TEST_SCRIPTNUM10_H

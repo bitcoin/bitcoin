@@ -31,4 +31,4 @@ void InterruptREST();
  */
 void StopREST();
 
-#endif
+#endif // SYSCOIN_HTTPRPC_H

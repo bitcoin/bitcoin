@@ -17,7 +17,7 @@ for HEADER_FILE in $(git ls-files -- "*.h" | grep -vE "^${REGEXP_EXCLUDE_FILES_W
 do
     HEADER_ID_BASE=$(cut -f2- -d/ <<< "${HEADER_FILE}" | sed "s/\.h$//g" | tr / _ | tr - _ | tr "[:lower:]" "[:upper:]")
     HEADER_ID="${HEADER_ID_PREFIX}${HEADER_ID_BASE}${HEADER_ID_SUFFIX}"
-    if [[ $(grep -cE "^#(ifndef|define) ${HEADER_ID}" "${HEADER_FILE}") != 2 ]]; then
+    if [[ $(grep --count --extended-regexp "^#(ifndef|define|endif //) ${HEADER_ID}" "${HEADER_FILE}") != 3 ]]; then
         echo "${HEADER_FILE} seems to be missing the expected include guard:"
         echo "  #ifndef ${HEADER_ID}"
         echo "  #define ${HEADER_ID}"

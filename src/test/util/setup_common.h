@@ -247,4 +247,4 @@ private:
     const std::string m_reason;
 };
 
-#endif
+#endif // SYSCOIN_TEST_UTIL_SETUP_COMMON_H

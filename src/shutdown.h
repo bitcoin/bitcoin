@@ -32,4 +32,4 @@ bool ShutdownRequested();
  */
 void WaitForShutdown();
 
-#endif
+#endif // SYSCOIN_SHUTDOWN_H
