@@ -93,7 +93,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, CCh
     const auto info_all = tx_pool.infoAll();
     if (!info_all.empty()) {
         const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
-        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, /* dummy */ MemPoolRemovalReason::BLOCK));
+        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, MemPoolRemovalReason::BLOCK /* dummy */));
         std::vector<uint256> all_txids;
         tx_pool.queryHashes(all_txids);
         assert(all_txids.size() < info_all.size());
