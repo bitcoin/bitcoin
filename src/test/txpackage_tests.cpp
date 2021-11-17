@@ -78,10 +78,10 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100NoDIP0001Setup)
     CKey parent_key;
     parent_key.MakeNewKey(true);
     CScript parent_locking_script = GetScriptForDestination(PKHash(parent_key.GetPubKey()));
-    auto mtx_parent = CreateValidMempoolTransaction(/* input_transaction */ m_coinbase_txns[0], /* vout */ 0,
-                                                    /* input_height */ 0, /* input_signing_key */ coinbaseKey,
-                                                    /* output_destination */ parent_locking_script,
-                                                    /* output_amount */ CAmount(49 * COIN), /* submit */ false);
+    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[0], /*input_vout=*/0,
+                                                    /*input_height=*/ 0, /*input_signing_key=*/coinbaseKey,
+                                                    /*output_destination=*/ parent_locking_script,
+                                                    /*output_amount=*/ CAmount(49 * COIN), /*submit=*/false);
     CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
 
     CKey child_key;
@@ -222,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     // Unrelated transactions are not allowed in package submission.
     Package package_unrelated;
     for (size_t i{0}; i < 10; ++i) {
-        auto mtx = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[i + 25], /*vout=*/0,
+        auto mtx = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[i + 25], /*input_vout=*/0,
                                                  /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                  /*output_destination=*/parent_locking_script,
                                                  /*output_amount=*/CAmount(49 * COIN), /*submit=*/false);
@@ -238,7 +238,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     // Parent and Child (and Grandchild) Package
     Package package_parent_child;
     Package package_3gen;
-    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*vout=*/0,
+    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
                                                     /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                     /*output_destination=*/parent_locking_script,
                                                     /*output_amount=*/CAmount(49 * COIN), /*submit=*/false);
@@ -249,7 +249,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     CKey child_key;
     child_key.MakeNewKey(true);
     CScript child_locking_script = GetScriptForDestination(PKHash(child_key.GetPubKey()));
-    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent, /*vout=*/0,
+    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent, /*input_vout=*/0,
                                                    /*input_height=*/101, /*input_signing_key=*/parent_key,
                                                    /*output_destination=*/child_locking_script,
                                                    /*output_amount=*/CAmount(48 * COIN), /*submit=*/false);
@@ -260,7 +260,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     CKey grandchild_key;
     grandchild_key.MakeNewKey(true);
     CScript grandchild_locking_script = GetScriptForDestination(PKHash(grandchild_key.GetPubKey()));
-    auto mtx_grandchild = CreateValidMempoolTransaction(/*input_transaction=*/tx_child, /*vout=*/0,
+    auto mtx_grandchild = CreateValidMempoolTransaction(/*input_transaction=*/tx_child, /*input_vout=*/0,
                                                        /*input_height=*/101, /*input_signing_key=*/child_key,
                                                        /*output_destination=*/grandchild_locking_script,
                                                        /*output_amount=*/CAmount(47 * COIN), /*submit=*/false);
