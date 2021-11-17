@@ -70,16 +70,18 @@ class TestSecurityChecks(unittest.TestCase):
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--disable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
-            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA NX RELOC_SECTION'))
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA NX RELOC_SECTION CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--disable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
-            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA RELOC_SECTION'))
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA RELOC_SECTION CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
-            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA'))
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-pie','-fPIE']),
-            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA'))  # -pie -fPIE does nothing unless --dynamicbase is also supplied
+            (1, executable+': failed PIE DYNAMIC_BASE HIGH_ENTROPY_VA CONTROL_FLOW'))  # -pie -fPIE does nothing unless --dynamicbase is also supplied
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--dynamicbase','-Wl,--no-high-entropy-va','-pie','-fPIE']),
-            (1, executable+': failed HIGH_ENTROPY_VA'))
+            (1, executable+': failed HIGH_ENTROPY_VA CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--dynamicbase','-Wl,--high-entropy-va','-pie','-fPIE']),
+            (1, executable+': failed CONTROL_FLOW'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--enable-reloc-section','-Wl,--dynamicbase','-Wl,--high-entropy-va','-pie','-fPIE', '-fcf-protection=full']),
             (0, ''))
 
         clean_files(source, executable)

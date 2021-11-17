@@ -31,6 +31,7 @@ $(package)_cxxflags=-std=c++17 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
 $(package)_cxxflags_android=-fPIC
 $(package)_cxxflags_x86_64_darwin=-fcf-protection=full
+$(package)_cxxflags_mingw32=-fcf-protection=full
 endef
 
 # Fix unused variable in boost_process, can be removed after upgrading to 1.72

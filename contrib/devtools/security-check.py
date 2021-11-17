@@ -121,6 +121,21 @@ def check_PE_RELOC_SECTION(binary) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
     return binary.has_relocations
 
+def check_PE_control_flow(binary) -> bool:
+    '''
+    Check for control flow instrumentation
+    '''
+    main = binary.get_symbol('main').value
+
+    section_addr = binary.section_from_rva(main).virtual_address
+    virtual_address = binary.optional_header.imagebase + section_addr + main
+
+    content = binary.get_content_from_virtual_address(virtual_address, 4, lief.Binary.VA_TYPES.VA)
+
+    if content == [243, 15, 30, 250]: # endbr64
+        return True
+    return False
+
 def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     Check for no undefined references.
@@ -177,7 +192,8 @@ CHECKS = {
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
     ('NX', check_NX),
-    ('RELOC_SECTION', check_PE_RELOC_SECTION)
+    ('RELOC_SECTION', check_PE_RELOC_SECTION),
+    ('CONTROL_FLOW', check_PE_control_flow),
 ],
 'MACHO': [
     ('PIE', check_PIE),
