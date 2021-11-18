@@ -2019,6 +2019,40 @@ public:
     }
 };
 
+static const auto scan_action_arg_desc = RPCArg{
+    "action", RPCArg::Type::STR, RPCArg::Optional::NO, "The action to execute\n"
+        "\"start\" for starting a scan\n"
+        "\"abort\" for aborting the current scan (returns true when abort was successful)\n"
+        "\"status\" for progress report (in %) of the current scan"
+};
+
+static const auto scan_objects_arg_desc = RPCArg{
+    "scanobjects", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "Array of scan objects. Required for \"start\" action\n"
+        "Every scan object is either a string descriptor or an object:",
+    {
+        {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"},
+        {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with output descriptor and metadata",
+            {
+                {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "An output descriptor"},
+                {"range", RPCArg::Type::RANGE, RPCArg::Default{1000}, "The range of HD chain indexes to explore (either end or [begin,end])"},
+            }},
+    },
+    RPCArgOptions{.oneline_description="[scanobjects,...]"},
+};
+
+static const auto scan_result_abort = RPCResult{
+    "when action=='abort'", RPCResult::Type::BOOL, "success",
+    "True if scan will be aborted (not necessarily before this RPC returns), or false if there is no scan to abort"
+};
+static const auto scan_result_status_none = RPCResult{
+    "when action=='status' and no scan is in progress - possibly already completed", RPCResult::Type::NONE, "", ""
+};
+static const auto scan_result_status_some = RPCResult{
+    "when action=='status' and a scan is currently in progress", RPCResult::Type::OBJ, "", "",
+    {{RPCResult::Type::NUM, "progress", "Approximate percent complete"},}
+};
+
+
 static RPCHelpMan scantxoutset()
 {
     // scriptPubKey corresponding to mainnet address 12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S
@@ -2038,21 +2072,8 @@ static RPCHelpMan scantxoutset()
         "In the latter case, a range needs to be specified by below if different from 1000.\n"
         "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n",
         {
-            {"action", RPCArg::Type::STR, RPCArg::Optional::NO, "The action to execute\n"
-                "\"start\" for starting a scan\n"
-                "\"abort\" for aborting the current scan (returns true when abort was successful)\n"
-                "\"status\" for progress report (in %) of the current scan"},
-            {"scanobjects", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "Array of scan objects. Required for \"start\" action\n"
-                "Every scan object is either a string descriptor or an object:",
-            {
-                {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"},
-                {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with output descriptor and metadata",
-                {
-                    {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "An output descriptor"},
-                    {"range", RPCArg::Type::RANGE, RPCArg::Default{1000}, "The range of HD chain indexes to explore (either end or [begin,end])"},
-                }},
-            },
-            RPCArgOptions{.oneline_description="[scanobjects,...]"}},
+            scan_action_arg_desc,
+            scan_objects_arg_desc,
         },
         {
             RPCResult{"when action=='start'; only returns after scan completes", RPCResult::Type::OBJ, "", "", {
@@ -2074,12 +2095,9 @@ static RPCHelpMan scantxoutset()
                 }},
                 {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
             }},
-            RPCResult{"when action=='abort'", RPCResult::Type::BOOL, "success", "True if scan will be aborted (not necessarily before this RPC returns), or false if there is no scan to abort"},
-            RPCResult{"when action=='status' and a scan is currently in progress", RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "progress", "Approximate percent complete"},
-            }},
-            RPCResult{"when action=='status' and no scan is in progress - possibly already completed", RPCResult::Type::NONE, "", ""},
+            scan_result_abort,
+            scan_result_status_some,
+            scan_result_status_none,
         },
         RPCExamples{
             HelpExampleCli("scantxoutset", "start \'[\"" + EXAMPLE_DESCRIPTOR_RAW + "\"]\'") +
