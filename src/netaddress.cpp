@@ -473,8 +473,8 @@ bool CNetAddr::IsValid() const
         return false;
     }
 
-    // Yggdrasil addresses always start with 0x02
-    if (IsYggdrasil() && (m_addr[0] != 0x02)) {
+    // Yggdrasil addresses always start with 0x02 or 0x03
+    if (IsYggdrasil() && ((m_addr[0] & 0xfe) != 0x02)) {
         return false;
     }
 

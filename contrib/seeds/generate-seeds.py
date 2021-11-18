@@ -84,8 +84,8 @@ def name_to_bip155(addr):
             # not to the publicly unroutable "Unique Local Unicast" network, see
             # RFC4193: https://datatracker.ietf.org/doc/html/rfc4193#section-8
             return (BIP155Network.CJDNS, addr_bytes)
-        elif addr_bytes[0] == 0x02:
-            # Assume that seeds with 0200::/8 addresses belong to Yggdrasil.
+        elif addr_bytes[0] in [0x02, 0x03]:
+            # Assume that seeds with 0200::/7 addresses belong to Yggdrasil.
             # See https://yggdrasil-network.github.io/faq.html#will-yggdrasil-conflict-with-my-network-routing
             return (BIP155Network.YGGDRASIL, addr_bytes)
         else:
