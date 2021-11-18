@@ -385,4 +385,4 @@ namespace std
 	template<> struct hash<dev::h256>: dev::h256::hash {};
 	template<> struct hash<dev::h512>: dev::h512::hash {};
 }
-  #endif // SYSCOIN_NEVM_FIXEDHASH_H
+#endif // SYSCOIN_NEVM_FIXEDHASH_H
