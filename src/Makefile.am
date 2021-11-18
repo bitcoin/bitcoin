@@ -387,6 +387,7 @@ libbitcoin_node_a_SOURCES = \
   shutdown.cpp \
   signet.cpp \
   timedata.cpp \
+  kernel/timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
@@ -848,7 +849,6 @@ libbitcoinkernel_la_SOURCES = \
   init/common.cpp \
   key.cpp \
   logging.cpp \
-  netaddress.cpp \
   node/blockstorage.cpp \
   node/chainstate.cpp \
   node/coinstats.cpp \
@@ -877,11 +877,10 @@ libbitcoinkernel_la_SOURCES = \
   support/lockedpool.cpp \
   sync.cpp \
   threadinterrupt.cpp \
-  timedata.cpp \
+  kernel/timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
   uint256.cpp \
-  util/asmap.cpp \
   util/bytevectorhash.cpp \
   util/getuniquepath.cpp \
   util/hasher.cpp \

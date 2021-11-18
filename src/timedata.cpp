@@ -16,27 +16,6 @@
 #include <util/translation.h>
 #include <warnings.h>
 
-static Mutex g_timeoffset_mutex;
-static int64_t nTimeOffset GUARDED_BY(g_timeoffset_mutex) = 0;
-
-/**
- * "Never go to sea with two chronometers; take one or three."
- * Our three time sources are:
- *  - System clock
- *  - Median of other nodes clocks
- *  - The user (asking the user to fix the system clock if the first two disagree)
- */
-int64_t GetTimeOffset()
-{
-    LOCK(g_timeoffset_mutex);
-    return nTimeOffset;
-}
-
-int64_t GetAdjustedTime()
-{
-    return GetTime() + GetTimeOffset();
-}
-
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
