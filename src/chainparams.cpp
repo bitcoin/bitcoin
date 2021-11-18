@@ -91,10 +91,10 @@ CMainParams::CMainParams()
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-    pchMessageStart[0] = 'v';
+    pchMessageStart[0] = 'V';
     pchMessageStart[1] = 'B';
-    pchMessageStart[2] = 'T';
-    pchMessageStart[3] = 'C';
+    pchMessageStart[2] = 'K';
+    pchMessageStart[3] = 0;
     nDefaultPort = 8033;
     nPruneAfterHeight = 100000;
     m_assumed_blockchain_size = 1;
