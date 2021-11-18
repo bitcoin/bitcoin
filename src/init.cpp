@@ -466,6 +466,8 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-peerbloomfilters", strprintf("Support filtering of blocks and transaction with bloom filters (default: %u)", DEFAULT_PEERBLOOMFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerblockfilters", strprintf("Serve compact block filters to peers per BIP 157 (default: %u)", DEFAULT_PEERBLOCKFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-permitbaremultisig", strprintf("Relay non-P2SH multisig (default: %u)", DEFAULT_PERMIT_BAREMULTISIG), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    // TODO: remove the sentence "Nodes not using ... incoming connections." once the changes from
+    // https://github.com/bitcoin/bitcoin/pull/23542 have become widespread.
     argsman.AddArg("-port=<port>", strprintf("Listen for connections on <port>. Nodes not using the default ports (default: %u, testnet: %u, signet: %u, regtest: %u) are unlikely to get incoming connections. Not relevant for I2P (see doc/i2p.md).", defaultChainParams->GetDefaultPort(), testnetChainParams->GetDefaultPort(), signetChainParams->GetDefaultPort(), regtestChainParams->GetDefaultPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-proxy=<ip:port>", "Connect through SOCKS5 proxy, set -noproxy to disable (default: disabled)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-proxyrandomize", strprintf("Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)", DEFAULT_PROXYRANDOMIZE), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1698,12 +1700,23 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
+    const auto BadPortWarning = [](const char* prefix, uint16_t port) {
+        return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
+                           "thus it is unlikely that any Bitcoin Core peers connect to it. See "
+                           "doc/p2p-bad-ports.md for details and a full list."),
+                         prefix,
+                         port);
+    };
+
     for (const std::string& bind_arg : args.GetArgs("-bind")) {
         CService bind_addr;
         const size_t index = bind_arg.rfind('=');
         if (index == std::string::npos) {
             if (Lookup(bind_arg, bind_addr, GetListenPort(), false)) {
                 connOptions.vBinds.push_back(bind_addr);
+                if (IsBadPort(bind_addr.GetPort())) {
+                    InitWarning(BadPortWarning("-bind", bind_addr.GetPort()));
+                }
                 continue;
             }
         } else {
@@ -1729,6 +1742,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // If the user did not specify -bind= or -whitebind= then we bind
     // on any address - 0.0.0.0 (IPv4) and :: (IPv6).
     connOptions.bind_on_any = args.GetArgs("-bind").empty() && args.GetArgs("-whitebind").empty();
+
+    // Emit a warning if a bad port is given to -port= but only if -bind and -whitebind are not
+    // given, because if they are, then -port= is ignored.
+    if (connOptions.bind_on_any && args.IsArgSet("-port")) {
+        const uint16_t port_arg = args.GetIntArg("-port", 0);
+        if (IsBadPort(port_arg)) {
+            InitWarning(BadPortWarning("-port", port_arg));
+        }
+    }
 
     CService onion_service_target;
     if (!connOptions.onion_binds.empty()) {
