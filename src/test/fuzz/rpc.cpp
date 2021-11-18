@@ -79,6 +79,7 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future
     "setban",                // avoid DNS lookups
     "stop",                  // avoid shutdown state
+    "getnevmblockchaininfo",
 };
 
 // RPC commands which are safe for fuzzing.
