@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
@@ -275,7 +275,7 @@ class BIP68Test(BitcoinTestFramework):
         cur_time = int(time.time())
         for _ in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             cur_time += 600
 
         assert tx2.hash in self.nodes[0].getrawmempool()
@@ -335,7 +335,6 @@ class BIP68Test(BitcoinTestFramework):
         # tx3 to be removed.
         for i in range(2):
             block = create_block(tmpl=tmpl, ntime=cur_time)
-            block.rehash()
             block.solve()
             tip = block.sha256
             assert_equal(None if i == 1 else 'inconclusive', self.nodes[0].submitblock(block.serialize().hex()))
@@ -351,7 +350,7 @@ class BIP68Test(BitcoinTestFramework):
         # Reset the chain and get rid of the mocktimed-blocks
         self.nodes[0].setmocktime(0)
         self.nodes[0].invalidateblock(self.nodes[0].getblockhash(cur_height+1))
-        self.generate(self.nodes[0], 10)
+        self.generate(self.nodes[0], 10, sync_fun=self.no_op)
 
     # Make sure that BIP68 isn't being used to validate blocks prior to
     # activation height.  If more blocks are mined prior to this test
@@ -392,7 +391,6 @@ class BIP68Test(BitcoinTestFramework):
         block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         add_witness_commitment(block)
         block.solve()
 
@@ -405,9 +403,9 @@ class BIP68Test(BitcoinTestFramework):
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
         assert_greater_than(min_activation_height - height, 2)
-        self.generate(self.nodes[0], min_activation_height - height - 2)
+        self.generate(self.nodes[0], min_activation_height - height - 2, sync_fun=self.no_op)
         assert not softfork_active(self.nodes[0], 'csv')
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert softfork_active(self.nodes[0], 'csv')
         self.sync_blocks()
 

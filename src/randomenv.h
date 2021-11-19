@@ -14,4 +14,4 @@ void RandAddDynamicEnv(CSHA512& hasher);
 /** Gather non-cryptographic environment data that does not change over time. */
 void RandAddStaticEnv(CSHA512& hasher);
 
-#endif
+#endif // BITCOIN_RANDOMENV_H

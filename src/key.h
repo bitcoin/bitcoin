@@ -85,6 +85,7 @@ public:
 
     //! Simple read-only vector-like interface.
     unsigned int size() const { return (fValid ? keydata.size() : 0); }
+    const unsigned char* data() const { return keydata.data(); }
     const unsigned char* begin() const { return keydata.data(); }
     const unsigned char* end() const { return keydata.data() + size(); }
 
@@ -129,7 +130,7 @@ public:
 
     /**
      * Create a BIP-340 Schnorr signature, for the xonly-pubkey corresponding to *this,
-     * optionally tweaked by *merkle_root. Additional nonce entropy can be provided through
+     * optionally tweaked by *merkle_root. Additional nonce entropy is provided through
      * aux.
      *
      * merkle_root is used to optionally perform tweaking of the private key, as specified
@@ -142,7 +143,7 @@ public:
      *                              (this is used for key path spending, with specific
      *                              Merkle root of the script tree).
      */
-    bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root = nullptr, const uint256* aux = nullptr) const;
+    bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const;
 
     //! Derive BIP32 child key.
     bool Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
@@ -177,7 +178,7 @@ struct CExtKey {
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
-    void SetSeed(const unsigned char* seed, unsigned int nSeedLen);
+    void SetSeed(Span<const uint8_t> seed);
 };
 
 /** Initialize the elliptic curve support. May not be called twice without calling ECC_Stop first. */

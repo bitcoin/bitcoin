@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the bumpfee RPC.
@@ -62,7 +62,6 @@ class BumpFeeTest(BitcoinTestFramework):
     def clear_mempool(self):
         # Clear mempool between subtests. The subtests may only depend on chainstate (utxos)
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
     def run_test(self):
         # Encrypt wallet for test_locked_wallet_fails test
@@ -75,12 +74,10 @@ class BumpFeeTest(BitcoinTestFramework):
         # fund rbf node with 10 coins of 0.001 btc (100,000 satoshis)
         self.log.info("Mining blocks...")
         self.generate(peer_node, 110)
-        self.sync_all()
         for _ in range(25):
             peer_node.sendtoaddress(rbf_node_address, 0.001)
         self.sync_all()
         self.generate(peer_node, 1)
-        self.sync_all()
         assert_equal(rbf_node.getbalance(), Decimal("0.025"))
 
         self.log.info("Running tests")
@@ -444,7 +441,6 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     funding_address2 = watcher.getnewaddress(address_type='bech32')
     peer_node.sendmany("", {funding_address1: 0.001, funding_address2: 0.001})
     self.generate(peer_node, 1)
-    self.sync_all()
 
     # Create single-input PSBT for transaction to be bumped
     psbt = watcher.walletcreatefundedpsbt([], {dest_address: 0.0005}, 0, {"fee_rate": 1}, True)['psbt']
@@ -529,7 +525,7 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     assert_equal([t for t in rbf_node.listunspent(minconf=0, include_unsafe=False) if t["txid"] == rbfid], [])
 
     # check that the main output from the rbf tx is spendable after confirmed
-    self.generate(rbf_node, 1)
+    self.generate(rbf_node, 1, sync_fun=self.no_op)
     assert_equal(
         sum(1 for t in rbf_node.listunspent(minconf=0, include_unsafe=False)
             if t["txid"] == rbfid and t["address"] == rbf_node_address and t["spendable"]), 1)
@@ -598,7 +594,6 @@ def submit_block_with_tx(node, tx):
     block_time = node.getblockheader(tip)["mediantime"] + 1
     block = create_block(int(tip, 16), create_coinbase(height), block_time)
     block.vtx.append(ctx)
-    block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
     add_witness_commitment(block)
     block.solve()

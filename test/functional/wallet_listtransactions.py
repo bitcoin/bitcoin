@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
@@ -38,7 +38,6 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.log.info("Test confirmations change after mining a block")
         blockhash = self.generate(self.nodes[0], 1)[0]
         blockheight = self.nodes[0].getblockheader(blockhash)['height']
-        self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid},
                             {"category": "send", "amount": Decimal("-0.1"), "confirmations": 1, "blockhash": blockhash, "blockheight": blockheight})
@@ -95,7 +94,6 @@ class ListTransactionsTest(BitcoinTestFramework):
             self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
             txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
             self.generate(self.nodes[1], 1)
-            self.sync_all()
             assert_equal(len(self.nodes[0].listtransactions(label="watchonly", include_watchonly=True)), 1)
             assert_equal(len(self.nodes[0].listtransactions(dummy="watchonly", include_watchonly=True)), 1)
             assert len(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=False)) == 0

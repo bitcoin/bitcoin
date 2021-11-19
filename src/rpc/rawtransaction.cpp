@@ -946,12 +946,13 @@ static RPCHelpMan testmempoolaccept()
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CTxMemPool& mempool = EnsureMemPool(node);
-    CChainState& chainstate = EnsureChainman(node).ActiveChainstate();
+    ChainstateManager& chainman = EnsureChainman(node);
+    CChainState& chainstate = chainman.ActiveChainstate();
     const PackageMempoolAcceptResult package_result = [&] {
         LOCK(::cs_main);
         if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /* test_accept */ true);
         return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
-               AcceptToMemoryPool(chainstate, mempool, txns[0], /* bypass_limits */ false, /* test_accept*/ true));
+               chainman.ProcessTransaction(txns[0], /*test_accept=*/ true));
     }();
 
     UniValue rpc_result(UniValue::VARR);
@@ -977,7 +978,7 @@ static RPCHelpMan testmempoolaccept()
         if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             const CAmount fee = tx_result.m_base_fees.value();
             // Check that fee does not exceed maximum fee
-            const int64_t virtual_size = GetVirtualTransactionSize(*tx);
+            const int64_t virtual_size = tx_result.m_vsize.value();
             const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
             if (max_raw_tx_fee && fee > max_raw_tx_fee) {
                 result_inner.pushKV("allowed", false);
@@ -1618,7 +1619,7 @@ static RPCHelpMan utxoupdatepsbt()
         }
     }
     // We don't actually need private keys further on; hide them as a precaution.
-    HidingSigningProvider public_provider(&provider, /* nosign */ true, /* nobip32derivs */ false);
+    HidingSigningProvider public_provider(&provider, /*hide_secret=*/true, /*hide_origin=*/false);
 
     // Fetch previous transactions (inputs):
     CCoinsView viewDummy;
@@ -1657,7 +1658,7 @@ static RPCHelpMan utxoupdatepsbt()
         // Update script/keypath information using descriptor data.
         // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures
         // we don't actually care about those here, in fact.
-        SignPSBTInput(public_provider, psbtx, i, &txdata, /* sighash_type */ 1);
+        SignPSBTInput(public_provider, psbtx, i, &txdata, /*sighash=*/1);
     }
 
     // Update script/keypath information using descriptor data.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-cli"""
@@ -136,7 +136,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         network_info = self.nodes[0].getnetworkinfo()
         cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
-        assert_equal(cli_get_info["Proxies"], "127.0.0.1:9050 (ipv4, ipv6, onion), 127.0.0.1:7656 (i2p)")
+        assert_equal(cli_get_info["Proxies"], "127.0.0.1:9050 (ipv4, ipv6, onion, cjdns), 127.0.0.1:7656 (i2p)")
 
         if self.is_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")

@@ -230,9 +230,27 @@ std::optional<CAddress> GetLocalAddrForPeer(CNode *pnode)
     return std::nullopt;
 }
 
-// learn a new local address
-bool AddLocal(const CService& addr, int nScore)
+/**
+ * If an IPv6 address belongs to the address range used by the CJDNS network and
+ * the CJDNS network is reachable (-cjdnsreachable config is set), then change
+ * the type from NET_IPV6 to NET_CJDNS.
+ * @param[in] service Address to potentially convert.
+ * @return a copy of `service` either unmodified or changed to CJDNS.
+ */
+CService MaybeFlipIPv6toCJDNS(const CService& service)
 {
+    CService ret{service};
+    if (ret.m_net == NET_IPV6 && ret.m_addr[0] == 0xfc && IsReachable(NET_CJDNS)) {
+        ret.m_net = NET_CJDNS;
+    }
+    return ret;
+}
+
+// learn a new local address
+bool AddLocal(const CService& addr_, int nScore)
+{
+    CService addr{MaybeFlipIPv6toCJDNS(addr_)};
+
     if (!addr.IsRoutable())
         return false;
 
@@ -409,7 +427,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     if (pszDest) {
         std::vector<CService> resolved;
         if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
-            addrConnect = CAddress(resolved[GetRand(resolved.size())], NODE_NONE);
+            const CService rnd{resolved[GetRand(resolved.size())]};
+            addrConnect = CAddress{MaybeFlipIPv6toCJDNS(rnd), NODE_NONE};
             if (!addrConnect.IsValid()) {
                 LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s\n", addrConnect.ToString(), pszDest);
                 return nullptr;
@@ -626,25 +645,26 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
-            uint32_t out_err_raw_size{0};
-            std::optional<CNetMessage> result{m_deserializer->GetMessage(time, out_err_raw_size)};
-            if (!result) {
+            bool reject_message{false};
+            CNetMessage msg = m_deserializer->GetMessage(time, reject_message);
+            if (reject_message) {
                 // Message deserialization failed.  Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
-                mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER)->second += out_err_raw_size;
+                mapRecvBytesPerMsgCmd.at(NET_MESSAGE_COMMAND_OTHER) += msg.m_raw_message_size;
                 continue;
             }
 
-            //store received bytes per message command
-            //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(result->m_command);
-            if (i == mapRecvBytesPerMsgCmd.end())
+            // Store received bytes per message command
+            // to prevent a memory DOS, only allow valid commands
+            auto i = mapRecvBytesPerMsgCmd.find(msg.m_command);
+            if (i == mapRecvBytesPerMsgCmd.end()) {
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
+            }
             assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += result->m_raw_message_size;
+            i->second += msg.m_raw_message_size;
 
             // push the message to the process queue,
-            vRecvMsg.push_back(std::move(*result));
+            vRecvMsg.push_back(std::move(msg));
 
             complete = true;
         }
@@ -718,16 +738,18 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-std::optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, uint32_t& out_err_raw_size)
+CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, bool& reject_message)
 {
+    // Initialize out parameter
+    reject_message = false;
     // decompose a single CNetMessage from the TransportDeserializer
-    std::optional<CNetMessage> msg(std::move(vRecv));
+    CNetMessage msg(std::move(vRecv));
 
     // store command string, time, and sizes
-    msg->m_command = hdr.GetCommand();
-    msg->m_time = time;
-    msg->m_message_size = hdr.nMessageSize;
-    msg->m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+    msg.m_command = hdr.GetCommand();
+    msg.m_time = time;
+    msg.m_message_size = hdr.nMessageSize;
+    msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
 
     uint256 hash = GetMessageHash();
 
@@ -737,17 +759,15 @@ std::optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono
     // Check checksum and header command string
     if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
         LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
-                 SanitizeString(msg->m_command), msg->m_message_size,
+                 SanitizeString(msg.m_command), msg.m_message_size,
                  HexStr(Span<uint8_t>(hash.begin(), hash.begin() + CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
-        out_err_raw_size = msg->m_raw_message_size;
-        msg = std::nullopt;
+        reject_message = true;
     } else if (!hdr.IsCommandValid()) {
         LogPrint(BCLog::NET, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
-                 SanitizeString(hdr.GetCommand()), msg->m_message_size, m_node_id);
-        out_err_raw_size = msg->m_raw_message_size;
-        msg.reset();
+                 SanitizeString(hdr.GetCommand()), msg.m_message_size, m_node_id);
+        reject_message = true;
     }
 
     // Always reset the network deserializer (prepare for the next message)
@@ -1091,9 +1111,11 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
         LogPrintf("Warning: Unknown socket family\n");
+    } else {
+        addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
     }
 
-    const CAddress addr_bind = GetBindAddress(hSocket);
+    const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(hSocket)), NODE_NONE};
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::None;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
@@ -2459,7 +2481,10 @@ NodeId CConnman::GetNewNodeId()
 }
 
 
-bool CConnman::Bind(const CService &addr, unsigned int flags, NetPermissionFlags permissions) {
+bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlags permissions)
+{
+    const CService addr{MaybeFlipIPv6toCJDNS(addr_)};
+
     if (!(flags & BF_EXPLICIT) && !IsReachable(addr)) {
         return false;
     }
@@ -2980,7 +3005,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
 
-    m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
+    m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), id, SER_NETWORK, INIT_PROTO_VERSION));
     m_serializer = std::make_unique<V1TransportSerializer>(V1TransportSerializer());
 }
 
@@ -2999,7 +3024,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     size_t nMessageSize = msg.data.size();
     LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
     if (gArgs.GetBoolArg("-capturemessages", false)) {
-        CaptureMessage(pnode->addr, msg.m_type, msg.data, /* incoming */ false);
+        CaptureMessage(pnode->addr, msg.m_type, msg.data, /*is_incoming=*/false);
     }
 
     TRACE6(net, outbound_message,

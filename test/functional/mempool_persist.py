@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool persistence.
@@ -149,8 +149,9 @@ class MempoolPersistTest(BitcoinTestFramework):
         mempooldat1 = os.path.join(self.nodes[1].datadir, self.chain, 'mempool.dat')
         self.log.debug("Remove the mempool.dat file. Verify that savemempool to disk via RPC re-creates it")
         os.remove(mempooldat0)
-        self.nodes[0].savemempool()
+        result0 = self.nodes[0].savemempool()
         assert os.path.isfile(mempooldat0)
+        assert_equal(result0['filename'], mempooldat0)
 
         self.log.debug("Stop nodes, make node1 use mempool.dat from node0. Verify it has 6 transactions")
         os.rename(mempooldat0, mempooldat1)
@@ -174,7 +175,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.start_node(0)
 
         # clear out mempool
-        self.generate(node0, 1)
+        self.generate(node0, 1, sync_fun=self.no_op)
 
         # ensure node0 doesn't have any connections
         # make a transaction that will remain in the unbroadcast set

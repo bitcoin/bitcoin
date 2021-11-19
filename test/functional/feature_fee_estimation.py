@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
@@ -218,7 +218,6 @@ class EstimateFeeTest(BitcoinTestFramework):
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
             self.sync_mempools(wait=.1)
             mined = mining_node.getblock(self.generate(mining_node, 1)[0], True)["tx"]
-            self.sync_blocks(wait=.1)
             # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
@@ -237,7 +236,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Mine
         while len(node.getrawmempool()) > 0:
-            self.generate(node, 1)
+            self.generate(node, 1, sync_fun=self.no_op)
 
         # Repeatedly split those 2 outputs, doubling twice for each rep
         # Use txouts to monitor the available utxo, since these won't be tracked in wallet
@@ -247,12 +246,12 @@ class EstimateFeeTest(BitcoinTestFramework):
             while len(self.txouts) > 0:
                 split_inputs(node, self.txouts, self.txouts2)
             while len(node.getrawmempool()) > 0:
-                self.generate(node, 1)
+                self.generate(node, 1, sync_fun=self.no_op)
             # Double txouts2 to txouts
             while len(self.txouts2) > 0:
                 split_inputs(node, self.txouts2, self.txouts)
             while len(node.getrawmempool()) > 0:
-                self.generate(node, 1)
+                self.generate(node, 1, sync_fun=self.no_op)
             reps += 1
 
     def sanity_check_estimates_range(self):
@@ -278,8 +277,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:
             self.generate(self.nodes[1], 1)
-
-        self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
@@ -322,7 +319,6 @@ class EstimateFeeTest(BitcoinTestFramework):
             for txid in txids_to_replace:
                 miner.prioritisetransaction(txid=txid, fee_delta=-COIN)
             self.generate(miner, 1)
-            self.sync_blocks(wait=.1, nodes=[node, miner])
             # RBF the low-fee transactions
             while True:
                 try:
@@ -334,7 +330,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Mine the last replacement txs
         self.sync_mempools(wait=.1, nodes=[node, miner])
         self.generate(miner, 1)
-        self.sync_blocks(wait=.1, nodes=[node, miner])
 
         # Only 10% of the transactions were really confirmed with a low feerate,
         # the rest needed to be RBF'd. We must return the 90% conf rate feerate.

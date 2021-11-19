@@ -221,7 +221,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
         }
 
         context.chain->initMessage(_("Loading wallet…").translated);
-        std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
+        const std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
             status = DatabaseStatus::FAILED_LOAD;
@@ -301,7 +301,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 
     // Make the wallet
     context.chain->initMessage(_("Loading wallet…").translated);
-    std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), wallet_creation_flags, error, warnings);
+    const std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), wallet_creation_flags, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
         status = DatabaseStatus::FAILED_CREATE;
@@ -959,7 +959,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
-    std::string strCmd = gArgs.GetArg("-walletnotify", "");
+    std::string strCmd = m_args.GetArg("-walletnotify", "");
 
     if (!strCmd.empty())
     {
@@ -2540,7 +2540,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     int64_t nStart = GetTimeMillis();
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), ReleaseWallet);
+    const std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, args, std::move(database)), ReleaseWallet);
     bool rescan_required = false;
     DBErrors nLoadWalletRet = walletInstance->LoadWallet();
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
@@ -2732,11 +2732,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->m_default_max_tx_fee = max_fee.value();
     }
 
-    if (gArgs.IsArgSet("-consolidatefeerate")) {
-        if (std::optional<CAmount> consolidate_feerate = ParseMoney(gArgs.GetArg("-consolidatefeerate", ""))) {
+    if (args.IsArgSet("-consolidatefeerate")) {
+        if (std::optional<CAmount> consolidate_feerate = ParseMoney(args.GetArg("-consolidatefeerate", ""))) {
             walletInstance->m_consolidate_feerate = CFeeRate(*consolidate_feerate);
         } else {
-            error = AmountErrMsg("consolidatefeerate", gArgs.GetArg("-consolidatefeerate", ""));
+            error = AmountErrMsg("consolidatefeerate", args.GetArg("-consolidatefeerate", ""));
             return nullptr;
         }
     }
@@ -3160,7 +3160,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
         // Get the extended key
         CExtKey master_key;
-        master_key.SetSeed(seed_key.begin(), seed_key.size());
+        master_key.SetSeed(seed_key);
 
         for (bool internal : {false, true}) {
             for (OutputType t : OUTPUT_TYPES) {

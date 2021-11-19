@@ -230,8 +230,8 @@ public:
     XOnlyPubKey& operator=(const XOnlyPubKey&) = default;
 
     /** Determine if this pubkey is fully valid. This is true for approximately 50% of all
-     *  possible 32-byte arrays. If false, VerifySchnorr and CreatePayToContract will always
-     *  fail. */
+     *  possible 32-byte arrays. If false, VerifySchnorr, CheckTapTweak and CreateTapTweak
+     *  will always fail. */
     bool IsFullyValid() const;
 
     /** Test whether this is the 0 key (the result of default construction). This implies

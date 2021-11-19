@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -72,9 +72,6 @@ class AddrTest(BitcoinTestFramework):
         addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
         msg.addrs = ADDRS
         with self.nodes[0].assert_debug_log([
-                # The I2P address is not added to node's own addrman because it has no
-                # I2P reachability (thus 10 - 1 = 9).
-                'Added 9 addresses from 127.0.0.1: 0 tried',
                 'received: addrv2 (159 bytes) peer=0',
                 'sending addrv2 (159 bytes) peer=1',
         ]):

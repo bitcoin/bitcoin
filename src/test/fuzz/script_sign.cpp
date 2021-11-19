@@ -48,7 +48,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
 
     {
         std::map<CPubKey, KeyOriginInfo> hd_keypaths;
-        while (fuzzed_data_provider.ConsumeBool()) {
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
             const std::optional<CPubKey> pub_key = ConsumeDeserializable<CPubKey>(fuzzed_data_provider);
             if (!pub_key) {
                 break;
@@ -125,7 +125,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
                 (void)signature_creator.CreateSig(provider, vch_sig, address, ConsumeScript(fuzzed_data_provider), fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0}));
             }
             std::map<COutPoint, Coin> coins;
-            while (fuzzed_data_provider.ConsumeBool()) {
+            LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                 const std::optional<COutPoint> outpoint = ConsumeDeserializable<COutPoint>(fuzzed_data_provider);
                 if (!outpoint) {
                     break;

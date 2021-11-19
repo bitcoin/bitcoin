@@ -67,6 +67,17 @@ using interfaces::WalletClient;
 
 namespace node {
 namespace {
+#ifdef ENABLE_EXTERNAL_SIGNER
+class ExternalSignerImpl : public interfaces::ExternalSigner
+{
+public:
+    ExternalSignerImpl(::ExternalSigner signer) : m_signer(std::move(signer)) {}
+    std::string getName() override { return m_signer.m_name; }
+private:
+    ::ExternalSigner m_signer;
+};
+#endif
+
 class NodeImpl : public Node
 {
 private:
@@ -172,14 +183,18 @@ public:
         }
         return false;
     }
-    std::vector<ExternalSigner> externalSigners() override
+    std::vector<std::unique_ptr<interfaces::ExternalSigner>> listExternalSigners() override
     {
 #ifdef ENABLE_EXTERNAL_SIGNER
         std::vector<ExternalSigner> signers = {};
         const std::string command = gArgs.GetArg("-signer", "");
-        if (command == "") return signers;
+        if (command == "") return {};
         ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
-        return signers;
+        std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
+        for (auto& signer : signers) {
+            result.emplace_back(std::make_unique<ExternalSignerImpl>(std::move(signer)));
+        }
+        return result;
 #else
         // This result is indistinguishable from a successful call that returns
         // no signers. For the current GUI this doesn't matter, because the wallet
@@ -261,6 +276,10 @@ public:
         LOCK(::cs_main);
         return chainman().ActiveChainstate().CoinsTip().GetCoin(output, coin);
     }
+    TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) override
+    {
+        return BroadcastTransaction(*m_context, std::move(tx), err_string, max_tx_fee, /*relay=*/ true, /*wait_callback=*/ false);
+    }
     WalletClient& walletClient() override
     {
         return *Assert(m_context->wallet_client);
@@ -280,6 +299,10 @@ public:
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeHandler(::uiInterface.ShowProgress_connect(fn));
+    }
+    std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
+    {
+        return MakeHandler(::uiInterface.InitWallet_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {

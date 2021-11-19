@@ -15,7 +15,7 @@ AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
 
-BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
@@ -178,6 +178,7 @@ BITCOIN_CORE_H = \
   node/coin.h \
   node/coinstats.h \
   node/context.h \
+  node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
   node/ui_interface.h \
@@ -341,6 +342,7 @@ libbitcoin_server_a_SOURCES = \
   node/coinstats.cpp \
   node/context.cpp \
   node/interfaces.cpp \
+  node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/ui_interface.cpp \
@@ -707,7 +709,18 @@ bitcoin_wallet_SOURCES += init/bitcoin-wallet.cpp
 bitcoin_wallet_CPPFLAGS = $(bitcoin_bin_cppflags)
 bitcoin_wallet_CXXFLAGS = $(bitcoin_bin_cxxflags)
 bitcoin_wallet_LDFLAGS = $(bitcoin_bin_ldflags)
-bitcoin_wallet_LDADD = $(LIBBITCOIN_WALLET_TOOL) $(bitcoin_bin_ldadd)
+bitcoin_wallet_LDADD = \
+  $(LIBBITCOIN_WALLET_TOOL) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBSECP256K1) \
+  $(BOOST_LIBS) \
+  $(BDB_LIBS) \
+  $(SQLITE_LIBS)
 
 if TARGET_WINDOWS
 bitcoin_wallet_SOURCES += bitcoin-wallet-res.rc
@@ -842,8 +855,11 @@ nodist_libbitcoin_ipc_a_SOURCES = $(libbitcoin_ipc_mpgen_output)
 CLEANFILES += $(libbitcoin_ipc_mpgen_output)
 endif
 
+include Makefile.minisketch.include
+
 include Makefile.crc32c.include
 include Makefile.leveldb.include
+
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
 

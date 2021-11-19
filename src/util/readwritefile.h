@@ -25,4 +25,4 @@ std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxs
  */
 bool WriteBinaryFile(const fs::path &filename, const std::string &data);
 
-#endif /* BITCOIN_UTIL_READWRITEFILE_H */
+#endif // BITCOIN_UTIL_READWRITEFILE_H

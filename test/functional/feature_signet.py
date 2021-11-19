@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2020 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test basic signet functionality"""
@@ -51,7 +51,7 @@ class SignetBasicTest(BitcoinTestFramework):
         assert_equal(mining_info['networkhashps'], Decimal('0'))
         assert_equal(mining_info['pooledtx'], 0)
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         self.log.info("pregenerated signet blocks check")
 

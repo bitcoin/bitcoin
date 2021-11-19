@@ -113,7 +113,7 @@ public:
      */
     bool Rewrite(const char* pszSkip=nullptr) override;
 
-    /** Indicate the a new database user has began using the database. */
+    /** Indicate that a new database user has begun using the database. */
     void AddRef() override;
     /** Indicate that database user has stopped using the database and that it could be flushed or closed. */
     void RemoveRef() override;

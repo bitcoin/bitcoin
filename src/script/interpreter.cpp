@@ -1483,7 +1483,7 @@ template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, 
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
-static const CHashWriter HASHER_TAPSIGHASH = TaggedHash("TapSighash");
+const CHashWriter HASHER_TAPSIGHASH = TaggedHash("TapSighash");
 const CHashWriter HASHER_TAPLEAF = TaggedHash("TapLeaf");
 const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
 

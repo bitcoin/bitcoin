@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Hierarchical Deterministic wallet function."""
@@ -229,7 +229,6 @@ class WalletHDTest(BitcoinTestFramework):
             txid = self.nodes[0].sendtoaddress(addr, 1)
             origin_rpc.sendrawtransaction(self.nodes[0].gettransaction(txid)['hex'])
             self.generate(self.nodes[0], 1)
-            self.sync_blocks()
             origin_rpc.gettransaction(txid)
             assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', restore_rpc.gettransaction, txid)
             out_of_kp_txid = txid
@@ -240,7 +239,6 @@ class WalletHDTest(BitcoinTestFramework):
             txid = self.nodes[0].sendtoaddress(last_addr, 1)
             origin_rpc.sendrawtransaction(self.nodes[0].gettransaction(txid)['hex'])
             self.generate(self.nodes[0], 1)
-            self.sync_blocks()
             origin_rpc.gettransaction(txid)
             restore_rpc.gettransaction(txid)
             assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', restore_rpc.gettransaction, out_of_kp_txid)

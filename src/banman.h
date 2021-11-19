@@ -95,4 +95,4 @@ private:
     CRollingBloomFilter m_discouraged GUARDED_BY(m_cs_banned) {50000, 0.000001};
 };
 
-#endif
+#endif // BITCOIN_BANMAN_H

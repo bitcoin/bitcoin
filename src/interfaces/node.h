@@ -6,7 +6,6 @@
 #define BITCOIN_INTERFACES_NODE_H
 
 #include <consensus/amount.h>
-#include <external_signer.h>
 #include <net.h>        // For NodeId
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
@@ -31,6 +30,7 @@ class RPCTimerInterface;
 class UniValue;
 class proxyType;
 enum class SynchronizationState;
+enum class TransactionError;
 struct CNodeStateStats;
 struct NodeContext;
 struct bilingual_str;
@@ -48,6 +48,16 @@ struct BlockAndHeaderTipInfo
     int header_height;
     int64_t header_time;
     double verification_progress;
+};
+
+//! External signer interface used by the GUI.
+class ExternalSigner
+{
+public:
+    virtual ~ExternalSigner() {};
+
+    //! Get signer display name
+    virtual std::string getName() = 0;
 };
 
 //! Top-level interface for a bitcoin node (bitcoind process).
@@ -111,8 +121,8 @@ public:
     //! Disconnect node by id.
     virtual bool disconnectById(NodeId id) = 0;
 
-    //! List external signers
-    virtual std::vector<ExternalSigner> externalSigners() = 0;
+    //! Return list of external signers (attached devices which can sign transactions).
+    virtual std::vector<std::unique_ptr<ExternalSigner>> listExternalSigners() = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
@@ -174,6 +184,9 @@ public:
     //! Get unspent outputs associated with a transaction.
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
 
+    //! Broadcast transaction.
+    virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
+
     //! Get wallet client.
     virtual WalletClient& walletClient() = 0;
 
@@ -196,6 +209,10 @@ public:
     //! Register handler for progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
+
+    //! Register handler for wallet client constructed messages.
+    using InitWalletFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) = 0;
 
     //! Register handler for number of connections changed messages.
     using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;

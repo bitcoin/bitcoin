@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
@@ -47,8 +47,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
         # the pre-mined test framework chain contains coinbase outputs to the
-        # MiniWallet's default address ADDRESS_BCRT1_P2WSH_OP_TRUE in blocks
-        # 76-100 (see method BitcoinTestFramework._initialize_chain())
+        # MiniWallet's default address in blocks 76-100 (see method
+        # BitcoinTestFramework._initialize_chain())
         self.wallet.rescan_utxos()
 
         self.log.info("Running test simple doublespend...")

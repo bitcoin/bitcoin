@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test CSV soft fork activation.
@@ -177,7 +177,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         block.nVersion = 4
         block.vtx.extend(txs)
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block.solve()
         return block
 

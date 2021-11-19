@@ -30,7 +30,11 @@
 
 /** A Span is an object that can refer to a contiguous sequence of objects.
  *
- * It implements a subset of C++20's std::span.
+ * This file implements a subset of C++20's std::span.  It can be considered
+ * temporary compatibility code until C++20 and is designed to be a
+ * self-contained abstraction without depending on other project files. For this
+ * reason, Clang lifetimebound is defined here instead of including
+ * <attributes.h>, which also defines it.
  *
  * Things to be aware of when writing code that deals with Spans:
  *
@@ -60,7 +64,7 @@
  *   types that expose a data() and size() member function), functions that
  *   accept a Span as input parameter can be called with any compatible
  *   range-like object. For example, this works:
-*
+ *
  *       void Foo(Span<const int> arg);
  *
  *       Foo(std::vector<int>{1, 2, 3}); // Works
@@ -248,4 +252,4 @@ template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename s
 /** Like MakeSpan, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(MakeSpan(std::forward<V>(v)))) { return UCharSpanCast(MakeSpan(std::forward<V>(v))); }
 
-#endif
+#endif // BITCOIN_SPAN_H

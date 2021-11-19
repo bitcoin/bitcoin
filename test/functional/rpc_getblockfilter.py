@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblockfilter RPC."""
@@ -21,8 +21,8 @@ class GetBlockFilterTest(BitcoinTestFramework):
         # Create two chains by disconnecting nodes 0 & 1, mining, then reconnecting
         self.disconnect_nodes(0, 1)
 
-        self.generate(self.nodes[0], 3)
-        self.generate(self.nodes[1], 4)
+        self.generate(self.nodes[0], 3, sync_fun=self.no_op)
+        self.generate(self.nodes[1], 4, sync_fun=self.no_op)
 
         assert_equal(self.nodes[0].getblockcount(), 3)
         chain0_hashes = [self.nodes[0].getblockhash(block_height) for block_height in range(4)]

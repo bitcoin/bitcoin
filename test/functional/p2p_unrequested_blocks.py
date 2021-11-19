@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
@@ -77,7 +77,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
         # 1. Have nodes mine a block (leave IBD)
-        [self.generatetoaddress(n, 1, n.get_deterministic_priv_key().address) for n in self.nodes]
+        [self.generate(n, 1, sync_fun=self.no_op) for n in self.nodes]
         tips = [int("0x" + n.getbestblockhash(), 0) for n in self.nodes]
 
         # 2. Send one block that builds on each tip.
