@@ -11,7 +11,7 @@ $(package)_toolset_$(host_os)=gcc
 endif
 
 define $(package)_build_cmds
-  CXX="$($(package)_cxx)" CXXFLAGS="$($(package)_cxxflags)" ./build.sh "$($(package)_toolset_$(host_os))"
+  ./build.sh "$($(package)_toolset_$(host_os))"
 endef
 
 define $(package)_stage_cmds
