@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <compressor.h>
+#include <primitives/transaction.h>
 #include <core_io.h>
 #include <core_memusage.h>
 #include <key_io.h>
@@ -111,7 +111,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     UniValue o2(UniValue::VOBJ);
     ScriptPubKeyToUniv(script, o2, false);
     UniValue o3(UniValue::VOBJ);
-    ScriptToUniv(script, o3);
+    ScriptToUniv(script, o3, false);
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
