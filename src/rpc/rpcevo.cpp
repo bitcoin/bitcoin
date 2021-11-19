@@ -82,8 +82,7 @@ static RPCHelpMan protx_list()
             if (height < 1 || height > node.chainman->ActiveHeight()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
             }
-            if(deterministicMNManager)
-                deterministicMNManager->GetListForBlock(node.chainman->ActiveChain()[height], mnList);
+            CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(node.chainman->ActiveChain()[height]);
         }
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
@@ -116,9 +115,7 @@ static RPCHelpMan protx_info()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[0], "proTxHash");
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));

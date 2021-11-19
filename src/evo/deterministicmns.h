@@ -368,7 +368,7 @@ public:
      * @param[in]   nCount max block count to find mn payees
      * @param[out]  result result vector of payees
      */
-    void GetProjectedMNPayees(size_t nCount, std::vector<CDeterministicMNCPtr>& result) const;
+    std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(int nCount) const;
 
     /**
      * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
@@ -376,8 +376,8 @@ public:
      * @param[in]   modifier hash used as seed for quorum calculation
      * @param[out]  members return vector of MN's as candidates
      */
-    void CalculateQuorum(size_t maxSize, const uint256& modifier, std::vector<CDeterministicMNCPtr> &members) const;
-    void CalculateScores(const uint256& modifier, std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> &scores) const;
+    std::vector<CDeterministicMNCPtr> CalculateQuorum(size_t maxSize, const uint256& modifier) const;
+    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier) const;
 
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
@@ -411,7 +411,7 @@ public:
      */
     void PoSeDecrease(const uint256& proTxHash);
 
-    void BuildDiff(const CDeterministicMNList& to, CDeterministicMNListDiff& ret) const;
+    CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
     CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to) const;
     CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
@@ -563,13 +563,13 @@ public:
     mutable RecursiveMutex cs;
 
 private:
-
+    CEvoDB& evoDb;
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache;
     std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache;
     const CBlockIndex* tipIndex{};
 
 public:
-    explicit CDeterministicMNManager();
+    explicit CDeterministicMNManager(CEvoDB& _evoDb);
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -581,8 +581,8 @@ public:
     static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
-    void GetListForBlock(const CBlockIndex* pindex, CDeterministicMNList& result);
-    void GetListAtChainTip(CDeterministicMNList& result);
+    CDeterministicMNList GetListForBlock(const CBlockIndex* pindex);
+    CDeterministicMNList GetListAtChainTip();
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);

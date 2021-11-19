@@ -101,7 +101,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     // SYSCOIN
     evoDb.reset(new CEvoDB(1 << 20, true, true));
-    deterministicMNManager.reset(new CDeterministicMNManager());
+    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
     gArgs.ForceSetArg("-mncollateral", "100");
     gArgs.ForceSetArg("-dip3params", "550:550");
     gArgs.ClearPathCache();
@@ -226,7 +226,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
     // SYSCOIN
-    llmq::InitLLMQSystem(true, *m_node.connman, *m_node.banman, *m_node.peerman, *m_node.chainman);
+    llmq::InitLLMQSystem(*evoDb, true, *m_node.connman, *m_node.banman, *m_node.peerman, *m_node.chainman);
     fRegTest = chainName == CBaseChainParams::REGTEST;
 }
 // SYSCOIN

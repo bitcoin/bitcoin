@@ -49,8 +49,7 @@ static RPCHelpMan quorum_list()
 
     for (auto& p : Params().GetConsensus().llmqs) {
         UniValue v(UniValue::VARR);
-        std::vector<llmq::CQuorumCPtr> quorums;
-        llmq::quorumManager->ScanQuorums(p.first, pindexTip, count > -1 ? count : p.second.signingActiveQuorumCount, quorums);
+        auto quorums = llmq::quorumManager->ScanQuorums(p.first, pindexTip, count > -1 ? count : p.second.signingActiveQuorumCount);
         for (auto& q : quorums) {
             v.push_back(q->qc->quorumHash.ToString());
         }
@@ -182,8 +181,8 @@ static RPCHelpMan quorum_dkgstatus()
             const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)]);
             if(!pQuorumBaseBlockIndex)
                 continue;
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pQuorumBaseBlockIndex, proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pQuorumBaseBlockIndex, proTxHash, true);
+            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params, pQuorumBaseBlockIndex, proTxHash, false);
+            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params, pQuorumBaseBlockIndex, proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             node.connman->ForEachNode([&](CNode* pnode) {
                 auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
@@ -255,9 +254,7 @@ static RPCHelpMan quorum_memberof()
     {
         LOCK(cs_main);
         const CBlockIndex* pindexTip = node.chainman->ActiveTip();
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListForBlock(pindexTip, mnList);
+        auto mnList = deterministicMNManager->GetListForBlock(pindexTip);
         dmn = mnList.GetMN(protxHash);
         if (!dmn) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");
@@ -272,8 +269,7 @@ static RPCHelpMan quorum_memberof()
         if (scanQuorumsCount != -1) {
             count = (size_t)scanQuorumsCount;
         }
-        std::vector<llmq::CQuorumCPtr> quorums;
-        llmq::quorumManager->ScanQuorums(params.type, count, quorums);
+        auto quorums = llmq::quorumManager->ScanQuorums(params.type, count);
         for (auto& quorum : quorums) {
             if (quorum->IsMember(dmn->proTxHash)) {
                 auto json = BuildQuorumInfo(quorum, false, false);

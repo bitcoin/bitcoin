@@ -465,9 +465,7 @@ std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& 
     auto it = mapObjects.find(nParentHash);
     if (it == mapObjects.end()) return vecResult;
     const CGovernanceObject& govobj = it->second;
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     std::map<COutPoint, CDeterministicMNCPtr> mapMasternodes;
     if (mnCollateralOutpointFilter.IsNull()) {
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
@@ -957,9 +955,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     int nMaxObjRequestsPerNode = 1;
     size_t nProjectedVotes = 2000;
     if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, (int)mnList.GetValidMNsCount())));
     }
 
@@ -1248,11 +1244,9 @@ void CGovernanceManager::RemoveInvalidVotes()
     }
 
     LOCK(cs);
-    CDeterministicMNList curMNList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(curMNList);
-    CDeterministicMNListDiff diff;
-    lastMNListForVotingKeys->BuildDiff(curMNList, diff);
+
+    auto curMNList = deterministicMNManager->GetListAtChainTip();
+    auto diff = lastMNListForVotingKeys->BuildDiff(curMNList);
 
     std::vector<COutPoint> changedKeyMNs;
     for (const auto& p : diff.updatedMNs) {

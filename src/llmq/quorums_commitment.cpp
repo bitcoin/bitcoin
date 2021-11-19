@@ -68,8 +68,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         LogPrintfFinalCommitment("invalid vvecSig\n");
         return false;
     }
-    std::vector<CDeterministicMNCPtr> members;
-    CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex, members);
+    auto members = CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex);
 
     for (size_t i = members.size(); i < (size_t)params.size; i++) {
         if (validMembers[i]) {

@@ -691,9 +691,7 @@ static RPCHelpMan protx_update_service()
     }
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(ptx.proTxHash);
     if (!dmn) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
@@ -786,9 +784,7 @@ static RPCHelpMan protx_update_registrar()
     CProUpRegTx ptx;
     ptx.nVersion = CProUpRegTx::CURRENT_VERSION;
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
@@ -893,9 +889,7 @@ static RPCHelpMan protx_revoke()
         }
         ptx.nReason = (uint16_t)nReason;
     }
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
@@ -1084,9 +1078,7 @@ static RPCHelpMan protx_info_wallet()
     if (wallet)
         pwallet = wallet.get();
     uint256 proTxHash = ParseHashV(request.params[0], "proTxHash");
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));

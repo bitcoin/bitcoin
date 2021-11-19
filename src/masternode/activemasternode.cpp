@@ -81,9 +81,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         state = MASTERNODE_ERROR;
         return;
     }
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListForBlock(pindex, mnList);
+    CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(pindex);
     if(!activeMasternodeInfo.blsPubKeyOperator)
         return;
     CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeMasternodeInfo.blsPubKeyOperator);
@@ -160,11 +158,8 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
     if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 
     if (state == MASTERNODE_READY) {
-        CDeterministicMNList oldMNList, newMNList;
-        if(deterministicMNManager) {
-            deterministicMNManager->GetListForBlock(pindexNew->pprev, oldMNList);
-            deterministicMNManager->GetListForBlock(pindexNew, newMNList);
-        }
+        auto oldMNList = deterministicMNManager->GetListForBlock(pindexNew->pprev);
+        auto newMNList = deterministicMNManager->GetListForBlock(pindexNew);
         if (!newMNList.IsMNValid(activeMasternodeInfo.proTxHash)) {
             // MN disappeared from MN list
             state = MASTERNODE_REMOVED;

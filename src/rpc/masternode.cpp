@@ -104,9 +104,7 @@ static RPCHelpMan masternode_count()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     int total = mnList.GetAllMNsCount();
     int enabled = mnList.GetValidMNsCount();
 
@@ -120,11 +118,8 @@ static RPCHelpMan masternode_count()
 
 UniValue GetNextMasternodeForPayment(size_t heightShift)
 {
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    std::vector<CDeterministicMNCPtr> payees;
-    mnList.GetProjectedMNPayees(heightShift, payees);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto payees = mnList.GetProjectedMNPayees(heightShift);
     if (payees.empty())
         return "unknown";
     auto payee = payees.back();
@@ -204,9 +199,7 @@ static RPCHelpMan masternode_status()
         // keep compatibility with legacy status for now (might get deprecated/removed later)
         mnObj.pushKV("outpoint", activeMasternodeInfo.outpoint.ToStringShort());
         mnObj.pushKV("service", activeMasternodeInfo.service.ToString());
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMN(activeMasternodeInfo.proTxHash);
         if (dmn) {
             mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
@@ -298,20 +291,15 @@ static RPCHelpMan masternode_winners()
     int nStartHeight = std::max(nChainTipHeight - nCount, 1);
 
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
-        CDeterministicMNList projection;
-        deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1),projection);
-        auto payee = projection.GetMNPayee();
+        auto payee = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1)).GetMNPayee();
         std::string strPayments = GetRequiredPaymentsString(h, payee);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
         obj.pushKV(strprintf("%d", h), strPayments);
     }
-    CDeterministicMNList projection;
-    deterministicMNManager->GetListForBlock(pindexTip,projection);
-    std::vector<CDeterministicMNCPtr> projectedPayees;
-    projection.GetProjectedMNPayees(20, projectedPayees);
-    for (size_t i = 0; i < projectedPayees.size(); i++) {
+    auto projection = deterministicMNManager->GetListForBlock(pindexTip).GetProjectedMNPayees(20);
+    for (size_t i = 0; i < projection.size(); i++) {
         int h = nChainTipHeight + 1 + i;
-        std::string strPayments = GetRequiredPaymentsString(h, projectedPayees[i]);
+        std::string strPayments = GetRequiredPaymentsString(h, projection[i]);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
         obj.pushKV(strprintf("%d", h), strPayments);
     }
@@ -404,10 +392,7 @@ RPCHelpMan masternode_payments()
             payedPerMasternode += txout.nValue;
             payeesArr.push_back(obj);
         }
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListForBlock(pindex, mnList);
-        const auto dmnPayee = mnList.GetMNPayee();
+        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
         protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
         protxObj.pushKV("amount", payedPerMasternode);
         protxObj.pushKV("payees", payeesArr);
@@ -476,9 +461,7 @@ RPCHelpMan masternodelist()
     }
 
     UniValue obj(UniValue::VOBJ);
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmnToStatus = [&](const CDeterministicMNCPtr& dmn) {
         if (mnList.IsMNValid(dmn)) {
             return "ENABLED";

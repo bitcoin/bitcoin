@@ -137,9 +137,7 @@ static RPCHelpMan gobject_submit()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     bool fMnFound = WITH_LOCK(activeMasternodeInfoCs, return mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint));
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
@@ -280,9 +278,7 @@ static RPCHelpMan gobject_vote_conf()
 
     UniValue statusObj(UniValue::VOBJ);
     UniValue returnObj(UniValue::VOBJ);
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = WITH_LOCK(activeMasternodeInfoCs, return mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint));
 
     if (!dmn) {
@@ -668,9 +664,7 @@ static RPCHelpMan voteraw()
     if (fInvalid) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetValidMNByCollateral(outpoint);
 
     if (!dmn) {

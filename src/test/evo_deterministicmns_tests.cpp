@@ -188,9 +188,7 @@ static CScript GenerateRandomAddress()
 
 static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
 {
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
 
     for (const auto& txout : block.vtx[0]->vout) {
         CDeterministicMNCPtr found;
@@ -240,10 +238,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     BOOST_CHECK_EQUAL(block->GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    BOOST_ASSERT(!mnList.HasMN(tx.GetHash()));
+    BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
 
     // re-create reg tx prev one got mined as no-op
     tx = CreateProRegTx(m_node, utxos, 1, addr, coinbaseKey, ownerKey, operatorKey);
@@ -256,9 +251,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    BOOST_ASSERT(mnList.HasMN(tx.GetHash()));
+    BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
 }
 
 BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
@@ -308,9 +301,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
         BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
         
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         BOOST_ASSERT(mnList.HasMN(tx.GetHash()));
 
         nHeight++;
@@ -328,9 +319,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     // check MN reward payments
     for (size_t i = 0; i < 20; i++) {
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmnExpectedPayee = mnList.GetMNPayee();
 
         CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
@@ -369,10 +358,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         }
 
         for (size_t j = 0; j < 3; j++) {
-            CDeterministicMNList mnList;
-            if(deterministicMNManager)
-                deterministicMNManager->GetListAtChainTip(mnList);
-            BOOST_ASSERT(mnList.HasMN(txns[j].GetHash()));
+            BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(txns[j].GetHash()));
         }
 
         nHeight++;
@@ -387,9 +373,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
-    CDeterministicMNList mnList;
-    deterministicMNManager->GetListAtChainTip(mnList);
-    auto dmn = mnList.GetMN(dmnHashes[0]);
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 1000);
 
     // test ProUpRevTx
@@ -403,16 +387,12 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     
     nHeight++;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    dmn = mnList.GetMN(dmnHashes[0]);
+    dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->GetBannedHeight() == nHeight);
 
     // test that the revoked MN does not get paid anymore
     for (size_t i = 0; i < 20; i++) {
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
-        auto dmnExpectedPayee = mnList.GetMNPayee();
+        auto dmnExpectedPayee = deterministicMNManager->GetListAtChainTip().GetMNPayee();
         BOOST_ASSERT(dmnExpectedPayee->proTxHash != dmnHashes[0]);
 
         CBlock block = CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
@@ -433,9 +413,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     // test reviving the MN
     CBLSSecretKey newOperatorKey;
     newOperatorKey.MakeNewKey();
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    dmn = mnList.GetMN(dmnHashes[0]);
+    dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
     tx = CreateProUpRegTx(m_node, utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
     {
         LOCK(cs_main);
@@ -466,18 +444,14 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    dmn = mnList.GetMN(dmnHashes[0]);
+    dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 100);
     BOOST_ASSERT(dmn != nullptr && !dmn->pdmnState->IsBanned());
 
     // test that the revived MN gets payments again
     bool foundRevived = false;
     for (size_t i = 0; i < 20; i++) {
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
-        auto dmnExpectedPayee = mnList.GetMNPayee();
+        auto dmnExpectedPayee = deterministicMNManager->GetListAtChainTip().GetMNPayee();
         if (dmnExpectedPayee->proTxHash == dmnHashes[0]) {
             foundRevived = true;
         }
@@ -685,10 +659,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 2);
     BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    BOOST_ASSERT(mnList.HasMN(tx_reg_hash));
+    BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
 
     // Now spend the collateral while updating the same MN
     SimpleUTXOVec collateral_utxos;
@@ -699,9 +670,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 3);
     BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    BOOST_ASSERT(!mnList.HasMN(tx_reg_hash));
+    BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
     LOCK(cs_main);
     CChainState& active_chainstate = m_node.chainman->ActiveChainstate();
     // Verify db consistency

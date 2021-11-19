@@ -164,8 +164,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
     if (!deterministicMNManager || !deterministicMNManager->IsDIP3Enforced(pQuorumBaseBlockIndex->nHeight)) {
         return false;
     }
-    std::vector<CDeterministicMNCPtr> mns;
-    CLLMQUtils::GetAllQuorumMembers(params.type, pQuorumBaseBlockIndex, mns);
+    auto mns = CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex);
 
     if (!curSession->Init(pQuorumBaseBlockIndex, mns, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash))) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialization failed for %s\n", __func__, curSession->params.name);
@@ -529,9 +528,9 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params.type, pQuorumBaseBlockIndex, curSession->myProTxHash, dkgManager.connman);
+    CLLMQUtils::EnsureQuorumConnections(params, pQuorumBaseBlockIndex, curSession->myProTxHash, dkgManager.connman);
     if (curSession->AreWeMember()) {
-        CLLMQUtils::AddQuorumProbeConnections(params.type, pQuorumBaseBlockIndex, curSession->myProTxHash, dkgManager.connman);
+        CLLMQUtils::AddQuorumProbeConnections(params, pQuorumBaseBlockIndex, curSession->myProTxHash, dkgManager.connman);
     }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});

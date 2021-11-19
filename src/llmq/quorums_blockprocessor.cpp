@@ -33,7 +33,7 @@ static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
 
-CQuorumBlockProcessor::CQuorumBlockProcessor(CConnman &_connman, ChainstateManager& _chainman) : connman(_connman), chainman(_chainman)
+CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb, CConnman &_connman, ChainstateManager& _chainman) : connman(_connman), chainman(_chainman), evoDb(_evoDb)
 {
     CLLMQUtils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }
@@ -212,8 +212,6 @@ static std::tuple<std::string, uint8_t, uint32_t> BuildInversedHeightKey(uint8_t
 
 bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck)
 {
-    if(!evoDb)
-        return false;
     AssertLockHeld(cs_main);
     auto& params = Params().GetConsensus().llmqs.at(qc.llmqType);
 
@@ -262,8 +260,8 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 
     // Store commitment in DB
     auto cacheKey = std::make_pair(params.type, quorumHash);
-    evoDb->Write(std::make_pair(DB_MINED_COMMITMENT, cacheKey), std::make_pair(qc, blockHash));
-    evoDb->Write(BuildInversedHeightKey(params.type, nHeight), pQuorumBaseBlockIndex->nHeight);
+    evoDb.Write(std::make_pair(DB_MINED_COMMITMENT, cacheKey), std::make_pair(qc, blockHash));
+    evoDb.Write(BuildInversedHeightKey(params.type, nHeight), pQuorumBaseBlockIndex->nHeight);
 
     {
         LOCK(minableCommitmentsCs);
@@ -280,8 +278,6 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 
 bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
 {
-    if(!evoDb)
-        return false;
     AssertLockHeld(cs_main);
 
     std::map<uint8_t, CFinalCommitment> qcs;
@@ -296,8 +292,8 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
             continue;
         }
 
-        evoDb->Erase(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(qc.llmqType, qc.quorumHash)));
-        evoDb->Erase(BuildInversedHeightKey(qc.llmqType, pindex->nHeight));
+        evoDb.Erase(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(qc.llmqType, qc.quorumHash)));
+        evoDb.Erase(BuildInversedHeightKey(qc.llmqType, pindex->nHeight));
         {
             LOCK(minableCommitmentsCs);
             mapHasMinedCommitmentCache[qc.llmqType].erase(qc.quorumHash);
@@ -381,8 +377,6 @@ uint256 CQuorumBlockProcessor::GetQuorumBlockHash(ChainstateManager& chainman, u
 
 bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash) const
 {
-    if(!evoDb)
-        return false;
     bool fExists;
     {
         LOCK(minableCommitmentsCs);
@@ -391,7 +385,7 @@ bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& 
         }
     }
 
-    fExists = evoDb->Exists(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(llmqType, quorumHash)));
+    fExists = evoDb.Exists(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(llmqType, quorumHash)));
 
     LOCK(minableCommitmentsCs);
     mapHasMinedCommitmentCache[llmqType].insert(quorumHash, fExists);
@@ -401,11 +395,9 @@ bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& 
 
 CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, uint256& retMinedBlockHash) const
 {
-    if(!evoDb)
-        return nullptr;
     auto key = std::make_pair(DB_MINED_COMMITMENT, std::make_pair(llmqType, quorumHash));
     std::pair<CFinalCommitment, uint256> p;
-    if (!evoDb->Read(key, p)) {
+    if (!evoDb.Read(key, p)) {
         return nullptr;
     }
     retMinedBlockHash = p.second;
@@ -413,20 +405,20 @@ CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, 
 }
 
 // The returned quorums are in reversed order, so the most recent one is at index 0
-void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount, std::vector<const CBlockIndex*> &ret) const
+std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount) const
 {
-    if(!evoDb)
-        return;
-    LOCK(evoDb->cs);
-    ret.clear();
-    auto dbIt = evoDb->GetCurTransaction().NewIteratorUniquePtr();
+    LOCK(evoDb.cs);
+
+    auto dbIt = evoDb.GetCurTransaction().NewIteratorUniquePtr();
 
     auto firstKey = BuildInversedHeightKey(llmqType, pindex->nHeight);
     auto lastKey = BuildInversedHeightKey(llmqType, 0);
 
     dbIt->Seek(firstKey);
 
+    std::vector<const CBlockIndex*> ret;
     ret.reserve(maxCount);
+
     while (dbIt->Valid() && ret.size() < maxCount) {
         decltype(firstKey) curKey;
         int quorumHeight;
@@ -436,32 +428,39 @@ void CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, cons
         if (std::get<0>(curKey) != DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT || std::get<1>(curKey) != llmqType) {
             break;
         }
+
         uint32_t nMinedHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<2>(curKey));
         if (nMinedHeight > (uint32_t)pindex->nHeight) {
             break;
         }
+
         if (!dbIt->GetValue(quorumHeight)) {
             break;
         }
+
         auto pQuorumBaseBlockIndex = pindex->GetAncestor(quorumHeight);
         assert(pQuorumBaseBlockIndex);
         ret.emplace_back(pQuorumBaseBlockIndex);
+
         dbIt->Next();
     }
+
+    return ret;
 }
 
 // The returned quorums are in reversed order, so the most recent one is at index 0
-void CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex, std::map<uint8_t, std::vector<const CBlockIndex*>>& ret) const
+std::map<uint8_t, std::vector<const CBlockIndex*>> CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex) const
 {
-    ret.clear();
+    std::map<uint8_t, std::vector<const CBlockIndex*>> ret;
+
     for (const auto& p : Params().GetConsensus().llmqs) {
         auto& v = ret[p.second.type];
         v.reserve(p.second.signingActiveQuorumCount);
-        std::vector<const CBlockIndex*> commitments;
-        GetMinedCommitmentsUntilBlock(p.second.type, pindex, p.second.signingActiveQuorumCount, commitments);
+        auto commitments = GetMinedCommitmentsUntilBlock(p.second.type, pindex, p.second.signingActiveQuorumCount);
         std::copy(commitments.begin(), commitments.end(), std::back_inserter(v));
     }
 
+    return ret;
 }
 
 bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash) const

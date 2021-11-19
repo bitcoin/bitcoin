@@ -78,9 +78,7 @@ class EVOImpl : public EVO
 public:
     CDeterministicMNList getListAtChainTip() override
     {
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         return mnList;
     }
 };
@@ -549,10 +547,7 @@ public:
         return std::nullopt;
     }
     CDeterministicMNList getMNList(int height) override {
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListForBlock(m_node.chainman->ActiveChain()[height], mnList);
-        return mnList;
+        return deterministicMNManager->GetListForBlock(m_node.chainman->ActiveChain()[height]);
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {

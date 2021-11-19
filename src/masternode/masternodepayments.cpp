@@ -245,10 +245,7 @@ bool CMasternodePayments::GetBlockTxOuts(CChain& activeChain, int nBlockHeight, 
         const CBlockIndex* pindex = activeChain[nBlockHeight - 1];
         if(!pindex)
             return false;
-        CDeterministicMNList dmnPayeeList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListForBlock(pindex, dmnPayeeList);
-        dmnPayee = dmnPayeeList.GetMNPayee();
+        dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
         if (!dmnPayee) {
             return false;
         }

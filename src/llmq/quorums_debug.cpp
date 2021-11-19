@@ -26,7 +26,7 @@ UniValue CDKGDebugSessionStatus::ToJson(ChainstateManager &chainman, int detailL
     if (detailLevel == 2) {
         const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
         if (pindex != nullptr) {
-            CLLMQUtils::GetAllQuorumMembers(llmqType, pindex, dmnMembers);
+            dmnMembers = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pindex);
         }
     }
 

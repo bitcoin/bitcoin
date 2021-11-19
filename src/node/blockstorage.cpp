@@ -578,9 +578,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         // and reduce further locking overhead for cs_main in other parts of code including GUI
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
         int64_t nStart = GetTimeMillis();
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             std::map<COutPoint, Coin> coins;
             coins[dmn->collateralOutpoint]; 

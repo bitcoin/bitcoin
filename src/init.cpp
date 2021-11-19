@@ -1687,10 +1687,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReindexGeth));
                 deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager());
+                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
                 governance.reset();
                 governance.reset(new CGovernanceManager(*node.chainman));
-                llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, fReindexGeth);
+                llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, *node.chainman, fReindexGeth);
                 passetdb.reset(new CAssetDB(nEvoDbCache, false, fReindexGeth));
                 passetnftdb.reset(new CAssetNFTDB(nEvoDbCache, false, fReindexGeth));
                 pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nEvoDbCache, false, fReindexGeth));
@@ -1812,7 +1812,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     llmq::DestroyLLMQSystem();
                     evoDb.reset();
                     evoDb.reset(new CEvoDB(nEvoDbCache, false, coinsViewEmpty));
-                    llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, *node.chainman, coinsViewEmpty);
+                    deterministicMNManager.reset();
+                    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+                    llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, *node.chainman, coinsViewEmpty);
                     passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));
                     passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, coinsViewEmpty));
                     pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, false, coinsViewEmpty));

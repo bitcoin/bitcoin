@@ -2091,9 +2091,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         addrman.ResolveCollisions();
         // SYSCOIN
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
 
         int64_t nANow = GetAdjustedTime();
         int nTries = 0;
@@ -2249,9 +2247,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                 connectedProRegTxHashes.emplace(verifiedProRegTxHash, pnode->IsInboundConn());
             }
         });
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         if (interruptNet)
             return;
 
@@ -3160,16 +3156,18 @@ bool CConnman::HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumH
     return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
 }
 
-void CConnman::GetMasternodeQuorums(uint8_t llmqType, std::set<uint256> &result)
+
+std::set<uint256> CConnman::GetMasternodeQuorums(uint8_t llmqType)
 {
     LOCK(cs_vPendingMasternodes);
-    result.clear();
+    std::set<uint256> result;
     for (const auto& p : masternodeQuorumNodes) {
         if (p.first.first != llmqType) {
             continue;
         }
         result.emplace(p.first.second);
     }
+    return result;
 }
 
 void CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, std::set<NodeId>& nodes) const
@@ -3213,8 +3211,7 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
     if (verifiedProRegTxHash.IsNull() && !pnode->IsInboundConn()) {
-        CDeterministicMNList mnList;
-        deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
             // This is definitely not a masternode

@@ -1036,7 +1036,7 @@ public:
     void SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     void SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
-    void GetMasternodeQuorums(uint8_t llmqType, std::set<uint256> &result);
+    std::set<uint256> GetMasternodeQuorums(uint8_t llmqType);
     // also returns QWATCH nodes
     void GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, std::set<NodeId> &result) const;
     void RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);

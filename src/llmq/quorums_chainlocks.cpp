@@ -213,8 +213,7 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
         return false;
     }
     bool fHaveSigner{std::count(clsig.signers.begin(), clsig.signers.end(), true) > 0};
-    std::vector<CQuorumCPtr> quorums_scanned;
-    llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount, quorums_scanned);
+    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount);
 
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         const CQuorumCPtr& quorum = quorums_scanned[i];
@@ -274,8 +273,7 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
         // not enough signers
         return false;
     }
-    std::vector<CQuorumCPtr> quorums_scanned;
-    llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount, quorums_scanned);
+    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount);
 
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         const CQuorumCPtr& quorum = quorums_scanned[i];
@@ -634,9 +632,7 @@ void CChainLocksHandler::TrySignChainTip()
     const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
     
-
-    std::vector<CQuorumCPtr> quorums_scanned;
-    llmq::quorumManager->ScanQuorums(llmqType, pindex, signingActiveQuorumCount, quorums_scanned);
+    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(llmqType, pindex, signingActiveQuorumCount);
     std::map<CQuorumCPtr, CChainLockSigCPtr> mapSharesAtTip;
     {
         LOCK(cs);

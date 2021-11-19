@@ -16,6 +16,7 @@ class CConnman;
 class PeerManager;
 class BlockValidationState;
 class ChainstateManager;
+class CEvoDB;
 namespace llmq
 {
 class CFinalCommitment;
@@ -26,6 +27,7 @@ class CQuorumBlockProcessor
 private:
     CConnman& connman;
     ChainstateManager &chainman;
+    CEvoDB& evoDb;
     // TODO cleanup
     mutable RecursiveMutex minableCommitmentsCs;
     std::map<std::pair<uint8_t, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
@@ -34,7 +36,7 @@ private:
     mutable std::map<uint8_t, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
-    explicit CQuorumBlockProcessor(CConnman &_connman, ChainstateManager& _chainman);
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman &_connman, ChainstateManager& _chainman);
 
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman);
@@ -50,8 +52,8 @@ public:
     bool HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash) const;
     CFinalCommitmentPtr GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, uint256& retMinedBlockHash) const;
 
-    void GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount, std::vector<const CBlockIndex*> &ret) const;
-    void GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex, std::map<uint8_t, std::vector<const CBlockIndex*>> &ret) const;
+    std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount) const;
+    std::map<uint8_t, std::vector<const CBlockIndex*>> GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex) const;
 
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, const uint32_t& nHeight, std::map<uint8_t, CFinalCommitment>& ret, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

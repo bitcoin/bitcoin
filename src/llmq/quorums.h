@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2018-2021 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,11 +14,14 @@
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
+
 class CNode;
 class CConnman;
 class CBlockIndex;
+
 class CDeterministicMN;
 class ChainstateManager;
+class CEvoDB;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 
@@ -26,6 +29,7 @@ namespace llmq
 {
 
 class CDKGSessionManager;
+
 
 /**
  * An object of this class represents a quorum which was mined on-chain (through a quorum commitment)
@@ -69,6 +73,7 @@ public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
     ~CQuorum();
     void Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
+
     bool HasVerificationVector() const;
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
@@ -78,8 +83,8 @@ public:
     CBLSSecretKey GetSkShare() const;
 
 private:
-    void WriteContributions() const;
-    bool ReadContributions();
+    void WriteContributions(CEvoDB& evoDb) const;
+    bool ReadContributions(CEvoDB& evoDb);
 };
 
 /**
@@ -91,40 +96,41 @@ private:
 class CQuorumManager
 {
 private:
+    CEvoDB& evoDb;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     ChainstateManager& chainman;
     mutable RecursiveMutex quorumsCacheCs;
-    mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumCPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(quorumsCacheCs);
+    mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(quorumsCacheCs);
     mutable std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache GUARDED_BY(quorumsCacheCs);
 
     mutable ctpl::thread_pool workerPool;
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman);
+    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman);
     ~CQuorumManager();
 
     void Start();
     void Stop();
 
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload) const;
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
     static bool HasQuorum(uint8_t llmqType, const uint256& quorumHash);
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash) const;
-    void ScanQuorums(uint8_t llmqType, size_t nCountRequested, std::vector<CQuorumCPtr>& quorums) const;
+    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, size_t nCountRequested) const;
 
     // this one is cs_main-free
-    void ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested, std::vector<CQuorumCPtr>& quorums) const;
+    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested) const;
 
 private:
     // all private methods here are cs_main-free
-    void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew);
+    void EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pindexNew) const;
 
-    bool BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
+    CQuorumPtr BuildQuorumFromCommitment(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;
@@ -134,5 +140,6 @@ private:
 extern CQuorumManager* quorumManager;
 
 } // namespace llmq
+
 
 #endif // SYSCOIN_LLMQ_QUORUMS_H

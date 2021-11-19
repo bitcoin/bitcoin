@@ -190,8 +190,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     static std::map<uint8_t, std::vector<uint256>> qcHashesCached;
 
     // The returned quorums are in reversed order, so the most recent one is at index 0
-    std::map<uint8_t, std::vector<const CBlockIndex*>> quorums;
-    llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev, quorums);
+    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
     std::map<uint8_t, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
 

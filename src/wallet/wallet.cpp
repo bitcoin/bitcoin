@@ -924,9 +924,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
         AddToSpends(hash, &batch);
         // SYSCOIN
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 if (deterministicMNManager && (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i)))) {
@@ -2236,9 +2234,7 @@ DBErrors CWallet::LoadWallet()
 // This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
 
     LOCK(cs_wallet);
     for (const auto& pair : mapWallet) {
@@ -2560,9 +2556,7 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 // SYSCOIN
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
 
     AssertLockHeld(cs_wallet);
 

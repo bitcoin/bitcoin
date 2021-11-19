@@ -26,9 +26,7 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
 
     int nSuccessful = 0;
     int nFailed = 0;
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
 
     UniValue resultsObj(UniValue::VOBJ);
 
@@ -276,9 +274,7 @@ static RPCHelpMan gobject_vote_many()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
         LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
@@ -340,9 +336,7 @@ static RPCHelpMan gobject_vote_alias()
     EnsureWalletIsUnlocked(*pwallet);
 
     uint256 proTxHash = ParseHashV(request.params[3], "protxHash");
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetValidMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
