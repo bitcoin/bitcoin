@@ -29,24 +29,24 @@ the Syscoin Core software, see https://syscoin.org/, or read the
 
 Syscoin is a merge-minable SHA256 coin which provides an array of useful services which leverage the bitcoin protocol and blockchain technology. It enables turing complete smart contracts running in an NEVM (Network-enhanced Virtual Machine) to leverage bitcoin security through merged-mining. Scaling the technology will happen on layer 2 (zkRollups for NEVM and Lightning Networks for UTXO assets).
 
-Block time: 150 seconds target
-Halving interval: 210240 (~1 year)
-Rewards: 96.25 Syscoins per block deflated 5 percent per year
-10 percent to governance proposals
-90 percent split with miner/masternode of which:
-   25 percent to miner
-   75 percent to masternode
-50 percent of the transaction fees paid to masternode
-Masternode minimum subsidy(before seniority): 5.275 Syscoins (can not go below this amount even accounting for deflation)
-NEVM subsidy (EIP1559): 10.55 Syscoins (static, not deflating)
-SHA256 Proof of Work
-Mineable either exclusively or via merge-mining any SHA256 PoW coin
-Masternode collateral requirement: 100000 Syscoins
-Masternode seniority: 35 percent increase after 210240 blocks (~1 year), 100 percent increase after 525600 blocks (~2.5 years)
-Governance proposals payout schedule: every 17520 blocks (~1 month)
-Governance funding per round (Approx. 2m Syscoins per month to start)
-Governance funding gets 5% deflation per round (superblock). See formula below
-Codebase based off of latest Bitcoin Core (https://github.com/bitcoin/bitcoin)
+- Block time: 150 seconds target
+- Halving interval: 210240 (~1 year)
+- Rewards: 96.25 Syscoins per block deflated 5 percent per year
+  - 10 percent to governance proposals
+  - 90 percent split with miner/masternode of which:
+    - 25 percent to miner
+    - 75 percent to masternode
+- 50 percent of the transaction fees paid to masternode
+- Masternode minimum subsidy(before seniority): 5.275 Syscoins (can not go below this amount even accounting for deflation)
+- NEVM subsidy (EIP1559): 10.55 Syscoins (static, not deflating)
+- SHA256 Proof of Work
+- Mineable either exclusively or via merge-mining any SHA256 PoW coin
+- Masternode collateral requirement: 100000 Syscoins
+- Masternode seniority: 35 percent increase after 210240 blocks (~1 year), 100 percent increase after 525600 blocks (~2.5 years)
+- Governance proposals payout schedule: every 17520 blocks (~1 month)
+- Governance funding per round (Approx. 2m Syscoins per month to start)
+- Governance funding gets 5% deflation per round (superblock). See formula below
+- Codebase based off of latest Bitcoin Core (https://github.com/bitcoin/bitcoin)
 
 For more information read the Syscoin whitepaper.
 
