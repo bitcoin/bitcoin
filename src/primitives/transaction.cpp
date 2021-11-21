@@ -68,16 +68,12 @@ CTxOut::CTxOut(const CAmount& nValueIn,  const CScript &scriptPubKeyIn)
 }
 std::string CTxOut::ToString() const
 {
-    return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
-}
-// SYSCOIN
-std::string CTxOutCoin::ToString() const
-{
     if(assetInfo.IsNull())
-        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
+        return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
     else
-        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s, nAsset=%llu, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
+        return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s, nAsset=%llu, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
 }
+
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
 // SYSCOIN
 CMutableTransaction::CMutableTransaction(const CTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), voutAssets(tx.voutAssets) {}

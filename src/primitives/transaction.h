@@ -391,47 +391,11 @@ public:
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
+                a.scriptPubKey == b.scriptPubKey &&
+                a.assetInfo == b.assetInfo);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
-    {
-        return !(a == b);
-    }
-    std::string ToString() const;
-};
-// SYSCOIN
-class CTxOutCoin: public CTxOut
-{
-public:
-    CTxOutCoin()
-    {
-        SetNull();
-    }
-
-    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValue, txOut.scriptPubKey, txOut.assetInfo) { }
-    CTxOutCoin(CTxOut&& txOut)  {
-        nValue = std::move(txOut.nValue);
-        scriptPubKey = std::move(txOut.scriptPubKey);
-        assetInfo = std::move(txOut.assetInfo);
-    }
-    friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
-    {
-        return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo == b.assetInfo);
-    }
-    friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
-    {
-        return !(a == b);
-    }
-    friend bool operator==(const CTxOut& a, const CTxOutCoin& b)
-    {
-        return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo == b.assetInfo);
-    }
-    friend bool operator!=(const CTxOut& a, const CTxOutCoin& b)
     {
         return !(a == b);
     }
@@ -442,11 +406,7 @@ public:
 /** wrapper for CTxOut that provides a more compact serialization */
 struct TxOutCompression
 {
-    FORMATTER_METHODS(CTxOut, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey)); }
-};
-struct TxOutCoinCompression
-{
-    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
+    FORMATTER_METHODS(CTxOut, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
 
 class CAssetOutValue {

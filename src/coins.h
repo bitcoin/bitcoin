@@ -24,14 +24,13 @@
  *
  * Serialized format:
  * - VARINT((coinbase ? 1 : 0) | (height << 1))
- * - the non-spent CTxOutCoin (via TxOutCoinCompression)
+ * - the non-spent CTxOut (via TxOutCompression)
  */
 class Coin
 {
 public:
     //! unspent transaction output
-    // SYSCOIN
-    CTxOutCoin out;
+    CTxOut out;
 
     //! whether containing transaction was a coinbase
     unsigned int fCoinBase : 1;
@@ -39,11 +38,9 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
 
-    //! construct a Coin from a CTxOutCoin and height/coinbase information.
-    // SYSCOIN
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(CTxOutCoin(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(CTxOutCoin&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(CTxOutCoin(outIn)), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    //! construct a Coin from a CTxOut and height/coinbase information.
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
 
     void Clear() {
         out.SetNull();
@@ -63,8 +60,7 @@ public:
         assert(!IsSpent());
         uint32_t code = nHeight * uint32_t{2} + fCoinBase;
         ::Serialize(s, VARINT(code));
-        // SYSCOIN
-        ::Serialize(s, Using<TxOutCoinCompression>(out));
+        ::Serialize(s, Using<TxOutCompression>(out));
     }
 
     template<typename Stream>
@@ -73,8 +69,7 @@ public:
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 1;
         fCoinBase = code & 1;
-        // SYSCOIN
-        ::Unserialize(s, Using<TxOutCoinCompression>(out));
+        ::Unserialize(s, Using<TxOutCompression>(out));
     }
 
     /** Either this coin never existed (see e.g. coinEmpty in coins.cpp), or it
