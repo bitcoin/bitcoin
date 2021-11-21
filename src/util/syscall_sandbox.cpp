@@ -581,7 +581,7 @@ public:
         allowed_syscalls.insert(__NR_fdatasync);       // synchronize a file's in-core state with storage device
         allowed_syscalls.insert(__NR_flock);           // apply or remove an advisory lock on an open file
         allowed_syscalls.insert(__NR_fstat);           // get file status
-        allowed_syscalls.insert(__NR_newfstatat);      // get file status
+        allowed_syscalls.insert(__NR_fstatfs);         // get file system status
         allowed_syscalls.insert(__NR_fsync);           // synchronize a file's in-core state with storage device
         allowed_syscalls.insert(__NR_ftruncate);       // truncate a file to a specified length
         allowed_syscalls.insert(__NR_getcwd);          // get current working directory
@@ -589,6 +589,7 @@ public:
         allowed_syscalls.insert(__NR_getdents64);      // get directory entries
         allowed_syscalls.insert(__NR_lstat);           // get file status
         allowed_syscalls.insert(__NR_mkdir);           // create a directory
+        allowed_syscalls.insert(__NR_newfstatat);      // get file status
         allowed_syscalls.insert(__NR_open);            // open and possibly create a file
         allowed_syscalls.insert(__NR_openat);          // open and possibly create a file
         allowed_syscalls.insert(__NR_readlink);        // read value of a symbolic link
