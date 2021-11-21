@@ -915,7 +915,7 @@ void SyscoinGUI::showHelpMessageClicked()
 #ifdef ENABLE_WALLET
 void SyscoinGUI::openClicked()
 {
-    OpenURIDialog dlg(this);
+    OpenURIDialog dlg(platformStyle, this);
     if(dlg.exec())
     {
         Q_EMIT receivedURI(dlg.getURI());
