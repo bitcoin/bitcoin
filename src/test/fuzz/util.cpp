@@ -200,16 +200,19 @@ bool FuzzedSock::IsConnected(std::string& errmsg) const
     return false;
 }
 
-void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, PeerManager& peerman, CNode& node) noexcept
 {
+    const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
+    node.fSuccessfullyConnected = successfully_connected;
     const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
     const NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     const int32_t version = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max());
     const bool filter_txs = fuzzed_data_provider.ConsumeBool();
 
+    node.fPauseSend = false;
     node.nServices = remote_services;
     node.m_permissionFlags = permission_flags;
-    if (init_version) {
+    if (successfully_connected) {
         node.nVersion = version;
         node.SetCommonVersion(std::min(version, PROTOCOL_VERSION));
     }
