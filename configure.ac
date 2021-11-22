@@ -1971,7 +1971,7 @@ if test x$syscoin_enable_qt != xno; then
     echo "    with qr       = $use_qr"
 fi
 echo "  with zmq        = $use_zmq"
-if test x$enable_fuzz == xno; then
+if test x$enable_fuzz = xno; then
     echo "  with test       = $use_tests"
 else
     echo "  with test       = not building test_syscoin because fuzzing is enabled"
