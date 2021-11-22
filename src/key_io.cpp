@@ -102,17 +102,20 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             return ScriptHash(hash);
         }
 
-        if (!std::equal(script_prefix.begin(), script_prefix.end(), data.begin()) &&
-            !std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin())) {
-            error_str = "Invalid prefix for Base58-encoded address";
-        } else {
+        // If the prefix of data matches either the script or pubkey prefix, the length must have been wrong
+        if ((data.size() >= script_prefix.size() &&
+                std::equal(script_prefix.begin(), script_prefix.end(), data.begin())) ||
+            (data.size() >= pubkey_prefix.size() &&
+                std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin()))) {
             error_str = "Invalid length for Base58 address";
+        } else {
+            error_str = "Invalid prefix for Base58-encoded address";
         }
         return CNoDestination();
     } else if (!is_bech32) {
         // Try Base58 decoding without the checksum, using a much larger max length
         if (!DecodeBase58(str, data, 100)) {
-            error_str = "Invalid HRP or Base58 character in address";
+            error_str = "Not a valid Bech32 or Base58 encoding";
         } else {
             error_str = "Invalid checksum or length of Base58 address";
         }

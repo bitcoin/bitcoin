@@ -391,7 +391,7 @@ void push_range(int from, int to, std::vector<int>& vec)
     }
 }
 
-/** Return index of first invalid character in a Bech32 string. */
+/** Return indices of invalid characters in a Bech32 string. */
 bool CheckCharacters(const std::string& str, std::vector<int>& errors) {
     bool lower = false, upper = false;
     for (size_t i = 0; i < str.size(); ++i) {
