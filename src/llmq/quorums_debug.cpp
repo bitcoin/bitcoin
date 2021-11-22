@@ -149,24 +149,23 @@ void CDKGDebugManager::ResetLocalSessionStatus(uint8_t llmqType)
     localStatus.nTime = GetTime();
 }
 
-void CDKGDebugManager::InitLocalSessionStatus(uint8_t llmqType, const uint256& quorumHash, uint32_t quorumHeight)
+void CDKGDebugManager::InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash, uint32_t quorumHeight)
 {
     LOCK(cs);
 
-    auto it = localStatus.sessions.find(llmqType);
+    auto it = localStatus.sessions.find(llmqParams.type);
     if (it == localStatus.sessions.end()) {
-        it = localStatus.sessions.try_emplace(llmqType, CDKGDebugSessionStatus()).first;
+        it = localStatus.sessions.emplace(llmqParams.type, CDKGDebugSessionStatus()).first;
     }
 
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
     auto& session = it->second;
-    session.llmqType = llmqType;
+    session.llmqType = llmqParams.type;
     session.quorumHash = quorumHash;
     session.quorumHeight = quorumHeight;
     session.phase = 0;
     session.statusBitset = 0;
     session.members.clear();
-    session.members.resize((size_t)params.size);
+    session.members.resize((size_t)llmqParams.size);
 }
 
 void CDKGDebugManager::UpdateLocalSessionStatus(uint8_t llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func)

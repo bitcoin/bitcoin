@@ -30,7 +30,9 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CConnman &_connma
     MigrateDKG();
 
     for (const auto& qt : Params().GetConsensus().llmqs) {
-        dkgSessionHandlers.try_emplace(qt.first, qt.second, blsWorker, *this, peerman, _chainman);
+        dkgSessionHandlers.emplace(std::piecewise_construct,
+                std::forward_as_tuple(qt.first),
+                std::forward_as_tuple(qt.second, blsWorker, *this, peerman, _chainman));
     }
 }
 
@@ -327,7 +329,7 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlock
                 }
                 db->Read(std::make_tuple(DB_SKCONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), skContribution);
 
-                it = contributionsCache.try_emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr, skContribution}).first;
+                it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr, skContribution}).first;
             }
 
             memberIndexesRet.emplace_back(i);

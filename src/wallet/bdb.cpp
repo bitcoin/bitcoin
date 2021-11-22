@@ -61,7 +61,7 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
 std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory)
 {
     LOCK(cs_db);
-    auto inserted = g_dbenvs.try_emplace(fs::PathToString(env_directory), std::weak_ptr<BerkeleyEnvironment>());
+    auto inserted = g_dbenvs.emplace(fs::PathToString(env_directory), std::weak_ptr<BerkeleyEnvironment>());
     if (inserted.second) {
         auto env = std::make_shared<BerkeleyEnvironment>(env_directory);
         inserted.first->second = env;

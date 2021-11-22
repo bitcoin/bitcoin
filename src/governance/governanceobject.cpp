@@ -123,7 +123,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    auto it = mapCurrentMNVotes.try_emplace(vote.GetMasternodeOutpoint()).first;
+    auto it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetMasternodeOutpoint(), vote_rec_t())).first;
     vote_rec_t& voteRecordRef = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
     if (eSignal == VOTE_SIGNAL_NONE) {
@@ -140,7 +140,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
-    auto it2 = voteRecordRef.mapInstances.try_emplace(int(eSignal)).first;
+    auto it2 = voteRecordRef.mapInstances.emplace(vote_instance_m_t::value_type(int(eSignal), vote_instance_t())).first;
     vote_instance_t& voteInstanceRef = it2->second;
 
     // Reject obsolete votes

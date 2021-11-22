@@ -668,7 +668,7 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
 
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
-    auto ret = arg_map.try_emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
+    auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
     assert(ret.second); // Make sure an insertion actually happened
 
     if (flags & ArgsManager::NETWORK_ONLY) {

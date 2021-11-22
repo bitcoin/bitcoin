@@ -912,7 +912,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
     }
 
     // Inserts only if not already there, returns tx inserted or tx found
-    auto ret = mapWallet.try_emplace(hash, tx);
+    auto ret = mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(tx));
     CWalletTx& wtx = (*ret.first).second;
     bool fInsertedNew = ret.second;
     bool fUpdated = update_wtx && update_wtx(wtx, fInsertedNew);
@@ -1005,7 +1005,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
 
 bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx)
 {
-    const auto& ins = mapWallet.try_emplace(hash, nullptr);
+    const auto& ins = mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(nullptr));
     CWalletTx& wtx = ins.first->second;
     if (!fill_wtx(wtx, ins.second)) {
         return false;

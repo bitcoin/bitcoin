@@ -103,7 +103,7 @@ public:
         s >> tmpMetaInfo;
         metaInfos.clear();
         for (auto& mm : tmpMetaInfo) {
-            metaInfos.try_emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
+            metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
         }
     }
 

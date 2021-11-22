@@ -276,8 +276,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         CBLSSecretKey operatorKey;
         auto tx = CreateProRegTx(m_node, utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
         dmnHashes.emplace_back(tx.GetHash());
-        ownerKeys.try_emplace(tx.GetHash(), ownerKey);
-        operatorKeys.try_emplace(tx.GetHash(), operatorKey);
+        ownerKeys.emplace(tx.GetHash(), ownerKey);
+        operatorKeys.emplace(tx.GetHash(), operatorKey);
         {
             LOCK(cs_main);
             // also verify that payloads are not malleable after they have been signed
@@ -345,8 +345,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
             CBLSSecretKey operatorKey;
             auto tx = CreateProRegTx(m_node, utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
             dmnHashes.emplace_back(tx.GetHash());
-            ownerKeys.try_emplace(tx.GetHash(), ownerKey);
-            operatorKeys.try_emplace(tx.GetHash(), operatorKey);
+            ownerKeys.emplace(tx.GetHash(), ownerKey);
+            operatorKeys.emplace(tx.GetHash(), operatorKey);
             txns.emplace_back(tx);
         }
         CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));

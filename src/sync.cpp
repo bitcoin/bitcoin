@@ -187,7 +187,7 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
             // potential_deadlock_detected() does not return.
         }
 
-        lockdata.lockorders.try_emplace(p1, lock_stack);
+        lockdata.lockorders.emplace(p1, lock_stack);
         lockdata.invlockorders.insert(p2);
     }
 }

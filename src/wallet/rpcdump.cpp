@@ -1015,7 +1015,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         if (!pubkey.IsFullyValid()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey \"" + str + "\" is not a valid public key");
         }
-        pubkey_map.try_emplace(pubkey.GetID(), pubkey);
+        pubkey_map.emplace(pubkey.GetID(), pubkey);
         ordered_pubkeys.push_back(pubkey.GetID());
     }
     for (size_t i = 0; i < keys.size(); ++i) {
@@ -1029,7 +1029,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         if (pubkey_map.count(id)) {
             pubkey_map.erase(id);
         }
-        privkey_map.try_emplace(id, key);
+        privkey_map.emplace(id, key);
     }
 
 
@@ -1153,7 +1153,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         if (!pubkey_map.count(id)) {
             warnings.push_back("Ignoring irrelevant private key.");
         } else {
-            privkey_map.try_emplace(id, key);
+            privkey_map.emplace(id, key);
         }
     }
 

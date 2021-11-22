@@ -89,7 +89,7 @@ public:
     {
         map_it mit = mapIndex.find(key);
         if(mit == mapIndex.end()) {
-            mit = mapIndex.try_emplace(key).first;
+            mit = mapIndex.emplace(key, it_map_t()).first;
         }
         it_map_t& mapIt = mit->second;
 
@@ -102,7 +102,7 @@ public:
             PruneLast();
         }
         listItems.push_front(item_t(key, value));
-        mapIt.try_emplace(value, listItems.begin());
+        mapIt.emplace(value, listItems.begin());
         return true;
     }
 
@@ -240,10 +240,10 @@ private:
             item_t& item = *lit;
             map_it mit = mapIndex.find(item.key);
             if(mit == mapIndex.end()) {
-                mit = mapIndex.try_emplace(item.key).first;
+                mit = mapIndex.emplace(item.key, it_map_t()).first;
             }
             it_map_t& mapIt = mit->second;
-            mapIt.try_emplace(item.value, lit);
+            mapIt.emplace(item.value, lit);
         }
     }
 };

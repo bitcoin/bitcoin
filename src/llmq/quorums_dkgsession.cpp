@@ -101,7 +101,7 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
 
     for (size_t i = 0; i < mns.size(); i++) {
         members[i] = std::make_unique<CDKGMember>(mns[i], i);
-        membersMap.try_emplace(members[i]->dmn->proTxHash, i);
+        membersMap.emplace(members[i]->dmn->proTxHash, i);
         memberIds[i] = members[i]->id;
     }
 
@@ -125,7 +125,7 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
     }
 
     if (!myProTxHash.IsNull()) {
-        quorumDKGDebugManager->InitLocalSessionStatus(params.type, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
+        quorumDKGDebugManager->InitLocalSessionStatus(params, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
         relayMembers = CLLMQUtils::GetQuorumRelayMembers(params, m_quorum_base_block_index, myProTxHash, true);
     }
 
@@ -465,7 +465,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
         if (verifiedProRegTxHash.IsNull()) {
             return;
         }
-        protoMap.try_emplace(verifiedProRegTxHash, pnode->nVersion);
+        protoMap.emplace(verifiedProRegTxHash, pnode->nVersion);
     });
 
     bool fShouldAllMembersBeConnected = CLLMQUtils::IsAllMembersConnectedEnabled(params.type);
@@ -1119,7 +1119,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitm
 
         // keep track of ALL commitments but only relay valid ones (or if we couldn't build the vvec)
         // relaying is done further down
-        prematureCommitments.try_emplace(hash, qc);
+        prematureCommitments.emplace(hash, qc);
         member->prematureCommitments.emplace(hash);
     }
 
@@ -1208,7 +1208,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
 
             auto it = commitmentsMap.find(qc.validMembers);
             if (it == commitmentsMap.end()) {
-                it = commitmentsMap.try_emplace(qc.validMembers, std::vector<CDKGPrematureCommitment>()).first;
+                it = commitmentsMap.emplace(qc.validMembers, std::vector<CDKGPrematureCommitment>()).first;
             }
 
             it->second.emplace_back(qc);

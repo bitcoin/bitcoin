@@ -3939,7 +3939,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // block that is in flight from some other peer.
             {
                 LOCK(cs_main);
-                mapBlockSource.try_emplace(pblock->GetHash(), pfrom.GetId(), false);
+                mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom.GetId(), false));
             }
             // Setting force_processing to true means that we bypass some of
             // our anti-DoS protections in AcceptBlock, which filters
@@ -4023,7 +4023,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // BIP 152 permits peers to relay compact blocks after validating
                 // the header only; we should not punish peers if the block turns
                 // out to be invalid.
-                mapBlockSource.try_emplace(resp.blockhash, pfrom.GetId(), false);
+                mapBlockSource.emplace(resp.blockhash, std::make_pair(pfrom.GetId(), false));
             }
         } // Don't hold cs_main when we call into ProcessNewBlock
         if (fBlockRead) {
@@ -4090,7 +4090,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
-            mapBlockSource.try_emplace(hash, pfrom.GetId(), true);
+            mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
         }
         ProcessBlock(pfrom, pblock, forceProcessing);
         return;
@@ -5262,12 +5262,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 g_relay_expiration.pop_front();
                             }
 
-                            auto ret = mapRelay.try_emplace(txid, std::move(txinfo.tx));
+                            auto ret = mapRelay.emplace(txid, std::move(txinfo.tx));
                             if (ret.second) {
                                 g_relay_expiration.emplace_back(current_time + RELAY_TX_CACHE_TIME, ret.first);
                             }
                             // Add wtxid-based lookup into mapRelay as well, so that peers can request by wtxid
-                            auto ret2 = mapRelay.try_emplace(wtxid, ret.first->second);
+                            auto ret2 = mapRelay.emplace(wtxid, ret.first->second);
                             if (ret2.second) {
                                 g_relay_expiration.emplace_back(current_time + RELAY_TX_CACHE_TIME, ret2.first);
                             }

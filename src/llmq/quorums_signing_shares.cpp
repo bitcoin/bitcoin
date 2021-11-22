@@ -1047,7 +1047,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
         if (it == quorumNodesMap.end()) {
             std::set<NodeId> nodeIds;
             connman.GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second, nodeIds);
-            it = quorumNodesMap.try_emplace(quorumKey, nodeIds.begin(), nodeIds.end()).first;
+            it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
         }
 
         const auto& quorumNodes = it->second;
@@ -1115,7 +1115,7 @@ bool CSigSharesManager::SendMessages()
         if (verifiedProRegTxHash.IsNull()) {
             continue;
         }
-        proTxToNode.try_emplace(verifiedProRegTxHash, pnode->GetId());
+        proTxToNode.emplace(verifiedProRegTxHash, pnode->GetId());
     }
     {
         LOCK(cs);

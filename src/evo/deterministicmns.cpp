@@ -611,14 +611,14 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
         if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1) {
             evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
-            mnListsCache.try_emplace(newList.GetBlockHash(), newList);
+            mnListsCache.emplace(newList.GetBlockHash(), newList);
             LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                 __func__, nHeight, newList.GetAllMNsCount());
         }
         
 
         diff.nHeight = pindex->nHeight;
-        mnListDiffsCache.try_emplace(pindex->GetBlockHash(), diff);
+        mnListDiffsCache.emplace(pindex->GetBlockHash(), diff);
     } catch (const std::exception& e) {
         LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
         return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-dmn-block");

@@ -142,7 +142,7 @@ public:
     bool Add(const SigShareKey& k, const T& v)
     {
         auto& m = internalMap[k.first];
-        return m.try_emplace(k.second, v).second;
+        return m.emplace(k.second, v).second;
     }
 
     void Erase(const SigShareKey& k)

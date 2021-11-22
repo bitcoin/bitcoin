@@ -1,11 +1,15 @@
-// Copyright (c) 2019-2020 The Dash Core developers
+// Copyright (c) 2019-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_UNORDERED_LRU_CACHE_H
 #define SYSCOIN_UNORDERED_LRU_CACHE_H
 
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <unordered_map>
+#include <vector>
 
 template<typename Key, typename Value, typename Hasher, size_t MaxSize = 0, size_t TruncateThreshold = 0>
 class unordered_lru_cache
@@ -35,7 +39,7 @@ public:
         truncate_if_needed();
         auto it = cacheMap.find(key);
         if (it == cacheMap.end()) {
-            cacheMap.try_emplace(key, std::forward<Value2>(v), accessCounter++);
+            cacheMap.emplace(key, std::make_pair(std::forward<Value2>(v), accessCounter++));
         } else {
             it->second.first = std::forward<Value2>(v);
             it->second.second = accessCounter++;

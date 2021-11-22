@@ -97,7 +97,7 @@ public:
     void GetLocalDebugStatus(CDKGDebugStatus& ret) const;
 
     void ResetLocalSessionStatus(uint8_t llmqType);
-    void InitLocalSessionStatus(uint8_t llmqType, const uint256& quorumHash, uint32_t quorumHeight);
+    void InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash, uint32_t quorumHeight);
 
     void UpdateLocalSessionStatus(uint8_t llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func);
     void UpdateLocalMemberStatus(uint8_t llmqType, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);

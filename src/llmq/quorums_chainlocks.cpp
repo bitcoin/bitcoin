@@ -320,7 +320,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     bool bReturn = false;
     {
         LOCK(cs);
-        if (!seenChainLocks.try_emplace(hash, GetTimeMillis()).second) {
+        if (!seenChainLocks.emplace(hash, GetTimeMillis()).second) {
             bReturn = true;
         }
 
@@ -399,9 +399,9 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             }
             auto it = bestChainLockShares.find(clsig.nHeight);
             if (it == bestChainLockShares.end()) {
-                bestChainLockShares[clsig.nHeight].try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
+                bestChainLockShares[clsig.nHeight].emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
             } else {
-                it->second.try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
+                it->second.emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
             }
             mostRecentChainLockShare = clsig;
             if (TryUpdateBestChainLock(pindexSig)) {
@@ -705,7 +705,7 @@ void CChainLocksHandler::TrySignChainTip()
                 // might have happened while we didn't hold cs
                 return;
             }
-            mapSignedRequestIds.try_emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
+            mapSignedRequestIds.emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
         }
         quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc->quorumHash);
     }

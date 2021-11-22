@@ -628,7 +628,7 @@ public:
         pubkeys.reserve(entries.size());
         for (auto& entry : entries) {
             pubkeys.push_back(entry.first);
-            out.origins.try_emplace(entry.first.GetID(), CPubKey(entry.first), std::move(entry.second));
+            out.origins.emplace(entry.first.GetID(), std::make_pair<CPubKey, KeyOriginInfo>(CPubKey(entry.first), std::move(entry.second)));
         }
 
         output_scripts = MakeScripts(pubkeys, MakeSpan(subscripts), out);
@@ -650,7 +650,7 @@ public:
         for (const auto& p : m_pubkey_args) {
             CKey key;
             if (!p->GetPrivKey(pos, provider, key)) continue;
-            out.keys.try_emplace(key.GetPubKey().GetID(), key);
+            out.keys.emplace(key.GetPubKey().GetID(), key);
         }
         for (const auto& arg : m_subdescriptor_args) {
             arg->ExpandPrivate(pos, provider, out);
@@ -725,7 +725,7 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript>, FlatSigningProvider& out) const override
     {
         CKeyID id = keys[0].GetID();
-        out.pubkeys.try_emplace(id, keys[0]);
+        out.pubkeys.emplace(id, keys[0]);
         return Vector(GetScriptForDestination(PKHash(id)));
     }
 public:
@@ -741,7 +741,7 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript>, FlatSigningProvider& out) const override
     {
         CKeyID id = keys[0].GetID();
-        out.pubkeys.try_emplace(id, keys[0]);
+        out.pubkeys.emplace(id, keys[0]);
         return Vector(GetScriptForDestination(WitnessV0KeyHash(id)));
     }
 public:
@@ -758,12 +758,12 @@ protected:
     {
         std::vector<CScript> ret;
         CKeyID id = keys[0].GetID();
-        out.pubkeys.try_emplace(id, keys[0]);
+        out.pubkeys.emplace(id, keys[0]);
         ret.emplace_back(GetScriptForRawPubKey(keys[0])); // P2PK
         ret.emplace_back(GetScriptForDestination(PKHash(id))); // P2PKH
         if (keys[0].IsCompressed()) {
             CScript p2wpkh = GetScriptForDestination(WitnessV0KeyHash(id));
-            out.scripts.try_emplace(CScriptID(p2wpkh), p2wpkh);
+            out.scripts.emplace(CScriptID(p2wpkh), p2wpkh);
             ret.emplace_back(p2wpkh);
             ret.emplace_back(GetScriptForDestination(ScriptHash(p2wpkh))); // P2SH-P2WPKH
         }
@@ -984,7 +984,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
     if (!ParseKeyPath(split, path, error)) return nullptr;
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
-        out.keys.try_emplace(extpubkey.pubkey.GetID(), extkey.key);
+        out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
     }
     return std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type);
 }

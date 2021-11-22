@@ -532,11 +532,11 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             if (!proTx.collateralOutpoint.hash.IsNull()) {
                 mapProTxRefs.emplace(tx.GetHash(), proTx.collateralOutpoint.hash);
             }
-            mapProTxAddresses.try_emplace(proTx.addr, tx.GetHash());
-            mapProTxPubKeyIDs.try_emplace(proTx.keyIDOwner, tx.GetHash());
-            mapProTxBlsPubKeyHashes.try_emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
+            mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
+            mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
+            mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
             if (!proTx.collateralOutpoint.hash.IsNull()) {
-                mapProTxCollaterals.try_emplace(proTx.collateralOutpoint, tx.GetHash());
+                mapProTxCollaterals.emplace(proTx.collateralOutpoint, tx.GetHash());
             } else {
                 mapProTxCollaterals.emplace(COutPoint(tx.GetHash(), proTx.collateralOutpoint.n), tx.GetHash());
             }
@@ -545,13 +545,13 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         CProUpServTx proTx;
         if(GetTxPayload(tx, proTx)) {
             mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-            mapProTxAddresses.try_emplace(proTx.addr, tx.GetHash());
+            mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
         }
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if(GetTxPayload(tx, proTx)) {
             mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-            mapProTxBlsPubKeyHashes.try_emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
+            mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
             auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
             if(dmn) {
                 newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);

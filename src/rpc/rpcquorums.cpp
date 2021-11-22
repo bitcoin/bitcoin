@@ -187,7 +187,7 @@ static RPCHelpMan quorum_dkgstatus()
             node.connman->ForEachNode([&](CNode* pnode) {
                 auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
                 if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
-                    foundConnections.try_emplace(verifiedProRegTxHash, pnode->addr);
+                    foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
                 }
             });
             UniValue arr(UniValue::VARR);
