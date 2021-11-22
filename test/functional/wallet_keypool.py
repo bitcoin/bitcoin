@@ -220,23 +220,23 @@ def test_auxpow(self, nodes):
     nodes[0].keypoolrefill(1)
     nodes[0].walletlock()
     if self.options.descriptors:
-        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 13)
+        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 19)
     else:
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 1)
 
     nodes[0].getauxblock()
     if self.options.descriptors:
-        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 12)
+        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 18)
     else:
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 0)
     self.generate(nodes[0], 1)
     if self.options.descriptors:
-        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 12)
+        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 18)
     else:
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 0)
     auxblock = nodes[0].getauxblock()
     if self.options.descriptors:
-        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 12)
+        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 18)
     else:
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 0)
 
@@ -245,7 +245,7 @@ def test_auxpow(self, nodes):
     res = nodes[0].getauxblock(auxblock['hash'], solved)
     assert res
     if self.options.descriptors:
-        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 12)
+        assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 18)
     else:
         assert_equal (nodes[0].getwalletinfo()['keypoolsize'], 0)
 
