@@ -284,7 +284,7 @@ task:
 task:
   name: 'macOS 11 native [gui] [no depends]'
   brew_install_script:
-    - brew install boost libevent berkeley-db4 qt@5 miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
+    - brew install boost libevent berkeley-db@4 qt@5 miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
