@@ -84,7 +84,7 @@ Now, you can either build from self-compiled [depends](/depends/README.md) or in
 
     sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
-SQLite is required for the descriptor wallet:
+SQLite is required for the wallet:
 
     sudo apt install libsqlite3-dev
 
@@ -141,7 +141,7 @@ Now, you can either build from self-compiled [depends](/depends/README.md) or in
 
     sudo dnf install libevent-devel boost-devel
 
-SQLite is required for the descriptor wallet:
+SQLite is required for the wallet:
 
     sudo dnf install sqlite-devel
 
@@ -232,7 +232,7 @@ from the root of the repository.
 
 Otherwise, you can build Bitcoin Core from self-compiled [depends](/depends/README.md).
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
+**Note**: You only need Berkeley DB if you want to use the legacy wallet.
 
 Security
 --------
@@ -287,7 +287,7 @@ disable-wallet mode with:
 
     ./configure --disable-wallet
 
-In this case there is no dependency on Berkeley DB 4.8 and SQLite.
+In this case there is no dependency on SQLite or Berkeley DB 4.8.
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 

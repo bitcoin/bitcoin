@@ -30,8 +30,7 @@ compilers within the same executable will result in errors.
 
 ### Building BerkeleyDB
 
-BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
-`--disable-wallet` to `./configure` and skip to the next section.
+BerkeleyDB is only necessary for legacy wallet functionality.
 
 It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
 from ports, for the same reason as boost above (g++/libstd++ incompatibility).
@@ -77,22 +76,21 @@ and preprocessor defines like `waitid()` and `WEXITED` that are not available.)
 To configure with wallet:
 ```bash
 ./configure --with-gui=no --disable-external-signer CC=cc CXX=c++ \
+    MAKE=gmake
+```
+
+To configure with legacy wallet:
+```bash
+./configure --with-gui=no --disable-external-signer CC=cc CXX=c++ \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
     BDB_CFLAGS="-I${BDB_PREFIX}/include" \
     MAKE=gmake
 ```
 
-To configure without wallet:
+To configure without wallet or gui:
 ```bash
-./configure --disable-wallet --with-gui=no --disable-external-signer CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake
-```
-
-To configure with GUI:
-```bash
-./configure --with-gui=yes --disable-external-signer CC=cc CXX=c++ \
-    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
-    BDB_CFLAGS="-I${BDB_PREFIX}/include" \
-    MAKE=gmake
+./configure --disable-wallet --with-gui=no --disable-external-signer \
+    CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake
 ```
 
 Build and run the tests:

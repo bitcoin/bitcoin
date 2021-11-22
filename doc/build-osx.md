@@ -99,30 +99,22 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 #### Wallet Dependencies
 
-It is not necessary to build wallet functionality to run `bitcoind` or  `bitcoin-qt`.
-To enable legacy wallets, you must install `berkeley-db@4`.
-To enable [descriptor wallets](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md), `sqlite` is required.
-Skip `berkeley-db@4` if you intend to *exclusively* use descriptor wallets.
+###### Wallet
 
-###### Legacy Wallet Support
-
-`berkeley-db@4` is required to enable support for legacy wallets.
-Skip if you don't intend to use legacy wallets.
-
-``` bash
-brew install berkeley-db@4
-```
-
-###### Descriptor Wallet Support
-
-Note: Apple has included a useable `sqlite` package since macOS 10.14.
-You may not need to install this package.
-
-`sqlite` is required to enable support for descriptor wallets.
-Skip if you don't intend to use descriptor wallets.
+`sqlite` is required for the wallet ([descriptor based](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md)).
 
 ``` bash
 brew install sqlite
+```
+
+Note: macOS ships with a version of `sqlite`. You may not need to install it.
+
+###### Legacy Wallet
+
+`berkeley-db@4` is only required to enable support for legacy wallets.
+
+``` bash
+brew install berkeley-db@4
 ```
 ---
 

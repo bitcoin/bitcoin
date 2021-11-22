@@ -21,16 +21,16 @@ libevent
 libtool
 pkg-config
 python37
+sqlite3
 
 git clone https://github.com/bitcoin/bitcoin.git
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-### Building BerkeleyDB
+### Building Berkeley DB
 
-BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
-`--disable-wallet` to `./configure` and skip to the next section.
+Berkeley DB is only necessary for legacy wallet functionality.
 
 It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
 from ports, for the same reason as boost above (g++/libstd++ incompatibility).
@@ -54,16 +54,15 @@ export BDB_PREFIX="$PWD/db4"
 With wallet:
 ```bash
 ./autogen.sh
-./configure --with-gui=no CPPFLAGS="-I/usr/pkg/include" \
+./configure --with-gui=no \
+    CPPFLAGS="-I/usr/pkg/include" \
     LDFLAGS="-L/usr/pkg/lib" \
     BOOST_CPPFLAGS="-I/usr/pkg/include" \
     BOOST_LDFLAGS="-L/usr/pkg/lib" \
-    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
-    BDB_CFLAGS="-I${BDB_PREFIX}/include" \
     MAKE=gmake
 ```
 
-Without wallet:
+With legacy wallet:
 ```bash
 ./autogen.sh
 ./configure --with-gui=no --disable-wallet \
@@ -71,6 +70,8 @@ Without wallet:
     LDFLAGS="-L/usr/pkg/lib" \
     BOOST_CPPFLAGS="-I/usr/pkg/include" \
     BOOST_LDFLAGS="-L/usr/pkg/lib" \
+    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
+    BDB_CFLAGS="-I${BDB_PREFIX}/include" \
     MAKE=gmake
 ```
 
