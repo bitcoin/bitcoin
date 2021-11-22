@@ -466,7 +466,7 @@ jobs:
         run: ./configure
           --enable-zmq
           --with-incompatible-bdb
-          --without-gui
+          --with-gui=qt5
           CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER'
           --with-sanitizers=address,undefined
           CC=clang-8 CXX=clang++-8
