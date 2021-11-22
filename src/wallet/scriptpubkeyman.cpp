@@ -528,7 +528,7 @@ static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, Walle
     return keypool.nTime;
 }
 
-int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime() const
+std::optional<int64_t> LegacyScriptPubKeyMan::GetOldestKeyPoolTime() const
 {
     LOCK(cs_KeyStore);
 
@@ -1970,11 +1970,10 @@ bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
     return m_map_keys.size() > 0 || m_map_crypted_keys.size() > 0;
 }
 
-int64_t DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
+std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
 {
     // This is only used for getwalletinfo output and isn't relevant to descriptor wallets.
-    // The magic number 0 indicates that it shouldn't be displayed so that's what we return.
-    return 0;
+    return std::nullopt;
 }
 
 
