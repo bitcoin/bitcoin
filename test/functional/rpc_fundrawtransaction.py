@@ -571,12 +571,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         if self.options.descriptors:
             self.nodes[1].walletpassphrase('test', 10)
             self.nodes[1].importdescriptors([{
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
+                'desc': descsum_create('tr(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
                 'timestamp': 'now',
                 'active': True
             },
             {
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
+                'desc': descsum_create('tr(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
                 'timestamp': 'now',
                 'active': True,
                 'internal': True
@@ -778,11 +778,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         for param, zero_value in product(["fee_rate", "feeRate"], [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]):
             assert_equal(self.nodes[3].fundrawtransaction(rawtx, {param: zero_value})["fee"], 0)
 
-        # With no arguments passed, expect fee of 141 satoshis.
-        assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000141, vspan=0.00000001)
-        # Expect fee to be 10,000x higher when an explicit fee rate 10,000x greater is specified.
-        result = node.fundrawtransaction(rawtx, {"fee_rate": 10000})
-        assert_approx(result["fee"], vexp=0.0141, vspan=0.0001)
+        if self.options.descriptors:
+            # With no arguments passed, expect fee of 153 satoshis as descriptor wallets now have a taproot output.
+            assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000153, vspan=0.00000001)
+            # Expect fee to be 10,000x higher when an explicit fee rate 10,000x greater is specified.
+            result = node.fundrawtransaction(rawtx, {"fee_rate": 10000})
+            assert_approx(result["fee"], vexp=0.0153, vspan=0.0001)
+        else:
+            # With no arguments passed, expect fee of 141 satoshis as legacy wallets only support up to segwit v0.
+            assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000141, vspan=0.00000001)
+            # Expect fee to be 10,000x higher when an explicit fee rate 10,000x greater is specified.
+            result = node.fundrawtransaction(rawtx, {"fee_rate": 10000})
+            assert_approx(result["fee"], vexp=0.0141, vspan=0.0001)
 
         self.log.info("Test fundrawtxn with invalid estimate_mode settings")
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
@@ -1073,7 +1080,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Make sure the default wallet will not be loaded when restarted with a high minrelaytxfee
         self.nodes[0].unloadwallet(self.default_wallet_name, False)
         feerate = Decimal("0.1")
-        self.restart_node(0, [f"-minrelaytxfee={feerate}", "-discardfee=0"]) # Set high minrelayfee, set discardfee to 0 for easier calculation
+        self.restart_node(0, [f"-minrelaytxfee={feerate}", "-discardfee=0", "-changetype=bech32", "-addresstype=bech32"]) # Set high minrelayfee, set discardfee to 0 for easier calculation
 
         self.nodes[0].loadwallet(self.default_wallet_name, True)
         funds = self.nodes[0].get_wallet_rpc(self.default_wallet_name)

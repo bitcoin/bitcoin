@@ -3168,11 +3168,6 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
         for (bool internal : {false, true}) {
             for (OutputType t : OUTPUT_TYPES) {
-                if (t == OutputType::BECH32M) {
-                    // Skip taproot (bech32m) for now
-                    // TODO: Setup taproot (bech32m) descriptors by default
-                    continue;
-                }
                 auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this));
                 if (IsCrypted()) {
                     if (IsLocked()) {

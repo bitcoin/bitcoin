@@ -31,7 +31,7 @@ class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
-            ["-walletrbf=1"],
+            ["-walletrbf=1", "-addresstype=bech32", "-changetype=bech32"], #TODO: Remove address type restrictions once taproot has psbt extensions
             ["-walletrbf=0", "-changetype=legacy"],
             []
         ]
