@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(bech32_testvectors_invalid)
         {"Invalid separator position", {0}},
         {"Invalid character or mixed case", {3, 4, 5, 7}},
         {"Invalid character or mixed case", {3}},
-        {"Invalid checksum", {11}},
-        {"Invalid checksum", {9, 16}},
+        {"Invalid Bech32 checksum", {11}},
+        {"Invalid Bech32 checksum", {9, 16}},
     };
     static_assert(std::size(CASES) == std::size(ERRORS), "Bech32 CASES and ERRORS should have the same length");
 
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(bech32m_testvectors_invalid)
         {"Invalid checksum", {}},
         {"Invalid separator position", {0}},
         {"Invalid separator position", {0}},
-        {"Invalid checksum", {21}},
-        {"Invalid checksum", {13, 32}},
+        {"Invalid Bech32m checksum", {21}},
+        {"Invalid Bech32m checksum", {13, 32}},
     };
     static_assert(std::size(CASES) == std::size(ERRORS), "Bech32m CASES and ERRORS should have the same length");
 

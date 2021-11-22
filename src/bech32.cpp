@@ -7,6 +7,7 @@
 #include <util/vector.h>
 
 #include <assert.h>
+#include <optional>
 
 namespace bech32
 {
@@ -539,6 +540,7 @@ std::string LocateErrors(const std::string& str, std::vector<int>& error_locatio
 
     // We attempt error detection with both bech32 and bech32m, and choose the one with the fewest errors
     // We can't simply use the segwit version, because that may be one of the errors
+    std::optional<Encoding> error_encoding;
     for (Encoding encoding : {Encoding::BECH32, Encoding::BECH32M}) {
         std::vector<int> possible_errors;
         // Recall that (ExpandHRP(hrp) ++ values) is interpreted as a list of coefficients of a polynomial
@@ -657,9 +659,13 @@ std::string LocateErrors(const std::string& str, std::vector<int>& error_locatio
 
         if (error_locations.empty() || (!possible_errors.empty() && possible_errors.size() < error_locations.size())) {
             error_locations = std::move(possible_errors);
+            if (!error_locations.empty()) error_encoding = encoding;
         }
     }
-    return "Invalid checksum";
+    return error_encoding == Encoding::BECH32M ? "Invalid Bech32m checksum"
+            : error_encoding == Encoding::BECH32 ? "Invalid Bech32 checksum"
+            : "Invalid checksum";
+
 }
 
 } // namespace bech32

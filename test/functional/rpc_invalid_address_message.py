@@ -67,13 +67,13 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.check_invalid(BECH32_INVALID_VERSION, 'Invalid Bech32 address witness version')
         self.check_invalid(BECH32_INVALID_V0_SIZE, 'Invalid Bech32 v0 address data size')
         self.check_invalid(BECH32_TOO_LONG, 'Bech32 string too long', list(range(90, 108)))
-        self.check_invalid(BECH32_ONE_ERROR, 'Invalid checksum', [9])
-        self.check_invalid(BECH32_TWO_ERRORS, 'Invalid checksum', [22, 43])
-        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid checksum', [38])
+        self.check_invalid(BECH32_ONE_ERROR, 'Invalid Bech32 checksum', [9])
+        self.check_invalid(BECH32_TWO_ERRORS, 'Invalid Bech32 checksum', [22, 43])
+        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid Bech32 checksum', [38])
         self.check_invalid(BECH32_NO_SEPARATOR, 'Missing separator')
         self.check_invalid(BECH32_INVALID_CHAR, 'Invalid Base 32 character', [8])
-        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Invalid checksum', [19, 30])
-        self.check_invalid(BECH32_WRONG_VERSION, 'Invalid checksum', [5])
+        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Invalid Bech32 checksum', [19, 30])
+        self.check_invalid(BECH32_WRONG_VERSION, 'Invalid Bech32 checksum', [5])
 
         # Valid Bech32
         self.check_valid(BECH32_VALID)
