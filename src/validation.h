@@ -454,16 +454,6 @@ public:
     //! Mark one block file as pruned (modify associated database entries)
     void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    /**
-     * If a block header hasn't already been seen, call CheckBlockHeader on it, ensure
-     * that it doesn't descend from an invalid block, and then add it to m_block_index.
-     */
-    bool AcceptBlockHeader(
-        const CBlockHeader& block,
-        BlockValidationState& state,
-        const CChainParams& chainparams,
-        CBlockIndex** ppindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
     CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Returns last CBlockIndex* that is a checkpoint
@@ -901,6 +891,17 @@ private:
         CChainState& snapshot_chainstate,
         CAutoFile& coins_file,
         const SnapshotMetadata& metadata);
+
+    /**
+     * If a block header hasn't already been seen, call CheckBlockHeader on it, ensure
+     * that it doesn't descend from an invalid block, and then add it to m_block_index.
+     */
+    bool AcceptBlockHeader(
+        const CBlockHeader& block,
+        BlockValidationState& state,
+        const CChainParams& chainparams,
+        CBlockIndex** ppindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    friend CChainState;
 
 public:
     std::thread m_load_block;
