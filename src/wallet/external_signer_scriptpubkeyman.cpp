@@ -9,6 +9,7 @@
 #include <wallet/external_signer_scriptpubkeyman.h>
 
 #include <iostream>
+#include <key_io.h>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -51,15 +52,19 @@ ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
     return signers[0];
 }
 
-bool ExternalSignerScriptPubKeyMan::DisplayAddress(const CScript scriptPubKey, const ExternalSigner &signer) const
+bool ExternalSignerScriptPubKeyMan::DisplayAddress(const CTxDestination& dest, const ExternalSigner &signer) const
 {
     // TODO: avoid the need to infer a descriptor from inside a descriptor wallet
+    const CScript& scriptPubKey = GetScriptForDestination(dest);
     auto provider = GetSolvingProvider(scriptPubKey);
     auto descriptor = InferDescriptor(scriptPubKey, *provider);
 
-    signer.DisplayAddress(descriptor->ToString());
-    // TODO inspect result
-    return true;
+    const UniValue& result = signer.DisplayAddress(descriptor->ToString());
+
+    const UniValue& ret_address = result.find_value("address");
+    if (!ret_address.isStr()) return false;
+
+    return ret_address.getValStr() == EncodeDestination(dest);
 }
 
 // If sign is true, transaction must previously have been filled

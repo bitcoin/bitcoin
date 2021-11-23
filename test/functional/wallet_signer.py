@@ -130,8 +130,9 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(address_info['hdkeypath'], "m/86h/1h/0h/0/0")
 
         self.log.info('Test walletdisplayaddress')
-        result = hww.walletdisplayaddress(address1)
-        assert_equal(result, {"address": address1})
+        for address in [address1, address2, address3]:
+            result = hww.walletdisplayaddress(address)
+            assert_equal(result, {"address": address})
 
         # Handle error thrown by script
         self.set_mock_result(self.nodes[1], "2")

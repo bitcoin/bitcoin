@@ -2676,7 +2676,7 @@ bool CWallet::DisplayAddress(const CTxDestination& dest)
             continue;
         }
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
-        return signer_spk_man->DisplayAddress(scriptPubKey, signer);
+        return signer_spk_man->DisplayAddress(dest, signer);
     }
     return false;
 }
