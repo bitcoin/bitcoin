@@ -155,23 +155,24 @@ CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
     return it == m_block_index.end() ? nullptr : it->second;
 }
 
-CBlockIndex* BlockManager::FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
+CBlockIndex* CChainState::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
     AssertLockHeld(cs_main);
 
     // Find the latest block common to locator and chain - we expect that
     // locator.vHave is sorted descending by height.
     for (const uint256& hash : locator.vHave) {
-        CBlockIndex* pindex = LookupBlockIndex(hash);
+        CBlockIndex* pindex{m_blockman.LookupBlockIndex(hash)};
         if (pindex) {
-            if (chain.Contains(pindex))
+            if (m_chain.Contains(pindex)) {
                 return pindex;
-            if (pindex->GetAncestor(chain.Height()) == chain.Tip()) {
-                return chain.Tip();
+            }
+            if (pindex->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
+                return m_chain.Tip();
             }
         }
     }
-    return chain.Genesis();
+    return m_chain.Genesis();
 }
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,

@@ -494,8 +494,8 @@ public:
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        if (CBlockIndex* fork = m_node.chainman->m_blockman.FindForkInGlobalIndex(active, locator)) {
+        const CChainState& active = Assert(m_node.chainman)->ActiveChainstate();
+        if (CBlockIndex* fork = active.FindForkInGlobalIndex(locator)) {
             return fork->nHeight;
         }
         return std::nullopt;
