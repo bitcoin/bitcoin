@@ -729,7 +729,7 @@
            </property>
          
            <property name="text">
-           <string>Bitcoin Finality Indicator (BFI) indicates when a transaction on an altchain network has as much security as a transaction on Bitcoin itself.&lt;br&gt;See here for more details: &lt;a href='https://wiki.veriblock.org/index.php/How_VeriBlock_PoP_BFI_Protects_Altchains'&gt;https://wiki.veriblock.org/index.php/How_VeriBlock_PoP_BFI_Protects_Altchains&lt;/a&gt;.&lt;br&gt;The BFI service can be run locally, or for convenience, directly pulled from a hosted website (like looking up transactions in an altchain web explorer).&lt;br&gt;&lt;br&gt;Check the -bfiendpoint in the btcsq.conf file to set the BFI endpoint.&lt;br&gt;</string>
+           <string>Bitcoin Finality Indicator (BFI) indicates when a transaction on an altchain network has as much security as a transaction on Bitcoin itself.&lt;br&gt;See here for more details: &lt;a href='https://veriblock.org/vbfi'&gt;https://veriblock.org/vbfi&lt;/a&gt;.&lt;br&gt;The BFI service can be run locally, or for convenience, directly pulled from a hosted website (like looking up transactions in an altchain web explorer).&lt;br&gt;&lt;br&gt;Check the -bfiendpoint in the btcsq.conf file to set the BFI endpoint.&lt;br&gt;</string>
            </property>
            
           </widget>
