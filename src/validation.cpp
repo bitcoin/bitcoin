@@ -3738,7 +3738,12 @@ bool BlockManager::LoadBlockIndex(
     return true;
 }
 
-void BlockManager::Unload() {
+BlockManager::~BlockManager()
+{
+    Unload();
+}
+void BlockManager::Unload()
+{
     m_failed_blocks.clear();
     m_blocks_unlinked.clear();
 

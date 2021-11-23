@@ -486,9 +486,7 @@ public:
      */
     int GetSpendHeight(const CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    ~BlockManager() {
-        Unload();
-    }
+    ~BlockManager();
 };
 
 /**
