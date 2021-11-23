@@ -457,9 +457,9 @@ std::string LocateErrors(const std::string& str, std::vector<int>& error_locatio
             int s2 = syn >> 20;
 
             // Get the discrete logs of these values in GF1024 for more efficient computation
-            int l_s0 = GF1024_LOG[s0];
-            int l_s1 = GF1024_LOG[s1];
-            int l_s2 = GF1024_LOG[s2];
+            int l_s0 = GF1024_LOG.at(s0);
+            int l_s1 = GF1024_LOG.at(s1);
+            int l_s2 = GF1024_LOG.at(s2);
 
             // First, suppose there is only a single error. Then E(x) = e1*x^p1 for some position p1
             // Then s0 = E((e)^997) = e1*(e)^(997*p1) and s1 = E((e)^998) = e1*(e)^(998*p1)
@@ -494,15 +494,15 @@ std::string LocateErrors(const std::string& str, std::vector<int>& error_locatio
                     //    (Because we are working in characteristic 2.)
                     //          = e2*(e)^(998*p2) ((e)^p2 + (e)^p1)
                     //
-                    int s2_s1p1 = s2 ^ (s1 == 0 ? 0 : GF1024_EXP[(l_s1 + p1) % 1023]);
+                    int s2_s1p1 = s2 ^ (s1 == 0 ? 0 : GF1024_EXP.at((l_s1 + p1) % 1023));
                     if (s2_s1p1 == 0) continue;
-                    int l_s2_s1p1 = GF1024_LOG[s2_s1p1];
+                    int l_s2_s1p1 = GF1024_LOG.at(s2_s1p1);
 
                     // Similarly, s1 + s0*(e)^p1
                     //          = e2*(e)^(997*p2) ((e)^p2 + (e)^p1)
-                    int s1_s0p1 = s1 ^ (s0 == 0 ? 0 : GF1024_EXP[(l_s0 + p1) % 1023]);
+                    int s1_s0p1 = s1 ^ (s0 == 0 ? 0 : GF1024_EXP.at((l_s0 + p1) % 1023));
                     if (s1_s0p1 == 0) continue;
-                    int l_s1_s0p1 = GF1024_LOG[s1_s0p1];
+                    int l_s1_s0p1 = GF1024_LOG.at(s1_s0p1);
 
                     // So, putting these together, we can compute the second error position as
                     // (e)^p2 = (s2 + s1^p1)/(s1 + s0^p1)
@@ -515,12 +515,12 @@ std::string LocateErrors(const std::string& str, std::vector<int>& error_locatio
                     // Now we want to compute the error values e1 and e2.
                     // Similar to above, we compute s1 + s0*(e)^p2
                     //          = e1*(e)^(997*p1) ((e)^p1 + (e)^p2)
-                    int s1_s0p2 = s1 ^ (s0 == 0 ? 0 : GF1024_EXP[(l_s0 + p2) % 1023]);
+                    int s1_s0p2 = s1 ^ (s0 == 0 ? 0 : GF1024_EXP.at((l_s0 + p2) % 1023));
                     if (s1_s0p2 == 0) continue;
-                    int l_s1_s0p2 = GF1024_LOG[s1_s0p2];
+                    int l_s1_s0p2 = GF1024_LOG.at(s1_s0p2);
 
                     // And compute (the log of) 1/((e)^p1 + (e)^p2))
-                    int inv_p1_p2 = 1023 - GF1024_LOG[GF1024_EXP[p1] ^ GF1024_EXP[p2]];
+                    int inv_p1_p2 = 1023 - GF1024_LOG.at(GF1024_EXP.at(p1) ^ GF1024_EXP.at(p2));
 
                     // Then (s1 + s0*(e)^p1) * (1/((e)^p1 + (e)^p2)))
                     //         = e2*(e)^(997*p2)
