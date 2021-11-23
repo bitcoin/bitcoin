@@ -6,9 +6,10 @@
 #include <bech32.h>
 #include <util/vector.h>
 
-#include <assert.h>
-#include <optional>
 #include <array>
+#include <assert.h>
+#include <numeric>
+#include <optional>
 
 namespace bech32
 {
@@ -282,13 +283,6 @@ inline unsigned char LowerCase(unsigned char c)
     return (c >= 'A' && c <= 'Z') ? (c - 'A') + 'a' : c;
 }
 
-void push_range(int from, int to, std::vector<int>& vec)
-{
-    for (int i = from; i < to; i++) {
-        vec.push_back(i);
-    }
-}
-
 /** Return indices of invalid characters in a Bech32 string. */
 bool CheckCharacters(const std::string& str, std::vector<int>& errors) {
     bool lower = false, upper = false;
@@ -404,7 +398,8 @@ DecodeResult Decode(const std::string& str) {
 /** Find index of an incorrect character in a Bech32 string. */
 std::string LocateErrors(const std::string& str, std::vector<int>& error_locations) {
     if (str.size() > 90) {
-        push_range(90, str.size(), error_locations);
+        error_locations.resize(str.size() - 90);
+        std::iota(error_locations.begin(), error_locations.end(), 90);
         return "Bech32 string too long";
     }
     if (!CheckCharacters(str, error_locations)){
