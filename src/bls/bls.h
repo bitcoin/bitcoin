@@ -21,7 +21,7 @@
 #undef DOUBLE
 
 #include <array>
-#include <sync.h>
+#include <mutex>
 #include <unistd.h>
 
 static constexpr bool fLegacyDefault{true};
@@ -300,7 +300,7 @@ template<typename BLSObject>
 class CBLSLazyWrapper
 {
 private:
-    mutable RecursiveMutex mutex;
+    mutable std::mutex mutex;
 
     mutable std::vector<uint8_t> vecBytes;
     mutable bool bufValid{false};
@@ -326,7 +326,7 @@ public:
 
     CBLSLazyWrapper& operator=(const CBLSLazyWrapper& r)
     {
-        LOCK(r.mutex);
+        std::unique_lock<std::mutex> l(r.mutex);
         bufValid = r.bufValid;
         if (r.bufValid) {
             vecBytes = r.vecBytes;
@@ -351,7 +351,7 @@ public:
     template<typename Stream>
     inline void Serialize(Stream& s) const
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         if (!objInitialized && !bufValid) {
             throw std::ios_base::failure("obj and buf not initialized");
         }
@@ -366,7 +366,7 @@ public:
     template<typename Stream>
     inline void Unserialize(Stream& s)
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         s.read((char*)vecBytes.data(), BLSObject::SerSize);
         bufValid = true;
         objInitialized = false;
@@ -375,7 +375,7 @@ public:
 
     void Set(const BLSObject& _obj)
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         bufValid = false;
         objInitialized = true;
         obj = _obj;
@@ -383,7 +383,7 @@ public:
     }
     const BLSObject& Get() const
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         static BLSObject invalidObj;
         if (!bufValid && !objInitialized) {
             return invalidObj;
@@ -419,7 +419,7 @@ public:
 
     uint256 GetHash() const
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         if (!bufValid) {
             vecBytes = obj.ToByteVector();
             bufValid = true;

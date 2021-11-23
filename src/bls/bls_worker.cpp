@@ -134,7 +134,7 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
     bool parallel;
     ctpl::thread_pool& workerPool;
 
-    RecursiveMutex m;
+    std::mutex m;
     // items in the queue are all intermediate aggregation results of finished batches.
     // The intermediate results must be deleted by us again (which we do in SyncAggregateAndPushAggQueue)
     ctpl::detail::Queue<T*> aggQueue;
@@ -276,7 +276,7 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
             // we've collected enough intermediate results to form a new batch.
             std::shared_ptr<std::vector<const T*> > newBatch;
             {
-                LOCK(m);
+                std::unique_lock<std::mutex> l(m);
                 if (aggQueueSize < batchSize) {
                     // some other worker thread grabbed this batch
                     return;
@@ -805,7 +805,7 @@ void CBLSWorker::AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& p
         return;
     }
 
-    LOCK(sigVerifyMutex);
+    std::unique_lock<std::mutex> l(sigVerifyMutex);
 
     bool foundDuplicate = false;
     for (const auto& s : sigVerifyQueue) {
@@ -836,7 +836,7 @@ std::future<bool> CBLSWorker::AsyncVerifySig(const CBLSSignature& sig, const CBL
 
 bool CBLSWorker::IsAsyncVerifyInProgress()
 {
-    LOCK(sigVerifyMutex);
+    std::unique_lock<std::mutex> l(sigVerifyMutex);
     return sigVerifyBatchesInProgress != 0;
 }
 
@@ -851,7 +851,7 @@ void CBLSWorker::PushSigVerifyBatch()
                 bool valid = job.sig.VerifyInsecure(job.pubKey, job.msgHash);
                 job.doneCallback(valid);
             }
-            LOCK(sigVerifyMutex);
+            std::unique_lock<std::mutex> l(sigVerifyMutex);
             sigVerifyBatchesInProgress--;
             if (!sigVerifyQueue.empty()) {
                 PushSigVerifyBatch();
@@ -898,7 +898,7 @@ void CBLSWorker::PushSigVerifyBatch()
             }
         }
 
-        LOCK(sigVerifyMutex);
+        std::unique_lock<std::mutex> l(sigVerifyMutex);
         sigVerifyBatchesInProgress--;
         if (!sigVerifyQueue.empty()) {
             PushSigVerifyBatch();

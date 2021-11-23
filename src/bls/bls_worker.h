@@ -43,7 +43,7 @@ private:
         }
     };
 
-    RecursiveMutex sigVerifyMutex;
+    std::mutex sigVerifyMutex;
     int sigVerifyBatchesInProgress{0};
     std::vector<SigVerifyJob> sigVerifyQueue;
 
@@ -140,7 +140,7 @@ class CBLSWorkerCache
 private:
     CBLSWorker& worker;
 
-    RecursiveMutex cacheCs;
+    std::mutex cacheCs;
     std::map<uint256, std::shared_future<BLSVerificationVectorPtr> > vvecCache;
     std::map<uint256, std::shared_future<CBLSSecretKey> > secretKeyShareCache;
     std::map<uint256, std::shared_future<CBLSPublicKey> > publicKeyShareCache;
