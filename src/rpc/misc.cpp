@@ -52,6 +52,10 @@ static RPCHelpMan validateaddress()
                         {RPCResult::Type::NUM, "witness_version", /* optional */ true, "The version number of the witness program"},
                         {RPCResult::Type::STR_HEX, "witness_program", /* optional */ true, "The hex value of the witness program"},
                         {RPCResult::Type::STR, "error", /* optional */ true, "Error message, if any"},
+                        {RPCResult::Type::ARR, "error_locations", "Indices of likely error locations in address, if known (e.g. Bech32 errors)",
+                            {
+                                {RPCResult::Type::NUM, "index", "index of a potential error"},
+                            }},
                     }
                 },
                 RPCExamples{
@@ -61,7 +65,8 @@ static RPCHelpMan validateaddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::string error_msg;
-    CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg);
+    std::vector<int> error_locations;
+    CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations);
     const bool isValid = IsValidDestination(dest);
     CHECK_NONFATAL(isValid == error_msg.empty());
 
@@ -77,6 +82,9 @@ static RPCHelpMan validateaddress()
         UniValue detail = DescribeAddress(dest);
         ret.pushKVs(detail);
     } else {
+        UniValue error_indices(UniValue::VARR);
+        for (int i : error_locations) error_indices.push_back(i);
+        ret.pushKV("error_locations", error_indices);
         ret.pushKV("error", error_msg);
     }
 

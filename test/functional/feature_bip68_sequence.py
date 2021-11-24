@@ -388,9 +388,7 @@ class BIP68Test(BitcoinTestFramework):
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, tx3.serialize().hex())
 
         # make a block that violates bip68; ensure that the tip updates
-        block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
-        block.vtx.extend([tx1, tx2, tx3])
-        block.hashMerkleRoot = block.calc_merkle_root()
+        block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS), txlist=[tx1, tx2, tx3])
         add_witness_commitment(block)
         block.solve()
 

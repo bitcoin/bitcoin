@@ -1,4 +1,5 @@
 // Copyright (c) 2017 Pieter Wuille
+// Copyright (c) 2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -68,10 +69,36 @@ BOOST_AUTO_TEST_CASE(bech32_testvectors_invalid)
         "1qzzfhee",
         "a12UEL5L",
         "A12uEL5L",
+        "abcdef1qpzrz9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
     };
+    static const std::pair<std::string, int> ERRORS[] = {
+        {"Invalid character or mixed case", 0},
+        {"Invalid character or mixed case", 0},
+        {"Invalid character or mixed case", 0},
+        {"Bech32 string too long", 90},
+        {"Missing separator", -1},
+        {"Invalid separator position", 0},
+        {"Invalid Base 32 character", 2},
+        {"Invalid separator position", 2},
+        {"Invalid character or mixed case", 8},
+        {"Invalid checksum", -1}, // The checksum is calculated using the uppercase form so the entire string is invalid, not just a few characters
+        {"Invalid separator position", 0},
+        {"Invalid separator position", 0},
+        {"Invalid character or mixed case", 3},
+        {"Invalid character or mixed case", 3},
+        {"Invalid checksum", 11}
+    };
+    int i = 0;
     for (const std::string& str : CASES) {
+        const auto& err = ERRORS[i];
         const auto dec = bech32::Decode(str);
         BOOST_CHECK(dec.encoding == bech32::Encoding::INVALID);
+        std::vector<int> error_locations;
+        std::string error = bech32::LocateErrors(str, error_locations);
+        BOOST_CHECK_EQUAL(err.first, error);
+        if (err.second == -1) BOOST_CHECK(error_locations.empty());
+        else BOOST_CHECK_EQUAL(err.second, error_locations[0]);
+        i++;
     }
 }
 
@@ -91,11 +118,37 @@ BOOST_AUTO_TEST_CASE(bech32m_testvectors_invalid)
         "au1s5cgom",
         "M1VUXWEZ",
         "16plkw9",
-        "1p2gdwpf"
+        "1p2gdwpf",
+        "abcdef1l7aum6echk45nj2s0wdvt2fg8x9yrzpqzd3ryx",
     };
+    static const std::pair<std::string, int> ERRORS[] = {
+        {"Invalid character or mixed case", 0},
+        {"Invalid character or mixed case", 0},
+        {"Invalid character or mixed case", 0},
+        {"Bech32 string too long", 90},
+        {"Missing separator", -1},
+        {"Invalid separator position", 0},
+        {"Invalid Base 32 character", 2},
+        {"Invalid Base 32 character", 3},
+        {"Invalid separator position", 2},
+        {"Invalid Base 32 character", 8},
+        {"Invalid Base 32 character", 7},
+        {"Invalid checksum", -1},
+        {"Invalid separator position", 0},
+        {"Invalid separator position", 0},
+        {"Invalid checksum", 21},
+    };
+    int i = 0;
     for (const std::string& str : CASES) {
+        const auto& err = ERRORS[i];
         const auto dec = bech32::Decode(str);
         BOOST_CHECK(dec.encoding == bech32::Encoding::INVALID);
+        std::vector<int> error_locations;
+        std::string error = bech32::LocateErrors(str, error_locations);
+        BOOST_CHECK_EQUAL(err.first, error);
+        if (err.second == -1) BOOST_CHECK(error_locations.empty());
+        else BOOST_CHECK_EQUAL(err.second, error_locations[0]);
+        i++;
     }
 }
 

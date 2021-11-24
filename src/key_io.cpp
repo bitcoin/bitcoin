@@ -76,12 +76,16 @@ public:
     std::string operator()(const CNoDestination& no) const { return {}; }
 };
 
-CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str)
+CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
     std::vector<unsigned char> data;
     uint160 hash;
     error_str = "";
-    if (DecodeBase58Check(str, data, 21)) {
+
+    // Note this will be false if it is a valid Bech32 address for a different network
+    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
+
+    if (!is_bech32 && DecodeBase58Check(str, data, 21)) {
         // base58-encoded Bitcoin addresses.
         // Public-key-hash-addresses have version 0 (or 111 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
@@ -98,15 +102,27 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             return ScriptHash(hash);
         }
 
-        // Set potential error message.
-        // This message may be changed if the address can also be interpreted as a Bech32 address.
-        error_str = "Invalid prefix for Base58-encoded address";
+        if (!std::equal(script_prefix.begin(), script_prefix.end(), data.begin()) &&
+            !std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin())) {
+            error_str = "Invalid prefix for Base58-encoded address";
+        } else {
+            error_str = "Invalid length for Base58 address";
+        }
+        return CNoDestination();
+    } else if (!is_bech32) {
+        // Try Base58 decoding without the checksum, using a much larger max length
+        if (!DecodeBase58(str, data, 100)) {
+            error_str = "Invalid HRP or Base58 character in address";
+        } else {
+            error_str = "Invalid checksum or length of Base58 address";
+        }
+        return CNoDestination();
     }
+
     data.clear();
     const auto dec = bech32::Decode(str);
     if ((dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) && dec.data.size() > 0) {
         // Bech32 decoding
-        error_str = "";
         if (dec.hrp != params.Bech32HRP()) {
             error_str = "Invalid prefix for Bech32 address";
             return CNoDestination();
@@ -168,8 +184,13 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         }
     }
 
-    // Set error message if address can't be interpreted as Base58 or Bech32.
-    if (error_str.empty()) error_str = "Invalid address format";
+    // Perform Bech32 error location
+    if (!error_locations) {
+        std::vector<int> dummy_errors;
+        error_str = bech32::LocateErrors(str, dummy_errors);
+    } else {
+        error_str = bech32::LocateErrors(str, *error_locations);
+    }
 
     return CNoDestination();
 }
@@ -258,9 +279,9 @@ std::string EncodeDestination(const CTxDestination& dest)
     return std::visit(DestinationEncoder(Params()), dest);
 }
 
-CTxDestination DecodeDestination(const std::string& str, std::string& error_msg)
+CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations)
 {
-    return DecodeDestination(str, Params(), error_msg);
+    return DecodeDestination(str, Params(), error_msg, error_locations);
 }
 
 CTxDestination DecodeDestination(const std::string& str)
@@ -272,7 +293,7 @@ CTxDestination DecodeDestination(const std::string& str)
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
     std::string error_msg;
-    return IsValidDestination(DecodeDestination(str, params, error_msg));
+    return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr));
 }
 
 bool IsValidDestinationString(const std::string& str)

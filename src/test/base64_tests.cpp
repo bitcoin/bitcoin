@@ -23,6 +23,16 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
         BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
     }
 
+    {
+        const std::vector<uint8_t> in_u{0xff, 0x01, 0xff};
+        const std::vector<std::byte> in_b{std::byte{0xff}, std::byte{0x01}, std::byte{0xff}};
+        const std::string in_s{"\xff\x01\xff"};
+        const std::string out_exp{"/wH/"};
+        BOOST_CHECK_EQUAL(EncodeBase64(in_u), out_exp);
+        BOOST_CHECK_EQUAL(EncodeBase64(in_b), out_exp);
+        BOOST_CHECK_EQUAL(EncodeBase64(in_s), out_exp);
+    }
+
     // Decoding strings with embedded NUL characters should fail
     bool failure;
     (void)DecodeBase64("invalid\0"s, &failure);

@@ -18,7 +18,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     CTransaction,
     hash256,
-    tx_from_hex,
 )
 from test_framework.util import (
     assert_equal,
@@ -402,12 +401,8 @@ class ZMQTest (BitcoinTestFramework):
             raw_tx = self.nodes[0].getrawtransaction(orig_txid)
             bump_info = self.nodes[0].bumpfee(orig_txid)
             # Mine the pre-bump tx
-            block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(self.nodes[0].getblockcount()+1))
-            tx = tx_from_hex(raw_tx)
-            block.vtx.append(tx)
-            for txid in more_tx:
-                tx = tx_from_hex(self.nodes[0].getrawtransaction(txid))
-                block.vtx.append(tx)
+            txs_to_add = [raw_tx] + [self.nodes[0].getrawtransaction(txid) for txid in more_tx]
+            block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(self.nodes[0].getblockcount()+1), txlist=txs_to_add)
             add_witness_commitment(block)
             block.solve()
             assert_equal(self.nodes[0].submitblock(block.serialize().hex()), None)
