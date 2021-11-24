@@ -94,6 +94,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 5m vv
     'mining_getblocktemplate_longpoll.py',
     'feature_maxuploadtarget.py',
+    'feature_maxuploadtarget_byteunit.py',
     'feature_block.py',
     'rpc_fundrawtransaction.py --legacy-wallet',
     'rpc_fundrawtransaction.py --descriptors',

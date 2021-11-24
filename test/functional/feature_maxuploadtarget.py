@@ -31,12 +31,14 @@ class TestP2PConn(P2PInterface):
         self.block_receive_map[message.block.sha256] += 1
 
 class MaxUploadTest(BitcoinTestFramework):
+    uploadtarget = "800"
+    restart_uploadtarget = "1"
 
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[
-            "-maxuploadtarget=800",
+            f"-maxuploadtarget={self.uploadtarget}",
             "-acceptnonstdtxn=1",
         ]]
         self.supports_cli = False
@@ -141,7 +143,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         self.log.info("Restarting node 0 with download permission and 1MB maxuploadtarget")
-        self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1"])
+        self.restart_node(0, ["-whitelist=download@127.0.0.1", f"-maxuploadtarget={self.restart_uploadtarget}"])
 
         # Reconnect to self.nodes[0]
         peer = self.nodes[0].add_p2p_connection(TestP2PConn())
