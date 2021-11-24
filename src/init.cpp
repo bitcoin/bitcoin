@@ -1596,8 +1596,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         LogPrintf("Transition to NEVM detected, reindexing to migrate...\n");
         DeleteOldEthDir();
         fReindex = true;
+    } else {
+        fReindex = args.GetBoolArg("-reindex", false);
     }
-    fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
     fReindexGeth = fReindex || fReindexChainState;
     if(fNEVMConnection) {
