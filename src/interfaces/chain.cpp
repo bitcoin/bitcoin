@@ -228,6 +228,14 @@ public:
         auto locked_chain = m_chain.assumeLocked();
         m_notifications->ResendWalletTransactions(*locked_chain, best_block_time);
     }
+    void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override
+    {
+        m_notifications->NotifyChainLock(pindexChainLock, clsig);
+    }
+    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override
+    {
+        m_notifications->NotifyTransactionLock(tx, islock);
+    }
     Chain& m_chain;
     Chain::Notifications* m_notifications;
 };
