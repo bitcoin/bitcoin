@@ -45,12 +45,12 @@ public:
      *  e.g. (nFeePaid * 1e8 / 1e3) == (nFeePaid / 1e5),
      *  where 1e5 is the ratio to convert from BTC/kvB to sat/vB.
      */
-    CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes);
+    CFeeRate(const CAmount& nFeePaid, uint64_t num_bytes);
     /**
      * Return the fee in satoshis for the given size in bytes.
      * If the calculated fee would have fractional satoshis, then the returned fee will always be rounded up to the nearest satoshi.
      */
-    CAmount GetFee(uint32_t num_bytes) const;
+    CAmount GetFee(uint64_t num_bytes) const;
     /**
      * Return the fee in satoshis for a size of 1000 bytes
      */
