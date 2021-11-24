@@ -17,6 +17,10 @@ $(package)_config_opts_x86_64=architecture=x86 address-model=64
 $(package)_config_opts_i686=architecture=x86 address-model=32
 $(package)_config_opts_aarch64=address-model=64
 $(package)_config_opts_armv7a=address-model=32
+$(package)_config_opts_i686_android=address-model=32
+$(package)_config_opts_aarch64_android=address-model=64
+$(package)_config_opts_x86_64_android=address-model=64
+$(package)_config_opts_armv7a_android=address-model=32
 ifneq (,$(findstring clang,$($(package)_cxx)))
 $(package)_toolset_$(host_os)=clang
 else
@@ -25,6 +29,7 @@ endif
 $(package)_config_libraries=chrono,filesystem,system,thread,test
 $(package)_cxxflags=-std=c++17 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
+$(package)_cxxflags_android=-fPIC
 endef
 
 # Fix unused variable in boost_process, can be removed after upgrading to 1.72
