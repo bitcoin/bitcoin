@@ -16,7 +16,6 @@
 // SYSCOIN
 #include <math.h>
 #include <errno.h>
-#include <limits>
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const std::string SAFE_CHARS[] =
