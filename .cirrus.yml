@@ -269,10 +269,11 @@ task:
 
 task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
+  << : *BASE_TEMPLATE
   macos_sdk_cache:
     folder: "depends/SDKs/$MACOS_SDK"
     fingerprint_key: "$MACOS_SDK"
-  << : *GLOBAL_TASK_TEMPLATE
+  << : *MAIN_TEMPLATE
   container:
     image: ubuntu:focal
   env:
