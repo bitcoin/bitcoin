@@ -893,14 +893,14 @@ bool ChainstateManager::ProcessNewBlock(...)
   OK:
 ```c++
 {
-    TRY_LOCK(cs_vNodes, lockNodes);
+    TRY_LOCK(m_nodes_mutex, lockNodes);
     ...
 }
 ```
 
   Wrong:
 ```c++
-TRY_LOCK(cs_vNodes, lockNodes);
+TRY_LOCK(m_nodes_mutex, lockNodes);
 {
     ...
 }

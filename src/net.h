@@ -891,8 +891,8 @@ public:
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
-            LOCK(cs_vAddedNodes);
-            vAddedNodes = connOptions.m_added_nodes;
+            LOCK(m_added_nodes_mutex);
+            m_added_nodes = connOptions.m_added_nodes;
         }
         m_onion_binds = connOptions.onion_binds;
     }
@@ -927,8 +927,8 @@ public:
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes)
             if (cond(node))
                 if(!func(node))
                     return false;
@@ -944,8 +944,8 @@ public:
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func) const
     {
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
+        LOCK(m_nodes_mutex);
+        for (const auto& node : m_nodes)
             if (cond(node))
                 if(!func(node))
                     return false;
@@ -961,8 +961,8 @@ public:
     template<typename Condition, typename Callable>
     void ForEachNode(const Condition& cond, Callable&& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (cond(node))
                 func(node);
         }
@@ -977,8 +977,8 @@ public:
     template<typename Condition, typename Callable>
     void ForEachNode(const Condition& cond, Callable&& func) const
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (cond(node))
                 func(node);
         }
@@ -1137,7 +1137,7 @@ private:
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
-     * the `vNodes` member.
+     * the `m_nodes` member.
      * @param[in] hSocket Connected socket to communicate with the peer.
      * @param[in] permissionFlags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
@@ -1243,9 +1243,8 @@ private:
     // static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
-    mutable RecursiveMutex cs_totalBytesRecv;
     mutable RecursiveMutex cs_totalBytesSent;
-    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv) {0};
+    std::atomic<uint64_t> nTotalBytesRecv{0};
     uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
 
     // outbound limit & stats
@@ -1268,18 +1267,18 @@ private:
     bool fAddressesInitialized{false};
     AddrMan& addrman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
-    RecursiveMutex m_addr_fetches_mutex;
-    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
-    mutable RecursiveMutex cs_vAddedNodes;
+    Mutex m_addr_fetches_mutex;
+    std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
+    mutable Mutex m_added_nodes_mutex;
     // SYSCOIN
     std::vector<uint256> vPendingMasternodes GUARDED_BY(cs_vPendingMasternodes);
     std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
     std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumRelayMembers GUARDED_BY(cs_vPendingMasternodes);
     std::set<uint256> masternodePendingProbes;
     mutable RecursiveMutex cs_vPendingMasternodes;
-    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
-    std::list<CNode*> vNodesDisconnected;
-    mutable RecursiveMutex cs_vNodes;
+    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::list<CNode*> m_nodes_disconnected;
+    mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
@@ -1403,7 +1402,7 @@ private:
     std::vector<CService> m_onion_binds;
 
     /**
-     * RAII helper to atomically create a copy of `vNodes` and add a reference
+     * RAII helper to atomically create a copy of `m_nodes` and add a reference
      * to each of the nodes. The nodes are released when this object is destroyed.
      */
     class NodesSnapshot
@@ -1412,8 +1411,8 @@ private:
         explicit NodesSnapshot(const CConnman& connman, bool shuffle)
         {
             {
-                LOCK(connman.cs_vNodes);
-                m_nodes_copy = connman.vNodes;
+                LOCK(connman.m_nodes_mutex);
+                m_nodes_copy = connman.m_nodes;
                 for (auto& node : m_nodes_copy) {
                     node->AddRef();
                 }
