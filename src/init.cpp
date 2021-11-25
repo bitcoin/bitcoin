@@ -873,6 +873,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("Cannot set -listen=0 together with -listenonion=1"));
     }
 
+    // if torcontrol given, it needs to be in form of <host>:<port>
+    if (!TorControlArgumentCheck(args.GetArg("-torcontrol", DEFAULT_TOR_CONTROL))) {
+        return InitError(Untranslated("-torcontrol has to be in the form <host>:<port>"));
+    }
+
     // Make sure enough file descriptors are available
     int nBind = std::max(nUserBind, size_t(1));
     nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);

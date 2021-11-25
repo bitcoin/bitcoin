@@ -136,7 +136,7 @@ bool TorControlConnection::Connect(const std::string& tor_control_center, const 
     }
 
     CService control_service;
-    if (!Lookup(tor_control_center, control_service, 9051, fNameLookup)) {
+    if (!Lookup(tor_control_center, control_service, 0, fNameLookup)) {
         LogPrintf("tor: Failed to look up control center %s\n", tor_control_center);
         return false;
     }
@@ -587,6 +587,17 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 /****** Thread ********/
 static struct event_base *gBase;
 static std::thread torControlThread;
+
+bool TorControlArgumentCheck(const std::string& arguments)
+{
+    CService control_service;
+
+    if (!Lookup(arguments, control_service, 0, fNameLookup)) {
+        LogPrintf("tor: Failed to look up control center %s\n", arguments);
+        return false;
+    }
+    return true;
+}
 
 static void TorControlThread(CService onion_service_target)
 {

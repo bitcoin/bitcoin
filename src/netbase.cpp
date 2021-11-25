@@ -204,6 +204,10 @@ bool Lookup(const std::string& name, std::vector<CService>& vAddr, uint16_t port
     std::string hostname;
     SplitHostPort(name, port, hostname);
 
+    if (port == 0) {
+      return false;
+    }
+
     std::vector<CNetAddr> vIP;
     bool fRet = LookupIntern(hostname, vIP, nMaxSolutions, fAllowLookup, dns_lookup_function);
     if (!fRet)
