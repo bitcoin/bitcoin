@@ -1,0 +1,123 @@
+macOS: Don't hard-code x86_64 as the architecture when using qmake
+
+Upstream commit:
+ - Qt 6.1: 9082cc8e8d5a6441dabe5e7a95bc0cd9085b95fe
+
+For other Qt branches see
+https://codereview.qt-project.org/q/I70db7e4c27f0d3da5d0af33cb491d72c312d3fa8
+
+
+--- old/qtbase/configure.json
++++ new/qtbase/configure.json
+@@ -208,11 +208,18 @@
+ 
+     "testTypeDependencies": {
+         "linkerSupportsFlag": [ "use_gold_linker" ],
+-        "verifySpec": [ "shared", "use_gold_linker", "compiler-flags", "qmakeargs", "commit" ],
++        "verifySpec": [
++            "shared",
++            "use_gold_linker",
++            "compiler-flags", "qmakeargs",
++            "simulator_and_device",
++            "thread",
++            "commit" ],
+         "compile": [ "verifyspec" ],
+         "detectPkgConfig": [ "cross_compile", "machineTuple" ],
+         "library": [ "pkg-config", "compiler-flags" ],
+-        "getPkgConfigVariable": [ "pkg-config" ]
++        "getPkgConfigVariable": [ "pkg-config" ],
++        "architecture" : [ "verifyspec" ]
+     },
+ 
+     "testTypeAliases": {
+@@ -653,7 +660,7 @@
+         },
+         "architecture": {
+             "label": "Architecture",
+-            "output": [ "architecture" ]
++            "output": [ "architecture", "commitConfig" ]
+         },
+         "pkg-config": {
+             "label": "Using pkg-config",
+diff --git a/configure.pri b/configure.pri
+index 33c90a8c2f..71767e29d6 100644
+
+--- old/qtbase/configure.pri
++++ new/qtbase/configure.pri
+@@ -642,6 +642,13 @@ defineTest(qtConfOutput_commitOptions) {
+     write_file($$QT_BUILD_TREE/mkspecs/qdevice.pri, $${currentConfig}.output.devicePro)|error()
+ }
+ 
++# Output is written after configuring each Qt module,
++# but some tests within a module might depend on the
++# configuration output of previous tests.
++defineTest(qtConfOutput_commitConfig) {
++    qtConfProcessOutput()
++}
++
+ # type (empty or 'host'), option name, default value
+ defineTest(processQtPath) {
+     out_var = config.rel_input.$${2}
+diff --git a/mkspecs/common/macx.conf b/mkspecs/common/macx.conf
+index 7d4a406134..de96c12fc9 100644
+
+--- old/qtbase/mkspecs/common/macx.conf
++++ new/qtbase/mkspecs/common/macx.conf
+@@ -6,7 +6,6 @@ QMAKE_PLATFORM         += macos osx macx
+ QMAKE_MAC_SDK           = macosx
+ 
+ QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
+-QMAKE_APPLE_DEVICE_ARCHS = x86_64
+ 
+ QT_MAC_SDK_VERSION_MIN = 10.13
+ QT_MAC_SDK_VERSION_MAX = 11.0
+diff --git a/mkspecs/features/mac/default_post.prf b/mkspecs/features/mac/default_post.prf
+index d052808c14..0a89effe87 100644
+
+--- old/qtbase/mkspecs/features/mac/default_post.prf
++++ new/qtbase/mkspecs/features/mac/default_post.prf
+@@ -89,6 +89,11 @@ app_extension_api_only {
+     QMAKE_LFLAGS              += $$QMAKE_CFLAGS_APPLICATION_EXTENSION
+ }
+ 
++# Non-universal builds do not set QMAKE_APPLE_DEVICE_ARCHS,
++# so we pick it up from what the arch test resolved instead.
++isEmpty(QMAKE_APPLE_DEVICE_ARCHS): \
++    QMAKE_APPLE_DEVICE_ARCHS = $$QT_ARCH
++
+ macx-xcode {
+     qmake_pkginfo_typeinfo.name = QMAKE_PKGINFO_TYPEINFO
+     !isEmpty(QMAKE_PKGINFO_TYPEINFO): \
+@@ -144,9 +149,6 @@ macx-xcode {
+     simulator: VALID_SIMULATOR_ARCHS = $$QMAKE_APPLE_SIMULATOR_ARCHS
+     VALID_ARCHS = $$VALID_DEVICE_ARCHS $$VALID_SIMULATOR_ARCHS
+ 
+-    isEmpty(VALID_ARCHS): \
+-        error("QMAKE_APPLE_DEVICE_ARCHS or QMAKE_APPLE_SIMULATOR_ARCHS must contain at least one architecture")
+-
+     single_arch: VALID_ARCHS = $$first(VALID_ARCHS)
+ 
+     ACTIVE_ARCHS = $(filter $(EXPORT_VALID_ARCHS), $(ARCHS))
+diff --git a/mkspecs/features/toolchain.prf b/mkspecs/features/toolchain.prf
+index 5003679bd0..c7c080cb07 100644
+
+--- old/qtbase/mkspecs/features/toolchain.prf
++++ new/qtbase/mkspecs/features/toolchain.prf
+@@ -182,9 +182,14 @@ isEmpty($${target_prefix}.INCDIRS) {
+         # UIKit simulator platforms will see the device SDK's sysroot in
+         # QMAKE_DEFAULT_*DIRS, because they're handled in a single build pass.
+         darwin {
+-            # Clang doesn't pick up the architecture from the sysroot, and will
+-            # default to the host architecture, so we need to manually set it.
+-            cxx_flags += -arch $$QMAKE_APPLE_DEVICE_ARCHS
++            uikit {
++                # Clang doesn't automatically pick up the architecture, just because
++                # we're passing the iOS sysroot below, and we will end up building the
++                # test for the host architecture, resulting in linker errors when
++                # linking against the iOS libraries. We work around this by passing
++                # the architecture explicitly.
++                cxx_flags += -arch $$first(QMAKE_APPLE_DEVICE_ARCHS)
++            }
+ 
+             uikit:macx-xcode: \
+                 cxx_flags += -isysroot $$sdk_path_device.value
