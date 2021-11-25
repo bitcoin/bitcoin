@@ -10,7 +10,8 @@ import time
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_equal
+    assert_equal,
+    set_node_times,
 )
 
 
@@ -35,9 +36,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time)
-        usernode.setmocktime(cur_time)
-        restorenode.setmocktime(cur_time)
+        set_node_times(self.nodes, cur_time)
 
         # prepare miner wallet
         minernode.createwallet(wallet_name='default')
@@ -68,9 +67,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time + ten_days)
-        usernode.setmocktime(cur_time + ten_days)
-        restorenode.setmocktime(cur_time + ten_days)
+        set_node_times(self.nodes, cur_time + ten_days)
         # send 10 btc to user's first watch-only address
         self.log.info('Send 10 btc to user')
         miner_wallet.sendtoaddress(wo1, 10)
@@ -81,9 +78,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time + ten_days + ten_days)
-        usernode.setmocktime(cur_time + ten_days + ten_days)
-        restorenode.setmocktime(cur_time + ten_days + ten_days)
+        set_node_times(self.nodes, cur_time + ten_days + ten_days)
         # send 5 btc to our second watch-only address
         self.log.info('Send 5 btc to user')
         miner_wallet.sendtoaddress(wo2, 5)
@@ -94,9 +89,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time + ten_days + ten_days + ten_days)
-        usernode.setmocktime(cur_time + ten_days + ten_days + ten_days)
-        restorenode.setmocktime(cur_time + ten_days + ten_days + ten_days)
+        set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days)
         # send 1 btc to our third watch-only address
         self.log.info('Send 1 btc to user')
         miner_wallet.sendtoaddress(wo3, 1)
