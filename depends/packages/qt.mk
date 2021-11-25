@@ -24,6 +24,22 @@ $(package)_qttools_sha256_hash=98b2aaca230458f65996f3534fd471d2ffd038dd58ac997c0
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
 
+# Qt has its own deeply integrated build system which during cross compiling builds some tools,
+# including qmake, for a build platform (internally, such tools depend on the `host_build`
+# variable). For a host platform qmake constructs tool invocations based on the provided mkspec.
+# That is why we should provide Qt with build tools rather host ones, as we do for native packages.
+# Otherwise, a compiler targeted, for instance, for a host with the arm64 architecture builds
+# the qmake tool, which in turn will fail to run on a build platform with the x86_64 architecture.
+ifneq ($(build),$(host))
+ifneq ($(build_os),darwin)
+$(package)_cc := $(clang_prog)
+$(package)_cxx := $(clangxx_prog)
+else
+$(package)_cc := $(build_CC)
+$(package)_cxx := $(build_CXX)
+endif
+endif
+
 define $(package)_set_vars
 $(package)_config_opts_release = -release
 $(package)_config_opts_release += -silent
