@@ -1589,8 +1589,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Co
     // mainnet and testnet), so for simplicity, always leave P2SH
     // on except for the one violating block.
     if (consensusparams.BIP16Exception.IsNull() || // no bip16 exception on this chain
-        block_index.phashBlock == nullptr || // this is a new candidate block, eg from TestBlockValidity()
-        *block_index.phashBlock != consensusparams.BIP16Exception) // this block isn't the historical exception
+        *Assert(block_index.phashBlock) != consensusparams.BIP16Exception) // this block isn't the historical exception
     {
         // Enforce WITNESS rules whenever P2SH is in effect
         flags |= SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS;
