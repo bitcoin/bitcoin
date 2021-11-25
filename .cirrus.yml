@@ -273,11 +273,14 @@ task:
 
 task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
+  macos_sdk_cache:
+    folder: "depends/SDKs/$MACOS_SDK"
+    fingerprint_key: "$MACOS_SDK"
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
   env:
+    MACOS_SDK: "Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers"
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 

@@ -15,11 +15,15 @@ fi
 
 DOCKER_EXEC mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
 
-OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
-OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_BASENAME}"
+OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers"
 
-if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
-  DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
+if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]; then
+  OSX_SDK_FILENAME="${OSX_SDK_BASENAME}.tar.gz"
+  OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_FILENAME}"
+  if [ ! -f "$OSX_SDK_PATH" ]; then
+    DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
+  fi
+  DOCKER_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 
 if [ -n "$ANDROID_TOOLS_URL" ]; then
@@ -38,9 +42,6 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   DOCKER_EXEC "contrib/install_db4.sh \$(pwd) --enable-umrw CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 fi
 
-if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
-  DOCKER_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
-fi
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_EXEC update-alternatives --set "${HOST}-g++" \$\(which "${HOST}-g++-posix"\)
 fi
