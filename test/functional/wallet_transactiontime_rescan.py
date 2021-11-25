@@ -119,6 +119,14 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         restorenode.createwallet(wallet_name='wo', disable_private_keys=True)
         restorewo_wallet = restorenode.get_wallet_rpc('wo')
 
+        # for descriptor wallets, the test framework maps the importaddress RPC to the
+        # importdescriptors RPC (with argument 'timestamp'='now'), which always rescans
+        # blocks of the past 2 hours, based on the current MTP timestamp; in order to avoid
+        # importing the last address (wo3), we advance the time further and generate 10 blocks
+        if self.options.descriptors:
+            set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days)
+            self.generatetoaddress(minernode, 10, m1)
+
         restorewo_wallet.importaddress(wo1, rescan=False)
         restorewo_wallet.importaddress(wo2, rescan=False)
         restorewo_wallet.importaddress(wo3, rescan=False)
