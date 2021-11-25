@@ -166,13 +166,13 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     entry.pushKV("confirmations", confirms);
     if (wtx.IsCoinBase())
         entry.pushKV("generated", true);
-    if (confirms > 0)
+    if (auto* conf = wtx.state<TxStateConfirmed>())
     {
-        entry.pushKV("blockhash", wtx.m_confirm.hashBlock.GetHex());
-        entry.pushKV("blockheight", wtx.m_confirm.block_height);
-        entry.pushKV("blockindex", wtx.m_confirm.nIndex);
+        entry.pushKV("blockhash", conf->confirmed_block_hash.GetHex());
+        entry.pushKV("blockheight", conf->confirmed_block_height);
+        entry.pushKV("blockindex", conf->position_in_block);
         int64_t block_time;
-        CHECK_NONFATAL(chain.findBlock(wtx.m_confirm.hashBlock, FoundBlock().time(block_time)));
+        CHECK_NONFATAL(chain.findBlock(conf->confirmed_block_hash, FoundBlock().time(block_time)));
         entry.pushKV("blocktime", block_time);
     } else {
         entry.pushKV("trusted", CachedTxIsTrusted(wallet, wtx));
