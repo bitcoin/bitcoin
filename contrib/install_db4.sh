@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -61,6 +61,12 @@ http_get() {
 
   sha256_check "${3}" "${2}"
 }
+
+# Ensure the commands we use exist on the system
+if ! check_exists patch; then
+    echo "Command-line tool 'patch' not found.  Install patch and try again."
+    exit 1
+fi
 
 mkdir -p "${BDB_PREFIX}"
 http_get "${BDB_URL}" "${BDB_VERSION}.tar.gz" "${BDB_HASH}"
