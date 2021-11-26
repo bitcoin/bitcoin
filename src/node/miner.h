@@ -3,20 +3,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_MINER_H
-#define SYSCOIN_MINER_H
+#ifndef SYSCOIN_NODE_MINER_H
+#define SYSCOIN_NODE_MINER_H
 
 #include <primitives/block.h>
 #include <txmempool.h>
-#include <validation.h>
 
 #include <memory>
 #include <optional>
 #include <stdint.h>
 
-#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
 
+class ChainstateManager;
 class CBlockIndex;
 class CChainParams;
 class CScript;
@@ -212,4 +212,4 @@ bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainParams);
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman, const std::vector<unsigned char> &vchExtraData);
 
-#endif // SYSCOIN_MINER_H
+#endif // SYSCOIN_NODE_MINER_H
