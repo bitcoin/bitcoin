@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_RPC_AUXPOW_MINER_H
 #define SYSCOIN_RPC_AUXPOW_MINER_H
 
-#include <miner.h>
+#include <node/miner.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>
@@ -22,6 +22,7 @@ namespace auxpow_tests
 {
 class AuxpowMinerForTest;
 }
+class JSONRPCRequest;
 class ChainstateManager;
 /**
  * This class holds "global" state used to construct blocks for the auxpow

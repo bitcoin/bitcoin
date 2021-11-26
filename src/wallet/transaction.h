@@ -70,9 +70,9 @@ using SyncTxState = std::variant<TxStateConfirmed, TxStateInMempool, TxStateInac
 //! Try to interpret deserialized TxStateUnrecognized data as a recognized state.
 static inline TxState TxStateInterpretSerialized(TxStateUnrecognized data)
 {
-    if (data.block_hash == uint256::ZERO) {
+    if (data.block_hash == uint256::ZEROV) {
         if (data.index == 0) return TxStateInactive{};
-    } else if (data.block_hash == uint256::ONE) {
+    } else if (data.block_hash == uint256::ONEV) {
         if (data.index == -1) return TxStateInactive{/*abandoned=*/true};
     } else if (data.index >= 0) {
         return TxStateConfirmed{data.block_hash, /*height=*/-1, data.index};
@@ -86,8 +86,8 @@ static inline TxState TxStateInterpretSerialized(TxStateUnrecognized data)
 static inline uint256 TxStateSerializedBlockHash(const TxState& state)
 {
     return std::visit(util::Overloaded{
-        [](const TxStateInactive& inactive) { return inactive.abandoned ? uint256::ONE : uint256::ZERO; },
-        [](const TxStateInMempool& in_mempool) { return uint256::ZERO; },
+        [](const TxStateInactive& inactive) { return inactive.abandoned ? uint256::ONEV : uint256::ZEROV; },
+        [](const TxStateInMempool& in_mempool) { return uint256::ZEROV; },
         [](const TxStateConfirmed& confirmed) { return confirmed.confirmed_block_hash; },
         [](const TxStateConflicted& conflicted) { return conflicted.conflicting_block_hash; },
         [](const TxStateUnrecognized& unrecognized) { return unrecognized.block_hash; }
