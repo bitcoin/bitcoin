@@ -82,8 +82,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test prioritised transactions...")
         self.test_prioritised_transactions()
 
-        self.log.info("Running test no inherited signaling...")
-        self.test_no_inherited_signaling()
+        self.log.info("Running test inherited signaling...")
+        self.test_inherited_signaling()
 
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
@@ -570,7 +570,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             assert_equal(json0["vin"][0]["sequence"], 4294967293)
             assert_equal(json1["vin"][0]["sequence"], 4294967294)
 
-    def test_no_inherited_signaling(self):
+    def test_inherited_signaling(self):
         confirmed_utxo = self.wallet.get_utxo()
 
         # Create an explicitly opt-in parent transaction
@@ -607,29 +607,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # Reports true due to inheritance
         assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
 
-        self.log.info('Check that the (optout) child tx can not be replaced directly')
+        self.log.info('Check that the (optout) child tx can be replaced directly')
         replacement_child_tx = self.wallet.create_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=parent_utxo,
             sequence=0xffffffff,
             fee_rate=Decimal('0.02'),
-            mempool_valid=False,
         )
 
         # The transaction we are attempting to replace (`optout_child_tx`) doesn't signal RBF but its parent (`optin_parent_tx`) does.
         # The replacement transaction (`replacement_child_tx`) should be able to replace `optout_child_tx` due to replaceability through inheritance.
-        # Here we show that this isn't the case. See CVE-2021-31876 for further explanations.
         assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])  # explicitly signals replaceability
         assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])  # reports `True` due to inherited signaling from `optin_parent_tx`
-        assert_raises_rpc_error(-26, 'txn-mempool-conflict', self.nodes[0].sendrawtransaction, replacement_child_tx["hex"], 0)
-
-        self.log.info('Check that the child tx can still be replaced (via a tx that also replaces the parent)')
-        replacement_parent_tx = self.wallet.send_self_transfer(
-            from_node=self.nodes[0],
-            utxo_to_spend=confirmed_utxo,
-            sequence=0xffffffff,
-            fee_rate=Decimal('0.03'),
-        )
+        self.nodes[0].sendrawtransaction(replacement_child_tx["hex"], 0)
         # Check that child is removed and update wallet utxo state
         assert_raises_rpc_error(-5, 'Transaction not in mempool', self.nodes[0].getmempoolentry, optout_child_tx['txid'])
         self.wallet.get_utxo(txid=optout_child_tx['txid'])
