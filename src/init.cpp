@@ -29,13 +29,13 @@
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
-#include <miner.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <node/ui_interface.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
