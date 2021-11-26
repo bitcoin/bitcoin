@@ -21,6 +21,8 @@ class CTransaction;
 struct PartiallySignedTransaction;
 struct WalletContext;
 
+extern const std::string HELP_REQUIRING_PASSPHRASE;
+
 Span<const CRPCCommand> GetWalletRPCCommands();
 
 /**
