@@ -573,7 +573,7 @@ public:
     }
     RBFTransactionState isRBFOptIn(const CTransaction& tx) override
     {
-        if (!m_node.mempool) return IsRBFOptInEmptyMempool(tx);
+        if (!m_node.mempool) return RBFTransactionState::UNKNOWN;
         LOCK(m_node.mempool->cs);
         return IsRBFOptIn(tx, *m_node.mempool);
     }

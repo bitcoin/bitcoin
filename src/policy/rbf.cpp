@@ -15,15 +15,15 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 
     CTxMemPool::setEntries ancestors;
 
-    // First check the transaction itself.
-    if (SignalsOptInRBF(tx)) {
-        return RBFTransactionState::REPLACEABLE_BIP125;
-    }
-
     // If this transaction is not in our mempool, then we can't be sure
     // we will know about all its inputs.
     if (!pool.exists(GenTxid::Txid(tx.GetHash()))) {
         return RBFTransactionState::UNKNOWN;
+    }
+
+    // First check the transaction itself.
+    if (SignalsOptInRBF(tx)) {
+        return RBFTransactionState::REPLACEABLE_BIP125;
     }
 
     // If all the inputs have nSequence >= maxint-1, it still might be
@@ -39,12 +39,6 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
         }
     }
     return RBFTransactionState::FINAL;
-}
-
-RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
-{
-    // If we don't have a local mempool we can only check the transaction itself.
-    return SignalsOptInRBF(tx) ? RBFTransactionState::REPLACEABLE_BIP125 : RBFTransactionState::UNKNOWN;
 }
 
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,

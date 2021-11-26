@@ -38,7 +38,6 @@ enum class RBFTransactionState {
  * @return     The rbf state
  */
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
-RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 
 /** Get all descendants of iters_conflicting. Also enforce BIP125 Rule #5, "The number of original
  * transactions to be replaced and their descendant transactions which will be evicted from the
