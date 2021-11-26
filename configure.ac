@@ -1510,6 +1510,16 @@ if test x$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench
   fi
 fi
 
+AC_MSG_CHECKING([if evhttp_connection_get_peer expects const char**])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <cstdint>
+    #include <event2/http.h>
+  ]],
+  [[ evhttp_connection_get_peer((evhttp_connection*) nullptr,(const char**) nullptr,(uint16_t*) nullptr); ]])],
+  [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR], [1], [Define this symbol if evhttp_connection_get_peer expects const char**]) ],
+  [ AC_MSG_RESULT([no]); AC_DEFINE([HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR], [0], [Define this symbol if evhttp_connection_get_peer expects const char**]) ]
+)
+
 dnl QR Code encoding library check
 
 if test "x$use_qr" != xno; then
@@ -1870,6 +1880,7 @@ AC_SUBST(HAVE_BUILTIN_PREFETCH)
 AC_SUBST(HAVE_MM_PREFETCH)
 AC_SUBST(HAVE_STRONG_GETAUXVAL)
 AC_SUBST(ANDROID_ARCH)
+AC_SUBST(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
