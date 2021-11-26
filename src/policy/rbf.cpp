@@ -21,8 +21,10 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
         return RBFTransactionState::UNKNOWN;
     }
 
-    // First check the transaction itself.
-    if (SignalsOptInRBF(tx)) {
+    CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
+    if (entry.GetCountWithDescendants() > MAX_BIP125_REPLACEMENT_CANDIDATES) {
+        return RBFTransactionState::FINAL;
+    } else if (SignalsOptInRBF(tx)) {
         return RBFTransactionState::REPLACEABLE_BIP125;
     }
 
@@ -30,11 +32,10 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     // signaled for RBF if any unconfirmed parents have signaled.
     uint64_t noLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
-    CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
     pool.CalculateMemPoolAncestors(entry, ancestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
 
     for (CTxMemPool::txiter it : ancestors) {
-        if (SignalsOptInRBF(it->GetTx())) {
+        if (SignalsOptInRBF(it->GetTx()) && it->GetCountWithDescendants() <= MAX_BIP125_REPLACEMENT_CANDIDATES) {
             return RBFTransactionState::REPLACEABLE_BIP125;
         }
     }

@@ -740,24 +740,24 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # Create a chain the size of `MAX_REPLACEMENT_LIMIT` spending `joined_tx` - the BIP125 Rule #5 imposed limit
         tx = None
-        for _ in range(MAX_REPLACEMENT_LIMIT - 1):
+        for i in range(MAX_REPLACEMENT_LIMIT - 1):
             tx = self.wallet.send_self_transfer(
                 from_node=self.nodes[0],
                 utxo_to_spend=joined_utxo if tx is None else self.wallet.get_utxo(txid=tx['txid']),  # a straight line of descendants
                 sequence=0xffffffff,
                 fee_rate=Decimal('0.0001'),
             )
-            assert_equal(True, self.nodes[0].getmempoolentry(tx['txid'])['bip125-replaceable'])  # inherited
+            assert_equal(i < MAX_REPLACEMENT_LIMIT - 2, self.nodes[0].getmempoolentry(tx['txid'])['bip125-replaceable'])  # inherited
         # Now we have a chain of: `optin_parent_tx`, `joined_tx`, and 99 txs. The last tx in the loop exceeded `MAX_REPLACEMENT_LIMIT`
 
         # Attempting to replace the opt-in parent transaction will now result in more than `MAX_REPLACEMENT_LIMIT`
-        # conflicting txns being evicted from the mempool. However, it (and all of its descendants) are still signaling replaceability.
-        # We would've expected that once `MAX_REPLACEMENT_LIMIT` is exceeded, the opt-in parent txn stops signaling
+        # conflicting txns being evicted from the mempool. Therefore, it (and all of its descendants) no longer signal replaceability.
+        # Since `MAX_REPLACEMENT_LIMIT` is exceeded, the opt-in parent txn stops signaling
         # replaceability, along with _all_ of its descendants.
         entry = self.nodes[0].getmempoolentry(optin_parent_tx["txid"])
         assert_greater_than(entry['descendantcount'], MAX_REPLACEMENT_LIMIT)
-        assert_equal(True, entry['bip125-replaceable'])
-        assert_equal(True, self.nodes[0].getmempoolentry(tx["txid"])['bip125-replaceable'])
+        assert_equal(False, entry['bip125-replaceable'])
+        assert_equal(False, self.nodes[0].getmempoolentry(tx["txid"])['bip125-replaceable'])
 
         # Case in point, we can't actually replace `optin_parent_tx` once it has `MAX_REPLACEMENT_LIMIT` descendants
         self.wallet.create_self_transfer(

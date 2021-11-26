@@ -30,7 +30,10 @@ enum class RBFTransactionState {
  * Determine whether an unconfirmed transaction is signaling opt-in to RBF
  * according to BIP 125
  * This involves checking sequence numbers of the transaction, as well
- * as the sequence numbers of all in-mempool ancestors.
+ * as the sequence numbers of all in-mempool ancestors for inherited signaling.
+ * This also takes the number of original transactions to be replaced and their
+ * descendant transactions into consideration as according to BIP125 RBF (Rule #5)
+ * this must not exceed `MAX_BIP125_REPLACEMENT_CANDIDATES`.
  *
  * @param tx   The unconfirmed transaction
  * @param pool The mempool, which may contain the tx
