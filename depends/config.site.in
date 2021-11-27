@@ -115,6 +115,10 @@ if test -n "@debug@"; then
   enable_reduce_exports=no
 fi
 
+if test -n "@debug@" && test "@host_os@" = "mingw32"; then
+  enable_shared=no
+fi
+
 if test -n "@CFLAGS@"; then
   CFLAGS="@CFLAGS@ ${CFLAGS}"
 fi
