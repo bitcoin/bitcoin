@@ -88,8 +88,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
 
-        self.log.info("Running test prechecks overestimates replacements...")
-        self.test_prechecks_overestimates_replacements()
+        self.log.info("Running test prechecks does not overestimate replacements...")
+        self.test_prechecks_does_not_overestimate_replacements()
 
         self.log.info("Running test reorged inherited signaling and descendant limit...")
         self.test_reorged_inherited_signaling_and_descendant_limit()
@@ -632,7 +632,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx.vout[0].nValue -= 1
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
 
-    def test_prechecks_overestimates_replacements(self):
+    def test_prechecks_does_not_overestimate_replacements(self):
         confirmed_utxos = [self.wallet.get_utxo(), self.wallet.get_utxo()]
 
         # Two opt-in parent transactions
@@ -662,38 +662,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 fee_rate=Decimal('0.0001'),
             )
 
-        # Even though there are well under `MAX_REPLACEMENT_LIMIT` transactions that will be evicted due to this replacement,
-        # in this case we still reject the replacement attempt because of the way `MemPoolAccept::PreChecks` double-counts descendants.
-        # Each `confirmed_utxo` has the exact same descendants, but they are each counted twice!
+        # There are well under `MAX_REPLACEMENT_LIMIT` transactions that will be evicted due to this replacement
+        # because `confirmed_utxo` has the exact same descendants, so we ensure they are not counted twice!
+        # Makes sure `MemPoolAccept::PreChecks` doesn't double-counts descendants.
         replacement_attempt_tx_hex = self.create_double_input_self_transfer(confirmed_utxos, Decimal('0.01'))
-        assert_raises_rpc_error(-26, 'too many potential replacements', self.nodes[0].sendrawtransaction, replacement_attempt_tx_hex, 0)
-
-        # However, we can still craft a transaction that replaces the entire descendant chain by only replacing one of the `parent_txs`
-        replacement_tx = self.wallet.send_self_transfer(
-            from_node=self.nodes[0],
-            utxo_to_spend=confirmed_utxos[0],  # replace the opt-in parent transaction
-            sequence=BIP125_SEQUENCE_NUMBER,
-            fee_rate=Decimal('0.01'),
-        )
-        mempool = self.nodes[0].getrawmempool()
-        assert replacement_tx['txid'] in mempool
-        assert parent_txs[0]['txid'] not in mempool
-        assert parent_txs[1]['txid'] in mempool
-        assert tx['txid'] not in mempool
-
-        # And funny enough, _now_ we can successfully broadcast that same `replacement_tx_hex` which just failed with the
-        # "too many potential replacements" error. It was just a little tricky to get around `MemPoolAccept::PreChecks`
-        # double-counting evictions.
         replacement_attempt_tx_txid = self.nodes[0].sendrawtransaction(replacement_attempt_tx_hex, 0)
         mempool = self.nodes[0].getrawmempool()
         assert replacement_attempt_tx_txid in mempool
-        assert replacement_tx['txid'] not in mempool
+        assert tx['txid'] not in mempool
         for parent_tx in parent_txs:
             assert parent_tx not in mempool
 
         # clean up all evicted utxos / update wallet utxo state
         self.wallet.get_utxo(txid=tx['txid'])
-        self.wallet.get_utxo(txid=replacement_tx['txid'])
 
     def test_reorged_inherited_signaling_and_descendant_limit(self):
         confirmed_utxos = [self.wallet.get_utxo(), self.wallet.get_utxo()]
