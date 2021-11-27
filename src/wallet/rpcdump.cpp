@@ -369,11 +369,9 @@ RPCHelpMan importprunedfunds()
 
     unsigned int txnIndex = vIndex[it - vMatch.begin()];
 
-    CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, height, merkleBlock.header.GetHash(), txnIndex);
-
     CTransactionRef tx_ref = MakeTransactionRef(tx);
     if (pwallet->IsMine(*tx_ref)) {
-        pwallet->AddToWallet(std::move(tx_ref), confirm);
+        pwallet->AddToWallet(std::move(tx_ref), TxStateConfirmed{merkleBlock.header.GetHash(), height, static_cast<int>(txnIndex)});
         return NullUniValue;
     }
 
@@ -1545,18 +1543,6 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             if (!expand_keys.GetKey(key_id, key)) {
                 have_all_privkeys = false;
                 break;
-            }
-        }
-
-        // Taproot descriptors cannot be imported if Taproot is not yet active.
-        // Check if this is a Taproot descriptor
-        CTxDestination dest;
-        ExtractDestination(scripts[0], dest);
-        if (std::holds_alternative<WitnessV1Taproot>(dest)) {
-            // Check if Taproot is active
-            if (!wallet.chain().isTaprootActive()) {
-                // Taproot is not active, raise an error
-                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import tr() descriptor when Taproot is not active");
             }
         }
 

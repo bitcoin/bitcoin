@@ -866,7 +866,11 @@ void RPCConsole::clear(bool keep_prompt)
     }
 
     // Set default style sheet
+#ifdef Q_OS_MAC
+    QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont(/*use_embedded_font=*/true));
+#else
     QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont());
+#endif
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"

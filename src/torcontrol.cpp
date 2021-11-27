@@ -22,19 +22,17 @@
 #include <deque>
 #include <functional>
 #include <set>
-#include <stdlib.h>
 #include <vector>
 
-#include <boost/signals2/signal.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/split.hpp>
 
-#include <event2/bufferevent.h>
 #include <event2/buffer.h>
-#include <event2/util.h>
+#include <event2/bufferevent.h>
 #include <event2/event.h>
 #include <event2/thread.h>
+#include <event2/util.h>
 
 /** Default control port */
 const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
@@ -277,9 +275,15 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
                         if (j == 3 && value[i] > '3') {
                             j--;
                         }
-                        escaped_value.push_back(strtol(value.substr(i, j).c_str(), nullptr, 8));
+                        const auto end{i + j};
+                        uint8_t val{0};
+                        while (i < end) {
+                            val *= 8;
+                            val += value[i++] - '0';
+                        }
+                        escaped_value.push_back(char(val));
                         // Account for automatic incrementing at loop end
-                        i += j - 1;
+                        --i;
                     } else {
                         escaped_value.push_back(value[i]);
                     }
