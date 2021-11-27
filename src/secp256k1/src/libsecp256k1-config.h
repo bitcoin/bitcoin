@@ -93,7 +93,7 @@
 #define STDC_HEADERS 1
 
 /* Define this symbol to enable x86_64 assembly optimizations */
-#define USE_ASM_X86_64 1
+/* #undef USE_ASM_X86_64 */
 
 /* Define this symbol to use a statically generated ecmult table */
 #define USE_ECMULT_STATIC_PRECOMPUTATION 1
