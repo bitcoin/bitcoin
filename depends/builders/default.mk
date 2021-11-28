@@ -7,12 +7,12 @@ default_build_STRIP = strip
 default_build_NM = nm
 
 define add_build_tool_func
-ifneq ($(filter $(origin $1),undefined default),)
+ifeq ($(origin $(1)_FOR_BUILD),undefined)
 build_$(build_os)_$1 ?= $$(default_build_$1)
 build_$(build_arch)_$(build_os)_$1 ?= $$(build_$(build_os)_$1)
 else
-build_$(build_os)_$1 = $(or $($1),$(build_$(build_os)_$1),$(default_build_$1))
-build_$(build_arch)_$(build_os)_$1 = $(or $($1),$(build_$(build_arch)_$(build_os)_$1),$$(build_$(build_os)_$1))
+build_$(build_os)_$1 = $(or $($(1)_FOR_BUILD),$(build_$(build_os)_$1),$(default_build_$1))
+build_$(build_arch)_$(build_os)_$1 = $(or $($(1)_FOR_BUILD),$(build_$(build_arch)_$(build_os)_$1),$$(build_$(build_os)_$1))
 endif
 build_$1 = $$(build_$(build_arch)_$(build_os)_$1)
 endef
