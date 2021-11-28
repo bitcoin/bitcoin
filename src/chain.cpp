@@ -31,9 +31,6 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
     return block;
 }
 
-/**
- * CChain implementation
- */
 void CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == nullptr) {
         vChain.clear();
