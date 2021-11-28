@@ -54,6 +54,12 @@ unsupported systems.
 Notable changes
 ===============
 
+Mempool policy changed such that now RBF inherited signaling is supported (transactions
+that don't explicitly signal replaceability are replaceable for as long as any one
+of their ancestors signals replaceability and remains unconfirmed). Previously
+the mempool only accepted replacements for transactions that themselves opted-in
+to RBF. See `getmempoolentry` in the "Updated RPCs" section below for more details. (#22698)
+
 P2P and network changes
 -----------------------
 
@@ -98,6 +104,17 @@ Updated RPCs
 - `lockunspent` now optionally takes a third parameter, `persistent`, which
   causes the lock to be written persistently to the wallet database. This
   allows UTXOs to remain locked even after node restarts or crashes. (#23065)
+
+- `getmempoolentry` now returns the "correct" bip125-replaceable status,
+  resolving issue #22209. This status is now consistent with what the mempool
+  treats as replaceable. Before, `getmempoolentry` would show replaceability due
+  to inherited signaling, but the mempool only accepted replacements for
+  transactions that themselves opted-in to RBF (ie the mempool did not support
+  inherited signaling). Some other discrepancies b/w how `getmempoolentry`
+  signals, and what the mempool accepts were also made consistent. As well as
+  more closely adhering to the rules outlined in BIP125 (specifically Rule #5).
+  The result is increased confidence that the bip125-replaceable status returned
+  by `getmempoolentry` is accurate. (#22698)
 
 New RPCs
 --------
