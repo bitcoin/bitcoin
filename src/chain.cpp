@@ -13,9 +13,6 @@ std::string CBlockIndex::ToString() const
                      pprev, nHeight, hashMerkleRoot.ToString(), GetBlockHash().ToString());
 }
 
-/**
- * CChain implementation
- */
 void CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == nullptr) {
         vChain.clear();
