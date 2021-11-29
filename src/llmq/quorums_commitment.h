@@ -91,7 +91,7 @@ public:
         obj.pushKV("membersSig", membersSig.ToString());
     }
 };
-using CFinalCommitmentPtr = std::shared_ptr<CFinalCommitment>;
+using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 
 class CFinalCommitmentTxPayload
 {

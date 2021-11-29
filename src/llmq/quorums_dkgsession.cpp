@@ -81,7 +81,7 @@ CDKGPrematureCommitment::CDKGPrematureCommitment(const Consensus::LLMQParams& pa
 {
 }
 
-CDKGMember::CDKGMember(CDeterministicMNCPtr _dmn, size_t _idx) :
+CDKGMember::CDKGMember(const CDeterministicMNCPtr& _dmn, size_t _idx) :
     dmn(_dmn),
     idx(_idx),
     id(_dmn->proTxHash)
@@ -319,7 +319,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
 
     bool complain = false;
     CBLSSecretKey skContribution;
-    if (!qc.contributions->Decrypt(myIdx, WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator), skContribution, PROTOCOL_VERSION)) {
+    if (!qc.contributions->Decrypt(*myIdx, WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator), skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
     } else if (member->idx != myIdx && ShouldSimulateError("complain-lie")) {
@@ -667,7 +667,7 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
         }
 
         const auto& qc = WITH_LOCK(invCs, return std::move(complaints.at(*m->complaints.begin())));
-        if (qc.complainForMembers[myIdx]) {
+        if (qc.complainForMembers[*myIdx]) {
             justifyFor.emplace(qc.proTxHash);
         }
     }
@@ -870,18 +870,12 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
         }
     }
 
-    int receivedCount = 0;
-    int expectedCount = 0;
-
-    for (const auto& m : members) {
-        if (!m->justifications.empty()) {
-            receivedCount++;
-        }
-
-        if (m->someoneComplain) {
-            expectedCount++;
-        }
-    }
+    auto receivedCount = std::count_if(members.cbegin(), members.cend(), [](const auto& m){
+        return !m->justifications.empty();
+    });
+    auto expectedCount = std::count_if(members.cbegin(), members.cend(), [](const auto& m){
+        return m->someoneComplain;
+    });
 
     logger.Batch("verified justification: received=%d/%d time=%d", receivedCount, expectedCount, t1.count());
 }
@@ -895,7 +889,9 @@ void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
     CDKGLogger logger(*this, __func__);
 
     std::vector<size_t> badMembers;
+    badMembers.reserve(members.size());
     std::vector<size_t> openComplaintMembers;
+    openComplaintMembers.reserve(members.size());
 
     for (const auto& m : members) {
         if (m->bad) {
@@ -1310,14 +1306,8 @@ void CDKGSession::MarkBadMember(size_t idx)
 void CDKGSession::RelayOtherInvToParticipants(const CInv& inv) const
 {
     dkgManager.connman.ForEachNode([&](CNode* pnode) {
-        bool relay = false;
-        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
-        if (pnode->qwatch) {
-            relay = true;
-        } else if (!verifiedProRegTxHash.IsNull() && relayMembers.count(verifiedProRegTxHash)) {
-            relay = true;
-        }
-        if (relay) {
+        if (pnode->qwatch ||
+                (!pnode->GetVerifiedProRegTxHash().IsNull() && relayMembers.count(pnode->GetVerifiedProRegTxHash()))) {
             pnode->PushOtherInventory(inv);
         }
     });

@@ -401,7 +401,7 @@ CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, 
         return nullptr;
     }
     retMinedBlockHash = p.second;
-    return std::make_shared<CFinalCommitment>(p.first);
+    return std::make_unique<CFinalCommitment>(p.first);
 }
 
 // The returned quorums are in reversed order, so the most recent one is at index 0
