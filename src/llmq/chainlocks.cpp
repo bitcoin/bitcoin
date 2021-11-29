@@ -207,16 +207,15 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
     // EnforceBestChainLock switching chains.
-    if (tryLockChainTipScheduled) {
-        return;
+    // atomic[If tryLockChainTipScheduled is false, do (set it to true] and schedule signing).
+    if (bool expected = false; tryLockChainTipScheduled.compare_exchange_strong(expected, true)) {
+        scheduler->scheduleFromNow([&]() {
+            CheckActiveState();
+            EnforceBestChainLock();
+            TrySignChainTip();
+            tryLockChainTipScheduled = false;
+        }, 0);
     }
-    tryLockChainTipScheduled = true;
-    scheduler->scheduleFromNow([&]() {
-        CheckActiveState();
-        EnforceBestChainLock();
-        TrySignChainTip();
-        tryLockChainTipScheduled = false;
-    }, 0);
 }
 
 void CChainLocksHandler::CheckActiveState()
