@@ -108,6 +108,55 @@ Arguments passed:
 5. SigOps in the Block (excluding coinbase SigOps) `uint64`
 6. Time it took to connect the Block in microseconds (µs) as `uint64`
 
+### Context `utxocache`
+
+#### Tracepoint `utxocache:flush`
+
+Is called *after* the caches and indexes are flushed depending on the mode
+`CChainState::FlushStateToDisk` is called with.
+
+Arguments passed:
+1. Duration in microseconds as `int64`
+2. Flush state mode as `uint32`. It's an enumerator class with values `0`
+   (`NONE`), `1` (`IF_NEEDED`), `2` (`PERIODIC`), `3` (`ALWAYS`)
+3. Number of coins flushed as `uint64`
+4. Memory usage in bytes as `uint64`
+5. If the flush was pruned as `bool`
+6. If it was full flush as `bool`
+
+#### Tracepoint `utxocache:add`
+
+It is called when a new coin is added to the UTXO cache.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. Output index as `uint32`
+3. Block height the coin was added to the UTXO-set as  `uint32`
+4. Value of the coin as `int64`
+5. If the coin is a coinbase as `bool`
+
+#### Tracepoint `utxocache:spent`
+
+It is called when a coin is spent from the UTXO cache.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. Output index as `uint32`
+3. Block height the coin was spent, as `uint32`
+4. Value of the coin as `int64`
+5. If the coin is a coinbase as `bool`
+
+#### Tracepoint `utxocache:uncache`
+
+It is called when the UTXO with the given outpoint is removed from the cache.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. Output index as `uint32`
+3. Block height the coin was uncached, as `uint32`
+4. Value of the coin as `int64`
+. If the coin is a coinbase as `bool`
+
 ## Adding tracepoints to Bitcoin Core
 
 To add a new tracepoint, `#include <util/trace.h>` in the compilation unit where
