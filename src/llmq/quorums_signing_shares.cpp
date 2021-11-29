@@ -805,13 +805,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- recovered signature. id=%s, msgHash=%s, time=%d\n", __func__,
               id.ToString(), msgHash.ToString(), t.count());
 
-    auto rs = std::make_shared<CRecoveredSig>();
-    rs->llmqType = quorum->params.type;
-    rs->quorumHash = quorum->qc->quorumHash;
-    rs->id = id;
-    rs->msgHash = msgHash;
-    rs->sig.Set(recoveredSig);
-    rs->UpdateHash();
+    auto rs = std::make_shared<CRecoveredSig>(quorum->params.type, quorum->qc->quorumHash, id, msgHash, recoveredSig);
 
     // There should actually be no need to verify the self-recovered signatures as it should always succeed. Let's
     // however still verify it from time to time, so that we have a chance to catch bugs. We do only this sporadic

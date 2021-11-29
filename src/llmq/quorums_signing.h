@@ -32,40 +32,34 @@ using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 class CRecoveredSig
 {
 public:
-    uint8_t llmqType;
-    uint256 quorumHash;
-    uint256 id;
-    uint256 msgHash;
-    CBLSLazySignature sig;
+    const uint8_t llmqType{Consensus::LLMQ_NONE};
+    const uint256 quorumHash;
+    const uint256 id;
+    const uint256 msgHash;
+    const CBLSLazySignature sig;
 
+    CRecoveredSig() = default;
+
+    CRecoveredSig(uint8_t _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSLazySignature& _sig) :
+                  llmqType(_llmqType), quorumHash(_quorumHash), id(_id), msgHash(_msgHash), sig(_sig) {UpdateHash();};
+    CRecoveredSig(uint8_t _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSSignature& _sig) :
+                  llmqType(_llmqType), quorumHash(_quorumHash), id(_id), msgHash(_msgHash) {const_cast<CBLSLazySignature&>(sig).Set(_sig); UpdateHash();};
+
+private:
     // only in-memory
     uint256 hash;
-
-public:
-   template<typename Stream>
-   void Serialize(Stream& s) const
-    {
-        s << llmqType;
-        s << quorumHash;
-        s << id;
-        s << msgHash;
-        s << sig;
-   
-    }
-    template<typename Stream>
-    void Unserialize(Stream& s)
-    {
-        s >> llmqType;
-        s >> quorumHash;
-        s >> id;
-        s >> msgHash;
-        s >> sig;
-        UpdateHash();
-    }
 
     void UpdateHash()
     {
         hash = ::SerializeHash(*this);
+    }
+
+public:
+    SERIALIZE_METHODS(CRecoveredSig, obj)
+    {
+        READWRITE(const_cast<uint8_t&>(obj.llmqType), const_cast<uint256&>(obj.quorumHash), const_cast<uint256&>(obj.id),
+                  const_cast<uint256&>(obj.msgHash), const_cast<CBLSLazySignature&>(obj.sig));
+        SER_READ(obj, obj.UpdateHash());
     }
 
     const uint256& GetHash() const

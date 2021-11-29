@@ -236,13 +236,7 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
                 // We can reconstruct the CRecoveredSig from the clsig and pass it to the signing manager, which
                 // avoids unnecessary double-verification of the signature. We can do this here because we just
                 // verified the sig.
-                std::shared_ptr<CRecoveredSig> rs = std::make_shared<CRecoveredSig>();
-                rs->llmqType = llmqType;
-                rs->quorumHash = quorum->qc->quorumHash;
-                rs->id = requestId;
-                rs->msgHash = clsig.blockHash;
-                rs->sig.Set(clsig.sig);
-                rs->UpdateHash();
+                auto rs = std::make_shared<CRecoveredSig>(llmqType, quorum->qc->quorumHash, requestId, clsig.blockHash, clsig.sig);
                 quorumSigningManager->PushReconstructedRecoveredSig(rs);
             }
             ret = std::make_pair(i, quorum);
