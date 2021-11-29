@@ -23,6 +23,11 @@ bool CZMQAbstractNotifier::NotifyTransaction(const CTransaction &/*transaction*/
     return true;
 }
 
+bool CZMQAbstractNotifier::NotifyMempoolTransaction(const CTransaction &/*transaction*/)
+{
+    return true;
+}
+
 bool CZMQAbstractNotifier::NotifyBlockConnect(const CBlockIndex * /*CBlockIndex*/)
 {
     return true;

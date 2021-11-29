@@ -29,6 +29,7 @@ static const char *MSG_HASHBLOCK = "hashblock";
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
+static const char *MSG_RAWMEMPOOLTX = "rawmempooltx";
 static const char *MSG_SEQUENCE  = "sequence";
 
 // Internal function to send multipart message
@@ -251,6 +252,15 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << transaction;
     return SendZmqMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
+}
+
+bool CZMQPublishRawMempoolTransactionNotifier::NotifyMempoolTransaction(const CTransaction &transaction)
+{
+    uint256 hash = transaction.GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawmempooltx %s to %s\n", hash.GetHex(), this->address);
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+    ss << transaction;
+    return SendZmqMessage(MSG_RAWMEMPOOLTX, &(*ss.begin()), ss.size());
 }
 
 // Helper function to send a 'sequence' topic message with the following structure:

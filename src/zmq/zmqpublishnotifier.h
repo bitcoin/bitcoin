@@ -52,6 +52,12 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
+class CZMQPublishRawMempoolTransactionNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyMempoolTransaction(const CTransaction &transaction) override;
+};
+
 class CZMQPublishSequenceNotifier : public CZMQAbstractPublishNotifier
 {
 public:

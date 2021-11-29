@@ -36,6 +36,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubhashtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashTransactionNotifier>;
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
+    factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawMempoolTransactionNotifier>;
     factories["pubsequence"] = CZMQAbstractNotifier::Create<CZMQPublishSequenceNotifier>;
 
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
@@ -144,7 +145,7 @@ void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef&
     const CTransaction& tx = *ptx;
 
     TryForEachAndRemoveFailed(notifiers, [&tx, mempool_sequence](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyTransaction(tx) && notifier->NotifyTransactionAcceptance(tx, mempool_sequence);
+        return notifier->NotifyTransaction(tx) && notifier->NotifyMempoolTransaction(tx) && notifier->NotifyTransactionAcceptance(tx, mempool_sequence);
     });
 }
 

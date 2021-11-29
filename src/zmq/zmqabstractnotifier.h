@@ -55,6 +55,8 @@ public:
     virtual bool NotifyTransactionRemoval(const CTransaction &transaction, uint64_t mempool_sequence);
     // Notifies of transactions added to mempool or appearing in blocks
     virtual bool NotifyTransaction(const CTransaction &transaction);
+    // Notifies of transactions added to mempool
+    virtual bool NotifyMempoolTransaction(const CTransaction &transaction);
 
 protected:
     void *psocket;

@@ -9,6 +9,7 @@
     Bitcoin should be started with the command line arguments:
         bitcoind -testnet -daemon \
                 -zmqpubrawtx=tcp://127.0.0.1:28332 \
+                -zmqpubrawmempooltx=tcp://127.0.0.1:28332 \
                 -zmqpubrawblock=tcp://127.0.0.1:28332 \
                 -zmqpubhashtx=tcp://127.0.0.1:28332 \
                 -zmqpubhashblock=tcp://127.0.0.1:28332 \
@@ -47,6 +48,7 @@ class ZMQHandler():
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashtx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawblock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawtx")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawmempooltx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "sequence")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % port)
 
@@ -66,6 +68,9 @@ class ZMQHandler():
             print(body[:80].hex())
         elif topic == b"rawtx":
             print('- RAW TX ('+sequence+') -')
+            print(body.hex())
+        elif topic == b"rawmempooltx":
+            print('- RAW MEMPOOL TX ('+sequence+') -')
             print(body.hex())
         elif topic == b"sequence":
             hash = body[:32].hex()
