@@ -71,7 +71,6 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [Assumeutxo design](assumeutxo.md)
 - [bitcoin.conf Configuration File](bitcoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
@@ -83,6 +82,10 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 - [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
 - [ZMQ](zmq.md)
+
+### Internal developer design documention
+- [Assumeutxo design](dev-design/assumeutxo.md)
+- [Multiprocess design](dev-design/multiprocess.md)
 
 License
 ---------------------
