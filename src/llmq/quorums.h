@@ -144,7 +144,7 @@ using CQuorumPtr = std::shared_ptr<CQuorum>;
 using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 
 class CFinalCommitment;
-using CFinalCommitmentPtr = std::shared_ptr<CFinalCommitment>;
+using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 
 
 class CQuorum
@@ -171,7 +171,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
     ~CQuorum();
-    void Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
+    void Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool SetVerificationVector(const BLSVerificationVector& quorumVecIn);
     bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare);

@@ -122,6 +122,7 @@ public:
     Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
+    // TODO make this pair a struct with named fields
     std::vector<std::pair<uint32_t, CBLSSecretKey>> contributions;
     CBLSSignature sig;
 
@@ -190,7 +191,7 @@ public:
 class CDKGMember
 {
 public:
-    CDKGMember(CDeterministicMNCPtr _dmn, size_t _idx);
+    CDKGMember(const CDeterministicMNCPtr& _dmn, size_t _idx);
 
     CDeterministicMNCPtr dmn;
     size_t idx;
@@ -255,7 +256,7 @@ private:
 
     uint256 myProTxHash;
     CBLSId myId;
-    size_t myIdx{(size_t)-1};
+    std::optional<size_t> myIdx;
 
     // all indexed by msg hash
     // we expect to only receive a single vvec and contribution per member, but we must also be able to relay
@@ -279,7 +280,7 @@ public:
 
     bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
 
-    size_t GetMyMemberIndex() const { return myIdx; }
+    std::optional<size_t> GetMyMemberIndex() const { return myIdx; }
 
     /**
      * The following sets of methods are for the first 4 phases handled in the session. The flow of message calls

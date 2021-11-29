@@ -202,7 +202,7 @@ void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
     }
 }
 
-void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
+void CChainLocksHandler::UpdatedBlockTip()
 {
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
@@ -460,10 +460,14 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
     if (!RejectConflictingBlocks()) {
         return true;
     }
+    if (!isEnabled || !isEnforced) {
+        return true;
+    }
+
     if (!IsInstantSendEnabled()) {
         return true;
     }
-    if (!isEnabled || !isEnforced) {
+    if (quorumInstantSendManager->IsLocked(txid)) {
         return true;
     }
 
@@ -476,10 +480,7 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
         }
     }
 
-    if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
-        return false;
-    }
-    return true;
+    return txAge >= WAIT_FOR_ISLOCK_TIMEOUT;
 }
 
 // WARNING: cs_main and cs should not be held!

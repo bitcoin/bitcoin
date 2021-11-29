@@ -90,7 +90,7 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBL
     params(_params),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
-    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
+    curSession(std::make_unique<CDKGSession>(_params, _blsWorker, _dkgManager)),
     pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
     pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
     pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
@@ -158,7 +158,7 @@ void CDKGSessionHandler::StopThread()
 
 bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 {
-    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
+    curSession = std::make_unique<CDKGSession>(params, blsWorker, dkgManager);
 
     if (!deterministicMNManager->IsDIP3Enforced(pQuorumBaseBlockIndex->nHeight)) {
         return false;
@@ -271,7 +271,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
     // Don't expect perfect block times and thus reduce the phase time to be on the secure side (caller chooses factor)
     double adjustedPhaseSleepTimePerMember = phaseSleepTimePerMember * randomSleepFactor;
 
-    int64_t sleepTime = (int64_t)(adjustedPhaseSleepTimePerMember * curSession->GetMyMemberIndex());
+    int64_t sleepTime = (int64_t)(adjustedPhaseSleepTimePerMember * curSession->GetMyMemberIndex().value_or(0));
     int64_t endTime = GetTimeMillis() + sleepTime;
     int heightTmp{-1};
     int heightStart{-1};

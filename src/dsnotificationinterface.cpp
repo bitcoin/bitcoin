@@ -67,7 +67,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 #endif // ENABLE_WALLET
 
     llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
-    llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
+    llmq::chainLocksHandler->UpdatedBlockTip();
 
     llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
