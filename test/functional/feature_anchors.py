@@ -8,16 +8,10 @@ import os
 
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import check_node_connections
 
 INBOUND_CONNECTIONS = 5
 BLOCK_RELAY_CONNECTIONS = 2
-
-
-def check_node_connections(*, node, num_in, num_out):
-    info = node.getnetworkinfo()
-    assert_equal(info["connections_in"], num_in)
-    assert_equal(info["connections_out"], num_out)
 
 
 class AnchorsTest(SyscoinTestFramework):

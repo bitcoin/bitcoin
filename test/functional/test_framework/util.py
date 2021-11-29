@@ -276,6 +276,7 @@ def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'),
     else:
         return False
 
+
 def sha256sum_file(filename):
     h = hashlib.sha256()
     with open(filename, 'rb') as f:
@@ -479,6 +480,12 @@ def force_finish_mnsync(node):
         if node.mnsync("status")['IsSynced']:
             break
         node.mnsync("next")
+
+def check_node_connections(*, node, num_in, num_out):
+    info = node.getnetworkinfo()
+    assert_equal(info["connections_in"], num_in)
+    assert_equal(info["connections_out"], num_out)
+
 
 # Transaction/Block functions
 #############################
