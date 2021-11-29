@@ -84,14 +84,16 @@ constexpr std::pair<std::array<int16_t, 1023>, std::array<int16_t, 1024>> Genera
 
     // Each element v of GF(1024) is encoded as a 10 bit integer in the following way:
     // v = v1 || v0 where v0, v1 are 5-bit integers (elements of GF(32)).
-    // The element (e) is encoded as 9 || 15. Given (v), we
-    // compute (e)*(v) by multiplying in the following way:
+    // The element (e) is encoded as 1 || 0, to represent 1*(e) + 0. Every other element
+    // a*(e) + b is represented as a || b (a and b are both GF(32) elements). Given (v),
+    // we compute (e)*(v) by multiplying in the following way:
     //
-    // v0' = 27*v1 + 15*v0
-    // v1' = 6*v1 + 9*v0
+    // v0' = 23*v1
+    // v1' = 9*v1 + v0
     // e*v = v1' || v0'
     //
-    // Multiplication in GF(32) is done using the log/exp tables:
+    // Where 23, 9 are GF(32) elements encoded as described above. Multiplication in GF(32)
+    // is done using the log/exp tables:
     // e^x * e^y = e^(x + y) so a * b = EXP[ LOG[a] + LOG [b] ]
     // for non-zero a and b.
 
@@ -100,10 +102,8 @@ constexpr std::pair<std::array<int16_t, 1023>, std::array<int16_t, 1024>> Genera
         int v0 = v & 31;
         int v1 = v >> 5;
 
-        int v0n = (v1 ? GF32_EXP.at((GF32_LOG.at(v1) + GF32_LOG.at(27)) % 31) : 0) ^
-                    (v0 ? GF32_EXP.at((GF32_LOG.at(v0) + GF32_LOG.at(15)) % 31) : 0);
-        int v1n = (v1 ? GF32_EXP.at((GF32_LOG.at(v1) + GF32_LOG.at(6)) % 31) : 0) ^
-                    (v0 ? GF32_EXP.at((GF32_LOG.at(v0) + GF32_LOG.at(9)) % 31) : 0);
+        int v0n = v1 ? GF32_EXP.at((GF32_LOG.at(v1) + GF32_LOG.at(23)) % 31) : 0;
+        int v1n = (v1 ? GF32_EXP.at((GF32_LOG.at(v1) + GF32_LOG.at(9)) % 31) : 0) ^ v0;
 
         v = v1n << 5 | v0n;
         GF1024_EXP[i] = v;
