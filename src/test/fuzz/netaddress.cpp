@@ -84,6 +84,8 @@ FUZZ_TARGET(netaddress)
     (void)service.ToString();
     (void)service.ToStringIPPort();
     (void)service.ToStringPort();
+    (void)CServiceHash()(service);
+    (void)CServiceHash(0, 0)(service);
 
     const CNetAddr other_net_addr = ConsumeNetAddr(fuzzed_data_provider);
     (void)net_addr.GetReachabilityFrom(&other_net_addr);
