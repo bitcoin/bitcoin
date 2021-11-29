@@ -163,10 +163,16 @@ could lead to loss of funds, or are deemed security hazards. Conforming to vario
 
 The basic steps are:
 
-  1. Every participant generates an xpub. The most straightforward way is to create a new descriptor wallet which we will refer to as
-     the participant's signer wallet. Avoid reusing this wallet for any purpose other than signing transactions from the
-     corresponding multisig we are about to create. Hint: extract the wallet's xpubs using `listdescriptors` and pick the one from the
-     `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)
+  1. Every participant generates an xpub. The most straightforward way is to create
+     a new descriptor wallet which we will refer to as the participant's signer wallet.
+     Avoid reusing this wallet for any purpose other than signing transactions from the
+     corresponding multisig we are about to create. Hint: extract the wallet's
+     xpubs using `gethdkey m/44h/0h/0h` (`m/44h/1h/0h` for testnet and signet).
+     This reuses keys from the `pkh` descriptor (legacy addresses), since these
+     are the least likely to be accidentally reused. A future update to
+     `importdescriptors` may add support for derivation the corresponding
+     private keys of arbitrary derivations, such as BIP87's `m/87h`. That would
+     prevent key reuse entirely.
   2. Create a watch-only descriptor wallet (blank, private keys disabled). Now the multisig is created by importing the two descriptors:
      `wsh(sortedmulti(<M>,XPUB1/0/*,XPUB2/0/*,…,XPUBN/0/*))` and `wsh(sortedmulti(<M>,XPUB1/1/*,XPUB2/1/*,…,XPUBN/1/*))`
      (one descriptor w/ `0` for receiving addresses and another w/ `1` for change). Every participant does this
