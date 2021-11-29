@@ -676,7 +676,7 @@ QString NetworkToQString(Network net)
     case NET_ONION: return "Onion";
     case NET_I2P: return "I2P";
     case NET_CJDNS: return "CJDNS";
-    case NET_YGGDRASIL: return "Yggdrasil";
+    case NET_YGGDRASIL: return "Ygg";
     case NET_INTERNAL: return QObject::tr("Internal");
     case NET_MAX: assert(false);
     } // no default case, so the compiler can warn about missing cases

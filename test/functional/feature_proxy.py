@@ -58,7 +58,7 @@ NET_IPV6 = "ipv6"
 NET_ONION = "onion"
 NET_I2P = "i2p"
 NET_CJDNS = "cjdns"
-NET_YGGDRASIL = "yggdrasil"
+NET_YGGDRASIL = "ygg"
 
 # Networks returned by RPC getnetworkinfo, defined in src/rpc/net.cpp::GetNetworksInfo()
 NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS, NET_YGGDRASIL})
@@ -284,7 +284,7 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n0['onion']['reachable'], True)
         assert_equal(n0['i2p']['reachable'], False)
         assert_equal(n0['cjdns']['reachable'], False)
-        assert_equal(n0['yggdrasil']['reachable'], False)
+        assert_equal(n0['ygg']['reachable'], False)
 
         n1 = networks_dict(nodes_network_info[1])
         assert_equal(NETWORKS, n1.keys())
@@ -313,7 +313,7 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n2['onion']['reachable'], True)
         assert_equal(n2['i2p']['reachable'], False)
         assert_equal(n2['cjdns']['reachable'], False)
-        assert_equal(n2['yggdrasil']['reachable'], False)
+        assert_equal(n2['ygg']['reachable'], False)
 
         if self.have_ipv6:
             n3 = networks_dict(nodes_network_info[3])
@@ -326,7 +326,7 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(n3['onion']['reachable'], False)
             assert_equal(n3['i2p']['reachable'], False)
             assert_equal(n3['cjdns']['reachable'], False)
-            assert_equal(n3['yggdrasil']['reachable'], False)
+            assert_equal(n3['ygg']['reachable'], False)
 
         n4 = networks_dict(nodes_network_info[4])
         assert_equal(NETWORKS, n4.keys())
@@ -342,7 +342,7 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n4['onion']['reachable'], True)
         assert_equal(n4['i2p']['reachable'], False)
         assert_equal(n4['cjdns']['reachable'], True)
-        assert_equal(n4['yggdrasil']['reachable'], False)
+        assert_equal(n4['ygg']['reachable'], False)
 
         self.stop_node(1)
 
