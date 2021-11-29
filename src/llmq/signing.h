@@ -34,24 +34,34 @@ static constexpr int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE{60 * 60 * 24 * 7};
 class CRecoveredSig
 {
 public:
-    Consensus::LLMQType llmqType;
-    uint256 quorumHash;
-    uint256 id;
-    uint256 msgHash;
-    CBLSLazySignature sig;
+    const Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
+    const uint256 quorumHash;
+    const uint256 id;
+    const uint256 msgHash;
+    const CBLSLazySignature sig;
 
+    CRecoveredSig() = default;
+
+    CRecoveredSig(Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSLazySignature& _sig) :
+                  llmqType(_llmqType), quorumHash(_quorumHash), id(_id), msgHash(_msgHash), sig(_sig) {UpdateHash();};
+    CRecoveredSig(Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSSignature& _sig) :
+                  llmqType(_llmqType), quorumHash(_quorumHash), id(_id), msgHash(_msgHash) {const_cast<CBLSLazySignature&>(sig).Set(_sig); UpdateHash();};
+
+private:
     // only in-memory
     uint256 hash;
-
-    SERIALIZE_METHODS(CRecoveredSig, obj)
-    {
-        READWRITE(obj.llmqType, obj.quorumHash, obj.id, obj.msgHash, obj.sig);
-        SER_READ(obj, obj.UpdateHash());
-    }
 
     void UpdateHash()
     {
         hash = ::SerializeHash(*this);
+    }
+
+public:
+    SERIALIZE_METHODS(CRecoveredSig, obj)
+    {
+        READWRITE(const_cast<Consensus::LLMQType&>(obj.llmqType), const_cast<uint256&>(obj.quorumHash), const_cast<uint256&>(obj.id),
+                  const_cast<uint256&>(obj.msgHash), const_cast<CBLSLazySignature&>(obj.sig));
+        SER_READ(obj, obj.UpdateHash());
     }
 
     const uint256& GetHash() const

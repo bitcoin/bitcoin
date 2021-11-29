@@ -975,13 +975,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         // avoids unnecessary double-verification of the signature. We however only do this when verification here
         // turns out to be good (which is checked further down)
         if (!quorumSigningManager->HasRecoveredSigForId(llmqType, id)) {
-            CRecoveredSig recSig;
-            recSig.llmqType = llmqType;
-            recSig.quorumHash = quorum->qc->quorumHash;
-            recSig.id = id;
-            recSig.msgHash = islock->txid;
-            recSig.sig = islock->sig;
-            recSigs.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(std::move(recSig)));
+            recSigs.try_emplace(hash, CRecoveredSig(llmqType, quorum->qc->quorumHash, id, islock->txid, islock->sig));
         }
     }
 
@@ -1022,7 +1016,6 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         if (it != recSigs.end()) {
             auto recSig = std::make_shared<CRecoveredSig>(std::move(it->second));
             if (!quorumSigningManager->HasRecoveredSigForId(llmqType, recSig->id)) {
-                recSig->UpdateHash();
                 LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: passing reconstructed recSig to signing mgr, peer=%d\n", __func__,
                          islock->txid.ToString(), hash.ToString(), nodeId);
                 quorumSigningManager->PushReconstructedRecoveredSig(recSig);
