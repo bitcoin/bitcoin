@@ -30,12 +30,6 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.skip_if_no_sqlite()
 
     @staticmethod
-    def _get_xpub(wallet):
-        """Extract the wallet's xpubs using `listdescriptors` and pick the one from the `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)."""
-        descriptor = next(filter(lambda d: d["desc"].startswith("pkh"), wallet.listdescriptors()["descriptors"]))
-        return descriptor["desc"].split("]")[-1].split("/")[0]
-
-    @staticmethod
     def _check_psbt(psbt, to, value, multisig):
         """Helper function for any of the N participants to check the psbt with decodepsbt and verify it is OK before signing."""
         tx = multisig.decodepsbt(psbt)["tx"]
@@ -93,7 +87,9 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         }
 
         self.log.info("Generate and exchange xpubs...")
-        xpubs = [self._get_xpub(signer) for signer in participants["signers"]]
+        # Reuse `pkh` descriptor keys, since it's least likely to be accidentally reused (legacy addresses)
+        # TODO: use BIP87's recommended m/87'/1'/0' once importdescriptors can infer private keys for arbitrary derivations
+        xpubs = [signer.gethdkey("m/44'/1'/0'")["xpub"] for signer in participants["signers"]]
 
         self.log.info("Every participant imports the following descriptors to create the watch-only multisig...")
         participants["multisigs"] = list(self.participants_create_multisigs(xpubs))
