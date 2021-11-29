@@ -16,7 +16,6 @@ FUZZ_TARGET(netaddress)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CNetAddr net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    (void)net_addr.GetHash();
     (void)net_addr.GetNetClass();
     if (net_addr.GetNetwork() == Network::NET_IPV4) {
         assert(net_addr.IsIPv4());

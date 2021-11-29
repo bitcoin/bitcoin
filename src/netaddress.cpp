@@ -833,14 +833,6 @@ std::vector<unsigned char> CNetAddr::GetAddrBytes() const
     return std::vector<unsigned char>(m_addr.begin(), m_addr.end());
 }
 
-uint64_t CNetAddr::GetHash() const
-{
-    uint256 hash = Hash(m_addr);
-    uint64_t nRet;
-    memcpy(&nRet, &hash, sizeof(nRet));
-    return nRet;
-}
-
 // private extensions to enum Network, only returned by GetExtNetwork,
 // and only used in GetReachabilityFrom
 static const int NET_UNKNOWN = NET_MAX + 0;
