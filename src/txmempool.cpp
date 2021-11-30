@@ -642,7 +642,7 @@ void CTxMemPool::removeForReorg(CChainState& active_chainstate, int flags)
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
         LockPoints lp = it->GetLockPoints();
-        bool validLP =  TestLockPointValidity(active_chainstate.m_chain, &lp);
+        const bool validLP = TestLockPointValidity(active_chainstate.m_chain, &lp);
         CCoinsViewMemPool view_mempool(&active_chainstate.CoinsTip(), *this);
         if (!CheckFinalTx(active_chainstate.m_chain.Tip(), tx, flags)
             || !CheckSequenceLocks(active_chainstate.m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
@@ -663,15 +663,19 @@ void CTxMemPool::removeForReorg(CChainState& active_chainstate, int flags)
                 }
             }
         }
-        if (!validLP) {
-            mapTx.modify(it, update_lock_points(lp));
-        }
     }
     setEntries setAllRemoves;
     for (txiter it : txToRemove) {
         CalculateDescendants(it, setAllRemoves);
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
+    auto chain = active_chainstate.m_chain;
+    for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+        LockPoints lp = it->GetLockPoints();
+        if (!TestLockPointValidity(chain, &lp)) {
+            mapTx.modify(it, update_lock_points(lp));
+        }
+    }
 }
 
 void CTxMemPool::removeConflicts(const CTransaction &tx)
