@@ -15,10 +15,10 @@
 
 #include <base58.h>
 #include <chainparams.h>
-#include <primitives/transaction.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -884,7 +884,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "dashcore.desktop";
-    return GetAutostartDir() / strprintf("dashcore-%s.lnk", chain);
+    return GetAutostartDir() / strprintf("dashcore-%s.desktop", chain);
 }
 
 bool GetStartOnSystemStartup()

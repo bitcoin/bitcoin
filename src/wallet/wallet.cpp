@@ -4197,8 +4197,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     {
         LOCK(cs_wallet);
 
-        if (IsLocked(true))
-            return false;
+        if (IsLocked(true)) return false;
 
         // Top up key pool
         unsigned int nTargetSize;
@@ -4267,8 +4266,7 @@ bool CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRe
     {
         LOCK(cs_wallet);
 
-        if (!IsLocked(true))
-            TopUpKeyPool();
+        TopUpKeyPool();
 
         bool fReturningInternal = IsHDEnabled() && fRequestedInternal;
         std::set<int64_t>& setKeyPool = fReturningInternal ? setInternalKeyPool : setExternalKeyPool;

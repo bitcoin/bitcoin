@@ -145,7 +145,8 @@ AC_ARG_ENABLE([extended-functional-tests],
     [use_extended_functional_tests=no])
 
 AC_ARG_ENABLE([fuzz],
-    AS_HELP_STRING([--enable-fuzz],[enable building of fuzz targets (default no)]),
+    AS_HELP_STRING([--enable-fuzz],
+    [enable building of fuzz targets (default no). enabling this will disable all other targets]),
     [enable_fuzz=$enableval],
     [enable_fuzz=no])
 
@@ -1118,6 +1119,37 @@ dnl it would break GCC's #include_next.
 AC_DEFUN([SUPPRESS_WARNINGS],
          [$(echo $1 |${SED} -E -e 's/(^| )-I/\1-isystem /g' -e 's;-isystem /usr/include([/ ]|$);-I/usr/include\1;g')])
 
+dnl enable-fuzz should disable all other targets
+if test "x$enable_fuzz" = "xyes"; then
+  AC_MSG_WARN(enable-fuzz will disable all other targets)
+  build_bitcoin_utils=no
+  build_bitcoin_cli=no
+  build_bitcoin_tx=no
+  build_bitcoin_wallet=no
+  build_bitcoind=no
+  build_bitcoin_libs=no
+  bitcoin_enable_qt=no
+  bitcoin_enable_qt_test=no
+  bitcoin_enable_qt_dbus=no
+  enable_wallet=no
+  use_bench=no
+  use_upnp=no
+  use_zmq=no
+else
+    BITCOIN_QT_INIT
+
+    dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+    BITCOIN_QT_CONFIGURE([5.5.1])
+
+    dnl Keep a copy of the original $QT_INCLUDES and use it when invoking qt's moc
+    QT_INCLUDES_UNSUPPRESSED=$QT_INCLUDES
+    if test x$suppress_external_warnings != xno ; then
+      QT_INCLUDES=SUPPRESS_WARNINGS($QT_INCLUDES)
+      QT_DBUS_INCLUDES=SUPPRESS_WARNINGS($QT_DBUS_INCLUDES)
+      QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
+    fi
+fi
+
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     BITCOIN_FIND_BDB48
@@ -1153,19 +1185,6 @@ if test x$have_miniupnpc != xno; then
     have_miniupnpc=no
   ])
 fi
-fi
-
-BITCOIN_QT_INIT
-
-dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([5.5.1])
-
-dnl Keep a copy of the original $QT_INCLUDES and use it when invoking qt's moc
-QT_INCLUDES_UNSUPPRESSED=$QT_INCLUDES
-if test x$suppress_external_warnings != xno ; then
-  QT_INCLUDES=SUPPRESS_WARNINGS($QT_INCLUDES)
-  QT_DBUS_INCLUDES=SUPPRESS_WARNINGS($QT_DBUS_INCLUDES)
-  QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
 fi
 
 if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
