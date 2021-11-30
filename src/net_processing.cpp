@@ -1398,7 +1398,9 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             // masternode would not be able to exploit this to spam the network with specially
             // crafted invalid DSTX-es and potentially cause high load cheaply, because
             // corresponding checks in ProcessMessage won't let it to send DSTX-es too often.
-            bool fIgnoreRecentRejects = llmq::quorumInstantSendManager->IsLocked(inv.hash) || inv.type == MSG_DSTX;
+            bool fIgnoreRecentRejects = inv.type == MSG_DSTX ||
+                                        llmq::quorumInstantSendManager->IsWaitingForTx(inv.hash) ||
+                                        llmq::quorumInstantSendManager->IsLocked(inv.hash);
 
             return (!fIgnoreRecentRejects && recentRejects->contains(inv.hash)) ||
                    (inv.type == MSG_DSTX && static_cast<bool>(CCoinJoin::GetDSTX(inv.hash))) ||

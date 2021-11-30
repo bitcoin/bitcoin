@@ -232,14 +232,24 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.sync_all()
         assert self.nodes[0].getbestblockhash() == cl_block.hash
 
-        # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
-        # the locked transaction yet
+        # Send the ISLOCK, which should result in the last 2 blocks to be disconnected,
+        # even though the nodes don't know the locked transaction yet
         self.test_node.send_islock(islock, deterministic)
         for node in self.nodes:
             wait_until(lambda: node.getbestblockhash() == good_tip, timeout=10, sleep=0.5)
+            # islock for tx2 is incomplete, tx1 should return in mempool now that blocks are disconnected
+            assert rawtx1_txid in set(node.getrawmempool())
 
-        # Send the actual transaction and mine it
+        # Should drop tx1 and accept tx2 because there is an islock waiting for it
         self.nodes[0].sendrawtransaction(rawtx2)
+        # bump mocktime to force tx relay
+        self.bump_mocktime(60)
+        for node in self.nodes:
+            self.wait_for_instantlock(rawtx2_txid, node)
+
+        # Should not allow competing txes now
+        assert_raises_rpc_error(-26, "tx-txlock-conflict", self.nodes[0].sendrawtransaction, rawtx1)
+
         islock_tip = self.nodes[0].generate(1)[0]
         self.sync_all()
 

@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hash256, hex_str_to_bytes, isolate_node, reconnect_isolated_node
+from test_framework.util import assert_equal, assert_raises_rpc_error, isolate_node, reconnect_isolated_node
 
 '''
 p2p_instantsend.py
@@ -85,6 +85,8 @@ class InstantSendTest(DashTestFramework):
         sender = self.nodes[self.sender_idx]
         receiver = self.nodes[self.receiver_idx]
         isolated = self.nodes[self.isolated_idx]
+        connected_nodes = self.nodes.copy()
+        del connected_nodes[self.isolated_idx]
 
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
@@ -95,28 +97,31 @@ class InstantSendTest(DashTestFramework):
 
         # create doublespending transaction, but don't relay it
         dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
-        dblspnd_txid = hash256(hex_str_to_bytes(dblspnd_tx['hex']))[::-1].hex()
         # isolate one node from network
         isolate_node(isolated)
         # send doublespend transaction to isolated node
-        isolated.sendrawtransaction(dblspnd_tx['hex'])
+        dblspnd_txid = isolated.sendrawtransaction(dblspnd_tx['hex'])
+        assert dblspnd_txid in set(isolated.getrawmempool())
         # let isolated node rejoin the network
         # The previously isolated node should NOT relay the doublespending TX
         reconnect_isolated_node(isolated, 0)
-        for node in self.nodes:
-            if node is not isolated:
-                assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, dblspnd_txid)
-        # instantsend to receiver. The previously isolated node should prune the doublespend TX and request the correct
-        # TX from other nodes.
+        for node in connected_nodes:
+            assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, dblspnd_txid)
+        # Instantsend to receiver. The previously isolated node won't accept the tx but it should
+        # request the correct TX from other nodes once the corresponding lock is received.
+        # And this time the doublespend TX should be pruned once the correct tx is received.
         receiver_addr = receiver.getnewaddress()
         is_id = sender.sendtoaddress(receiver_addr, 0.9)
         # wait for the transaction to propagate
         self.sync_mempools()
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
-        assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)
+        assert dblspnd_txid not in set(isolated.getrawmempool())
         # send coins back to the controller node without waiting for confirmations
-        receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
+        sentback_id = receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
+        self.sync_mempools()
+        for node in self.nodes:
+            self.wait_for_instantlock(sentback_id, node)
         assert_equal(receiver.getwalletinfo()["balance"], 0)
         # mine more blocks
         self.bump_mocktime(1)

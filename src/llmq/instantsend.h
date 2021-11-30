@@ -196,6 +196,8 @@ private:
 
     // Incoming and not verified yet
     std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks GUARDED_BY(cs);
+    // Tried to veryfy but there is no tx yet
+    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingNoTxInstantSendLocks GUARDED_BY(cs);
 
     // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking
     // of child TXs
@@ -251,6 +253,7 @@ private:
 
 public:
     bool IsLocked(const uint256& txHash) const;
+    bool IsWaitingForTx(const uint256& txHash) const;
     CInstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
