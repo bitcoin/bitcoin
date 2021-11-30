@@ -31,7 +31,6 @@
 #include <QtGlobal>
 #include <QtTest/QtTestWidgets>
 #include <QtTest/QtTestGui>
-#include <new>
 #include <string>
 #include <univalue.h>
 

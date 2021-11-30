@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <script/interpreter.h>
-#include <script/script.h>
 #include <streams.h>
 #include <version.h>
 

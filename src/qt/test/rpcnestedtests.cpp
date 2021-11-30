@@ -6,7 +6,6 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <fs.h>
 #include <interfaces/node.h>
 #include <validation.h>
 #include <rpc/register.h>

@@ -12,12 +12,12 @@
 #include <miner.h>
 #include <policy/policy.h>
 #include <pow.h>
-#include <pubkey.h>
 #include <script/standard.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <test/setup_common.h>

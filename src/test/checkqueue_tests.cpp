@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <sync.h>
+#include <util/memory.h>
 #include <util/system.h>
 #include <util/time.h>
 
@@ -17,8 +18,6 @@
 #include <condition_variable>
 
 #include <unordered_set>
-#include <memory>
-#include <random.h>
 
 BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, TestingSetup)
 

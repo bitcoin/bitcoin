@@ -11,8 +11,11 @@
 #include <pow.h>
 #include <random.h>
 #include <test/setup_common.h>
+#include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+#include <thread>
 
 struct RegtestingSetup : public TestingSetup {
     RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}

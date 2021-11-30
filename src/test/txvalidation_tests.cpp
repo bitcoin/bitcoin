@@ -3,8 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <validation.h>
-#include <txmempool.h>
-#include <amount.h>
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/script.h>

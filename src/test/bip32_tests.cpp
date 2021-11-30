@@ -4,9 +4,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <clientversion.h>
 #include <key.h>
 #include <key_io.h>
-#include <uint256.h>
+#include <streams.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <test/setup_common.h>

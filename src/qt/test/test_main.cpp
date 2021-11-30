@@ -7,7 +7,6 @@
 #include <config/dash-config.h>
 #endif
 
-#include <chainparams.h>
 #include <interfaces/node.h>
 #include <qt/dash.h>
 #include <qt/test/apptests.h>

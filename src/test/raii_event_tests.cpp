@@ -11,8 +11,6 @@
 
 #include <test/setup_common.h>
 
-#include <vector>
-
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(raii_event_tests, BasicTestingSetup)

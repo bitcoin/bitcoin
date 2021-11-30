@@ -13,7 +13,7 @@
 #include <index/txindex.h>
 #include <init.h>
 #include <miner.h>
-#include <net_processing.h>
+#include <net.h>
 #include <noui.h>
 #include <pow.h>
 #include <rpc/register.h>
@@ -21,7 +21,12 @@
 #include <script/sigcache.h>
 #include <streams.h>
 #include <ui_interface.h>
+#include <txdb.h>
+#include <util/memory.h>
+#include <util/strencodings.h>
+#include <util/time.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <util/validation.h>
 
