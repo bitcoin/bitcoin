@@ -15,17 +15,22 @@ fi
 
 DOCKER_EXEC mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
 
-OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
-OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_BASENAME}"
+OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers"
 
-if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
-  DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
+if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]; then
+  OSX_SDK_FILENAME="${OSX_SDK_BASENAME}.tar.gz"
+  OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_FILENAME}"
+  if [ ! -f "$OSX_SDK_PATH" ]; then
+    DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
+  fi
+  DOCKER_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 
-if [ -n "$ANDROID_TOOLS_URL" ]; then
-  ANDROID_TOOLS_PATH=$DEPENDS_DIR/sdk-sources/android-tools.zip
-
-  DOCKER_EXEC curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
+if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
+  ANDROID_TOOLS_PATH=${DEPENDS_DIR}/sdk-sources/android-tools.zip
+  if [ ! -f "$ANDROID_TOOLS_PATH" ]; then
+    DOCKER_EXEC curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
+  fi
   DOCKER_EXEC mkdir -p "${ANDROID_HOME}/cmdline-tools"
   DOCKER_EXEC unzip -o "$ANDROID_TOOLS_PATH" -d "${ANDROID_HOME}/cmdline-tools"
   DOCKER_EXEC "yes | ${ANDROID_HOME}/cmdline-tools/tools/bin/sdkmanager --install \"build-tools;${ANDROID_BUILD_TOOLS_VERSION}\" \"platform-tools\" \"platforms;android-${ANDROID_API_LEVEL}\" \"ndk;${ANDROID_NDK_VERSION}\""
@@ -38,9 +43,6 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   DOCKER_EXEC "contrib/install_db4.sh \$(pwd) --enable-umrw CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 fi
 
-if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
-  DOCKER_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
-fi
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_EXEC update-alternatives --set "${HOST}-g++" \$\(which "${HOST}-g++-posix"\)
 fi
