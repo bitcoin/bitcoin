@@ -12,6 +12,8 @@
 
 #include <llmq/utils.h>
 
+#include <optional>
+
 class UniValue;
 class CInv;
 
