@@ -51,10 +51,6 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *BASE_TEMPLATE
   << : *MAIN_TEMPLATE
 
-depends_sdk_cache_template: &DEPENDS_SDK_CACHE_TEMPLATE
-  depends_sdk_cache:
-    folder: "depends/sdk-sources"
-
 compute_credits_template: &CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
@@ -273,11 +269,15 @@ task:
 
 task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
-  << : *GLOBAL_TASK_TEMPLATE
+  << : *BASE_TEMPLATE
+  macos_sdk_cache:
+    folder: "depends/SDKs/$MACOS_SDK"
+    fingerprint_key: "$MACOS_SDK"
+  << : *MAIN_TEMPLATE
   container:
     image: ubuntu:focal
   env:
+    MACOS_SDK: "Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers"
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
@@ -297,8 +297,10 @@ task:
 
 task:
   name: 'ARM64 Android APK [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
   << : *BASE_TEMPLATE
+  android_sdk_cache:
+    folder: "depends/SDKs/android"
+    fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=22.1.7171670"
   depends_sources_cache:
     folder: "depends/sources"
     fingerprint_script: git rev-list -1 HEAD ./depends
