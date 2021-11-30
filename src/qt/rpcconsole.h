@@ -69,7 +69,6 @@ public:
 
     std::vector<TabTypes> tabs() const { return {TAB_INFO, TAB_CONSOLE, TAB_GRAPH, TAB_PEERS, TAB_REPAIR}; }
 
-    TabTypes tabFocus() const;
     QString tabTitle(TabTypes tab_type) const;
 
 protected:
