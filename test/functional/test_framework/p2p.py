@@ -94,6 +94,9 @@ P2P_SUBVERSION = "/python-p2p-tester:0.0.3/"
 P2P_VERSION_RELAY = 1
 # SYSCOIN
 P2P_SUBVERSIONARG = "/python-p2p-tester:0.0.3%s/"
+# Delay after receiving a tx inv before requesting transactions from non-preferred peers, in seconds
+NONPREF_PEER_TX_DELAY = 2
+
 MESSAGEMAP = {
     b"addr": msg_addr,
     b"addrv2": msg_addrv2,
