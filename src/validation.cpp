@@ -212,24 +212,6 @@ bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction &tx, i
     return IsFinalTx(tx, nBlockHeight, nBlockTime);
 }
 
-bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
-{
-    AssertLockHeld(cs_main);
-    assert(lp);
-    // If there are relative lock times then the maxInputBlock will be set
-    // If there are no relative lock times, the LockPoints don't depend on the chain
-    if (lp->maxInputBlock) {
-        // Check whether active_chain is an extension of the block at which the LockPoints
-        // calculation was valid.  If not LockPoints are no longer valid
-        if (!active_chain.Contains(lp->maxInputBlock)) {
-            return false;
-        }
-    }
-
-    // LockPoints still valid
-    return true;
-}
-
 bool CheckSequenceLocks(CBlockIndex* tip,
                         const CCoinsView& coins_view,
                         const CTransaction& tx,

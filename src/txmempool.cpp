@@ -74,6 +74,24 @@ private:
     const LockPoints& lp;
 };
 
+bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
+{
+    AssertLockHeld(cs_main);
+    assert(lp);
+    // If there are relative lock times then the maxInputBlock will be set
+    // If there are no relative lock times, the LockPoints don't depend on the chain
+    if (lp->maxInputBlock) {
+        // Check whether active_chain is an extension of the block at which the LockPoints
+        // calculation was valid.  If not LockPoints are no longer valid
+        if (!active_chain.Contains(lp->maxInputBlock)) {
+            return false;
+        }
+    }
+
+    // LockPoints still valid
+    return true;
+}
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
                                  int64_t time, unsigned int entry_height,
                                  bool spends_coinbase, int64_t sigops_cost, LockPoints lp)

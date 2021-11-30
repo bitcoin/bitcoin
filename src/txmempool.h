@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include <chain.h>
 #include <coins.h>
 #include <consensus/amount.h>
 #include <indirectmap.h>
@@ -48,6 +49,11 @@ struct LockPoints {
     // values are still valid even after a reorg.
     CBlockIndex* maxInputBlock{nullptr};
 };
+
+/**
+ * Test whether the LockPoints height and time are still valid on the current chain
+ */
+bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 struct CompareIteratorByHash {
     // SFINAE for T where T is either a pointer type (e.g., a txiter) or a reference_wrapper<T>
