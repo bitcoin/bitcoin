@@ -696,6 +696,7 @@ case $host in
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
+     TARGET_OS=android
      ;;
    *linux*)
      TARGET_OS=linux
