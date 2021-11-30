@@ -40,7 +40,7 @@ if [ "$BUILD_TARGET" = "arm-linux" ]; then
   export CHECK_DOC=1
   # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
   # This could be removed once the ABI change warning does not show up by default
-  export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --enable-suppress-external-warnings --enable-werror CXXFLAGS=-Wno-psabi"
+  export BITCOIN_CONFIG="--enable-reduce-exports --enable-suppress-external-warnings --enable-werror CXXFLAGS=-Wno-psabi"
   export RUN_UNITTESTS=false
   export RUN_INTEGRATIONTESTS=false
 elif [ "$BUILD_TARGET" = "win64" ]; then
@@ -50,30 +50,30 @@ elif [ "$BUILD_TARGET" = "win64" ]; then
   export DIRECT_WINE_EXEC_TESTS=true
 elif [ "$BUILD_TARGET" = "linux32" ]; then
   export HOST=i686-pc-linux-gnu
-  export BITCOIN_CONFIG="--enable-zmq --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks LDFLAGS=-static-libstdc++"
+  export BITCOIN_CONFIG="--enable-zmq --disable-bip70 --enable-reduce-exports --enable-crash-hooks"
   export USE_SHELL="/bin/dash"
   export PYZMQ=true
 elif [ "$BUILD_TARGET" = "linux64" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
-  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
+  export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
 elif [ "$BUILD_TARGET" = "linux64_cxx17" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
-  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks --enable-c++17 --enable-suppress-external-warnings --enable-werror --with-sanitizers=undefined"
+  export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --enable-c++17 --enable-suppress-external-warnings --enable-werror --with-sanitizers=undefined"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
   export RUN_INTEGRATIONTESTS=false
 elif [ "$BUILD_TARGET" = "linux64_nowallet" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_WALLET=1"
-  export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+  export BITCOIN_CONFIG="--enable-reduce-exports"
 elif [ "$BUILD_TARGET" = "linux64_release" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1"
-  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports"
+  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
   export PYZMQ=true
 elif [ "$BUILD_TARGET" = "mac" ]; then
   export HOST=x86_64-apple-darwin19

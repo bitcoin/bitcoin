@@ -6,6 +6,7 @@
 #include <config/dash-config.h>
 #endif
 
+#include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 
@@ -58,19 +59,59 @@ extern "C" int64_t __wrap___divmoddi4(int64_t u, int64_t v, int64_t* rp)
 }
 #endif
 
+extern "C" float exp_old(float x);
+extern "C" float exp2_old(float x);
+extern "C" float log_old(float x);
+extern "C" float log2_old(float x);
 extern "C" float log2f_old(float x);
+extern "C" float pow_old(float x, float y);
+extern "C" int fcntl_old(int fd, int cmd, ...);
+
 #ifdef __i386__
-__asm(".symver log2f_old,log2f@GLIBC_2.1");
+#define SYMVER "GLIBC_2.1"
 #elif defined(__amd64__)
-__asm(".symver log2f_old,log2f@GLIBC_2.2.5");
+#define SYMVER "GLIBC_2.2.5"
 #elif defined(__arm__)
-__asm(".symver log2f_old,log2f@GLIBC_2.4");
+#define SYMVER "GLIBC_2.4"
 #elif defined(__aarch64__)
-__asm(".symver log2f_old,log2f@GLIBC_2.17");
+#define SYMVER "GLIBC_2.17"
 #elif defined(__riscv)
-__asm(".symver log2f_old,log2f@GLIBC_2.27");
-#endif
-extern "C" float __wrap_log2f(float x)
+#define SYMVER "GLIBC_2.27"
+#endif // __i386__
+
+#define SYMVER_OLD(FUNC) __asm__(".symver " #FUNC "_old," #FUNC "@" SYMVER)
+
+SYMVER_OLD(exp2);
+SYMVER_OLD(log2);
+SYMVER_OLD(log2f);
+
+#ifdef __i386__
+#undef SYMVER
+#undef SYMVER_OLD
+#define SYMVER "GLIBC_2.0"
+#define SYMVER_OLD(FUNC) __asm__(".symver " #FUNC "_old," #FUNC "@" SYMVER)
+#endif // __i386__
+
+SYMVER_OLD(exp);
+SYMVER_OLD(log);
+SYMVER_OLD(pow);
+SYMVER_OLD(fcntl);
+
+extern "C" float __wrap_exp(float x)                { return exp_old(x); }
+extern "C" float __wrap_exp2(float x)               { return exp2_old(x); }
+extern "C" float __wrap_log(float x)                { return log_old(x); }
+extern "C" float __wrap_log2(float x)               { return log2_old(x); }
+extern "C" float __wrap_log2f(float x)              { return log2f_old(x); }
+extern "C" float __wrap_pow(float x, float y)       { return pow_old(x, y); }
+
+extern "C" int __wrap_fcntl(int fd, int cmd, ...)
 {
-    return log2f_old(x);
+    va_list va;
+    void *arg;
+
+    va_start(va, cmd);
+    arg = va_arg(va, void *);
+    va_end(va);
+
+    return fcntl_old(fd, cmd, arg);
 }

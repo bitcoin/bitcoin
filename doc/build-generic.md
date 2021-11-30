@@ -55,7 +55,7 @@ Please replace `<host>` with your local system's `host-platform-triplet`. The fo
 If you want to cross-compile for another platform, choose the appropriate `<host>` and make sure to build the
 dependencies with the same host before.
 
-If you want to build for the same host but different distro, add `--enable-glibc-back-compat` when calling `./configure`.
+If you want to build for the same host but different distro, add `--enable-glibc-back-compat LDFLAGS=-static-libstdc++` when calling `./configure`.
 
 
 ccache
