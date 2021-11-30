@@ -369,5 +369,4 @@ private:
     const RPCResults m_results;
     const RPCExamples m_examples;
 };
-static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 #endif // SYSCOIN_RPC_UTIL_H
