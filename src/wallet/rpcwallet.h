@@ -7,9 +7,17 @@
 
 #include <span.h>
 
+#include <memory>
+#include <string>
+#include <vector>
+
 class CRPCCommand;
+class CWallet;
+struct WalletContext;
 
 Span<const CRPCCommand> GetWalletRPCCommands();
+
+std::tuple<std::shared_ptr<CWallet>, std::vector<bilingual_str>> LoadWalletHelper(WalletContext& context, UniValue load_on_start_param, const std::string wallet_name);
 
 RPCHelpMan getaddressinfo();
 RPCHelpMan signrawtransactionwithwallet();
