@@ -6,7 +6,6 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrman.h>
 #include <chainparams.h>
 #include <common/bloom.h>
 #include <compat.h>
@@ -37,9 +36,10 @@
 #include <thread>
 #include <vector>
 
-class CScheduler;
-class CNode;
+class AddrMan;
 class BanMan;
+class CNode;
+class CScheduler;
 struct bilingual_str;
 
 /** Default for -whitelistrelay. */

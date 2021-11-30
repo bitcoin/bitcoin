@@ -10,6 +10,7 @@
 #include <net.h>
 
 #include <addrdb.h>
+#include <addrman.h>
 #include <banman.h>
 #include <clientversion.h>
 #include <compat.h>
