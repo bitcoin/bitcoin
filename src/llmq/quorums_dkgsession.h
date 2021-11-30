@@ -12,6 +12,7 @@
 
 #include <llmq/quorums_utils.h>
 #include <sync.h>
+#include <optional>
 class UniValue;
 
 namespace llmq
