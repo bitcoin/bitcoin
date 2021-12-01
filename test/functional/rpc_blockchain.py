@@ -6,6 +6,7 @@
 
 Test the following RPCs:
     - getblockchaininfo
+    - getdeploymentinfo
     - getchaintxstats
     - gettxoutsetinfo
     - getblockheader
@@ -71,6 +72,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1'])  # Set extra args with pruning after rescan is complete
 
         self._test_getblockchaininfo()
+        self._test_getdeploymentinfo()
         self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
@@ -115,7 +117,6 @@ class BlockchainTest(BitcoinTestFramework):
             'mediantime',
             'pruned',
             'size_on_disk',
-            'softforks',
             'time',
             'verificationprogress',
             'warnings',
@@ -177,7 +178,12 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
 
-        assert_equal(res['softforks'], {
+    def _test_getdeploymentinfo(self):
+        self.log.info("Test getdeploymentinfo")
+
+        res = self.nodes[0].getdeploymentinfo()
+        assert_equal(res, {
+          "deployments": {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
             'bip66': {'type': 'buried', 'active': True, 'height': 3},
             'bip65': {'type': 'buried', 'active': True, 'height': 4},
@@ -214,6 +220,7 @@ class BlockchainTest(BitcoinTestFramework):
                 'height': 0,
                 'active': True
             }
+          }
         })
 
     def _test_getchaintxstats(self):
