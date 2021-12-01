@@ -22,7 +22,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/load.h>
 #include <wallet/receive.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
