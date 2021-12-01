@@ -629,9 +629,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].bit = 7;
         consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nStartTime = 1635724800; // Nov 1st, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nTimeout = 999999999999ULL;
-        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nWindowSize = 4032;
-        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdStart = 3226; // 80% of 4032
-        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdMin = 2420; // 60% of 4032
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nWindowSize = 100;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdStart = 80;
+        consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nThresholdMin = 60;
         consensus.vDeployments[Consensus::DEPLOYMENT_GOV_FEE].nFalloffCoeff = 5; // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
