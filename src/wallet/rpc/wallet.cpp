@@ -29,7 +29,7 @@
 #include <wallet/context.h>
 #include <wallet/load.h>
 #include <wallet/receive.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/spend.h>
