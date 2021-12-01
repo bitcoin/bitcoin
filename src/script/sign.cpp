@@ -10,6 +10,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>
+#include <script/miniscript.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <uint256.h>
@@ -381,6 +382,74 @@ static CScript PushAll(const std::vector<valtype>& values)
     return result;
 }
 
+/**
+ * Context for solving a Miniscript.
+ * If enough material (access to keys, hash preimages, ..) is given, produces a valid satisfaction.
+ */
+struct Satisfier {
+    typedef CPubKey Key;
+
+    const SigningProvider& m_provider;
+    SignatureData& m_sig_data;
+    const BaseSignatureCreator& m_creator;
+    const CScript& m_witness_script;
+
+    explicit Satisfier(const SigningProvider& provider LIFETIMEBOUND, SignatureData& sig_data LIFETIMEBOUND,
+                       const BaseSignatureCreator& creator LIFETIMEBOUND,
+                       const CScript& witscript LIFETIMEBOUND) : m_provider(provider),
+                                                                 m_sig_data(sig_data),
+                                                                 m_creator(creator),
+                                                                 m_witness_script(witscript) {}
+
+    static bool KeyCompare(const Key& a, const Key& b) {
+        return a < b;
+    }
+
+    //! Conversion from a raw public key.
+    template <typename I>
+    std::optional<Key> FromPKBytes(I first, I last) const
+    {
+        Key pubkey{first, last};
+        if (pubkey.IsValid()) return pubkey;
+        return {};
+    }
+
+    //! Conversion from a raw public key hash.
+    template<typename I>
+    std::optional<Key> FromPKHBytes(I first, I last) const {
+        assert(last - first == 20);
+        Key pubkey;
+        CKeyID key_id;
+        std::copy(first, last, key_id.begin());
+        if (GetPubKey(m_provider, m_sig_data, key_id, pubkey)) return pubkey;
+        m_sig_data.missing_pubkeys.push_back(key_id);
+        return {};
+    }
+
+    //! Conversion to raw public key.
+    std::vector<unsigned char> ToPKBytes(const CPubKey& key) const { return {key.begin(), key.end()}; }
+
+    //! Satisfy a signature check.
+    miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
+        if (CreateSig(m_creator, m_sig_data, m_provider, sig, key, m_witness_script, SigVersion::WITNESS_V0)) {
+            return miniscript::Availability::YES;
+        }
+        return miniscript::Availability::NO;
+    }
+
+    //! Time lock satisfactions.
+    // TODO
+    bool CheckAfter(uint32_t value) const { return false; }
+    bool CheckOlder(uint32_t value) const { return false; }
+
+    //! Hash preimage satisfactions.
+    // TODO
+    miniscript::Availability SatSHA256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return miniscript::Availability::NO; }
+    miniscript::Availability SatRIPEMD160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return miniscript::Availability::NO; }
+    miniscript::Availability SatHASH256(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return miniscript::Availability::NO; }
+    miniscript::Availability SatHASH160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const { return miniscript::Availability::NO; }
+};
+
 bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& fromPubKey, SignatureData& sigdata)
 {
     if (sigdata.complete) return true;
@@ -416,9 +485,21 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     {
         CScript witnessscript(result[0].begin(), result[0].end());
         sigdata.witness_script = witnessscript;
-        TxoutType subType;
+
+        TxoutType subType{TxoutType::NONSTANDARD};
         solved = solved && SignStep(provider, creator, witnessscript, result, subType, SigVersion::WITNESS_V0, sigdata) && subType != TxoutType::SCRIPTHASH && subType != TxoutType::WITNESS_V0_SCRIPTHASH && subType != TxoutType::WITNESS_V0_KEYHASH;
+
+        // If we couldn't find a solution with the legacy satisfier, try satisfying the script using Miniscript.
+        // Note we need to check if the result stack is empty before, because it might be used even if the Script
+        // isn't fully solved. For instance the CHECKMULTISIG satisfaction in SignStep() pushes partial signatures
+        // and the extractor relies on this behaviour to combine witnesses.
+        if (!solved && result.empty()) {
+            Satisfier ms_satisfier{provider, sigdata, creator, witnessscript};
+            const auto ms = miniscript::FromScript(witnessscript, ms_satisfier);
+            solved = ms && ms->Satisfy(ms_satisfier, result) == miniscript::Availability::YES;
+        }
         result.push_back(std::vector<unsigned char>(witnessscript.begin(), witnessscript.end()));
+
         sigdata.scriptWitness.stack = result;
         sigdata.witness = true;
         result.clear();
@@ -592,8 +673,8 @@ class DummySignatureChecker final : public BaseSignatureChecker
 {
 public:
     DummySignatureChecker() = default;
-    bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override { return true; }
-    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const override { return true; }
+    bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override { return sig.size() != 0; }
+    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const override { return sig.size() != 0; }
 };
 }
 

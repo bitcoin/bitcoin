@@ -59,7 +59,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
             lambda: len(self.ms_wo_wallet.listunspent(minconf=0, addresses=[addr])) == 1
         )
         utxo = self.ms_wo_wallet.listunspent(minconf=0, addresses=[addr])[0]
-        assert utxo["txid"] == txid and not utxo["solvable"]  # No satisfaction logic (yet)
+        assert utxo["txid"] == txid and utxo["solvable"]
 
     def run_test(self):
         self.log.info("Making a descriptor wallet")
