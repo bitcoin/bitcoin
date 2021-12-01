@@ -30,6 +30,7 @@
 #include <util/moneystr.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <wallet/rpc/util.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>

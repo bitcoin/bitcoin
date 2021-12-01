@@ -22,7 +22,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
 
 #include <cstdint>
 #include <fstream>

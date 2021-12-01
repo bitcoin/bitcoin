@@ -12,12 +12,12 @@
 #include <util/check.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
+#include <wallet/rpc/util.h>
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 #include <interfaces/coinjoin.h>
-#include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
 
 #include <univalue.h>

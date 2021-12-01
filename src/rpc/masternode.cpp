@@ -24,7 +24,8 @@
 #include <util/strencodings.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
+
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
