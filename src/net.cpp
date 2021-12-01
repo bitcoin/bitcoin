@@ -1640,7 +1640,7 @@ void CConnman::SocketHandlerListening(const std::set<SOCKET>& recv_set)
         if (interruptNet) {
             return;
         }
-        if (listen_socket.socket != INVALID_SOCKET && recv_set.count(listen_socket.socket) > 0) {
+        if (recv_set.count(listen_socket.socket) > 0) {
             AcceptConnection(listen_socket);
         }
     }
