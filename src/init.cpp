@@ -1452,29 +1452,27 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
         ChainstateManager& chainman = *node.chainman;
 
-        const bool fReset = fReindex;
         bilingual_str strLoadError;
+
+        node::ChainstateLoadOptions options;
+        options.mempool = Assert(node.mempool.get());
+        options.reindex = node::fReindex;
+        options.reindex_chainstate = fReindexChainState;
+        options.prune = node::fPruneMode;
+        options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+        options.check_level = args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
+        options.check_interrupt = ShutdownRequested;
+        options.coins_error_cb = [] {
+            uiInterface.ThreadSafeMessageBox(
+                _("Error reading from database, shutting down."),
+                "", CClientUIInterface::MSG_ERROR);
+        };
 
         uiInterface.InitMessage(_("Loading block index…").translated);
         const int64_t load_block_index_start_time = GetTimeMillis();
         std::optional<ChainstateLoadingError> maybe_load_error;
         try {
-            maybe_load_error = LoadChainstate(fReset,
-                                              chainman,
-                                              Assert(node.mempool.get()),
-                                              fPruneMode,
-                                              fReindexChainState,
-                                              cache_sizes.block_tree_db,
-                                              cache_sizes.coins_db,
-                                              cache_sizes.coins,
-                                              /*block_tree_db_in_memory=*/false,
-                                              /*coins_db_in_memory=*/false,
-                                              /*shutdown_requested=*/ShutdownRequested,
-                                              /*coins_error_cb=*/[]() {
-                                                  uiInterface.ThreadSafeMessageBox(
-                                                                                   _("Error reading from database, shutting down."),
-                                                                                   "", CClientUIInterface::MSG_ERROR);
-                                              });
+            maybe_load_error = LoadChainstate(chainman, cache_sizes, options);
         } catch (const std::exception& e) {
             LogPrintf("%s\n", e.what());
             maybe_load_error = ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
@@ -1518,16 +1516,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             std::optional<ChainstateLoadVerifyError> maybe_verify_error;
             try {
                 uiInterface.InitMessage(_("Verifying blocks…").translated);
-                auto check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
-                if (chainman.m_blockman.m_have_pruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
+                if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
                     LogPrintfCategory(BCLog::PRUNE, "pruned datadir may not have more than %d blocks; only checking available blocks\n",
                                       MIN_BLOCKS_TO_KEEP);
                 }
-                maybe_verify_error = VerifyLoadedChainstate(chainman,
-                                                            fReset,
-                                                            fReindexChainState,
-                                                            check_blocks,
-                                                            args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL));
+                maybe_verify_error = VerifyLoadedChainstate(chainman, options);
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
                 maybe_verify_error = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
@@ -1554,7 +1547,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         if (!fLoaded && !ShutdownRequested()) {
             // first suggest a reindex
-            if (!fReset) {
+            if (!options.reindex) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
                     strLoadError + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
                     strLoadError.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",

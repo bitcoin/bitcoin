@@ -18,6 +18,7 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <node/blockstorage.h>
+#include <node/caches.h>
 #include <node/chainstate.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
@@ -83,26 +84,18 @@ int main(int argc, char* argv[])
     };
     ChainstateManager chainman{chainman_opts};
 
-    auto rv = node::LoadChainstate(false,
-                                   std::ref(chainman),
-                                   nullptr,
-                                   false,
-                                   false,
-                                   2 << 20,
-                                   2 << 22,
-                                   (450 << 20) - (2 << 20) - (2 << 22),
-                                   false,
-                                   false,
-                                   []() { return false; });
+    node::CacheSizes cache_sizes;
+    cache_sizes.block_tree_db = 2 << 20;
+    cache_sizes.coins_db = 2 << 22;
+    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
+    node::ChainstateLoadOptions options;
+    options.check_interrupt = [] { return false; };
+    auto rv = node::LoadChainstate(chainman, cache_sizes, options);
     if (rv.has_value()) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
     } else {
-        auto maybe_verify_error = node::VerifyLoadedChainstate(std::ref(chainman),
-                                                               false,
-                                                               false,
-                                                               DEFAULT_CHECKBLOCKS,
-                                                               DEFAULT_CHECKLEVEL);
+        auto maybe_verify_error = node::VerifyLoadedChainstate(chainman, options);
         if (maybe_verify_error.has_value()) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;
