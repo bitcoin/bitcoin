@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 {
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, vch, 0};
     BOOST_CHECK_EQUAL(reader.size(), 6U);
     BOOST_CHECK(!reader.empty());
 
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
-    VectorReader new_reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader new_reader{SER_NETWORK, INIT_PROTO_VERSION, vch, 0};
     new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
     BOOST_CHECK_EQUAL(new_reader.size(), 2U);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 {
     std::vector<uint8_t> data{0x82, 0xa7, 0x31};
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0};
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);
