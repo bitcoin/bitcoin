@@ -217,9 +217,6 @@ public:
     //! Check if shutdown requested.
     virtual bool shutdownRequested() = 0;
 
-    //! Get adjusted time.
-    virtual int64_t getAdjustedTime() = 0;
-
     //! Send init message.
     virtual void initMessage(const std::string& message) = 0;
 
