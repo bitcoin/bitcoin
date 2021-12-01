@@ -411,6 +411,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/load.cpp \
   wallet/receive.cpp \
   wallet/rpc/backup.cpp \
+  wallet/rpc/encrypt.cpp \
   wallet/rpc/signmessage.cpp \
   wallet/rpc/util.cpp \
   wallet/rpcwallet.cpp \
