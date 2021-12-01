@@ -212,24 +212,6 @@ bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction &tx, i
     return IsFinalTx(tx, nBlockHeight, nBlockTime);
 }
 
-bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
-{
-    AssertLockHeld(cs_main);
-    assert(lp);
-    // If there are relative lock times then the maxInputBlock will be set
-    // If there are no relative lock times, the LockPoints don't depend on the chain
-    if (lp->maxInputBlock) {
-        // Check whether active_chain is an extension of the block at which the LockPoints
-        // calculation was valid.  If not LockPoints are no longer valid
-        if (!active_chain.Contains(lp->maxInputBlock)) {
-            return false;
-        }
-    }
-
-    // LockPoints still valid
-    return true;
-}
-
 bool CheckSequenceLocks(CBlockIndex* tip,
                         const CCoinsView& coins_view,
                         const CTransaction& tx,
@@ -368,8 +350,39 @@ void CChainState::MaybeUpdateMempoolForReorg(
     // the disconnectpool that were added back and cleans up the mempool state.
     m_mempool->UpdateTransactionsFromBlock(vHashUpdate);
 
+    const auto check_final_and_mature = [this, flags=STANDARD_LOCKTIME_VERIFY_FLAGS](CTxMemPool::txiter it)
+        EXCLUSIVE_LOCKS_REQUIRED(m_mempool->cs, ::cs_main) {
+        bool should_remove = false;
+        AssertLockHeld(m_mempool->cs);
+        AssertLockHeld(::cs_main);
+        const CTransaction& tx = it->GetTx();
+        LockPoints lp = it->GetLockPoints();
+        bool validLP = TestLockPointValidity(m_chain, &lp);
+        CCoinsViewMemPool view_mempool(&CoinsTip(), *m_mempool);
+        if (!CheckFinalTx(m_chain.Tip(), tx, flags)
+            || !CheckSequenceLocks(m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
+            // Note if CheckSequenceLocks fails the LockPoints may still be invalid
+            // So it's critical that we remove the tx and not depend on the LockPoints.
+            should_remove = true;
+        } else if (it->GetSpendsCoinbase()) {
+            for (const CTxIn& txin : tx.vin) {
+                auto it2 = m_mempool->mapTx.find(txin.prevout.hash);
+                if (it2 != m_mempool->mapTx.end())
+                    continue;
+                const Coin &coin = CoinsTip().AccessCoin(txin.prevout);
+                assert(!coin.IsSpent());
+                unsigned int nMemPoolHeight = m_chain.Tip()->nHeight + 1;
+                if (coin.IsSpent() || (coin.IsCoinBase() && ((signed long)nMemPoolHeight) - coin.nHeight < COINBASE_MATURITY)) {
+                    should_remove = true;
+                    break;
+                }
+            }
+        }
+        return should_remove;
+    };
+
     // We also need to remove any now-immature transactions
-    m_mempool->removeForReorg(*this, STANDARD_LOCKTIME_VERIFY_FLAGS);
+    m_mempool->removeForReorg(m_chain, check_final_and_mature);
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(
         *m_mempool,
