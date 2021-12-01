@@ -117,8 +117,8 @@ bool fDiscover = true;
 bool fListen = true;
 bool g_relay_txes = !DEFAULT_BLOCKSONLY;
 RecursiveMutex cs_mapLocalHost;
-std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
-static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
+std::map<CNetAddr, LocalServiceInfo> mapLocalHost TS_ITCOIN_GUARDED_BY(cs_mapLocalHost);
+static bool vfLimited[NET_MAX] TS_ITCOIN_GUARDED_BY(cs_mapLocalHost) = {};
 std::string strSubVersion;
 
 void CConnman::AddAddrFetch(const std::string& strDest)
@@ -805,7 +805,7 @@ void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
     CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, header, 0, hdr};
 }
 
-size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
+size_t CConnman::SocketSendData(CNode *pnode) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
 {
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
@@ -2254,7 +2254,7 @@ void CConnman::ThreadMessageHandler()
 
         WAIT_LOCK(mutexMsgProc, lock);
         if (!fMoreWork) {
-            condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this]() EXCLUSIVE_LOCKS_REQUIRED(mutexMsgProc) { return fMsgProcWake; });
+            condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(mutexMsgProc) { return fMsgProcWake; });
         }
         fMsgProcWake = false;
     }

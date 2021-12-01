@@ -488,7 +488,7 @@ public:
 class CTxMemPool
 {
 private:
-    uint32_t nCheckFrequency GUARDED_BY(cs); //!< Value n means that n times in 2^32 we check.
+    uint32_t nCheckFrequency TS_ITCOIN_GUARDED_BY(cs); //!< Value n means that n times in 2^32 we check.
     std::atomic<unsigned int> nTransactionsUpdated; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator;
 
@@ -506,9 +506,9 @@ private:
     // is added or removed from the mempool for any reason.
     mutable uint64_t m_sequence_number{1};
 
-    void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void trackPackageRemoved(const CFeeRate& rate) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool m_is_loaded GUARDED_BY(cs){false};
+    bool m_is_loaded TS_ITCOIN_GUARDED_BY(cs){false};
 
 public:
 
@@ -574,30 +574,30 @@ public:
      * the mempool is consistent with the new chain tip and fully populated.
      */
     mutable RecursiveMutex cs;
-    indexed_transaction_set mapTx GUARDED_BY(cs);
+    indexed_transaction_set mapTx TS_ITCOIN_GUARDED_BY(cs);
 
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
-    std::vector<std::pair<uint256, txiter>> vTxHashes GUARDED_BY(cs); //!< All tx witness hashes/entries in mapTx, in random order
+    std::vector<std::pair<uint256, txiter>> vTxHashes TS_ITCOIN_GUARDED_BY(cs); //!< All tx witness hashes/entries in mapTx, in random order
 
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
 
-    uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    uint64_t CalculateDescendantMaximum(txiter entry) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
 
-    void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void UpdateChild(txiter entry, txiter child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateParent(txiter entry, txiter parent, bool add) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateChild(txiter entry, txiter child, bool add) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Track locally submitted transactions to periodically retry initial broadcast.
      */
-    std::set<uint256> m_unbroadcast_txids GUARDED_BY(cs);
+    std::set<uint256> m_unbroadcast_txids TS_ITCOIN_GUARDED_BY(cs);
 
 public:
-    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
+    indirectmap<COutPoint, const CTransaction*> mapNextTx TS_ITCOIN_GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas;
 
     /** Create a new CTxMemPool.
@@ -620,16 +620,16 @@ public:
     // Note that addUnchecked is ONLY called from ATMP outside of tests
     // and any other callers may break wallet's in-mempool tracking (due to
     // lack of CValidationInterface::TransactionAddedToMempool callbacks).
-    void addUnchecked(const CTxMemPoolEntry& entry, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void addUnchecked(const CTxMemPoolEntry& entry, bool validFeeEstimate = true) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
-    void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeConflicts(const CTransaction& tx) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void clear();
-    void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
+    void _clear() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
     void queryHashes(std::vector<uint256>& vtxid) const;
     bool isSpent(const COutPoint& outpoint) const;
@@ -639,21 +639,21 @@ public:
      * Check that none of this transactions inputs are in the mempool, and thus
      * the tx is not dependent on other mempool transactions to be included in a block.
      */
-    bool HasNoInputsOf(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool HasNoInputsOf(const CTransaction& tx) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
-    void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ClearPrioritisation(const uint256& hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Get the transaction in the pool that spends the same prevout */
-    const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    const CTransaction* GetConflictTx(const COutPoint& prevout) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Returns an iterator to the given hash, if found */
-    Optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    Optional<txiter> GetIter(const uint256& txid) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Translate a set of hashes into a set of pool iterators to avoid repeated lookups */
-    setEntries GetIterSet(const std::set<uint256>& hashes) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    setEntries GetIterSet(const std::set<uint256>& hashes) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
@@ -662,7 +662,7 @@ public:
      *  Set updateDescendants to true when removing a tx that was in a block, so
      *  that any in-mempool descendants have their ancestor state updated.
      */
-    void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** When adding transactions from a disconnected block back to the mempool,
      *  new mempool entries may have children in the mempool (which is generally
@@ -673,7 +673,7 @@ public:
      *  for).  Note: vHashesToUpdate should be the set of transactions from the
      *  disconnected block that have been accepted back into the mempool.
      */
-    void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     /** Try to calculate all in-mempool ancestors of entry.
      *  (these are all calculated including the tx itself)
@@ -685,12 +685,12 @@ public:
      *  fSearchForParents = whether to search a tx's vin for in-mempool parents, or
      *    look up parents from mapLinks. Must be true for entries not in the mempool
      */
-    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Populate setDescendants with all in-mempool descendants of hash.
      *  Assumes that setDescendants includes all in-mempool descendants of anything
      *  already in it.  */
-    void CalculateDescendants(txiter it, setEntries& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void CalculateDescendants(txiter it, setEntries& setDescendants) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
@@ -704,10 +704,10 @@ public:
       *  pvNoSpendsRemaining, if set, will be populated with the list of outpoints
       *  which are not in mempool which no longer have any spends in this mempool.
       */
-    void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
-    int Expire(std::chrono::seconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int Expire(std::chrono::seconds time) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Calculate the ancestor and descendant count for the given transaction.
@@ -727,7 +727,7 @@ public:
         return mapTx.size();
     }
 
-    uint64_t GetTotalTxSize() const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    uint64_t GetTotalTxSize() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);
         return totalTxSize;
@@ -744,7 +744,7 @@ public:
     bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
 
     CTransactionRef get(const uint256& hash) const;
-    txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    txiter get_iter_from_wtxid(const uint256& wtxid) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
@@ -775,18 +775,18 @@ public:
     }
 
     /** Returns whether a txid is in the unbroadcast set */
-    bool IsUnbroadcastTx(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    bool IsUnbroadcastTx(const uint256& txid) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);
         return m_unbroadcast_txids.count(txid) != 0;
     }
 
     /** Guards this internal counter for external reporting */
-    uint64_t GetAndIncrementSequence() const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    uint64_t GetAndIncrementSequence() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs) {
         return m_sequence_number++;
     }
 
-    uint64_t GetSequence() const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    uint64_t GetSequence() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs) {
         return m_sequence_number;
     }
 
@@ -806,17 +806,17 @@ private:
      */
     void UpdateForDescendants(txiter updateIt,
             cacheMap &cachedDescendants,
-            const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
+            const std::set<uint256> &setExclude) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
-    void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */
-    void UpdateEntryForAncestors(txiter it, const setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateEntryForAncestors(txiter it, const setEntries &setAncestors) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** For each transaction being removed, update ancestors and any direct children.
       * If updateDescendants is true, then also update in-mempool descendants'
       * ancestor state. */
-    void UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Sever link between specified transaction and direct children. */
-    void UpdateChildrenForRemoval(txiter entry) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateChildrenForRemoval(txiter entry) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Before calling removeUnchecked for a given transaction,
      *  UpdateForRemoveFromMempool must be called on the entire (dependent) set
@@ -826,7 +826,7 @@ private:
      *  transactions in a chain before we've updated all the state for the
      *  removal.
      */
-    void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeUnchecked(txiter entry, MemPoolRemovalReason reason) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 public:
     /** EpochGuard: RAII-style guard for using epoch-based graph traversal algorithms.
      *     When walking ancestors or descendants, we generally want to avoid
@@ -855,7 +855,7 @@ public:
     };
     // N.B. GetFreshEpoch modifies mutable state via the EpochGuard construction
     // (and later destruction)
-    EpochGuard GetFreshEpoch() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    EpochGuard GetFreshEpoch() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** visited marks a CTxMemPoolEntry as having been traversed
      * during the lifetime of the most recently created EpochGuard
@@ -865,14 +865,14 @@ public:
      * triggered.
      *
      */
-    bool visited(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    bool visited(txiter it) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs) {
         assert(m_has_epoch_guard);
         bool ret = it->m_epoch >= m_epoch;
         it->m_epoch = std::max(it->m_epoch, m_epoch);
         return ret;
     }
 
-    bool visited(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    bool visited(Optional<txiter> it) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs) {
         assert(m_has_epoch_guard);
         return !it || visited(*it);
     }

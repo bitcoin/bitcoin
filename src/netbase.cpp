@@ -31,8 +31,8 @@
 
 // Settings
 static Mutex g_proxyinfo_mutex;
-static proxyType proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);
-static proxyType nameProxy GUARDED_BY(g_proxyinfo_mutex);
+static proxyType proxyInfo[NET_MAX] TS_ITCOIN_GUARDED_BY(g_proxyinfo_mutex);
+static proxyType nameProxy TS_ITCOIN_GUARDED_BY(g_proxyinfo_mutex);
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = DEFAULT_NAME_LOOKUP;
 

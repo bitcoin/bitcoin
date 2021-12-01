@@ -59,7 +59,7 @@ struct FailingCheck {
 
 struct UniqueCheck {
     static Mutex m;
-    static std::unordered_multiset<size_t> results GUARDED_BY(m);
+    static std::unordered_multiset<size_t> results TS_ITCOIN_GUARDED_BY(m);
     size_t check_id;
     UniqueCheck(size_t check_id_in) : check_id(check_id_in){};
     UniqueCheck() : check_id(0){};

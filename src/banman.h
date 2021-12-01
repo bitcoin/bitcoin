@@ -87,12 +87,12 @@ private:
     void SweepBanned();
 
     RecursiveMutex m_cs_banned;
-    banmap_t m_banned GUARDED_BY(m_cs_banned);
-    bool m_is_dirty GUARDED_BY(m_cs_banned);
+    banmap_t m_banned TS_ITCOIN_GUARDED_BY(m_cs_banned);
+    bool m_is_dirty TS_ITCOIN_GUARDED_BY(m_cs_banned);
     CClientUIInterface* m_client_interface = nullptr;
     CBanDB m_ban_db;
     const int64_t m_default_ban_time;
-    CRollingBloomFilter m_discouraged GUARDED_BY(m_cs_banned) {50000, 0.000001};
+    CRollingBloomFilter m_discouraged TS_ITCOIN_GUARDED_BY(m_cs_banned) {50000, 0.000001};
 };
 
 #endif

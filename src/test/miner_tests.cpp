@@ -25,8 +25,8 @@
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
-    void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
-    bool TestSequenceLocks(const CTransaction& tx, int flags) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs)
+    void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
+    bool TestSequenceLocks(const CTransaction& tx, int flags) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs)
     {
         return CheckSequenceLocks(*m_node.mempool, tx, flags);
     }
@@ -81,7 +81,7 @@ constexpr static struct {
     {2, 0xbbbeb305}, {2, 0xfe1c810a},
 };
 
-static CBlockIndex CreateBlockIndex(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static CBlockIndex CreateBlockIndex(int nHeight) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CBlockIndex index;
     index.nHeight = nHeight;

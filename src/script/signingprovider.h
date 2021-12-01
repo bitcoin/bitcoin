@@ -71,7 +71,7 @@ protected:
      * Map may be empty if the provider has another source of keys, like an
      * encrypted store.
      */
-    KeyMap mapKeys GUARDED_BY(cs_KeyStore);
+    KeyMap mapKeys TS_ITCOIN_GUARDED_BY(cs_KeyStore);
 
     /**
      * Map of script id to scripts known by the signing provider.
@@ -113,9 +113,9 @@ protected:
      * setWatchOnly, is not automatically considered to belong to the wallet if
      * it can't be solved and signed for.
      */
-    ScriptMap mapScripts GUARDED_BY(cs_KeyStore);
+    ScriptMap mapScripts TS_ITCOIN_GUARDED_BY(cs_KeyStore);
 
-    void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
 public:
     mutable RecursiveMutex cs_KeyStore;

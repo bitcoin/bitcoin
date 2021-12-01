@@ -72,14 +72,14 @@ public:
     * @param[in]   pto             The node which we are sending messages to.
     * @return                      True if there is more work to be done
     */
-    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
+    bool SendMessages(CNode* pto) override TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
-    void ConsiderEviction(CNode& pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void ConsiderEviction(CNode& pto, int64_t time_in_seconds) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound */
     void CheckForStaleTipAndEvictPeers();
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
-    void EvictExtraOutboundPeers(int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void EvictExtraOutboundPeers(int64_t time_in_seconds) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) const;
 
@@ -122,7 +122,7 @@ private:
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode);
 
-    void ProcessOrphanTx(std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+    void ProcessOrphanTx(std::set<uint256>& orphan_work_set) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
     /** Process a single headers message from a peer. */
     void ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHeader>& headers, bool via_compact_block);
 
@@ -132,7 +132,7 @@ private:
      *  peer. The announcement parameters are decided in PeerManager and then
      *  passed to TxRequestTracker. */
     void AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -140,7 +140,7 @@ private:
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
-    TxRequestTracker m_txrequest GUARDED_BY(::cs_main);
+    TxRequestTracker m_txrequest TS_ITCOIN_GUARDED_BY(::cs_main);
 
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
 };
@@ -156,6 +156,6 @@ struct CNodeStateStats {
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 
 /** Relay transaction to every node */
-void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_NET_PROCESSING_H

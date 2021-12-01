@@ -777,7 +777,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     // deadlock during the sync and simulates a new block notification happening
     // as soon as possible.
     addtx_count = 0;
-    auto handler = HandleLoadWallet([&](std::unique_ptr<interfaces::Wallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->wallet()->cs_wallet) {
+    auto handler = HandleLoadWallet([&](std::unique_ptr<interfaces::Wallet> wallet) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet->wallet()->cs_wallet) {
             BOOST_CHECK(rescan_completed);
             m_coinbase_txns.push_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
             block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));

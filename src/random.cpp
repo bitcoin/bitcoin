@@ -360,12 +360,12 @@ class RNGState {
      * observe the RNG's state, fresh entropy is always mixed when
      * GetStrongRandBytes is called.
      */
-    unsigned char m_state[32] GUARDED_BY(m_mutex) = {0};
-    uint64_t m_counter GUARDED_BY(m_mutex) = 0;
-    bool m_strongly_seeded GUARDED_BY(m_mutex) = false;
+    unsigned char m_state[32] TS_ITCOIN_GUARDED_BY(m_mutex) = {0};
+    uint64_t m_counter TS_ITCOIN_GUARDED_BY(m_mutex) = 0;
+    bool m_strongly_seeded TS_ITCOIN_GUARDED_BY(m_mutex) = false;
 
     Mutex m_events_mutex;
-    CSHA256 m_events_hasher GUARDED_BY(m_events_mutex);
+    CSHA256 m_events_hasher TS_ITCOIN_GUARDED_BY(m_events_mutex);
 
 public:
     RNGState() noexcept

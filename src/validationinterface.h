@@ -58,7 +58,7 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
  *     });
  *     promise.get_future().wait();
  */
-void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
+void SyncWithValidationInterfaceQueue() TS_ITCOIN_LOCKS_EXCLUDED(cs_main);
 
 /**
  * Implement this to subscribe to events generated in validation

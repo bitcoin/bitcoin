@@ -13,9 +13,9 @@
 #include <vector>
 
 static Mutex g_warnings_mutex;
-static bilingual_str g_misc_warnings GUARDED_BY(g_warnings_mutex);
-static bool fLargeWorkForkFound GUARDED_BY(g_warnings_mutex) = false;
-static bool fLargeWorkInvalidChainFound GUARDED_BY(g_warnings_mutex) = false;
+static bilingual_str g_misc_warnings TS_ITCOIN_GUARDED_BY(g_warnings_mutex);
+static bool fLargeWorkForkFound TS_ITCOIN_GUARDED_BY(g_warnings_mutex) = false;
+static bool fLargeWorkInvalidChainFound TS_ITCOIN_GUARDED_BY(g_warnings_mutex) = false;
 
 void SetMiscWarning(const bilingual_str& warning)
 {

@@ -329,7 +329,7 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& chainparams);
 
 static void LimitMempoolSize(CTxMemPool& pool, size_t limit, std::chrono::seconds age)
-    EXCLUSIVE_LOCKS_REQUIRED(pool.cs, ::cs_main)
+    TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pool.cs, ::cs_main)
 {
     int expired = pool.Expire(GetTime<std::chrono::seconds>() - age);
     if (expired != 0) {
@@ -342,7 +342,7 @@ static void LimitMempoolSize(CTxMemPool& pool, size_t limit, std::chrono::second
         ::ChainstateActive().CoinsTip().Uncache(removed);
 }
 
-static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static bool IsCurrentForFeeEstimation() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     if (::ChainstateActive().IsInitialBlockDownload())
@@ -367,7 +367,7 @@ static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
  * and instead just erase from the mempool as needed.
  */
 
-static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransactions& disconnectpool, bool fAddToMempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs)
+static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransactions& disconnectpool, bool fAddToMempool) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(mempool.cs);
@@ -410,7 +410,7 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
 // were somehow broken and returning the wrong scriptPubKeys
 static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& view, const CTxMemPool& pool,
-                 unsigned int flags, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+                 unsigned int flags, PrecomputedTransactionData& txdata) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
     // pool.cs should be locked already, but go ahead and re-take the lock here
@@ -476,7 +476,7 @@ public:
     };
 
     // Single transaction acceptance
-    bool AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
     // All the intermediate state that gets passed between the various levels
@@ -501,22 +501,22 @@ private:
     // Looks up inputs, calculates feerate, considers replacement, evaluates
     // package limits, etc. As this function can be invoked for "free" by a peer,
     // only tests that are fast should be done here (to avoid CPU DoS).
-    bool PreChecks(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+    bool PreChecks(ATMPArgs& args, Workspace& ws) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Run the script checks using our policy flags. As this can be slow, we should
     // only invoke this on transactions that have otherwise passed policy checks.
-    bool PolicyScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool PolicyScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData& txdata) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Re-run the script checks, using consensus flags, and try to cache the
     // result in the scriptcache. This should be done after
     // PolicyScriptChecks(). This requires that all inputs either be in our
     // utxo set or in the mempool.
-    bool ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData &txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, PrecomputedTransactionData &txdata) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Try to add the transaction to the mempool, removing any conflicts first.
     // Returns true if the transaction is in the mempool after any size
     // limiting is performed, false otherwise.
-    bool Finalize(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+    bool Finalize(ATMPArgs& args, Workspace& ws) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Compare a package's feerate against minimum allowed.
     bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state)
@@ -1061,7 +1061,7 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
 /** (try to) add transaction to memory pool with a specified acceptance time **/
 static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
                         int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, bool test_accept, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool bypass_limits, bool test_accept, CAmount* fee_out=nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
     MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, plTxnReplaced, bypass_limits, coins_to_uncache, test_accept, fee_out };
@@ -1334,7 +1334,7 @@ static void AlertNotify(const std::string& strMessage)
 #endif
 }
 
-static void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void CheckForkWarningConditions() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     // Before we get past initial download, we cannot reliably alert about forks
@@ -1375,7 +1375,7 @@ static void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     }
 }
 
-static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     // If we are on a fork that is sufficiently large, set a warning flag
@@ -1409,7 +1409,7 @@ static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip) E
 }
 
 // Called both upon regular invalid block discovery *and* InvalidateBlock
-void static InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void static InvalidChainFound(CBlockIndex* pindexNew) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
         pindexBestInvalid = pindexNew;
@@ -1513,7 +1513,7 @@ void InitScriptExecutionCache() {
  *
  * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
  */
-bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (tx.IsCoinBase()) return true;
 
@@ -1825,7 +1825,7 @@ void ThreadScriptCheck(int worker_num) {
     scriptcheckqueue.Thread();
 }
 
-VersionBitsCache versionbitscache GUARDED_BY(cs_main);
+VersionBitsCache versionbitscache TS_ITCOIN_GUARDED_BY(cs_main);
 
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
@@ -1867,7 +1867,7 @@ public:
     }
 };
 
-static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS] GUARDED_BY(cs_main);
+static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS] TS_ITCOIN_GUARDED_BY(cs_main);
 
 // 0.13.0 was shipped with a segwit deployment defined for testnet, but not for
 // mainnet. We no longer need to support disabling the segwit deployment
@@ -1878,7 +1878,7 @@ static bool IsScriptWitnessEnabled(const Consensus::Params& params)
     return params.SegwitHeight != std::numeric_limits<int>::max();
 }
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
     unsigned int flags = SCRIPT_VERIFY_NONE;
@@ -2442,7 +2442,7 @@ static void AppendWarning(bilingual_str& res, const bilingual_str& warn)
 
 /** Check warning conditions and do some notifications on new chain tip set. */
 static void UpdateTip(CTxMemPool& mempool, const CBlockIndex* pindexNew, const CChainParams& chainParams)
-    EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     // New best block
     mempool.AddTransactionsUpdated(1);
@@ -2834,7 +2834,7 @@ static SynchronizationState GetSynchronizationState(bool init)
     return SynchronizationState::INIT_DOWNLOAD;
 }
 
-static bool NotifyHeaderTip() LOCKS_EXCLUDED(cs_main) {
+static bool NotifyHeaderTip() TS_ITCOIN_LOCKS_EXCLUDED(cs_main) {
     bool fNotify = false;
     bool fInitialBlockDownload = false;
     static CBlockIndex* pindexHeaderOld = nullptr;
@@ -2856,7 +2856,7 @@ static bool NotifyHeaderTip() LOCKS_EXCLUDED(cs_main) {
     return fNotify;
 }
 
-static void LimitValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main) {
+static void LimitValidationInterfaceQueue() TS_ITCOIN_LOCKS_EXCLUDED(cs_main) {
     AssertLockNotHeld(cs_main);
 
     if (GetMainSignals().CallbacksPending() > 10) {
@@ -3466,7 +3466,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 }
 
 //! Returns last CBlockIndex* that is a checkpoint
-static CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
@@ -3490,7 +3490,7 @@ static CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOC
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
@@ -4100,7 +4100,7 @@ bool BlockManager::LoadBlockIndex(
     CBlockTreeDB& blocktree,
     std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
 {
-    if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }))
+    if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }))
         return false;
 
     // Calculate nChainWork
@@ -4161,7 +4161,7 @@ void BlockManager::Unload() {
     m_block_index.clear();
 }
 
-bool static LoadBlockIndexDB(ChainstateManager& chainman, const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool static LoadBlockIndexDB(ChainstateManager& chainman, const CChainParams& chainparams) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (!chainman.m_blockman.LoadBlockIndex(
             chainparams.GetConsensus(), *pblocktree,

@@ -16,7 +16,7 @@
 #include <warnings.h>
 
 static Mutex g_timeoffset_mutex;
-static int64_t nTimeOffset GUARDED_BY(g_timeoffset_mutex) = 0;
+static int64_t nTimeOffset TS_ITCOIN_GUARDED_BY(g_timeoffset_mutex) = 0;
 
 /**
  * "Never go to sea with two chronometers; take one or three."

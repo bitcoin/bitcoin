@@ -67,7 +67,7 @@ public:
     size_t EstimateSize() const override;
 
     //! Dynamically alter the underlying leveldb cache size.
-    void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void ResizeCache(size_t new_cache_size) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */

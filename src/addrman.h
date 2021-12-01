@@ -200,31 +200,31 @@ private:
     static constexpr uint8_t INCOMPATIBILITY_BASE = 32;
 
     //! last used nId
-    int nIdCount GUARDED_BY(cs);
+    int nIdCount TS_ITCOIN_GUARDED_BY(cs);
 
     //! table with information about all nIds
-    std::map<int, CAddrInfo> mapInfo GUARDED_BY(cs);
+    std::map<int, CAddrInfo> mapInfo TS_ITCOIN_GUARDED_BY(cs);
 
     //! find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr GUARDED_BY(cs);
+    std::map<CNetAddr, int> mapAddr TS_ITCOIN_GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
-    std::vector<int> vRandom GUARDED_BY(cs);
+    std::vector<int> vRandom TS_ITCOIN_GUARDED_BY(cs);
 
     // number of "tried" entries
-    int nTried GUARDED_BY(cs);
+    int nTried TS_ITCOIN_GUARDED_BY(cs);
 
     //! list of "tried" buckets
-    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
+    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] TS_ITCOIN_GUARDED_BY(cs);
 
     //! number of (unique) "new" entries
-    int nNew GUARDED_BY(cs);
+    int nNew TS_ITCOIN_GUARDED_BY(cs);
 
     //! list of "new" buckets
-    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
+    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] TS_ITCOIN_GUARDED_BY(cs);
 
     //! last time Good was called (memory only)
-    int64_t nLastGood GUARDED_BY(cs);
+    int64_t nLastGood TS_ITCOIN_GUARDED_BY(cs);
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
@@ -237,55 +237,55 @@ protected:
     FastRandomContext insecure_rand;
 
     //! Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Move an entry from the "new" table(s) to the "tried" table
-    void MakeTried(CAddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void MakeTried(CAddrInfo& info, int nId) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Delete an entry. It must not be in tried, and have refcount 0.
-    void Delete(int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Delete(int nId) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Clear a position in a "new" table. This is the only place where entries are actually deleted.
-    void ClearNew(int nUBucket, int nUBucketPos) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ClearNew(int nUBucket, int nUBucketPos) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Mark an entry "good", possibly moving it from "new" to "tried".
-    void Good_(const CService &addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Good_(const CService &addr, bool test_before_evict, int64_t time) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Add an entry to the "new" table.
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Mark an entry as attempted to connect.
-    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
-    CAddrInfo Select_(bool newOnly) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CAddrInfo Select_(bool newOnly) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
-    void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ResolveCollisions_() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Return a random to-be-evicted tried table address.
-    CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CAddrInfo SelectTriedCollision_() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
-    int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int Check_() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 #endif
 
     //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr, size_t max_addresses, size_t max_pct) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void GetAddr_(std::vector<CAddress> &vAddr, size_t max_addresses, size_t max_pct) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Mark an entry as currently-connected-to.
-    void Connected_(const CService &addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Connected_(const CService &addr, int64_t nTime) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Update an entry's service bits.
-    void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SetServices_(const CService &addr, ServiceFlags nServices) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
     // Compressed IP->ASN mapping, loaded from a file when a node starts.

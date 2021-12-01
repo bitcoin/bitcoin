@@ -84,7 +84,7 @@ WalletTxStatus MakeWalletTxStatus(CWallet& wallet, const CWalletTx& wtx)
 WalletTxOut MakeWalletTxOut(CWallet& wallet,
     const CWalletTx& wtx,
     int n,
-    int depth) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+    int depth) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     WalletTxOut result;
     result.txout = wtx.tx->vout[n];

@@ -9,7 +9,7 @@
 #include <univalue.h>
 
 
-static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
+static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& pool) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     LockPoints lp;
     pool.addUnchecked(CTxMemPoolEntry(tx, fee, /* time */ 0, /* height */ 1, /* spendsCoinbase */ false, /* sigOpCost */ 4, lp));

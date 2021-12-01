@@ -474,14 +474,14 @@ private:
     // Network usage totals
     RecursiveMutex cs_totalBytesRecv;
     RecursiveMutex cs_totalBytesSent;
-    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv) {0};
-    uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
+    uint64_t nTotalBytesRecv TS_ITCOIN_GUARDED_BY(cs_totalBytesRecv) {0};
+    uint64_t nTotalBytesSent TS_ITCOIN_GUARDED_BY(cs_totalBytesSent) {0};
 
     // outbound limit & stats
-    uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent);
-    uint64_t nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent);
-    uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
-    uint64_t nMaxOutboundTimeframe GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundTotalBytesSentInCycle TS_ITCOIN_GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundCycleStartTime TS_ITCOIN_GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundLimit TS_ITCOIN_GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundTimeframe TS_ITCOIN_GUARDED_BY(cs_totalBytesSent);
 
     // P2P timeout in seconds
     int64_t m_peer_connect_timeout;
@@ -497,11 +497,11 @@ private:
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
     CAddrMan addrman;
-    std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
+    std::deque<std::string> m_addr_fetches TS_ITCOIN_GUARDED_BY(m_addr_fetches_mutex);
     RecursiveMutex m_addr_fetches_mutex;
-    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
+    std::vector<std::string> vAddedNodes TS_ITCOIN_GUARDED_BY(cs_vAddedNodes);
     RecursiveMutex cs_vAddedNodes;
-    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
+    std::vector<CNode*> vNodes TS_ITCOIN_GUARDED_BY(cs_vNodes);
     std::list<CNode*> vNodesDisconnected;
     mutable RecursiveMutex cs_vNodes;
     std::atomic<NodeId> nLastNodeId{0};
@@ -579,7 +579,7 @@ private:
     const uint64_t nSeed0, nSeed1;
 
     /** flag for waking the message processor. */
-    bool fMsgProcWake GUARDED_BY(mutexMsgProc);
+    bool fMsgProcWake TS_ITCOIN_GUARDED_BY(mutexMsgProc);
 
     std::condition_variable condMsgProc;
     Mutex mutexMsgProc;
@@ -680,7 +680,7 @@ struct LocalServiceInfo {
 };
 
 extern RecursiveMutex cs_mapLocalHost;
-extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
+extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost TS_ITCOIN_GUARDED_BY(cs_mapLocalHost);
 
 extern const std::string NET_MESSAGE_COMMAND_OTHER;
 typedef std::map<std::string, uint64_t> mapMsgCmdSize; //command, total bytes
@@ -848,22 +848,22 @@ public:
 
     // socket
     std::atomic<ServiceFlags> nServices{NODE_NONE};
-    SOCKET hSocket GUARDED_BY(cs_hSocket);
+    SOCKET hSocket TS_ITCOIN_GUARDED_BY(cs_hSocket);
     size_t nSendSize{0}; // total size of all vSendMsg entries
     size_t nSendOffset{0}; // offset inside the first vSendMsg already sent
-    uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
-    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
+    uint64_t nSendBytes TS_ITCOIN_GUARDED_BY(cs_vSend){0};
+    std::deque<std::vector<unsigned char>> vSendMsg TS_ITCOIN_GUARDED_BY(cs_vSend);
     RecursiveMutex cs_vSend;
     RecursiveMutex cs_hSocket;
     RecursiveMutex cs_vRecv;
 
     RecursiveMutex cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
+    std::list<CNetMessage> vProcessMsg TS_ITCOIN_GUARDED_BY(cs_vProcessMsg);
     size_t nProcessQueueSize{0};
 
     RecursiveMutex cs_sendProcessing;
 
-    uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
+    uint64_t nRecvBytes TS_ITCOIN_GUARDED_BY(cs_vRecv){0};
 
     std::atomic<int64_t> nLastSend{0};
     std::atomic<int64_t> nLastRecv{0};
@@ -879,7 +879,7 @@ public:
      * cleanSubVer is a sanitized string of the user agent byte array we read
      * from the wire. This cleaned string can safely be logged or displayed.
      */
-    std::string cleanSubVer GUARDED_BY(cs_SubVer){};
+    std::string cleanSubVer TS_ITCOIN_GUARDED_BY(cs_SubVer){};
     bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permissionFlags, permission);
@@ -979,7 +979,7 @@ public:
 
 protected:
     mapMsgCmdSize mapSendBytesPerMsgCmd;
-    mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
+    mapMsgCmdSize mapRecvBytesPerMsgCmd TS_ITCOIN_GUARDED_BY(cs_vRecv);
 
 public:
     uint256 hashContinue;
@@ -989,13 +989,13 @@ public:
     std::vector<CAddress> vAddrToSend;
     std::unique_ptr<CRollingBloomFilter> m_addr_known{nullptr};
     bool fGetAddr{false};
-    std::chrono::microseconds m_next_addr_send GUARDED_BY(cs_sendProcessing){0};
-    std::chrono::microseconds m_next_local_addr_send GUARDED_BY(cs_sendProcessing){0};
+    std::chrono::microseconds m_next_addr_send TS_ITCOIN_GUARDED_BY(cs_sendProcessing){0};
+    std::chrono::microseconds m_next_local_addr_send TS_ITCOIN_GUARDED_BY(cs_sendProcessing){0};
 
     // List of block ids we still have announce.
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
-    std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
+    std::vector<uint256> vInventoryBlockToSend TS_ITCOIN_GUARDED_BY(cs_inventory);
     Mutex cs_inventory;
 
     struct TxRelay {
@@ -1004,23 +1004,23 @@ public:
         // a) it allows us to not relay tx invs before receiving the peer's version message
         // b) the peer may tell us in its version message that we should not relay tx invs
         //    unless it loads a bloom filter.
-        bool fRelayTxes GUARDED_BY(cs_filter){false};
-        std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter) GUARDED_BY(cs_filter){nullptr};
+        bool fRelayTxes TS_ITCOIN_GUARDED_BY(cs_filter){false};
+        std::unique_ptr<CBloomFilter> pfilter TS_ITCOIN_PT_GUARDED_BY(cs_filter) TS_ITCOIN_GUARDED_BY(cs_filter){nullptr};
 
         mutable RecursiveMutex cs_tx_inventory;
-        CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_tx_inventory){50000, 0.000001};
+        CRollingBloomFilter filterInventoryKnown TS_ITCOIN_GUARDED_BY(cs_tx_inventory){50000, 0.000001};
         // Set of transaction ids we still have to announce.
         // They are sorted by the mempool before relay, so the order is not important.
         std::set<uint256> setInventoryTxToSend;
         // Used for BIP35 mempool sending
-        bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
+        bool fSendMempool TS_ITCOIN_GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
         std::atomic<std::chrono::seconds> m_last_mempool_req{std::chrono::seconds{0}};
         std::chrono::microseconds nNextInvSend{0};
 
         RecursiveMutex cs_feeFilter;
         // Minimum fee rate with which to filter inv's to this node
-        CAmount minFeeFilter GUARDED_BY(cs_feeFilter){0};
+        CAmount minFeeFilter TS_ITCOIN_GUARDED_BY(cs_feeFilter){0};
         CAmount lastSentFeeFilter{0};
         int64_t nextSendTimeFeeFilter{0};
     };
@@ -1029,7 +1029,7 @@ public:
     std::unique_ptr<TxRelay> m_tx_relay;
 
     // Used for headers announcements - unfiltered blocks to relay
-    std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
+    std::vector<uint256> vBlockHashesToAnnounce TS_ITCOIN_GUARDED_BY(cs_inventory);
 
     /** UNIX epoch time of the last block received from this peer that we had
      * not yet seen (e.g. not already received from another peer), that passed
@@ -1089,10 +1089,10 @@ private:
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
     mutable RecursiveMutex cs_addrName;
-    std::string addrName GUARDED_BY(cs_addrName);
+    std::string addrName TS_ITCOIN_GUARDED_BY(cs_addrName);
 
     // Our address, as reported by the peer
-    CService addrLocal GUARDED_BY(cs_addrLocal);
+    CService addrLocal TS_ITCOIN_GUARDED_BY(cs_addrLocal);
     mutable RecursiveMutex cs_addrLocal;
 
     //! Whether this peer connected via our Tor onion service.

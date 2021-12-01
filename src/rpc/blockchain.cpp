@@ -53,7 +53,7 @@ struct CUpdatedBlock
 
 static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
-static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
+static CUpdatedBlock latestblock TS_ITCOIN_GUARDED_BY(cs_blockchange);
 
 NodeContext& EnsureNodeContext(const util::Ref& context)
 {
@@ -267,9 +267,9 @@ static RPCHelpMan waitfornewblock()
         WAIT_LOCK(cs_blockchange, lock);
         block = latestblock;
         if(timeout)
-            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&block]() EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height != block.height || latestblock.hash != block.hash || !IsRPCRunning(); });
+            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&block]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height != block.height || latestblock.hash != block.hash || !IsRPCRunning(); });
         else
-            cond_blockchange.wait(lock, [&block]() EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height != block.height || latestblock.hash != block.hash || !IsRPCRunning(); });
+            cond_blockchange.wait(lock, [&block]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height != block.height || latestblock.hash != block.hash || !IsRPCRunning(); });
         block = latestblock;
     }
     UniValue ret(UniValue::VOBJ);
@@ -312,9 +312,9 @@ static RPCHelpMan waitforblock()
     {
         WAIT_LOCK(cs_blockchange, lock);
         if(timeout)
-            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&hash]() EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.hash == hash || !IsRPCRunning();});
+            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&hash]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.hash == hash || !IsRPCRunning();});
         else
-            cond_blockchange.wait(lock, [&hash]() EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.hash == hash || !IsRPCRunning(); });
+            cond_blockchange.wait(lock, [&hash]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.hash == hash || !IsRPCRunning(); });
         block = latestblock;
     }
 
@@ -359,9 +359,9 @@ static RPCHelpMan waitforblockheight()
     {
         WAIT_LOCK(cs_blockchange, lock);
         if(timeout)
-            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&height]() EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height >= height || !IsRPCRunning();});
+            cond_blockchange.wait_for(lock, std::chrono::milliseconds(timeout), [&height]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height >= height || !IsRPCRunning();});
         else
-            cond_blockchange.wait(lock, [&height]() EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height >= height || !IsRPCRunning(); });
+            cond_blockchange.wait(lock, [&height]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height >= height || !IsRPCRunning(); });
         block = latestblock;
     }
     UniValue ret(UniValue::VOBJ);
@@ -438,7 +438,7 @@ static std::vector<RPCResult> MempoolEntryDescription() { return {
     RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
 };}
 
-static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     AssertLockHeld(pool.cs);
 
@@ -1193,7 +1193,7 @@ static RPCHelpMan verifychain()
     };
 }
 
-static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For buried deployments.
     // A buried deployment is one where the height of the activation has been hardcoded into
@@ -1211,7 +1211,7 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
     softforks.pushKV(name, rv);
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For BIP9 deployments.
     // Deployments that are never active are hidden.

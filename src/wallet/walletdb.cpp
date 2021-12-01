@@ -268,7 +268,7 @@ public:
 
 static bool
 ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
-             CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+             CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     try {
         // Unserialize

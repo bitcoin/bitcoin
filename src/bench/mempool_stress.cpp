@@ -9,7 +9,7 @@
 
 #include <vector>
 
-static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
+static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
@@ -82,7 +82,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
     TestingSetup test_setup;
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
-    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
+    bench.run([&]() TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS {
         for (auto& tx : ordered_coins) {
             AddTx(tx, pool);
         }

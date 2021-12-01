@@ -16,7 +16,7 @@
 
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
-static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, std::vector<bilingual_str>& errors) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     if (wallet.HasWalletSpend(wtx.GetHash())) {
         errors.push_back(Untranslated("Transaction has descendants in the wallet"));

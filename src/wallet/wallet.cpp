@@ -53,8 +53,8 @@ const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static RecursiveMutex cs_wallets;
-static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
-static std::list<LoadWalletFn> g_load_wallet_fns GUARDED_BY(cs_wallets);
+static std::vector<std::shared_ptr<CWallet>> vpwallets TS_ITCOIN_GUARDED_BY(cs_wallets);
+static std::list<LoadWalletFn> g_load_wallet_fns TS_ITCOIN_GUARDED_BY(cs_wallets);
 
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
 {
@@ -155,8 +155,8 @@ std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
 static Mutex g_loading_wallet_mutex;
 static Mutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
-static std::set<std::string> g_loading_wallet_set GUARDED_BY(g_loading_wallet_mutex);
-static std::set<std::string> g_unloading_wallet_set GUARDED_BY(g_wallet_release_mutex);
+static std::set<std::string> g_loading_wallet_set TS_ITCOIN_GUARDED_BY(g_loading_wallet_mutex);
+static std::set<std::string> g_unloading_wallet_set TS_ITCOIN_GUARDED_BY(g_wallet_release_mutex);
 
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)

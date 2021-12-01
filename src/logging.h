@@ -64,9 +64,9 @@ namespace BCLog {
     private:
         mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
-        FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
-        std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
-        bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
+        FILE* m_fileout TS_ITCOIN_GUARDED_BY(m_cs) = nullptr;
+        std::list<std::string> m_msgs_before_open TS_ITCOIN_GUARDED_BY(m_cs);
+        bool m_buffering TS_ITCOIN_GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -81,7 +81,7 @@ namespace BCLog {
         std::string LogTimestampStr(const std::string& str);
 
         /** Slots that connect to the print signal */
-        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
+        std::list<std::function<void(const std::string&)>> m_print_callbacks TS_ITCOIN_GUARDED_BY(m_cs) {};
 
     public:
         bool m_print_to_console = false;

@@ -159,17 +159,17 @@ struct COrphanTx {
 RecursiveMutex g_cs_orphans;
 /** Map from txid to orphan transaction record. Limited by
  *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
-std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
+std::map<uint256, COrphanTx> mapOrphanTransactions TS_ITCOIN_GUARDED_BY(g_cs_orphans);
 /** Index from wtxid into the mapOrphanTransactions to lookup orphan
  *  transactions using their witness ids. */
-std::map<uint256, std::map<uint256, COrphanTx>::iterator> g_orphans_by_wtxid GUARDED_BY(g_cs_orphans);
+std::map<uint256, std::map<uint256, COrphanTx>::iterator> g_orphans_by_wtxid TS_ITCOIN_GUARDED_BY(g_cs_orphans);
 
 void EraseOrphansFor(NodeId peer);
 
 // Internal stuff
 namespace {
     /** Number of nodes with fSyncStarted. */
-    int nSyncStarted GUARDED_BY(cs_main) = 0;
+    int nSyncStarted TS_ITCOIN_GUARDED_BY(cs_main) = 0;
 
     /**
      * Sources of received blocks, saved to be able punish them when processing
@@ -177,7 +177,7 @@ namespace {
      * Set mapBlockSource[hash].second to false if the node should not be
      * punished if the block is invalid.
      */
-    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
+    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource TS_ITCOIN_GUARDED_BY(cs_main);
 
     /**
      * Filter for transactions that were recently rejected by
@@ -213,8 +213,8 @@ namespace {
      *
      * Memory used: 1.3 MB
      */
-    std::unique_ptr<CRollingBloomFilter> recentRejects GUARDED_BY(cs_main);
-    uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
+    std::unique_ptr<CRollingBloomFilter> recentRejects TS_ITCOIN_GUARDED_BY(cs_main);
+    uint256 hashRecentRejectsChainTip TS_ITCOIN_GUARDED_BY(cs_main);
 
     /*
      * Filter for transactions that have been recently confirmed.
@@ -222,7 +222,7 @@ namespace {
      * confirnmed.
      */
     Mutex g_cs_recent_confirmed_transactions;
-    std::unique_ptr<CRollingBloomFilter> g_recent_confirmed_transactions GUARDED_BY(g_cs_recent_confirmed_transactions);
+    std::unique_ptr<CRollingBloomFilter> g_recent_confirmed_transactions TS_ITCOIN_GUARDED_BY(g_cs_recent_confirmed_transactions);
 
     /** Blocks that are in flight, and that are in the queue to be downloaded. */
     struct QueuedBlock {
@@ -231,31 +231,31 @@ namespace {
         bool fValidatedHeaders;                                  //!< Whether this block has validated headers at the time of request.
         std::unique_ptr<PartiallyDownloadedBlock> partialBlock;  //!< Optional, used for CMPCTBLOCK downloads
     };
-    std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight GUARDED_BY(cs_main);
+    std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight TS_ITCOIN_GUARDED_BY(cs_main);
 
     /** Stack of nodes which we have set to announce using compact blocks */
-    std::list<NodeId> lNodesAnnouncingHeaderAndIDs GUARDED_BY(cs_main);
+    std::list<NodeId> lNodesAnnouncingHeaderAndIDs TS_ITCOIN_GUARDED_BY(cs_main);
 
     /** Number of preferable block download peers. */
-    int nPreferredDownload GUARDED_BY(cs_main) = 0;
+    int nPreferredDownload TS_ITCOIN_GUARDED_BY(cs_main) = 0;
 
     /** Number of peers from which we're downloading blocks. */
-    int nPeersWithValidatedDownloads GUARDED_BY(cs_main) = 0;
+    int nPeersWithValidatedDownloads TS_ITCOIN_GUARDED_BY(cs_main) = 0;
 
     /** Number of peers with wtxid relay. */
-    int g_wtxid_relay_peers GUARDED_BY(cs_main) = 0;
+    int g_wtxid_relay_peers TS_ITCOIN_GUARDED_BY(cs_main) = 0;
 
     /** Number of outbound peers with m_chain_sync.m_protect. */
-    int g_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
+    int g_outbound_peers_with_protect_from_disconnect TS_ITCOIN_GUARDED_BY(cs_main) = 0;
 
     /** When our tip was last updated. */
     std::atomic<int64_t> g_last_tip_update(0);
 
     /** Relay map (txid or wtxid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
-    MapRelay mapRelay GUARDED_BY(cs_main);
+    MapRelay mapRelay TS_ITCOIN_GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
-    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
+    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration TS_ITCOIN_GUARDED_BY(cs_main);
 
     struct IteratorComparator
     {
@@ -268,16 +268,16 @@ namespace {
 
     /** Index from the parents' COutPoint into the mapOrphanTransactions. Used
      *  to remove orphan transactions from the mapOrphanTransactions */
-    std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
+    std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev TS_ITCOIN_GUARDED_BY(g_cs_orphans);
     /** Orphan transactions in vector for quick random eviction */
-    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans);
+    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list TS_ITCOIN_GUARDED_BY(g_cs_orphans);
 
     /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
      *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
      *  these are kept in a ring buffer */
-    static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
+    static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact TS_ITCOIN_GUARDED_BY(g_cs_orphans);
     /** Offset into vExtraTxnForCompact to insert the next tx */
-    static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
+    static size_t vExtraTxnForCompactIt TS_ITCOIN_GUARDED_BY(g_cs_orphans) = 0;
 } // namespace
 
 namespace {
@@ -416,9 +416,9 @@ struct CNodeState {
 };
 
 /** Map maintaining per-node state. */
-static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
+static std::map<NodeId, CNodeState> mapNodeState TS_ITCOIN_GUARDED_BY(cs_main);
 
-static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+static CNodeState *State(NodeId pnode) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     std::map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
     if (it == mapNodeState.end())
         return nullptr;
@@ -442,17 +442,17 @@ struct Peer {
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
     /** Accumulated misbehavior score for this peer */
-    int m_misbehavior_score GUARDED_BY(m_misbehavior_mutex){0};
+    int m_misbehavior_score TS_ITCOIN_GUARDED_BY(m_misbehavior_mutex){0};
     /** Whether this peer should be disconnected and marked as discouraged (unless it has the noban permission). */
-    bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
+    bool m_should_discourage TS_ITCOIN_GUARDED_BY(m_misbehavior_mutex){false};
 
     /** Set of txids to reconsider once their parent transactions have been accepted **/
-    std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
+    std::set<uint256> m_orphan_work_set TS_ITCOIN_GUARDED_BY(g_cs_orphans);
 
     /** Protects m_getdata_requests **/
     Mutex m_getdata_requests_mutex;
     /** Work queue of items requested by this peer **/
-    std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
+    std::deque<CInv> m_getdata_requests TS_ITCOIN_GUARDED_BY(m_getdata_requests_mutex);
 
     Peer(NodeId id) : m_id(id) {}
 };
@@ -466,7 +466,7 @@ using PeerRef = std::shared_ptr<Peer>;
  * their own locks.
  */
 Mutex g_peer_mutex;
-static std::map<NodeId, PeerRef> g_peer_map GUARDED_BY(g_peer_mutex);
+static std::map<NodeId, PeerRef> g_peer_map TS_ITCOIN_GUARDED_BY(g_peer_mutex);
 
 /** Get a shared pointer to the Peer object.
  *  May return nullptr if the Peer object can't be found. */
@@ -477,7 +477,7 @@ static PeerRef GetPeerRef(NodeId id)
     return it != g_peer_map.end() ? it->second : nullptr;
 }
 
-static void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void UpdatePreferredDownload(const CNode& node, CNodeState* state) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     nPreferredDownload -= state->fPreferredDownload;
 
@@ -515,7 +515,7 @@ static void PushNodeVersion(CNode& pnode, CConnman& connman, int64_t nTime)
 
 // Returns a bool indicating whether we requested this block.
 // Also used if a block was /not/ received and timed out or started with another peer
-static bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+static bool MarkBlockAsReceived(const uint256& hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
     if (itInFlight != mapBlocksInFlight.end()) {
         CNodeState *state = State(itInFlight->second.first);
@@ -540,7 +540,7 @@ static bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs
 
 // returns false, still setting pit, if the block was already in flight from the same peer
 // pit will only be valid as long as the same cs_main lock is being held
-static bool MarkBlockAsInFlight(CTxMemPool& mempool, NodeId nodeid, const uint256& hash, const CBlockIndex* pindex = nullptr, std::list<QueuedBlock>::iterator** pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+static bool MarkBlockAsInFlight(CTxMemPool& mempool, NodeId nodeid, const uint256& hash, const CBlockIndex* pindex = nullptr, std::list<QueuedBlock>::iterator** pit = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
 
@@ -574,7 +574,7 @@ static bool MarkBlockAsInFlight(CTxMemPool& mempool, NodeId nodeid, const uint25
 }
 
 /** Check whether the last unknown block a peer advertised is not yet known. */
-static void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+static void ProcessBlockAvailability(NodeId nodeid) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
 
@@ -590,7 +590,7 @@ static void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_
 }
 
 /** Update tracking information about which blocks a peer is assumed to have. */
-static void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+static void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
 
@@ -614,7 +614,7 @@ static void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIV
  * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
  * removing the first element if necessary.
  */
-static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connman) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     CNodeState* nodestate = State(nodeid);
@@ -630,7 +630,7 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connma
                 return;
             }
         }
-        connman.ForNode(nodeid, [&connman](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        connman.ForNode(nodeid, [&connman](CNode* pfrom) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
             uint64_t nCMPCTBLOCKVersion = (pfrom->GetLocalServices() & NODE_WITNESS) ? 2 : 1;
             if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
@@ -649,7 +649,7 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connma
     }
 }
 
-static bool TipMayBeStale(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static bool TipMayBeStale(const Consensus::Params &consensusParams) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     if (g_last_tip_update == 0) {
@@ -658,12 +658,12 @@ static bool TipMayBeStale(const Consensus::Params &consensusParams) EXCLUSIVE_LO
     return g_last_tip_update < GetTime() - consensusParams.nPowTargetSpacing * 3 && mapBlocksInFlight.empty();
 }
 
-static bool CanDirectFetch(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static bool CanDirectFetch(const Consensus::Params &consensusParams) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     return ::ChainActive().Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 20;
 }
 
-static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (state->pindexBestKnownBlock && pindex == state->pindexBestKnownBlock->GetAncestor(pindex->nHeight))
         return true;
@@ -674,7 +674,7 @@ static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIV
 
 /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
  *  at most count entries. */
-static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (count == 0)
         return;
@@ -915,7 +915,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
 // mapOrphanTransactions
 //
 
-static void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+static void AddToCompactExtraTransactions(const CTransactionRef& tx) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
 {
     size_t max_extra_txn = gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
@@ -926,7 +926,7 @@ static void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_L
     vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
 }
 
-bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
 {
     const uint256& hash = tx->GetHash();
     if (mapOrphanTransactions.count(hash))
@@ -962,7 +962,7 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
     return true;
 }
 
-int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+int static EraseOrphanTx(uint256 hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
 {
     std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
     if (it == mapOrphanTransactions.end())
@@ -1151,7 +1151,7 @@ bool PeerManager::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& s
 // active chain if they are no more than a month older (both in time, and in
 // best equivalent proof of work) than the best header chain we know about and
 // we fully-validated them at some point.
-static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Params& consensusParams) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     if (::ChainActive().Contains(pindex)) return true;
@@ -1267,10 +1267,10 @@ void PeerManager::BlockDisconnected(const std::shared_ptr<const CBlock> &block, 
 
 // All of the following cache a recent block, and are protected by cs_most_recent_block
 static RecursiveMutex cs_most_recent_block;
-static std::shared_ptr<const CBlock> most_recent_block GUARDED_BY(cs_most_recent_block);
-static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block GUARDED_BY(cs_most_recent_block);
-static uint256 most_recent_block_hash GUARDED_BY(cs_most_recent_block);
-static bool fWitnessesPresentInMostRecentCompactBlock GUARDED_BY(cs_most_recent_block);
+static std::shared_ptr<const CBlock> most_recent_block TS_ITCOIN_GUARDED_BY(cs_most_recent_block);
+static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block TS_ITCOIN_GUARDED_BY(cs_most_recent_block);
+static uint256 most_recent_block_hash TS_ITCOIN_GUARDED_BY(cs_most_recent_block);
+static bool fWitnessesPresentInMostRecentCompactBlock TS_ITCOIN_GUARDED_BY(cs_most_recent_block);
 
 /**
  * Maintain state about the best-seen block and fast-announce a compact block
@@ -1298,7 +1298,7 @@ void PeerManager::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_
         fWitnessesPresentInMostRecentCompactBlock = fWitnessEnabled;
     }
 
-    m_connman.ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    m_connman.ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
 
         // TODO: Avoid the repeated-serialization here
@@ -1394,7 +1394,7 @@ void PeerManager::BlockChecked(const CBlock& block, const BlockValidationState& 
 //
 
 
-bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     assert(recentRejects);
     if (::ChainActive().Tip()->GetBlockHash() != hashRecentRejectsChainTip) {
@@ -1425,14 +1425,14 @@ bool static AlreadyHaveTx(const GenTxid& gtxid, const CTxMemPool& mempool) EXCLU
     return recentRejects->contains(hash) || mempool.exists(gtxid);
 }
 
-bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool static AlreadyHaveBlock(const uint256& block_hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     return LookupBlockIndex(block_hash) != nullptr;
 }
 
 void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman)
 {
-    connman.ForEachNode([&txid, &wtxid](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    connman.ForEachNode([&txid, &wtxid](CNode* pnode) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
 
         CNodeState* state = State(pnode->GetId());
@@ -1639,7 +1639,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
 }
 
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
-static CTransactionRef FindTxForGetData(const CTxMemPool& mempool, const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
+static CTransactionRef FindTxForGetData(const CTxMemPool& mempool, const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) TS_ITCOIN_LOCKS_EXCLUDED(cs_main)
 {
     auto txinfo = mempool.info(gtxid);
     if (txinfo.tx) {
@@ -1666,7 +1666,7 @@ static CTransactionRef FindTxForGetData(const CTxMemPool& mempool, const CNode& 
     return {};
 }
 
-void static ProcessGetData(CNode& pfrom, Peer& peer, const CChainParams& chainparams, CConnman& connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(!cs_main, peer.m_getdata_requests_mutex)
+void static ProcessGetData(CNode& pfrom, Peer& peer, const CChainParams& chainparams, CConnman& connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs_main, peer.m_getdata_requests_mutex)
 {
     AssertLockNotHeld(cs_main);
 
@@ -1760,7 +1760,7 @@ void static ProcessGetData(CNode& pfrom, Peer& peer, const CChainParams& chainpa
     }
 }
 
-static uint32_t GetFetchFlags(const CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+static uint32_t GetFetchFlags(const CNode& pfrom) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     uint32_t nFetchFlags = 0;
     if ((pfrom.GetLocalServices() & NODE_WITNESS) && State(pfrom.GetId())->fHaveWitness) {
         nFetchFlags |= MSG_WITNESS_FLAG;
@@ -3952,7 +3952,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
         NodeId worst_peer = -1;
         int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
 
-        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        m_connman.ForEachNode([&](CNode* pnode) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
 
             // Ignore non-outbound peers, or nodes marked for disconnect already
@@ -3969,7 +3969,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
             }
         });
         if (worst_peer != -1) {
-            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode* pnode) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
                 AssertLockHeld(::cs_main);
 
                 // Only disconnect a peer that has been connected to us for

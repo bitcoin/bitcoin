@@ -470,11 +470,11 @@ public:
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache = true) const;
-    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
-    // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
+    // TODO: Remove "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
+    // annotation "TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
+    // annotation "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
     // having to resolve the issue of member access into incomplete type CWallet.
-    CAmount GetAvailableCredit(bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
+    CAmount GetAvailableCredit(bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) const TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache = true) const;
     CAmount GetChange() const;
 
@@ -503,13 +503,13 @@ public:
     // Pass this transaction to node for mempool insertion and relay to peers if flag set to true
     bool SubmitMemoryPoolAndRelay(std::string& err_string, bool relay);
 
-    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
-    // "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
+    // TODO: Remove "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
+    // annotation "TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
+    // "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
     // resolve the issue of member access into incomplete type CWallet. Note
     // that we still have the runtime check "AssertLockHeld(pwallet->cs_wallet)"
     // in place.
-    std::set<uint256> GetConflicts() const NO_THREAD_SAFETY_ANALYSIS;
+    std::set<uint256> GetConflicts() const TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS;
 
     /**
      * Return depth of transaction in blockchain:
@@ -517,13 +517,13 @@ public:
      *  0  : in memory pool, waiting to be included in a block
      * >=1 : this many blocks deep in the main chain
      */
-    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
-    // "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
+    // TODO: Remove "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
+    // annotation "TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
+    // "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
     // resolve the issue of member access into incomplete type CWallet. Note
     // that we still have the runtime check "AssertLockHeld(pwallet->cs_wallet)"
     // in place.
-    int GetDepthInMainChain() const NO_THREAD_SAFETY_ANALYSIS;
+    int GetDepthInMainChain() const TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS;
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
 
     /**
@@ -633,7 +633,7 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
 class CWallet final : public WalletStorage, public interfaces::Chain::Notifications
 {
 private:
-    CKeyingMaterial vMasterKey GUARDED_BY(cs_wallet);
+    CKeyingMaterial vMasterKey TS_ITCOIN_GUARDED_BY(cs_wallet);
 
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys = false);
@@ -645,7 +645,7 @@ private:
     friend class WalletRescanReserver;
 
     //! the current wallet version: clients below this version are not able to load the wallet
-    int nWalletVersion GUARDED_BY(cs_wallet){FEATURE_BASE};
+    int nWalletVersion TS_ITCOIN_GUARDED_BY(cs_wallet){FEATURE_BASE};
 
     int64_t nNextResend = 0;
     bool fBroadcastTransactions = false;
@@ -658,9 +658,9 @@ private:
      * mutated transactions where the mutant gets mined).
      */
     typedef std::multimap<COutPoint, uint256> TxSpends;
-    TxSpends mapTxSpends GUARDED_BY(cs_wallet);
-    void AddToSpends(const COutPoint& outpoint, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void AddToSpends(const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    TxSpends mapTxSpends TS_ITCOIN_GUARDED_BY(cs_wallet);
+    void AddToSpends(const COutPoint& outpoint, const uint256& wtxid) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AddToSpends(const uint256& wtxid) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Add a transaction to the wallet, or update it.  pIndex and posInBlock should
@@ -675,19 +675,19 @@ private:
      * Abandoned state should probably be more carefully tracked via different
      * posInBlock signals or by checking mempool presence when necessary.
      */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool fUpdate) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx);
 
     /* Mark a transaction's inputs dirty, thus forcing the outputs to be recomputed */
-    void MarkInputsDirty(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void MarkInputsDirty(const CTransactionRef& tx) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected/ScanForWalletTransactions.
      * Should be called with non-zero block_hash and posInBlock if this is for a transaction that is included in a block. */
-    void SyncTransaction(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SyncTransaction(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool update_tx = true) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::atomic<uint64_t> m_wallet_flags{0};
 
@@ -715,14 +715,14 @@ private:
      * Processed hash is a pointer on node's tip and doesn't imply that the wallet
      * has scanned sequentially all blocks up to this one.
      */
-    uint256 m_last_block_processed GUARDED_BY(cs_wallet);
+    uint256 m_last_block_processed TS_ITCOIN_GUARDED_BY(cs_wallet);
 
     /* Height of last block processed is used by wallet to know depth of transactions
      * without relying on Chain interface beyond asynchronous updates. For safety, we
      * initialize it to -1. Height is a pointer on node's tip and doesn't imply
      * that the wallet has scanned sequentially all blocks up to this one.
      */
-    int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
+    int m_last_block_processed_height TS_ITCOIN_GUARDED_BY(cs_wallet) = -1;
 
     std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
     std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
@@ -755,7 +755,7 @@ public:
      * if they are not ours
      */
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
-                    const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+                    const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Get a name for this wallet for logging/debugging purposes.
      */
@@ -786,18 +786,18 @@ public:
     /** Interface to assert chain access */
     bool HaveChain() const { return m_chain ? true : false; }
 
-    std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
+    std::map<uint256, CWalletTx> mapWallet TS_ITCOIN_GUARDED_BY(cs_wallet);
 
     typedef std::multimap<int64_t, CWalletTx*> TxItems;
     TxItems wtxOrdered;
 
-    int64_t nOrderPosNext GUARDED_BY(cs_wallet) = 0;
+    int64_t nOrderPosNext TS_ITCOIN_GUARDED_BY(cs_wallet) = 0;
     uint64_t nAccountingEntryNumber = 0;
 
-    std::map<CTxDestination, CAddressBookData> m_address_book GUARDED_BY(cs_wallet);
-    const CAddressBookData* FindAddressBookEntry(const CTxDestination&, bool allow_change = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::map<CTxDestination, CAddressBookData> m_address_book TS_ITCOIN_GUARDED_BY(cs_wallet);
+    const CAddressBookData* FindAddressBookEntry(const CTxDestination&, bool allow_change = false) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    std::set<COutPoint> setLockedCoins GUARDED_BY(cs_wallet);
+    std::set<COutPoint> setLockedCoins TS_ITCOIN_GUARDED_BY(cs_wallet);
 
     /** Registered interfaces::Chain::Notifications handler. */
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
@@ -805,26 +805,26 @@ public:
     /** Interface for accessing chain state. */
     interfaces::Chain& chain() const { assert(m_chain); return *m_chain; }
 
-    const CWalletTx* GetWalletTx(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    const CWalletTx* GetWalletTx(const uint256& hash) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! check whether we support the named feature
-    bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return IsFeatureSupported(nWalletVersion, wf); }
+    bool CanSupportFeature(enum WalletFeature wf) const override TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return IsFeatureSupported(nWalletVersion, wf); }
 
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
      */
-    std::map<CTxDestination, std::vector<COutput>> ListCoins() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::map<CTxDestination, std::vector<COutput>> ListCoins() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Find non-change parent output.
      */
-    const CTxOut& FindNonChangeParentOutput(const CTransaction& tx, int output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    const CTxOut& FindNonChangeParentOutput(const CTransaction& tx, int output) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Shuffle and select coins until nTargetValue is reached while avoiding
@@ -835,19 +835,19 @@ public:
     bool SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
         std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
 
-    bool IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsSpent(const uint256& hash, unsigned int n) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // Whether this or any known UTXO with the same single key has been spent.
-    bool IsSpentKey(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsSpentKey(const uint256& hash, unsigned int n) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const size_t max_ancestors) const;
 
-    bool IsLockedCoin(uint256 hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void LockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsLockedCoin(uint256 hash, unsigned int n) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LockCoin(const COutPoint& output) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void UnlockCoin(const COutPoint& output) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void UnlockAllCoins() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void ListLockedCoins(std::vector<COutPoint>& vOutpts) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /*
      * Rescan abort properties
@@ -859,26 +859,26 @@ public:
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
-    void UpgradeKeyMetadata() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void UpgradeKeyMetadata() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; return true; }
+    bool LoadMinVersion(int nVersion) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; return true; }
 
     /**
      * Adds a destination data tuple to the store, and saves it to disk
      * When adding new fields, take care to consider how DelAddressBook should handle it!
      */
-    bool AddDestData(WalletBatch& batch, const CTxDestination& dest, const std::string& key, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddDestData(WalletBatch& batch, const CTxDestination& dest, const std::string& key, const std::string& value) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Erases a destination data tuple in the store and on disk
-    bool EraseDestData(WalletBatch& batch, const CTxDestination& dest, const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool EraseDestData(WalletBatch& batch, const CTxDestination& dest, const std::string& key) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Adds a destination data tuple to the store, without saving it to disk
-    void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Look up a destination data tuple in the store, return true if found false otherwise
-    bool GetDestData(const CTxDestination& dest, const std::string& key, std::string* value) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool GetDestData(const CTxDestination& dest, const std::string& key, std::string* value) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Get all destination values matching a prefix.
-    std::vector<std::string> GetDestValues(const std::string& prefix) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::vector<std::string> GetDestValues(const std::string& prefix) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
-    int64_t nRelockTime GUARDED_BY(cs_wallet){0};
+    int64_t nRelockTime TS_ITCOIN_GUARDED_BY(cs_wallet){0};
 
     // Used to prevent concurrent calls to walletpassphrase RPC.
     Mutex m_unlock_mutex;
@@ -886,14 +886,14 @@ public:
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
 
-    void GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     unsigned int ComputeTimeSmart(const CWalletTx& wtx) const;
 
     /**
      * Increment the next transaction order id
      * @return next transaction order id
      */
-    int64_t IncOrderPosNext(WalletBatch *batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    int64_t IncOrderPosNext(WalletBatch *batch = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     DBErrors ReorderTransactions();
 
     void MarkDirty();
@@ -907,7 +907,7 @@ public:
     using UpdateWalletTxFn = std::function<bool(CWalletTx& wtx, bool new_tx)>;
 
     CWalletTx* AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true);
-    bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override;
     void blockConnected(const CBlock& block, int height) override;
     void blockDisconnected(const CBlock& block, int height) override;
@@ -931,7 +931,7 @@ public:
     };
     ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, Optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate);
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
-    void ReacceptWalletTransactions() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void ReacceptWalletTransactions() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ResendWalletTransactions();
     struct Balance {
         CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
@@ -952,7 +952,7 @@ public:
      */
     bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
     // Fetch the inputs and sign with SIGHASH_ALL.
-    bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SignTransaction(CMutableTransaction& tx) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     // Sign the tx given the input coins and sighash.
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
@@ -1003,10 +1003,10 @@ public:
     bool DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, bool use_max_sig = false) const;
     bool DummySignInput(CTxIn &tx_in, const CTxOut &txout, bool use_max_sig = false) const;
 
-    bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     CFeeRate m_pay_tx_fee{DEFAULT_PAY_TX_FEE};
     unsigned int m_confirm_target{DEFAULT_TX_CONFIRM_TARGET};
@@ -1033,12 +1033,12 @@ public:
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
-    size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    size_t KeypoolCountExternalKeys() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);
 
     int64_t GetOldestKeyPoolTime() const;
 
-    std::set<std::set<CTxDestination>> GetAddressGroupings() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::set<std::set<CTxDestination>> GetAddressGroupings() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     std::map<CTxDestination, CAmount> GetAddressBalances() const;
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
@@ -1047,25 +1047,25 @@ public:
      * Marks all outputs in each one of the destinations dirty, so their cache is
      * reset and does not return outdated information.
      */
-    void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error);
     bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error);
 
-    isminetype IsMine(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    isminetype IsMine(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    isminetype IsMine(const CTxIn& txin) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    isminetype IsMine(const CTxDestination& dest) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    isminetype IsMine(const CScript& script) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    isminetype IsMine(const CTxIn& txin) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /**
      * Returns amount of debit if the input matches the
      * filter, otherwise returns 0
      */
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
-    isminetype IsMine(const CTxOut& txout) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    isminetype IsMine(const CTxOut& txout) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;
-    bool IsChange(const CTxOut& txout) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool IsChange(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    CAmount GetChange(const CTxOut& txout) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool IsMine(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsChange(const CTxOut& txout) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsChange(const CScript& script) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    CAmount GetChange(const CTxOut& txout) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsMine(const CTransaction& tx) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
@@ -1076,13 +1076,13 @@ public:
     void chainStateFlushed(const CBlockLocator& loc) override;
 
     DBErrors LoadWallet(bool& fFirstRunRet);
-    DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
     bool DelAddressBook(const CTxDestination& address);
 
-    unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    unsigned int GetKeyPoolSize() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! signify that a particular wallet feature is now used.
     void SetMinVersion(enum WalletFeature, WalletBatch* batch_in = nullptr) override;
@@ -1091,10 +1091,10 @@ public:
     int GetVersion() const { LOCK(cs_wallet); return nWalletVersion; }
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
-    std::set<uint256> GetConflicts(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::set<uint256> GetConflicts(const uint256& txid) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Check if a given transaction has any of its outputs spent by another transaction in the wallet
-    bool HasWalletSpend(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool HasWalletSpend(const uint256& txid) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Flush wallet (bitdb flush)
     void Flush();
@@ -1173,7 +1173,7 @@ public:
      * Obviously holding cs_main/cs_wallet when going into this call may cause
      * deadlock
      */
-    void BlockUntilSyncedToCurrentChain() const EXCLUSIVE_LOCKS_REQUIRED(!::cs_main, !cs_wallet);
+    void BlockUntilSyncedToCurrentChain() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!::cs_main, !cs_wallet);
 
     /** set a single wallet flag */
     void SetWalletFlag(uint64_t flags);
@@ -1240,20 +1240,20 @@ public:
     bool HasEncryptionKeys() const override;
 
     /** Get last block processed height */
-    int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    int GetLastBlockHeight() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
         assert(m_last_block_processed_height >= 0);
         return m_last_block_processed_height;
     };
-    uint256 GetLastBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    uint256 GetLastBlockHash() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
         assert(m_last_block_processed_height >= 0);
         return m_last_block_processed;
     }
     /** Set last block processed height, currently only use in unit test */
-    void SetLastBlockProcessed(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    void SetLastBlockProcessed(int block_height, uint256 block_hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
         m_last_block_processed_height = block_height;
@@ -1279,7 +1279,7 @@ public:
     void LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
-    void SetupDescriptorScriptPubKeyMans() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SetupDescriptorScriptPubKeyMans() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Return the DescriptorScriptPubKeyMan for a WalletDescriptor if it is already in the wallet
     DescriptorScriptPubKeyMan* GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const;
@@ -1332,7 +1332,7 @@ public:
 // Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
 // NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 // be IsAllFromMe).
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
 
 //! Add wallet name to persistent configuration so it will be loaded on startup.

@@ -28,7 +28,7 @@ enum class RBFTransactionState {
  *
  * @return     The rbf state
  */
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 
 #endif // BITCOIN_POLICY_RBF_H

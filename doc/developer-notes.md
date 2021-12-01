@@ -760,7 +760,7 @@ public:
     ...
     mutable RecursiveMutex cs;
     ...
-    void UpdateTransactionsFromBlock(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, cs);
+    void UpdateTransactionsFromBlock(...) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main, cs);
     ...
 }
 
@@ -779,7 +779,7 @@ class ChainstateManager
 {
 public:
     ...
-    bool ProcessNewBlock(...) EXCLUSIVE_LOCKS_REQUIRED(!::cs_main);
+    bool ProcessNewBlock(...) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!::cs_main);
     ...
 }
 
