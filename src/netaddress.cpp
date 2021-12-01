@@ -430,7 +430,7 @@ bool CNetAddr::IsI2P() const { return m_net == NET_I2P; }
 bool CNetAddr::IsCJDNS() const { return m_net == NET_CJDNS; }
 
 /**
- * Check whether this object represents a Yggdrasil address.
+ * Check whether this object represents an Yggdrasil address.
  */
 bool CNetAddr::IsYggdrasil() const { return m_net == NET_YGGDRASIL; }
 

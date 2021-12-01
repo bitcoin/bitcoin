@@ -29,7 +29,7 @@ addnode connect to IPv6
 addnode connect to onion
 addnode connect to generic DNS name
 addnode connect to a CJDNS address
-addnode connect to a Yggdrasil address
+addnode connect to an Yggdrasil address
 
 - Test getnetworkinfo for each node
 
