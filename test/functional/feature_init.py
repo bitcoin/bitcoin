@@ -8,12 +8,12 @@ import time
 import os
 from pathlib import Path
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import SyscoinTestFramework, SkipTest
 from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal
 
 
-class InitStressTest(BitcoinTestFramework):
+class InitStressTest(SyscoinTestFramework):
     """
     Ensure that initialization can be interrupted at a number of points and not impair
     subsequent starts.
