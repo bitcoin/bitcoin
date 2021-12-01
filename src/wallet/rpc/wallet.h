@@ -11,6 +11,4 @@ class CRPCCommand;
 
 Span<const CRPCCommand> GetWalletRPCCommands();
 
-RPCHelpMan getaddressinfo();
-RPCHelpMan signrawtransactionwithwallet();
 #endif // BITCOIN_WALLET_RPC_WALLET_H
