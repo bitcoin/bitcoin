@@ -58,7 +58,7 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
     }
 
     {
-        BanMan ban_man{banlist_file, /* client_interface */ nullptr, /* default_ban_time */ ConsumeBanTimeOffset(fuzzed_data_provider)};
+        BanMan ban_man{banlist_file, /*client_interface=*/nullptr, /*default_ban_time=*/ConsumeBanTimeOffset(fuzzed_data_provider)};
         // The complexity is O(N^2), where N is the input size, because each call
         // might call DumpBanlist (or other methods that are at least linear
         // complexity of the input size).
@@ -105,7 +105,7 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
             SetMockTime(ConsumeTime(fuzzed_data_provider));
             banmap_t banmap;
             ban_man.GetBanned(banmap);
-            BanMan ban_man_read{banlist_file, /* client_interface */ nullptr, /* default_ban_time */ 0};
+            BanMan ban_man_read{banlist_file, /*client_interface=*/nullptr, /*default_ban_time=*/0};
             banmap_t banmap_read;
             ban_man_read.GetBanned(banmap_read);
             assert(banmap == banmap_read);

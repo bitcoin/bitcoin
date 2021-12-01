@@ -190,7 +190,7 @@ void test_init()
     static ECCVerifyHandle handle;
 }
 
-FUZZ_TARGET_INIT_HIDDEN(script_assets_test_minimizer, test_init, /* hidden */ true)
+FUZZ_TARGET_INIT_HIDDEN(script_assets_test_minimizer, test_init, /*hidden=*/true)
 {
     if (buffer.size() < 2 || buffer.back() != '\n' || buffer[buffer.size() - 2] != ',') return;
     const std::string str((const char*)buffer.data(), buffer.size() - 2);

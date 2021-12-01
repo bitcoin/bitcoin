@@ -20,18 +20,18 @@ FUZZ_TARGET(node_eviction)
     std::vector<NodeEvictionCandidate> eviction_candidates;
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         eviction_candidates.push_back({
-            /* id */ fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-            /* nTimeConnected */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            /* m_min_ping_time */ std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
-            /* nLastBlockTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            /* nLastTXTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            /* fRelevantServices */ fuzzed_data_provider.ConsumeBool(),
-            /* fRelayTxes */ fuzzed_data_provider.ConsumeBool(),
-            /* fBloomFilter */ fuzzed_data_provider.ConsumeBool(),
-            /* nKeyedNetGroup */ fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
-            /* prefer_evict */ fuzzed_data_provider.ConsumeBool(),
-            /* m_is_local */ fuzzed_data_provider.ConsumeBool(),
-            /* m_network */ fuzzed_data_provider.PickValueInArray(ALL_NETWORKS),
+            /*id=*/fuzzed_data_provider.ConsumeIntegral<NodeId>(),
+            /*nTimeConnected=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /*m_min_ping_time=*/std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
+            /*nLastBlockTime=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /*nLastTXTime=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /*fRelevantServices=*/fuzzed_data_provider.ConsumeBool(),
+            /*fRelayTxes=*/fuzzed_data_provider.ConsumeBool(),
+            /*fBloomFilter=*/fuzzed_data_provider.ConsumeBool(),
+            /*nKeyedNetGroup=*/fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
+            /*prefer_evict=*/fuzzed_data_provider.ConsumeBool(),
+            /*m_is_local=*/fuzzed_data_provider.ConsumeBool(),
+            /*m_network=*/fuzzed_data_provider.PickValueInArray(ALL_NETWORKS),
         });
     }
     // Make a copy since eviction_candidates may be in some valid but otherwise
