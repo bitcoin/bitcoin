@@ -108,8 +108,6 @@ using kernel::DumpMempool;
 
 using node::CacheSizes;
 using node::CalculateCacheSizes;
-using node::ChainstateLoadVerifyError;
-using node::ChainstateLoadingError;
 using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINTPRIORITY;
 using node::DEFAULT_STOPAFTERBLOCKIMPORT;
@@ -1452,8 +1450,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
         ChainstateManager& chainman = *node.chainman;
 
-        bilingual_str strLoadError;
-
         node::ChainstateLoadOptions options;
         options.mempool = Assert(node.mempool.get());
         options.reindex = node::fReindex;
@@ -1470,87 +1466,38 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         uiInterface.InitMessage(_("Loading block index…").translated);
         const int64_t load_block_index_start_time = GetTimeMillis();
-        std::optional<ChainstateLoadingError> maybe_load_error;
-        try {
-            maybe_load_error = LoadChainstate(chainman, cache_sizes, options);
-        } catch (const std::exception& e) {
-            LogPrintf("%s\n", e.what());
-            maybe_load_error = ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
-        }
-        if (maybe_load_error.has_value()) {
-            switch (maybe_load_error.value()) {
-            case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
-                strLoadError = _("Error loading block database");
-                break;
-            case ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK:
-                // If the loaded chain has a wrong genesis, bail out immediately
-                // (we're likely using a testnet datadir, or the other way around).
-                return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
-            case ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX:
-                strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
-                break;
-            case ChainstateLoadingError::ERROR_LOAD_GENESIS_BLOCK_FAILED:
-                strLoadError = _("Error initializing block database");
-                break;
-            case ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED:
-                return InitError(_("Unsupported chainstate database format found. "
-                                   "Please restart with -reindex-chainstate. This will "
-                                   "rebuild the chainstate database."));
-            case ChainstateLoadingError::ERROR_REPLAYBLOCKS_FAILED:
-                strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
-                break;
-            case ChainstateLoadingError::ERROR_LOADCHAINTIP_FAILED:
-                strLoadError = _("Error initializing block database");
-                break;
-            case ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED:
-                strLoadError = _("Error opening block database");
-                break;
-            case ChainstateLoadingError::ERROR_BLOCKS_WITNESS_INSUFFICIENTLY_VALIDATED:
-                strLoadError = strprintf(_("Witness data for blocks after height %d requires validation. Please restart with -reindex."),
-                                         chainman.GetConsensus().SegwitHeight);
-                break;
-            case ChainstateLoadingError::SHUTDOWN_PROBED:
-                break;
-            }
-        } else {
-            std::optional<ChainstateLoadVerifyError> maybe_verify_error;
+        auto catch_exceptions = [](auto&& f) {
             try {
-                uiInterface.InitMessage(_("Verifying blocks…").translated);
-                if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
-                    LogPrintfCategory(BCLog::PRUNE, "pruned datadir may not have more than %d blocks; only checking available blocks\n",
-                                      MIN_BLOCKS_TO_KEEP);
-                }
-                maybe_verify_error = VerifyLoadedChainstate(chainman, options);
+                return f();
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
-                maybe_verify_error = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
+                return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
             }
-            if (maybe_verify_error.has_value()) {
-                switch (maybe_verify_error.value()) {
-                case ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE:
-                    strLoadError = _("The block database contains a block which appears to be from the future. "
-                                     "This may be due to your computer's date and time being set incorrectly. "
-                                     "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                    break;
-                case ChainstateLoadVerifyError::ERROR_CORRUPTED_BLOCK_DB:
-                    strLoadError = _("Corrupted block database detected");
-                    break;
-                case ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE:
-                    strLoadError = _("Error opening block database");
-                    break;
-                }
-            } else {
+        };
+        auto [status, error] = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
+        if (status == node::ChainstateLoadStatus::SUCCESS) {
+            uiInterface.InitMessage(_("Verifying blocks…").translated);
+            if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
+                LogPrintfCategory(BCLog::PRUNE, "pruned datadir may not have more than %d blocks; only checking available blocks\n",
+                                  MIN_BLOCKS_TO_KEEP);
+            }
+            std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
+            if (status == node::ChainstateLoadStatus::SUCCESS) {
                 fLoaded = true;
                 LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
             }
+        }
+
+        if (status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB) {
+            return InitError(error);
         }
 
         if (!fLoaded && !ShutdownRequested()) {
             // first suggest a reindex
             if (!options.reindex) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
-                    strLoadError + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
-                    strLoadError.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
+                    error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
+                    error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     fReindex = true;
@@ -1560,7 +1507,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     return false;
                 }
             } else {
-                return InitError(strLoadError);
+                return InitError(error);
             }
         }
     }

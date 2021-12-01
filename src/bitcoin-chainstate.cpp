@@ -90,13 +90,13 @@ int main(int argc, char* argv[])
     cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
     node::ChainstateLoadOptions options;
     options.check_interrupt = [] { return false; };
-    auto rv = node::LoadChainstate(chainman, cache_sizes, options);
-    if (rv.has_value()) {
+    auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
+    if (status != node::ChainstateLoadStatus::SUCCESS) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
     } else {
-        auto maybe_verify_error = node::VerifyLoadedChainstate(chainman, options);
-        if (maybe_verify_error.has_value()) {
+        std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
+        if (status != node::ChainstateLoadStatus::SUCCESS) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;
         }
