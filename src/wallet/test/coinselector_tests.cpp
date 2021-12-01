@@ -343,8 +343,10 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(COutPoint(coins.at(0).tx->GetHash(), coins.at(0).i));
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
-        const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
+        auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);
+        result10->ComputeAndSetWaste(coin_selection_params_bnb);
+        BOOST_CHECK(result10->GetWaste() == -68 * 3); // - (long_term_fee * input) * 3coins
     }
 }
 
