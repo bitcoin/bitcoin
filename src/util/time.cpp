@@ -87,6 +87,17 @@ std::optional<int64_t> ParseISO8601DateTime(std::string_view str)
     return int64_t{TicksSinceEpoch<std::chrono::seconds>(tp)};
 }
 
+std::string FormatISO8601Time(int64_t nTime) {
+    struct tm ts;
+    time_t time_val = nTime;
+#ifdef HAVE_GMTIME_R
+    gmtime_r(&time_val, &ts);
+#else
+    gmtime_s(&ts, &time_val);
+#endif
+    return strprintf("%02i:%02i:%02iZ", ts.tm_hour, ts.tm_min, ts.tm_sec);
+}
+
 struct timeval MillisToTimeval(int64_t nTimeout)
 {
     struct timeval timeout;
