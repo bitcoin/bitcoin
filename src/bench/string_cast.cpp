@@ -18,8 +18,9 @@ std::string NumberToString(T Number){
 
 static void int_atoi(benchmark::Bench& bench)
 {
+    int value;
     bench.run([&] {
-        atoi("1");
+        value = atoi("1");
     });
 }
 

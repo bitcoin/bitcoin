@@ -11,15 +11,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(cachemultimap_tests, BasicTestingSetup)
 
-static void DumpMap(const CacheMultiMap<int,int>& cmmap)
-{
-    const CacheMultiMap<int,int>::list_t& listItems = cmmap.GetItemList();
-    for(CacheMultiMap<int,int>::list_cit it = listItems.begin(); it != listItems.end(); ++it) {
-        const CacheItem<int,int>& item = *it;
-        std::cout << item.key << " : " << item.value << std::endl;
-    }
-}
-
 static bool Compare(const CacheMultiMap<int,int>& cmmap1, const CacheMultiMap<int,int>& cmmap2)
 {
     if(cmmap1.GetMaxSize() != cmmap2.GetMaxSize()) {

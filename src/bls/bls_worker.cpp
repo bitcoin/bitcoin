@@ -154,8 +154,8 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
                bool _parallel,
                ctpl::thread_pool& _workerPool,
                DoneCallback _doneCallback) :
-            workerPool(_workerPool),
             parallel(_parallel),
+            workerPool(_workerPool),
             doneCallback(std::move(_doneCallback))
     {
         inputVec = std::make_shared<std::vector<const T*> >(count);
@@ -342,7 +342,7 @@ struct VectorAggregator : public std::enable_shared_from_this<VectorAggregator<T
     bool parallel;
     ctpl::thread_pool& workerPool;
 
-    std::atomic<size_t> doneCount;
+    std::atomic<size_t> doneCount{0};
 
     VectorPtrType result;
     size_t vecSize;
@@ -351,13 +351,12 @@ struct VectorAggregator : public std::enable_shared_from_this<VectorAggregator<T
                      size_t _start, size_t _count,
                      bool _parallel, ctpl::thread_pool& _workerPool,
                      DoneCallback _doneCallback) :
+            doneCallback(std::move(_doneCallback)),
             vecs(_vecs),
-            parallel(_parallel),
             start(_start),
             count(_count),
-            workerPool(_workerPool),
-            doneCallback(std::move(_doneCallback)),
-            doneCount(0)
+            parallel(_parallel),
+            workerPool(_workerPool)
     {
         assert(!vecs.empty());
         vecSize = vecs[0]->size();
@@ -417,7 +416,7 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
 
     ctpl::thread_pool& workerPool;
 
-    size_t batchCount;
+    size_t batchCount{1};
     size_t verifyCount;
 
     std::vector<BatchState> batchStates;
@@ -435,9 +434,8 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
         parallel(_parallel),
         aggregated(_aggregated),
         workerPool(_workerPool),
-        doneCallback(std::move(_doneCallback)),
-        batchCount(1),
-        verifyCount(_vvecs.size())
+        verifyCount(_vvecs.size()),
+        doneCallback(std::move(_doneCallback))
     {
     }
 

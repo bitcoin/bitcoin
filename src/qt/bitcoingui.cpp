@@ -81,8 +81,8 @@ const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle, QWidget* parent) :
     QMainWindow(parent),
     m_node(node),
-    m_network_style(networkStyle),
-    trayIconMenu{new QMenu()}
+    trayIconMenu{new QMenu()},
+    m_network_style(networkStyle)
 {
     GUIUtil::loadTheme(true);
 

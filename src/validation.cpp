@@ -162,8 +162,6 @@ CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
 std::atomic_bool g_is_mempool_loaded{false};
 
-static void CheckBlockIndex(const Consensus::Params& consensusParams);
-
 // Internal stuff
 namespace {
     CBlockIndex* pindexBestInvalid = nullptr;

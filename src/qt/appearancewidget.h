@@ -46,12 +46,12 @@ private:
     Ui::AppearanceWidget* ui;
     QDataWidgetMapper* mapper;
     OptionsModel* model;
-    bool fAcceptChanges;
-    QString prevTheme;
-    int prevScale;
-    GUIUtil::FontFamily prevFontFamily;
-    QFont::Weight prevWeightNormal;
-    QFont::Weight prevWeightBold;
+    bool fAcceptChanges{false};
+    QString prevTheme{GUIUtil::getActiveTheme()};
+    int prevScale{GUIUtil::getFontScale()};
+    GUIUtil::FontFamily prevFontFamily{GUIUtil::getFontFamily()};
+    QFont::Weight prevWeightNormal{GUIUtil::getFontWeightNormal()};
+    QFont::Weight prevWeightBold{GUIUtil::getFontWeightBold()};
 
     void updateWeightSlider(bool fForce = false);
 };

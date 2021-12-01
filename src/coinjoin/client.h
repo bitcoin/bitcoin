@@ -180,14 +180,14 @@ private:
 
     bool fMixing{false};
 
-    int nCachedLastSuccessBlock;
-    int nMinBlocksToWait; // how many blocks to wait for after one successful mixing tx in non-multisession mode
+    int nCachedLastSuccessBlock{0};
+    int nMinBlocksToWait{1}; // how many blocks to wait for after one successful mixing tx in non-multisession mode
     std::string strAutoDenomResult;
 
     CWallet& mixingWallet;
 
     // Keep track of current block height
-    int nCachedBlockHeight;
+    int nCachedBlockHeight{0};
 
     bool WaitForAnotherBlock() const;
 
@@ -195,25 +195,15 @@ private:
     bool CheckAutomaticBackup();
 
 public:
-    int nCachedNumBlocks;    // used for the overview screen
-    bool fCreateAutoBackups; // builtin support for automatic backups
+    int nCachedNumBlocks{std::numeric_limits<int>::max()};    // used for the overview screen
+    bool fCreateAutoBackups{true}; // builtin support for automatic backups
 
     CCoinJoinClientManager() = delete;
     CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
     explicit CCoinJoinClientManager(CWallet& wallet) :
-        vecMasternodesUsed(),
-        deqSessions(),
-        nCachedLastSuccessBlock(0),
-        nMinBlocksToWait(1),
-        strAutoDenomResult(),
-        nCachedBlockHeight(0),
-        nCachedNumBlocks(std::numeric_limits<int>::max()),
-        fCreateAutoBackups(true),
-        mixingWallet(wallet)
-    {
-    }
+        mixingWallet(wallet) {}
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 

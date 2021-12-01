@@ -21,8 +21,8 @@ namespace llmq
 {
 
 CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
-    maxMessagesPerNode(_maxMessagesPerNode),
-    invType(_invType)
+    invType(_invType),
+    maxMessagesPerNode(_maxMessagesPerNode)
 {
 }
 

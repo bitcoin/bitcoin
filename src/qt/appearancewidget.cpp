@@ -20,13 +20,7 @@
 
 AppearanceWidget::AppearanceWidget(QWidget* parent) :
     QWidget(parent),
-    ui(new Ui::AppearanceWidget),
-    fAcceptChanges(false),
-    prevTheme(GUIUtil::getActiveTheme()),
-    prevFontFamily(GUIUtil::getFontFamily()),
-    prevScale(GUIUtil::getFontScale()),
-    prevWeightNormal(GUIUtil::getFontWeightNormal()),
-    prevWeightBold(GUIUtil::getFontWeightBold())
+    ui{new Ui::AppearanceWidget()}
 {
     ui->setupUi(this);
 

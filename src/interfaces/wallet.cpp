@@ -188,7 +188,6 @@ public:
 class WalletImpl : public Wallet
 {
 public:
-    CoinJoinImpl m_coinjoin;
 
     explicit WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_wallet(wallet), m_coinjoin(wallet) {}
 
@@ -592,6 +591,7 @@ public:
     }
 
     std::shared_ptr<CWallet> m_wallet;
+    CoinJoinImpl m_coinjoin;
 };
 
 class WalletClientImpl : public ChainClient
