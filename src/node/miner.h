@@ -80,10 +80,11 @@ struct modifiedentry_iter {
 // This is sufficient to sort an ancestor package in an order that is valid
 // to appear in a block.
 struct CompareTxIterByAncestorCount {
-    bool operator()(const CTxMemPool::txiter &a, const CTxMemPool::txiter &b) const
+    bool operator()(const CTxMemPool::txiter& a, const CTxMemPool::txiter& b) const
     {
-        if (a->GetCountWithAncestors() != b->GetCountWithAncestors())
+        if (a->GetCountWithAncestors() != b->GetCountWithAncestors()) {
             return a->GetCountWithAncestors() < b->GetCountWithAncestors();
+        }
         return CompareIteratorByHash()(a, b);
     }
 };
@@ -143,7 +144,8 @@ private:
 
     // Chain context for the block
     int nHeight;
-    int64_t nLockTimeCutoff;
+    int64_t m_lock_time_cutoff;
+
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
     CChainState& m_chainstate;
