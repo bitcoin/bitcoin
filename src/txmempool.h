@@ -17,7 +17,6 @@
 #include <addressindex.h>
 #include <spentindex.h>
 #include <amount.h>
-#include <chain.h>
 #include <coins.h>
 #include <gsl/pointers.h>
 #include <indirectmap.h>
@@ -31,12 +30,13 @@
 #include <util/epochguard.h>
 #include <util/hasher.h>
 
-#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index_container.hpp>
 
 class CBlockIndex;
+class CChain;
 class CChainState;
 extern RecursiveMutex cs_main;
 
@@ -63,7 +63,7 @@ struct LockPoints {
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
  */
-bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 struct CompareIteratorByHash {
     // SFINAE for T where T is either a pointer type (e.g., a txiter) or a reference_wrapper<T>
