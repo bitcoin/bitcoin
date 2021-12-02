@@ -2051,12 +2051,12 @@ RPCHelpMan listdescriptors()
         }
         spk.pushKV("desc", descriptor);
         spk.pushKV("timestamp", wallet_descriptor.creation_time);
-        const bool active = active_spk_mans.count(desc_spk_man) != 0;
-        spk.pushKV("active", active);
-        const auto& type = wallet_descriptor.descriptor->GetOutputType();
-        if (active && type != std::nullopt) {
-            spk.pushKV("internal", wallet->GetScriptPubKeyMan(true) == desc_spk_man);
+        spk.pushKV("active", active_spk_mans.count(desc_spk_man) != 0);
+        const auto internal = wallet->IsInternalScriptPubKeyMan(desc_spk_man);
+        if (internal.has_value()) {
+            spk.pushKV("internal", *internal);
         }
+        const auto& type = wallet_descriptor.descriptor->GetOutputType();
         if (type != std::nullopt) {
             std::string match = strprintf("/%d'/%s'/4'/0'", BIP32_PURPOSE_FEATURE, Params().ExtCoinType());
             bool is_cj = descriptor.find(match) != std::string::npos;
