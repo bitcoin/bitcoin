@@ -3,6 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
+
+import shutil
+import os
+
 from decimal import Decimal
 
 from test_framework.messages import (
@@ -17,7 +21,7 @@ from test_framework.util import (
 
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 3
         # This test isn't testing txn relay/timing, so set whitelist on the
         # peers for instant txn relay. This speeds up the test run time 2-3x.
         self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
@@ -102,7 +106,7 @@ class ListTransactionsTest(BitcoinTestFramework):
                                 {"txid": txid, "label": "watchonly"})
 
         self.run_rbf_opt_in_test()
-
+        self.run_externally_generated_address_test()
 
     def run_rbf_opt_in_test(self):
         """Test the opt-in-rbf flag for sent and received transactions."""
@@ -216,6 +220,64 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert txid_3b not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
         assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")
+
+    def run_externally_generated_address_test(self):
+        """Test behavior when receiving address is not in the address book."""
+
+        self.log.info("Setup the same wallet on two nodes")
+        # refill keypool otherwise the second node wouldn't recognize addresses generated on the first nodes
+        self.nodes[0].keypoolrefill(1000)
+        self.stop_nodes()
+        wallet0 = os.path.join(self.nodes[0].datadir, self.chain, self.default_wallet_name, "wallet.dat")
+        wallet2 = os.path.join(self.nodes[2].datadir, self.chain, self.default_wallet_name, "wallet.dat")
+        shutil.copyfile(wallet0, wallet2)
+        self.start_nodes()
+        # reconnect nodes
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(2, 0)
+
+        addr1 = self.nodes[0].getnewaddress("pizza1", 'legacy')
+        addr2 = self.nodes[0].getnewaddress("pizza2", 'p2sh-segwit')
+        addr3 = self.nodes[0].getnewaddress("pizza3", 'bech32')
+
+        self.log.info("Send to externally generated addresses")
+        # send to an address beyond the next to be generated to test the keypool gap
+        self.nodes[1].sendtoaddress(addr3, "0.001")
+        self.nodes[1].generate(1)
+        self.sync_all()
+
+        # send to an address that is already marked as used due to the keypool gap mechanics
+        self.nodes[1].sendtoaddress(addr2, "0.001")
+        self.nodes[1].generate(1)
+        self.sync_all()
+
+        # send to self transaction
+        self.nodes[0].sendtoaddress(addr1, "0.001")
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        self.log.info("Verify listtransactions is the same regardless of where the address was generated")
+        transactions0 = self.nodes[0].listtransactions()
+        transactions2 = self.nodes[2].listtransactions()
+
+        # normalize results: remove fields that normally could differ and sort
+        def normalize_list(txs):
+            for tx in txs:
+                tx.pop('label', None)
+                tx.pop('time', None)
+                tx.pop('timereceived', None)
+            txs.sort(key=lambda x: x['txid'])
+
+        normalize_list(transactions0)
+        normalize_list(transactions2)
+        assert_equal(transactions0, transactions2)
+
+        self.log.info("Verify labels are persistent on the node generated the addresses")
+        assert_equal(['pizza1'], self.nodes[0].getaddressinfo(addr1)['labels'])
+        assert_equal(['pizza2'], self.nodes[0].getaddressinfo(addr2)['labels'])
+        assert_equal(['pizza3'], self.nodes[0].getaddressinfo(addr3)['labels'])
+
 
 if __name__ == '__main__':
     ListTransactionsTest().main()
