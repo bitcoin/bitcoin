@@ -9,7 +9,7 @@
 #include <messagesigner.h>
 #include <net.h>
 #include <util/system.h>
-
+#include <timedata.h>
 #include <evo/deterministicmns.h>
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)

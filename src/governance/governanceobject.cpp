@@ -17,6 +17,7 @@
 #include <node/transaction.h>
 #include <string>
 #include <univalue.h>
+#include <timedata.h>
 
 CGovernanceObject::CGovernanceObject() :
     cs(),

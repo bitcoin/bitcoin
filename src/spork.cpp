@@ -13,6 +13,7 @@
 #include <util/message.h>
 #include <string>
 #include <key_io.h>
+#include <timedata.h>
 const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
 CSporkManager sporkManager;

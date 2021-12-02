@@ -13,7 +13,7 @@
 #include <shutdown.h>
 #include <util/translation.h>
 #include <util/system.h>
-
+#include <timedata.h>
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 

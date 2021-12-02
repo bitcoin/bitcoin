@@ -12,7 +12,7 @@
 
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
 
 #include <netbase.h>
 
@@ -29,6 +29,7 @@
 #include <util/translation.h>
 #include <node/context.h>
 #include <node/transaction.h>
+#include <wallet/rpcwallet.h>
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {

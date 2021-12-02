@@ -6,7 +6,7 @@
 #include <governance/governancevalidators.h>
 #include <validation.h>
 #include <rpc/server.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
 #include <wallet/spend.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>

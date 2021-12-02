@@ -15,6 +15,7 @@ Span<const CRPCCommand> GetAssetWalletRPCCommands();
 Span<const CRPCCommand> GetEvoWalletRPCCommands();
 Span<const CRPCCommand> GetGovernanceWalletRPCCommands();
 Span<const CRPCCommand> GetMasternodeWalletRPCCommands();
+RPCHelpMan listunspent();
 RPCHelpMan getaddressinfo();
 RPCHelpMan signrawtransactionwithwallet();
 #endif // SYSCOIN_WALLET_RPCWALLET_H

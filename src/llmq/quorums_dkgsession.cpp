@@ -12,7 +12,7 @@
 #include <evo/deterministicmns.h>
 
 #include <evo/specialtx.h>
-
+#include <timedata.h>
 #include <masternode/activemasternode.h>
 #include <masternode/masternodemeta.h>
 #include <chainparams.h>

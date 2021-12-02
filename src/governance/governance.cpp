@@ -23,6 +23,7 @@
 #include <validationinterface.h>
 #include <shutdown.h>
 #include <validation.h>
+#include <timedata.h>
 std::unique_ptr<CGovernanceManager> governance;
 
 int nSubmittedFinalBudget;

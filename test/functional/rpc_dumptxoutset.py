@@ -48,7 +48,7 @@ class DumptxoutsetTest(SyscoinTestFramework):
                 digest, 'e771b160b690e002464f61bed07af483e2d54dd02fd344db6943886697e6463c')
 
         assert_equal(
-            out['txoutset_hash'], 'd4b614f476b99a6e569973bf1c0120d88b1a168076f8ce25691fb41dd1cef149')
+            out['txoutset_hash'], '19f78e9a07564524fc94b5af5faddb22e70463f9b5f5cf8d8ee1db384cf41d6a')
         assert_equal(out['nchaintx'], 101)
 
         # Specifying a path to an existing file will fail.

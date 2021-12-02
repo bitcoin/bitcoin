@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
 #include <wallet/fees.h>
 #include <policy/policy.h>
 #include <consensus/validation.h>
@@ -27,6 +27,7 @@
 #include <rpc/rawtransaction_util.h>
 #include <nevm/sha3.h>
 #include <wallet/spend.h>
+#include <wallet/rpcwallet.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);
