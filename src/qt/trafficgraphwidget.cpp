@@ -47,16 +47,22 @@ int TrafficGraphWidget::getGraphRangeMins() const
     return nMins;
 }
 
+int TrafficGraphWidget::y_value(float value)
+{
+    int h = height() - YMARGIN * 2;
+    return YMARGIN + h - (h * 1.0 * value / fMax);
+}
+
 void TrafficGraphWidget::paintPath(QPainterPath &path, QQueue<float> &samples)
 {
     int sampleCount = samples.size();
-    if(sampleCount > 0) {
+    if(sampleCount > 0 && fMax > 0) {
         int h = height() - YMARGIN * 2, w = width() - XMARGIN * 2;
         int x = XMARGIN + w;
         path.moveTo(x, YMARGIN + h);
         for(int i = 0; i < sampleCount; ++i) {
             x = XMARGIN + w - w * i / DESIRED_SAMPLES;
-            int y = YMARGIN + h - (int)(h * samples.at(i) / fMax);
+            int y = y_value(samples.at(i));
             path.lineTo(x, y);
         }
         path.lineTo(x, YMARGIN + h);
@@ -84,7 +90,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
 
     // draw lines
     painter.setPen(axisCol);
-    painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
+    painter.drawText(XMARGIN, y_value(val)-yMarginText, QString("%1 %2").arg(val).arg(units));
     for(float y = val; y < fMax; y += val) {
         int yy = YMARGIN + h - h * y / fMax;
         painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
@@ -94,13 +100,13 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         axisCol = axisCol.darker();
         val = pow(10.0f, base - 1);
         painter.setPen(axisCol);
-        painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
+        painter.drawText(XMARGIN, y_value(val)-yMarginText, QString("%1 %2").arg(val).arg(units));
         int count = 1;
         for(float y = val; y < fMax; y += val, count++) {
             // don't overwrite lines drawn above
             if(count % 10 == 0)
                 continue;
-            int yy = YMARGIN + h - h * y / fMax;
+            int yy = y_value(y);
             painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
         }
     }

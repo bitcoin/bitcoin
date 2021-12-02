@@ -26,6 +26,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *) override;
+    int y_value(float value);
 
 public Q_SLOTS:
     void updateRates();
