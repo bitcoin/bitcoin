@@ -17,7 +17,7 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
 #include <stdint.h>
