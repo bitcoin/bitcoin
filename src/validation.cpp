@@ -331,8 +331,8 @@ void CChainState::MaybeUpdateMempoolForReorg(
     while (it != disconnectpool.queuedTx.get<insertion_order>().rend()) {
         // ignore validation errors in resurrected transactions
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            AcceptToMemoryPool(*m_mempool, *this, *it, GetTime(),
-                /* bypass_limits= */true, /* test_accept= */ false).m_result_type !=
+            AcceptToMemoryPool(*this, *it, GetTime(),
+                /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
                     MempoolAcceptResult::ResultType::VALID) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
@@ -1091,11 +1091,14 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
 } // anon namespace
 
-MempoolAcceptResult AcceptToMemoryPool(CTxMemPool& pool, CChainState& active_chainstate, const CTransactionRef& tx,
+MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTransactionRef& tx,
                                        int64_t accept_time, bool bypass_limits, bool test_accept)
     EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const CChainParams& chainparams{active_chainstate.m_params};
+    assert(active_chainstate.GetMempool() != nullptr);
+    CTxMemPool& pool{*active_chainstate.GetMempool()};
+
     std::vector<COutPoint> coins_to_uncache;
     auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, bypass_limits, coins_to_uncache, test_accept);
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
@@ -3500,13 +3503,13 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
 {
     CChainState& active_chainstate = ActiveChainstate();
-    if (!active_chainstate.m_mempool) {
+    if (!active_chainstate.GetMempool()) {
         TxValidationState state;
         state.Invalid(TxValidationResult::TX_NO_MEMPOOL, "no-mempool");
         return MempoolAcceptResult::Failure(state);
     }
-    auto result = AcceptToMemoryPool(*active_chainstate.m_mempool, active_chainstate, tx, GetTime(), /* bypass_limits= */ false, test_accept);
-    active_chainstate.m_mempool->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
+    auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), /*bypass_limits=*/ false, test_accept);
+    active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
 }
 
@@ -4572,8 +4575,8 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
             }
             if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
-                if (AcceptToMemoryPool(pool, active_chainstate, tx, nTime, /* bypass_limits= */ false,
-                                               /* test_accept= */ false).m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {
                     // mempool may contain the transaction already, e.g. from
