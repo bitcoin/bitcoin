@@ -357,7 +357,7 @@ void CChainState::MaybeUpdateMempoolForReorg(
         AssertLockHeld(::cs_main);
         const CTransaction& tx = it->GetTx();
         LockPoints lp = it->GetLockPoints();
-        const bool validLP{TestLockPointValidity(m_chain, &lp)};
+        const bool validLP{TestLockPointValidity(m_chain, lp)};
         CCoinsViewMemPool view_mempool(&CoinsTip(), *m_mempool);
         if (!CheckFinalTx(m_chain.Tip(), tx, flags)
             || !CheckSequenceLocks(m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
