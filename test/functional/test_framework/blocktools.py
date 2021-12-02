@@ -67,6 +67,8 @@ SYSCOIN_TX_VERSION_ALLOCATION_MINT = 133
 SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM = 134
 SYSCOIN_TX_VERSION_ALLOCATION_SEND = 135
 
+MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60
+
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
 

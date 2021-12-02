@@ -16,6 +16,7 @@ import copy
 import time
 
 from test_framework.blocktools import (
+    MAX_FUTURE_BLOCK_TIME,
     create_block,
     create_coinbase,
     create_tx_with_script,
@@ -25,8 +26,6 @@ from test_framework.p2p import P2PDataStore
 from test_framework.script import OP_TRUE
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
-
-MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60
 
 
 class InvalidBlockRequestTest(SyscoinTestFramework):
