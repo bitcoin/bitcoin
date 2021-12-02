@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <fs.h>
 #include <streams.h>
 #include <sync.h>
 
@@ -67,6 +68,13 @@ CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
  * Helper to create UTXO snapshots given a chainstate and a file handle.
  * @return a UniValue map containing metadata about the snapshot.
  */
-UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile, FILE* filejson = nullptr);
+// SYSCOIN
+UniValue CreateUTXOSnapshot(
+    NodeContext& node,
+    CChainState& chainstate,
+    CAutoFile& afile,
+    const fs::path& path,
+    const fs::path& tmppath,
+    FILE* filejson = nullptr);
 
 #endif // SYSCOIN_RPC_BLOCKCHAIN_H

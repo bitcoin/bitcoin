@@ -47,6 +47,10 @@ class DumptxoutsetTest(SyscoinTestFramework):
             assert_equal(
                 digest, 'e771b160b690e002464f61bed07af483e2d54dd02fd344db6943886697e6463c')
 
+        assert_equal(
+            out['txoutset_hash'], 'd4b614f476b99a6e569973bf1c0120d88b1a168076f8ce25691fb41dd1cef149')
+        assert_equal(out['nchaintx'], 101)
+
         # Specifying a path to an existing file will fail.
         assert_raises_rpc_error(
             -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME)
