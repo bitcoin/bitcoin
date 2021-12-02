@@ -55,8 +55,11 @@ http_get() {
     echo "File ${2} already exists; not downloading again"
   elif check_exists curl; then
     curl --insecure --retry 5 "${1}" -o "${2}"
-  else
+  elif check_exists wget; then
     wget --no-check-certificate "${1}" -O "${2}"
+  else
+    echo "Simple transfer utilities 'curl' and 'wget' not found. Please install one of them and try again."
+    exit 1
   fi
 
   sha256_check "${3}" "${2}"
@@ -64,7 +67,7 @@ http_get() {
 
 # Ensure the commands we use exist on the system
 if ! check_exists patch; then
-    echo "Command-line tool 'patch' not found.  Install patch and try again."
+    echo "Command-line tool 'patch' not found. Install patch and try again."
     exit 1
 fi
 
