@@ -234,7 +234,7 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     LOCK(cs_main);
     auto& mp = VeriBlock::GetPop().getMemPool();
     auto idhex = data.getId().toHex();
-    auto result = mp.submit<Pop>(data, state, false);
+    auto result = mp.submit<Pop>(data, state);
     logSubmitResult<Pop>(idhex, result, state);
 
     bool accepted = result.isAccepted();
@@ -501,25 +501,24 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
 
         // intentionally ignore return value
         mp.generatePopData(
-            [&](const altintegration::ATV& p, const altintegration::ValidationState& state){
+            [&](const altintegration::ATV& p, const altintegration::ValidationState& state) {
                 UniValue j(UniValue::VOBJ);
                 j.pushKV("id", altintegration::HexStr(p.getId()));
                 j.pushKV("validity", altintegration::ToJSON<UniValue>(state));
                 atvs.push_back(j);
             },
-            [&](const altintegration::VTB& p, const altintegration::ValidationState& state){
+            [&](const altintegration::VTB& p, const altintegration::ValidationState& state) {
                 UniValue j(UniValue::VOBJ);
                 j.pushKV("id", altintegration::HexStr(p.getId()));
                 j.pushKV("validity", altintegration::ToJSON<UniValue>(state));
                 vtbs.push_back(j);
             },
-            [&](const altintegration::VbkBlock& p, const altintegration::ValidationState& state){
+            [&](const altintegration::VbkBlock& p, const altintegration::ValidationState& state) {
                 UniValue j(UniValue::VOBJ);
                 j.pushKV("id", altintegration::HexStr(p.getId()));
                 j.pushKV("validity", altintegration::ToJSON<UniValue>(state));
                 vbkblocks.push_back(j);
-            }
-        );
+            });
 
         result.pushKV("atvs", atvs);
         result.pushKV("vtbs", vtbs);
@@ -844,34 +843,6 @@ UniValue extractblockinfo(const JSONRPCRequest& req)
     return res;
 }
 
-UniValue setmempooldostalledcheck(const JSONRPCRequest& req)
-{
-    RPCHelpMan{
-        "setmempooldostalledcheck",
-        "set the mempool dostalledcheck flag",
-        {
-            {"flag", RPCArg::Type::BOOL, RPCArg::Optional::NO, "flag"},
-        },
-        {},
-        RPCExamples{
-            HelpExampleCli("setmempooldostalledcheck", "\"flag\"") +
-            HelpExampleRpc("setmempooldostalledcheck", "\"flag\"")},
-    }
-        .Check(req);
-
-    EnsurePopEnabled();
-
-    {
-        LOCK(cs_main);
-
-        bool flag = req.params[0].get_bool();
-        VeriBlock::GetPop().getMemPool().setDoStalledCheck(flag);
-    }
-
-
-    return UniValue{};
-}
-
 UniValue getpopscorestats(const JSONRPCRequest& req)
 {
     std::string cmdname = "getpopscorestats";
@@ -916,7 +887,6 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getrawvtb", &getrawvtb, {"id"}},
     {"pop_mining", "getrawvbkblock", &getrawvbkblock, {"id"}},
     {"pop_mining", "getrawpopmempool", &getrawpopmempool, {"verbosity"}},
-    {"pop_mining", "setmempooldostalledcheck", &setmempooldostalledcheck, {"flag"}},
     {"pop_mining", "extractblockinfo", &extractblockinfo, {"data_array"}},
     {"pop_mining", "getpopscorestats", &getpopscorestats, {}}};
 
