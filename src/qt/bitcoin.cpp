@@ -486,7 +486,16 @@ int GuiMain(int argc, char* argv[])
     QApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
     QApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+
+    // Add new safety native permission dialog for R/W actions.
+    static const QString write_permission = "android.permission.WRITE_EXTERNAL_STORAGE";
+    if (QtAndroid::checkPermission(write_permission) == QtAndroid::PermissionResult::Denied)
+        QtAndroid::requestPermissionsSync(QStringList() << write_permission);
+    static const QString read_permission = "android.permission.READ_EXTERNAL_STORAGE";
+    if (QtAndroid::checkPermission(read_permission) == QtAndroid::PermissionResult::Denied)
+        QtAndroid::requestPermissionsSync(QStringList() << read_permission);
 #endif
+
 
     BitcoinApplication app;
     GUIUtil::LoadFont(QStringLiteral(":/fonts/monospace"));
