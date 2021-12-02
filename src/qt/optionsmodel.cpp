@@ -122,6 +122,18 @@ static const QLatin1String fontchoice_str_embedded{"embedded"};
 static const QLatin1String fontchoice_str_best_system{"best_system"};
 static const QString fontchoice_str_custom_prefix{QStringLiteral("custom, ")};
 
+QString OptionsModel::FontChoiceToString(const OptionsModel::FontChoice& f)
+{
+    if (std::holds_alternative<FontChoiceAbstract>(f)) {
+        if (f == UseBestSystemFont) {
+            return fontchoice_str_best_system;
+        } else {
+            return fontchoice_str_embedded;
+        }
+    }
+    return fontchoice_str_custom_prefix + std::get<QFont>(f).toString();
+}
+
 OptionsModel::FontChoice OptionsModel::FontChoiceFromString(const QString& s)
 {
     if (s == fontchoice_str_best_system) {
@@ -451,8 +463,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return strThirdPartyTxUrls;
     case Language:
         return QString::fromStdString(SettingToString(setting(), ""));
-    case UseEmbeddedMonospacedFont:
-        return (m_font_money != UseBestSystemFont);
+    case FontForMoney:
+        return QVariant::fromValue(m_font_money);
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -622,20 +634,12 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             setRestartRequired(true);
         }
         break;
-    case UseEmbeddedMonospacedFont:
+    case FontForMoney:
     {
-        const bool use_embedded_monospaced_font = value.toBool();
-        if (use_embedded_monospaced_font) {
-            if (m_font_money != UseBestSystemFont) {
-                // Leave it as-is
-                break;
-            }
-            m_font_money = FontChoiceAbstract::EmbeddedFont;
-        } else {
-            m_font_money = FontChoiceAbstract::BestSystemFont;
-        }
-        settings.setValue("UseEmbeddedMonospacedFont", use_embedded_monospaced_font);
-        settings.remove("FontForMoney");
+        const auto& new_font = value.value<FontChoice>();
+        if (m_font_money == new_font) break;
+        settings.setValue("FontForMoney", FontChoiceToString(new_font));
+        m_font_money = new_font;
         Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
     }
