@@ -1170,7 +1170,7 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
 #ifdef HAVE_MALLOC_INFO
         return RPCMallocInfo();
 #else
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "mallocinfo is only available when compiled with glibc 2.10+");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "mallocinfo mode not available");
 #endif
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown mode " + mode);
