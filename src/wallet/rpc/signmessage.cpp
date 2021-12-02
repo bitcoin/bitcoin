@@ -5,7 +5,7 @@
 #include <key_io.h>
 #include <rpc/util.h>
 #include <util/message.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
 #include <univalue.h>
