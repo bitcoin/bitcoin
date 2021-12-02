@@ -1189,10 +1189,11 @@ std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
 /** Return object for accessing temporary in-memory database. */
 std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
 {
+    DatabaseOptions options;
 #ifdef USE_SQLITE
-    return std::make_unique<SQLiteDatabase>("", "", true);
+    return std::make_unique<SQLiteDatabase>("", "", options, true);
 #elif USE_BDB
-    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
+    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "", options);
 #endif
 }
 } // namespace wallet
