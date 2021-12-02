@@ -218,7 +218,11 @@ bool OptionsModel::Init(bilingual_str& error)
     if (!settings.contains("UseEmbeddedMonospacedFont")) {
         settings.setValue("UseEmbeddedMonospacedFont", "true");
     }
-    m_use_embedded_monospaced_font = settings.value("UseEmbeddedMonospacedFont").toBool();
+    if (settings.value("UseEmbeddedMonospacedFont").toBool()) {
+        m_font_money = FontChoiceAbstract::EmbeddedFont;
+    } else {
+        m_font_money = FontChoiceAbstract::BestSystemFont;
+    }
     Q_EMIT fontForMoneyChanged(getFontForMoney());
 
     m_mask_values = settings.value("mask_values", false).toBool();
@@ -428,7 +432,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     case Language:
         return QString::fromStdString(SettingToString(setting(), ""));
     case UseEmbeddedMonospacedFont:
-        return m_use_embedded_monospaced_font;
+        return (m_font_money != UseBestSystemFont);
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -456,8 +460,13 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
 
 QFont OptionsModel::getFontForMoney() const
 {
-    QFont f = GUIUtil::fixedPitchFont(m_use_embedded_monospaced_font);
-    f.setWeight(QFont::Bold);
+    QFont f;
+    if (std::holds_alternative<FontChoiceAbstract>(m_font_money)) {
+        f = GUIUtil::fixedPitchFont(m_font_money != UseBestSystemFont);
+        f.setWeight(QFont::Bold);
+    } else {
+        f = std::get<QFont>(m_font_money);
+    }
     return f;
 }
 
@@ -594,10 +603,21 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         }
         break;
     case UseEmbeddedMonospacedFont:
-        m_use_embedded_monospaced_font = value.toBool();
-        settings.setValue("UseEmbeddedMonospacedFont", m_use_embedded_monospaced_font);
+    {
+        const bool use_embedded_monospaced_font = value.toBool();
+        if (use_embedded_monospaced_font) {
+            if (m_font_money != UseBestSystemFont) {
+                // Leave it as-is
+                break;
+            }
+            m_font_money = FontChoiceAbstract::EmbeddedFont;
+        } else {
+            m_font_money = FontChoiceAbstract::BestSystemFont;
+        }
+        settings.setValue("UseEmbeddedMonospacedFont", use_embedded_monospaced_font);
         Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
+    }
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
