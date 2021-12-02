@@ -219,7 +219,7 @@ bool OptionsModel::Init(bilingual_str& error)
         settings.setValue("UseEmbeddedMonospacedFont", "true");
     }
     m_use_embedded_monospaced_font = settings.value("UseEmbeddedMonospacedFont").toBool();
-    Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
+    Q_EMIT fontForMoneyChanged(getFontForMoney());
 
     m_mask_values = settings.value("mask_values", false).toBool();
 
@@ -454,6 +454,13 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     }
 }
 
+QFont OptionsModel::getFontForMoney() const
+{
+    QFont f = GUIUtil::fixedPitchFont(m_use_embedded_monospaced_font);
+    f.setWeight(QFont::Bold);
+    return f;
+}
+
 bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::string& suffix)
 {
     auto changed = [&] { return value.isValid() && value != getOption(option, suffix); };
@@ -589,7 +596,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case UseEmbeddedMonospacedFont:
         m_use_embedded_monospaced_font = value.toBool();
         settings.setValue("UseEmbeddedMonospacedFont", m_use_embedded_monospaced_font);
-        Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
+        Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
