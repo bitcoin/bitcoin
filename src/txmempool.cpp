@@ -5,6 +5,7 @@
 
 #include <txmempool.h>
 
+#include <chain.h>
 #include <coins.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>

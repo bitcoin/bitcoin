@@ -14,7 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include <chain.h>
 #include <coins.h>
 #include <consensus/amount.h>
 #include <indirectmap.h>
@@ -26,12 +25,13 @@
 #include <util/epochguard.h>
 #include <util/hasher.h>
 
-#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index_container.hpp>
 
 class CBlockIndex;
+class CChain;
 class CChainState;
 extern RecursiveMutex cs_main;
 
