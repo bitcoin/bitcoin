@@ -357,7 +357,7 @@ void CChainState::MaybeUpdateMempoolForReorg(
         AssertLockHeld(::cs_main);
         const CTransaction& tx = it->GetTx();
         LockPoints lp = it->GetLockPoints();
-        bool validLP = TestLockPointValidity(m_chain, &lp);
+        const bool validLP{TestLockPointValidity(m_chain, &lp)};
         CCoinsViewMemPool view_mempool(&CoinsTip(), *m_mempool);
         if (!CheckFinalTx(m_chain.Tip(), tx, flags)
             || !CheckSequenceLocks(m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
@@ -371,8 +371,8 @@ void CChainState::MaybeUpdateMempoolForReorg(
                     continue;
                 const Coin &coin = CoinsTip().AccessCoin(txin.prevout);
                 assert(!coin.IsSpent());
-                unsigned int nMemPoolHeight = m_chain.Tip()->nHeight + 1;
-                if (coin.IsSpent() || (coin.IsCoinBase() && ((signed long)nMemPoolHeight) - coin.nHeight < COINBASE_MATURITY)) {
+                const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
+                if (coin.IsSpent() || (coin.IsCoinBase() && mempool_spend_height - coin.nHeight < COINBASE_MATURITY)) {
                     should_remove = true;
                     break;
                 }
