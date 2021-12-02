@@ -428,6 +428,15 @@ namespace GUIUtil
      */
     void ShowModalDialogAndDeleteOnClose(QDialog* dialog);
 
+    inline bool IsEscapeOrBack(int key)
+    {
+        if (key == Qt::Key_Escape) return true;
+#ifdef Q_OS_ANDROID
+        if (key == Qt::Key_Back) return true;
+#endif // Q_OS_ANDROID
+        return false;
+    }
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H
