@@ -639,10 +639,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        const LockPoints lp{it->GetLockPoints()};
-        if (!TestLockPointValidity(chain, lp)) {
-            mapTx.modify(it, update_lock_points(lp));
-        }
+        assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
 }
 
