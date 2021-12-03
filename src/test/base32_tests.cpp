@@ -36,6 +36,8 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
     BOOST_CHECK(failure);
     (void)DecodeBase32("AWSX3VPPinvalid"s, &failure); // invalid size
     BOOST_CHECK(failure);
+    (void)DecodeBase32("AWSX3VPPinvalidxD)"s, &failure); // invalid size
+    BOOST_CHECK(failure);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
