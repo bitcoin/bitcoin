@@ -54,7 +54,7 @@ CMutableTransaction TxFromHex(const std::string& str)
 {
     CMutableTransaction tx;
     try {
-        VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, CheckedParseHex(str), 0) >> tx;
+        SpanReader{SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, CheckedParseHex(str), 0} >> tx;
     } catch (const std::ios_base::failure&) {
         throw std::runtime_error("Tx deserialization failure");
     }
@@ -68,7 +68,7 @@ std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
     for (size_t i = 0; i < univalue.size(); ++i) {
         CTxOut txout;
         try {
-            VectorReader(SER_DISK, 0, CheckedParseHex(univalue[i].get_str()), 0) >> txout;
+            SpanReader{SER_DISK, 0, CheckedParseHex(univalue[i].get_str()), 0} >> txout;
         } catch (const std::ios_base::failure&) {
             throw std::runtime_error("Prevout invalid format");
         }
