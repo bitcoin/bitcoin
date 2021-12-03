@@ -20,7 +20,7 @@ static void print_number(double x) {
         y *= 10.0;
         c++;
     }
-    printf("%.*f", c, x);
+    printf("%.*f\n", c, x);
 }
 
 static void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), void (*teardown)(void*), void* data, int count, int iter) {
