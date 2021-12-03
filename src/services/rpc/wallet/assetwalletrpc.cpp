@@ -2667,5 +2667,5 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            &getauxblock,                   },
 };
 // clang-format on
-    return MakeSpan(commands);
+    return commands;
 }

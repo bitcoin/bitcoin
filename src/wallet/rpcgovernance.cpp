@@ -375,5 +375,5 @@ static const CRPCCommand commands[] =
     { "governancewallet",            &gobject_list_prepared,   },
 };
 // clang-format on
-    return MakeSpan(commands);
+    return commands;
 }

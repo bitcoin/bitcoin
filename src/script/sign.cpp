@@ -167,7 +167,7 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
 
     // <xonly pubkey> OP_CHECKSIG
     if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {
-        XOnlyPubKey pubkey(MakeSpan(script).subspan(1, 32));
+        XOnlyPubKey pubkey{Span{script}.subspan(1, 32)};
         std::vector<unsigned char> sig;
         if (CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion)) {
             result = Vector(std::move(sig));

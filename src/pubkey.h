@@ -157,13 +157,13 @@ public:
     //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
-        return CKeyID(Hash160(MakeSpan(vch).first(size())));
+        return CKeyID(Hash160(Span{vch}.first(size())));
     }
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
-        return Hash(MakeSpan(vch).first(size()));
+        return Hash(Span{vch}.first(size()));
     }
 
     /*
@@ -240,7 +240,7 @@ public:
     explicit XOnlyPubKey(Span<const unsigned char> bytes);
 
     /** Construct an x-only pubkey from a normal pubkey. */
-    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(Span<const unsigned char>(pubkey.begin() + 1, pubkey.begin() + 33)) {}
+    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(Span{pubkey}.subspan(1, 32)) {}
 
     /** Verify a Schnorr signature against this public key.
      *

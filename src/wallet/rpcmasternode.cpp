@@ -55,5 +55,5 @@ static const CRPCCommand commands[] =
 
 };
 // clang-format on
-    return MakeSpan(commands);
+    return commands;
 }

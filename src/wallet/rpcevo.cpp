@@ -1106,5 +1106,5 @@ static const CRPCCommand commands[] =
     { "evowallet",              &protx_revoke,                      },
 };
 // clang-format on
-    return MakeSpan(commands);
+    return commands;
 }
