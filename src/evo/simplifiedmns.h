@@ -10,6 +10,7 @@
 #include <script/standard.h>
 #include <threadsafety.h>
 #include <sync.h>
+#include <bls/bls.h>
 extern RecursiveMutex cs_main;
 class UniValue;
 class CDeterministicMNList;

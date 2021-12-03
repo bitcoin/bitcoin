@@ -18,6 +18,7 @@
 #include <unordered_set>
 #include <script/standard.h>
 #include <interfaces/chain.h>
+#include <bls/bls.h>
 class CBlock;
 class CBlockIndex;
 class BlockValidationState;
