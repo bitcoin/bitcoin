@@ -784,6 +784,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // to coins_to_uncache)
     m_view.SetBackend(m_dummy);
 
+    assert(m_active_chainstate.m_blockman.LookupBlockIndex(m_view.GetBestBlock()) == m_active_chainstate.m_chain.Tip());
+
     // Only accept BIP68 sequence locked transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
@@ -795,7 +797,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN
     CAssetsMap mapAssetIn;
     CAssetsMap mapAssetOut;
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_blockman.GetSpendHeight(m_view), ws.m_base_fees, mapAssetIn, mapAssetOut)) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees, mapAssetIn, mapAssetOut)) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -1529,14 +1531,6 @@ bool CScriptCheck::operator()() {
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
     return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
 }
-
-int BlockManager::GetSpendHeight(const CCoinsViewCache& inputs)
-{
-    AssertLockHeld(cs_main);
-    CBlockIndex* pindexPrev = LookupBlockIndex(inputs.GetBestBlock());
-    return pindexPrev->nHeight + 1;
-}
-
 
 static CuckooCache::cache<uint256, SignatureCacheHasher> g_scriptExecutionCache;
 static CSHA256 g_scriptExecutionCacheHasher;
