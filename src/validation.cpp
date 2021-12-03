@@ -312,6 +312,26 @@ static bool IsCurrentForFeeEstimation(CChainState& active_chainstate) EXCLUSIVE_
     return true;
 }
 
+/**
+ * Test whether the LockPoints height and time are still valid on the current chain
+ */
+static bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    AssertLockHeld(cs_main);
+    // If there are relative lock times then the maxInputBlock will be set
+    // If there are no relative lock times, the LockPoints don't depend on the chain
+    if (lp.maxInputBlock) {
+        // Check whether active_chain is an extension of the block at which the LockPoints
+        // calculation was valid.  If not LockPoints are no longer valid
+        if (!active_chain.Contains(lp.maxInputBlock)) {
+            return false;
+        }
+    }
+
+    // LockPoints still valid
+    return true;
+}
+
 void CChainState::MaybeUpdateMempoolForReorg(
     DisconnectedBlockTransactions& disconnectpool,
     bool fAddToMempool)
@@ -382,7 +402,7 @@ void CChainState::MaybeUpdateMempoolForReorg(
     };
 
     // We also need to remove any now-immature transactions
-    m_mempool->removeForReorg(m_chain, check_final_and_mature);
+    m_mempool->removeForReorg(check_final_and_mature);
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(
         *m_mempool,

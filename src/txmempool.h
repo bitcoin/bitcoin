@@ -31,7 +31,6 @@
 #include <boost/multi_index_container.hpp>
 
 class CBlockIndex;
-class CChain;
 class CChainState;
 extern RecursiveMutex cs_main;
 
@@ -49,11 +48,6 @@ struct LockPoints {
     // values are still valid even after a reorg.
     CBlockIndex* maxInputBlock{nullptr};
 };
-
-/**
- * Test whether the LockPoints height and time are still valid on the current chain
- */
-bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 struct CompareIteratorByHash {
     // SFINAE for T where T is either a pointer type (e.g., a txiter) or a reference_wrapper<T>
@@ -142,8 +136,6 @@ public:
     // Updates the fee delta used for mining priority score, and the
     // modified fees with descendants.
     void UpdateFeeDelta(int64_t feeDelta);
-    // Update the LockPoints after a reorg
-    void UpdateLockPoints(const LockPoints& lp);
 
     uint64_t GetCountWithDescendants() const { return nCountWithDescendants; }
     uint64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
@@ -592,7 +584,7 @@ public:
     /** After reorg, check if mempool entries are now non-final, premature coinbase spends, or have
      * invalid lockpoints. Update lockpoints and remove entries (and descendants of entries) that
      * are no longer valid. */
-    void removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void removeForReorg(std::function<bool(txiter)> check_final_and_mature) EXCLUSIVE_LOCKS_REQUIRED(cs, ::cs_main);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 

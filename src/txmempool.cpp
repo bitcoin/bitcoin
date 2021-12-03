@@ -5,7 +5,6 @@
 
 #include <txmempool.h>
 
-#include <chain.h>
 #include <coins.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
@@ -64,33 +63,6 @@ private:
     int64_t feeDelta;
 };
 
-struct update_lock_points
-{
-    explicit update_lock_points(const LockPoints& _lp) : lp(_lp) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateLockPoints(lp); }
-
-private:
-    const LockPoints& lp;
-};
-
-bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
-{
-    AssertLockHeld(cs_main);
-    // If there are relative lock times then the maxInputBlock will be set
-    // If there are no relative lock times, the LockPoints don't depend on the chain
-    if (lp.maxInputBlock) {
-        // Check whether active_chain is an extension of the block at which the LockPoints
-        // calculation was valid.  If not LockPoints are no longer valid
-        if (!active_chain.Contains(lp.maxInputBlock)) {
-            return false;
-        }
-    }
-
-    // LockPoints still valid
-    return true;
-}
-
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
                                  int64_t time, unsigned int entry_height,
                                  bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
@@ -114,11 +86,6 @@ void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
     nModFeesWithDescendants += newFeeDelta - feeDelta;
     nModFeesWithAncestors += newFeeDelta - feeDelta;
     feeDelta = newFeeDelta;
-}
-
-void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
-{
-    lockPoints = lp;
 }
 
 size_t CTxMemPoolEntry::GetTxSize() const
@@ -633,7 +600,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
         RemoveStaged(setAllRemoves, false, reason);
 }
 
-void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
+void CTxMemPool::removeForReorg(std::function<bool(txiter)> check_final_and_mature)
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     AssertLockHeld(cs);
@@ -648,12 +615,6 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
         CalculateDescendants(it, setAllRemoves);
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
-    for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        const LockPoints lp{it->GetLockPoints()};
-        if (!TestLockPointValidity(chain, lp)) {
-            mapTx.modify(it, update_lock_points(lp));
-        }
-    }
 }
 
 void CTxMemPool::removeConflicts(const CTransaction &tx)
