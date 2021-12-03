@@ -235,7 +235,6 @@ sha256sum * > SHA256SUMS
 The list of files should be:
 ```
 dash-${VERSION}-aarch64-linux-gnu.tar.gz
-dash-${VERSION}-arm-linux-gnueabihf.tar.gz
 dash-${VERSION}-riscv64-linux-gnu.tar.gz
 dash-${VERSION}-x86_64-linux-gnu.tar.gz
 dash-${VERSION}-osx64.tar.gz
