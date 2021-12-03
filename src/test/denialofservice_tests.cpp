@@ -213,13 +213,13 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
     banman->ClearBanned();
     nodes[0] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[0], /*nKeyedNetGroupIn=*/0,
-                         /*nLocalHostNonceIn */ 0, CAddress(), /*addrNameIn=*/"",
+                         /*nLocalHostNonceIn=*/0, CAddress(), /*addrNameIn=*/"",
                          ConnectionType::INBOUND, /*inbound_onion=*/false};
     nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[0]);
     nodes[0]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[0]);
-    peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
+    peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /*message=*/""); // Should be discouraged
     {
         LOCK(nodes[0]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
@@ -229,13 +229,13 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
     nodes[1] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[1], /*nKeyedNetGroupIn=*/1,
-                         /*nLocalHostNonceIn */ 1, CAddress(), /*addrNameIn=*/"",
+                         /*nLocalHostNonceIn=*/1, CAddress(), /*addrNameIn=*/"",
                          ConnectionType::INBOUND, /*inbound_onion=*/false};
     nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[1]);
     nodes[1]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[1]);
-    peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
+    peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /*message=*/"");
     {
         LOCK(nodes[1]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // [1] is not discouraged/disconnected yet.
     BOOST_CHECK(!banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(!nodes[1]->fDisconnect);
-    peerLogic->Misbehaving(nodes[1]->GetId(), 1, /* message */ ""); // [1] reaches discouragement threshold
+    peerLogic->Misbehaving(nodes[1]->GetId(), 1, /*message=*/""); // [1] reaches discouragement threshold
     {
         LOCK(nodes[1]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
@@ -260,13 +260,13 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // Make sure non-IP peers are discouraged and disconnected properly.
 
     nodes[2] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[2], /*nKeyedNetGroupIn=*/1,
-                         /*nLocalHostNonceIn */ 1, CAddress(), /*addrNameIn=*/"",
+                         /*nLocalHostNonceIn=*/1, CAddress(), /*addrNameIn=*/"",
                          ConnectionType::OUTBOUND_FULL_RELAY, /*inbound_onion=*/false};
     nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[2]);
     nodes[2]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[2]);
-    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /*message=*/"");
     {
         LOCK(nodes[2]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     peerLogic->InitializeNode(&dummyNode);
     dummyNode.fSuccessfullyConnected = true;
 
-    peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD, /*message=*/"");
     {
         LOCK(dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
@@ -334,7 +334,7 @@ static void MakeNewKeyWithFastRandomContext(CKey& key)
 {
     std::vector<unsigned char> keydata;
     keydata = g_insecure_rand_ctx.randbytes(32);
-    key.Set(keydata.data(), keydata.data() + keydata.size(), /*fCompressedIn*/ true);
+    key.Set(keydata.data(), keydata.data() + keydata.size(), /*fCompressedIn=*/true);
     assert(key.IsValid());
 }
 

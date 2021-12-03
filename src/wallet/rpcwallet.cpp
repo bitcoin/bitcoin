@@ -20,7 +20,6 @@
 #include <script/sign.h>
 #include <util/bip32.h>
 #include <util/fees.h>
-#include <util/message.h> // For MessageSign()
 #include <util/moneystr.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -33,6 +32,7 @@
 #include <wallet/load.h>
 #include <wallet/receive.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -47,36 +47,6 @@
 
 using interfaces::FoundBlock;
 
-static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
-static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
-
-static inline bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
-    bool can_avoid_reuse = wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
-    bool avoid_reuse = param.isNull() ? can_avoid_reuse : param.get_bool();
-
-    if (avoid_reuse && !can_avoid_reuse) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "wallet does not have the \"avoid reuse\" feature enabled");
-    }
-
-    return avoid_reuse;
-}
-
-
-/** Used by RPC commands that have an include_watchonly parameter.
- *  We default to true for watchonly wallets if include_watchonly isn't
- *  explicitly set.
- */
-static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wallet)
-{
-    if (include_watchonly.isNull()) {
-        // if include_watchonly isn't explicitly set, then check if we have a watchonly wallet
-        return wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-    }
-
-    // otherwise return whatever include_watchonly was set to
-    return include_watchonly.get_bool();
-}
-
 
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
 bool HaveKey(const SigningProvider& wallet, const CKey& key)
@@ -84,79 +54,6 @@ bool HaveKey(const SigningProvider& wallet, const CKey& key)
     CKey key2;
     key2.Set(key.begin(), key.end(), !key.IsCompressed());
     return wallet.HaveKey(key.GetPubKey().GetID()) || wallet.HaveKey(key2.GetPubKey().GetID());
-}
-
-bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
-{
-    if (URL_DECODE && request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
-        // wallet endpoint was used
-        wallet_name = URL_DECODE(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
-        return true;
-    }
-    return false;
-}
-
-std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
-{
-    CHECK_NONFATAL(request.mode == JSONRPCRequest::EXECUTE);
-    WalletContext& context = EnsureWalletContext(request.context);
-
-    std::string wallet_name;
-    if (GetWalletNameFromJSONRPCRequest(request, wallet_name)) {
-        const std::shared_ptr<CWallet> pwallet = GetWallet(context, wallet_name);
-        if (!pwallet) throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
-        return pwallet;
-    }
-
-    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets(context);
-    if (wallets.size() == 1) {
-        return wallets[0];
-    }
-
-    if (wallets.empty()) {
-        throw JSONRPCError(
-            RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
-    }
-    throw JSONRPCError(RPC_WALLET_NOT_SPECIFIED,
-        "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
-}
-
-void EnsureWalletIsUnlocked(const CWallet& wallet)
-{
-    if (wallet.IsLocked()) {
-        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-    }
-}
-
-WalletContext& EnsureWalletContext(const std::any& context)
-{
-    auto wallet_context = util::AnyPtr<WalletContext>(context);
-    if (!wallet_context) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet context not found");
-    }
-    return *wallet_context;
-}
-
-// also_create should only be set to true only when the RPC is expected to add things to a blank wallet and make it no longer blank
-LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create)
-{
-    LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (!spk_man && also_create) {
-        spk_man = wallet.GetOrCreateLegacyScriptPubKeyMan();
-    }
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
-    return *spk_man;
-}
-
-const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wallet)
-{
-    const LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
-    return *spk_man;
 }
 
 static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
@@ -201,13 +98,6 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
         entry.pushKV(item.first, item.second);
 }
 
-static std::string LabelFromValue(const UniValue& value)
-{
-    std::string label = value.get_str();
-    if (label == "*")
-        throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, "Invalid label name");
-    return label;
-}
 
 /**
  * Update coin control with fee estimation based on the given parameters
@@ -608,63 +498,6 @@ static RPCHelpMan listaddressgroupings()
         jsonGroupings.push_back(jsonGrouping);
     }
     return jsonGroupings;
-},
-    };
-}
-
-static RPCHelpMan signmessage()
-{
-    return RPCHelpMan{"signmessage",
-                "\nSign a message with the private key of an address" +
-        HELP_REQUIRING_PASSPHRASE,
-                {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the private key."},
-                    {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
-                },
-                RPCResult{
-                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
-                },
-                RPCExamples{
-            "\nUnlock the wallet for 30 seconds\n"
-            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
-            "\nCreate the signature\n"
-            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"my message\"") +
-            "\nVerify the signature\n"
-            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"signature\" \"my message\"") +
-            "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"my message\"")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    LOCK(pwallet->cs_wallet);
-
-    EnsureWalletIsUnlocked(*pwallet);
-
-    std::string strAddress = request.params[0].get_str();
-    std::string strMessage = request.params[1].get_str();
-
-    CTxDestination dest = DecodeDestination(strAddress);
-    if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-    }
-
-    const PKHash* pkhash = std::get_if<PKHash>(&dest);
-    if (!pkhash) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
-    }
-
-    std::string signature;
-    SigningResult err = pwallet->SignMessage(strMessage, *pkhash, signature);
-    if (err == SigningResult::SIGNING_FAILED) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, SigningResultString(err));
-    } else if (err != SigningResult::OK){
-        throw JSONRPCError(RPC_WALLET_ERROR, SigningResultString(err));
-    }
-
-    return signature;
 },
     };
 }
@@ -3220,7 +3053,7 @@ static std::vector<RPCArg> FundTxDoc()
         {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
         {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "         \"" + FeeModes("\"\n\"") + "\""},
-        {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Marks this transaction as BIP125 replaceable.\n"
+        {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Marks this transaction as BIP125-replaceable.\n"
             "Allows this transaction to be replaced by a transaction with higher fees"},
         {"solving_data", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Keys and scripts needed for producing a final transaction with a dummy signature.\n"
             "Used for fee estimation during coin selection.",
@@ -4107,8 +3940,12 @@ RPCHelpMan getaddressinfo()
         ret.pushKV("solvable", false);
     }
 
+    const auto& spk_mans = pwallet->GetScriptPubKeyMans(scriptPubKey);
+    // In most cases there is only one matching ScriptPubKey manager and we can't resolve ambiguity in a better way
+    ScriptPubKeyMan* spk_man{nullptr};
+    if (spk_mans.size()) spk_man = *spk_mans.begin();
 
-    DescriptorScriptPubKeyMan* desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(pwallet->GetScriptPubKeyMan(scriptPubKey));
+    DescriptorScriptPubKeyMan* desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
     if (desc_spk_man) {
         std::string desc_str;
         if (desc_spk_man->GetDescriptorString(desc_str, /* priv */ false)) {
@@ -4123,7 +3960,6 @@ RPCHelpMan getaddressinfo()
 
     ret.pushKV("ischange", ScriptIsChange(*pwallet, scriptPubKey));
 
-    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
         if (const std::unique_ptr<CKeyMetadata> meta = spk_man->GetMetadata(dest)) {
             ret.pushKV("timestamp", meta->nCreateTime);
@@ -4551,6 +4387,7 @@ static RPCHelpMan walletprocesspsbt()
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+                    {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -4572,7 +4409,7 @@ static RPCHelpMan walletprocesspsbt()
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL, UniValue::VSTR});
+    RPCTypeCheck(request.params, {UniValue::VSTR});
 
     // Unserialize the transaction
     PartiallySignedTransaction psbtx;
@@ -4587,11 +4424,12 @@ static RPCHelpMan walletprocesspsbt()
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+    bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs)};
+    const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs, nullptr, finalize)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }
@@ -4860,6 +4698,7 @@ RPCHelpMan removeprunedfunds();
 RPCHelpMan importmulti();
 RPCHelpMan importdescriptors();
 RPCHelpMan listdescriptors();
+RPCHelpMan signmessage();
 
 Span<const CRPCCommand> GetWalletRPCCommands()
 {

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addrman.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <net.h>
@@ -25,7 +26,7 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addrman(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/0);
     CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, fuzzed_data_provider.ConsumeBool()};
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
@@ -69,15 +70,15 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 (void)connman.GetAddresses(
-                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /* max_pct */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /* network */ std::nullopt);
+                    /*max_addresses=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /*max_pct=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /*network=*/std::nullopt);
             },
             [&] {
                 (void)connman.GetAddresses(
-                    /* requestor */ random_node,
-                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /* max_pct */ fuzzed_data_provider.ConsumeIntegral<size_t>());
+                    /*requestor=*/random_node,
+                    /*max_addresses=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /*max_pct=*/fuzzed_data_provider.ConsumeIntegral<size_t>());
             },
             [&] {
                 (void)connman.GetDeterministicRandomizer(fuzzed_data_provider.ConsumeIntegral<uint64_t>());

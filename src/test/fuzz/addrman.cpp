@@ -29,7 +29,7 @@ FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
-    AddrMan addr_man(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addr_man(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/0);
     try {
         ReadFromStream(addr_man, data_stream);
     } catch (const std::exception&) {
@@ -113,7 +113,7 @@ class AddrManDeterministic : public AddrMan
 {
 public:
     explicit AddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
-        : AddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
+        : AddrMan(std::move(asmap), /*deterministic=*/true, /*consistency_check_ratio=*/0)
     {
         WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
     }
@@ -286,9 +286,9 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
     }
     const AddrMan& const_addr_man{addr_man};
     (void)const_addr_man.GetAddr(
-        /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        /* network */ std::nullopt);
+        /*max_addresses=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /*network=*/std::nullopt);
     (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool());
     (void)const_addr_man.size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);

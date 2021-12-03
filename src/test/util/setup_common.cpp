@@ -179,7 +179,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.chainman->InitializeChainstate(m_node.mempool.get());
     m_node.chainman->ActiveChainstate().InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+        /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
     assert(!m_node.chainman->ActiveChainstate().CanFlushToDisk());
     m_node.chainman->ActiveChainstate().InitCoinsCache(1 << 23);
     assert(m_node.chainman->ActiveChainstate().CanFlushToDisk());
@@ -192,7 +192,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 
-    m_node.addrman = std::make_unique<AddrMan>(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    m_node.addrman = std::make_unique<AddrMan>(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/0);
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman,

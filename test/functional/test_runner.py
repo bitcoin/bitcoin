@@ -278,6 +278,7 @@ BASE_SCRIPTS = [
     'wallet_taproot.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
+    'feature_init.py',
     'wallet_coinbase_category.py --legacy-wallet',
     'wallet_coinbase_category.py --descriptors',
     'feature_filelock.py',

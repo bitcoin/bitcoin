@@ -4,6 +4,7 @@
 
 #include <rpc/server.h>
 
+#include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
