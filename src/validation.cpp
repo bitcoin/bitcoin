@@ -349,21 +349,37 @@ void CChainState::MaybeUpdateMempoolForReorg(
     // the disconnectpool that were added back and cleans up the mempool state.
     m_mempool->UpdateTransactionsFromBlock(vHashUpdate);
 
-    const auto check_final_and_mature = [this, flags=STANDARD_LOCKTIME_VERIFY_FLAGS](CTxMemPool::txiter it)
+    // Predicate to use for filtering transactions in removeForReorg.
+    // Checks whether the transaction is still final and, if it spends a coinbase output, mature.
+    // Also updates valid entries' cached LockPoints if needed.
+    // If false, the tx is still valid and its lockpoints are updated.
+    // If true, the tx would be invalid in the next block; remove this entry and all of its descendants.
+    const auto filter_final_and_mature = [this, flags=STANDARD_LOCKTIME_VERIFY_FLAGS](CTxMemPool::txiter it)
         EXCLUSIVE_LOCKS_REQUIRED(m_mempool->cs, ::cs_main) {
-        bool should_remove = false;
         AssertLockHeld(m_mempool->cs);
         AssertLockHeld(::cs_main);
         const CTransaction& tx = it->GetTx();
+
+        // The transaction must be final.
+        if (!CheckFinalTx(m_chain.Tip(), tx, flags)) return true;
         LockPoints lp = it->GetLockPoints();
         const bool validLP{TestLockPointValidity(m_chain, lp)};
         CCoinsViewMemPool view_mempool(&CoinsTip(), *m_mempool);
-        if (!CheckFinalTx(m_chain.Tip(), tx, flags)
-            || !CheckSequenceLocks(m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
-            // Note if CheckSequenceLocks fails the LockPoints may still be invalid
-            // So it's critical that we remove the tx and not depend on the LockPoints.
-            should_remove = true;
-        } else if (it->GetSpendsCoinbase()) {
+        // CheckSequenceLocks checks if the transaction will be final in the next block to be
+        // created on top of the new chain. We use useExistingLockPoints=false so that, instead of
+        // using the information in lp (which might now refer to a block that no longer exists in
+        // the chain), it will update lp to contain LockPoints relevant to the new chain.
+        if (!CheckSequenceLocks(m_chain.Tip(), view_mempool, tx, flags, &lp, validLP)) {
+            // If CheckSequenceLocks fails, remove the tx and don't depend on the LockPoints.
+            return true;
+        } else if (!validLP) {
+            // If CheckSequenceLocks succeeded, it also updated the LockPoints.
+            // Now update the mempool entry lockpoints as well.
+            m_mempool->mapTx.modify(it, update_lock_points(lp));
+        }
+
+        // If the transaction spends any coinbase outputs, it must be mature.
+        if (it->GetSpendsCoinbase()) {
             for (const CTxIn& txin : tx.vin) {
                 auto it2 = m_mempool->mapTx.find(txin.prevout.hash);
                 if (it2 != m_mempool->mapTx.end())
@@ -372,18 +388,16 @@ void CChainState::MaybeUpdateMempoolForReorg(
                 assert(!coin.IsSpent());
                 const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
                 if (coin.IsSpent() || (coin.IsCoinBase() && mempool_spend_height - coin.nHeight < COINBASE_MATURITY)) {
-                    should_remove = true;
-                    break;
+                    return true;
                 }
             }
         }
-        // CheckSequenceLocks updates lp. Update the mempool entry LockPoints.
-        if (!validLP) m_mempool->mapTx.modify(it, update_lock_points(lp));
-        return should_remove;
+        // Transaction is still valid and cached LockPoints are updated.
+        return false;
     };
 
     // We also need to remove any now-immature transactions
-    m_mempool->removeForReorg(m_chain, check_final_and_mature);
+    m_mempool->removeForReorg(m_chain, filter_final_and_mature);
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(
         *m_mempool,
