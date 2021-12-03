@@ -265,6 +265,8 @@ class ListTransactionsTest(SyscoinTestFramework):
         # normalize results: remove fields that normally could differ and sort
         def normalize_list(txs):
             for tx in txs:
+                # SYSCOIN
+                tx.pop('account', None)
                 tx.pop('label', None)
                 tx.pop('time', None)
                 tx.pop('timereceived', None)
