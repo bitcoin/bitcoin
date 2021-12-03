@@ -27,6 +27,8 @@ BOOST_AUTO_TEST_CASE(findBlock)
     int height = -1;
     BOOST_CHECK(chain->findBlock(active[20]->GetBlockHash(), FoundBlock().height(height)));
     BOOST_CHECK_EQUAL(height, active[20]->nHeight);
+    BOOST_CHECK(chain->findBlock(active[10]->GetBlockHash(), FoundBlock().height(height)));
+    BOOST_CHECK_EQUAL(height, active[10]->nHeight);
 
     CBlock data;
     BOOST_CHECK(chain->findBlock(active[30]->GetBlockHash(), FoundBlock().data(data)));
@@ -35,6 +37,8 @@ BOOST_AUTO_TEST_CASE(findBlock)
     int64_t time = -1;
     BOOST_CHECK(chain->findBlock(active[40]->GetBlockHash(), FoundBlock().time(time)));
     BOOST_CHECK_EQUAL(time, active[40]->GetBlockTime());
+    BOOST_CHECK(chain->findBlock(active[10]->GetBlockHash(), FoundBlock().time(time)));
+    BOOST_CHECK_EQUAL(time, active[10]->GetBlockTime());
 
     int64_t max_time = -1;
     BOOST_CHECK(chain->findBlock(active[50]->GetBlockHash(), FoundBlock().maxTime(max_time)));
