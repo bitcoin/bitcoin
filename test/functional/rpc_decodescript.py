@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test decoding scripts via decodescript RPC command."""
 
+import json
+import os
+
 from test_framework.messages import (
     sha256,
     tx_from_hex,
@@ -252,6 +255,14 @@ class DecodeScriptTest(BitcoinTestFramework):
         rpc_result = self.nodes[0].decoderawtransaction(txSave.serialize().hex())
         assert_equal('OP_RETURN 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
 
+    def decodescript_datadriven_tests(self):
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_decodescript.json'), encoding='utf-8') as f:
+            dd_tests = json.load(f)
+
+        for script, result in dd_tests:
+            rpc_result = self.nodes[0].decodescript(script)
+            assert_equal(result, rpc_result)
+
     def run_test(self):
         self.log.info("Test decoding of standard input scripts [scriptSig]")
         self.decodescript_script_sig()
@@ -259,6 +270,8 @@ class DecodeScriptTest(BitcoinTestFramework):
         self.decodescript_script_pub_key()
         self.log.info("Test 'asm' script decoding of transactions")
         self.decoderawtransaction_asm_sighashtype()
+        self.log.info("Data-driven tests")
+        self.decodescript_datadriven_tests()
 
 if __name__ == '__main__':
     DecodeScriptTest().main()
