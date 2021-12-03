@@ -188,13 +188,9 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     }
 
     // Perform Bech32 error location
-    if (!error_locations) {
-        std::vector<int> dummy_errors;
-        error_str = bech32::LocateErrors(str, dummy_errors);
-    } else {
-        error_str = bech32::LocateErrors(str, *error_locations);
-    }
-
+    auto res = bech32::LocateErrors(str);
+    error_str = res.first;
+    if (error_locations) *error_locations = std::move(res.second);
     return CNoDestination();
 }
 } // namespace
