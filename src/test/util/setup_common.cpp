@@ -309,6 +309,20 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                              /*coins_db_in_memory=*/true);
     assert(!rv.has_value());
 
+    auto maybe_verify_failure = VerifyLoadedChainstate(
+        *Assert(m_node.chainman),
+        *Assert(m_node.evodb.get()),
+        fReindex.load(),
+        m_args.GetArg("-reindex-chainstate", false),
+        chainparams.GetConsensus(),
+        m_args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+        m_args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+        static_cast<int64_t(*)()>(GetTime),
+        [](bool bls_state) {
+            LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls_state);
+        });
+    assert(!maybe_verify_failure.has_value());
+
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
                                        *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
