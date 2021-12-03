@@ -23,7 +23,10 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         // Get the set of addresses assigned to label
         std::string label = LabelFromValue(params[0]);
         for (const auto& address : wallet.GetLabelAddresses(label)) {
-            output_scripts.insert(GetScriptForDestination(address));
+            auto output_script{GetScriptForDestination(address)};
+            if (wallet.IsMine(output_script)) {
+                output_scripts.insert(output_script);
+            }
         }
     } else {
         // Get the address
@@ -67,7 +70,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         }
 
         for (const CTxOut& txout : wtx.tx->vout) {
-            if (wallet.IsMine(txout.scriptPubKey) && output_scripts.count(txout.scriptPubKey) > 0) {
+            if (output_scripts.count(txout.scriptPubKey) > 0) {
                 amount += txout.nValue;
             }
         }
