@@ -64,16 +64,6 @@ private:
     int64_t feeDelta;
 };
 
-struct update_lock_points
-{
-    explicit update_lock_points(const LockPoints& _lp) : lp(_lp) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateLockPoints(lp); }
-
-private:
-    const LockPoints& lp;
-};
-
 bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 {
     AssertLockHeld(cs_main);
