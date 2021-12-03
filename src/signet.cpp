@@ -38,7 +38,7 @@ static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CSc
     std::vector<uint8_t> pushdata;
     while (witness_commitment.GetOp(pc, opcode, pushdata)) {
         if (pushdata.size() > 0) {
-            if (!found_header && pushdata.size() > (size_t) header.size() && Span<const uint8_t>(pushdata.data(), header.size()) == header) {
+            if (!found_header && pushdata.size() > (size_t)header.size() && Span{pushdata}.first(header.size()) == header) {
                 // pushdata only counts if it has the header _and_ some data
                 result.insert(result.end(), pushdata.begin() + header.size(), pushdata.end());
                 pushdata.erase(pushdata.begin() + header.size(), pushdata.end());

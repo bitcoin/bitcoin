@@ -149,7 +149,7 @@ std::string EncodeBase58Check(Span<const unsigned char> input)
         return false;
     }
     // re-calculate the checksum, ensure it matches the included 4-byte checksum
-    uint256 hash = Hash(MakeSpan(vchRet).first(vchRet.size() - 4));
+    uint256 hash = Hash(Span{vchRet}.first(vchRet.size() - 4));
     if (memcmp(&hash, &vchRet[vchRet.size() - 4], 4) != 0) {
         vchRet.clear();
         return false;
