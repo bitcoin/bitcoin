@@ -5,6 +5,7 @@
 
 #include <txmempool.h>
 
+#include <chain.h>
 #include <coins.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
@@ -73,16 +74,15 @@ private:
     const LockPoints& lp;
 };
 
-bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
+bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 {
     AssertLockHeld(cs_main);
-    assert(lp);
     // If there are relative lock times then the maxInputBlock will be set
     // If there are no relative lock times, the LockPoints don't depend on the chain
-    if (lp->maxInputBlock) {
+    if (lp.maxInputBlock) {
         // Check whether active_chain is an extension of the block at which the LockPoints
         // calculation was valid.  If not LockPoints are no longer valid
-        if (!active_chain.Contains(lp->maxInputBlock)) {
+        if (!active_chain.Contains(lp.maxInputBlock)) {
             return false;
         }
     }
@@ -649,8 +649,8 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        LockPoints lp = it->GetLockPoints();
-        if (!TestLockPointValidity(chain, &lp)) {
+        const LockPoints lp{it->GetLockPoints()};
+        if (!TestLockPointValidity(chain, lp)) {
             mapTx.modify(it, update_lock_points(lp));
         }
     }
