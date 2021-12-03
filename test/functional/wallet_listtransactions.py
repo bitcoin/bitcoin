@@ -244,17 +244,17 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.log.info("Send to externally generated addresses")
         # send to an address beyond the next to be generated to test the keypool gap
         self.nodes[1].sendtoaddress(addr3, "0.001")
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         self.sync_all()
 
         # send to an address that is already marked as used due to the keypool gap mechanics
         self.nodes[1].sendtoaddress(addr2, "0.001")
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         self.sync_all()
 
         # send to self transaction
         self.nodes[0].sendtoaddress(addr1, "0.001")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         self.log.info("Verify listtransactions is the same regardless of where the address was generated")
