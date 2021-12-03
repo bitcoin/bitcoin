@@ -1831,3 +1831,99 @@ RPCHelpMan listdescriptors()
 },
     };
 }
+
+RPCHelpMan backupwallet()
+{
+    return RPCHelpMan{"backupwallet",
+                "\nSafely copies current wallet file to destination, which can be a directory or a path with filename.\n",
+                {
+                    {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "The destination directory or file"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("backupwallet", "\"backup.dat\"")
+            + HelpExampleRpc("backupwallet", "\"backup.dat\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK(pwallet->cs_wallet);
+
+    std::string strDest = request.params[0].get_str();
+    if (!pwallet->BackupWallet(strDest)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
+    }
+
+    return NullUniValue;
+},
+    };
+}
+
+
+RPCHelpMan restorewallet()
+{
+    return RPCHelpMan{
+        "restorewallet",
+        "\nRestore and loads a wallet from backup.\n",
+        {
+            {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name that will be applied to the restored wallet"},
+            {"backup_file", RPCArg::Type::STR, RPCArg::Optional::NO, "The backup file that will be used to restore the wallet."},
+            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "name", "The wallet name if restored successfully."},
+                {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("restorewallet", "\"testwallet\" \"home\\backups\\backup-file.bak\"")
+            + HelpExampleRpc("restorewallet", "\"testwallet\" \"home\\backups\\backup-file.bak\"")
+            + HelpExampleCliNamed("restorewallet", {{"wallet_name", "testwallet"}, {"backup_file", "home\\backups\\backup-file.bak\""}, {"load_on_startup", true}})
+            + HelpExampleRpcNamed("restorewallet", {{"wallet_name", "testwallet"}, {"backup_file", "home\\backups\\backup-file.bak\""}, {"load_on_startup", true}})
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+
+    WalletContext& context = EnsureWalletContext(request.context);
+
+    auto backup_file = fs::u8path(request.params[1].get_str());
+
+    if (!fs::exists(backup_file)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Backup file does not exist");
+    }
+
+    std::string wallet_name = request.params[0].get_str();
+
+    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
+
+    if (fs::exists(wallet_path)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Wallet name already exists.");
+    }
+
+    if (!TryCreateDirectories(wallet_path)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Failed to create database path '%s'. Database already exists.", wallet_path.u8string()));
+    }
+
+    auto wallet_file = wallet_path / "wallet.dat";
+
+    fs::copy_file(backup_file, wallet_file, fs::copy_option::fail_if_exists);
+
+    auto [wallet, warnings] = LoadWalletHelper(context, request.params[2], wallet_name);
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("name", wallet->GetName());
+    obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+
+    return obj;
+
+},
+    };
+}
