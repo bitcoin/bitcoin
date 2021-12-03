@@ -17,6 +17,8 @@ BOOST_AUTO_TEST_CASE(MoneyRangeTest)
     BOOST_CHECK_EQUAL(MoneyRange(CAmount(0)), true);
     BOOST_CHECK_EQUAL(MoneyRange(CAmount(1)), true);
     BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY), true);
+    BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY/2), true);
+    BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY - 1), true);
     BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY + CAmount(1)), false);
 }
 
@@ -27,6 +29,8 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     feeRate = CFeeRate(0);
     // Must always return 0
     BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1), CAmount(0));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount(0));
     BOOST_CHECK_EQUAL(feeRate.GetFee(1e5), CAmount(0));
 
     feeRate = CFeeRate(1000);
