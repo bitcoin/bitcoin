@@ -38,7 +38,6 @@ Common `host-platform-triplet`s for cross compilation are:
 - `s390x-linux-gnu` for Linux S390X
 - `armv7a-linux-android` for Android ARM 32 bit
 - `aarch64-linux-android` for Android ARM 64 bit
-- `i686-linux-android` for Android x86 32 bit
 - `x86_64-linux-android` for Android x86 64 bit
 
 The paths are automatically configured and no other options are needed unless targeting [Android](../doc/build-android.md).
