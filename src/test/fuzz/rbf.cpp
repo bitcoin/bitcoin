@@ -24,7 +24,7 @@ FUZZ_TARGET(rbf)
         return;
     }
     CTxMemPool pool;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         const std::optional<CMutableTransaction> another_mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
         if (!another_mtx) {
             break;

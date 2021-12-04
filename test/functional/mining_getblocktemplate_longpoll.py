@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test longpolling with getblocktemplate."""
@@ -64,7 +64,6 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
 
         # Add enough mature utxos to the wallets, so that all txs spend confirmed coins
         self.generate(self.nodes[0], COINBASE_MATURITY)
-        self.sync_blocks()
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")
         thr = LongpollThread(self.nodes[0])

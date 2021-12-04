@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet backup features.
@@ -89,7 +89,6 @@ class WalletBackupTest(BitcoinTestFramework):
         # Must sync mempools before mining.
         self.sync_mempools()
         self.generate(self.nodes[3], 1)
-        self.sync_blocks()
 
     # As above, this mirrors the original bash test.
     def start_three(self, args=()):
@@ -124,20 +123,16 @@ class WalletBackupTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Wallet name already exists.", node.restorewallet, wallet_name, wallet_file)
 
     def init_three(self):
-        self.init_wallet(0)
-        self.init_wallet(1)
-        self.init_wallet(2)
+        self.init_wallet(node=0)
+        self.init_wallet(node=1)
+        self.init_wallet(node=2)
 
     def run_test(self):
         self.log.info("Generating initial blockchain")
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
         self.generate(self.nodes[1], 1)
-        self.sync_blocks()
         self.generate(self.nodes[2], 1)
-        self.sync_blocks()
         self.generate(self.nodes[3], COINBASE_MATURITY)
-        self.sync_blocks()
 
         assert_equal(self.nodes[0].getbalance(), 50)
         assert_equal(self.nodes[1].getbalance(), 50)
@@ -166,7 +161,6 @@ class WalletBackupTest(BitcoinTestFramework):
 
         # Generate 101 more blocks, so any fees paid mature
         self.generate(self.nodes[3], COINBASE_MATURITY + 1)
-        self.sync_all()
 
         balance0 = self.nodes[0].getbalance()
         balance1 = self.nodes[1].getbalance()

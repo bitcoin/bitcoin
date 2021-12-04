@@ -5,12 +5,12 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_H
 #define BITCOIN_TEST_FUZZ_UTIL_H
 
-#include <amount.h>
 #include <arith_uint256.h>
 #include <attributes.h>
 #include <chainparamsbase.h>
 #include <coins.h>
 #include <compat.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <merkleblock.h>
 #include <net.h>
@@ -132,7 +132,7 @@ template <typename WeakEnumType, size_t size>
 
 [[nodiscard]] CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, const size_t max_stack_elem_size = 32) noexcept;
 
-[[nodiscard]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt, const bool maybe_p2wsh = false) noexcept;
+[[nodiscard]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const bool maybe_p2wsh = false) noexcept;
 
 [[nodiscard]] uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 

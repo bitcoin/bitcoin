@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the avoid_reuse and setwalletflag features."""
@@ -80,7 +80,6 @@ class AvoidReuseTest(BitcoinTestFramework):
         self.test_immutable()
 
         self.generate(self.nodes[0], 110)
-        self.sync_all()
         self.test_change_remains_change(self.nodes[1])
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_sending_from_reused_address_without_avoid_reuse()
@@ -175,7 +174,6 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # listunspent should show 1 single, unused 10 btc output
         assert_unspent(self.nodes[1], total_count=1, total_sum=10, reused_supported=True, reused_count=0)
@@ -186,7 +184,6 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         self.nodes[1].sendtoaddress(retaddr, 5)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # listunspent should show 1 single, unused 5 btc output
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_supported=True, reused_count=0)
@@ -195,7 +192,6 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
         assert_unspent(self.nodes[1], total_count=2, total_sum=15, reused_count=1, reused_sum=10)
@@ -229,7 +225,6 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # listunspent should show 1 single, unused 10 btc output
         assert_unspent(self.nodes[1], total_count=1, total_sum=10, reused_supported=True, reused_count=0)
@@ -238,7 +233,6 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         self.nodes[1].sendtoaddress(retaddr, 5)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # listunspent should show 1 single, unused 5 btc output
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_supported=True, reused_count=0)
@@ -260,7 +254,6 @@ class AvoidReuseTest(BitcoinTestFramework):
 
             self.nodes[0].sendtoaddress(new_fundaddr, 10)
             self.generate(self.nodes[0], 1)
-            self.sync_all()
 
             # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
             assert_unspent(self.nodes[1], total_count=2, total_sum=15, reused_count=1, reused_sum=10)
@@ -303,7 +296,6 @@ class AvoidReuseTest(BitcoinTestFramework):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # send transaction that should not use all the available outputs
         # per the current coin selection algorithm
@@ -335,7 +327,6 @@ class AvoidReuseTest(BitcoinTestFramework):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Sending a transaction that is smaller than each one of the
         # available outputs
@@ -364,7 +355,6 @@ class AvoidReuseTest(BitcoinTestFramework):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Sending a transaction that needs to use the full groups
         # of 100 inputs but also the incomplete group of 2 inputs.

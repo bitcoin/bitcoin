@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test external signer.
@@ -27,6 +27,9 @@ class WalletSignerTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 2
+        # The experimental syscall sandbox feature (-sandbox) is not compatible with -signer (which
+        # invokes execve).
+        self.disable_syscall_sandbox = True
 
         self.extra_args = [
             [],
@@ -109,7 +112,6 @@ class WalletSignerTest(BitcoinTestFramework):
         self.log.info('Prepare mock PSBT')
         self.nodes[0].sendtoaddress(address1, 1)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Load private key into wallet to generate a signed PSBT for the mock
         self.nodes[1].createwallet(wallet_name="mock", disable_private_keys=False, blank=True, descriptors=True)

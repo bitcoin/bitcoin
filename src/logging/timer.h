@@ -27,10 +27,12 @@ public:
     Timer(
         std::string prefix,
         std::string end_msg,
-        BCLog::LogFlags log_category = BCLog::LogFlags::ALL) :
+        BCLog::LogFlags log_category = BCLog::LogFlags::ALL,
+        bool msg_on_completion = true) :
             m_prefix(std::move(prefix)),
             m_title(std::move(end_msg)),
-            m_log_category(log_category)
+            m_log_category(log_category),
+            m_message_on_completion(msg_on_completion)
     {
         this->Log(strprintf("%s started", m_title));
         m_start_t = GetTime<std::chrono::microseconds>();
@@ -38,7 +40,11 @@ public:
 
     ~Timer()
     {
-        this->Log(strprintf("%s completed", m_title));
+        if (m_message_on_completion) {
+            this->Log(strprintf("%s completed", m_title));
+        } else {
+            this->Log("completed");
+        }
     }
 
     void Log(const std::string& msg)
@@ -74,14 +80,17 @@ private:
     std::chrono::microseconds m_start_t{};
 
     //! Log prefix; usually the name of the function this was created in.
-    const std::string m_prefix{};
+    const std::string m_prefix;
 
     //! A descriptive message of what is being timed.
-    const std::string m_title{};
+    const std::string m_title;
 
     //! Forwarded on to LogPrint if specified - has the effect of only
     //! outputting the timing log when a particular debug= category is specified.
-    const BCLog::LogFlags m_log_category{};
+    const BCLog::LogFlags m_log_category;
+
+    //! Whether to output the message again on completion.
+    const bool m_message_on_completion;
 };
 
 } // namespace BCLog
@@ -91,6 +100,8 @@ private:
     BCLog::Timer<std::chrono::microseconds> PASTE2(logging_timer, __COUNTER__)(__func__, end_msg, log_category)
 #define LOG_TIME_MILLIS_WITH_CATEGORY(end_msg, log_category) \
     BCLog::Timer<std::chrono::milliseconds> PASTE2(logging_timer, __COUNTER__)(__func__, end_msg, log_category)
+#define LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(end_msg, log_category) \
+    BCLog::Timer<std::chrono::milliseconds> PASTE2(logging_timer, __COUNTER__)(__func__, end_msg, log_category, /* msg_on_completion=*/false)
 #define LOG_TIME_SECONDS(end_msg) \
     BCLog::Timer<std::chrono::seconds> PASTE2(logging_timer, __COUNTER__)(__func__, end_msg)
 

@@ -7,6 +7,7 @@
 
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/syscall_sandbox.h>
 #include <util/threadnames.h>
 
 #include <algorithm>
@@ -151,6 +152,7 @@ public:
         for (int n = 0; n < threads_num; ++n) {
             m_worker_threads.emplace_back([this, n]() {
                 util::ThreadRename(strprintf("scriptch.%i", n));
+                SetSyscallSandboxPolicy(SyscallSandboxPolicy::VALIDATION_SCRIPT_CHECK);
                 Loop(false /* worker thread */);
             });
         }
@@ -165,16 +167,24 @@ public:
     //! Add a batch of checks to the queue
     void Add(std::vector<T>& vChecks)
     {
-        LOCK(m_mutex);
-        for (T& check : vChecks) {
-            queue.push_back(T());
-            check.swap(queue.back());
+        if (vChecks.empty()) {
+            return;
         }
-        nTodo += vChecks.size();
-        if (vChecks.size() == 1)
+
+        {
+            LOCK(m_mutex);
+            for (T& check : vChecks) {
+                queue.emplace_back();
+                check.swap(queue.back());
+            }
+            nTodo += vChecks.size();
+        }
+
+        if (vChecks.size() == 1) {
             m_worker_cv.notify_one();
-        else if (vChecks.size() > 1)
+        } else {
             m_worker_cv.notify_all();
+        }
     }
 
     //! Stop all of the worker threads.

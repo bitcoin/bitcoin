@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,26 +37,15 @@ export LC_ALL=C
 # See https://doc.qt.io/qt-5/qcoreapplication.html#locale-settings and
 # https://stackoverflow.com/a/34878283 for more details.
 
+# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 KNOWN_VIOLATIONS=(
-    "src/bitcoin-tx.cpp.*stoul"
-    "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
-    "src/node/blockstorage.cpp:.*atoi"
-    "src/qt/rpcconsole.cpp:.*atoi"
-    "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
     "src/test/fuzz/locale.cpp"
-    "src/test/fuzz/parse_numbers.cpp:.*atoi"
-    "src/torcontrol.cpp:.*atoi"
-    "src/torcontrol.cpp:.*strtol"
-    "src/util/strencodings.cpp:.*atoi"
-    "src/util/strencodings.cpp:.*strtol"
-    "src/util/strencodings.cpp:.*strtoul"
-    "src/util/strencodings.h:.*atoi"
-    "src/util/system.cpp:.*atoi"
+    "src/test/fuzz/string.cpp"
 )
 
-REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
+REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|minisketch/|tinyformat.h|univalue/)"
 
 LOCALE_DEPENDENT_FUNCTIONS=(
     alphasort    # LC_COLLATE (via strcoll)

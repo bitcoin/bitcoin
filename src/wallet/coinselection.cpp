@@ -4,10 +4,13 @@
 
 #include <wallet/coinselection.h>
 
+#include <consensus/amount.h>
 #include <policy/feerate.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 
+#include <numeric>
 #include <optional>
 
 // Descending order comparator
@@ -168,6 +171,30 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selectio
     return true;
 }
 
+std::optional<std::pair<std::set<CInputCoin>, CAmount>> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value)
+{
+    std::set<CInputCoin> out_set;
+    CAmount value_ret = 0;
+
+    std::vector<size_t> indexes;
+    indexes.resize(utxo_pool.size());
+    std::iota(indexes.begin(), indexes.end(), 0);
+    Shuffle(indexes.begin(), indexes.end(), FastRandomContext());
+
+    CAmount selected_eff_value = 0;
+    for (const size_t i : indexes) {
+        const OutputGroup& group = utxo_pool.at(i);
+        Assume(group.GetSelectionAmount() > 0);
+        selected_eff_value += group.GetSelectionAmount();
+        value_ret += group.m_value;
+        util::insert(out_set, group.m_outputs);
+        if (selected_eff_value >= target_value) {
+            return std::make_pair(out_set, value_ret);
+        }
+    }
+    return std::nullopt;
+}
+
 static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
 {
@@ -279,13 +306,13 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
         }
 
         if (LogAcceptCategory(BCLog::SELECTCOINS)) {
-            LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: "); /* Continued */
+            std::string log_message{"Coin selection best subset: "};
             for (unsigned int i = 0; i < applicable_groups.size(); i++) {
                 if (vfBest[i]) {
-                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(applicable_groups[i].m_value)); /* Continued */
+                    log_message += strprintf("%s ", FormatMoney(applicable_groups[i].m_value));
                 }
             }
-            LogPrint(BCLog::SELECTCOINS, "total %s\n", FormatMoney(nBest));
+            LogPrint(BCLog::SELECTCOINS, "%stotal %s\n", log_message, FormatMoney(nBest));
         }
     }
 
