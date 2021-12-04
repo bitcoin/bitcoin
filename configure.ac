@@ -789,9 +789,6 @@ case $host in
         *armv7a*)
           ANDROID_ARCH=armeabi-v7a
           ;;
-        *i686*)
-          ANDROID_ARCH=i686
-          ;;
         *) AC_MSG_ERROR("Could not determine Android arch") ;;
       esac
      ;;
