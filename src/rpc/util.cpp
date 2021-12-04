@@ -317,7 +317,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", (int)id.version);
-        obj.pushKV("witness_program", HexStr(Span<const unsigned char>(id.program, id.length)));
+        obj.pushKV("witness_program", HexStr({id.program, id.length}));
         return obj;
     }
 };

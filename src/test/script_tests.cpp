@@ -284,7 +284,7 @@ public:
         CScript scriptPubKey = script;
         if (wm == WitnessMode::PKH) {
             uint160 hash;
-            CHash160().Write(MakeSpan(script).subspan(1)).Finalize(hash);
+            CHash160().Write(Span{script}.subspan(1)).Finalize(hash);
             script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(hash) << OP_EQUALVERIFY << OP_CHECKSIG;
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
         } else if (wm == WitnessMode::SH) {
@@ -1473,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
 static CMutableTransaction TxFromHex(const std::string& str)
 {
     CMutableTransaction tx;
-    VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, ParseHex(str), 0) >> tx;
+    SpanReader{SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, ParseHex(str), 0} >> tx;
     return tx;
 }
 
@@ -1483,7 +1483,7 @@ static std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
     std::vector<CTxOut> prevouts;
     for (size_t i = 0; i < univalue.size(); ++i) {
         CTxOut txout;
-        VectorReader(SER_DISK, 0, ParseHex(univalue[i].get_str()), 0) >> txout;
+        SpanReader{SER_DISK, 0, ParseHex(univalue[i].get_str()), 0} >> txout;
         prevouts.push_back(std::move(txout));
     }
     return prevouts;
@@ -1754,7 +1754,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
     for (const auto& vec : vectors.getValues()) {
         auto txhex = ParseHex(vec["given"]["rawUnsignedTx"].get_str());
         CMutableTransaction tx;
-        VectorReader(SER_NETWORK, PROTOCOL_VERSION, txhex, 0) >> tx;
+        SpanReader{SER_NETWORK, PROTOCOL_VERSION, txhex, 0} >> tx;
         std::vector<CTxOut> utxos;
         for (const auto& utxo_spent : vec["given"]["utxosSpent"].getValues()) {
             auto script_bytes = ParseHex(utxo_spent["scriptPubKey"].get_str());
@@ -1812,7 +1812,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
             BOOST_CHECK_EQUAL(HexStr(sighash), input["intermediary"]["sigHash"].get_str());
 
             // To verify the sigmsg, hash the expected sigmsg, and compare it with the (expected) sighash.
-            BOOST_CHECK_EQUAL(HexStr((CHashWriter(HASHER_TAPSIGHASH) << MakeSpan(ParseHex(input["intermediary"]["sigMsg"].get_str()))).GetSHA256()), input["intermediary"]["sigHash"].get_str());
+            BOOST_CHECK_EQUAL(HexStr((CHashWriter(HASHER_TAPSIGHASH) << Span{ParseHex(input["intermediary"]["sigMsg"].get_str())}).GetSHA256()), input["intermediary"]["sigHash"].get_str());
         }
 
     }

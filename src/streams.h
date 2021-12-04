@@ -128,15 +128,14 @@ private:
     size_t nPos;
 };
 
-/** Minimal stream for reading from an existing vector by reference
+/** Minimal stream for reading from an existing byte array by Span.
  */
-class VectorReader
+class SpanReader
 {
 private:
     const int m_type;
     const int m_version;
-    const std::vector<unsigned char>& m_data;
-    size_t m_pos = 0;
+    Span<const unsigned char> m_data;
 
 public:
 
@@ -146,12 +145,13 @@ public:
      * @param[in]  data Referenced byte vector to overwrite/append
      * @param[in]  pos Starting position. Vector index where reads should start.
      */
-    VectorReader(int type, int version, const std::vector<unsigned char>& data, size_t pos)
-        : m_type(type), m_version(version), m_data(data), m_pos(pos)
+    SpanReader(int type, int version, Span<const unsigned char> data, size_t pos)
+        : m_type(type), m_version(version), m_data(data)
     {
-        if (m_pos > m_data.size()) {
-            throw std::ios_base::failure("VectorReader(...): end of data (m_pos > m_data.size())");
+        if (pos > m_data.size()) {
+            throw std::ios_base::failure("SpanReader(...): end of data (pos > m_data.size())");
         }
+        data = data.subspan(pos);
     }
 
     /**
@@ -159,15 +159,15 @@ public:
      * @param[in]  args  A list of items to deserialize starting at pos.
      */
     template <typename... Args>
-    VectorReader(int type, int version, const std::vector<unsigned char>& data, size_t pos,
+    SpanReader(int type, int version, Span<const unsigned char> data, size_t pos,
                   Args&&... args)
-        : VectorReader(type, version, data, pos)
+        : SpanReader(type, version, data, pos)
     {
         ::UnserializeMany(*this, std::forward<Args>(args)...);
     }
 
     template<typename T>
-    VectorReader& operator>>(T&& obj)
+    SpanReader& operator>>(T&& obj)
     {
         // Unserialize from this stream
         ::Unserialize(*this, obj);
@@ -177,8 +177,8 @@ public:
     int GetVersion() const { return m_version; }
     int GetType() const { return m_type; }
 
-    size_t size() const { return m_data.size() - m_pos; }
-    bool empty() const { return m_data.size() == m_pos; }
+    size_t size() const { return m_data.size(); }
+    bool empty() const { return m_data.empty(); }
 
     void read(char* dst, size_t n)
     {
@@ -187,12 +187,11 @@ public:
         }
 
         // Read from the beginning of the buffer
-        size_t pos_next = m_pos + n;
-        if (pos_next > m_data.size()) {
-            throw std::ios_base::failure("VectorReader::read(): end of data");
+        if (n > m_data.size()) {
+            throw std::ios_base::failure("SpanReader::read(): end of data");
         }
-        memcpy(dst, m_data.data() + m_pos, n);
-        m_pos = pos_next;
+        memcpy(dst, m_data.data(), n);
+        m_data = m_data.subspan(n);
     }
 };
 

@@ -682,7 +682,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
     vw << (int32_t)0;
     vw << (int32_t)1;
 
-    VectorReader vr(0, 0, malformed_record, 0);
+    SpanReader vr{0, 0, malformed_record, 0};
     WalletDescriptor w_desc;
     BOOST_CHECK_EXCEPTION(vr >> w_desc, std::ios_base::failure, malformed_descriptor);
 }
