@@ -12,7 +12,7 @@ $(package)_patches += fix_qt_pkgconfig.patch mac-qmake.conf fix_no_printer.patch
 $(package)_patches += dont_hardcode_x86_64.patch fix_montery_include.patch
 $(package)_patches += fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch fix_limits_header.patch
-$(package)_patches += fix_bigsur_style.patch
+$(package)_patches += fix_bigsur_style.patch use_android_ndk23.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=d5788e86257b21d5323f1efd94376a213e091d1e5e03b45a95dd052b5f570db8
@@ -237,6 +237,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_bigsur_style.patch && \
+  patch -p1 -i $($(package)_patch_dir)/use_android_ndk23.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
