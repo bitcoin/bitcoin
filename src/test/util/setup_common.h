@@ -56,7 +56,7 @@ void Seed(FastRandomContext& ctx);
 static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
 {
     if (seed == SeedRand::ZEROS) {
-        g_insecure_rand_ctx = FastRandomContext(/* deterministic */ true);
+        g_insecure_rand_ctx = FastRandomContext(/*fDeterministic=*/true);
     } else {
         Seed(g_insecure_rand_ctx);
     }
@@ -227,4 +227,4 @@ private:
     const std::string m_reason;
 };
 
-#endif
+#endif // BITCOIN_TEST_UTIL_SETUP_COMMON_H

@@ -82,6 +82,9 @@ public:
     /** Progress message during initialization. */
     ADD_SIGNALS_DECL_WRAPPER(InitMessage, void, const std::string& message);
 
+    /** Wallet client created. */
+    ADD_SIGNALS_DECL_WRAPPER(InitWallet, void, );
+
     /** Number of network connections changed. */
     ADD_SIGNALS_DECL_WRAPPER(NotifyNumConnectionsChanged, void, int newNumConnections);
 

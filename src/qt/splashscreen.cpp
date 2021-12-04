@@ -194,6 +194,7 @@ void SplashScreen::subscribeToCoreSignals()
     // Connect signals to client
     m_handler_init_message = m_node->handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
     m_handler_show_progress = m_node->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    m_handler_init_wallet = m_node->handleInitWallet([this]() { handleLoadWallet(); });
 }
 
 void SplashScreen::handleLoadWallet()

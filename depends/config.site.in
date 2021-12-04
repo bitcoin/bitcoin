@@ -72,7 +72,6 @@ fi
 
 if test "@host_os@" = darwin; then
   BREW=no
-  PORT=no
 fi
 
 PATH="${depends_prefix}/native/bin:${PATH}"

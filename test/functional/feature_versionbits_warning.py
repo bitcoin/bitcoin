@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -48,8 +48,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         tip = int(tip, 16)
 
         for _ in range(numblocks):
-            block = create_block(tip, create_coinbase(height + 1), block_time)
-            block.nVersion = version
+            block = create_block(tip, create_coinbase(height + 1), block_time, version=version)
             block.solve()
             peer.send_message(msg_block(block))
             block_time += 1

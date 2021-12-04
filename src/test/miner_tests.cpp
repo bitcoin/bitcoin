@@ -7,7 +7,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <policy/policy.h>
 #include <script/standard.h>
 #include <txmempool.h>

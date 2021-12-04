@@ -34,7 +34,8 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
     FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
     CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
 
-    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), auto_outfile);
+    UniValue result = CreateUTXOSnapshot(
+        node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
     BOOST_TEST_MESSAGE(
         "Wrote UTXO snapshot to " << fs::PathToString(snapshot_path.make_preferred()) << ": " << result.write());
 
@@ -47,7 +48,7 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
 
     malleation(auto_infile, metadata);
 
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory*/ true);
+    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory=*/true);
 }
 
 

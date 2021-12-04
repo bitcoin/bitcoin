@@ -238,9 +238,6 @@ mkdir -p "$OUTDIR"
 
 # CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
-case "$HOST" in
-    *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
-esac
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
@@ -263,7 +260,7 @@ case "$HOST" in
     *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
 esac
 
-# Using --no-tls-get-addr-optimize retains compatibility with glibc 2.17, by
+# Using --no-tls-get-addr-optimize retains compatibility with glibc 2.18, by
 # avoiding a PowerPC64 optimisation available in glibc 2.22 and later.
 # https://sourceware.org/binutils/docs-2.35/ld/PowerPC64-ELF64.html
 case "$HOST" in

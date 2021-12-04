@@ -44,7 +44,7 @@ class TestSymbolChecks(unittest.TestCase):
             self.skipTest("test not available for RISC-V")
 
         # nextup was introduced in GLIBC 2.24, so is newer than our supported
-        # glibc (2.17), and available in our release build environment (2.24).
+        # glibc (2.18), and available in our release build environment (2.24).
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
                 #define _GNU_SOURCE

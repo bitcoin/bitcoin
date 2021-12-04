@@ -141,7 +141,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        unsigned int len = ::ReadCompactSize(s);
+        const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
             s.read((char*)vch, len);
             if (len != size()) {
@@ -149,9 +149,7 @@ public:
             }
         } else {
             // invalid pubkey, skip available data
-            char dummy;
-            while (len--)
-                s.read(&dummy, 1);
+            s.ignore(len);
             Invalidate();
         }
     }
@@ -159,13 +157,13 @@ public:
     //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
-        return CKeyID(Hash160(MakeSpan(vch).first(size())));
+        return CKeyID(Hash160(Span{vch}.first(size())));
     }
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
-        return Hash(MakeSpan(vch).first(size()));
+        return Hash(Span{vch}.first(size()));
     }
 
     /*
@@ -230,8 +228,8 @@ public:
     XOnlyPubKey& operator=(const XOnlyPubKey&) = default;
 
     /** Determine if this pubkey is fully valid. This is true for approximately 50% of all
-     *  possible 32-byte arrays. If false, VerifySchnorr and CreatePayToContract will always
-     *  fail. */
+     *  possible 32-byte arrays. If false, VerifySchnorr, CheckTapTweak and CreateTapTweak
+     *  will always fail. */
     bool IsFullyValid() const;
 
     /** Test whether this is the 0 key (the result of default construction). This implies
@@ -242,7 +240,7 @@ public:
     explicit XOnlyPubKey(Span<const unsigned char> bytes);
 
     /** Construct an x-only pubkey from a normal pubkey. */
-    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(Span<const unsigned char>(pubkey.begin() + 1, pubkey.begin() + 33)) {}
+    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(Span{pubkey}.subspan(1, 32)) {}
 
     /** Verify a Schnorr signature against this public key.
      *

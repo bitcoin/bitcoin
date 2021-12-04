@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <optional>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -136,11 +137,6 @@ std::string EncodeBase64(Span<const unsigned char> input)
     ConvertBits<8, 6, true>([&](int v) { str += pbase64[v]; }, input.begin(), input.end());
     while (str.size() % 4) str += '=';
     return str;
-}
-
-std::string EncodeBase64(const std::string& str)
-{
-    return EncodeBase64(MakeUCharSpan(str));
 }
 
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
@@ -525,4 +521,49 @@ std::string HexStr(const Span<const uint8_t> s)
     }
     assert(it == rv.end());
     return rv;
+}
+
+std::optional<uint64_t> ParseByteUnits(const std::string& str, ByteUnit default_multiplier)
+{
+    if (str.empty()) {
+        return std::nullopt;
+    }
+    auto multiplier = default_multiplier;
+    char unit = str.back();
+    switch (unit) {
+    case 'k':
+        multiplier = ByteUnit::k;
+        break;
+    case 'K':
+        multiplier = ByteUnit::K;
+        break;
+    case 'm':
+        multiplier = ByteUnit::m;
+        break;
+    case 'M':
+        multiplier = ByteUnit::M;
+        break;
+    case 'g':
+        multiplier = ByteUnit::g;
+        break;
+    case 'G':
+        multiplier = ByteUnit::G;
+        break;
+    case 't':
+        multiplier = ByteUnit::t;
+        break;
+    case 'T':
+        multiplier = ByteUnit::T;
+        break;
+    default:
+        unit = 0;
+        break;
+    }
+
+    uint64_t unit_amount = static_cast<uint64_t>(multiplier);
+    auto parsed_num = ToIntegral<uint64_t>(unit ? str.substr(0, str.size() - 1) : str);
+    if (!parsed_num || parsed_num > std::numeric_limits<uint64_t>::max() / unit_amount) { // check overflow
+        return std::nullopt;
+    }
+    return *parsed_num * unit_amount;
 }

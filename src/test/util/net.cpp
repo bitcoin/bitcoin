@@ -46,18 +46,18 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
     std::vector<NodeEvictionCandidate> candidates;
     for (int id = 0; id < n_candidates; ++id) {
         candidates.push_back({
-            /* id */ id,
-            /* nTimeConnected */ static_cast<int64_t>(random_context.randrange(100)),
-            /* m_min_ping_time */ std::chrono::microseconds{random_context.randrange(100)},
-            /* nLastBlockTime */ static_cast<int64_t>(random_context.randrange(100)),
-            /* nLastTXTime */ static_cast<int64_t>(random_context.randrange(100)),
-            /* fRelevantServices */ random_context.randbool(),
-            /* fRelayTxes */ random_context.randbool(),
-            /* fBloomFilter */ random_context.randbool(),
-            /* nKeyedNetGroup */ random_context.randrange(100),
-            /* prefer_evict */ random_context.randbool(),
-            /* m_is_local */ random_context.randbool(),
-            /* m_network */ ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
+            /*id=*/id,
+            /*nTimeConnected=*/static_cast<int64_t>(random_context.randrange(100)),
+            /*m_min_ping_time=*/std::chrono::microseconds{random_context.randrange(100)},
+            /*nLastBlockTime=*/static_cast<int64_t>(random_context.randrange(100)),
+            /*nLastTXTime=*/static_cast<int64_t>(random_context.randrange(100)),
+            /*fRelevantServices=*/random_context.randbool(),
+            /*fRelayTxes=*/random_context.randbool(),
+            /*fBloomFilter=*/random_context.randbool(),
+            /*nKeyedNetGroup=*/random_context.randrange(100),
+            /*prefer_evict=*/random_context.randbool(),
+            /*m_is_local=*/random_context.randbool(),
+            /*m_network=*/ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
         });
     }
     return candidates;
