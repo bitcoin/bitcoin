@@ -276,14 +276,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res3 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
         assert_equal(res2, res3)
 
-        self.log.info("Test that a node aware of stale blocks syncs them as well")
-        node = self.nodes[0]
-        # Ensure the node is aware of a stale block prior to restart
-        node.getblock(reorg_block)
-
-        self.restart_node(0, ["-coinstatsindex"])
-        assert_raises_rpc_error(-32603, "Unable to get data because coinstatsindex is still syncing.", node.gettxoutsetinfo, 'muhash', reorg_block)
-
     def _test_index_rejects_hash_serialized(self):
         self.log.info("Test that the rpc raises if the legacy hash is passed with the index")
 
