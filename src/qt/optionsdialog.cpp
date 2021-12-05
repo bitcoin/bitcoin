@@ -497,7 +497,7 @@ void OptionsDialog::updateWidth()
             continue;
         }
         QFontMetrics fm(button->font());
-        nWidthWidestButton = std::max<int>(nWidthWidestButton, fm.width(button->text()));
+        nWidthWidestButton = std::max<int>(nWidthWidestButton, GUIUtil::TextWidth(fm, button->text()));
         ++nButtonsVisible;
     }
     // Add 10 per button as padding and use minimum 585 which is what we used in css before

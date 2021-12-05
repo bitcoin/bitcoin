@@ -9,22 +9,22 @@
 
 #include <qt/splashscreen.h>
 
-#include <qt/guiutil.h>
-#include <qt/networkstyle.h>
 
 #include <chainparams.h>
 #include <clientversion.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
+#include <qt/guiutil.h>
+#include <qt/networkstyle.h>
 #include <ui_interface.h>
 #include <util/system.h>
 #include <version.h>
 
 #include <QApplication>
 #include <QCloseEvent>
-#include <QDesktopWidget>
 #include <QPainter>
+#include <QScreen>
 
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
@@ -89,7 +89,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     fontBold.setPointSize(50 * fontFactor);
     pixPaint.setFont(fontBold);
     QFontMetrics fm = pixPaint.fontMetrics();
-    int titleTextWidth = fm.width(titleText);
+    int titleTextWidth = GUIUtil::TextWidth(fm, titleText);
     if (titleTextWidth > width * 0.8) {
         fontFactor = 0.75;
     }
@@ -97,14 +97,14 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     fontBold.setPointSize(50 * fontFactor);
     pixPaint.setFont(fontBold);
     fm = pixPaint.fontMetrics();
-    titleTextWidth  = fm.width(titleText);
+    titleTextWidth  = GUIUtil::TextWidth(fm, titleText);
     int titleTextHeight = fm.height();
     pixPaint.drawText((width / 2) - (titleTextWidth / 2), titleTextHeight + paddingTop, titleText);
 
     fontNormal.setPointSize(16 * fontFactor);
     pixPaint.setFont(fontNormal);
     fm = pixPaint.fontMetrics();
-    int versionTextWidth = fm.width(versionText);
+    int versionTextWidth = GUIUtil::TextWidth(fm, versionText);
     pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleTextHeight + paddingTop + titleVersionVSpace, versionText);
 
     // draw additional text if special network
@@ -112,7 +112,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
         fontBold.setPointSize(10 * fontFactor);
         pixPaint.setFont(fontBold);
         fm = pixPaint.fontMetrics();
-        int titleAddTextWidth = fm.width(titleAddText);
+        int titleAddTextWidth = GUIUtil::TextWidth(fm, titleAddText);
         // Draw the badge background with the network-specific color
         QRect badgeRect = QRect(width - titleAddTextWidth - 20, 5, width, fm.height() + 10);
         QColor badgeColor = networkStyle->getBadgeColor();
@@ -128,7 +128,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect r(QPoint(), QSize(width, height));
     resize(r.size());
     setFixedSize(r.size());
-    move(QApplication::desktop()->screenGeometry().center() - r.center());
+    move(QGuiApplication::primaryScreen()->geometry().center() - r.center());
 
     subscribeToCoreSignals();
     installEventFilter(this);
