@@ -137,6 +137,10 @@ void PSBTInput::Merge(const PSBTInput& input)
     if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
 
     partial_sigs.insert(input.partial_sigs.begin(), input.partial_sigs.end());
+    ripemd160_preimages.insert(input.ripemd160_preimages.begin(), input.ripemd160_preimages.end());
+    sha256_preimages.insert(input.sha256_preimages.begin(), input.sha256_preimages.end());
+    hash160_preimages.insert(input.hash160_preimages.begin(), input.hash160_preimages.end());
+    hash256_preimages.insert(input.hash256_preimages.begin(), input.hash256_preimages.end());
     hd_keypaths.insert(input.hd_keypaths.begin(), input.hd_keypaths.end());
     unknown.insert(input.unknown.begin(), input.unknown.end());
 
