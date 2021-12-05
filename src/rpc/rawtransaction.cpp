@@ -1154,7 +1154,23 @@ static RPCHelpMan decodepsbt()
                                 {
                                     {RPCResult::Type::STR_HEX, "", "hex-encoded witness data (if any)"},
                                 }},
-                                {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/true, "The unknown global fields",
+                                {RPCResult::Type::OBJ_DYN, "ripemd160_preimages", /*optional=*/ true, "",
+                                {
+                                    {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                                }},
+                                {RPCResult::Type::OBJ_DYN, "sha256_preimages", /*optional=*/ true, "",
+                                {
+                                    {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                                }},
+                                {RPCResult::Type::OBJ_DYN, "hash160_preimages", /*optional=*/ true, "",
+                                {
+                                    {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                                }},
+                                {RPCResult::Type::OBJ_DYN, "hash256_preimages", /*optional=*/ true, "",
+                                {
+                                    {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                                }},
+                                {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/ true, "The unknown input fields",
                                 {
                                     {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                                 }},
@@ -1371,6 +1387,42 @@ static RPCHelpMan decodepsbt()
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("final_scriptwitness", txinwitness);
+        }
+
+        // Ripemd160 hash preimages
+        if (!input.ripemd160_preimages.empty()) {
+            UniValue ripemd160_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.ripemd160_preimages) {
+                ripemd160_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("ripemd160_preimages", ripemd160_preimages);
+        }
+
+        // Sha256 hash preimages
+        if (!input.sha256_preimages.empty()) {
+            UniValue sha256_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.sha256_preimages) {
+                sha256_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("sha256_preimages", sha256_preimages);
+        }
+
+        // Hash160 hash preimages
+        if (!input.hash160_preimages.empty()) {
+            UniValue hash160_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.hash160_preimages) {
+                hash160_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("hash160_preimages", hash160_preimages);
+        }
+
+        // Hash256 hash preimages
+        if (!input.hash256_preimages.empty()) {
+            UniValue hash256_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.hash256_preimages) {
+                hash256_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("hash256_preimages", hash256_preimages);
         }
 
         // Proprietary
