@@ -32,14 +32,14 @@ def setup():
     if not os.path.isdir('dash'):
         subprocess.check_call(['git', 'clone', 'https://github.com/dashpay/dash.git'])
     os.chdir('gitian-builder')
-    make_image_prog = ['bin/make-base-vm', '--suite', 'bionic', '--arch', 'amd64']
+    make_image_prog = ['bin/make-base-vm', '--suite', 'focal', '--arch', 'amd64']
     if args.docker:
         make_image_prog += ['--docker']
     elif args.lxc:
         make_image_prog += ['--lxc', '--disksize', '13000']
     subprocess.check_call(make_image_prog)
     os.chdir(workdir)
-    if args.is_bionic and not args.kvm and not args.docker:
+    if args.is_focal and not args.kvm and not args.docker:
         subprocess.check_call(['sudo', 'sed', '-i', 's/lxcbr0/br0/', '/etc/default/lxc-net'])
         print('Reboot is required')
         sys.exit(0)
@@ -174,7 +174,7 @@ def main():
     args = parser.parse_args()
     workdir = os.getcwd()
 
-    args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
+    args.is_focal = b'focal' in subprocess.check_output(['lsb_release', '-cs'])
 
     args.lxc = (args.virtualization == 'lxc')
     args.kvm = (args.virtualization == 'kvm')

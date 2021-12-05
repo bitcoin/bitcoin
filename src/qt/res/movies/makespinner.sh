@@ -9,6 +9,6 @@ FRAMEDIR=$(dirname $0)
 for i in {0..89}
 do
     frame=$(printf "%03d" $i)
-    angle=$(($i * 4))
+    angle=$((i * 4))
     convert $FRAMEDIR/../src/spinner.png -background "rgba(0,0,0,0.0)" -distort SRT $angle $FRAMEDIR/spinner-$frame.png
 done

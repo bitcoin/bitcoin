@@ -18,15 +18,11 @@ else
     exit 1
 fi
 
-git_check_in_repo() {
-    ! { git status --porcelain -uall --ignored "$@" 2>/dev/null || echo '??'; } | grep -q '?'
-}
-
 DESC=""
 SUFFIX=""
-if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" -a -e "$(which git 2>/dev/null)" -a "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ] && git_check_in_repo share/genbuild.sh; then
+if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     # clean 'dirty' status of touched files that haven't been modified
-    git diff >/dev/null 2>/dev/null 
+    git diff >/dev/null 2>/dev/null
 
     # if latest commit is tagged and not dirty, then override using the tag name
     RAWDESC=$(git describe --abbrev=0 2>/dev/null)

@@ -3,7 +3,7 @@ name: "dash-osx-0.17"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -30,6 +30,7 @@ packages:
 - "ccache"
 - "cmake"
 - "xorriso"
+- "libtinfo5"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
@@ -72,11 +73,12 @@ script: |
 
   export ZERO_AR_DATE=1
 
+  # Use $LIB in LD_PRELOAD to avoid hardcoding the dir (See `man ld.so`)
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
@@ -89,7 +91,7 @@ script: |
     for prog in ${FAKETIME_HOST_PROGS}; do
         echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
@@ -121,38 +123,27 @@ script: |
   create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
-  # Create the release tarball using (arbitrarily) the first host
-  ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
-  make dist
-  SOURCEDIST=$(echo dashcore-*.tar.gz)
-  DISTNAME=${SOURCEDIST/%.tar.gz}
+  # Define DISTNAME variable.
+  # shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
+  source contrib/gitian-descriptors/assign_DISTNAME
 
-  # Correct tar file order
-  mkdir -p temp
-  pushd temp
-  tar -xf ../$SOURCEDIST
-  find dashcore-* | sort | tar --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
-  popd
+  GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
 
-  # Workaround for tarball not building with the bare tag version (prep)
-  make -C src obj/build.h
+  # Create the source tarball
+  mkdir -p "$(dirname "$GIT_ARCHIVE")"
+  git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 
   ORIGPATH="$PATH"
-  # Extract the release tarball into a dir for each host and build
+  # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xf ../$SOURCEDIST
+    tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
-    # Workaround for tarball not building with the bare tag version
-    echo '#!/bin/true' >share/genbuild.sh
-    mkdir src/obj
-    cp ../src/obj/build.h src/obj/
-
+    ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make -C src osx_debug
@@ -169,7 +160,7 @@ script: |
     cp ${BASEPREFIX}/${i}/native/bin/${i}-pagestuff unsigned-app-${i}/pagestuff
     mv dist unsigned-app-${i}
     pushd unsigned-app-${i}
-    find . | sort | tar --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
+    find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
     popd
 
     make deploy OSX_DMG="${OUTDIR}/${DISTNAME}-osx-unsigned.dmg"
@@ -179,12 +170,10 @@ script: |
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
     find .. -name "*.dSYM" -exec cp -ra {} ${DISTNAME}/bin \;
-    find ${DISTNAME} -not -path '*.dSYM*' | sort | tar --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
-    find ${DISTNAME} -path '*.dSYM*' | sort | tar --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
+    find ${DISTNAME} -not -path '*.dSYM*' | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
+    find ${DISTNAME} -path '*.dSYM*' | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
     cd ../../
   done
-  mkdir -p $OUTDIR/src
-  mv $SOURCEDIST $OUTDIR/src
   mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin19.tar.gz ${OUTDIR}/${DISTNAME}-osx64.tar.gz
   mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin19-debug.tar.gz ${OUTDIR}/${DISTNAME}-osx64-debug.tar.gz
 

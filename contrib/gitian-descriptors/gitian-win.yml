@@ -3,7 +3,7 @@ name: "dash-win-0.17"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -22,7 +22,6 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
-- "rename"
 - "ccache"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
@@ -68,14 +67,15 @@ script: |
   fi
 
   # We include the GCC version in all wrappers so that ccache can detect compiler upgrades when hashing the wrappers
-  GCCVERSION=`gcc --version | head -1`
+  GCCVERSION=$(gcc --version | head -1)
 
+  # Use $LIB in LD_PRELOAD to avoid hardcoding the dir (See `man ld.so`)
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${prog}
     echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
@@ -89,7 +89,7 @@ script: |
         echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
@@ -101,16 +101,14 @@ script: |
   function create_per-host_compiler_wrapper {
   # -posix variant is required for c++11 threading.
   for i in $HOSTS; do
-    mkdir -p ${WRAP_DIR}/${i}
     for prog in gcc g++; do
         echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog}-posix | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo '# Add the gcc version to the wrapper so that ccache takes this into account (we use CCACHE_COMPILERCHECK=content)' >> ${WRAP_DIR}/${i}-${prog}
-        echo "# `${prog} --version | head -1`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "# $(${prog} --version | head -1)" >> ${WRAP_DIR}/${i}-${prog}
+        echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
         touch -d "${REFERENCE_DATETIME}" ${WRAP_DIR}/${i}-${prog}
@@ -139,66 +137,51 @@ script: |
   create_per-host_compiler_wrapper "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
-  # Create the release tarball using (arbitrarily) the first host
-  ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
-  make dist
-  SOURCEDIST=$(echo dashcore-*.tar.gz)
-  DISTNAME=${SOURCEDIST/%.tar.gz}
+  # Define DISTNAME variable.
+  # shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
+  source contrib/gitian-descriptors/assign_DISTNAME
 
-  # Correct tar file order
-  mkdir -p temp
-  pushd temp
-  tar -xf ../$SOURCEDIST
-  find dashcore-* | sort | tar --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
-  mkdir -p $OUTDIR/src
-  cp ../$SOURCEDIST $OUTDIR/src
-  popd
+  GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
 
-  # Workaround for tarball not building with the bare tag version (prep)
-  make -C src obj/build.h
+  # Create the source tarball
+  mkdir -p "$(dirname "$GIT_ARCHIVE")"
+  git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 
   ORIGPATH="$PATH"
-  # Extract the release tarball into a dir for each host and build
+  # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xf ../$SOURCEDIST
+    tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
-    # Workaround for tarball not building with the bare tag version
-    echo '#!/bin/true' >share/genbuild.sh
-    mkdir src/obj
-    cp ../src/obj/build.h src/obj/
-
+    ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
-    make deploy
+    make deploy BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
     make install DESTDIR=${INSTALLPATH}
-    rename 's/-setup\.exe$/-setup-unsigned.exe/' "*-setup.exe"
-    cp -f dashcore-*setup*.exe $OUTDIR/
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
-    find ${DISTNAME}/bin -type f -executable -exec ${i}-objcopy --only-keep-debug {} {}.dbg \; -exec ${i}-strip -s {} \; -exec ${i}-objcopy --add-gnu-debuglink={}.dbg {} \;
-    find ${DISTNAME}/lib -type f -exec ${i}-objcopy --only-keep-debug {} {}.dbg \; -exec ${i}-strip -s {} \; -exec ${i}-objcopy --add-gnu-debuglink={}.dbg {} \;
-    find ${DISTNAME} -not -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}.zip
-    find ${DISTNAME} -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}-debug.zip
+    find ${DISTNAME}/bin -type f -executable -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
+    find ${DISTNAME}/lib -type f -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
+    cp ../doc/README_windows.txt ${DISTNAME}/readme.txt
+    find ${DISTNAME} -not -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i//x86_64-w64-mingw32/win64}.zip
+    find ${DISTNAME} -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i//x86_64-w64-mingw32/win64}-debug.zip
     cd ../../
     rm -rf distsrc-${i}
   done
+
   cp -rf contrib/windeploy $BUILD_DIR
   cd $BUILD_DIR/windeploy
   mkdir unsigned
-  cp $OUTDIR/dashcore-*setup-unsigned.exe unsigned/
-  find . | sort | tar --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*-debug.zip ${OUTDIR}/${DISTNAME}-win64-debug.zip
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*.zip ${OUTDIR}/${DISTNAME}-win64.zip
+  cp ${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe unsigned/
+  find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
 
   # Compress ccache (otherwise the assert file will get too huge)
   if [ "$CCACHE_DIR" != "" ]; then
