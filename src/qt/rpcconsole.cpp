@@ -16,6 +16,7 @@
 #include <netbase.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
+#include <qt/guiutil.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/platformstyle.h>
 #include <qt/walletmodel.h>
@@ -942,8 +943,7 @@ void RPCConsole::clear(bool keep_prompt)
 
 void RPCConsole::keyPressEvent(QKeyEvent *event)
 {
-    if(windowType() != Qt::Widget && event->key() == Qt::Key_Escape)
-    {
+    if (windowType() != Qt::Widget && GUIUtil::IsEscapeOrBack(event->key())) {
         close();
     }
 }
