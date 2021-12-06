@@ -1,0 +1,18 @@
+[
+    [
+        "a914eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee87",
+        {
+            "asm": "OP_HASH160 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee OP_EQUAL",
+            "address": "92Cpm6g9Hba4maFG66aDjVxcgPY4wnQM4E",
+            "type": "scripthash"
+        }
+    ],
+    [
+        "6a00",
+        {
+            "asm": "OP_RETURN 0",
+            "type": "nulldata",
+            "p2sh": "93JSZ4DRLAifokPwn3C6WtnZoAVHwDa6UP"
+        }
+    ]
+]
