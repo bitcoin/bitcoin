@@ -262,7 +262,13 @@ uncached from the UTXO set. Based on the `utxocache:add`, `utxocache:spend` and
 $ bpftrace contrib/tracing/log_utxos.bt
 ```
 
-It should produce an output similar to the following.
+This should produce an output similar to the following. If you see bpftrace
+warnings like `Lost 24 events`, the eBPF perf ring-buffer is filled faster
+than it is being read. You can increase the ring-buffer size by setting the
+ENV variable `BPFTRACE_PERF_RB_PAGES` (default 64) at a cost of higher
+memory usage. See the [bpftrace reference guide] for more information.
+
+[bpftrace reference guide]: https://github.com/iovisor/bpftrace/blob/master/docs/reference_guide.md#98-bpftrace_perf_rb_pages
 
 ```bash
 Attaching 4 probes...

@@ -13,13 +13,14 @@ from bcc import BPF, USDT
 # a sandboxed Linux kernel VM.
 program = """
 # include <uapi/linux/ptrace.h>
+
 struct data_t
 {
   u64 duration;
   u32 mode;
   u64 coins_count;
   u64 coins_mem_usage;
-  bool is_flush_prune;
+  bool is_flush_for_prune;
 };
 
 // BPF perf buffer to push the data to user space.
@@ -31,7 +32,7 @@ int trace_flush(struct pt_regs *ctx) {
   bpf_usdt_readarg(2, ctx, &data.mode);
   bpf_usdt_readarg(3, ctx, &data.coins_count);
   bpf_usdt_readarg(4, ctx, &data.coins_mem_usage);
-  bpf_usdt_readarg(5, ctx, &data.is_flush_prune);
+  bpf_usdt_readarg(5, ctx, &data.is_flush_for_prune);
   flush.perf_submit(ctx, &data, sizeof(data));
   return 0;
 }
@@ -52,7 +53,7 @@ class Data(ctypes.Structure):
         ("mode", ctypes.c_uint32),
         ("coins_count", ctypes.c_uint64),
         ("coins_mem_usage", ctypes.c_uint64),
-        ("is_flush_prune", ctypes.c_bool),
+        ("is_flush_for_prune", ctypes.c_bool)
     ]
 
 
@@ -62,7 +63,7 @@ def print_event(event):
         FLUSH_MODES[event.mode],
         event.coins_count,
         "%.2f kB" % (event.coins_mem_usage/1000),
-        event.is_flush_prune,
+        event.is_flush_for_prune
     ))
 
 
@@ -85,7 +86,7 @@ def main(bitcoind_path):
     print("Logging utxocache flushes. Ctrl-C to end...")
     print("%-15s %-10s %-15s %-15s %-8s" % ("Duration (µs)", "Mode",
                                             "Coins Count", "Memory Usage",
-                                            "Prune"))
+                                            "Flush for Prune"))
 
     while True:
         try:
