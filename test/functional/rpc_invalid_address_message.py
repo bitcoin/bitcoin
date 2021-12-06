@@ -61,19 +61,19 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
     def test_validateaddress(self):
         # Invalid Bech32
         self.check_invalid(BECH32_INVALID_SIZE, 'Invalid Bech32 address data size')
-        self.check_invalid(BECH32_INVALID_PREFIX, 'Invalid HRP or Base58 character in address')
+        self.check_invalid(BECH32_INVALID_PREFIX, 'Not a valid Bech32 or Base58 encoding')
         self.check_invalid(BECH32_INVALID_BECH32, 'Version 1+ witness address must use Bech32m checksum')
         self.check_invalid(BECH32_INVALID_BECH32M, 'Version 0 witness address must use Bech32 checksum')
         self.check_invalid(BECH32_INVALID_VERSION, 'Invalid Bech32 address witness version')
         self.check_invalid(BECH32_INVALID_V0_SIZE, 'Invalid Bech32 v0 address data size')
         self.check_invalid(BECH32_TOO_LONG, 'Bech32 string too long', list(range(90, 108)))
-        self.check_invalid(BECH32_ONE_ERROR, 'Invalid checksum', [9])
-        self.check_invalid(BECH32_TWO_ERRORS, 'Invalid checksum', [22, 43])
-        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid checksum', [38])
+        self.check_invalid(BECH32_ONE_ERROR, 'Invalid Bech32 checksum', [9])
+        self.check_invalid(BECH32_TWO_ERRORS, 'Invalid Bech32 checksum', [22, 43])
+        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid Bech32 checksum', [38])
         self.check_invalid(BECH32_NO_SEPARATOR, 'Missing separator')
         self.check_invalid(BECH32_INVALID_CHAR, 'Invalid Base 32 character', [8])
-        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Invalid checksum', [19, 30])
-        self.check_invalid(BECH32_WRONG_VERSION, 'Invalid checksum', [5])
+        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Invalid Bech32 checksum', [19, 30])
+        self.check_invalid(BECH32_WRONG_VERSION, 'Invalid Bech32 checksum', [5])
 
         # Valid Bech32
         self.check_valid(BECH32_VALID)
@@ -89,19 +89,19 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.check_valid(BASE58_VALID)
 
         # Invalid address format
-        self.check_invalid(INVALID_ADDRESS, 'Invalid HRP or Base58 character in address')
-        self.check_invalid(INVALID_ADDRESS_2, 'Invalid HRP or Base58 character in address')
+        self.check_invalid(INVALID_ADDRESS, 'Not a valid Bech32 or Base58 encoding')
+        self.check_invalid(INVALID_ADDRESS_2, 'Not a valid Bech32 or Base58 encoding')
 
     def test_getaddressinfo(self):
         node = self.nodes[0]
 
         assert_raises_rpc_error(-5, "Invalid Bech32 address data size", node.getaddressinfo, BECH32_INVALID_SIZE)
 
-        assert_raises_rpc_error(-5, "Invalid HRP or Base58 character in address", node.getaddressinfo, BECH32_INVALID_PREFIX)
+        assert_raises_rpc_error(-5, "Not a valid Bech32 or Base58 encoding", node.getaddressinfo, BECH32_INVALID_PREFIX)
 
         assert_raises_rpc_error(-5, "Invalid prefix for Base58-encoded address", node.getaddressinfo, BASE58_INVALID_PREFIX)
 
-        assert_raises_rpc_error(-5, "Invalid HRP or Base58 character in address", node.getaddressinfo, INVALID_ADDRESS)
+        assert_raises_rpc_error(-5, "Not a valid Bech32 or Base58 encoding", node.getaddressinfo, INVALID_ADDRESS)
 
     def run_test(self):
         self.test_validateaddress()

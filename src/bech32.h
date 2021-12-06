@@ -46,7 +46,7 @@ struct DecodeResult
 DecodeResult Decode(const std::string& str);
 
 /** Return the positions of errors in a Bech32 string. */
-std::string LocateErrors(const std::string& str, std::vector<int>& error_locations);
+std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str);
 
 } // namespace bech32
 
