@@ -1,0 +1,120 @@
+[
+    [
+        "5120eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        {
+            "asm": "1 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "address": "bcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqz6nvlh",
+            "type": "witness_v1_taproot",
+            "p2sh": "2Mt5gBng2UVL3xX4FUQinSBthq8gWQqs37g"
+        }
+    ],
+    [
+        "5102eeee",
+        {
+            "asm": "1 -28398",
+            "address": "bcrt1pamhqk96edn",
+            "type": "witness_unknown",
+            "p2sh": "2ND89Zqxi19tq7AjL5Y3un8fDWRwpwrk4tf"
+        }
+    ],
+    [
+        "0020eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        {
+            "asm": "0 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "address": "bcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqgdn98t",
+            "type": "witness_v0_scripthash",
+            "p2sh": "2MwGk8mw1GBP6U9D5X8gTvgvXpuknmAK3fo"
+        }
+    ],
+    [
+        "a914eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee87",
+        {
+            "asm": "OP_HASH160 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee OP_EQUAL",
+            "address": "2NF2b3KS8xXb9XHvbRMXdZh8s5g92rUZHtp",
+            "type": "scripthash"
+        }
+    ],
+    [
+        "6a00",
+        {
+            "asm": "OP_RETURN 0",
+            "type": "nulldata",
+            "p2sh": "2NG8CqGyR16jkZU5H7J9WM5xpCT6Fpw6bww"
+        }
+    ],
+    [
+        "6aee",
+        {
+            "asm": "OP_RETURN OP_UNKNOWN",
+            "type": "nonstandard",
+            "p2sh": "2NGU1bmCBhSooc3vkPYdea2ngDcwhNx8CeF",
+            "segwit": {
+                "asm": "0 44358a3abb4cc9f635f459edffb2a1210f849857aaf12106a1af645e034faa95",
+                "hex": "002044358a3abb4cc9f635f459edffb2a1210f849857aaf12106a1af645e034faa95",
+                "address": "bcrt1qgs6c5w4mfnylvd05t8kllv4pyy8cfxzh4tcjzp4p4aj9uq60422sw9mgmf",
+                "type": "witness_v0_scripthash",
+                "p2sh-segwit": "2N9xFeGJC4Z2BQcVEq7vyeNUZiVoANFbrX1"
+            }
+        }
+    ],
+    [
+        "6a02ee",
+        {
+            "asm": "OP_RETURN [error]",
+            "type": "nonstandard",
+            "p2sh": "2N9JFV56rrkTYVnrJTMFSpKNsq6j5NbAdQr",
+            "segwit": {
+                "asm": "0 6f3d493995bda1f72a8f4de96663be22b583623a05f5ae98f38c45b8e03ca5da",
+                "hex": "00206f3d493995bda1f72a8f4de96663be22b583623a05f5ae98f38c45b8e03ca5da",
+                "address": "bcrt1qdu75jwv4hkslw250fh5kvca7y26cxc36qh66ax8n33zm3cpu5hdqdtm4gp",
+                "type": "witness_v0_scripthash",
+                "p2sh-segwit": "2N3TqW8vuVr987Z695CmLNmLLXobBRMmqho"
+            }
+        }
+    ],
+    [
+        "02eeee",
+        {
+            "asm": "-28398",
+            "type": "nonstandard",
+            "p2sh": "2N34iiGoUUkVSPiaaTFpJjB1FR9TXQu3PGM",
+            "segwit": {
+                "asm": "0 96c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
+                "hex": "002096c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
+                "address": "bcrt1qjmprdr7rq522gw9ghkgfly7yng25n4m3nrxtmdujqsakvm9jfapqk795l5",
+                "type": "witness_v0_scripthash",
+                "p2sh-segwit": "2MtoejEictTQ6XtmHYzoYttt35Ec6krqFKN"
+            }
+        }
+    ],
+    [
+        "ba",
+        {
+            "asm": "OP_CHECKSIGADD",
+            "type": "nonstandard",
+            "p2sh": "2MyX11u6v747zcKHTJMjXFgkj1vYZgHr4i1",
+            "segwit": {
+                "asm": "0 281c93990bac2c69cf372c9a3b66c406c86cca826d6407b68e644da22eef8186",
+                "hex": "0020281c93990bac2c69cf372c9a3b66c406c86cca826d6407b68e644da22eef8186",
+                "address": "bcrt1q9qwf8xgt4skxnneh9jdrkekyqmyxej5zd4jq0d5wv3x6yth0sxrqe2wl7r",
+                "type": "witness_v0_scripthash",
+                "p2sh-segwit": "2NBoeWVFMmZdEhLzP5kpvjnJ8c1GucsCbFK"
+            }
+        }
+    ],
+    [
+        "50",
+        {
+            "asm": "OP_RESERVED",
+            "type": "nonstandard",
+            "p2sh": "2NEqnmDnSWcfTRBG2t6M53ey6mjc8ncHesN",
+            "segwit": {
+                "asm": "0 5c62e091b8c0565f1bafad0dad5934276143ae2ccef7a5381e8ada5b1a8d26d2",
+                "hex": "00205c62e091b8c0565f1bafad0dad5934276143ae2ccef7a5381e8ada5b1a8d26d2",
+                "address": "bcrt1qt33wpydccpt97xa045x66kf5yas58t3vemm62wq73td9kx5dymfqknplwh",
+                "type": "witness_v0_scripthash",
+                "p2sh-segwit": "2NEtjT3ku2KjZo53bnwKX2v928Mzx5sjdUh"
+            }
+        }
+    ]
+]
