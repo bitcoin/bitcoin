@@ -776,8 +776,11 @@ public:
     //! Check whether this script always needs a signature.
     bool NeedsSignature() const { return GetType() << "s"_mst; }
 
+    //! Check whether there is no satisfaction path that contains both timelocks and heightlocks
+    bool CheckTimeLocksMix() const { return GetType() << "k"_mst; }
+
     //! Do all sanity checks.
-    bool IsSane() const { return IsValid() && GetType() << "mk"_mst && CheckOpsLimit() && CheckStackSize(); }
+    bool IsSane() const { return IsValid() && IsNonMalleable() && CheckTimeLocksMix() && CheckOpsLimit() && CheckStackSize(); }
 
     //! Check whether this node is safe as a script on its own.
     bool IsSaneTopLevel() const { return IsValidTopLevel() && IsSane() && NeedsSignature(); }
