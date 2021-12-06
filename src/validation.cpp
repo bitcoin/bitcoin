@@ -1774,6 +1774,7 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
 // SYSCOIN
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, std::vector<uint256> &vecNEVMBlocks, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify)
 {
+    AssertLockHeld(::cs_main);
     // SYSCOIN
     const auto& params = Params().GetConsensus();
     bool fDIP0003Active = pindex->nHeight >= params.DIP0003Height;
