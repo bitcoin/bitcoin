@@ -2298,6 +2298,9 @@ public:
 
 static RPCHelpMan scantxoutset()
 {
+    // scriptPubKey corresponding to mainnet address 12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S
+    const std::string EXAMPLE_DESCRIPTOR_RAW = "raw(76a91411b366edfc0a8b66feebae5c2e25a7b6a5d1cf3188ac)#fm24fxxy";
+
     return RPCHelpMan{"scantxoutset",
         "\nScans the unspent transaction output set for entries that match certain output descriptors.\n"
         "Examples of output descriptors are:\n"
@@ -2355,7 +2358,14 @@ static RPCHelpMan scantxoutset()
                 {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
             }},
         },
-        RPCExamples{""},
+        RPCExamples{
+            HelpExampleCli("scantxoutset", "start \'[\"" + EXAMPLE_DESCRIPTOR_RAW + "\"]\'") +
+            HelpExampleCli("scantxoutset", "status") +
+            HelpExampleCli("scantxoutset", "abort") +
+            HelpExampleRpc("scantxoutset", "\"start\", [\"" + EXAMPLE_DESCRIPTOR_RAW + "\"]") +
+            HelpExampleRpc("scantxoutset", "\"status\"") +
+            HelpExampleRpc("scantxoutset", "\"abort\"")
+        },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR});
