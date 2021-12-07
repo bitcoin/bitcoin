@@ -251,6 +251,8 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
         indexed_modified_transaction_set &mapModifiedTx)
 {
+    AssertLockHeld(m_mempool.cs);
+
     int nDescendantsUpdated = 0;
     for (CTxMemPool::txiter it : alreadyAdded) {
         CTxMemPool::setEntries descendants;
@@ -287,6 +289,8 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
 // cached size/sigops/fee values that are not actually correct.
 bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set& mapModifiedTx, CTxMemPool::setEntries& failedTx)
 {
+    AssertLockHeld(m_mempool.cs);
+
     assert(it != m_mempool.mapTx.end());
     return mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it);
 }
@@ -314,6 +318,8 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // transaction package to work on next.
 void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated)
 {
+    AssertLockHeld(m_mempool.cs);
+
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
     indexed_modified_transaction_set mapModifiedTx;
