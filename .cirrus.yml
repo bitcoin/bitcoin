@@ -300,7 +300,7 @@ task:
   << : *BASE_TEMPLATE
   android_sdk_cache:
     folder: "depends/SDKs/android"
-    fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=22.1.7171670"
+    fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.1.7779620"
   depends_sources_cache:
     folder: "depends/sources"
     fingerprint_script: git rev-list -1 HEAD ./depends
