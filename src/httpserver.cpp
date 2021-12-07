@@ -602,7 +602,7 @@ CService HTTPRequest::GetPeer() const
         const char* address = "";
         uint16_t port = 0;
 
-#if HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
+#ifdef HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
         evhttp_connection_get_peer(con, &address, &port);
 #else
         evhttp_connection_get_peer(con, (char**)&address, &port);

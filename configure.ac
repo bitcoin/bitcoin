@@ -1510,15 +1510,25 @@ if test x$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench
   fi
 fi
 
-AC_MSG_CHECKING([if evhttp_connection_get_peer expects const char**])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-    #include <cstdint>
-    #include <event2/http.h>
-  ]],
-  [[ evhttp_connection_get_peer((evhttp_connection*) nullptr,(const char**) nullptr,(uint16_t*) nullptr); ]])],
-  [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR], [1], [Define this symbol if evhttp_connection_get_peer expects const char**]) ],
-  [ AC_MSG_RESULT([no]); AC_DEFINE([HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR], [0], [Define this symbol if evhttp_connection_get_peer expects const char**]) ]
-)
+if test x$use_libevent = xyes; then
+  TEMP_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS $EVENT_CFLAGS"
+  AC_MSG_CHECKING([if evhttp_connection_get_peer expects const char**])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+      #include <cstdint>
+      #include <event2/http.h>
+    ]], [[
+      evhttp_connection *conn = (evhttp_connection *)1;
+      const char *host;
+      uint16_t port;
+
+      evhttp_connection_get_peer(conn, &host, &port);
+    ]])],
+    [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR], [1], [Define this symbol if evhttp_connection_get_peer expects const char**]) ],
+    [ AC_MSG_RESULT([no]) ]
+  )
+  CXXFLAGS="$TEMP_CXXFLAGS"
+fi
 
 dnl QR Code encoding library check
 
