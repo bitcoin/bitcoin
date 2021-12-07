@@ -676,7 +676,7 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uin
     return true;
 }
 
-bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out, DNSLookupFn dns_lookup_function)
+bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 {
     if (!ValidAsCString(subnet_str)) {
         return false;
@@ -686,7 +686,7 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out, DNSLookupF
     const std::string str_addr{subnet_str.substr(0, slash_pos)};
     CNetAddr addr;
 
-    if (LookupHost(str_addr, addr, /*fAllowLookup=*/false, dns_lookup_function)) {
+    if (LookupHost(str_addr, addr, /*fAllowLookup=*/false)) {
         if (slash_pos != subnet_str.npos) {
             const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
             uint8_t netmask;
@@ -697,7 +697,7 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out, DNSLookupF
             } else {
                 // Invalid number; try full netmask syntax. Never allow lookup for netmask.
                 CNetAddr full_netmask;
-                if (LookupHost(netmask_str, full_netmask, /*fAllowLookup=*/false, dns_lookup_function)) {
+                if (LookupHost(netmask_str, full_netmask, /*fAllowLookup=*/false)) {
                     subnet_out = CSubNet{addr, full_netmask};
                     return subnet_out.IsValid();
                 }
