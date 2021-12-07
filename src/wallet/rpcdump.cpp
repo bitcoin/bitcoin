@@ -1529,6 +1529,11 @@ RPCHelpMan importmulti()
 
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(mainRequest);
     if (!pwallet) return NullUniValue;
+    CWallet& wallet{*pwallet};
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
 
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
@@ -1828,6 +1833,11 @@ RPCHelpMan importdescriptors() {
     // Acquire the wallet
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(main_request);
     if (!pwallet) return NullUniValue;
+    CWallet& wallet{*pwallet};
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
 
     //  Make sure wallet is a descriptor wallet
     if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
