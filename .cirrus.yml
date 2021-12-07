@@ -54,7 +54,7 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 compute_credits_template: &CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
-  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
+  use_compute_credits: true
 
 task:
   name: 'lint [bionic]'
@@ -72,6 +72,7 @@ task:
 
 task:
   name: "Win64 native [msvc]"
+  << : *CREDITS_TEMPLATE
   << : *FILTER_TEMPLATE
   windows_container:
     cpu: 4
@@ -164,6 +165,7 @@ task:
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
     image: debian:bullseye
@@ -176,6 +178,7 @@ task:
 
 task:
   name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [focal]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -185,6 +188,7 @@ task:
 
 task:
   name: '32-bit + dash [gui] [CentOS 8]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: centos:8
@@ -195,6 +199,7 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [bionic]'
+  << : *CREDITS_TEMPLATE
   previous_releases_cache:
     folder: "releases"
   << : *GLOBAL_TASK_TEMPLATE
@@ -205,6 +210,7 @@ task:
 
 task:
   name: '[TSan, depends, no gui] [jammy]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
@@ -217,6 +223,7 @@ task:
 
 task:
   name: '[MSan, depends] [focal]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -226,6 +233,7 @@ task:
 
 task:
   name: '[ASan + LSan + UBSan + integer, no depends] [jammy]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
@@ -235,6 +243,7 @@ task:
 
 task:
   name: '[fuzzer,address,undefined,integer, no depends] [focal]'
+  << : *CREDITS_TEMPLATE
   only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_BASE_BRANCH == $CIRRUS_DEFAULT_BRANCH
   << : *GLOBAL_TASK_TEMPLATE
   container:
@@ -248,6 +257,7 @@ task:
 
 task:
   name: '[multiprocess, i686, DEBUG] [focal]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -260,6 +270,7 @@ task:
 
 task:
   name: '[no wallet] [bionic]'
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
@@ -269,6 +280,7 @@ task:
 
 task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
+  << : *CREDITS_TEMPLATE
   << : *BASE_TEMPLATE
   macos_sdk_cache:
     folder: "depends/SDKs/$MACOS_SDK"
@@ -283,6 +295,7 @@ task:
 
 task:
   name: 'macOS 11 native [gui] [no depends]'
+  << : *CREDITS_TEMPLATE
   brew_install_script:
     - brew install boost libevent berkeley-db@4 qt@5 miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
@@ -297,6 +310,7 @@ task:
 
 task:
   name: 'ARM64 Android APK [focal]'
+  << : *CREDITS_TEMPLATE
   << : *BASE_TEMPLATE
   android_sdk_cache:
     folder: "depends/SDKs/android"
