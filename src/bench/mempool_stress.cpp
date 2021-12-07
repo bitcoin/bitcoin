@@ -63,7 +63,7 @@ static std::vector<CTransactionRef> CreateOrderedCoins(FastRandomContext& det_ra
                 tx.vin.back().scriptSig = CScript() << coin.tx_count;
                 tx.vin.back().scriptWitness.stack.push_back(CScriptNum(coin.tx_count).getvch());
             }
-            if (coin.vin_left == coin.ref->vout.size()) {
+            if (coin.vin_left == coin.ref->vin.size()) {
                 if(available_coins.size()-1!=idx){ // if idx is not the last index swap it with the end index
                    std::swap(available_coins[idx], available_coins.back());
                 }
