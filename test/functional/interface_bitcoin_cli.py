@@ -149,6 +149,9 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         if self.is_specified_wallet_compiled():
             self.log.info("Test -getinfo and dash-cli getwalletinfo return expected wallet info")
+            # Explicitely set the output type in order to have constintent tx vsize / fees
+            # for both legacy and descriptor wallets (disables the change address type detection algorithm)
+            self.restart_node(0, extra_args=[])
             assert_equal(Decimal(cli_get_info['Balance']), BALANCE)
             assert 'Balances' not in cli_get_info_string
             wallet_info = self.nodes[0].getwalletinfo()
