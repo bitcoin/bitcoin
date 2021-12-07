@@ -77,6 +77,21 @@ Otherwise, please use the `rescanblockchain` RPC to trigger a rescan. (#23123)
 Updated RPCs
 ------------
 
+- `upgradewallet` will now automatically flush the keypool if upgrading
+  from a non-HD wallet to an HD wallet, to immediately start using the
+  newly-generated HD keys. (#23093)
+
+- a new RPC `newkeypool` has been added, which will flush (entirely
+  clear and refill) the keypool. (#23093)
+
+- The `validateaddress` RPC now returns an `error_locations` array for invalid
+  addresses, with the indices of invalid character locations in the address (if
+  known). For example, this will attempt to locate up to two Bech32 errors, and
+  return their locations if successful. Success and correctness are only guaranteed
+  if fewer than two substitution errors have been made.
+  The error message returned in the `error` field now also returns more specific
+  errors when decoding fails. (#16807)
+
 - The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs
   `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`,
   `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`,
