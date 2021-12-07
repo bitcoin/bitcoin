@@ -81,7 +81,7 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
         conflicts.push_back(conflict.GetHex());
     entry.pushKV("walletconflicts", conflicts);
     entry.pushKV("time", wtx.GetTxTime());
-    entry.pushKV("timereceived", (int64_t)wtx.nTimeReceived);
+    entry.pushKV("timereceived", int64_t{wtx.nTimeReceived});
 
     // Add opt-in RBF status
     std::string rbfStatus = "no";
