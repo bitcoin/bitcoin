@@ -4,10 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
 
-import shutil
-import os
-
 from decimal import Decimal
+import os
+import shutil
 
 from test_framework.messages import (
     COIN,
@@ -18,6 +17,7 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
 )
+
 
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -245,17 +245,14 @@ class ListTransactionsTest(BitcoinTestFramework):
         # send to an address beyond the next to be generated to test the keypool gap
         self.nodes[1].sendtoaddress(addr3, "0.001")
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         # send to an address that is already marked as used due to the keypool gap mechanics
         self.nodes[1].sendtoaddress(addr2, "0.001")
         self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         # send to self transaction
         self.nodes[0].sendtoaddress(addr1, "0.001")
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         self.log.info("Verify listtransactions is the same regardless of where the address was generated")
         transactions0 = self.nodes[0].listtransactions()
@@ -273,7 +270,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         normalize_list(transactions2)
         assert_equal(transactions0, transactions2)
 
-        self.log.info("Verify labels are persistent on the node generated the addresses")
+        self.log.info("Verify labels are persistent on the node that generated the addresses")
         assert_equal(['pizza1'], self.nodes[0].getaddressinfo(addr1)['labels'])
         assert_equal(['pizza2'], self.nodes[0].getaddressinfo(addr2)['labels'])
         assert_equal(['pizza3'], self.nodes[0].getaddressinfo(addr3)['labels'])
