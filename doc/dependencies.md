@@ -24,7 +24,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | Qt | [5.12.11](https://download.qt.io/official_releases/qt/) | [5.9.5](https://github.com/bitcoin/bitcoin/issues/20104) | No |  |  |
 | SQLite | [3.32.1](https://sqlite.org/download.html) | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) |  |  |  |
 | XCB |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) (Linux only) |
-| systemtap ([tracing](tracing.md))|  |  |  |  | |
+| systemtap ([tracing](tracing.md))| [4.5](https://sourceware.org/systemtap/ftp/releases/) |  |  |  | |
 | xkbcommon |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) (Linux only) |
 | ZeroMQ | [4.3.1](https://github.com/zeromq/libzmq/releases) | 4.0.0 | No |  |  |
 | zlib |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) |
