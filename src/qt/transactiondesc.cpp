@@ -101,46 +101,36 @@ QJsonObject objectFromString(const QString& in)
     QJsonDocument doc = QJsonDocument::fromJson(in.toUtf8());
 
     // check validity of the document
-    if(!doc.isNull())
-    {
-        if(doc.isObject())
-        {
-            obj = doc.object();        
+    if (!doc.isNull()) {
+        if (doc.isObject()) {
+            obj = doc.object();
+        } else {
+            qDebug() << "Document is not an object";
         }
-        else
-        {
-            qDebug() << "Document is not an object" << endl;
-        }
-    }
-    else
-    {
-        qDebug() << "Invalid JSON...\n" << in << endl;
+    } else {
+        qDebug() << "Invalid JSON...\n"
+                 << in;
     }
 
     return obj;
 }
 
-QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
+QString TransactionDesc::FormatBFIStatus(TransactionRecord* rec)
 {
-    QString vbkMessage = "";
-    
-    try { 
-        ///////////////////////////////////////////////
-        // VBK NETWORK
-
-        std::string stdVbkEndPoint = gArgs.GetArg("bfiendpoint", "");// read from conf.
-        
-        QString vbkEndPoint = QString::fromStdString(stdVbkEndPoint);
-        QString url = vbkEndPoint;  
-        // if BFI end point does not contain arguments, append to end of URL.
-        if( !url.contains("%1") && !url.contains("%2") ) {
-            if( !url.endsWith('/') ) {
-                url = url + '/';
-            }
-            url = url + "%1/chains/transactions/%2";
+    try {
+        std::string bfiendpoint = gArgs.GetArg("bfiendpoint", ""); // read from conf.
+        if (bfiendpoint.empty()) {
+            return tr("BFI not setup yet, specify bfiendpoint=url in btcsq.conf");
         }
-        url = url.arg(QString::number(VeriBlock::ALT_CHAIN_ID)).arg(rec->getTxHash());
-        
+
+        QString input = QString::fromStdString(bfiendpoint + "/%1/chains/transactions/%2")
+                            .arg(QString::number(VeriBlock::ALT_CHAIN_ID))
+                            .arg(rec->getTxHash());
+        QUrl qurl = QUrl::fromUserInput(input);
+        if (!qurl.isValid()) {
+            return tr("URL is not valid. bfiendpoint=%s").arg(input);
+        }
+
         QEventLoop loop;
         QNetworkAccessManager nam;
         QNetworkRequest req;
@@ -148,8 +138,8 @@ QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
         req.setRawHeader("Accept-Encoding", "gzip, deflate");
         req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/json"));
         req.setRawHeader("User-Agent", "BTCSQ Daemon");
-        req.setUrl(QUrl(url));
-        QNetworkReply *reply = nam.get(req);
+        req.setUrl(qurl);
+        QNetworkReply* reply = nam.get(req);
         connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 
         loop.exec();
@@ -157,40 +147,30 @@ QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
         QByteArray buffer = reply->readAll();
         dataLine = buffer.constData();
         QJsonObject o = objectFromString(dataLine.toUtf8().constData());
-        
-        // VBK NETWORK
-        ///////////////////////////////////////////////
 
         if (reply->error()) {
-            if (vbkEndPoint.isEmpty()) {
-                vbkMessage = tr("BFI not setup yet, specify bfiendpoint=url in btcsq.conf");
-            }
-            else {
-                vbkMessage = tr("Unconfirmed Bitcoin Finality");
-            }
+            qDebug() << "[BFI] Error: " << reply->errorString();
+            return tr("Error getting Bitcoin Finality: %1").arg(reply->errorString());
         }
-        else {
-            int bitcoinFinality = o.value("bitcoinFinality").toInt();
-            bool isAttackInProgress = o.value("isAttackInProgress").toBool();
-            
-            if (isAttackInProgress) { 
-                vbkMessage = tr("Alternate Chain Detected, wait for Bitcoin Finality");
-            }
-            else {
-                if( bitcoinFinality >= 0 ) { 
-                    vbkMessage = tr("%1 blocks of Bitcoin Finality");
-                    ++bitcoinFinality;
-                } else { 
-                    vbkMessage = tr("%1 blocks until Bitcoin Finality");
-                    bitcoinFinality = -bitcoinFinality;
-                }
-                vbkMessage = vbkMessage.arg(QString::number(bitcoinFinality));
-            }
+
+        bool isAttackInProgress = o.value("isAttackInProgress").toBool();
+        if (isAttackInProgress) {
+            return tr("Detected Alternative Chain, wait for Bitcoin Finality");
         }
-    } catch(...) { 
+
+        int bitcoinFinality = o.value("bitcoinFinality").toInt();
+        if (bitcoinFinality >= 0) {
+            return tr("%1 blocks of Bitcoin Finality").arg(bitcoinFinality);
+        }
+
+        return tr("%1 blocks until Bitcoin Finality").arg(-bitcoinFinality);
+    } catch (const std::exception& e) {
+        qDebug() << "[BFI] Got exception: " << e.what();
+    } catch (...) {
+        qDebug() << "[BFI] Unknown exception";
     }
 
-    return vbkMessage;
+    return "";
 }
 
 
