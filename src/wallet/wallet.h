@@ -1011,7 +1011,6 @@ public:
         CAmount m_denominated_trusted{0};
         CAmount m_denominated_untrusted_pending{0};
     };
-    CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const bool fAddLocked) const;
     Balance GetBalance(int min_depth = 0, const bool fAddLocked = false, const CCoinControl* coinControl = nullptr) const;
 
     CAmount GetAnonymizableBalance(bool fSkipDenominated = false, bool fSkipUnconfirmed = true) const;
