@@ -777,22 +777,23 @@ static RPCHelpMan getmempoolentry()
 
 static RPCHelpMan getblockfrompeer()
 {
-    return RPCHelpMan{"getblockfrompeer",
-                "\nAttempt to fetch block from a given peer.\n"
-                "\nWe must have the header for this block, e.g. using submitheader.\n"
-                "\nReturns {} if a block-request was successfully scheduled\n",
-                {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-                    {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The node ID (see getpeerinfo for node IDs)"},
-                },
-                RPCResult{RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::STR, "warnings", "any warnings"}
-                }},
-                RPCExamples{
-                    HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
-                + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
-                },
+    return RPCHelpMan{
+        "getblockfrompeer",
+        "\nAttempt to fetch block from a given peer.\n"
+        "\nWe must have the header for this block, e.g. using submitheader.\n"
+        "\nReturns {} if a block-request was successfully scheduled\n",
+        {
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+            {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The node ID (see getpeerinfo for node IDs)"},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "warnings", /*optional=*/true, "any warnings"},
+        }},
+        RPCExamples{
+            HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
+            + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
+        },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
