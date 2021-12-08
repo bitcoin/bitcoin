@@ -312,7 +312,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
-    bool FetchBlock(NodeId id, const uint256& hash, const CBlockIndex& index) override;
+    bool FetchBlock(NodeId id, const CBlockIndex& block_index) override;
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override;
@@ -1428,7 +1428,7 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-bool PeerManagerImpl::FetchBlock(NodeId id, const uint256& hash, const CBlockIndex& index)
+bool PeerManagerImpl::FetchBlock(NodeId id, const CBlockIndex& block_index)
 {
     if (fImporting || fReindex) return false;
 
@@ -1440,9 +1440,10 @@ bool PeerManagerImpl::FetchBlock(NodeId id, const uint256& hash, const CBlockInd
     if (!state->fHaveWitness) return false;
 
     // Mark block as in-flight unless it already is
-    if (!BlockRequested(id, index)) return false;
+    if (!BlockRequested(id, block_index)) return false;
 
     // Construct message to request the block
+    const uint256& hash{block_index.GetBlockHash()};
     std::vector<CInv> invs{CInv(MSG_BLOCK | MSG_WITNESS_FLAG, hash)};
 
     // Send block request message to the peer

@@ -801,9 +801,8 @@ static RPCHelpMan getblockfrompeer()
     PeerManager& peerman = EnsurePeerman(node);
     CConnman& connman = EnsureConnman(node);
 
-    uint256 hash(ParseHashV(request.params[0], "hash"));
-
-    const NodeId nodeid = static_cast<NodeId>(request.params[1].get_int64());
+    const uint256 hash(ParseHashV(request.params[0], "hash"));
+    const NodeId nodeid{request.params[1].get_int64()};
 
     // Check that the peer with nodeid exists
     if (!connman.ForNode(nodeid, [](CNode* node) {return true;})) {
@@ -820,7 +819,7 @@ static RPCHelpMan getblockfrompeer()
 
     if (index->nStatus & BLOCK_HAVE_DATA) {
         result.pushKV("warnings", "Block already downloaded");
-    } else if (!peerman.FetchBlock(nodeid, hash, *index)) {
+    } else if (!peerman.FetchBlock(nodeid, *index)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Failed to fetch block from peer");
     }
     return result;
