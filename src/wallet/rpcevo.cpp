@@ -29,7 +29,7 @@
 #include <util/translation.h>
 #include <node/context.h>
 #include <node/transaction.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/spend.h>
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {

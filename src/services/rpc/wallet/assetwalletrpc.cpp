@@ -27,7 +27,7 @@
 #include <rpc/rawtransaction_util.h>
 #include <nevm/sha3.h>
 #include <wallet/spend.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/coins.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);

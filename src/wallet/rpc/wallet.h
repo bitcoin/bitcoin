@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_WALLET_RPCWALLET_H
-#define SYSCOIN_WALLET_RPCWALLET_H
+#ifndef SYSCOIN_WALLET_RPC_WALLET_H
+#define SYSCOIN_WALLET_RPC_WALLET_H
 
 #include <span.h>
 
@@ -15,7 +15,4 @@ Span<const CRPCCommand> GetAssetWalletRPCCommands();
 Span<const CRPCCommand> GetEvoWalletRPCCommands();
 Span<const CRPCCommand> GetGovernanceWalletRPCCommands();
 Span<const CRPCCommand> GetMasternodeWalletRPCCommands();
-RPCHelpMan listunspent();
-RPCHelpMan getaddressinfo();
-RPCHelpMan signrawtransactionwithwallet();
-#endif // SYSCOIN_WALLET_RPCWALLET_H
+#endif // SYSCOIN_WALLET_RPC_WALLET_H
