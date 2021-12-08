@@ -347,7 +347,12 @@ RPCHelpMan keypoolrefill()
 RPCHelpMan newkeypool()
 {
     return RPCHelpMan{"newkeypool",
-                "\nEntirely clears and refills the keypool."+
+                "\nEntirely clears and refills the keypool.\n"
+                "WARNING: On non-HD wallets, this will require a new backup immediately, to include the new keys.\n"
+                "When restoring a backup of an HD wallet created before the newkeypool command is run, funds received to\n"
+                "new addresses may not appear automatically. They have not been lost, but the wallet may not find them.\n"
+                "This can be fixed by running the newkeypool command on the backup and then rescanning, so the wallet\n"
+                "re-generates the required keys." +
             HELP_REQUIRING_PASSPHRASE,
                 {},
                 RPCResult{RPCResult::Type::NONE, "", ""},
