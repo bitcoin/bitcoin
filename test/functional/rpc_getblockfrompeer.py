@@ -40,12 +40,8 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.sync_blocks()
 
         self.log.info("Node 0 should only have the header for node 1's block 3")
-        for x in self.nodes[0].getchaintips():
-            if x['hash'] == short_tip:
-                assert_equal(x['status'], "headers-only")
-                break
-        else:
-            raise AssertionError("short tip not synced")
+        x = next(filter(lambda x: x['hash'] == short_tip, self.nodes[0].getchaintips()))
+        assert_equal(x['status'], "headers-only")
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, short_tip)
 
         self.log.info("Fetch block from node 1")
