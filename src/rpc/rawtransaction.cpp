@@ -133,7 +133,7 @@ static RPCHelpMan getrawtransaction()
                      RPCResult{"if verbose is set to true",
                          RPCResult::Type::OBJ, "", "",
                          {
-                             {RPCResult::Type::BOOL, "in_active_chain", /* optional */ true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
+                             {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
                              {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
                              {RPCResult::Type::STR_HEX, "txid", "The transaction id (same as provided)"},
                              {RPCResult::Type::STR_HEX, "hash", "The transaction hash (differs from txid for witness transactions)"},
@@ -154,7 +154,7 @@ static RPCHelpMan getrawtransaction()
                                          {RPCResult::Type::STR_HEX, "hex", "hex"},
                                      }},
                                      {RPCResult::Type::NUM, "sequence", "The script sequence number"},
-                                     {RPCResult::Type::ARR, "txinwitness", /* optional */ true, "",
+                                     {RPCResult::Type::ARR, "txinwitness", /*optional=*/true, "",
                                      {
                                          {RPCResult::Type::STR_HEX, "hex", "hex-encoded witness data (if any)"},
                                      }},
@@ -171,14 +171,14 @@ static RPCHelpMan getrawtransaction()
                                          {RPCResult::Type::STR, "asm", "the asm"},
                                          {RPCResult::Type::STR, "hex", "the hex"},
                                          {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                         {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
+                                         {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                                      }},
                                  }},
                              }},
-                             {RPCResult::Type::STR_HEX, "blockhash", /* optional */ true, "the block hash"},
-                             {RPCResult::Type::NUM, "confirmations", /* optional */ true, "The confirmations"},
-                             {RPCResult::Type::NUM_TIME, "blocktime", /* optional */ true, "The block time expressed in " + UNIX_EPOCH_TIME},
-                             {RPCResult::Type::NUM, "time", /* optional */ true, "Same as \"blocktime\""},
+                             {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
+                             {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
+                             {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
+                             {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
                         }
                     },
                 },
@@ -472,15 +472,15 @@ static RPCHelpMan decoderawtransaction()
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::STR_HEX, "coinbase", /* optional */ true, ""},
-                                {RPCResult::Type::STR_HEX, "txid", /* optional */ true, "The transaction id"},
-                                {RPCResult::Type::NUM, "vout", /* optional */ true, "The output number"},
-                                {RPCResult::Type::OBJ, "scriptSig", /* optional */ true, "The script",
+                                {RPCResult::Type::STR_HEX, "coinbase", /*optional=*/true, ""},
+                                {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+                                {RPCResult::Type::NUM, "vout", /*optional=*/true, "The output number"},
+                                {RPCResult::Type::OBJ, "scriptSig", /*optional=*/true, "The script",
                                 {
                                     {RPCResult::Type::STR, "asm", "asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "hex"},
                                 }},
-                                {RPCResult::Type::ARR, "txinwitness", /* optional */ true, "",
+                                {RPCResult::Type::ARR, "txinwitness", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR_HEX, "hex", "hex-encoded witness data (if any)"},
                                 }},
@@ -498,7 +498,7 @@ static RPCHelpMan decoderawtransaction()
                                     {RPCResult::Type::STR, "asm", "the asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "the hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                    {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
+                                    {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                                 }},
                             }},
                         }},
@@ -552,7 +552,7 @@ static RPCHelpMan decodescript()
             {
                 {RPCResult::Type::STR, "asm", "Script public key"},
                 {RPCResult::Type::STR, "type", "The output type (e.g. " + GetAllOutputTypes() + ")"},
-                {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
+                {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                 {RPCResult::Type::STR, "p2sh", /*optional=*/true,
                  "address of P2SH script wrapping this redeem script (not returned for types that should not be wrapped)"},
                 {RPCResult::Type::OBJ, "segwit", /*optional=*/true,
@@ -561,7 +561,7 @@ static RPCHelpMan decodescript()
                      {RPCResult::Type::STR, "asm", "String representation of the script public key"},
                      {RPCResult::Type::STR_HEX, "hex", "Hex string of the script public key"},
                      {RPCResult::Type::STR, "type", "The type of the script public key (e.g. witness_v0_keyhash or witness_v0_scripthash)"},
-                     {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
+                     {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                      {RPCResult::Type::STR, "p2sh-segwit", "address of the P2SH script wrapping this witness redeem script"},
                  }},
             },
@@ -800,7 +800,7 @@ static RPCHelpMan signrawtransactionwithkey()
                     {
                         {RPCResult::Type::STR_HEX, "hex", "The hex-encoded raw transaction with signature(s)"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
-                        {RPCResult::Type::ARR, "errors", /* optional */ true, "Script verification errors (if there are any)",
+                        {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
@@ -947,15 +947,15 @@ static RPCHelpMan testmempoolaccept()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                             {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
-                            {RPCResult::Type::STR, "package-error", /* optional */ true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
-                            {RPCResult::Type::BOOL, "allowed", /* optional */ true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
+                            {RPCResult::Type::STR, "package-error", /*optional=*/true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
+                            {RPCResult::Type::BOOL, "allowed", /*optional=*/true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
                                                                "If not present, the tx was not fully validated due to a failure in another tx in the list."},
-                            {RPCResult::Type::NUM, "vsize", /* optional */ true, "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
-                            {RPCResult::Type::OBJ, "fees", /* optional */ true, "Transaction fees (only present if 'allowed' is true)",
+                            {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
+                            {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees (only present if 'allowed' is true)",
                             {
                                 {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
                             }},
-                            {RPCResult::Type::STR, "reject-reason", /* optional */ true, "Rejection string (only present when 'allowed' is false)"},
+                            {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection string (only present when 'allowed' is false)"},
                         }},
                     }
                 },
@@ -1083,11 +1083,11 @@ static RPCHelpMan decodepsbt()
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::OBJ, "non_witness_utxo", /* optional */ true, "Decoded network transaction for non-witness UTXOs",
+                                {RPCResult::Type::OBJ, "non_witness_utxo", /*optional=*/true, "Decoded network transaction for non-witness UTXOs",
                                 {
                                     {RPCResult::Type::ELISION, "",""},
                                 }},
-                                {RPCResult::Type::OBJ, "witness_utxo", /* optional */ true, "Transaction output for witness UTXOs",
+                                {RPCResult::Type::OBJ, "witness_utxo", /*optional=*/true, "Transaction output for witness UTXOs",
                                 {
                                     {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
                                     {RPCResult::Type::OBJ, "scriptPubKey", "",
@@ -1095,27 +1095,27 @@ static RPCHelpMan decodepsbt()
                                         {RPCResult::Type::STR, "asm", "The asm"},
                                         {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                         {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                                        {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
+                                        {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                                     }},
                                 }},
-                                {RPCResult::Type::OBJ_DYN, "partial_signatures", /* optional */ true, "",
+                                {RPCResult::Type::OBJ_DYN, "partial_signatures", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "pubkey", "The public key and signature that corresponds to it."},
                                 }},
-                                {RPCResult::Type::STR, "sighash", /* optional */ true, "The sighash type to be used"},
-                                {RPCResult::Type::OBJ, "redeem_script", /* optional */ true, "",
+                                {RPCResult::Type::STR, "sighash", /*optional=*/true, "The sighash type to be used"},
+                                {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                 }},
-                                {RPCResult::Type::OBJ, "witness_script", /* optional */ true, "",
+                                {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                 }},
-                                {RPCResult::Type::ARR, "bip32_derivs", /* optional */ true, "",
+                                {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::OBJ, "", "",
                                     {
@@ -1124,16 +1124,16 @@ static RPCHelpMan decodepsbt()
                                         {RPCResult::Type::STR, "path", "The path"},
                                     }},
                                 }},
-                                {RPCResult::Type::OBJ, "final_scriptSig", /* optional */ true, "",
+                                {RPCResult::Type::OBJ, "final_scriptSig", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR, "hex", "The hex"},
                                 }},
-                                {RPCResult::Type::ARR, "final_scriptwitness", /* optional */ true, "",
+                                {RPCResult::Type::ARR, "final_scriptwitness", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR_HEX, "", "hex-encoded witness data (if any)"},
                                 }},
-                                {RPCResult::Type::OBJ_DYN, "unknown", /* optional */ true, "The unknown global fields",
+                                {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/true, "The unknown global fields",
                                 {
                                     {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                                 }},
@@ -1143,19 +1143,19 @@ static RPCHelpMan decodepsbt()
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::OBJ, "redeem_script", /* optional */ true, "",
+                                {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                 }},
-                                {RPCResult::Type::OBJ, "witness_script", /* optional */ true, "",
+                                {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                 }},
-                                {RPCResult::Type::ARR, "bip32_derivs", /* optional */ true, "",
+                                {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::OBJ, "", "",
                                     {
@@ -1164,13 +1164,13 @@ static RPCHelpMan decodepsbt()
                                         {RPCResult::Type::STR, "path", "The path"},
                                     }},
                                 }},
-                                {RPCResult::Type::OBJ_DYN, "unknown", /* optional */ true, "The unknown global fields",
+                                {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/true, "The unknown global fields",
                                 {
                                     {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                                 }},
                             }},
                         }},
-                        {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid if all UTXOs slots in the PSBT have been filled."},
+                        {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The transaction fee paid if all UTXOs slots in the PSBT have been filled."},
                     }
                 },
                 RPCExamples{
@@ -1438,8 +1438,8 @@ static RPCHelpMan finalizepsbt()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "psbt", /* optional */ true, "The base64-encoded partially signed transaction if not extracted"},
-                        {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "The hex-encoded network transaction if extracted"},
+                        {RPCResult::Type::STR, "psbt", /*optional=*/true, "The base64-encoded partially signed transaction if not extracted"},
+                        {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded network transaction if extracted"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
                     }
                 },
@@ -1799,33 +1799,33 @@ static RPCHelpMan analyzepsbt()
             RPCResult {
                 RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::ARR, "inputs", /* optional */ true, "",
+                    {RPCResult::Type::ARR, "inputs", /*optional=*/true, "",
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::BOOL, "has_utxo", "Whether a UTXO is provided"},
                             {RPCResult::Type::BOOL, "is_final", "Whether the input is finalized"},
-                            {RPCResult::Type::OBJ, "missing", /* optional */ true, "Things that are missing that are required to complete this input",
+                            {RPCResult::Type::OBJ, "missing", /*optional=*/true, "Things that are missing that are required to complete this input",
                             {
-                                {RPCResult::Type::ARR, "pubkeys", /* optional */ true, "",
+                                {RPCResult::Type::ARR, "pubkeys", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR_HEX, "keyid", "Public key ID, hash160 of the public key, of a public key whose BIP 32 derivation path is missing"},
                                 }},
-                                {RPCResult::Type::ARR, "signatures", /* optional */ true, "",
+                                {RPCResult::Type::ARR, "signatures", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR_HEX, "keyid", "Public key ID, hash160 of the public key, of a public key whose signature is missing"},
                                 }},
-                                {RPCResult::Type::STR_HEX, "redeemscript", /* optional */ true, "Hash160 of the redeemScript that is missing"},
-                                {RPCResult::Type::STR_HEX, "witnessscript", /* optional */ true, "SHA256 of the witnessScript that is missing"},
+                                {RPCResult::Type::STR_HEX, "redeemscript", /*optional=*/true, "Hash160 of the redeemScript that is missing"},
+                                {RPCResult::Type::STR_HEX, "witnessscript", /*optional=*/true, "SHA256 of the witnessScript that is missing"},
                             }},
-                            {RPCResult::Type::STR, "next", /* optional */ true, "Role of the next person that this input needs to go to"},
+                            {RPCResult::Type::STR, "next", /*optional=*/true, "Role of the next person that this input needs to go to"},
                         }},
                     }},
-                    {RPCResult::Type::NUM, "estimated_vsize", /* optional */ true, "Estimated vsize of the final signed transaction"},
-                    {RPCResult::Type::STR_AMOUNT, "estimated_feerate", /* optional */ true, "Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kvB. Shown only if all UTXO slots in the PSBT have been filled"},
-                    {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid. Shown only if all UTXO slots in the PSBT have been filled"},
+                    {RPCResult::Type::NUM, "estimated_vsize", /*optional=*/true, "Estimated vsize of the final signed transaction"},
+                    {RPCResult::Type::STR_AMOUNT, "estimated_feerate", /*optional=*/true, "Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kvB. Shown only if all UTXO slots in the PSBT have been filled"},
+                    {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The transaction fee paid. Shown only if all UTXO slots in the PSBT have been filled"},
                     {RPCResult::Type::STR, "next", "Role of the next person that this psbt needs to go to"},
-                    {RPCResult::Type::STR, "error", /* optional */ true, "Error message (if there is one)"},
+                    {RPCResult::Type::STR, "error", /*optional=*/true, "Error message (if there is one)"},
                 }
             },
             RPCExamples {
