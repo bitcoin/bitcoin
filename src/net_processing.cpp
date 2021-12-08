@@ -312,7 +312,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
-    bool FetchBlock(NodeId id, const CBlockIndex& block_index) override;
+    std::optional<std::string> FetchBlock(NodeId id, const CBlockIndex& block_index) override;
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override;
@@ -1428,21 +1428,22 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-bool PeerManagerImpl::FetchBlock(NodeId id, const CBlockIndex& block_index)
+std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId id, const CBlockIndex& block_index)
 {
-    if (fImporting || fReindex) return false;
+    if (fImporting) return "Importing...";
+    if (fReindex) return "Reindexing...";
 
     LOCK(cs_main);
     // Ensure this peer exists and hasn't been disconnected
     CNodeState* state = State(id);
-    if (state == nullptr) return false;
+    if (state == nullptr) return "Peer does not exist";
     // Ignore pre-segwit peers
-    if (!state->fHaveWitness) return false;
+    if (!state->fHaveWitness) return "Pre-SegWit peer";
 
     // Mark block as in-flight unless it already is (for this peer).
     // If a block was already in-flight for a different peer, its BLOCKTXN
     // response will be dropped.
-    if (!BlockRequested(id, block_index)) return false;
+    if (!BlockRequested(id, block_index)) return "Already requested from this peer";
 
     // Construct message to request the block
     const uint256& hash{block_index.GetBlockHash()};
@@ -1455,15 +1456,11 @@ bool PeerManagerImpl::FetchBlock(NodeId id, const CBlockIndex& block_index)
         return true;
     });
 
-    if (success) {
-        LogPrint(BCLog::NET, "Requesting block %s from peer=%d\n",
+    if (!success) return "Node not fully connected";
+
+    LogPrint(BCLog::NET, "Requesting block %s from peer=%d\n",
                  hash.ToString(), id);
-    } else {
-        RemoveBlockRequest(hash);
-        LogPrint(BCLog::NET, "Failed to request block %s from peer=%d\n",
-                 hash.ToString(), id);
-    }
-    return success;
+    return std::nullopt;
 }
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman,

@@ -47,9 +47,9 @@ public:
      *
      * @param[in]  id           The peer id
      * @param[in]  block_index  The blockindex
-     * @returns                 Whether a request was successfully made
+     * @returns std::nullopt if a request was successfully made, otherwise an error message
      */
-    virtual bool FetchBlock(NodeId id, const CBlockIndex& block_index) = 0;
+    virtual std::optional<std::string> FetchBlock(NodeId id, const CBlockIndex& block_index) = 0;
 
     /** Begin running background tasks, should only be called once */
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;

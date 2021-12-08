@@ -56,7 +56,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "Block header missing", self.nodes[0].getblockfrompeer, "00" * 32, 0)
 
         self.log.info("Non-existent peer generates error")
-        assert_raises_rpc_error(-1, f"Peer nodeid {peer_0_peer_1_id + 1} does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
+        assert_raises_rpc_error(-1, "Peer does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
 
         self.log.info("Successful fetch")
         result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
