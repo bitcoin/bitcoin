@@ -29,15 +29,6 @@ struct MockedTxPool : public CTxMemPool {
     }
 };
 
-class DummyChainState final : public CChainState
-{
-public:
-    void SetMempool(CTxMemPool* mempool)
-    {
-        m_mempool = mempool;
-    }
-};
-
 void initialize_tx_pool()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
@@ -123,7 +114,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
-    auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
+    auto& chainstate{node.chainman->ActiveChainstate()};
 
     MockTime(fuzzed_data_provider, chainstate);
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
@@ -143,7 +134,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     CTxMemPool tx_pool_{/*estimator=*/nullptr, /*check_ratio=*/1};
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
-    chainstate.SetMempool(&tx_pool);
+    chainstate.m_mempool = &tx_pool;
 
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
