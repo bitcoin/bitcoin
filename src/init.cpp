@@ -40,10 +40,11 @@
 #include <node/caches.h>
 #include <node/chainstate.h>
 #include <node/context.h>
-#include <node/miner.h>
 #include <node/interface_ui.h>
+#include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
+#include <policy/fees_args.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
@@ -1291,7 +1292,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.fee_estimator);
     // Don't initialize fee estimation with old data if we don't relay transactions,
     // as they would never get updated.
-    if (!ignores_incoming_txs) node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
+    if (!ignores_incoming_txs) node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(args));
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
