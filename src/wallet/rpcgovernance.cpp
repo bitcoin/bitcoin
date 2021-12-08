@@ -11,7 +11,7 @@
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <evo/deterministicmns.h>
-
+#include <rpc/server_util.h>
 UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
                              vote_outcome_enum_t eVoteOutcome, CConnman& connman)

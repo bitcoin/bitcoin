@@ -14,6 +14,7 @@
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <timedata.h>
+#include <rpc/server_util.h>
 static RPCHelpMan gobject_count()
 {
     return RPCHelpMan{"gobject_count",

@@ -71,6 +71,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendfrom", 3, "minconf" },
     { "sendfrom", 4, "maxconf" },
     { "sendfrom", 6, "include_watching" },
+    { "getblockfrompeer", 1, "nodeid" },
     { "getblockhash", 0, "height" },
     { "waitforblockheight", 0, "height" },
     { "waitforblockheight", 1, "timeout" },

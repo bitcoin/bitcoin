@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <util/check.h>
+#include <rpc/server_util.h>
 namespace
 {
 

@@ -13,6 +13,7 @@
 #include <net.h>
 #include <validation.h>
 #include <node/transaction.h>
+#include <rpc/server_util.h>
 RPCHelpMan masternodelist();
 
 static RPCHelpMan masternode_list()

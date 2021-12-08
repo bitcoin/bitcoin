@@ -18,7 +18,7 @@
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-
+#include <rpc/server_util.h>
 
 UniValue BuildDMNListEntry(const NodeContext& node, const CDeterministicMNCPtr& dmn, bool detailed)
 {

@@ -19,6 +19,7 @@
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <node/transaction.h>
+#include <rpc/server_util.h>
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);

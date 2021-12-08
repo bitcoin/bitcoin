@@ -262,12 +262,12 @@ SYSCOIN_CORE_H = \
   rpc/auxpow_miner.h \
   rpc/client.h \
   rpc/mining.h \
-  rpc/net.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
   rpc/request.h \
   rpc/server.h \
+  rpc/server_util.h \
   rpc/util.h \
   saltedhasher.h \
   scheduler.h \
@@ -532,6 +532,7 @@ libsyscoin_server_a_SOURCES = \
   rpc/governance.cpp \
   rpc/rpcevo.cpp \
   rpc/rpcquorums.cpp \
+  rpc/server_util.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   signet.cpp \
