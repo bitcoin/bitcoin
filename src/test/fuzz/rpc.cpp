@@ -360,7 +360,9 @@ FUZZ_TARGET_INIT(rpc, initialize_rpc)
         rpc_testing_setup->CallRPC(rpc_command, arguments);
     } catch (const UniValue& json_rpc_error) {
         const std::string error_msg{find_value(json_rpc_error, "message").get_str()};
-        if (error_msg.find("Internal bug detected") != std::string::npos) {
+        // Once c++20 is allowed, starts_with can be used.
+        // if (error_msg.starts_with("Internal bug detected")) {
+        if (0 == error_msg.rfind("Internal bug detected", 0)) {
             // Only allow the intentional internal bug
             assert(error_msg.find("trigger_internal_bug") != std::string::npos);
         }
