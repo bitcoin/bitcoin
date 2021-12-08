@@ -1099,8 +1099,7 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTr
     EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const CChainParams& chainparams{active_chainstate.m_params};
-    assert(active_chainstate.GetMempool() != nullptr);
-    CTxMemPool& pool{*active_chainstate.GetMempool()};
+    CTxMemPool& pool{*Assert(active_chainstate.m_mempool)};
 
     std::vector<COutPoint> coins_to_uncache;
     auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, bypass_limits, coins_to_uncache, test_accept);
@@ -3500,13 +3499,13 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
 {
     CChainState& active_chainstate = ActiveChainstate();
-    if (!active_chainstate.GetMempool()) {
+    if (!active_chainstate.m_mempool) {
         TxValidationState state;
         state.Invalid(TxValidationResult::TX_NO_MEMPOOL, "no-mempool");
         return MempoolAcceptResult::Failure(state);
     }
     auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), /*bypass_limits=*/ false, test_accept);
-    active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
+    active_chainstate.m_mempool->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
 }
 
