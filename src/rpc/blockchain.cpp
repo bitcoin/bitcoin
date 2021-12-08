@@ -781,7 +781,8 @@ static RPCHelpMan getblockfrompeer()
         "getblockfrompeer",
         "\nAttempt to fetch block from a given peer.\n"
         "\nWe must have the header for this block, e.g. using submitheader.\n"
-        "\nReturns {} if a block-request was successfully scheduled\n",
+        "Subsequent calls for the same block and a new peer will cause the response from the previous peer to be ignored.\n"
+        "\nReturns an empty JSON object if the request was successfully scheduled.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
             {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The node ID (see getpeerinfo for node IDs)"},
