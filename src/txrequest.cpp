@@ -9,7 +9,6 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <uint256.h>
-#include <util/memory.h>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -301,7 +300,7 @@ std::map<uint256, TxHashInfo> ComputeTxHashInfo(const Index& index, const Priori
 
 GenTxid ToGenTxid(const Announcement& ann)
 {
-    return {ann.m_is_wtxid, ann.m_txhash};
+    return ann.m_is_wtxid ? GenTxid::Wtxid(ann.m_txhash) : GenTxid::Txid(ann.m_txhash);
 }
 
 }  // namespace
@@ -487,7 +486,7 @@ private:
     }
 
     //! Make the data structure consistent with a given point in time:
-    //! - REQUESTED annoucements with expiry <= now are turned into COMPLETED.
+    //! - REQUESTED announcements with expiry <= now are turned into COMPLETED.
     //! - CANDIDATE_DELAYED announcements with reqtime <= now are turned into CANDIDATE_{READY,BEST}.
     //! - CANDIDATE_{READY,BEST} announcements with reqtime > now are turned into CANDIDATE_DELAYED.
     void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired)
@@ -711,7 +710,7 @@ public:
 };
 
 TxRequestTracker::TxRequestTracker(bool deterministic) :
-    m_impl{MakeUnique<TxRequestTracker::Impl>(deterministic)} {}
+    m_impl{std::make_unique<TxRequestTracker::Impl>(deterministic)} {}
 
 TxRequestTracker::~TxRequestTracker() = default;
 

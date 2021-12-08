@@ -11,7 +11,7 @@
 #include <optional>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(chain)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     std::optional<CDiskBlockIndex> disk_block_index = ConsumeDeserializable<CDiskBlockIndex>(fuzzed_data_provider);
@@ -35,7 +35,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)CDiskBlockIndex{*disk_block_index};
     (void)disk_block_index->BuildSkip();
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         const BlockStatus block_status = fuzzed_data_provider.PickValueInArray({
             BlockStatus::BLOCK_VALID_UNKNOWN,
             BlockStatus::BLOCK_VALID_RESERVED,

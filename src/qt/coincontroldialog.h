@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_COINCONTROLDIALOG_H
 #define BITCOIN_QT_COINCONTROLDIALOG_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QAbstractButton>
 #include <QAction>
@@ -51,6 +51,9 @@ public:
     static QList<CAmount> payAmounts;
     static bool fSubtractFeeFromAmount;
 
+protected:
+    void changeEvent(QEvent* e) override;
+
 private:
     Ui::CoinControlDialog *ui;
     CCoinControl& m_coin_control;
@@ -60,7 +63,7 @@ private:
 
     QMenu *contextMenu;
     QTreeWidgetItem *contextMenuItem;
-    QAction *copyTransactionHashAction;
+    QAction* m_copy_transaction_outpoint_action;
     QAction *lockAction;
     QAction *unlockAction;
 
@@ -92,7 +95,7 @@ private Q_SLOTS:
     void copyAmount();
     void copyLabel();
     void copyAddress();
-    void copyTransactionHash();
+    void copyTransactionOutpoint();
     void lockCoin();
     void unlockCoin();
     void clipboardQuantity();

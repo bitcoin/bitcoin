@@ -5,12 +5,12 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
-#include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/settings.h>          // For util::SettingsValue
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
@@ -35,7 +35,9 @@ namespace interfaces {
 class Handler;
 class Wallet;
 
-//! Helper for findBlock to selectively return pieces of block data.
+//! Helper for findBlock to selectively return pieces of block data. If block is
+//! found, data will be returned by setting specified output variables. If block
+//! is not found, output variables will keep their previous values.
 class FoundBlock
 {
 public:
@@ -60,6 +62,7 @@ public:
     bool* m_in_active_chain = nullptr;
     const FoundBlock* m_next_block = nullptr;
     CBlock* m_data = nullptr;
+    mutable bool found = false;
 };
 
 //! Interface giving clients (wallet processes, maybe other analysis tools in
@@ -94,7 +97,7 @@ public:
     //! Get current chain height, not including genesis block (returns 0 if
     //! chain only contains genesis block, nullopt if chain does not contain
     //! any blocks)
-    virtual Optional<int> getHeight() = 0;
+    virtual std::optional<int> getHeight() = 0;
 
     //! Get block hash. Height must be valid or this function will abort.
     virtual uint256 getBlockHash(int height) = 0;
@@ -109,7 +112,7 @@ public:
     //! Return height of the highest block on chain in common with the locator,
     //! which will either be the original block used to create the locator,
     //! or one of its ancestors.
-    virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
+    virtual std::optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
 
     //! Check if transaction will be final given chain height current time.
     virtual bool checkFinalTx(const CTransaction& tx) = 0;
@@ -154,10 +157,13 @@ public:
     //! Return true if data is available for all blocks in the specified range
     //! of blocks. This checks all blocks that are ancestors of block_hash in
     //! the height range from min_height to max_height, inclusive.
-    virtual bool hasBlocks(const uint256& block_hash, int min_height = 0, Optional<int> max_height = {}) = 0;
+    virtual bool hasBlocks(const uint256& block_hash, int min_height = 0, std::optional<int> max_height = {}) = 0;
 
     //! Check if transaction is RBF opt in.
     virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
+
+    //! Check if transaction is in mempool.
+    virtual bool isInMempool(const uint256& txid) = 0;
 
     //! Check if transaction has descendants in mempool.
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
@@ -171,7 +177,7 @@ public:
         std::string& err_string) = 0;
 
     //! Calculate mempool ancestor and descendant counts for the given transaction.
-    virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
+    virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) = 0;
 
     //! Get the node's package limits.
     //! Currently only returns the ancestor and descendant count limits, but could be enhanced to
@@ -210,9 +216,6 @@ public:
 
     //! Check if shutdown requested.
     virtual bool shutdownRequested() = 0;
-
-    //! Get adjusted time.
-    virtual int64_t getAdjustedTime() = 0;
 
     //! Send init message.
     virtual void initMessage(const std::string& message) = 0;
@@ -259,11 +262,18 @@ public:
     //! Current RPC serialization flags.
     virtual int rpcSerializationFlags() = 0;
 
+    //! Get settings value.
+    virtual util::SettingsValue getSetting(const std::string& arg) = 0;
+
+    //! Get list of settings values.
+    virtual std::vector<util::SettingsValue> getSettingsList(const std::string& arg) = 0;
+
     //! Return <datadir>/settings.json setting value.
     virtual util::SettingsValue getRwSetting(const std::string& name) = 0;
 
-    //! Write a setting to <datadir>/settings.json.
-    virtual bool updateRwSetting(const std::string& name, const util::SettingsValue& value) = 0;
+    //! Write a setting to <datadir>/settings.json. Optionally just update the
+    //! setting in memory and do not write the file.
+    virtual bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write=true) = 0;
 
     //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after

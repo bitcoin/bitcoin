@@ -11,7 +11,6 @@
 #include <wallet/wallet.h>
 
 #include <algorithm>
-#include <typeinfo>
 
 #include <QFont>
 #include <QDebug>
@@ -82,8 +81,9 @@ public:
         {
             for (const auto& address : wallet.getAddresses())
             {
-                if (pk_hash_only && address.dest.type() != typeid(PKHash))
+                if (pk_hash_only && !std::holds_alternative<PKHash>(address.dest)) {
                     continue;
+                }
                 AddressTableEntry::Type addressType = translateTransactionType(
                         QString::fromStdString(address.purpose), address.is_mine);
                 cachedAddressTable.append(AddressTableEntry(addressType,
@@ -177,13 +177,17 @@ AddressTableModel::~AddressTableModel()
 
 int AddressTableModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    if (parent.isValid()) {
+        return 0;
+    }
     return priv->size();
 }
 
 int AddressTableModel::columnCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    if (parent.isValid()) {
+        return 0;
+    }
     return columns.length();
 }
 
@@ -194,42 +198,38 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
 
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
 
-    if(role == Qt::DisplayRole || role == Qt::EditRole)
-    {
-        switch(index.column())
-        {
+    const auto column = static_cast<ColumnIndex>(index.column());
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        switch (column) {
         case Label:
-            if(rec->label.isEmpty() && role == Qt::DisplayRole)
-            {
+            if (rec->label.isEmpty() && role == Qt::DisplayRole) {
                 return tr("(no label)");
-            }
-            else
-            {
+            } else {
                 return rec->label;
             }
         case Address:
             return rec->address;
-        }
-    }
-    else if (role == Qt::FontRole)
-    {
-        QFont font;
-        if(index.column() == Address)
-        {
-            font = GUIUtil::fixedPitchFont();
-        }
-        return font;
-    }
-    else if (role == TypeRole)
-    {
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    } else if (role == Qt::FontRole) {
+        switch (column) {
+        case Label:
+            return QFont();
+        case Address:
+            return GUIUtil::fixedPitchFont();
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    } else if (role == TypeRole) {
         switch(rec->type)
         {
         case AddressTableEntry::Sending:
             return Send;
         case AddressTableEntry::Receiving:
             return Receive;
-        default: break;
-        }
+        case AddressTableEntry::Hidden:
+            return {};
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
     }
     return QVariant();
 }
@@ -257,7 +257,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
         } else if(index.column() == Address) {
             CTxDestination newAddress = DecodeDestination(value.toString().toStdString());
             // Refuse to set invalid address, set error status and return false
-            if(boost::get<CNoDestination>(&newAddress))
+            if(std::get_if<CNoDestination>(&newAddress))
             {
                 editStatus = INVALID_ADDRESS;
                 return false;

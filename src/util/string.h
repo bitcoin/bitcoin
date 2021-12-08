@@ -25,6 +25,14 @@
     return str.substr(front, end - front + 1);
 }
 
+[[nodiscard]] inline std::string RemovePrefix(const std::string& str, const std::string& prefix)
+{
+    if (str.substr(0, prefix.size()) == prefix) {
+        return str.substr(prefix.size());
+    }
+    return str;
+}
+
 /**
  * Join a list of items
  *
@@ -54,6 +62,14 @@ T Join(const std::vector<T>& list, const T& separator)
 inline std::string Join(const std::vector<std::string>& list, const std::string& separator)
 {
     return Join<std::string>(list, separator);
+}
+
+/**
+ * Create an unordered multi-line list of items.
+ */
+inline std::string MakeUnorderedList(const std::vector<std::string>& items)
+{
+    return Join(items, "\n", [](const std::string& item) { return "- " + item; });
 }
 
 /**
@@ -87,4 +103,4 @@ template <typename T1, size_t PREFIX_LEN>
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // BITCOIN_UTIL_STRING_H

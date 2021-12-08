@@ -18,6 +18,8 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+#include <functional>
+
 #include <QApplication>
 #include <QCloseEvent>
 #include <QPainter>
@@ -182,8 +184,8 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
 {
     InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? _("(press q to shutdown and continue later)").translated
-                                : _("press q to shutdown").translated) +
+            (resume_possible ? SplashScreen::tr("(press q to shutdown and continue later)").toStdString()
+                                : SplashScreen::tr("press q to shutdown").toStdString()) +
             strprintf("\n%d", nProgress) + "%");
 }
 
@@ -192,6 +194,7 @@ void SplashScreen::subscribeToCoreSignals()
     // Connect signals to client
     m_handler_init_message = m_node->handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
     m_handler_show_progress = m_node->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    m_handler_init_wallet = m_node->handleInitWallet([this]() { handleLoadWallet(); });
 }
 
 void SplashScreen::handleLoadWallet()

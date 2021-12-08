@@ -38,7 +38,7 @@ static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CSc
     std::vector<uint8_t> pushdata;
     while (witness_commitment.GetOp(pc, opcode, pushdata)) {
         if (pushdata.size() > 0) {
-            if (!found_header && pushdata.size() > (size_t) header.size() && Span<const uint8_t>(pushdata.data(), header.size()) == header) {
+            if (!found_header && pushdata.size() > (size_t)header.size() && Span{pushdata}.first(header.size()) == header) {
                 // pushdata only counts if it has the header _and_ some data
                 result.insert(result.end(), pushdata.begin() + header.size(), pushdata.end());
                 pushdata.erase(pushdata.begin() + header.size(), pushdata.end());
@@ -65,7 +65,7 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
     return ComputeMerkleRoot(std::move(leaves));
 }
 
-Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
+std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
 {
     CMutableTransaction tx_to_spend;
     tx_to_spend.nVersion = 0;
@@ -83,12 +83,12 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
     // responses from block coinbase tx
 
     // find and delete signet signature
-    if (block.vtx.empty()) return nullopt; // no coinbase tx in block; invalid
+    if (block.vtx.empty()) return std::nullopt; // no coinbase tx in block; invalid
     CMutableTransaction modified_cb(*block.vtx.at(0));
 
     const int cidx = GetWitnessCommitmentIndex(block);
     if (cidx == NO_WITNESS_COMMITMENT) {
-        return nullopt; // require a witness commitment
+        return std::nullopt; // require a witness commitment
     }
 
     CScript& witness_commitment = modified_cb.vout.at(cidx).scriptPubKey;
@@ -98,12 +98,12 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
     } else {
         try {
-            VectorReader v(SER_NETWORK, INIT_PROTO_VERSION, signet_solution, 0);
+            SpanReader v{SER_NETWORK, INIT_PROTO_VERSION, signet_solution};
             v >> tx_spending.vin[0].scriptSig;
             v >> tx_spending.vin[0].scriptWitness.stack;
-            if (!v.empty()) return nullopt; // extraneous data encountered
+            if (!v.empty()) return std::nullopt; // extraneous data encountered
         } catch (const std::exception&) {
-            return nullopt; // parsing error
+            return std::nullopt; // parsing error
         }
     }
     uint256 signet_merkle = ComputeModifiedMerkleRoot(modified_cb, block);
@@ -129,7 +129,7 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     }
 
     const CScript challenge(consensusParams.signet_challenge.begin(), consensusParams.signet_challenge.end());
-    const Optional<SignetTxs> signet_txs = SignetTxs::Create(block, challenge);
+    const std::optional<SignetTxs> signet_txs = SignetTxs::Create(block, challenge);
 
     if (!signet_txs) {
         LogPrint(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution parse failure)\n");
@@ -139,7 +139,9 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     const CScript& scriptSig = signet_txs->m_to_sign.vin[0].scriptSig;
     const CScriptWitness& witness = signet_txs->m_to_sign.vin[0].scriptWitness;
 
-    TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /*nIn=*/ 0, /*amount=*/ signet_txs->m_to_spend.vout[0].nValue);
+    PrecomputedTransactionData txdata;
+    txdata.Init(signet_txs->m_to_sign, {signet_txs->m_to_spend.vout[0]});
+    TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /* nInIn= */ 0, /* amountIn= */ signet_txs->m_to_spend.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
 
     if (!VerifyScript(scriptSig, signet_txs->m_to_spend.vout[0].scriptPubKey, &witness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
         LogPrint(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution invalid)\n");

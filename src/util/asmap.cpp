@@ -2,10 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/asmap.h>
+
+#include <clientversion.h>
+#include <crypto/common.h>
+#include <logging.h>
+#include <streams.h>
+
+#include <cassert>
 #include <map>
 #include <vector>
-#include <assert.h>
-#include <crypto/common.h>
 
 namespace {
 
@@ -93,8 +99,7 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
             jump = DecodeJump(pos, endpos);
             if (jump == INVALID) break; // Jump offset straddles EOF
             if (bits == 0) break; // No input bits left
-            if (pos + jump < pos) break; // overflow
-            if (pos + jump >= endpos) break; // Jumping past EOF
+            if (int64_t{jump} >= int64_t{endpos - pos}) break; // Jumping past EOF
             if (ip[ip.size() - bits]) {
                 pos += jump;
             }
@@ -156,8 +161,7 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
         } else if (opcode == Instruction::JUMP) {
             uint32_t jump = DecodeJump(pos, endpos);
             if (jump == INVALID) return false; // Jump offset straddles EOF
-            if (pos + jump < pos) return false; // overflow
-            if (pos + jump > endpos) return false; // Jump out of range
+            if (int64_t{jump} > int64_t{endpos - pos}) return false; // Jump out of range
             if (bits == 0) return false; // Consuming bits past the end of the input
             --bits;
             uint32_t jump_offset = pos - begin + jump;
@@ -185,3 +189,31 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
     }
     return false; // Reached EOF without RETURN instruction
 }
+
+std::vector<bool> DecodeAsmap(fs::path path)
+{
+    std::vector<bool> bits;
+    FILE *filestr = fsbridge::fopen(path, "rb");
+    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+    if (file.IsNull()) {
+        LogPrintf("Failed to open asmap file from disk\n");
+        return bits;
+    }
+    fseek(filestr, 0, SEEK_END);
+    int length = ftell(filestr);
+    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
+    fseek(filestr, 0, SEEK_SET);
+    uint8_t cur_byte;
+    for (int i = 0; i < length; ++i) {
+        file >> cur_byte;
+        for (int bit = 0; bit < 8; ++bit) {
+            bits.push_back((cur_byte >> bit) & 1);
+        }
+    }
+    if (!SanityCheckASMap(bits, 128)) {
+        LogPrintf("Sanity check of asmap file %s failed\n", fs::quoted(fs::PathToString(path)));
+        return {};
+    }
+    return bits;
+}
+

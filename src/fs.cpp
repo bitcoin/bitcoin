@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 #define NOMINMAX
 #endif
 #include <codecvt>
+#include <limits>
 #include <windows.h>
 #endif
 
@@ -24,11 +25,17 @@ namespace fsbridge {
 FILE *fopen(const fs::path& p, const char *mode)
 {
 #ifndef WIN32
-    return ::fopen(p.string().c_str(), mode);
+    return ::fopen(p.c_str(), mode);
 #else
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t> utf8_cvt;
     return ::_wfopen(p.wstring().c_str(), utf8_cvt.from_bytes(mode).c_str());
 #endif
+}
+
+fs::path AbsPathJoin(const fs::path& base, const fs::path& path)
+{
+    assert(base.is_absolute());
+    return fs::absolute(path, base);
 }
 
 #ifndef WIN32
@@ -40,7 +47,7 @@ static std::string GetErrorReason()
 
 FileLock::FileLock(const fs::path& file)
 {
-    fd = open(file.string().c_str(), O_RDWR);
+    fd = open(file.c_str(), O_RDWR);
     if (fd == -1) {
         reason = GetErrorReason();
     }
@@ -148,7 +155,10 @@ std::string get_filesystem_error_message(const fs::filesystem_error& e)
 #ifdef __GLIBCXX__
 
 // reference: https://github.com/gcc-mirror/gcc/blob/gcc-7_3_0-release/libstdc%2B%2B-v3/include/std/fstream#L270
-
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+#endif
 static std::string openmodeToStr(std::ios_base::openmode mode)
 {
     switch (mode & ~std::ios_base::ate) {
@@ -186,6 +196,9 @@ static std::string openmodeToStr(std::ios_base::openmode mode)
         return std::string();
     }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 void ifstream::open(const fs::path& p, std::ios_base::openmode mode)
 {
@@ -236,7 +249,11 @@ void ofstream::close()
 }
 #else // __GLIBCXX__
 
-static_assert(sizeof(*fs::path().BOOST_FILESYSTEM_C_STR) == sizeof(wchar_t),
+#if BOOST_VERSION >= 107700
+static_assert(sizeof(*BOOST_FILESYSTEM_C_STR(boost::filesystem::path())) == sizeof(wchar_t),
+#else
+static_assert(sizeof(*boost::filesystem::path().BOOST_FILESYSTEM_C_STR) == sizeof(wchar_t),
+#endif // BOOST_VERSION >= 107700
     "Warning: This build is using boost::filesystem ofstream and ifstream "
     "implementations which will fail to open paths containing multibyte "
     "characters. You should delete this static_assert to ignore this warning, "

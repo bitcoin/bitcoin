@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <protocol.h>
 
-#include <util/strencodings.h>
 #include <util/system.h>
 
 static std::atomic<bool> g_initial_block_download_completed(false);
@@ -86,28 +85,18 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CFCHECKPT,
     NetMsgType::WTXIDRELAY,
 };
-const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
-
-CMessageHeader::CMessageHeader()
-{
-    memset(pchMessageStart, 0, MESSAGE_START_SIZE);
-    memset(pchCommand, 0, sizeof(pchCommand));
-    nMessageSize = -1;
-    memset(pchChecksum, 0, CHECKSUM_SIZE);
-}
+const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
 
-    // Copy the command name, zero-padding to COMMAND_SIZE bytes
+    // Copy the command name
     size_t i = 0;
     for (; i < COMMAND_SIZE && pszCommand[i] != 0; ++i) pchCommand[i] = pszCommand[i];
     assert(pszCommand[i] == 0); // Assert that the command name passed in is not longer than COMMAND_SIZE
-    for (; i < COMMAND_SIZE; ++i) pchCommand[i] = 0;
 
     nMessageSize = nMessageSizeIn;
-    memset(pchChecksum, 0, CHECKSUM_SIZE);
 }
 
 std::string CMessageHeader::GetCommand() const
@@ -234,5 +223,5 @@ std::vector<std::string> serviceFlagsToStr(uint64_t flags)
 GenTxid ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
-    return {inv.IsMsgWtx(), inv.hash};
+    return inv.IsMsgWtx() ? GenTxid::Wtxid(inv.hash) : GenTxid::Txid(inv.hash);
 }

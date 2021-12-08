@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,14 +51,15 @@ public Q_SLOTS:
 
 private:
     Ui::ReceiveCoinsDialog *ui;
-    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     WalletModel *model;
     QMenu *contextMenu;
+    QAction* copyLabelAction;
+    QAction* copyMessageAction;
+    QAction* copyAmountAction;
     const PlatformStyle *platformStyle;
 
     QModelIndex selectedRow();
     void copyColumnToClipboard(int column);
-    virtual void resizeEvent(QResizeEvent *event) override;
 
 private Q_SLOTS:
     void on_receiveButton_clicked();
@@ -69,6 +70,7 @@ private Q_SLOTS:
     void updateDisplayUnit();
     void showMenu(const QPoint &point);
     void copyURI();
+    void copyAddress();
     void copyLabel();
     void copyMessage();
     void copyAmount();

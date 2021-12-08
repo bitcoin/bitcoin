@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the Partially Signed Transaction RPCs.
 """
 
 from decimal import Decimal
+from itertools import product
+
+from test_framework.descriptors import descsum_create
+from test_framework.key import ECKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -14,6 +18,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     find_output,
 )
+from test_framework.wallet_util import bytes_to_wif
 
 import json
 import os
@@ -24,10 +29,9 @@ MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 class PSBTTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 3
         self.extra_args = [
-            ["-walletrbf=1"],
+            ["-walletrbf=1", "-addresstype=bech32", "-changetype=bech32"], #TODO: Remove address type restrictions once taproot has psbt extensions
             ["-walletrbf=0", "-changetype=legacy"],
             []
         ]
@@ -56,8 +60,7 @@ class PSBTTest(BitcoinTestFramework):
         online_addr = w2.getnewaddress(address_type="p2sh-segwit")
         wonline.importaddress(offline_addr, "", False)
         mining_node.sendtoaddress(address=offline_addr, amount=1.0)
-        mining_node.generate(nblocks=1)
-        self.sync_blocks([mining_node, online_node])
+        self.generate(mining_node, nblocks=1)
 
         # Construct an unsigned PSBT on the online node (who doesn't know the output is Segwit, so will include a non-witness UTXO)
         utxos = wonline.listunspent(addresses=[offline_addr])
@@ -71,8 +74,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Make sure we can mine the resulting transaction
         txid = mining_node.sendrawtransaction(mining_node.finalizepsbt(signed_psbt)["hex"])
-        mining_node.generate(1)
-        self.sync_blocks([mining_node, online_node])
+        self.generate(mining_node, 1)
         assert_equal(online_node.gettxout(txid,0)["confirmations"], 1)
 
         wonline.unloadwallet()
@@ -107,8 +109,20 @@ class PSBTTest(BitcoinTestFramework):
         psbtx = self.nodes[1].walletprocesspsbt(psbtx1)['psbt']
         assert_equal(psbtx1, psbtx)
 
+        # Node 0 should not be able to sign the transaction with the wallet is locked
+        self.nodes[0].encryptwallet("password")
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].walletprocesspsbt, psbtx)
+
+        # Node 0 should be able to process without signing though
+        unsigned_tx = self.nodes[0].walletprocesspsbt(psbtx, False)
+        assert_equal(unsigned_tx['complete'], False)
+
+        self.nodes[0].walletpassphrase(passphrase="password", timeout=1000000)
+
         # Sign the transaction and send
-        signed_tx = self.nodes[0].walletprocesspsbt(psbtx)['psbt']
+        signed_tx = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=False)['psbt']
+        finalized_tx = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=True)['psbt']
+        assert signed_tx != finalized_tx
         final_tx = self.nodes[0].finalizepsbt(signed_tx)['hex']
         self.nodes[0].sendrawtransaction(final_tx)
 
@@ -147,8 +161,7 @@ class PSBTTest(BitcoinTestFramework):
         rawtx = self.nodes[0].fundrawtransaction(rawtx, {"changePosition":3})
         signed_tx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])['hex']
         txid = self.nodes[0].sendrawtransaction(signed_tx)
-        self.nodes[0].generate(6)
-        self.sync_all()
+        self.generate(self.nodes[0], 6)
 
         # Find the output pos
         p2sh_pos = -1
@@ -159,17 +172,17 @@ class PSBTTest(BitcoinTestFramework):
         p2sh_p2wpkh_pos = -1
         decoded = self.nodes[0].decoderawtransaction(signed_tx)
         for out in decoded['vout']:
-            if out['scriptPubKey']['addresses'][0] == p2sh:
+            if out['scriptPubKey']['address'] == p2sh:
                 p2sh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2wsh:
+            elif out['scriptPubKey']['address'] == p2wsh:
                 p2wsh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2wpkh:
+            elif out['scriptPubKey']['address'] == p2wpkh:
                 p2wpkh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wsh:
+            elif out['scriptPubKey']['address'] == p2sh_p2wsh:
                 p2sh_p2wsh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wpkh:
+            elif out['scriptPubKey']['address'] == p2sh_p2wpkh:
                 p2sh_p2wpkh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2pkh:
+            elif out['scriptPubKey']['address'] == p2pkh:
                 p2pkh_pos = out['n']
 
         inputs = [{"txid": txid, "vout": p2wpkh_pos}, {"txid": txid, "vout": p2sh_p2wpkh_pos}, {"txid": txid, "vout": p2pkh_pos}]
@@ -190,18 +203,18 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test walletcreatefundedpsbt fee rate of 10000 sat/vB and 0.1 BTC/kvB produces a total fee at or slightly below -maxtxfee (~0.05290000)")
         res1 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"fee_rate": 10000, "add_inputs": True})
         assert_approx(res1["fee"], 0.055, 0.005)
-        res2 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"feeRate": 0.1, "add_inputs": True})
+        res2 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"feeRate": "0.1", "add_inputs": True})
         assert_approx(res2["fee"], 0.055, 0.005)
 
         self.log.info("Test min fee rate checks with walletcreatefundedpsbt are bypassed, e.g. a fee_rate under 1 sat/vB is allowed")
-        res3 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"fee_rate": 0.99999999, "add_inputs": True})
+        res3 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"fee_rate": "0.999", "add_inputs": True})
         assert_approx(res3["fee"], 0.00000381, 0.0000001)
         res4 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"feeRate": 0.00000999, "add_inputs": True})
         assert_approx(res4["fee"], 0.00000381, 0.0000001)
 
         self.log.info("Test min fee rate checks with walletcreatefundedpsbt are bypassed and that funding non-standard 'zero-fee' transactions is valid")
-        for param in ["fee_rate", "feeRate"]:
-            assert_equal(self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {param: 0, "add_inputs": True})["fee"], 0)
+        for param, zero_value in product(["fee_rate", "feeRate"], [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]):
+            assert_equal(0, self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {param: zero_value, "add_inputs": True})["fee"])
 
         self.log.info("Test invalid fee rate settings")
         for param, value in {("fee_rate", 100000), ("feeRate", 1)}:
@@ -211,8 +224,14 @@ class PSBTTest(BitcoinTestFramework):
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: -1, "add_inputs": True})
             assert_raises_rpc_error(-3, "Amount is not a number or string",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: {"foo": "bar"}, "add_inputs": True})
+            # Test fee rate values that don't pass fixed-point parsing checks.
+            for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
+                assert_raises_rpc_error(-3, "Invalid amount",
+                    self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: invalid_value, "add_inputs": True})
+        # Test fee_rate values that cannot be represented in sat/vB.
+        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999, "0.0001", "0.00000001", "0.00099999", "31.99999999"]:
             assert_raises_rpc_error(-3, "Invalid amount",
-                self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: "", "add_inputs": True})
+                self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": invalid_value, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
         assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
@@ -300,8 +319,7 @@ class PSBTTest(BitcoinTestFramework):
         node2_addr = self.nodes[2].getnewaddress()
         txid1 = self.nodes[0].sendtoaddress(node1_addr, 13)
         txid2 = self.nodes[0].sendtoaddress(node2_addr, 13)
-        blockhash = self.nodes[0].generate(6)[0]
-        self.sync_all()
+        blockhash = self.generate(self.nodes[0], 6)[0]
         vout1 = find_output(self.nodes[1], txid1, 13, blockhash=blockhash)
         vout2 = find_output(self.nodes[2], txid2, 13, blockhash=blockhash)
 
@@ -328,8 +346,7 @@ class PSBTTest(BitcoinTestFramework):
         combined = self.nodes[0].combinepsbt([psbt1, psbt2])
         finalized = self.nodes[0].finalizepsbt(combined)['hex']
         self.nodes[0].sendrawtransaction(finalized)
-        self.nodes[0].generate(6)
-        self.sync_all()
+        self.generate(self.nodes[0], 6)
 
         # Test additional args in walletcreatepsbt
         # Make sure both pre-included and funded inputs
@@ -394,6 +411,14 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(complete_psbt, double_processed_psbt)
         # We don't care about the decode result, but decoding must succeed.
         self.nodes[0].decodepsbt(double_processed_psbt["psbt"])
+
+        # Make sure unsafe inputs are included if specified
+        self.nodes[2].createwallet(wallet_name="unsafe")
+        wunsafe = self.nodes[2].get_wallet_rpc("unsafe")
+        self.nodes[0].sendtoaddress(wunsafe.getnewaddress(), 2)
+        self.sync_mempools()
+        assert_raises_rpc_error(-4, "Insufficient funds", wunsafe.walletcreatefundedpsbt, [], [{self.nodes[0].getnewaddress(): 1}])
+        wunsafe.walletcreatefundedpsbt([], [{self.nodes[0].getnewaddress(): 1}], 0, {"include_unsafe": True})
 
         # BIP 174 Test Vectors
 
@@ -515,8 +540,7 @@ class PSBTTest(BitcoinTestFramework):
         addr4 = self.nodes[1].getnewaddress("", "p2sh-segwit")
         txid4 = self.nodes[0].sendtoaddress(addr4, 5)
         vout4 = find_output(self.nodes[0], txid4, 5)
-        self.nodes[0].generate(6)
-        self.sync_all()
+        self.generate(self.nodes[0], 6)
         psbt2 = self.nodes[1].createpsbt([{"txid":txid4, "vout":vout4}], {self.nodes[0].getnewaddress():Decimal('4.999')})
         psbt2 = self.nodes[1].walletprocesspsbt(psbt2)['psbt']
         psbt2_decoded = self.nodes[0].decodepsbt(psbt2)
@@ -539,8 +563,7 @@ class PSBTTest(BitcoinTestFramework):
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
         txid = self.nodes[0].sendtoaddress(addr, 7)
         addrinfo = self.nodes[1].getaddressinfo(addr)
-        blockhash = self.nodes[0].generate(6)[0]
-        self.sync_all()
+        blockhash = self.generate(self.nodes[0], 6)[0]
         vout = find_output(self.nodes[0], txid, 7, blockhash=blockhash)
         psbt = self.nodes[1].createpsbt([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress("", "p2sh-segwit"):Decimal('6.999')})
         analyzed = self.nodes[0].analyzepsbt(psbt)
@@ -582,6 +605,43 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(analysis['error'], 'PSBT is not valid. Input 0 specifies invalid prevout')
 
         assert_raises_rpc_error(-25, 'Inputs missing or spent', self.nodes[0].walletprocesspsbt, 'cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==')
+
+        # Test that we can fund psbts with external inputs specified
+        eckey = ECKey()
+        eckey.generate()
+        privkey = bytes_to_wif(eckey.get_bytes())
+
+        # Make a weird but signable script. sh(pkh()) descriptor accomplishes this
+        desc = descsum_create("sh(pkh({}))".format(privkey))
+        if self.options.descriptors:
+            res = self.nodes[0].importdescriptors([{"desc": desc, "timestamp": "now"}])
+        else:
+            res = self.nodes[0].importmulti([{"desc": desc, "timestamp": "now"}])
+        assert res[0]["success"]
+        addr = self.nodes[0].deriveaddresses(desc)[0]
+        addr_info = self.nodes[0].getaddressinfo(addr)
+
+        self.nodes[0].sendtoaddress(addr, 10)
+        self.generate(self.nodes[0], 6)
+        ext_utxo = self.nodes[0].listunspent(addresses=[addr])[0]
+
+        # An external input without solving data should result in an error
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[1].walletcreatefundedpsbt, [ext_utxo], {self.nodes[0].getnewaddress(): 10 + ext_utxo['amount']}, 0, {'add_inputs': True})
+
+        # But funding should work when the solving data is provided
+        psbt = self.nodes[1].walletcreatefundedpsbt([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, {'add_inputs': True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"]]}})
+        signed = self.nodes[1].walletprocesspsbt(psbt['psbt'])
+        assert not signed['complete']
+        signed = self.nodes[0].walletprocesspsbt(signed['psbt'])
+        assert signed['complete']
+        self.nodes[0].finalizepsbt(signed['psbt'])
+
+        psbt = self.nodes[1].walletcreatefundedpsbt([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, {'add_inputs': True, "solving_data":{"descriptors": [desc]}})
+        signed = self.nodes[1].walletprocesspsbt(psbt['psbt'])
+        assert not signed['complete']
+        signed = self.nodes[0].walletprocesspsbt(signed['psbt'])
+        assert signed['complete']
+        self.nodes[0].finalizepsbt(signed['psbt'])
 
 if __name__ == '__main__':
     PSBTTest().main()

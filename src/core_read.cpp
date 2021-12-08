@@ -26,20 +26,20 @@ opcodetype ParseOpCode(const std::string& s)
 {
     static std::map<std::string, opcodetype> mapOpNames;
 
-    if (mapOpNames.empty())
-    {
-        for (unsigned int op = 0; op <= MAX_OPCODE; op++)
-        {
+    if (mapOpNames.empty()) {
+        for (unsigned int op = 0; op <= MAX_OPCODE; op++) {
             // Allow OP_RESERVED to get into mapOpNames
-            if (op < OP_NOP && op != OP_RESERVED)
+            if (op < OP_NOP && op != OP_RESERVED) {
                 continue;
+            }
 
             std::string strName = GetOpName(static_cast<opcodetype>(op));
-            if (strName == "OP_UNKNOWN")
+            if (strName == "OP_UNKNOWN") {
                 continue;
+            }
             mapOpNames[strName] = static_cast<opcodetype>(op);
             // Convenience: OP_ADD and just ADD are both recognized:
-            if (strName.compare(0, 3, "OP_") == 0) {  // strName starts with "OP_"
+            if (strName.compare(0, 3, "OP_") == 0) { // strName starts with "OP_"
                 mapOpNames[strName.substr(3)] = static_cast<opcodetype>(op);
             }
         }
@@ -59,44 +59,35 @@ CScript ParseScript(const std::string& s)
     std::vector<std::string> words;
     boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
 
-    for (std::vector<std::string>::const_iterator w = words.begin(); w != words.end(); ++w)
-    {
-        if (w->empty())
-        {
+    for (const std::string& w : words) {
+        if (w.empty()) {
             // Empty string, ignore. (boost::split given '' will return one word)
-        }
-        else if (std::all_of(w->begin(), w->end(), ::IsDigit) ||
-            (w->front() == '-' && w->size() > 1 && std::all_of(w->begin()+1, w->end(), ::IsDigit)))
+        } else if (std::all_of(w.begin(), w.end(), ::IsDigit) ||
+                   (w.front() == '-' && w.size() > 1 && std::all_of(w.begin() + 1, w.end(), ::IsDigit)))
         {
             // Number
-            int64_t n = atoi64(*w);
+            const auto num{ToIntegral<int64_t>(w)};
 
-            //limit the range of numbers ParseScript accepts in decimal
-            //since numbers outside -0xFFFFFFFF...0xFFFFFFFF are illegal in scripts
-            if (n > int64_t{0xffffffff} || n < -1 * int64_t{0xffffffff}) {
+            // limit the range of numbers ParseScript accepts in decimal
+            // since numbers outside -0xFFFFFFFF...0xFFFFFFFF are illegal in scripts
+            if (!num.has_value() || num > int64_t{0xffffffff} || num < -1 * int64_t{0xffffffff}) {
                 throw std::runtime_error("script parse error: decimal numeric value only allowed in the "
                                          "range -0xFFFFFFFF...0xFFFFFFFF");
             }
 
-            result << n;
-        }
-        else if (w->substr(0,2) == "0x" && w->size() > 2 && IsHex(std::string(w->begin()+2, w->end())))
-        {
+            result << num.value();
+        } else if (w.substr(0, 2) == "0x" && w.size() > 2 && IsHex(std::string(w.begin() + 2, w.end()))) {
             // Raw hex data, inserted NOT pushed onto stack:
-            std::vector<unsigned char> raw = ParseHex(std::string(w->begin()+2, w->end()));
+            std::vector<unsigned char> raw = ParseHex(std::string(w.begin() + 2, w.end()));
             result.insert(result.end(), raw.begin(), raw.end());
-        }
-        else if (w->size() >= 2 && w->front() == '\'' && w->back() == '\'')
-        {
+        } else if (w.size() >= 2 && w.front() == '\'' && w.back() == '\'') {
             // Single-quoted string, pushed as data. NOTE: this is poor-man's
             // parsing, spaces/tabs/newlines in single-quoted strings won't work.
-            std::vector<unsigned char> value(w->begin()+1, w->end()-1);
+            std::vector<unsigned char> value(w.begin() + 1, w.end() - 1);
             result << value;
-        }
-        else
-        {
+        } else {
             // opcode, e.g. OP_ADD or ADD:
-            result << ParseOpCode(*w);
+            result << ParseOpCode(w);
         }
     }
 
@@ -126,31 +117,72 @@ static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
 
 static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& tx_data, bool try_no_witness, bool try_witness)
 {
+    // General strategy:
+    // - Decode both with extended serialization (which interprets the 0x0001 tag as a marker for
+    //   the presence of witnesses) and with legacy serialization (which interprets the tag as a
+    //   0-input 1-output incomplete transaction).
+    //   - Restricted by try_no_witness (which disables legacy if false) and try_witness (which
+    //     disables extended if false).
+    //   - Ignore serializations that do not fully consume the hex string.
+    // - If neither succeeds, fail.
+    // - If only one succeeds, return that one.
+    // - If both decode attempts succeed:
+    //   - If only one passes the CheckTxScriptsSanity check, return that one.
+    //   - If neither or both pass CheckTxScriptsSanity, return the extended one.
+
+    CMutableTransaction tx_extended, tx_legacy;
+    bool ok_extended = false, ok_legacy = false;
+
+    // Try decoding with extended serialization support, and remember if the result successfully
+    // consumes the entire input.
     if (try_witness) {
         CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
         try {
-            ssData >> tx;
-            // If transaction looks sane, we don't try other mode even if requested
-            if (ssData.empty() && (!try_no_witness || CheckTxScriptsSanity(tx))) {
-                return true;
-            }
+            ssData >> tx_extended;
+            if (ssData.empty()) ok_extended = true;
         } catch (const std::exception&) {
             // Fall through.
         }
     }
 
+    // Optimization: if extended decoding succeeded and the result passes CheckTxScriptsSanity,
+    // don't bother decoding the other way.
+    if (ok_extended && CheckTxScriptsSanity(tx_extended)) {
+        tx = std::move(tx_extended);
+        return true;
+    }
+
+    // Try decoding with legacy serialization, and remember if the result successfully consumes the entire input.
     if (try_no_witness) {
         CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
         try {
-            ssData >> tx;
-            if (ssData.empty()) {
-                return true;
-            }
+            ssData >> tx_legacy;
+            if (ssData.empty()) ok_legacy = true;
         } catch (const std::exception&) {
             // Fall through.
         }
     }
 
+    // If legacy decoding succeeded and passes CheckTxScriptsSanity, that's our answer, as we know
+    // at this point that extended decoding either failed or doesn't pass the sanity check.
+    if (ok_legacy && CheckTxScriptsSanity(tx_legacy)) {
+        tx = std::move(tx_legacy);
+        return true;
+    }
+
+    // If extended decoding succeeded, and neither decoding passes sanity, return the extended one.
+    if (ok_extended) {
+        tx = std::move(tx_extended);
+        return true;
+    }
+
+    // If legacy decoding succeeded and extended didn't, return the legacy one.
+    if (ok_legacy) {
+        tx = std::move(tx_legacy);
+        return true;
+    }
+
+    // If none succeeded, we failed.
     return false;
 }
 
@@ -219,6 +251,7 @@ int ParseSighashString(const UniValue& sighash)
     int hash_type = SIGHASH_ALL;
     if (!sighash.isNull()) {
         static std::map<std::string, int> map_sighash_values = {
+            {std::string("DEFAULT"), int(SIGHASH_DEFAULT)},
             {std::string("ALL"), int(SIGHASH_ALL)},
             {std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY)},
             {std::string("NONE"), int(SIGHASH_NONE)},

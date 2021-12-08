@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -9,10 +9,10 @@
 # Check includes: Check for duplicate includes. Enforce bracket syntax includes.
 
 export LC_ALL=C
-IGNORE_REGEXP="/(leveldb|secp256k1|univalue|crc32c)/"
+IGNORE_REGEXP="/(leveldb|secp256k1|minisketch|univalue|crc32c)/"
 
 # cd to root folder of git repo for git ls-files to work properly
-cd "$(dirname $0)/../.." || exit 1
+cd "$(dirname "$0")/../.." || exit 1
 
 filter_suffix() {
     git ls-files | grep -E "^src/.*\.${1}"'$' | grep -Ev "${IGNORE_REGEXP}"
@@ -60,21 +60,11 @@ EXPECTED_BOOST_INCLUDES=(
     boost/multi_index/ordered_index.hpp
     boost/multi_index/sequenced_index.hpp
     boost/multi_index_container.hpp
-    boost/optional.hpp
-    boost/preprocessor/cat.hpp
-    boost/preprocessor/stringize.hpp
     boost/process.hpp
     boost/signals2/connection.hpp
     boost/signals2/optional_last_value.hpp
     boost/signals2/signal.hpp
     boost/test/unit_test.hpp
-    boost/thread/condition_variable.hpp
-    boost/thread/mutex.hpp
-    boost/thread/shared_mutex.hpp
-    boost/thread/thread.hpp
-    boost/variant.hpp
-    boost/variant/apply_visitor.hpp
-    boost/variant/static_visitor.hpp
 )
 
 for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | cut -f2 -d: | cut -f2 -d'<' | cut -f1 -d'>' | sort -u); do

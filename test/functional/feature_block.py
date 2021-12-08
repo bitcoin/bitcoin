@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block processing."""
@@ -22,7 +22,7 @@ from test_framework.messages import (
     CTransaction,
     CTxIn,
     CTxOut,
-    MAX_BLOCK_BASE_SIZE,
+    MAX_BLOCK_WEIGHT,
     uint256_from_compact,
     uint256_from_str,
 )
@@ -37,17 +37,17 @@ from test_framework.script import (
     OP_CHECKSIGVERIFY,
     OP_ELSE,
     OP_ENDIF,
-    OP_EQUAL,
     OP_DROP,
     OP_FALSE,
-    OP_HASH160,
     OP_IF,
     OP_INVALIDOPCODE,
     OP_RETURN,
     OP_TRUE,
     SIGHASH_ALL,
     LegacySignatureHash,
-    hash160,
+)
+from test_framework.script_util import (
+    script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -82,7 +82,10 @@ class FullBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [['-acceptnonstdtxn=1']]  # This is a consensus block test, we don't care about tx policy
+        self.extra_args = [[
+            '-acceptnonstdtxn=1',  # This is a consensus block test, we don't care about tx policy
+            '-testactivationheight=bip34@2',
+        ]]
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
@@ -307,33 +310,33 @@ class FullBlockTest(BitcoinTestFramework):
         b22 = self.next_block(22, spend=out[5])
         self.send_blocks([b22], success=False, reject_reason='bad-txns-premature-spend-of-coinbase', reconnect=True)
 
-        # Create a block on either side of MAX_BLOCK_BASE_SIZE and make sure its accepted/rejected
+        # Create a block on either side of MAX_BLOCK_WEIGHT and make sure its accepted/rejected
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b23 (6)
         #                                                                           \-> b24 (6) -> b25 (7)
         #                      \-> b3 (1) -> b4 (2)
-        self.log.info("Accept a block of size MAX_BLOCK_BASE_SIZE")
+        self.log.info("Accept a block of weight MAX_BLOCK_WEIGHT")
         self.move_tip(15)
         b23 = self.next_block(23, spend=out[6])
         tx = CTransaction()
-        script_length = MAX_BLOCK_BASE_SIZE - len(b23.serialize()) - 69
+        script_length = (MAX_BLOCK_WEIGHT - b23.get_weight() - 276) // 4
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 0)))
         b23 = self.update_block(23, [tx])
-        # Make sure the math above worked out to produce a max-sized block
-        assert_equal(len(b23.serialize()), MAX_BLOCK_BASE_SIZE)
+        # Make sure the math above worked out to produce a max-weighted block
+        assert_equal(b23.get_weight(), MAX_BLOCK_WEIGHT)
         self.send_blocks([b23], True)
         self.save_spendable_output()
 
-        self.log.info("Reject a block of size MAX_BLOCK_BASE_SIZE + 1")
+        self.log.info("Reject a block of weight MAX_BLOCK_WEIGHT + 4")
         self.move_tip(15)
         b24 = self.next_block(24, spend=out[6])
-        script_length = MAX_BLOCK_BASE_SIZE - len(b24.serialize()) - 69
+        script_length = (MAX_BLOCK_WEIGHT - b24.get_weight() - 276) // 4
         script_output = CScript([b'\x00' * (script_length + 1)])
         tx.vout = [CTxOut(0, script_output)]
         b24 = self.update_block(24, [tx])
-        assert_equal(len(b24.serialize()), MAX_BLOCK_BASE_SIZE + 1)
+        assert_equal(b24.get_weight(), MAX_BLOCK_WEIGHT + 1 * 4)
         self.send_blocks([b24], success=False, reject_reason='bad-blk-length', reconnect=True)
 
         b25 = self.next_block(25, spend=out[7])
@@ -373,7 +376,9 @@ class FullBlockTest(BitcoinTestFramework):
         # b30 has a max-sized coinbase scriptSig.
         self.move_tip(23)
         b30 = self.next_block(30)
-        b30.vtx[0].vin[0].scriptSig = b'\x00' * 100
+        b30.vtx[0].vin[0].scriptSig = bytes(b30.vtx[0].vin[0].scriptSig)  # Convert CScript to raw bytes
+        b30.vtx[0].vin[0].scriptSig += b'\x00' * (100 - len(b30.vtx[0].vin[0].scriptSig))  # Fill with 0s
+        assert_equal(len(b30.vtx[0].vin[0].scriptSig), 100)
         b30.vtx[0].rehash()
         b30 = self.update_block(30, [])
         self.send_blocks([b30], True)
@@ -469,8 +474,7 @@ class FullBlockTest(BitcoinTestFramework):
 
         # Build the redeem script, hash it, use hash to create the p2sh script
         redeem_script = CScript([self.coinbase_pubkey] + [OP_2DUP, OP_CHECKSIGVERIFY] * 5 + [OP_CHECKSIG])
-        redeem_script_hash = hash160(redeem_script)
-        p2sh_script = CScript([OP_HASH160, redeem_script_hash, OP_EQUAL])
+        p2sh_script = script_to_p2sh_script(redeem_script)
 
         # Create a transaction that spends one satoshi to the p2sh_script, the rest to OP_TRUE
         # This must be signed because it is spending a coinbase
@@ -485,13 +489,13 @@ class FullBlockTest(BitcoinTestFramework):
         # Until block is full, add tx's with 1 satoshi to p2sh_script, the rest to OP_TRUE
         tx_new = None
         tx_last = tx
-        total_size = len(b39.serialize())
-        while(total_size < MAX_BLOCK_BASE_SIZE):
+        total_weight = b39.get_weight()
+        while total_weight < MAX_BLOCK_WEIGHT:
             tx_new = self.create_tx(tx_last, 1, 1, p2sh_script)
             tx_new.vout.append(CTxOut(tx_last.vout[1].nValue - 1, CScript([OP_TRUE])))
             tx_new.rehash()
-            total_size += len(tx_new.serialize())
-            if total_size >= MAX_BLOCK_BASE_SIZE:
+            total_weight += tx_new.get_weight()
+            if total_weight >= MAX_BLOCK_WEIGHT:
                 break
             b39.vtx.append(tx_new)  # add tx to block
             tx_last = tx_new
@@ -502,7 +506,7 @@ class FullBlockTest(BitcoinTestFramework):
         # Make sure we didn't accidentally make too big a block. Note that the
         # size of the block has non-determinism due to the ECDSA signature in
         # the first transaction.
-        while (len(b39.serialize()) >= MAX_BLOCK_BASE_SIZE):
+        while b39.get_weight() >= MAX_BLOCK_WEIGHT:
             del b39.vtx[-1]
 
         b39 = self.update_block(39, [])
@@ -591,6 +595,8 @@ class FullBlockTest(BitcoinTestFramework):
         b44.hashPrevBlock = self.tip.sha256
         b44.nBits = 0x207fffff
         b44.vtx.append(coinbase)
+        tx = self.create_and_sign_transaction(out[14], 1)
+        b44.vtx.append(tx)
         b44.hashMerkleRoot = b44.calc_merkle_root()
         b44.solve()
         self.tip = b44
@@ -606,7 +612,6 @@ class FullBlockTest(BitcoinTestFramework):
         b45.nBits = 0x207fffff
         b45.vtx.append(non_coinbase)
         b45.hashMerkleRoot = b45.calc_merkle_root()
-        b45.calc_sha256()
         b45.solve()
         self.block_heights[b45.sha256] = self.block_heights[self.tip.sha256] + 1
         self.tip = b45
@@ -678,7 +683,7 @@ class FullBlockTest(BitcoinTestFramework):
         # Test block timestamps
         #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
         #                                                                                   \-> b54 (15)
-        #
+        #                                                                        -> b44 (14)\-> b48 ()
         self.move_tip(43)
         b53 = self.next_block(53, spend=out[14])
         self.send_blocks([b53], False)
@@ -697,6 +702,21 @@ class FullBlockTest(BitcoinTestFramework):
         self.update_block(55, [])
         self.send_blocks([b55], True)
         self.save_spendable_output()
+
+        # The block which was previously rejected because of being "too far(3 hours)" must be accepted 2 hours later.
+        # The new block is only 1 hour into future now and we must reorg onto to the new longer chain.
+        # The new bestblock b48p is invalidated manually.
+        #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
+        #                                                                                   \-> b54 (15)
+        #                                                                        -> b44 (14)\-> b48 () -> b48p ()
+        self.log.info("Accept a previously rejected future block at a later time")
+        node.setmocktime(int(time.time()) + 2*60*60)
+        self.move_tip(48)
+        self.block_heights[b48.sha256] = self.block_heights[b44.sha256] + 1 # b48 is a parent of b44
+        b48p = self.next_block("48p")
+        self.send_blocks([b48, b48p], success=True) # Reorg to the longer chain
+        node.invalidateblock(b48p.hash) # mark b48p as invalid
+        node.setmocktime(0)
 
         # Test Merkle tree malleability
         #
@@ -817,6 +837,7 @@ class FullBlockTest(BitcoinTestFramework):
         b61.vtx[0].rehash()
         b61 = self.update_block(61, [])
         assert_equal(duplicate_tx.serialize(), b61.vtx[0].serialize())
+        # BIP30 is always checked on regtest, regardless of the BIP34 activation height
         self.send_blocks([b61], success=False, reject_reason='bad-txns-BIP30', reconnect=True)
 
         # Test BIP30 (allow duplicate if spent)
@@ -875,7 +896,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b63], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)
 
         #  This checks that a block with a bloated VARINT between the block_header and the array of tx such that
-        #  the block is > MAX_BLOCK_BASE_SIZE with the bloated varint, but <= MAX_BLOCK_BASE_SIZE without the bloated varint,
+        #  the block is > MAX_BLOCK_WEIGHT with the bloated varint, but <= MAX_BLOCK_WEIGHT without the bloated varint,
         #  does not cause a subsequent, identical block with canonical encoding to be rejected.  The test does not
         #  care whether the bloated block is accepted or rejected; it only cares that the second block is accepted.
         #
@@ -900,12 +921,12 @@ class FullBlockTest(BitcoinTestFramework):
         tx = CTransaction()
 
         # use canonical serialization to calculate size
-        script_length = MAX_BLOCK_BASE_SIZE - len(b64a.normal_serialize()) - 69
+        script_length = (MAX_BLOCK_WEIGHT - 4 * len(b64a.normal_serialize()) - 276) // 4
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
         b64a = self.update_block("64a", [tx])
-        assert_equal(len(b64a.serialize()), MAX_BLOCK_BASE_SIZE + 8)
+        assert_equal(b64a.get_weight(), MAX_BLOCK_WEIGHT + 8 * 4)
         self.send_blocks([b64a], success=False, reject_reason='non-canonical ReadCompactSize()')
 
         # bitcoind doesn't disconnect us for sending a bloated block, but if we subsequently
@@ -919,7 +940,7 @@ class FullBlockTest(BitcoinTestFramework):
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
         assert_equal(b64.hash, b64a.hash)
-        assert_equal(len(b64.serialize()), MAX_BLOCK_BASE_SIZE)
+        assert_equal(b64.get_weight(), MAX_BLOCK_WEIGHT)
         self.blocks[64] = b64
         b64 = self.update_block(64, [])
         self.send_blocks([b64], True)
@@ -1253,12 +1274,12 @@ class FullBlockTest(BitcoinTestFramework):
         for i in range(89, LARGE_REORG_SIZE + 89):
             b = self.next_block(i, spend)
             tx = CTransaction()
-            script_length = MAX_BLOCK_BASE_SIZE - len(b.serialize()) - 69
+            script_length = (MAX_BLOCK_WEIGHT - b.get_weight() - 276) // 4
             script_output = CScript([b'\x00' * script_length])
             tx.vout.append(CTxOut(0, script_output))
             tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))
             b = self.update_block(i, [tx])
-            assert_equal(len(b.serialize()), MAX_BLOCK_BASE_SIZE)
+            assert_equal(b.get_weight(), MAX_BLOCK_WEIGHT)
             blocks.append(b)
             self.save_spendable_output()
             spend = self.get_spendable_output()
@@ -1308,7 +1329,7 @@ class FullBlockTest(BitcoinTestFramework):
         return create_tx_with_script(spend_tx, n, amount=value, script_pub_key=script)
 
     # sign a transaction, using the key we know about
-    # this signs input 0 in tx, which is assumed to be spending output n in spend_tx
+    # this signs input 0 in tx, which is assumed to be spending output 0 in spend_tx
     def sign_tx(self, tx, spend_tx):
         scriptPubKey = bytearray(spend_tx.vout[0].scriptPubKey)
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend
@@ -1340,11 +1361,10 @@ class FullBlockTest(BitcoinTestFramework):
         else:
             coinbase.vout[0].nValue += spend.vout[0].nValue - 1  # all but one satoshi to fees
             coinbase.rehash()
-            block = create_block(base_block_hash, coinbase, block_time, version=version)
             tx = self.create_tx(spend, 0, 1, script)  # spend 1 satoshi
             self.sign_tx(tx, spend)
-            self.add_transactions_to_block(block, [tx])
-            block.hashMerkleRoot = block.calc_merkle_root()
+            tx.rehash()
+            block = create_block(base_block_hash, coinbase, block_time, version=version, txlist=[tx])
         # Block is created. Find a valid nonce.
         block.solve()
         self.tip = block

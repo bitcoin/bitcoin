@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
-from binascii import a2b_hex
 import struct
 import time
 import unittest
@@ -23,25 +22,24 @@ from .messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
-    FromHex,
-    ToHex,
     hash256,
-    hex_str_to_bytes,
     ser_uint256,
-    sha256,
+    tx_from_hex,
     uint256_from_str,
 )
 from .script import (
     CScript,
     CScriptNum,
     CScriptOp,
-    OP_0,
     OP_1,
-    OP_CHECKMULTISIG,
-    OP_CHECKSIG,
     OP_RETURN,
     OP_TRUE,
-    hash160,
+)
+from .script_util import (
+    key_to_p2pk_script,
+    key_to_p2wpkh_script,
+    keys_to_multisig_script,
+    script_to_p2wsh_script,
 )
 from .util import assert_equal
 
@@ -52,10 +50,16 @@ MAX_BLOCK_SIGOPS_WEIGHT = MAX_BLOCK_SIGOPS * WITNESS_SCALE_FACTOR
 # Genesis block time (regtest)
 TIME_GENESIS_BLOCK = 1296688602
 
+MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60
+
+# Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
+COINBASE_MATURITY = 100
+
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
+VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 
 
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):
@@ -63,11 +67,11 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block = CBlock()
     if tmpl is None:
         tmpl = {}
-    block.nVersion = version or tmpl.get('version') or 1
+    block.nVersion = version or tmpl.get('version') or VERSIONBITS_LAST_OLD_BLOCK_VERSION
     block.nTime = ntime or tmpl.get('curtime') or int(time.time() + 600)
     block.hashPrevBlock = hashprev or int(tmpl['previousblockhash'], 0x10)
     if tmpl and not tmpl.get('bits') is None:
-        block.nBits = struct.unpack('>I', a2b_hex(tmpl['bits']))[0]
+        block.nBits = struct.unpack('>I', bytes.fromhex(tmpl['bits']))[0]
     else:
         block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
     if coinbase is None:
@@ -76,7 +80,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     if txlist:
         for tx in txlist:
             if not hasattr(tx, 'calc_sha256'):
-                tx = FromHex(CTransaction(), tx)
+                tx = tx_from_hex(tx)
             block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
@@ -115,7 +119,7 @@ def script_BIP34_coinbase_height(height):
     return CScript([CScriptNum(height)])
 
 
-def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0):
+def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0, nValue=50):
     """Create a coinbase transaction.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
@@ -126,12 +130,13 @@ def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0):
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff))
     coinbaseoutput = CTxOut()
-    coinbaseoutput.nValue = 50 * COIN
-    halvings = int(height / 150)  # regtest
-    coinbaseoutput.nValue >>= halvings
-    coinbaseoutput.nValue += fees
+    coinbaseoutput.nValue = nValue * COIN
+    if nValue == 50:
+        halvings = int(height / 150)  # regtest
+        coinbaseoutput.nValue >>= halvings
+        coinbaseoutput.nValue += fees
     if pubkey is not None:
-        coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
+        coinbaseoutput.scriptPubKey = key_to_p2pk_script(pubkey)
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [coinbaseoutput]
@@ -162,7 +167,7 @@ def create_transaction(node, txid, to_address, *, amount):
         sign for the output that is being spent.
     """
     raw_tx = create_raw_transaction(node, txid, to_address, amount=amount)
-    tx = FromHex(CTransaction(), raw_tx)
+    tx = tx_from_hex(raw_tx)
     return tx
 
 def create_raw_transaction(node, txid, to_address, *, amount):
@@ -203,13 +208,11 @@ def witness_script(use_p2wsh, pubkey):
     scriptPubKey."""
     if not use_p2wsh:
         # P2WPKH instead
-        pubkeyhash = hash160(hex_str_to_bytes(pubkey))
-        pkscript = CScript([OP_0, pubkeyhash])
+        pkscript = key_to_p2wpkh_script(pubkey)
     else:
         # 1-of-1 multisig
-        witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
-        scripthash = sha256(witness_program)
-        pkscript = CScript([OP_0, scripthash])
+        witness_script = keys_to_multisig_script([pubkey])
+        pkscript = script_to_p2wsh_script(witness_script)
     return pkscript.hex()
 
 def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
@@ -217,7 +220,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
 
     Optionally wrap the segwit output using P2SH."""
     if use_p2wsh:
-        program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
+        program = keys_to_multisig_script([pubkey])
         addr = script_to_p2sh_p2wsh(program) if encode_p2sh else script_to_p2wsh(program)
     else:
         addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
@@ -239,9 +242,9 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
         return node.sendrawtransaction(signed["hex"])
     else:
         if (insert_redeem_script):
-            tx = FromHex(CTransaction(), tx_to_witness)
-            tx.vin[0].scriptSig += CScript([hex_str_to_bytes(insert_redeem_script)])
-            tx_to_witness = ToHex(tx)
+            tx = tx_from_hex(tx_to_witness)
+            tx.vin[0].scriptSig += CScript([bytes.fromhex(insert_redeem_script)])
+            tx_to_witness = tx.serialize().hex()
 
     return node.sendrawtransaction(tx_to_witness)
 

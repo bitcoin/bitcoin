@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,11 +33,11 @@ class NonFatalCheckError : public std::runtime_error
     do {                                                          \
         if (!(condition)) {                                       \
             throw NonFatalCheckError(                             \
-                strprintf("%s:%d (%s)\n"                          \
-                          "Internal bug detected: '%s'\n"         \
+                strprintf("Internal bug detected: '%s'\n"         \
+                          "%s:%d (%s)\n"                          \
                           "You may report this issue here: %s\n", \
-                    __FILE__, __LINE__, __func__,                 \
                     (#condition),                                 \
+                    __FILE__, __LINE__, __func__,                 \
                     PACKAGE_BUGREPORT));                          \
         }                                                         \
     } while (false)
@@ -69,7 +69,7 @@ T get_pure_r_value(T&& val)
 #ifdef ABORT_ON_FAILED_ASSUME
 #define Assume(val) Assert(val)
 #else
-#define Assume(val) ((void)(val))
+#define Assume(val) ([&]() -> decltype(get_pure_r_value(val)) { auto&& check = (val); return std::forward<decltype(get_pure_r_value(val))>(check); }())
 #endif
 
 #endif // BITCOIN_UTIL_CHECK_H

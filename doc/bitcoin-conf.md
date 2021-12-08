@@ -4,6 +4,8 @@ The configuration file is used by `bitcoind`, `bitcoin-qt` and `bitcoin-cli`.
 
 All command-line options (except for `-?`, `-help`, `-version` and `-conf`) may be specified in a configuration file, and all configuration file options (except for `includeconf`) may also be specified on the command line. Command-line options override values set in the configuration file and configuration file options override values set in the GUI.
 
+Changes to the configuration file while `bitcoind` or `bitcoin-qt` is running only take effect after restarting.
+
 ## Configuration File Format
 
 The configuration file is a plain text file and consists of `option=value` entries, one per line. Leading and trailing whitespaces are removed.
@@ -27,7 +29,7 @@ Comments may appear in two ways:
 ### Network specific options
 
 Network specific options can be:
-- placed into sections with headers `[main]` (not `[mainnet]`), `[test]` (not `[testnet]`) or `[regtest]`;
+- placed into sections with headers `[main]` (not `[mainnet]`), `[test]` (not `[testnet]`), `[signet]` or `[regtest]`;
 - prefixed with a chain name; e.g., `regtest.maxmempool=100`.
 
 Network specific options take precedence over non-network specific options.

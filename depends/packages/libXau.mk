@@ -1,8 +1,8 @@
 package=libXau
-$(package)_version=1.0.8
+$(package)_version=1.0.9
 $(package)_download_path=https://xorg.freedesktop.org/releases/individual/lib/
 $(package)_file_name=$(package)-$($(package)_version).tar.bz2
-$(package)_sha256_hash=fdd477320aeb5cdd67272838722d6b7d544887dfe7de46e1e7cc0c27c2bea4f2
+$(package)_sha256_hash=ccf8cbf0dbf676faa2ea0a6d64bcc3b6746064722b606c8c52917ed00dcb73ec
 $(package)_dependencies=xproto
 
 # When updating this package, check the default value of
@@ -30,5 +30,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm lib/*.la
+  rm -rf share lib/*.la
 endef

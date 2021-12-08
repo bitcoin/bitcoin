@@ -2,6 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -9,14 +13,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#if defined(__has_builtin)
-#if __has_builtin(__builtin_mul_overflow)
-#define HAVE_BUILTIN_MUL_OVERFLOW
-#endif
-#elif defined(__GNUC__)
-#define HAVE_BUILTIN_MUL_OVERFLOW
-#endif
 
 namespace {
 template <typename T>
@@ -40,7 +36,7 @@ void TestMultiplicationOverflow(FuzzedDataProvider& fuzzed_data_provider)
 }
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(multiplication_overflow)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     TestMultiplicationOverflow<int64_t>(fuzzed_data_provider);

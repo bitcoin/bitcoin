@@ -19,7 +19,7 @@
 
 
 PSBTOperationsDialog::PSBTOperationsDialog(
-    QWidget* parent, WalletModel* wallet_model, ClientModel* client_model) : QDialog(parent),
+    QWidget* parent, WalletModel* wallet_model, ClientModel* client_model) : QDialog(parent, GUIUtil::dialog_flags),
                                                                              m_ui(new Ui::PSBTOperationsDialog),
                                                                              m_wallet_model(wallet_model),
                                                                              m_client_model(client_model)
@@ -47,18 +47,22 @@ void PSBTOperationsDialog::openWithPSBT(PartiallySignedTransaction psbtx)
 {
     m_transaction_data = psbtx;
 
-    bool complete;
-    size_t n_could_sign;
-    FinalizePSBT(psbtx);  // Make sure all existing signatures are fully combined before checking for completeness.
-    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */,  m_transaction_data, complete, &n_could_sign);
-    if (err != TransactionError::OK) {
-        showStatus(tr("Failed to load transaction: %1")
-            .arg(QString::fromStdString(TransactionErrorString(err).translated)), StatusLevel::ERR);
-        return;
+    bool complete = FinalizePSBT(psbtx); // Make sure all existing signatures are fully combined before checking for completeness.
+    if (m_wallet_model) {
+        size_t n_could_sign;
+        TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, &n_could_sign, m_transaction_data, complete);
+        if (err != TransactionError::OK) {
+            showStatus(tr("Failed to load transaction: %1")
+                           .arg(QString::fromStdString(TransactionErrorString(err).translated)),
+                       StatusLevel::ERR);
+            return;
+        }
+        m_ui->signTransactionButton->setEnabled(!complete && !m_wallet_model->wallet().privateKeysDisabled() && n_could_sign > 0);
+    } else {
+        m_ui->signTransactionButton->setEnabled(false);
     }
 
     m_ui->broadcastTransactionButton->setEnabled(complete);
-    m_ui->signTransactionButton->setEnabled(!complete && !m_wallet_model->wallet().privateKeysDisabled() && n_could_sign > 0);
 
     updateTransactionDisplay();
 }
@@ -67,7 +71,10 @@ void PSBTOperationsDialog::signTransaction()
 {
     bool complete;
     size_t n_signed;
-    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, m_transaction_data, complete, &n_signed);
+
+    WalletModel::UnlockContext ctx(m_wallet_model->requestUnlock());
+
+    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, &n_signed, m_transaction_data, complete);
 
     if (err != TransactionError::OK) {
         showStatus(tr("Failed to sign transaction: %1")
@@ -77,7 +84,9 @@ void PSBTOperationsDialog::signTransaction()
 
     updateTransactionDisplay();
 
-    if (!complete && n_signed < 1) {
+    if (!complete && !ctx.isValid()) {
+        showStatus(tr("Cannot sign inputs while wallet is locked."), StatusLevel::WARN);
+    } else if (!complete && n_signed < 1) {
         showStatus(tr("Could not sign any more inputs."), StatusLevel::WARN);
     } else if (!complete) {
         showStatus(tr("Signed %1 inputs, but more signatures are still required.").arg(n_signed),
@@ -101,8 +110,8 @@ void PSBTOperationsDialog::broadcastTransaction()
 
     CTransactionRef tx = MakeTransactionRef(mtx);
     std::string err_string;
-    TransactionError error = BroadcastTransaction(
-        *m_client_model->node().context(), tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /* relay */ true, /* await_callback */ false);
+    TransactionError error =
+        m_client_model->node().broadcastTransaction(tx, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), err_string);
 
     if (error == TransactionError::OK) {
         showStatus(tr("Transaction broadcast successfully! Transaction ID: %1")
@@ -133,7 +142,7 @@ void PSBTOperationsDialog::saveTransaction() {
         }
         CTxDestination address;
         ExtractDestination(out.scriptPubKey, address);
-        QString amount = BitcoinUnits::format(m_wallet_model->getOptionsModel()->getDisplayUnit(), out.nValue);
+        QString amount = BitcoinUnits::format(m_client_model->getOptionsModel()->getDisplayUnit(), out.nValue);
         QString address_str = QString::fromStdString(EncodeDestination(address));
         filename_suggestion.append(address_str + "-" + amount);
         first = false;
@@ -141,11 +150,12 @@ void PSBTOperationsDialog::saveTransaction() {
     filename_suggestion.append(".psbt");
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Save Transaction Data"), filename_suggestion,
-        tr("Partially Signed Transaction (Binary) (*.psbt)"), &selected_filter);
+        //: Expanded name of the binary PSBT file format. See: BIP 174.
+        tr("Partially Signed Transaction (Binary)") + QLatin1String(" (*.psbt)"), &selected_filter);
     if (filename.isEmpty()) {
         return;
     }
-    std::ofstream out(filename.toLocal8Bit().data());
+    std::ofstream out(filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary);
     out << ssTx.str();
     out.close();
     showStatus(tr("PSBT saved to disk."), StatusLevel::INFO);
@@ -223,9 +233,13 @@ void PSBTOperationsDialog::showStatus(const QString &msg, StatusLevel level) {
 }
 
 size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &psbtx) {
+    if (!m_wallet_model) {
+        return 0;
+    }
+
     size_t n_signed;
     bool complete;
-    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, false /* bip32derivs */, m_transaction_data, complete, &n_signed);
+    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, false /* bip32derivs */, &n_signed, m_transaction_data, complete);
 
     if (err != TransactionError::OK) {
         return 0;
@@ -245,7 +259,10 @@ void PSBTOperationsDialog::showTransactionStatus(const PartiallySignedTransactio
         case PSBTRole::SIGNER: {
             QString need_sig_text = tr("Transaction still needs signature(s).");
             StatusLevel level = StatusLevel::INFO;
-            if (m_wallet_model->wallet().privateKeysDisabled()) {
+            if (!m_wallet_model) {
+                need_sig_text += " " + tr("(But no wallet is loaded.)");
+                level = StatusLevel::WARN;
+            } else if (m_wallet_model->wallet().privateKeysDisabled()) {
                 need_sig_text += " " + tr("(But this wallet cannot sign transactions.)");
                 level = StatusLevel::WARN;
             } else if (n_could_sign < 1) {

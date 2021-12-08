@@ -1,14 +1,14 @@
-/**********************************************************************
- * Copyright (c) 2015 Andrew Poelstra                                 *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2015 Andrew Poelstra                                  *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_MODULE_ECDH_MAIN_H
 #define SECP256K1_MODULE_ECDH_MAIN_H
 
-#include "include/secp256k1_ecdh.h"
-#include "ecmult_const_impl.h"
+#include "../../../include/secp256k1_ecdh.h"
+#include "../../ecmult_const_impl.h"
 
 static int ecdh_hash_function_sha256(unsigned char *output, const unsigned char *x32, const unsigned char *y32, void *data) {
     unsigned char version = (y32[31] & 0x01) | 0x02;

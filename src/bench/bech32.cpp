@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/nanobench.h>
 
 #include <bech32.h>
 #include <util/strencodings.h>
@@ -19,7 +18,7 @@ static void Bech32Encode(benchmark::Bench& bench)
     tmp.reserve(1 + 32 * 8 / 5);
     ConvertBits<8, 5, true>([&](unsigned char c) { tmp.push_back(c); }, v.begin(), v.end());
     bench.batch(v.size()).unit("byte").run([&] {
-        bech32::Encode("bc", tmp);
+        bech32::Encode(bech32::Encoding::BECH32, "bc", tmp);
     });
 }
 

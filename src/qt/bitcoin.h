@@ -9,11 +9,14 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <QApplication>
+#include <interfaces/node.h>
+#include <qt/initexecutor.h>
+
 #include <assert.h>
 #include <memory>
+#include <optional>
 
-#include <interfaces/node.h>
+#include <QApplication>
 
 class BitcoinGUI;
 class ClientModel;
@@ -24,32 +27,10 @@ class PlatformStyle;
 class SplashScreen;
 class WalletController;
 class WalletModel;
+namespace interfaces {
+class Init;
+} // namespace interfaces
 
-
-/** Class encapsulating Bitcoin Core startup and shutdown.
- * Allows running startup and shutdown in a different thread from the UI thread.
- */
-class BitcoinCore: public QObject
-{
-    Q_OBJECT
-public:
-    explicit BitcoinCore(interfaces::Node& node);
-
-public Q_SLOTS:
-    void initialize();
-    void shutdown();
-
-Q_SIGNALS:
-    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
-    void shutdownResult();
-    void runawayException(const QString &message);
-
-private:
-    /// Pass fatal exception message to UI thread
-    void handleRunawayException(const std::exception *e);
-
-    interfaces::Node& m_node;
-};
 
 /** Main Bitcoin application object */
 class BitcoinApplication: public QApplication
@@ -68,18 +49,18 @@ public:
     /// Create options model
     void createOptionsModel(bool resetSettings);
     /// Initialize prune setting
-    void InitializePruneSetting(bool prune);
+    void InitPruneSetting(int64_t prune_MiB);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
     void createSplashScreen(const NetworkStyle *networkStyle);
+    /// Create or spawn node
+    void createNode(interfaces::Init& init);
     /// Basic initialization, before starting initialization/shutdown thread. Return true on success.
     bool baseInitialize();
 
     /// Request core initialization
     void requestInitialize();
-    /// Request core shutdown
-    void requestShutdown();
 
     /// Get process return value
     int getReturnValue() const { return returnValue; }
@@ -91,13 +72,19 @@ public:
     void setupPlatformStyle();
 
     interfaces::Node& node() const { assert(m_node); return *m_node; }
-    void setNode(interfaces::Node& node);
 
 public Q_SLOTS:
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
-    void shutdownResult();
+    /// Request core shutdown
+    void requestShutdown();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
+
+    /**
+     * A helper function that shows a message box
+     * with details about a non-fatal exception.
+     */
+    void handleNonFatalException(const QString& message);
 
 Q_SIGNALS:
     void requestedInitialize();
@@ -106,7 +93,7 @@ Q_SIGNALS:
     void windowShown(BitcoinGUI* window);
 
 private:
-    QThread *coreThread;
+    std::optional<InitExecutor> m_executor;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     BitcoinGUI *window;
@@ -119,7 +106,7 @@ private:
     const PlatformStyle *platformStyle;
     std::unique_ptr<QWidget> shutdownWindow;
     SplashScreen* m_splash = nullptr;
-    interfaces::Node* m_node = nullptr;
+    std::unique_ptr<interfaces::Node> m_node;
 
     void startThread();
 };

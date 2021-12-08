@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\qt\main.cpp" />
+    <ClCompile Include="..\..\src\init\bitcoin-qt.cpp" />
     <ResourceCompile Include="..\..\src\qt\res\bitcoin-qt-res.rc" />
   </ItemGroup>
   <ItemGroup>
@@ -55,6 +56,7 @@
       <AdditionalIncludeDirectories>$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
+      <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4206 /LTCG:OFF</AdditionalOptions>
     </Link>

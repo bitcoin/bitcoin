@@ -204,12 +204,13 @@ public:
 
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(prevector)
 {
     FuzzedDataProvider prov(buffer.data(), buffer.size());
     prevector_tester<8, int> test;
 
-    while (prov.remaining_bytes()) {
+    LIMITED_WHILE(prov.remaining_bytes(), 3000)
+    {
         switch (prov.ConsumeIntegralInRange<int>(0, 13 + 3 * (test.size() > 0))) {
         case 0:
             test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), prov.ConsumeIntegral<int>());

@@ -63,7 +63,7 @@ public:
 
     bool IsMock() const { return fMockDb; }
     bool IsInitialized() const { return fDbEnvInit; }
-    fs::path Directory() const { return strPath; }
+    fs::path Directory() const { return fs::PathFromString(strPath); }
 
     bool Open(bilingual_str& error);
     void Close();
@@ -83,11 +83,8 @@ public:
     }
 };
 
-/** Get BerkeleyEnvironment and database filename given a wallet path. */
-std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
-
-/** Check format of database file */
-bool IsBDBFile(const fs::path& path);
+/** Get BerkeleyEnvironment given a directory path. */
+std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory);
 
 class BerkeleyBatch;
 
@@ -116,7 +113,7 @@ public:
      */
     bool Rewrite(const char* pszSkip=nullptr) override;
 
-    /** Indicate the a new database user has began using the database. */
+    /** Indicate that a new database user has begun using the database. */
     void AddRef() override;
     /** Indicate that database user has stopped using the database and that it could be flushed or closed. */
     void RemoveRef() override;
@@ -144,7 +141,7 @@ public:
     bool Verify(bilingual_str& error);
 
     /** Return path to main database filename */
-    std::string Filename() override { return (env->Directory() / strFile).string(); }
+    std::string Filename() override { return fs::PathToString(env->Directory() / strFile); }
 
     std::string Format() override { return "bdb"; }
     /**
@@ -226,8 +223,9 @@ public:
 
 std::string BerkeleyDatabaseVersion();
 
-//! Check if Berkeley database exists at specified path.
-bool ExistsBerkeleyDatabase(const fs::path& path);
+/** Perform sanity check of runtime BDB version versus linked BDB version.
+ */
+bool BerkeleyDatabaseSanityCheck();
 
 //! Return object giving access to Berkeley database at specified path.
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);

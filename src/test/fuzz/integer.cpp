@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
 #include <arith_uint256.h>
 #include <compressor.h>
+#include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <crypto/common.h>
@@ -16,8 +16,6 @@
 #include <pow.h>
 #include <protocol.h>
 #include <pubkey.h>
-#include <rpc/util.h>
-#include <script/signingprovider.h>
 #include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>
@@ -25,6 +23,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
@@ -40,12 +39,12 @@
 #include <set>
 #include <vector>
 
-void initialize()
+void initialize_integer()
 {
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(integer, initialize_integer)
 {
     if (buffer.size() < sizeof(uint256) + sizeof(uint160)) {
         return;
@@ -84,11 +83,9 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)DecompressAmount(u64);
     (void)FormatISO8601Date(i64);
     (void)FormatISO8601DateTime(i64);
-    // FormatMoney(i) not defined when i == std::numeric_limits<int64_t>::min()
-    if (i64 != std::numeric_limits<int64_t>::min()) {
-        int64_t parsed_money;
-        if (ParseMoney(FormatMoney(i64), parsed_money)) {
-            assert(parsed_money == i64);
+    {
+        if (std::optional<CAmount> parsed = ParseMoney(FormatMoney(i64))) {
+            assert(parsed.value() == i64);
         }
     }
     (void)GetSizeOfCompactSize(u64);
@@ -123,20 +120,14 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(dynamic_usage == incremental_dynamic_usage * i64s.size());
     }
     (void)MillisToTimeval(i64);
-    const double d = ser_uint64_to_double(u64);
-    assert(ser_double_to_uint64(d) == u64);
-    const float f = ser_uint32_to_float(u32);
-    assert(ser_float_to_uint32(f) == u32);
     (void)SighashToStr(uch);
     (void)SipHashUint256(u64, u64, u256);
     (void)SipHashUint256Extra(u64, u64, u256, u32);
     (void)ToLower(ch);
     (void)ToUpper(ch);
-    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
-    if (i64 != std::numeric_limits<int64_t>::min()) {
-        int64_t parsed_money;
-        if (ParseMoney(ValueFromAmount(i64).getValStr(), parsed_money)) {
-            assert(parsed_money == i64);
+    {
+        if (std::optional<CAmount> parsed = ParseMoney(ValueFromAmount(i64).getValStr())) {
+            assert(parsed.value() == i64);
         }
     }
     if (i32 >= 0 && i32 <= 16) {
@@ -164,20 +155,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     const CKeyID key_id{u160};
     const CScriptID script_id{u160};
-    // CTxDestination = CNoDestination ∪ PKHash ∪ ScriptHash ∪ WitnessV0ScriptHash ∪ WitnessV0KeyHash ∪ WitnessUnknown
-    const PKHash pk_hash{u160};
-    const ScriptHash script_hash{u160};
-    const WitnessV0KeyHash witness_v0_key_hash{u160};
-    const WitnessV0ScriptHash witness_v0_script_hash{u256};
-    const std::vector<CTxDestination> destinations{pk_hash, script_hash, witness_v0_key_hash, witness_v0_script_hash};
-    const SigningProvider store;
-    for (const CTxDestination& destination : destinations) {
-        (void)DescribeAddress(destination);
-        (void)EncodeDestination(destination);
-        (void)GetKeyForDestination(store, destination);
-        (void)GetScriptForDestination(destination);
-        (void)IsValidDestination(destination);
-    }
 
     {
         CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);

@@ -1,8 +1,8 @@
 package=native_mac_alias
-$(package)_version=2.1.1
+$(package)_version=2.2.0
 $(package)_download_path=https://github.com/al45tair/mac_alias/archive/
 $(package)_file_name=v$($(package)_version).tar.gz
-$(package)_sha256_hash=c0ffceee14f7d04a6eb323fb7b8217dc3f373b346198d2ca42300a8362db7efa
+$(package)_sha256_hash=421e6d7586d1f155c7db3e7da01ca0dacc9649a509a253ad7077b70174426499
 $(package)_install_libdir=$(build_prefix)/lib/python3/dist-packages
 
 define $(package)_build_cmds

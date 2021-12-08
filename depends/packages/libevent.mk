@@ -1,14 +1,8 @@
 package=libevent
-$(package)_version=2.1.11-stable
-$(package)_download_path=https://github.com/libevent/libevent/archive/
-$(package)_file_name=release-$($(package)_version).tar.gz
-$(package)_sha256_hash=229393ab2bf0dc94694f21836846b424f3532585bac3468738b7bf752c03901e
-$(package)_patches=0001-fix-windows-getaddrinfo.patch
-
-define $(package)_preprocess_cmds
-   patch -p1 < $($(package)_patch_dir)/0001-fix-windows-getaddrinfo.patch && \
-  ./autogen.sh
-endef
+$(package)_version=2.1.12-stable
+$(package)_download_path=https://github.com/libevent/libevent/releases/download/release-$($(package)_version)/
+$(package)_file_name=$(package)-$($(package)_version).tar.gz
+$(package)_sha256_hash=92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb
 
 # When building for Windows, we set _WIN32_WINNT to target the same Windows
 # version as we do in configure. Due to quirks in libevents build system, this
@@ -20,6 +14,10 @@ define $(package)_set_vars
   $(package)_config_opts_linux=--with-pic
   $(package)_config_opts_android=--with-pic
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0601
+endef
+
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux
 endef
 
 define $(package)_config_cmds

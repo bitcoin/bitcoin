@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -76,7 +76,7 @@ static void PrevectorDeserialize(benchmark::Bench& bench)
         for (auto x = 0; x < 1000; ++x) {
             s0 >> t1;
         }
-        s0.Init(SER_NETWORK, 0);
+        s0.Rewind();
     });
 }
 
