@@ -11,11 +11,18 @@
 #include <compat/compat.h>
 #include <logging.h>
 #include <util/strencodings.h>
+#include <clientversion.h>
+#include <key.h>
+#include <pubkey.h>
+#include <tinyformat.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
 #include <wallet/wallettool.h>
 
+#include <exception>
+#include <string>
+#include <tuple>
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 
