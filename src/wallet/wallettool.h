@@ -5,11 +5,12 @@
 #ifndef SYSCOIN_WALLET_WALLETTOOL_H
 #define SYSCOIN_WALLET_WALLETTOOL_H
 
-#include <wallet/wallet.h>
+#include <string>
+
+class ArgsManager;
 
 namespace WalletTool {
 
-void WalletShowInfo(CWallet* wallet_instance);
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command);
 
 } // namespace WalletTool
