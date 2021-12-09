@@ -30,7 +30,7 @@ You can find installation instructions in the `build-*.md` file for your platfor
 ### GUI
 | Dependency | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- |
-| [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) | 2.12.1 | 2.6 | Yes |
+| [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) | 2.12.6 | 2.6 | Yes |
 | [FreeType](https://freetype.org) | 2.11.0 | 2.3.0 | Yes |
 | [qrencode](https://fukuchi.org/works/qrencode/) | [4.1.1](https://fukuchi.org/works/qrencode) | | No |
 | [Qt](https://www.qt.io) | [5.15.13](https://download.qt.io/official_releases/qt/) | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
