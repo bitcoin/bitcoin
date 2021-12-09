@@ -10,7 +10,12 @@ true  # Dummy command because shellcheck treats all directives before first
 # shellcheck disable=SC2154
 depends_prefix="$(cd "$(dirname "$ac_site_file")/.." && pwd)"
 
-cross_compiling=maybe
+if test "@host_os@" = "mingw32"; then
+  cross_compiling=yes
+else
+  cross_compiling=maybe
+fi
+
 host_alias="@HOST@"
 ac_tool_prefix="${host_alias}-"
 
