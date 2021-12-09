@@ -66,12 +66,6 @@ def cli_get_info_string_to_dict(cli_get_info_string):
 
 
 class TestBitcoinCli(BitcoinTestFramework):
-    def is_specified_wallet_compiled(self):
-        if self.options.descriptors:
-            return self.is_sqlite_compiled()
-        else:
-            return self.is_bdb_compiled()
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
