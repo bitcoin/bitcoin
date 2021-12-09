@@ -1935,27 +1935,15 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         return *change_type;
     }
 
-    // if m_default_address_type is legacy, use legacy address as change (even
-    // if some of the outputs are P2WPKH or P2WSH).
+    // if m_default_address_type is legacy, use legacy address as change.
     if (m_default_address_type == OutputType::LEGACY) {
         return OutputType::LEGACY;
     }
 
-    // if any destination is P2WPKH or P2WSH, use P2WPKH for the change
-    // output.
-    for (const auto& recipient : vecSend) {
-        // Check if any destination contains a witness program:
-        int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
-        if (recipient.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-            if (GetScriptPubKeyMan(OutputType::BECH32M, true)) {
-                return OutputType::BECH32M;
-            } else if (GetScriptPubKeyMan(OutputType::BECH32, true)) {
-                return OutputType::BECH32;
-            } else {
-                return m_default_address_type;
-            }
-        }
+    if (GetScriptPubKeyMan(OutputType::BECH32M, true)) {
+        return OutputType::BECH32M;
+    } else if (GetScriptPubKeyMan(OutputType::BECH32, true)) {
+        return OutputType::BECH32;
     }
 
     // else use m_default_address_type for change
