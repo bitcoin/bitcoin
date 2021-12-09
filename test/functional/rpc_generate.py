@@ -17,9 +17,9 @@ class RPCGenerateTest(BitcoinTestFramework):
 
     def run_test(self):
         message = (
-            "generate\n"
+            "generate\n\n"
             "has been replaced by the -generate "
-            "cli option. Refer to -help for more information."
+            "cli option. Refer to -help for more information.\n"
         )
 
         self.log.info("Test rpc generate raises with message to use cli option")
