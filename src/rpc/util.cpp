@@ -620,10 +620,9 @@ std::string RPCHelpMan::ToString() const
         ret += arg.ToString(/* oneline */ true);
     }
     if (was_optional) ret += " )";
-    ret += "\n";
 
     // Description
-    ret += m_description;
+    ret += "\n\n" + TrimString(m_description) + "\n";
 
     // Arguments
     Sections sections;

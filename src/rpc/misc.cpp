@@ -301,7 +301,7 @@ static RPCHelpMan deriveaddresses()
 static RPCHelpMan verifymessage()
 {
     return RPCHelpMan{"verifymessage",
-                "\nVerify a signed message\n",
+                "Verify a signed message.",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the signature."},
                     {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature provided by the signer in base 64 encoding (see signmessage)."},
