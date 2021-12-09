@@ -1967,29 +1967,58 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         return *change_type;
     }
 
-    // if m_default_address_type is legacy, use legacy address as change (even
-    // if some of the outputs are P2WPKH or P2WSH).
+    // if m_default_address_type is legacy, use legacy address as change.
     if (m_default_address_type == OutputType::LEGACY) {
         return OutputType::LEGACY;
     }
 
-    // if any destination is P2WPKH or P2WSH, use P2WPKH for the change
-    // output.
+    bool any_tr{false};
+    bool any_wpkh{false};
+    bool any_sh{false};
+    bool any_pkh{false};
+
     for (const auto& recipient : vecSend) {
-        // Check if any destination contains a witness program:
-        int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
-        if (recipient.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-            if (GetScriptPubKeyMan(OutputType::BECH32M, true)) {
-                return OutputType::BECH32M;
-            } else if (GetScriptPubKeyMan(OutputType::BECH32, true)) {
-                return OutputType::BECH32;
-            } else {
-                return m_default_address_type;
-            }
+        std::vector<std::vector<uint8_t>> dummy;
+        const TxoutType type{Solver(recipient.scriptPubKey, dummy)};
+        if (type == TxoutType::WITNESS_V1_TAPROOT) {
+            any_tr = true;
+        } else if (type == TxoutType::WITNESS_V0_KEYHASH) {
+            any_wpkh = true;
+        } else if (type == TxoutType::SCRIPTHASH) {
+            any_sh = true;
+        } else if (type == TxoutType::PUBKEYHASH) {
+            any_pkh = true;
         }
     }
 
+    const bool has_bech32m_spkman(GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/true));
+    if (has_bech32m_spkman && any_tr) {
+        // Currently tr is the only type supported by the BECH32M spkman
+        return OutputType::BECH32M;
+    }
+    const bool has_bech32_spkman(GetScriptPubKeyMan(OutputType::BECH32, /*internal=*/true));
+    if (has_bech32_spkman && any_wpkh) {
+        // Currently wpkh is the only type supported by the BECH32 spkman
+        return OutputType::BECH32;
+    }
+    const bool has_p2sh_segwit_spkman(GetScriptPubKeyMan(OutputType::P2SH_SEGWIT, /*internal=*/true));
+    if (has_p2sh_segwit_spkman && any_sh) {
+        // Currently sh_wpkh is the only type supported by the P2SH_SEGWIT spkman
+        // As of 2021 about 80% of all SH are wrapping WPKH, so use that
+        return OutputType::P2SH_SEGWIT;
+    }
+    const bool has_legacy_spkman(GetScriptPubKeyMan(OutputType::LEGACY, /*internal=*/true));
+    if (has_legacy_spkman && any_pkh) {
+        // Currently pkh is the only type supported by the LEGACY spkman
+        return OutputType::LEGACY;
+    }
+
+    if (has_bech32m_spkman) {
+        return OutputType::BECH32M;
+    }
+    if (has_bech32_spkman) {
+        return OutputType::BECH32;
+    }
     // else use m_default_address_type for change
     return m_default_address_type;
 }
