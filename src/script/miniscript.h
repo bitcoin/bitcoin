@@ -953,7 +953,11 @@ void BuildBack(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>>& construct
     }
 }
 
-//! Parse a miniscript from its textual descriptor form.
+/**
+ * Parse a miniscript from its textual descriptor form.
+ * This does not check whether the script is valid, let alone sane. The caller is expected to use
+ * the `IsValidTopLevel()` and `IsSaneTopLevel()` to check for these properties on the node.
+ */
 template<typename Key, typename Ctx>
 inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
 {
@@ -1255,9 +1259,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     // Sanity checks on the produced miniscript
     assert(constructed.size() == 1);
     if (in.size() > 0) return {};
-    const NodeRef<Key> tl_node = std::move(constructed.front());
-    if (!tl_node->IsValidTopLevel()) return {};
-    return tl_node;
+    return std::move(constructed.front());
 }
 
 /** Decode a script into opcode/push pairs.
