@@ -44,8 +44,6 @@ class InitStressTest(BitcoinTestFramework):
         def sigterm_node():
             node.process.terminate()
             node.process.wait()
-            node.debug_log_path.unlink()
-            node.debug_log_path.touch()
 
         def check_clean_start():
             """Ensure that node restarts successfully after various interrupts."""
@@ -71,7 +69,7 @@ class InitStressTest(BitcoinTestFramework):
             'net thread start',
             'addcon thread start',
             'loadblk thread start',
-            # TODO: reenable - see above TODO
+            # TODO: re-enable - see above TODO
             # 'txindex thread start',
             'msghand thread start'
         ]
@@ -84,39 +82,21 @@ class InitStressTest(BitcoinTestFramework):
                 # TODO: add -txindex=1 to fully test index initiatlization.
                 # extra_args=['-txindex=1'],
             )
-            logfile = open(node.debug_log_path, 'r', encoding='utf8')
 
-            MAX_SECS_TO_WAIT = 30
-            start = time.time()
-            num_lines = 0
-
-            while True:
-                line = logfile.readline()
-                if line:
-                    num_lines += 1
-
-                if line and terminate_line.lower() in line.lower():
-                    self.log.debug(f"Terminating node after {num_lines} log lines seen")
-                    sigterm_node()
-                    break
-
-                if (time.time() - start) > MAX_SECS_TO_WAIT:
-                    raise AssertionError(
-                        f"missed line {terminate_line}; terminating now after {num_lines} lines")
-
-                if node.process.poll() is not None:
-                    raise AssertionError(f"node failed to start (line: '{terminate_line}')")
+            num_total_logs = node.wait_for_debug_log([terminate_line], ignore_case=True)
+            self.log.debug(f"Terminating node after {num_total_logs} log lines seen")
+            sigterm_node()
 
         check_clean_start()
-        num_total_logs = len(node.debug_log_path.read_text().splitlines())
         self.stop_node(0)
 
         self.log.info(
             f"Terminate at some random point in the init process (max logs: {num_total_logs})")
 
         for _ in range(40):
-            terminate_after = random.randint(1, num_total_logs)
-            self.log.debug(f"Starting node and will exit after {terminate_after} lines")
+            num_logs = len(Path(node.debug_log_path).read_text().splitlines())
+            additional_lines = random.randint(1, num_total_logs)
+            self.log.debug(f"Starting node and will exit after {additional_lines} lines")
             node.start(
                 # TODO: add -txindex=1 to fully test index initiatlization.
                 # extra_args=['-txindex=1'],
@@ -132,7 +112,8 @@ class InitStressTest(BitcoinTestFramework):
                 if line:
                     num_lines += 1
 
-                if num_lines >= terminate_after or (time.time() - start) > MAX_SECS_TO_WAIT:
+                if num_lines >= (num_logs + additional_lines) or \
+                        (time.time() - start) > MAX_SECS_TO_WAIT:
                     self.log.debug(f"Terminating node after {num_lines} log lines seen")
                     sigterm_node()
                     break
