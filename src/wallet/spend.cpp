@@ -403,6 +403,20 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
         results.push_back(*srd_result);
     }
 
+    // If we didn't find any solutions, and are subtracting the fee from the outputs, we may need to include negative effective value coins.
+    // So try BnB and SRD again with all_groups.
+    // It is safe to do this because a solution including negative EVs will have a greater waste.
+    if (results.size() == 0 && coin_selection_params.m_subtract_fee_outputs) {
+        if (auto bnb_result{SelectCoinsBnB(all_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
+            bnb_result->ComputeAndSetWaste(CAmount(0));
+            results.push_back(*bnb_result);
+        }
+        if (auto srd_result{SelectCoinsSRD(all_groups, srd_target)}) {
+            srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+            results.push_back(*srd_result);
+        }
+    }
+
     if (results.size() == 0) {
         // No solution found
         return std::nullopt;
