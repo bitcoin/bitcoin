@@ -19,6 +19,7 @@ FUZZ_TARGET(parse_iso8601)
     const std::string random_string = fuzzed_data_provider.ConsumeRemainingBytesAsString();
 
     const std::string iso8601_datetime = FormatISO8601DateTime(random_time);
+    (void)FormatISO8601Date(random_time);
     const int64_t parsed_time_1 = ParseISO8601DateTime(iso8601_datetime);
     if (random_time >= 0) {
         assert(parsed_time_1 >= 0);
