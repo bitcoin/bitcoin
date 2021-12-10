@@ -32,6 +32,13 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     for (unsigned int i = 0; i < outputs.size(); ++i) {
         outputs[i].Merge(psbt.outputs[i]);
     }
+    for (auto& xpub_pair : psbt.m_xpubs) {
+        if (m_xpubs.count(xpub_pair.first) == 0) {
+            m_xpubs[xpub_pair.first] = xpub_pair.second;
+        } else {
+            m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
+        }
+    }
     unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
 
     return true;
@@ -400,4 +407,12 @@ bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data,
         return false;
     }
     return true;
+}
+
+uint32_t PartiallySignedTransaction::GetVersion() const
+{
+    if (m_version != std::nullopt) {
+        return *m_version;
+    }
+    return 0;
 }

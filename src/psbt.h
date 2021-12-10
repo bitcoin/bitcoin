@@ -10,8 +10,11 @@
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
+#include <script/keyorigin.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <span.h>
+#include <streams.h>
 
 #include <optional>
 
@@ -20,6 +23,9 @@ static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
 
 // Global types
 static constexpr uint8_t PSBT_GLOBAL_UNSIGNED_TX = 0x00;
+static constexpr uint8_t PSBT_GLOBAL_XPUB = 0x01;
+static constexpr uint8_t PSBT_GLOBAL_VERSION = 0xFB;
+static constexpr uint8_t PSBT_GLOBAL_PROPRIETARY = 0xFC;
 
 // Input types
 static constexpr uint8_t PSBT_IN_NON_WITNESS_UTXO = 0x00;
@@ -31,11 +37,13 @@ static constexpr uint8_t PSBT_IN_WITNESSSCRIPT = 0x05;
 static constexpr uint8_t PSBT_IN_BIP32_DERIVATION = 0x06;
 static constexpr uint8_t PSBT_IN_SCRIPTSIG = 0x07;
 static constexpr uint8_t PSBT_IN_SCRIPTWITNESS = 0x08;
+static constexpr uint8_t PSBT_IN_PROPRIETARY = 0xFC;
 
 // Output types
 static constexpr uint8_t PSBT_OUT_REDEEMSCRIPT = 0x00;
 static constexpr uint8_t PSBT_OUT_WITNESSSCRIPT = 0x01;
 static constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
+static constexpr uint8_t PSBT_OUT_PROPRIETARY = 0xFC;
 
 // The separator is 0x00. Reading this in means that the unserializer can interpret it
 // as a 0 length key which indicates that this is the separator. The separator has no value.
@@ -44,6 +52,113 @@ static constexpr uint8_t PSBT_SEPARATOR = 0x00;
 // BIP 174 does not specify a maximum file size, but we set a limit anyway
 // to prevent reading a stream indefinitely and running out of memory.
 const std::streamsize MAX_FILE_SIZE_PSBT = 100000000; // 100 MiB
+
+// PSBT version number
+static constexpr uint32_t PSBT_HIGHEST_VERSION = 0;
+
+/** A structure for PSBT proprietary types */
+struct PSBTProprietary
+{
+    uint64_t subtype;
+    std::vector<unsigned char> identifier;
+    std::vector<unsigned char> key;
+    std::vector<unsigned char> value;
+
+    bool operator<(const PSBTProprietary &b) const {
+        return key < b.key;
+    }
+    bool operator==(const PSBTProprietary &b) const {
+        return key == b.key;
+    }
+};
+
+// Takes a stream and multiple arguments and serializes them as if first serialized into a vector and then into the stream
+// The resulting output into the stream has the total serialized length of all of the objects followed by all objects concatenated with each other.
+template<typename Stream, typename... X>
+void SerializeToVector(Stream& s, const X&... args)
+{
+    WriteCompactSize(s, GetSerializeSizeMany(s.GetVersion(), args...));
+    SerializeMany(s, args...);
+}
+
+// Takes a stream and multiple arguments and unserializes them first as a vector then each object individually in the order provided in the arguments
+template<typename Stream, typename... X>
+void UnserializeFromVector(Stream& s, X&... args)
+{
+    size_t expected_size = ReadCompactSize(s);
+    size_t remaining_before = s.size();
+    UnserializeMany(s, args...);
+    size_t remaining_after = s.size();
+    if (remaining_after + expected_size != remaining_before) {
+        throw std::ios_base::failure("Size of value was not the stated size");
+    }
+}
+
+// Deserialize an individual HD keypath to a stream
+template<typename Stream>
+void DeserializeHDKeypath(Stream& s, KeyOriginInfo& hd_keypath)
+{
+    // Read in key path
+    uint64_t value_len = ReadCompactSize(s);
+    if (value_len % 4 || value_len == 0) {
+        throw std::ios_base::failure("Invalid length for HD key path");
+    }
+
+    s >> hd_keypath.fingerprint;
+    for (unsigned int i = 4; i < value_len; i += sizeof(uint32_t)) {
+        uint32_t index;
+        s >> index;
+        hd_keypath.path.push_back(index);
+    }
+}
+
+// Deserialize HD keypaths into a map
+template<typename Stream>
+void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std::map<CPubKey, KeyOriginInfo>& hd_keypaths)
+{
+    // Make sure that the key is the size of pubkey + 1
+    if (key.size() != CPubKey::SIZE + 1 && key.size() != CPubKey::COMPRESSED_SIZE + 1) {
+        throw std::ios_base::failure("Size of key was not the expected size for the type BIP32 keypath");
+    }
+    // Read in the pubkey from key
+    CPubKey pubkey(key.begin() + 1, key.end());
+    if (!pubkey.IsFullyValid()) {
+       throw std::ios_base::failure("Invalid pubkey");
+    }
+    if (hd_keypaths.count(pubkey) > 0) {
+        throw std::ios_base::failure("Duplicate Key, pubkey derivation path already provided");
+    }
+
+    KeyOriginInfo keypath;
+    DeserializeHDKeypath(s, keypath);
+
+    // Add to map
+    hd_keypaths.emplace(pubkey, std::move(keypath));
+}
+
+// Serialize an individual HD keypath to a stream
+template<typename Stream>
+void SerializeHDKeypath(Stream& s, KeyOriginInfo hd_keypath)
+{
+    WriteCompactSize(s, (hd_keypath.path.size() + 1) * sizeof(uint32_t));
+    s << hd_keypath.fingerprint;
+    for (const auto& path : hd_keypath.path) {
+        s << path;
+    }
+}
+
+// Serialize HD keypaths to a stream from a map
+template<typename Stream>
+void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_keypaths, CompactSizeWriter type)
+{
+    for (auto keypath_pair : hd_keypaths) {
+        if (!keypath_pair.first.IsValid()) {
+            throw std::ios_base::failure("Invalid CPubKey being serialized");
+        }
+        SerializeToVector(s, type, Span{keypath_pair.first});
+        SerializeHDKeypath(s, keypath_pair.second);
+    }
+}
 
 /** A structure for PSBTs which contain per-input information */
 struct PSBTInput
@@ -57,6 +172,7 @@ struct PSBTInput
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
     std::map<CKeyID, SigPair> partial_sigs;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
+    std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
 
     bool IsNull() const;
@@ -69,53 +185,59 @@ struct PSBTInput
     inline void Serialize(Stream& s) const {
         // Write the utxo
         if (non_witness_utxo) {
-            SerializeToVector(s, PSBT_IN_NON_WITNESS_UTXO);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_NON_WITNESS_UTXO));
             OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
             SerializeToVector(os, non_witness_utxo);
         }
         if (!witness_utxo.IsNull()) {
-            SerializeToVector(s, PSBT_IN_WITNESS_UTXO);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_WITNESS_UTXO));
             SerializeToVector(s, witness_utxo);
         }
 
         if (final_script_sig.empty() && final_script_witness.IsNull()) {
             // Write any partial signatures
             for (auto sig_pair : partial_sigs) {
-                SerializeToVector(s, PSBT_IN_PARTIAL_SIG, Span{sig_pair.second.first});
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PARTIAL_SIG), Span{sig_pair.second.first});
                 s << sig_pair.second.second;
             }
 
             // Write the sighash type
             if (sighash_type != std::nullopt) {
-                SerializeToVector(s, PSBT_IN_SIGHASH);
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_SIGHASH));
                 SerializeToVector(s, *sighash_type);
             }
 
             // Write the redeem script
             if (!redeem_script.empty()) {
-                SerializeToVector(s, PSBT_IN_REDEEMSCRIPT);
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_REDEEMSCRIPT));
                 s << redeem_script;
             }
 
             // Write the witness script
             if (!witness_script.empty()) {
-                SerializeToVector(s, PSBT_IN_WITNESSSCRIPT);
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_WITNESSSCRIPT));
                 s << witness_script;
             }
 
             // Write any hd keypaths
-            SerializeHDKeypaths(s, hd_keypaths, PSBT_IN_BIP32_DERIVATION);
+            SerializeHDKeypaths(s, hd_keypaths, CompactSizeWriter(PSBT_IN_BIP32_DERIVATION));
         }
 
         // Write script sig
         if (!final_script_sig.empty()) {
-            SerializeToVector(s, PSBT_IN_SCRIPTSIG);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_SCRIPTSIG));
             s << final_script_sig;
         }
         // write script witness
         if (!final_script_witness.IsNull()) {
-            SerializeToVector(s, PSBT_IN_SCRIPTWITNESS);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_SCRIPTWITNESS));
             SerializeToVector(s, final_script_witness.stack);
+        }
+
+        // Write proprietary things
+        for (const auto& entry : m_proprietary) {
+            s << entry.key;
+            s << entry.value;
         }
 
         // Write unknown things
@@ -147,8 +269,9 @@ struct PSBTInput
                 break;
             }
 
-            // First byte of key is the type
-            unsigned char type = key[0];
+            // Type is compact size uint at beginning of key
+            SpanReader skey(s.GetType(), s.GetVersion(), key);
+            uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
             switch(type) {
@@ -250,6 +373,20 @@ struct PSBTInput
                     UnserializeFromVector(s, final_script_witness.stack);
                     break;
                 }
+                case PSBT_IN_PROPRIETARY:
+                {
+                    PSBTProprietary this_prop;
+                    skey >> this_prop.identifier;
+                    this_prop.subtype = ReadCompactSize(skey);
+                    this_prop.key = key;
+
+                    if (m_proprietary.count(this_prop) > 0) {
+                        throw std::ios_base::failure("Duplicate Key, proprietary key already found");
+                    }
+                    s >> this_prop.value;
+                    m_proprietary.insert(this_prop);
+                    break;
+                }
                 // Unknown stuff
                 default:
                     if (unknown.count(key) > 0) {
@@ -281,6 +418,7 @@ struct PSBTOutput
     CScript witness_script;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
+    std::set<PSBTProprietary> m_proprietary;
 
     bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
@@ -292,18 +430,24 @@ struct PSBTOutput
     inline void Serialize(Stream& s) const {
         // Write the redeem script
         if (!redeem_script.empty()) {
-            SerializeToVector(s, PSBT_OUT_REDEEMSCRIPT);
+            SerializeToVector(s, CompactSizeWriter(PSBT_OUT_REDEEMSCRIPT));
             s << redeem_script;
         }
 
         // Write the witness script
         if (!witness_script.empty()) {
-            SerializeToVector(s, PSBT_OUT_WITNESSSCRIPT);
+            SerializeToVector(s, CompactSizeWriter(PSBT_OUT_WITNESSSCRIPT));
             s << witness_script;
         }
 
         // Write any hd keypaths
-        SerializeHDKeypaths(s, hd_keypaths, PSBT_OUT_BIP32_DERIVATION);
+        SerializeHDKeypaths(s, hd_keypaths, CompactSizeWriter(PSBT_OUT_BIP32_DERIVATION));
+
+        // Write proprietary things
+        for (const auto& entry : m_proprietary) {
+            s << entry.key;
+            s << entry.value;
+        }
 
         // Write unknown things
         for (auto& entry : unknown) {
@@ -334,8 +478,9 @@ struct PSBTOutput
                 break;
             }
 
-            // First byte of key is the type
-            unsigned char type = key[0];
+            // Type is compact size uint at beginning of key
+            SpanReader skey(s.GetType(), s.GetVersion(), key);
+            uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
             switch(type) {
@@ -362,6 +507,20 @@ struct PSBTOutput
                 case PSBT_OUT_BIP32_DERIVATION:
                 {
                     DeserializeHDKeypaths(s, key, hd_keypaths);
+                    break;
+                }
+                case PSBT_OUT_PROPRIETARY:
+                {
+                    PSBTProprietary this_prop;
+                    skey >> this_prop.identifier;
+                    this_prop.subtype = ReadCompactSize(skey);
+                    this_prop.key = key;
+
+                    if (m_proprietary.count(this_prop) > 0) {
+                        throw std::ios_base::failure("Duplicate Key, proprietary key already found");
+                    }
+                    s >> this_prop.value;
+                    m_proprietary.insert(this_prop);
                     break;
                 }
                 // Unknown stuff
@@ -393,11 +552,17 @@ struct PSBTOutput
 struct PartiallySignedTransaction
 {
     std::optional<CMutableTransaction> tx;
+    // We use a vector of CExtPubKey in the event that there happens to be the same KeyOriginInfos for different CExtPubKeys
+    // Note that this map swaps the key and values from the serialization
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> m_xpubs;
     std::vector<PSBTInput> inputs;
     std::vector<PSBTOutput> outputs;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
+    std::optional<uint32_t> m_version;
+    std::set<PSBTProprietary> m_proprietary;
 
     bool IsNull() const;
+    uint32_t GetVersion() const;
 
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
@@ -422,11 +587,35 @@ struct PartiallySignedTransaction
         s << PSBT_MAGIC_BYTES;
 
         // unsigned tx flag
-        SerializeToVector(s, PSBT_GLOBAL_UNSIGNED_TX);
+        SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_UNSIGNED_TX));
 
         // Write serialized tx to a stream
         OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
         SerializeToVector(os, *tx);
+
+        // Write xpubs
+        for (const auto& xpub_pair : m_xpubs) {
+            for (const auto& xpub : xpub_pair.second) {
+                unsigned char ser_xpub[BIP32_EXTKEY_WITH_VERSION_SIZE];
+                xpub.EncodeWithVersion(ser_xpub);
+                // Note that the serialization swaps the key and value
+                // The xpub is the key (for uniqueness) while the path is the value
+                SerializeToVector(s, PSBT_GLOBAL_XPUB, ser_xpub);
+                SerializeHDKeypath(s, xpub_pair.first);
+            }
+        }
+
+        // PSBT version
+        if (GetVersion() > 0) {
+            SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_VERSION));
+            SerializeToVector(s, *m_version);
+        }
+
+        // Write proprietary things
+        for (const auto& entry : m_proprietary) {
+            s << entry.key;
+            s << entry.value;
+        }
 
         // Write the unknown things
         for (auto& entry : unknown) {
@@ -460,6 +649,9 @@ struct PartiallySignedTransaction
         // Used for duplicate key detection
         std::set<std::vector<unsigned char>> key_lookup;
 
+        // Track the global xpubs we have already seen. Just for sanity checking
+        std::set<CExtPubKey> global_xpubs;
+
         // Read global data
         bool found_sep = false;
         while(!s.empty()) {
@@ -474,8 +666,9 @@ struct PartiallySignedTransaction
                 break;
             }
 
-            // First byte of key is the type
-            unsigned char type = key[0];
+            // Type is compact size uint at beginning of key
+            SpanReader skey(s.GetType(), s.GetVersion(), key);
+            uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
             switch(type) {
@@ -497,6 +690,65 @@ struct PartiallySignedTransaction
                             throw std::ios_base::failure("Unsigned tx does not have empty scriptSigs and scriptWitnesses.");
                         }
                     }
+                    break;
+                }
+                case PSBT_GLOBAL_XPUB:
+                {
+                    if (key.size() != BIP32_EXTKEY_WITH_VERSION_SIZE + 1) {
+                        throw std::ios_base::failure("Size of key was not the expected size for the type global xpub");
+                    }
+                    // Read in the xpub from key
+                    CExtPubKey xpub;
+                    xpub.DecodeWithVersion(&key.data()[1]);
+                    if (!xpub.pubkey.IsFullyValid()) {
+                       throw std::ios_base::failure("Invalid pubkey");
+                    }
+                    if (global_xpubs.count(xpub) > 0) {
+                       throw std::ios_base::failure("Duplicate key, global xpub already provided");
+                    }
+                    global_xpubs.insert(xpub);
+                    // Read in the keypath from stream
+                    KeyOriginInfo keypath;
+                    DeserializeHDKeypath(s, keypath);
+
+                    // Note that we store these swapped to make searches faster.
+                    // Serialization uses xpub -> keypath to enqure key uniqueness
+                    if (m_xpubs.count(keypath) == 0) {
+                        // Make a new set to put the xpub in
+                        m_xpubs[keypath] = {xpub};
+                    } else {
+                        // Insert xpub into existing set
+                        m_xpubs[keypath].insert(xpub);
+                    }
+                    break;
+                }
+                case PSBT_GLOBAL_VERSION:
+                {
+                    if (m_version) {
+                        throw std::ios_base::failure("Duplicate Key, version already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Global version key is more than one byte type");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    m_version = v;
+                    if (*m_version > PSBT_HIGHEST_VERSION) {
+                        throw std::ios_base::failure("Unsupported version number");
+                    }
+                    break;
+                }
+                case PSBT_GLOBAL_PROPRIETARY:
+                {
+                    PSBTProprietary this_prop;
+                    skey >> this_prop.identifier;
+                    this_prop.subtype = ReadCompactSize(skey);
+                    this_prop.key = key;
+
+                    if (m_proprietary.count(this_prop) > 0) {
+                        throw std::ios_base::failure("Duplicate Key, proprietary key already found");
+                    }
+                    s >> this_prop.value;
+                    m_proprietary.insert(this_prop);
                     break;
                 }
                 // Unknown stuff
