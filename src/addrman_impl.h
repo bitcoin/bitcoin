@@ -115,7 +115,7 @@ public:
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Good(const CService& addr, int64_t nTime)
+    bool Good(const CService& addr, int64_t nTime)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void Attempt(const CService& addr, bool fCountFailure, int64_t nTime)
@@ -248,7 +248,7 @@ private:
      *  @see AddrMan::Add() for parameters. */
     bool AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void Good_(const CService& addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Good_(const CService& addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
