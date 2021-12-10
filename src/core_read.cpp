@@ -248,7 +248,7 @@ std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strN
 
 int ParseSighashString(const UniValue& sighash)
 {
-    int hash_type = SIGHASH_ALL;
+    int hash_type = SIGHASH_DEFAULT;
     if (!sighash.isNull()) {
         static std::map<std::string, int> map_sighash_values = {
             {std::string("DEFAULT"), int(SIGHASH_DEFAULT)},
