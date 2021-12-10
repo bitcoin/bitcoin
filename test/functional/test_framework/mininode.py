@@ -88,7 +88,7 @@ def calculate_network_magic(index):
 
 
 MAGIC_BYTES = {
-    "mainnet": bytes([ord(x) for x in 'BTCSQ']),   # mainnet
+    "mainnet": bytes([ord(x) for x in 'VBKm']),   # mainnet
     "testnet3": calculate_network_magic(2),  # testnet3
     "regtest": calculate_network_magic(3),   # regtest
     "detregtest": calculate_network_magic(3),   # detregtest

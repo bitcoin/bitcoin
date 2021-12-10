@@ -22,7 +22,7 @@ const static int32_t POP_BLOCK_VERSION_BIT = 0x80000UL;
 // base = 0b10011 = 19
 // exponent = 1
 // so, max ATVs per VBK block would be pow(19+1, 1).
-const static int64_t ALT_CHAIN_ID = 0x3ae6ca000026ff;
+const static int64_t ALT_CHAIN_ID = 0x3ae6ca26ff;
 
 }  // namespace VeriBlock
 

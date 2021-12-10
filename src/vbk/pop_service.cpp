@@ -3,10 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "arith_uint256.h"
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
+#include <limits>
 #include <shutdown.h>
 #include <validation.h>
 #include <vbk/adaptors/payloads_provider.hpp>
@@ -139,25 +141,25 @@ altintegration::PopData generatePopData() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 }
 
 // PoP rewards are calculated for the current tip but are paid in the next block
-PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+PoPRewards getPopRewards(const CBlockIndex& tip, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     auto& pop = GetPop();
 
-    if (!params.isPopActive(pindexPrev.nHeight)) {
+    if (!params.isPopActive(tip.nHeight)) {
         return {};
     }
 
     auto& cfg = pop.getConfig();
-    if (pindexPrev.nHeight < (int)cfg.alt->getEndorsementSettlementInterval()) {
+    if (tip.nHeight < (int)cfg.alt->getEndorsementSettlementInterval()) {
         return {};
     }
-    if (pindexPrev.nHeight < (int)cfg.alt->getPayoutParams().getPopPayoutDelay()) {
+    if (tip.nHeight < (int)cfg.alt->getPayoutParams().getPopPayoutDelay()) {
         return {};
     }
 
     altintegration::ValidationState state;
-    auto prevHash = pindexPrev.GetBlockHash().asVector();
+    auto prevHash = tip.GetBlockHash().asVector();
     bool ret = pop.getAltBlockTree().setState(prevHash, state);
     VBK_ASSERT_MSG(ret, "error: %s", state.toString());
 
@@ -165,15 +167,19 @@ PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const CChainParams& para
     ret = pop.getPopPayout(prevHash, rewards, state);
     VBK_ASSERT_MSG(ret, "error: %s", state.toString());
 
-    int halvings = (pindexPrev.nHeight + 1) / params.GetConsensus().nSubsidyHalvingInterval;
-    PoPRewards result{};
     // erase rewards, that pay 0 satoshis, then halve rewards
+    PoPRewards result{};
     for (const auto& r : rewards) {
-        auto rewardValue = r.second;
-        rewardValue >>= halvings;
-        if ((rewardValue != 0) && (halvings < 64)) {
+        // we use airth_uint256 to prevent any overflows
+        arith_uint256 coeff(r.second);
+        // 50% of multiplier towards POP.
+        // we divide by COIN here because `coeff` is X * COIN, Multiplier is Y*COIN.
+        // so payout becomes = X*Y*COIN*COIN/2. 
+        arith_uint256 payout = (coeff * VeriBlock::GetSubsidyMultiplier(tip.nHeight + 1, params) / 2) / COIN;
+        if(payout > 0) {
             CScript key = CScript(r.first.begin(), r.first.end());
-            result[key] = params.PopRewardCoefficient() * rewardValue;
+            assert(payout <= std::numeric_limits<int64_t>::max() && "overflow!");
+            result[key] = payout.GetLow64();
         }
     }
 
@@ -244,13 +250,12 @@ bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees,
         nTotalPopReward += expectedAmount;
     }
 
-    CAmount PoWBlockReward =
-        GetBlockSubsidy(pindex.nHeight, params);
+    CAmount PoWBlockReward = GetBlockSubsidy(pindex.nHeight, params);
 
     if (tx.GetValueOut() > nTotalPopReward + PoWBlockReward + nFees) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
             "bad-cb-pop-amount",
-            strprintf("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", tx.GetValueOut(), PoWBlockReward + nTotalPopReward));
+            strprintf("ConnectBlock(): coinbase pays too much (actual=%d vs POW=%d + POP=%d)", tx.GetValueOut(), PoWBlockReward, nTotalPopReward));
     }
 
     return true;
@@ -323,17 +328,6 @@ int compareForks(const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip
     return pop.getAltBlockTree().comparePopScore(left.hash, right.hash);
 }
 
-CAmount getCoinbaseSubsidy(const CAmount& subsidy, int32_t height, const CChainParams& params)
-{
-    if (!params.isPopActive(height)) {
-        return subsidy;
-    }
-
-    int64_t powRewardPercentage = 100 - params.PopRewardPercentage();
-    CAmount newSubsidy = powRewardPercentage * subsidy;
-    return newSubsidy / 100;
-}
-
 void addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     altintegration::ValidationState state;
@@ -386,6 +380,56 @@ uint64_t getPopScoreComparisons() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     return popScoreComparisons;
+}
+
+
+CAmount GetSubsidyMultiplier(int nHeight, const CChainParams& params) {
+    // Offset halvings by the initial "non-halving" emissions which last 4183200 blocks
+    int halvings = (nHeight - 4183200) / params.GetConsensus().nSubsidyHalvingInterval;
+    // Force block reward to zero when right shift is undefined.
+    if (halvings >= 64)
+        return 0;
+
+    // If none of the switches below are hit, this value will be used (which is the value
+    // for the first halving period (so halvings=0)
+    CAmount nSubsidy = 1504471080 * COIN / 1000000000;
+    
+    if (nHeight < 64800) {
+        nSubsidy = 7 * COIN; // First period, reward = 7.00
+    } else if (nHeight < 136800) {
+        nSubsidy = 65 * COIN / 10; // Second period, reward = 6.50
+    } else if (nHeight < 223200) {
+        nSubsidy = 6 * COIN; // Third period, reward = 6.00
+    } else if (nHeight < 331200) {
+        nSubsidy = 575 * COIN / 100; // Fourth period, reward = 5.75
+    } else if (nHeight < 468000) {
+        nSubsidy = 55 * COIN / 10; // Fifth period, reward = 5.50
+    } else if (nHeight < 640800) {
+        nSubsidy = 525 * COIN / 100; // Sixth period, reward = 5.25
+    } else if (nHeight < 856800) {
+        nSubsidy = 5 * COIN; // Seventh period, reward = 5.00
+    } else if (nHeight < 1123200) {
+        nSubsidy = 475 * COIN / 100; // Eigth period, reward = 4.75
+    } else if (nHeight < 1447200) {
+        nSubsidy = 45 * COIN / 10; // Ninth period, reward = 4.50
+    } else if (nHeight < 1836000) {
+        nSubsidy = 425 * COIN / 100; // Tenth period, reward = 4.25
+    } else if (nHeight < 2296800) {
+        nSubsidy = 4 * COIN; // Eleventh period, reward = 4.00
+    } else if (nHeight < 2836800) {
+        nSubsidy = 375 * COIN / 100; // Twelfth period, reward = 3.75
+    } else if (nHeight < 3463200) {
+        nSubsidy = 35 * COIN / 10; // Thirteenth period, reward = 3.50
+    } else if (nHeight < 4183200) {
+        nSubsidy = 3 * COIN; // Fourteenth period, reward = 3.00
+    }
+
+    // Subsidy is cut in half every 1,051,200 blocks which will occur approximately every 4 years.
+    if (halvings > 0) {
+    	nSubsidy >>= halvings;
+    }
+
+    return nSubsidy;
 }
 
 

@@ -51,8 +51,6 @@ void removePayloadsFromMempool(const altintegration::PopData& popData);
 
 int compareForks(const CBlockIndex& left, const CBlockIndex& right);
 
-CAmount getCoinbaseSubsidy(const CAmount& subsidy, int32_t height, const CChainParams& params);
-
 void addDisconnectedPopdata(const altintegration::PopData& popData);
 
 bool isCrossedBootstrapBlock();
@@ -62,6 +60,8 @@ bool isPopActive(int32_t height);
 
 // get stats on POP score comparisons
 uint64_t getPopScoreComparisons();
+
+CAmount GetSubsidyMultiplier(int nHeight, const CChainParams& params);
 
 } // namespace VeriBlock
 

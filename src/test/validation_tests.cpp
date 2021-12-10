@@ -24,28 +24,28 @@ public:
     }
 };
 
-static void TestBlockSubsidyHalvings(const CChainParams& params)
-{
-    int maxHalvings = 64;
-    CAmount nInitialSubsidy = VeriBlock::getCoinbaseSubsidy(50 * COIN, 0, params);
+// static void TestBlockSubsidyHalvings(const CChainParams& params)
+// {
+//     int maxHalvings = 64;
+//     CAmount nInitialSubsidy = VeriBlock::getCoinbaseSubsidy(50 * COIN, 0, params);
 
-    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-        int nHeight = nHalvings * params.GetConsensus().nSubsidyHalvingInterval;
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, params);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-        nPreviousSubsidy = nSubsidy;
-    }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * params.GetConsensus().nSubsidyHalvingInterval, params), 0);
-}
+//     CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
+//     BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
+//     for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
+//         int nHeight = nHalvings * params.GetConsensus().nSubsidyHalvingInterval;
+//         CAmount nSubsidy = GetBlockSubsidy(nHeight, params);
+//         BOOST_CHECK(nSubsidy <= nInitialSubsidy);
+//         BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
+//         nPreviousSubsidy = nSubsidy;
+//     }
+//     BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * params.GetConsensus().nSubsidyHalvingInterval, params), 0);
+// }
 
-static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
-{
-    auto chainParams = CMainWithHalvingsParams(nSubsidyHalvingInterval);
-    TestBlockSubsidyHalvings(chainParams);
-}
+// static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
+// {
+//     auto chainParams = CMainWithHalvingsParams(nSubsidyHalvingInterval);
+//     TestBlockSubsidyHalvings(chainParams);
+// }
 
 //BOOST_AUTO_TEST_CASE(block_subsidy_test)
 //{
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     // with 50 BTCSQ payout:
 //    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
     // with 50*20% BTCSQ payout and RegTest
-    BOOST_CHECK_EQUAL(nSum, CAmount{3937008000});
+    BOOST_CHECK_EQUAL(nSum, CAmount{869702369389000});
 }
 
 static bool ReturnFalse() { return false; }

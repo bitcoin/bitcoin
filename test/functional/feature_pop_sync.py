@@ -55,7 +55,7 @@ class PoPSync(BitcoinTestFramework):
             response = node.submitpopvtb(vtb.toVbkEncodingHex())
             assert response['accepted'], response
             self.log.info("VTB accepted to mempool")
-            sync_pop_mempools(self.nodes, timeout=30)
+            sync_pop_mempools(self.nodes, timeout=100)
 
             # ATV
             self.log.info("Submitting ATV")
@@ -63,7 +63,7 @@ class PoPSync(BitcoinTestFramework):
             altblock = self.nodes[0].getblock(tip)
             endorse_block(self.nodes[0], self.apm, altblock['height'], self.nodes[0].getnewaddress())
             self.log.info("ATV accepted to mempool")
-            sync_pop_mempools(self.nodes, timeout=30)
+            sync_pop_mempools(self.nodes, timeout=100)
 
             self.nodes[2].generate(nblocks=1)
             self.sync_all()

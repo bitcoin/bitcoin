@@ -81,6 +81,7 @@ class PopPayouts(BitcoinTestFramework):
             self.target_payout_block
         ))
         payoutblockhash = self.nodes[1].generate(nblocks=n)[-1]
+        balance1 = self.nodes[0].getbalance()
         self.sync_blocks(self.nodes)
         self.log.info("pop rewards paid")
 
@@ -100,7 +101,7 @@ class PopPayouts(BitcoinTestFramework):
         # node[0] has 210 (lastblock) mature coinbases and a single pop payout
         assert lastblock == 210, "calculation below are only valid for POP activation height = 210"
         pop_payout = float(outputs[1]['value'])
-        assert balance == 8713.75  + pop_payout
+        assert float(balance) == float(balance1) + float(pop_payout)
         self.log.warning("success! _case1_endorse_keystone_get_paid()")
 
     def run_test(self):

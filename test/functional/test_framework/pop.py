@@ -279,7 +279,6 @@ class PopMiningContext:
         test_config("KEYSTONE_INTERVAL", keystoneInterval, lambda x: x["keystoneInterval"])
         test_config("NETWORK_ID", NETWORK_ID, lambda x: x["networkId"])
         test_config("POP_ACTIVATION_HEIGHT", POP_ACTIVATION_HEIGHT, lambda x: x["popActivationHeight"])
-        test_config("POW_REWARD_PERCENTAGE", POW_REWARD_PERCENTAGE, lambda x: x["popRewardPercentage"])
         test_config("POP_PAYOUT_DELAY", POP_PAYOUT_DELAY, lambda x: x["payoutParams"]["popPayoutDelay"])
 
     def get_block(self, hash: str) -> BlockIndex:
