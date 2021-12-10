@@ -276,24 +276,24 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 
     BOOST_CHECK_EQUAL(addrman.size(), num_addrs);
 
-    while (num_addrs < 64) { // Magic number! 250.1.1.1 - 250.1.1.64 do not collide with deterministic key = 1
+    while (num_addrs < 35) { // Magic number! 250.1.1.1 - 250.1.1.35 do not collide in tried with deterministic key = 1
         CService addr = ResolveService("250.1.1." + ToString(++num_addrs));
         BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-        addrman.Good(CAddress(addr, NODE_NONE));
 
-        // Test: No collision in tried table yet.
-        BOOST_CHECK_EQUAL(addrman.size(), num_addrs);
+        // Test: Add to tried without collision
+        BOOST_CHECK(addrman.Good(CAddress(addr, NODE_NONE)));
+
     }
 
-    // Test: tried table collision!
+    // Test: Unable to add to tried table due to collision!
     CService addr1 = ResolveService("250.1.1." + ToString(++num_addrs));
-    uint32_t collisions{1};
-    BOOST_CHECK(!addrman.Add({CAddress(addr1, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman.size(), num_addrs - collisions);
+    BOOST_CHECK(addrman.Add({CAddress(addr1, NODE_NONE)}, source));
+    BOOST_CHECK(!addrman.Good(CAddress(addr1, NODE_NONE)));
 
+    // Test: Add the next address to tried without collision
     CService addr2 = ResolveService("250.1.1." + ToString(++num_addrs));
     BOOST_CHECK(addrman.Add({CAddress(addr2, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman.size(), num_addrs - collisions);
+    BOOST_CHECK(addrman.Good(CAddress(addr2, NODE_NONE)));
 }
 
 BOOST_AUTO_TEST_CASE(addrman_find)
