@@ -674,7 +674,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     LOCK(cs_main);
     CChainState& active_chainstate = m_node.chainman->ActiveChainstate();
     // Verify db consistency
-    BOOST_ASSERT(CVerifyDB().VerifyDB(active_chainstate, Params(), active_chainstate.CoinsTip(), 4, 2));
+    BOOST_ASSERT(CVerifyDB().VerifyDB(active_chainstate, Params().GetConsensus(), active_chainstate.CoinsTip(), 4, 2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
