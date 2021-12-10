@@ -389,14 +389,17 @@ class TestNode():
     def debug_log_path(self) -> Path:
         return self.chain_path / 'debug.log'
 
+    def debug_log_bytes(self) -> int:
+        with open(self.debug_log_path, encoding='utf-8') as dl:
+            dl.seek(0, 2)
+            return dl.tell()
+
     @contextlib.contextmanager
     def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2):
         if unexpected_msgs is None:
             unexpected_msgs = []
         time_end = time.time() + timeout * self.timeout_factor
-        with open(self.debug_log_path, encoding='utf-8') as dl:
-            dl.seek(0, 2)
-            prev_size = dl.tell()
+        prev_size = self.debug_log_bytes()
 
         yield
 
