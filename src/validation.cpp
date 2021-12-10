@@ -4842,16 +4842,14 @@ bool ChainstateManager::ActivateSnapshot(
 
 static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
 {
-    LogPrintf("[snapshot] flushing %s (%.2f MB)... ", /* Continued */
-              snapshot_loaded ? "snapshot chainstate to disk" : "coins cache",
-              coins_cache.DynamicMemoryUsage() / (1000 * 1000));
-
-    const int64_t flush_now{GetTimeMillis()};
+    LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(
+        strprintf("%s (%.2f MB)",
+                  snapshot_loaded ? "saving snapshot chainstate" : "flushing coins cache",
+                  coins_cache.DynamicMemoryUsage() / (1000 * 1000)),
+        BCLog::LogFlags::ALL);
 
     // TODO: if #17487 is merged, add erase=false here if snapshot is loaded, for better performance.
     coins_cache.Flush();
-
-    LogPrintf("done (%.2fms)\n", GetTimeMillis() - flush_now);
 }
 
 bool ChainstateManager::PopulateAndValidateSnapshot(
