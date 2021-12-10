@@ -27,10 +27,9 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, ChainTestingSetup)
 //! First create a legacy (IBD) chainstate, then create a snapshot chainstate.
 BOOST_AUTO_TEST_CASE(chainstatemanager)
 {
-    printf("chainstatemanager\n");
     ChainstateManager& manager = *m_node.chainman;
     CTxMemPool& mempool = *m_node.mempool;
-    printf("chainstatemanager1\n");
+
     std::vector<CChainState*> chainstates;
 
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
@@ -42,12 +41,12 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     c1.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
-    printf("chainstatemanager2\n");
+
     BOOST_CHECK(!manager.IsSnapshotActive());
     BOOST_CHECK(!manager.IsSnapshotValidated());
     auto all = manager.GetAll();
     BOOST_CHECK_EQUAL_COLLECTIONS(all.begin(), all.end(), chainstates.begin(), chainstates.end());
-printf("chainstatemanager3\n");
+
     auto& active_chain = manager.ActiveChain();
     BOOST_CHECK_EQUAL(&active_chain, &c1.m_chain);
 
@@ -58,35 +57,31 @@ printf("chainstatemanager3\n");
     BOOST_CHECK_EQUAL(active_tip, exp_tip);
 
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
-printf("chainstatemanager4\n");
+
     // Create a snapshot-based chainstate.
     //
     const uint256 snapshot_blockhash = GetRandHash();
-    printf("chainstatemanager4a\n");
     CChainState& c2 = WITH_LOCK(::cs_main, return manager.InitializeChainstate(
         &mempool, snapshot_blockhash));
-        printf("chainstatemanager4b\n");
     chainstates.push_back(&c2);
 
     BOOST_CHECK_EQUAL(manager.SnapshotBlockhash().value(), snapshot_blockhash);
-printf("chainstatemanager4c\n");
+
     c2.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c2.InitCoinsCache(1 << 23));
-    printf("chainstatemanager4d\n");
     // Unlike c1, which doesn't have any blocks. Gets us different tip, height.
     c2.LoadGenesisBlock();
-    printf("chainstatemanager4e\n");
     BlockValidationState _;
     BOOST_CHECK(c2.ActivateBestChain(_, nullptr));
-printf("chainstatemanager5\n");
+
     BOOST_CHECK(manager.IsSnapshotActive());
     BOOST_CHECK(!manager.IsSnapshotValidated());
     BOOST_CHECK_EQUAL(&c2, &manager.ActiveChainstate());
     BOOST_CHECK(&c1 != &manager.ActiveChainstate());
     auto all2 = manager.GetAll();
     BOOST_CHECK_EQUAL_COLLECTIONS(all2.begin(), all2.end(), chainstates.begin(), chainstates.end());
-printf("chainstatemanager6\n");
+
     auto& active_chain2 = manager.ActiveChain();
     BOOST_CHECK_EQUAL(&active_chain2, &c2.m_chain);
 
@@ -95,7 +90,7 @@ printf("chainstatemanager6\n");
     auto active_tip2 = manager.ActiveTip();
     auto exp_tip2 = c2.m_chain.Tip();
     BOOST_CHECK_EQUAL(active_tip2, exp_tip2);
-printf("chainstatemanager7\n");
+
     // Ensure that these pointers actually correspond to different
     // CCoinsViewCache instances.
     BOOST_CHECK(exp_tip != exp_tip2);
@@ -104,13 +99,11 @@ printf("chainstatemanager7\n");
     SyncWithValidationInterfaceQueue();
 
     WITH_LOCK(::cs_main, manager.Unload());
-    printf("chainstatemanager1\n");
 }
 
 //! Test rebalancing the caches associated with each chainstate.
 BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
 {
-    printf("chainstatemanager_rebalance_caches\n");
     ChainstateManager& manager = *m_node.chainman;
     CTxMemPool& mempool = *m_node.mempool;
 
