@@ -77,7 +77,6 @@ BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
-    'feature_block_reward_reallocation.py',
     'feature_llmq_data_recovery.py',
     'feature_fee_estimation.py',
     'wallet_hd.py',

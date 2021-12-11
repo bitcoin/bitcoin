@@ -120,6 +120,7 @@ BITCOIN_TESTS =\
   test/bech32_tests.cpp \
   test/bip32_tests.cpp \
   test/bip39_tests.cpp \
+  test/block_reward_reallocation_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/blockfilter_tests.cpp \
@@ -139,6 +140,7 @@ BITCOIN_TESTS =\
   test/denialofservice_tests.cpp \
   test/dip0020opcodes_tests.cpp \
   test/descriptor_tests.cpp \
+  test/dynamic_activation_thresholds_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/flatfile_tests.cpp \
