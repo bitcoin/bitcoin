@@ -4848,7 +4848,6 @@ static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_load
                   coins_cache.DynamicMemoryUsage() / (1000 * 1000)),
         BCLog::LogFlags::ALL);
 
-    // TODO: if #17487 is merged, add erase=false here if snapshot is loaded, for better performance.
     coins_cache.Flush();
 }
 
