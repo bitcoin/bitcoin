@@ -30,6 +30,7 @@
 #include <spork.h>
 
 #include <stdint.h>
+#include <tuple>
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif
@@ -341,7 +342,7 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
 
 UniValue deriveaddresses(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty() || request.params.size() > 3) {
+    if (request.fHelp || request.params.empty() || request.params.size() > 2) {
         throw std::runtime_error(
             RPCHelpMan{"deriveaddresses",
             "\nDerives one or more addresses corresponding to an output descriptor.\n"
@@ -354,8 +355,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n",
                 {
                     {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor"},
-                    {"begin", RPCArg::Type::NUM, /* default */ "", "If a ranged descriptor is used, this specifies the beginning of the range to import"},
-                    {"end", RPCArg::Type::NUM, /* default */ "", "If a ranged descriptor is used, this specifies the end of the range to import"}
+                    {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
                 },
                 RPCResult{
             "\"address\"        (array) A json array of the derived addresses\n"
@@ -365,29 +365,19 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
                 },
                 RPCExamples{
             "\nFirst three receive addresses\n"
-            + HelpExampleCli("deriveaddresses", "\"pkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#trd0mf0l\" 0 2")
+            + HelpExampleCli("deriveaddresses", "\"pkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#trd0mf0l\" \"[0,2]\"")
                 }
         }.ToString());
     }
 
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VNUM, UniValue::VNUM});
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
     const std::string desc_str = request.params[0].get_str();
 
-    int range_begin = 0;
-    int range_end = 0;
+    int64_t range_begin = 0;
+    int64_t range_end = 0;
 
-    if (request.params.size() >= 2) {
-        if (request.params.size() == 2) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing range end parameter");
-        }
-        range_begin = request.params[1].get_int();
-        range_end = request.params[2].get_int();
-        if (range_begin < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should be greater or equal than 0");
-        }
-        if (range_begin > range_end) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range end should be equal to or greater than begin");
-        }
+    if (request.params.size() >= 2 && !request.params[1].isNull()) {
+        std::tie(range_begin, range_end) = ParseDescriptorRange(request.params[1]);
     }
 
     FlatSigningProvider key_provider;

@@ -498,9 +498,24 @@ class ImportMultiTest(BitcoinTestFramework):
         self.log.info("Should import the ranged descriptor with specified range as solvable")
         self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now",
-                               "range": {"end": 1}},
+                               "range": 1},
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+
+        self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": -1},
+                              success=False, error_code=-8, error_message='End of range is too high')
+
+        self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": [-1, 10]},
+                              success=False, error_code=-8, error_message='Range should be greater or equal than 0')
+
+        self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]},
+                              success=False, error_code=-8, error_message='End of range is too high')
+
+        self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": [2, 1]},
+                              success=False, error_code=-8, error_message='Range specified as [begin,end] must not have begin after end')
+
+        self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": [0, 1000001]},
+                              success=False, error_code=-8, error_message='Range is too large')
 
         # Test importing of a P2PKH address via descriptor
         key = self.get_key()
