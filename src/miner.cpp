@@ -35,7 +35,6 @@
 #include <llmq/chainlocks.h>
 #include <llmq/utils.h>
 #include <masternode/payments.h>
-#include <masternode/sync.h>
 
 #include <algorithm>
 #include <queue>
