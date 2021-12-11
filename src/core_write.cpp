@@ -20,6 +20,7 @@
 #include <spentindex.h>
 
 #include <evo/cbtx.h>
+#include <evo/mnhftx.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <llmq/commitment.h>
@@ -304,6 +305,13 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             UniValue obj;
             qcTx.ToJson(obj);
             entry.pushKV("qcTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_MNHF_SIGNAL) {
+        MNHFTxPayload mnhfTx;
+        if (GetTxPayload(tx, mnhfTx)) {
+            UniValue obj;
+            mnhfTx.ToJson(obj);
+            entry.pushKV("mnhfTx", obj);
         }
     }
 

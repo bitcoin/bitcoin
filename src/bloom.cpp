@@ -212,6 +212,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
     }
     case(TRANSACTION_COINBASE):
     case(TRANSACTION_QUORUM_COMMITMENT):
+    case(TRANSACTION_MNHF_SIGNAL):
         // No additional checks for this transaction types
         return false;
     }

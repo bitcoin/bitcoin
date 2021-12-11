@@ -169,6 +169,7 @@ BITCOIN_CORE_H = \
   evo/deterministicmns.h \
   evo/evodb.h \
   evo/mnauth.h \
+  evo/mnhftx.h \
   evo/providertx.h \
   evo/simplifiedmns.h \
   evo/specialtx.h \
@@ -356,6 +357,7 @@ libdash_server_a_SOURCES = \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
   evo/mnauth.cpp \
+  evo/mnhftx.cpp \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \

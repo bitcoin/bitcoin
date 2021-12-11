@@ -105,6 +105,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/utils -> net -> masternode/sync -> evo/deterministicmns"
+    "evo/mnhftx -> evo/specialtx -> evo/mnhftx"
 )
 
 EXIT_CODE=0
