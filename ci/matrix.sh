@@ -59,10 +59,10 @@ elif [ "$BUILD_TARGET" = "linux64" ]; then
   export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
-elif [ "$BUILD_TARGET" = "linux64_cxx17" ]; then
+elif [ "$BUILD_TARGET" = "linux64_cxx20" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
-  export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --enable-c++17 --enable-suppress-external-warnings --enable-werror --with-sanitizers=undefined"
+  export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --enable-c++20 --enable-suppress-external-warnings --enable-werror --with-sanitizers=undefined"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
   export RUN_INTEGRATIONTESTS=false

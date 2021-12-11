@@ -62,8 +62,18 @@ case $host in
   ;;
 esac
 
-dnl Require C++17 compiler (no GNU extensions)
-AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
+AC_ARG_ENABLE([c++20],
+  [AS_HELP_STRING([--enable-c++20],
+  [enable compilation in c++20 mode (disabled by default)])],
+  [use_cxx20=$enableval],
+  [use_cxx20=no])
+
+dnl Require C++17 or C++20 compiler (no GNU extensions)
+if test "x$use_cxx20" = xyes; then
+  AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
+else
+  AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
+fi
 
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
