@@ -32,7 +32,6 @@
 
 #include <stddef.h>
 #include <string.h>
-#include <limits.h>
 
 #include "sph_cubehash.h"
 #ifdef __cplusplus

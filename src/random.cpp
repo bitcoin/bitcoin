@@ -22,7 +22,6 @@
 
 #ifndef WIN32
 #include <fcntl.h>
-#include <sys/time.h>
 #endif
 
 #ifdef HAVE_SYS_GETRANDOM
@@ -45,7 +44,6 @@
 #include <cpuid.h>
 #endif
 
-#include <openssl/err.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
 

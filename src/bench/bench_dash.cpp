@@ -5,14 +5,9 @@
 #include <bench/bench.h>
 
 #include <crypto/sha256.h>
-#include <key.h>
 #include <stacktraces.h>
 #include <util/strencodings.h>
 #include <util/system.h>
-
-#include <boost/lexical_cast.hpp>
-
-#include <memory>
 
 #include <bls/bls.h>
 

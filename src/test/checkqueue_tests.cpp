@@ -4,7 +4,6 @@
 
 #include <sync.h>
 #include <util/memory.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <test/setup_common.h>

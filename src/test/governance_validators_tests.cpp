@@ -8,8 +8,6 @@
 
 #include <test/setup_common.h>
 
-#include <iostream>
-#include <fstream>
 #include <string>
 
 #include <boost/test/unit_test.hpp>

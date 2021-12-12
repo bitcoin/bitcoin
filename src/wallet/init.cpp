@@ -13,13 +13,10 @@
 #include <util/moneystr.h>
 #include <validation.h>
 #include <walletinitinterface.h>
-#include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
-
-#include <functional>
 
 class WalletInit : public WalletInitInterface {
 public:

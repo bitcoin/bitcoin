@@ -10,7 +10,6 @@
 #include <assert.h>
 #include <string.h>
 
-#include <cstdio>
 #include <limits>
 
 #ifndef HAVE_TIMINGSAFE_BCMP

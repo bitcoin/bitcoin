@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/memory.h>
-#include <util/system.h>
 
 #include <test/setup_common.h>
 

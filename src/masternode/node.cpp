@@ -13,8 +13,6 @@
 #include <validation.h>
 #include <warnings.h>
 
-#include <bls/bls.h>
-
 // Keep track of the active Masternode
 CCriticalSection activeMasternodeInfoCs;
 CActiveMasternodeInfo activeMasternodeInfo GUARDED_BY(activeMasternodeInfoCs);

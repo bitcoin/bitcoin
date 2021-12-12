@@ -5,7 +5,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <amount.h>
-#include <chain.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
@@ -13,7 +12,6 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <keepass.h>
-#include <net.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <rpc/mining.h>

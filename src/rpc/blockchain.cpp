@@ -7,14 +7,12 @@
 #include <rpc/blockchain.h>
 
 #include <amount.h>
-#include <base58.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <node/coinstats.h>
 #include <core_io.h>
-#include <hash.h>
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
 #include <key_io.h>
@@ -27,13 +25,13 @@
 #include <script/descriptor.h>
 #include <streams.h>
 #include <sync.h>
-#include <txdb.h>
 #include <txmempool.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 #include <util/system.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <evo/specialtx.h>
@@ -49,7 +47,6 @@
 
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
-#include <memory>
 #include <mutex>
 #include <condition_variable>
 #include <merkleblock.h>

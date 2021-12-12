@@ -8,7 +8,6 @@
 #include <primitives/block.h>
 #include <scheduler.h>
 #include <txmempool.h>
-#include <util/system.h>
 #include <validation.h>
 
 #include <future>

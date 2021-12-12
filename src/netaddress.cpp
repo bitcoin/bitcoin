@@ -18,7 +18,6 @@
 #include <array>
 #include <cstdint>
 #include <ios>
-#include <iterator>
 #include <tuple>
 
 constexpr size_t CNetAddr::V1_SERIALIZATION_SIZE;

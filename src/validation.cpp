@@ -23,7 +23,6 @@
 #include <logging/timer.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/settings.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -38,7 +37,6 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <undo.h>
-#include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 #include <util/system.h>
@@ -59,7 +57,7 @@
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/thread.hpp>
+#include <boost/thread.hpp> // Required for boost::this_thread::interruption_point();
 
 #if defined(NDEBUG)
 # error "Dash Core cannot be compiled without assertions."

@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <merkleblock.h>
+#include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/script.h>
@@ -27,7 +28,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <univalue.h>
-
 
 int64_t static DecodeDumpTime(const std::string &str) {
     static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);

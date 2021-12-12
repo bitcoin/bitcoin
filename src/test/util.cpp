@@ -12,9 +12,7 @@
 #include <pow.h>
 #include <scheduler.h>
 #include <script/standard.h>
-#include <txdb.h>
 #include <validation.h>
-#include <validationinterface.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif

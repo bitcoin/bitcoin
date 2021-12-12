@@ -10,9 +10,7 @@
 
 #include <algorithm>
 #include <assert.h>
-#include <iomanip>
 #include <iostream>
-#include <numeric>
 #include <regex>
 
 namespace {

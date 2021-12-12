@@ -14,7 +14,6 @@
 #include <ui_interface.h>
 #include <walletinitinterface.h>
 #include <crypto/hmac_sha256.h>
-#include <stdio.h>
 
 #include <memory>
 

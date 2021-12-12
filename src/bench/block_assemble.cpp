@@ -5,7 +5,6 @@
 #include <bench/bench.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
-#include <crypto/sha256.h>
 #include <script/standard.h>
 #include <test/util.h>
 #include <txmempool.h>

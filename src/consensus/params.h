@@ -9,6 +9,8 @@
 #include <uint256.h>
 #include <llmq/params.h>
 
+#include <map>
+
 namespace Consensus {
 
 enum DeploymentPos

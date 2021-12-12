@@ -6,9 +6,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <rpc/server.h>
 #include <streams.h>
-#include <util/system.h>
 #include <validation.h>
 #include <zmq/zmqutil.h>
 

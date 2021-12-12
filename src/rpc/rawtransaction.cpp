@@ -15,7 +15,6 @@
 #include <key_io.h>
 #include <keystore.h>
 #include <merkleblock.h>
-#include <net.h>
 #include <node/transaction.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -34,11 +33,8 @@
 #include <validationinterface.h>
 
 #include <evo/specialtx.h>
-#include <evo/providertx.h>
-#include <evo/cbtx.h>
 
 #include <llmq/chainlocks.h>
-#include <llmq/commitment.h>
 #include <llmq/instantsend.h>
 
 #include <stdint.h>

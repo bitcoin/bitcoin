@@ -17,7 +17,6 @@
 #include <merkleblock.h>
 #include <netmessagemaker.h>
 #include <netbase.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -26,10 +25,8 @@
 #include <scheduler.h>
 #include <streams.h>
 #include <tinyformat.h>
-#include <txdb.h>
 #include <index/txindex.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>

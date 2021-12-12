@@ -28,8 +28,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "wallet/coincontrol -> wallet/wallet -> wallet/coincontrol"
-    "policy/fees -> policy/policy -> validation -> policy/fees"
-    "policy/policy -> validation -> policy/policy"
     "qt/addressbookpage -> qt/bitcoingui -> qt/walletview -> qt/addressbookpage"
     "txmempool -> validation -> validationinterface -> txmempool"
     "qt/addressbookpage -> qt/bitcoingui -> qt/walletview -> qt/receivecoinsdialog -> qt/addressbookpage"
@@ -85,10 +83,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "logging -> util/system -> stacktraces -> logging"
     "coinjoin/client -> coinjoin/util -> wallet/wallet -> coinjoin/client"
     "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget"
-    "qt/bitcoinaddressvalidator -> qt/guiutil -> qt/qvalidatedlineedit -> qt/bitcoinaddressvalidator"
     "qt/guiutil -> qt/optionsdialog -> qt/optionsmodel -> qt/guiutil"
-    "bloom -> evo/cbtx -> evo/simplifiedmns -> merkleblock -> bloom"
-    "bloom -> evo/cbtx -> llmq/blockprocessor -> net -> bloom"
     "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> llmq/debug -> evo/deterministicmns"
     "evo/deterministicmns -> evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> evo/deterministicmns"
     "evo/specialtx -> llmq/blockprocessor -> net_processing -> txmempool -> evo/specialtx"
@@ -106,6 +101,9 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/utils -> net -> masternode/sync -> evo/deterministicmns"
     "evo/mnhftx -> evo/specialtx -> evo/mnhftx"
+    "policy/fees -> txmempool -> validation -> policy/fees"
+    "bloom -> evo/specialtx -> llmq/blockprocessor -> net -> bloom"
+    "bloom -> evo/specialtx -> llmq/blockprocessor -> net_processing -> merkleblock -> bloom"
 )
 
 EXIT_CODE=0

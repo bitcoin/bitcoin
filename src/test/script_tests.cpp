@@ -10,7 +10,6 @@
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <rpc/util.h>
 #include <test/setup_common.h>

@@ -7,11 +7,9 @@
 #include <rpc/protocol.h>
 
 #include <random.h>
-#include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/time.h>
-#include <version.h>
 
 /**
  * JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,

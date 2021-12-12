@@ -4,11 +4,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chain.h>
 #include <chainparams.h>
-#include <clientversion.h>
 #include <consensus/consensus.h>
-#include <core_io.h>
 #include <evo/mnauth.h>
 #include <httpserver.h>
 #include <key_io.h>
@@ -18,13 +15,11 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
-#include <timedata.h>
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <validation.h>
 #include <util/validation.h>
-#include <warnings.h>
 
 #include <masternode/sync.h>
 #include <spork.h>

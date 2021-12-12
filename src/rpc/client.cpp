@@ -8,7 +8,6 @@
 #include <util/system.h>
 
 #include <set>
-#include <stdint.h>
 
 class CRPCConvertParam
 {
