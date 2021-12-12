@@ -411,7 +411,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     if (m_coin_control->IsUsingCoinJoin()) {
         // append number of inputs
         questionString.append("<hr />");
-        int nInputs = currentTransaction.getWtx()->get().vin.size();
+        int nInputs = currentTransaction.getWtx()->vin.size();
         questionString.append(tr("This transaction will consume %n input(s)", "", nInputs));
 
         // warn about potential privacy issues when spending too many inputs at once
@@ -464,7 +464,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         accept();
         m_coin_control->UnSelectAll();
         coinControlUpdateLabels();
-        Q_EMIT coinsSent(currentTransaction.getWtx()->get().GetHash());
+        Q_EMIT coinsSent(currentTransaction.getWtx()->GetHash());
     }
     fNewRecipientAllowed = true;
 }
