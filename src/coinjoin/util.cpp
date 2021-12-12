@@ -236,8 +236,8 @@ CAmount CTransactionBuilder::GetFee(unsigned int nBytes) const
     if (nRequiredFee > nFeeCalc) {
         nFeeCalc = nRequiredFee;
     }
-    if (nFeeCalc > ::maxTxFee) {
-        nFeeCalc = ::maxTxFee;
+    if (nFeeCalc > pwallet->m_default_max_tx_fee) {
+        nFeeCalc = pwallet->m_default_max_tx_fee;
     }
     return nFeeCalc;
 }

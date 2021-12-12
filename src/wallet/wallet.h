@@ -74,6 +74,12 @@ static const bool DEFAULT_AVOIDPARTIALSPENDS = false;
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
+//! -maxtxfee default
+static const CAmount DEFAULT_TRANSACTION_MAXFEE = COIN / 10;
+//! Discourage users to set fees higher than this amount (in duffs) per kB
+static const CAmount HIGH_TX_FEE_PER_KB = COIN / 100;
+//! -maxtxfee will warn if called with a higher fee than this amount (in duffs)
+static const CAmount HIGH_MAX_TX_FEE = 100 * HIGH_TX_FEE_PER_KB;
 
 //! if set, all keys will be derived by using BIP39/BIP44
 static const bool DEFAULT_USE_HD_WALLET = false;
@@ -1065,6 +1071,8 @@ public:
      */
     CFeeRate m_fallback_fee{DEFAULT_FALLBACK_FEE};
     CFeeRate m_discard_rate{DEFAULT_DISCARD_FEE};
+    /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
+    CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
     bool NewKeyPool();
     size_t KeypoolCountExternalKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

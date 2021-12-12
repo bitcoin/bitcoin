@@ -544,6 +544,7 @@ public:
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
     bool IsWalletFlagSet(uint64_t flag) override { return m_wallet->IsWalletFlagSet(flag); }
     CoinJoin::Client& coinJoin() override { return m_coinjoin; }
+    CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
         RemoveWallet(m_wallet);

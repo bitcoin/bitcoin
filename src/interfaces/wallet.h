@@ -266,6 +266,9 @@ public:
 
     virtual CoinJoin::Client& coinJoin() = 0;
 
+    //! Get max tx fee.
+    virtual CAmount getDefaultMaxTxFee() = 0;
+
     // Remove wallet.
     virtual void remove() = 0;
 

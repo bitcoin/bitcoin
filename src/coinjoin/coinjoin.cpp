@@ -22,6 +22,8 @@
 
 #include <string>
 
+constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
+
 bool CCoinJoinEntry::AddScriptSig(const CTxIn& txin)
 {
     for (auto& txdsin : vecTxDSIn) {
@@ -370,7 +372,7 @@ bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
     {
         LOCK(cs_main);
         CValidationState validationState;
-        if (!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), nullptr /* pfMissingInputs */, false /* bypass_limits */, maxTxFee /* nAbsurdFee */, true /* fDryRun */)) {
+        if (!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), nullptr /* pfMissingInputs */, false /* bypass_limits */, DEFAULT_MAX_RAW_TX_FEE /* nAbsurdFee */, true /* fDryRun */)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }
