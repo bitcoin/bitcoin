@@ -142,7 +142,6 @@ public:
 
     const std::vector<bool>& GetAsmap() const;
 
-    friend class AddrManTest;
     friend class AddrManDeterministic;
 
 private:
