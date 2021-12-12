@@ -1114,6 +1114,7 @@ class DashTestFramework(SyscoinTestFramework):
         force_finish_mnsync(mninfo.node)
 
     def setup_network(self):
+        self.options.descriptors = False
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
