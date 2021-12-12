@@ -85,6 +85,9 @@ struct Params {
     uint256 DIP0003EnforcementHash;
     /** Block height at which DIP0008 becomes active */
     int DIP0008Height;
+    /** Don't warn about unknown BIP 9 activations below this height.
+     * This prevents us from warning about the CSV and DIP activations. */
+    int MinBIP9WarningHeight;
     /**
      * Minimum blocks including miner confirmation of the total of nMinerConfirmationWindow blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
