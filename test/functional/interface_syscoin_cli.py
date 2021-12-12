@@ -79,15 +79,6 @@ class TestSyscoinCli(SyscoinTestFramework):
         """Main test logic"""
         self.generate(self.nodes[0], BLOCKS)
 
-        cli_response = self.nodes[0].cli("-version").send_cli()
-        assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
-
-        self.log.info("Compare responses from getwalletinfo RPC and `syscoin-cli getwalletinfo`")
-        if self.is_wallet_compiled():
-            cli_response = self.nodes[0].cli.getwalletinfo()
-            rpc_response = self.nodes[0].getwalletinfo()
-            assert_equal(cli_response, rpc_response)
-
         self.log.info("Compare responses from getblockchaininfo RPC and `syscoin-cli getblockchaininfo`")
         cli_response = self.nodes[0].cli.getblockchaininfo()
         rpc_response = self.nodes[0].getblockchaininfo()
@@ -109,7 +100,7 @@ class TestSyscoinCli(SyscoinTestFramework):
         self.log.info("Test connecting with non-existing RPC cookie file")
         assert_raises_process_error(1, "Could not locate RPC credentials", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
 
-        self.log.info("Make sure that -getinfo with arguments fails")
+        self.log.info("Test -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
         self.log.info("Test -getinfo with -color=never does not return ANSI escape codes")
@@ -176,8 +167,8 @@ class TestSyscoinCli(SyscoinTestFramework):
             w1.sendtoaddress(w2.getnewaddress(), amounts[1])
             w1.sendtoaddress(w3.getnewaddress(), amounts[2])
 
-            # Mine a block to confirm; adds a block reward (50 BTC) to the default wallet.
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+            # Mine a block to confirm; adds a block reward (50 SYS) to the default wallet.
+            self.generate(self.nodes[0], 1)
 
             self.log.info("Test -getinfo with multiple wallets and -rpcwallet returns specified wallet balance")
             for i in range(len(wallets)):
