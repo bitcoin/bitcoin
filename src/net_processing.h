@@ -102,4 +102,7 @@ void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED
 void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 size_t GetRequestedObjectCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+/** Relay transaction to every node */
+void RelayTransaction(const uint256&, const CConnman& connman);
+
 #endif // BITCOIN_NET_PROCESSING_H

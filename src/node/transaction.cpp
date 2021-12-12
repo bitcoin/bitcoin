@@ -5,6 +5,7 @@
 
 #include <consensus/validation.h>
 #include <net.h>
+#include <net_processing.h>
 #include <txmempool.h>
 #include <util/validation.h>
 #include <validation.h>
@@ -76,7 +77,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
     }
 
     if (relay) {
-        g_connman->RelayTransaction(*tx);
+        RelayTransaction(hashTx, *g_connman);
     }
 
     return TransactionError::OK;
