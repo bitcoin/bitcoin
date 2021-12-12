@@ -91,6 +91,7 @@ libconftest.dylib*
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+!depends/Makefile
 dash-qt
 Dash-Qt.app
 background.tiff*
