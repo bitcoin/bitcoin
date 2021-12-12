@@ -46,18 +46,6 @@ public:
         LOCK(m_impl->cs);
         m_impl->Delete(nId);
     }
-
-    // Simulates connection failure so that we can test eviction of offline nodes
-    void SimConnFail(const CService& addr)
-    {
-        int64_t nLastSuccess = 1;
-        // Set last good connection in the deep past.
-        Good(addr, nLastSuccess);
-
-        bool count_failure = false;
-        int64_t nLastTry = GetAdjustedTime() - 61;
-        Attempt(addr, count_failure, nLastTry);
-    }
 };
 
 static CNetAddr ResolveIP(const std::string& ip)
@@ -897,7 +885,9 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK_EQUAL(info.ToString(), "250.1.1.19:0");
 
     // Ensure test of address fails, so that it is evicted.
-    addrman.SimConnFail(info);
+    // Update entry in tried by setting last good connection in the deep past.
+    BOOST_CHECK(!addrman.Good(info, /*nTime=*/1));
+    addrman.Attempt(info, /*fCountFailure=*/false, /*nTime=*/GetAdjustedTime() - 61);
 
     // Should swap 36 for 19.
     addrman.ResolveCollisions();
