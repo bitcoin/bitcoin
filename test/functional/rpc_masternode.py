@@ -15,6 +15,7 @@ class RPCMasternodeTest(DashTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_bdb()
 
     def run_test(self):
         self.log.info("test that results from `winners` and `payments` RPCs match")

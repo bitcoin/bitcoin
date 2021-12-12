@@ -41,6 +41,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_bdb()
 
     def run_test(self):
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
