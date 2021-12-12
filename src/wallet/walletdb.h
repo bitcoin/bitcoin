@@ -192,10 +192,6 @@ public:
     bool TxnCommit();
     //! Abort current transaction
     bool TxnAbort();
-    //! Read wallet version
-    bool ReadVersion(int& nVersion);
-    //! Write wallet version
-    bool WriteVersion(int nVersion);
 private:
     BerkeleyBatch m_batch;
     WalletDatabase& m_database;
