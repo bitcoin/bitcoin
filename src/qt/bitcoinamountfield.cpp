@@ -117,7 +117,7 @@ public:
         ensurePolished();
         const QFontMetrics fm(fontMetrics());
         int h = 0;
-        int w = fm.width(BitcoinUnits::format(BitcoinUnits::DASH, BitcoinUnits::maxMoney(), false, BitcoinUnits::separatorAlways));
+        int w = GUIUtil::TextWidth(fm, BitcoinUnits::format(BitcoinUnits::DASH, BitcoinUnits::maxMoney(), false, BitcoinUnits::separatorAlways));
         w += 2; // cursor blinking space
         w += GUIUtil::dashThemeActive() ? 24 : 0; // counteract padding from css
         return QSize(w, h);

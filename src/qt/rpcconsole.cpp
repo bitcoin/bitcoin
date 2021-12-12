@@ -31,12 +31,12 @@
 
 #include <QButtonGroup>
 #include <QDir>
-#include <QDesktopWidget>
 #include <QFontDatabase>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QScreen>
 #include <QSettings>
 #include <QTime>
 #include <QTimer>
@@ -466,7 +466,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     QSettings settings;
     if (!restoreGeometry(settings.value("RPCConsoleWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window
-        move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
+        move(QGuiApplication::primaryScreen()->availableGeometry().center() - frameGeometry().center());
     }
 
     QChar nonbreaking_hyphen(8209);
