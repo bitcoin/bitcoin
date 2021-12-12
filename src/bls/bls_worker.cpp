@@ -75,22 +75,23 @@ void CBLSWorker::Stop()
 
 bool CBLSWorker::GenerateContributions(int quorumThreshold, const BLSIdVector& ids, BLSVerificationVectorPtr& vvecRet, BLSSecretKeyVector& skSharesRet)
 {
-    auto svec = std::make_shared<BLSSecretKeyVector>((size_t)quorumThreshold);
+    auto svec = BLSSecretKeyVector((size_t)quorumThreshold);
     vvecRet = std::make_shared<BLSVerificationVector>((size_t)quorumThreshold);
     skSharesRet.resize(ids.size());
 
     for (int i = 0; i < quorumThreshold; i++) {
-        (*svec)[i].MakeNewKey();
+        svec[i].MakeNewKey();
     }
-    std::list<std::future<bool> > futures;
     size_t batchSize = 8;
+    std::vector<std::future<bool>> futures;
+    futures.reserve((quorumThreshold / batchSize + ids.size() / batchSize) + 2);
 
     for (size_t i = 0; i < quorumThreshold; i += batchSize) {
         size_t start = i;
         size_t count = std::min(batchSize, quorumThreshold - start);
         auto f = [&, start, count](int threadId) {
             for (size_t j = start; j < start + count; j++) {
-                (*vvecRet)[j] = (*svec)[j].GetPublicKey();
+                (*vvecRet)[j] = svec[j].GetPublicKey();
             }
             return true;
         };
@@ -102,7 +103,7 @@ bool CBLSWorker::GenerateContributions(int quorumThreshold, const BLSIdVector& i
         size_t count = std::min(batchSize, ids.size() - start);
         auto f = [&, start, count](int threadId) {
             for (size_t j = start; j < start + count; j++) {
-                if (!skSharesRet[j].SecretKeyShare(*svec, ids[j])) {
+                if (!skSharesRet[j].SecretKeyShare(svec, ids[j])) {
                     return false;
                 }
             }
@@ -110,13 +111,9 @@ bool CBLSWorker::GenerateContributions(int quorumThreshold, const BLSIdVector& i
         };
         futures.emplace_back(workerPool.push(f));
     }
-    bool success = true;
-    for (auto& f : futures) {
-        if (!f.get()) {
-            success = false;
-        }
-    }
-    return success;
+    return std::all_of(futures.begin(), futures.end(), [](auto& f){
+        return f.get();
+    });
 }
 
 // aggregates a single vector of BLS objects in parallel

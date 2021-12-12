@@ -106,6 +106,47 @@ public:
     }
 };
 
+static void BLSDKG_GenerateContributions(benchmark::Bench& bench, uint32_t epoch_iters, int quorumSize)
+{
+    CBLSWorker blsWorker;
+    blsWorker.Start();
+    std::vector<CBLSId> ids;
+    std::vector<Member> members;
+    for (int i = 0; i < quorumSize; i++) {
+        uint256 id;
+        WriteLE64(id.begin(), i + 1);
+        members.push_back({CBLSId(id), {}, {}});
+        ids.emplace_back(id);
+    }
+    bench.minEpochIterations(epoch_iters).run([&blsWorker, &quorumSize, &ids, &members] {
+        for (int i = 0; i < quorumSize; i++) {
+            blsWorker.GenerateContributions(quorumSize / 2 + 1, ids, members[i].vvec, members[i].skShares);
+        }
+    });
+    blsWorker.Stop();
+}
+
+#define BENCH_GenerateContributions(name, quorumSize, epoch_iters) \
+    static void BLSDKG_GenerateContributions_##name##_##quorumSize(benchmark::Bench& bench) \
+    {                                                \
+        BLSDKG_InitDKG(bench, epoch_iters, quorumSize); \
+    } \
+    BENCHMARK(BLSDKG_GenerateContributions_##name##_##quorumSize)
+
+static void BLSDKG_InitDKG(benchmark::Bench& bench, uint32_t epoch_iters, int quorumSize)
+{
+    bench.minEpochIterations(epoch_iters).run([&] {
+        DKG d(quorumSize);
+    });
+}
+
+#define BENCH_InitDKG(name, quorumSize, epoch_iters) \
+    static void BLSDKG_InitDKG_##name##_##quorumSize(benchmark::Bench& bench) \
+    {                                                \
+        BLSDKG_InitDKG(bench, epoch_iters, quorumSize); \
+    } \
+    BENCHMARK(BLSDKG_InitDKG_##name##_##quorumSize)
+
 #define BENCH_BuildQuorumVerificationVectors(name, quorumSize, epoch_iters) \
     static void BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize(benchmark::Bench& bench) \
     { \
@@ -123,6 +164,12 @@ public:
       ptr.reset(); \
     } \
     BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize)
+
+BENCH_GenerateContributions(simple, 10, 50);
+BENCH_GenerateContributions(simple, 50, 5);
+
+BENCH_InitDKG(simple, 10, 100)
+BENCH_InitDKG(simple, 50, 10)
 
 BENCH_BuildQuorumVerificationVectors(simple, 10, 1000)
 BENCH_BuildQuorumVerificationVectors(simple, 100, 10)
