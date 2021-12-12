@@ -5019,7 +5019,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             return error(_("Unable to generate initial keys"));
         }
 
-        auto locked_chain = chain.assumeLocked();  // Temporary. Removed in upcoming lock cleanup
+        auto locked_chain = chain.lock();
         walletInstance->ChainStateFlushed(locked_chain->getTipLocator());
 
         // Try to create wallet backup right after new wallet was created

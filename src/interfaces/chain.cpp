@@ -38,7 +38,7 @@
 namespace interfaces {
 namespace {
 
-class LockImpl : public Chain::Lock
+class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
 {
     Optional<int> getHeight() override
     {
@@ -171,10 +171,7 @@ class LockImpl : public Chain::Lock
         LockAnnotation lock(::cs_main);
         return CheckFinalTx(tx);
     }
-};
 
-class LockingStateImpl : public LockImpl, public UniqueLock<CCriticalSection>
-{
     using UniqueLock::UniqueLock;
 };
 
@@ -273,13 +270,12 @@ class ChainImpl : public Chain
 public:
     std::unique_ptr<Chain::Lock> lock(bool try_lock) override
     {
-        auto result = MakeUnique<LockingStateImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
+        auto result = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
         if (try_lock && result && !*result) return {};
         // std::move necessary on some compilers due to conversion from
-        // LockingStateImpl to Lock pointer
+        // LockImpl to Lock pointer
         return std::move(result);
     }
-    std::unique_ptr<Chain::Lock> assumeLocked() override { return MakeUnique<LockImpl>(); }
     bool findBlock(const uint256& hash, CBlock* block, int64_t* time, int64_t* time_max) override
     {
         CBlockIndex* index;
