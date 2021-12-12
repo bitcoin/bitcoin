@@ -809,14 +809,14 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     bool bypass_limits = false;
     if (!request.params[3].isNull()) bypass_limits = request.params[3].get_bool();
-    uint256 txid;
     std::string err_string;
-    const TransactionError err = BroadcastTransaction(tx, txid, err_string, max_raw_tx_fee, bypass_limits);
+    AssertLockNotHeld(cs_main);
+    const TransactionError err = BroadcastTransaction(tx, err_string, max_raw_tx_fee, /* relay */ true, /* wait_callback */ true, bypass_limits);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
 
-    return txid.GetHex();
+    return tx->GetHash().GetHex();
 }
 
 static UniValue testmempoolaccept(const JSONRPCRequest& request)
