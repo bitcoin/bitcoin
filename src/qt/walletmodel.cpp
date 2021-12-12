@@ -270,9 +270,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     }
 
     // reject absurdly high fee. (This can never happen because the
-    // wallet caps the fee at maxTxFee. This merely serves as a
+    // wallet caps the fee at m_default_max_tx_fee. This merely serves as a
     // belt-and-suspenders check)
-    if (nFeeRequired > m_node.getMaxTxFee())
+    if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
         return AbsurdFee;
 
     return SendCoinsReturn(OK);
@@ -312,11 +312,11 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
         auto& newTx = transaction.getWtx();
         std::string rejectReason;
-        if (!newTx->commit(std::move(mapValue), std::move(vOrderForm), rejectReason))
+        if (!wallet().commitTransaction(newTx, std::move(mapValue), std::move(vOrderForm), rejectReason))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << newTx->get();
+        ssTx << *newTx;
         transaction_array.append(ssTx.data(), ssTx.size());
     }
 

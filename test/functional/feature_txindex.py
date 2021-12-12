@@ -59,7 +59,7 @@ class TxIndexTest(BitcoinTestFramework):
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
-        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
         self.nodes[0].generate(1)
         self.sync_all()
 

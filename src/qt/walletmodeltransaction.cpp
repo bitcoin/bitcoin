@@ -22,14 +22,14 @@ QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
     return recipients;
 }
 
-std::unique_ptr<interfaces::PendingWalletTx>& WalletModelTransaction::getWtx()
+CTransactionRef& WalletModelTransaction::getWtx()
 {
     return wtx;
 }
 
 unsigned int WalletModelTransaction::getTransactionSize()
 {
-    return wtx ? ::GetSerializeSize(wtx->get(), SER_NETWORK, PROTOCOL_VERSION) : 0;
+    return wtx != nullptr ? ::GetSerializeSize(*wtx, SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
 CAmount WalletModelTransaction::getTransactionFee() const
@@ -60,7 +60,7 @@ void WalletModelTransaction::reassignAmounts()
                 if (out.amount() <= 0) continue;
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : wtx->get().vout) {
+                for (const auto& txout : wtx.get()->vout) {
                     if (txout.scriptPubKey == scriptPubKey) {
                         subtotal += txout.nValue;
                         break;
@@ -72,7 +72,7 @@ void WalletModelTransaction::reassignAmounts()
         else // normal recipient (no payment request)
 #endif
         {
-            for (const auto& txout : wtx->get().vout) {
+            for (const auto& txout : wtx.get()->vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;

@@ -237,8 +237,6 @@ namespace {
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
 
-    std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
-
     struct IteratorComparator
     {
         template<typename I>
@@ -1314,8 +1312,6 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
         });
         connman->WakeMessageHandler();
     }
-
-    nTimeBestReceived = GetTime();
 }
 
 /**
@@ -4378,21 +4374,6 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     pindexStart = pindexStart->pprev;
                 LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
                 connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexStart), uint256()));
-            }
-        }
-
-        // Resend wallet transactions that haven't gotten in a block yet
-        // Except during reindex, importing and IBD, when old wallet
-        // transactions become unconfirmed and spams other nodes.
-        if (!fReindex && !fImporting && !::ChainstateActive().IsInitialBlockDownload())
-        {
-            static int64_t nLastBroadcastTime = 0;
-            // HACK: Call this only once every few seconds. SendMessages is called once per peer, which makes this signal very expensive
-            // The proper solution would be to move this out of here, but this is not worth the effort right now as bitcoin#15632 will later do this.
-            // Luckily, the Broadcast signal is not used for anything else then CWallet::ResendWalletTransactionsBefore.
-            if (nNow - nLastBroadcastTime >= 5000000) {
-                GetMainSignals().Broadcast(nTimeBestReceived, connman);
-                nLastBroadcastTime = nNow;
             }
         }
 

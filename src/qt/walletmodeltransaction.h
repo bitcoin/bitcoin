@@ -16,7 +16,6 @@ class SendCoinsRecipient;
 
 namespace interfaces {
 class Node;
-class PendingWalletTx;
 }
 
 /** Data model for a walletmodel transaction. */
@@ -27,7 +26,7 @@ public:
 
     QList<SendCoinsRecipient> getRecipients() const;
 
-    std::unique_ptr<interfaces::PendingWalletTx>& getWtx();
+    CTransactionRef& getWtx();
     unsigned int getTransactionSize();
 
     void setTransactionFee(const CAmount& newFee);
@@ -39,7 +38,7 @@ public:
 
 private:
     QList<SendCoinsRecipient> recipients;
-    std::unique_ptr<interfaces::PendingWalletTx> wtx;
+    CTransactionRef wtx;
     CAmount fee;
 };
 

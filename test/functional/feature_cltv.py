@@ -129,7 +129,7 @@ class BIP65Test(BitcoinTestFramework):
 
         # First we show that this tx is valid except for CLTV by getting it
         # rejected from the mempool for exactly that reason.
-        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Negative locktime) (code 64)', self.nodes[0].sendrawtransaction, spendtx.serialize().hex(), True)
+        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Negative locktime) (code 64)', self.nodes[0].sendrawtransaction, spendtx.serialize().hex(), 0)
 
         # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)

@@ -572,7 +572,7 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
 
     rawtx = from_node.createrawtransaction(inputs, outputs)
     signresult = from_node.signrawtransactionwithwallet(rawtx)
-    txid = from_node.sendrawtransaction(signresult["hex"], True)
+    txid = from_node.sendrawtransaction(signresult["hex"], 0)
 
     return (txid, signresult["hex"], fee)
 
@@ -646,7 +646,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
             tx.vout.append(txout)
         newtx = tx.serialize().hex()
         signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
-        txid = node.sendrawtransaction(signresult["hex"], True)
+        txid = node.sendrawtransaction(signresult["hex"], 0)
         txids.append(txid)
     return txids
 

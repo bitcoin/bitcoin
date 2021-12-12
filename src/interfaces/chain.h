@@ -52,10 +52,6 @@ class Handler;
 //!   asynchronously
 //!   (https://github.com/bitcoin/bitcoin/pull/10973#issuecomment-380101269).
 //!
-//! * The relayTransactions() and submitToMemoryPool() methods could be replaced
-//!   with a higher-level broadcastTransaction method
-//!   (https://github.com/bitcoin/bitcoin/pull/14978#issuecomment-459373984).
-//!
 //! * The initMessages() and loadWallet() methods which the wallet uses to send
 //!   notifications to the GUI should go away when GUI and wallet can directly
 //!   communicate with each other without going through the node
@@ -145,21 +141,11 @@ public:
 
         //! Check if transaction will be final given chain height current time.
         virtual bool checkFinalTx(const CTransaction& tx) = 0;
-
-        //! Add transaction to memory pool if the transaction fee is below the
-        //! amount specified by absurd_fee. Returns false if the transaction
-        //! could not be added due to the fee or for another reason.
-        virtual bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
     //! unlocked when the returned interface is freed.
     virtual std::unique_ptr<Lock> lock(bool try_lock = false) = 0;
-
-    //! Return Lock interface assuming chain is already locked. This
-    //! method is temporary and is only used in a few places to avoid changing
-    //! behavior while code is transitioned to use the Chain::Lock interface.
-    virtual std::unique_ptr<Lock> assumeLocked() = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
@@ -184,8 +170,10 @@ public:
     //! Check if transaction has descendants in mempool.
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
 
-    //! Relay transaction.
-    virtual void relayTransaction(const uint256& txid) = 0;
+    //! Transaction is added to memory pool, if the transaction fee is below the
+    //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
+    //! Return false if the transaction could not be added due to the fee or for another reason.
+    virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) = 0;
 
     //! Calculate mempool ancestor and descendant counts for the given transaction.
     virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
@@ -211,17 +199,14 @@ public:
     //! Relay dust fee setting (-dustrelayfee), reflecting lowest rate it's economical to spend.
     virtual CFeeRate relayDustFee() = 0;
 
-    //! Node max tx fee setting (-maxtxfee).
-    //! This could be replaced by a per-wallet max fee, as proposed at
-    //! https://github.com/bitcoin/bitcoin/issues/15355
-    //! But for the time being, wallets call this to access the node setting.
-    virtual CAmount maxTxFee() = 0;
-
     //! Check if pruning is enabled.
     virtual bool getPruneMode() = 0;
 
     //! Check if p2p enabled.
     virtual bool p2pEnabled() = 0;
+
+    //! Check if the node is ready to broadcast transactions.
+    virtual bool isReadyToBroadcast() = 0;
 
     //! Check if in IBD.
     virtual bool isInitialBlockDownload() = 0;
@@ -256,8 +241,8 @@ public:
         virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason) {}
         virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
         virtual void BlockDisconnected(const CBlock& block) {}
+        virtual void UpdatedBlockTip() {}
         virtual void ChainStateFlushed(const CBlockLocator& locator) {}
-        virtual void ResendWalletTransactions(Lock& locked_chain, int64_t best_block_time) {}
         virtual void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {}
         virtual void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) {}
     };

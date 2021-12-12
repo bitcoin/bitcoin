@@ -21,6 +21,8 @@ bench_bench_dash_SOURCES = \
   bench/bls_dkg.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
+  bench/data.h \
+  bench/data.cpp \
   bench/duplicate_inputs.cpp \
   bench/ecdsa.cpp \
   bench/examples.cpp \
@@ -83,7 +85,7 @@ CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_BENCH)
 
-bench/checkblock.cpp: bench/data/block813851.raw.h
+bench/data.cpp: bench/data/block813851.raw.h
 
 bitcoin_bench: $(BENCH_BINARY)
 
@@ -97,7 +99,7 @@ bench/data/%.raw.h: bench/data/%.raw
 	@$(MKDIR_P) $(@D)
 	@{ \
 	 echo "namespace raw_bench{" && \
-	 echo "static unsigned const char $(*F)[] = {" && \
+	 echo "static unsigned const char $(*F)_raw[] = {" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
 	 echo "};};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"

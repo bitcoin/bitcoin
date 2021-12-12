@@ -140,7 +140,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
-        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
 
         self.nodes[0].generate(1)
         self.sync_all()
@@ -170,7 +170,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(amount, scriptPubKey2)]
         tx.rehash()
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
-        spending_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        spending_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
         self.nodes[0].generate(1)
         self.sync_all()
         balance1 = self.nodes[1].getaddressbalance(address2)
@@ -184,7 +184,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
-        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -265,7 +265,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(amount, scriptPubKey3)]
         tx.rehash()
         signed_tx = self.nodes[2].signrawtransactionwithwallet(tx.serialize().hex())
-        memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True)
+        memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], 0)
         self.bump_mocktime(2)
 
         tx2 = CTransaction()
@@ -279,7 +279,7 @@ class AddressIndexTest(BitcoinTestFramework):
         ]
         tx2.rehash()
         signed_tx2 = self.nodes[2].signrawtransactionwithwallet(tx2.serialize().hex())
-        memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
+        memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], 0)
         self.bump_mocktime(2)
 
         mempool = self.nodes[2].getaddressmempool({"addresses": [address3]})
@@ -306,7 +306,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         self.nodes[2].importprivkey(privKey3)
         signed_tx3 = self.nodes[2].signrawtransactionwithwallet(tx.serialize().hex())
-        self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
+        self.nodes[2].sendrawtransaction(signed_tx3["hex"], 0)
         self.bump_mocktime(2)
 
         mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
@@ -338,7 +338,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         self.nodes[0].importprivkey(privkey1)
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
-        self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
 
         self.sync_all()
         mempool_deltas = self.nodes[2].getaddressmempool({"addresses": [address1]})

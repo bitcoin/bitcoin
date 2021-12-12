@@ -11,6 +11,7 @@
 #include <interfaces/wallet.h>
 #include <net.h>
 #include <node/coin.h>
+#include <node/transaction.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -37,7 +38,7 @@
 namespace interfaces {
 namespace {
 
-class LockImpl : public Chain::Lock
+class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
 {
     Optional<int> getHeight() override
     {
@@ -170,16 +171,7 @@ class LockImpl : public Chain::Lock
         LockAnnotation lock(::cs_main);
         return CheckFinalTx(tx);
     }
-    bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) override
-    {
-        LockAnnotation lock(::cs_main);
-        return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */,
-            false /* bypass limits */, absurd_fee);
-    }
-};
 
-class LockingStateImpl : public LockImpl, public UniqueLock<CCriticalSection>
-{
     using UniqueLock::UniqueLock;
 };
 
@@ -217,17 +209,11 @@ public:
     {
         m_notifications->BlockDisconnected(*block);
     }
-    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->ChainStateFlushed(locator); }
-    void ResendWalletTransactions(int64_t best_block_time, CConnman*) override
+    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
-        // `cs_main` is always held when this method is called, so it is safe to
-        // call `assumeLocked`. This is awkward, and the `assumeLocked` method
-        // should be able to be removed entirely if `ResendWalletTransactions`
-        // is replaced by a wallet timer as suggested in
-        // https://github.com/bitcoin/bitcoin/issues/15619
-        auto locked_chain = m_chain.assumeLocked();
-        m_notifications->ResendWalletTransactions(*locked_chain, best_block_time);
+        m_notifications->UpdatedBlockTip();
     }
+    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->ChainStateFlushed(locator); }
     void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override
     {
         m_notifications->NotifyChainLock(pindexChainLock, clsig);
@@ -284,13 +270,12 @@ class ChainImpl : public Chain
 public:
     std::unique_ptr<Chain::Lock> lock(bool try_lock) override
     {
-        auto result = MakeUnique<LockingStateImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
+        auto result = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
         if (try_lock && result && !*result) return {};
         // std::move necessary on some compilers due to conversion from
-        // LockingStateImpl to Lock pointer
+        // LockImpl to Lock pointer
         return std::move(result);
     }
-    std::unique_ptr<Chain::Lock> assumeLocked() override { return MakeUnique<LockImpl>(); }
     bool findBlock(const uint256& hash, CBlock* block, int64_t* time, int64_t* time_max) override
     {
         CBlockIndex* index;
@@ -324,10 +309,13 @@ public:
         auto it = ::mempool.GetIter(txid);
         return it && (*it)->GetCountWithDescendants() > 1;
     }
-    void relayTransaction(const uint256& txid) override
+    bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
     {
-        CInv inv(CCoinJoin::GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid);
-        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+        const TransactionError err = BroadcastTransaction(tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
+        // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
+        // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
+        // that Chain clients do not need to know about.
+        return TransactionError::OK == err;
     }
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {
@@ -362,9 +350,9 @@ public:
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }
     CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
     CFeeRate relayDustFee() override { return ::dustRelayFee; }
-    CAmount maxTxFee() override { return ::maxTxFee; }
     bool getPruneMode() override { return ::fPruneMode; }
     bool p2pEnabled() override { return g_connman != nullptr; }
+    bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !::ChainstateActive().IsInitialBlockDownload(); }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
     int64_t getAdjustedTime() override { return GetAdjustedTime(); }
