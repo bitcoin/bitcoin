@@ -390,8 +390,7 @@ void SelectionResult::ComputeAndSetWaste(CAmount change_cost)
 
 CAmount SelectionResult::GetWaste() const
 {
-    Assume(m_waste != std::nullopt);
-    return *m_waste;
+    return *Assert(m_waste);
 }
 
 CAmount SelectionResult::GetSelectedValue() const
@@ -425,8 +424,8 @@ std::vector<CInputCoin> SelectionResult::GetShuffledInputVector() const
 
 bool SelectionResult::operator<(SelectionResult other) const
 {
-    Assume(m_waste != std::nullopt);
-    Assume(other.m_waste != std::nullopt);
+    Assert(m_waste.has_value());
+    Assert(other.m_waste.has_value());
     // As this operator is only used in std::min_element, we want the result that has more inputs when waste are equal.
     return *m_waste < *other.m_waste || (*m_waste == *other.m_waste && m_selected_inputs.size() > other.m_selected_inputs.size());
 }
