@@ -210,7 +210,7 @@ CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string&
     }
     CKeyID key = GetKeyForDestination(keystore, dest);
     if (key.IsNull()) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("%s does not refer to a key", addr_in));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' does not refer to a key", addr_in));
     }
     CPubKey vchPubKey;
     if (!keystore.GetPubKey(key, vchPubKey)) {
