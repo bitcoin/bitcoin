@@ -15,6 +15,7 @@ class AssetBurnTest(SyscoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_bdb()
 
     def run_test(self):
         self.generate(self.nodes[0], 200)
