@@ -8,7 +8,7 @@ set -e
 
 PASS_ARGS="$*"
 
-source ./ci/matrix.sh
+source ./ci/dash/matrix.sh
 
 if [ "$RUN_INTEGRATIONTESTS" != "true" ]; then
   echo "Skipping integration tests"
