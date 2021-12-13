@@ -26,10 +26,10 @@ builder-image:
   before_script:
     - echo $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
   script:
-    - cd ci
+    - cd contrib/containers/ci
     - docker pull $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG || true
     - docker pull $CI_REGISTRY_IMAGE:builder-develop || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG --cache-from $CI_REGISTRY_IMAGE:builder-develop -t $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG -f Dockerfile.builder .
+    - docker build --cache-from $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG --cache-from $CI_REGISTRY_IMAGE:builder-develop -t $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG -f Dockerfile .
     - docker push $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
 
 .build-depends-template:
@@ -63,7 +63,7 @@ builder-image:
     # Let all branches share the same cache, which is ok because the depends subsystem is able to handle this properly (it works with hashes of all scripts)
     key:
       files:
-        - ci/Dockerfile.builder
+        - contrib/containers/ci/Dockerfile
       prefix: ${CI_JOB_NAME}
     paths:
       - depends/built
@@ -115,7 +115,7 @@ builder-image:
     # Let all branches share the same cache, which is ok because ccache is able to handle it
     key:
       files:
-        - ci/Dockerfile.builder
+        - contrib/containers/ci/Dockerfile
       prefix: ${CI_JOB_NAME}
     paths:
       - cache/ccache
