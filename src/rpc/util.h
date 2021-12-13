@@ -240,6 +240,7 @@ struct RPCResult {
         STR_AMOUNT, //!< Special string to represent a floating point amount
         STR_HEX,    //!< Special string with only hex chars
         OBJ_DYN,    //!< Special dictionary with keys that are not literals
+        OBJ_EMPTY,  //!< Special type to allow empty OBJ
         ARR_FIXED,  //!< Special array that has a fixed number of entries
         NUM_TIME,   //!< Special numeric to denote unix epoch time
         ELISION,    //!< Special type to denote elision (...)

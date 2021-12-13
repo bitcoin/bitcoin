@@ -830,6 +830,10 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         return;
     }
     case Type::OBJ_DYN:
+    case Type::OBJ_EMPTY: {
+        sections.PushSection({indent + maybe_key + "{}", Description("empty JSON object")});
+        return;
+    }
     case Type::OBJ: {
         sections.PushSection({indent + maybe_key + "{", Description("json object")});
         for (const auto& i : m_inner) {
@@ -879,6 +883,7 @@ bool RPCResult::MatchesType(const UniValue& result) const
         return UniValue::VARR == result.getType();
     }
     case Type::OBJ_DYN:
+    case Type::OBJ_EMPTY:
     case Type::OBJ: {
         return UniValue::VOBJ == result.getType();
     }
