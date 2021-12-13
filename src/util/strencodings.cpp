@@ -92,7 +92,7 @@ std::vector<unsigned char> ParseHex(const char* psz)
         signed char c = HexDigit(*psz++);
         if (c == (signed char)-1)
             break;
-        unsigned char n = (c << 4);
+        auto n{uint8_t(c << 4)};
         c = HexDigit(*psz++);
         if (c == (signed char)-1)
             break;
@@ -164,7 +164,7 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
     while (*p != 0) {
         int x = decode64_table[(unsigned char)*p];
         if (x == -1) break;
-        val.push_back(x);
+        val.push_back(uint8_t(x));
         ++p;
     }
 
@@ -243,7 +243,7 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
     while (*p != 0) {
         int x = decode32_table[(unsigned char)*p];
         if (x == -1) break;
-        val.push_back(x);
+        val.push_back(uint8_t(x));
         ++p;
     }
 
@@ -491,14 +491,14 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
 std::string ToLower(const std::string& str)
 {
     std::string r;
-    for (auto ch : str) r += ToLower((unsigned char)ch);
+    for (auto ch : str) r += ToLower(ch);
     return r;
 }
 
 std::string ToUpper(const std::string& str)
 {
     std::string r;
-    for (auto ch : str) r += ToUpper((unsigned char)ch);
+    for (auto ch : str) r += ToUpper(ch);
     return r;
 }
 
