@@ -141,8 +141,7 @@ std::string EncodeBase64(Span<const unsigned char> input)
 
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 {
-    static const int decode64_table[256] =
-    {
+    static const int8_t decode64_table[256]{
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1,
@@ -220,8 +219,7 @@ std::string EncodeBase32(const std::string& str, bool pad)
 
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 {
-    static const int decode32_table[256] =
-    {
+    static const int8_t decode32_table[256]{
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1,
