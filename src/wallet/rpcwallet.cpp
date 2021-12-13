@@ -19,7 +19,6 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <timedata.h>
-#include <txmempool.h>
 #include <util/fees.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -388,7 +387,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     pwallet->BlockUntilSyncedToCurrentChain();
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK2(mempool.cs, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
@@ -921,7 +920,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
     pwallet->BlockUntilSyncedToCurrentChain();
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK2(mempool.cs, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -3483,7 +3482,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
 
     // Sign the transaction
     auto locked_chain = pwallet->chain().lock();
-    LOCK2(mempool.cs, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
     return SignTransaction(pwallet->chain(), mtx, request.params[1], pwallet, false, request.params[2]);

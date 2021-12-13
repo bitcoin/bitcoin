@@ -17,7 +17,6 @@
 #include <netbase.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
-#include <txmempool.h>
 #include <util/moneystr.h>
 #include <util/validation.h>
 #include <validation.h>
@@ -182,7 +181,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     pwallet->BlockUntilSyncedToCurrentChain();
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK2(mempool.cs, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
     if (fundDest == nodest) {
