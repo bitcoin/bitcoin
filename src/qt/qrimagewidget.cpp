@@ -83,7 +83,14 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
         // Plan how many lines are needed
         QFontMetrics fm(font);
         const int text_width = GUIUtil::TextWidth(fm, text);
-        text_lines = (text_width + max_text_width - 1) / max_text_width;
+        if (text_width > max_text_width && text_width < max_text_width * 5 / 4) {
+            // Allow the image to grow up to 25% wider
+            qr_image_width = text_width + (2 * QR_IMAGE_TEXT_MARGIN);
+            qr_image_x_margin = (qr_image_width - QR_IMAGE_SIZE) / 2;
+            text_lines = 1;
+        } else {
+            text_lines = (text_width + max_text_width - 1) / max_text_width;
+        }
         qr_image_height += (fm.height() * text_lines) + QR_IMAGE_TEXT_MARGIN;
     }
     QImage qrAddrImage(qr_image_width, qr_image_height, QImage::Format_RGB32);
