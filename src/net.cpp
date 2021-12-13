@@ -2975,7 +2975,7 @@ ServiceFlags CConnman::GetLocalServices() const
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
 CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion)
-    : nTimeConnected(GetTimeSeconds()),
+    : nTimeConnected{GetTime<std::chrono::seconds>()},
       addr(addrIn),
       addrBind(addrBindIn),
       m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
