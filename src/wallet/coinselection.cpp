@@ -170,6 +170,9 @@ std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& ut
 {
     SelectionResult result(target_value);
 
+    // Increase target to avoid making really small change.
+    target_value += MIN_FINAL_CHANGE;
+
     std::vector<size_t> indexes;
     indexes.resize(utxo_pool.size());
     std::iota(indexes.begin(), indexes.end(), 0);

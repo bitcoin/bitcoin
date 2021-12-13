@@ -399,9 +399,8 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
         results.push_back(*knapsack_result);
     }
 
-    // We include the minimum final change for SRD as we do want to avoid making really small change.
-    // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
-    const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE;
+    // SRD always produced at least MIN_FINAL_CHANGE change
+    const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee;
     if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*srd_result);
