@@ -64,31 +64,47 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
     }
     QRcode_free(code);
 
-    const int qr_image_width = QR_IMAGE_SIZE + (2 * QR_IMAGE_MARGIN);
+    int qr_image_width = QR_IMAGE_SIZE + (2 * QR_IMAGE_MARGIN);
     int qr_image_height = qr_image_width;
+    int qr_image_x_margin = QR_IMAGE_MARGIN;
+    int text_lines;
     QFont font;
-    if (!text.isEmpty()) {
+    if (text.isEmpty()) {
+        text_lines = 0;
+    } else {
+        // Determine font to use
         font = GUIUtil::fixedPitchFont();
         font.setStretch(QFont::SemiCondensed);
         font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
-        const qreal font_size = GUIUtil::calculateIdealFontSize(qr_image_width - 2 * QR_IMAGE_TEXT_MARGIN, text, font);
+        const int max_text_width = qr_image_width - (2 * QR_IMAGE_TEXT_MARGIN);
+        const qreal font_size = GUIUtil::calculateIdealFontSize(max_text_width, text, font);
         font.setPointSizeF(font_size);
 
+        // Plan how many lines are needed
         QFontMetrics fm(font);
-        qr_image_height += fm.height() + QR_IMAGE_TEXT_MARGIN;
+        const int text_width = GUIUtil::TextWidth(fm, text);
+        text_lines = (text_width + max_text_width - 1) / max_text_width;
+        qr_image_height += (fm.height() * text_lines) + QR_IMAGE_TEXT_MARGIN;
     }
     QImage qrAddrImage(qr_image_width, qr_image_height, QImage::Format_RGB32);
     qrAddrImage.fill(0xffffff);
     {
         QPainter painter(&qrAddrImage);
-        painter.drawImage(QR_IMAGE_MARGIN, QR_IMAGE_MARGIN, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
+        painter.drawImage(qr_image_x_margin, QR_IMAGE_MARGIN, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
 
         if (!text.isEmpty()) {
             QRect paddedRect = qrAddrImage.rect();
             paddedRect.setHeight(paddedRect.height() - QR_IMAGE_TEXT_MARGIN);
 
+            QString text_wrapped = text;
+            const int char_per_line = (text.size() + text_lines - 1) / text_lines;
+            for (int line = 1, pos = 0; line < text_lines; ++line) {
+                pos += char_per_line;
+                text_wrapped.insert(pos, QChar{'\n'});
+            }
+
             painter.setFont(font);
-            painter.drawText(paddedRect, Qt::AlignBottom | Qt::AlignCenter, text);
+            painter.drawText(paddedRect, Qt::AlignBottom | Qt::AlignCenter, text_wrapped);
         }
     }
 
