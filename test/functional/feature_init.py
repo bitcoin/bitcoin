@@ -47,9 +47,6 @@ class InitStressTest(BitcoinTestFramework):
 
         def check_clean_start():
             """Ensure that node restarts successfully after various interrupts."""
-            # TODO: add -txindex=1 to fully test index initiatlization.
-            # See https://github.com/bitcoin/bitcoin/pull/23289#discussion_r735159180 for
-            # a discussion of the related bug.
             node.start()
             node.wait_for_rpc_connection()
             assert_equal(200, node.getblockcount())
@@ -69,19 +66,17 @@ class InitStressTest(BitcoinTestFramework):
             'net thread start',
             'addcon thread start',
             'loadblk thread start',
-            # TODO: re-enable - see above TODO
-            # 'txindex thread start',
-            'msghand thread start'
+            'txindex thread start',
+            'msghand thread start',
+            'net thread start',
+            'addcon thread start',
         ]
         if self.is_wallet_compiled():
             lines_to_terminate_after.append('Verifying wallet')
 
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will exit after line '{terminate_line}'")
-            node.start(
-                # TODO: add -txindex=1 to fully test index initiatlization.
-                # extra_args=['-txindex=1'],
-            )
+            node.start(extra_args=['-txindex=1'])
 
             num_total_logs = node.wait_for_debug_log([terminate_line], ignore_case=True)
             self.log.debug(f"Terminating node after {num_total_logs} log lines seen")
@@ -97,10 +92,7 @@ class InitStressTest(BitcoinTestFramework):
             num_logs = len(Path(node.debug_log_path).read_text().splitlines())
             additional_lines = random.randint(1, num_total_logs)
             self.log.debug(f"Starting node and will exit after {additional_lines} lines")
-            node.start(
-                # TODO: add -txindex=1 to fully test index initiatlization.
-                # extra_args=['-txindex=1'],
-            )
+            node.start(extra_args=['-txindex=1'])
             logfile = open(node.debug_log_path, 'r', encoding='utf8')
 
             MAX_SECS_TO_WAIT = 10
@@ -152,8 +144,7 @@ class InitStressTest(BitcoinTestFramework):
             # investigate doing this later.
 
             node.assert_start_raises_init_error(
-                # TODO: add -txindex=1 to fully test index initiatlization.
-                # extra_args=['-txindex=1'],
+                extra_args=['-txindex=1'],
                 expected_msg=err_fragment,
                 match=ErrorMatch.PARTIAL_REGEX,
             )
