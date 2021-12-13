@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-DOCKER_EXEC echo \> \$HOME/.bitcoin  # Make sure default datadir does not exist and is never read by creating a dummy file
+DOCKER_EXEC echo \> \$HOME/.dashcore  # Make sure default datadir does not exist and is never read by creating a dummy file
 OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
 OSX_SDK_PATH="depends/sdk-sources/${OSX_SDK_BASENAME}"
 
