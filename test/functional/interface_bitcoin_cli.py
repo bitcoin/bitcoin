@@ -69,7 +69,7 @@ class TestBitcoinCli(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        if self.is_wallet_compiled():
+        if self.is_specified_wallet_compiled():
             self.requires_wallet = True
 
     def skip_test_if_missing_module(self):
@@ -113,7 +113,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "Invalid value for -color option. Valid values: always, auto, never.", self.nodes[0].cli('-getinfo', '-color=foo').send_cli)
 
         self.log.info("Test -getinfo returns expected network and blockchain info")
-        if self.is_wallet_compiled():
+        if self.is_specified_wallet_compiled():
             self.nodes[0].encryptwallet(password)
         cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
@@ -138,8 +138,11 @@ class TestBitcoinCli(BitcoinTestFramework):
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
         assert_equal(cli_get_info["Proxies"], "127.0.0.1:9050 (ipv4, ipv6, onion, cjdns), 127.0.0.1:7656 (i2p)")
 
-        if self.is_wallet_compiled():
+        if self.is_specified_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
+            # Explicitly set the output type in order to have consistent tx vsize / fees
+            # for both legacy and descriptor wallets (disables the change address type detection algorithm)
+            self.restart_node(0, extra_args=["-addresstype=bech32", "-changetype=bech32"])
             assert_equal(Decimal(cli_get_info['Balance']), BALANCE)
             assert 'Balances' not in cli_get_info_string
             wallet_info = self.nodes[0].getwalletinfo()

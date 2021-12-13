@@ -8,11 +8,10 @@
 
 #include <key.h>
 #include <pubkey.h>
+#include <script/keyorigin.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>
-
-struct KeyOriginInfo;
 
 /** An interface to be implemented by keystores that support signing. */
 class SigningProvider

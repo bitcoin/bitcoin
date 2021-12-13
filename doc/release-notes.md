@@ -77,6 +77,21 @@ Otherwise, please use the `rescanblockchain` RPC to trigger a rescan. (#23123)
 Updated RPCs
 ------------
 
+- `upgradewallet` will now automatically flush the keypool if upgrading
+  from a non-HD wallet to an HD wallet, to immediately start using the
+  newly-generated HD keys. (#23093)
+
+- a new RPC `newkeypool` has been added, which will flush (entirely
+  clear and refill) the keypool. (#23093)
+
+- The `validateaddress` RPC now returns an `error_locations` array for invalid
+  addresses, with the indices of invalid character locations in the address (if
+  known). For example, this will attempt to locate up to two Bech32 errors, and
+  return their locations if successful. Success and correctness are only guaranteed
+  if fewer than two substitution errors have been made.
+  The error message returned in the `error` field now also returns more specific
+  errors when decoding fails. (#16807)
+
 - The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs
   `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`,
   `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`,
@@ -98,6 +113,15 @@ Updated RPCs
 - `lockunspent` now optionally takes a third parameter, `persistent`, which
   causes the lock to be written persistently to the wallet database. This
   allows UTXOs to remain locked even after node restarts or crashes. (#23065)
+
+- The top-level fee fields `fee`, `modifiedfee`, `ancestorfees` and `descendantfees`
+  returned by RPCs `getmempoolentry`,`getrawmempool(verbose=true)`,
+  `getmempoolancestors(verbose=true)` and `getmempooldescendants(verbose=true)`
+  are deprecated and will be removed in the next major version (use
+  `-deprecated=fees` if needed in this version). The same fee fields can be accessed
+  through the `fees` object in the result. WARNING: deprecated
+  fields `ancestorfees` and `descendantfees` are denominated in sats, whereas all
+  fields in the `fees` object are denominated in BTC. (#22689)
 
 New RPCs
 --------
