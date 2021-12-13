@@ -54,33 +54,38 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
         return false;
     }
 
-    QImage qrImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-    qrImage.fill(0xffffff);
+    QImage qrImage = QImage(code->width, code->width, QImage::Format_RGB32);
     unsigned char *p = code->data;
     for (int y = 0; y < code->width; ++y) {
         for (int x = 0; x < code->width; ++x) {
-            qrImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+            qrImage.setPixel(x, y, ((*p & 1) ? 0x0 : 0xffffff));
             ++p;
         }
     }
     QRcode_free(code);
 
-    const int qr_image_size = QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 2 * QR_IMAGE_MARGIN);
-    QImage qrAddrImage(qr_image_size, qr_image_size, QImage::Format_RGB32);
+    const int qr_image_width = QR_IMAGE_SIZE + (2 * QR_IMAGE_MARGIN);
+    int qr_image_height = qr_image_width;
+    QFont font;
+    if (!text.isEmpty()) {
+        font = GUIUtil::fixedPitchFont();
+        font.setStretch(QFont::SemiCondensed);
+        font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
+        const qreal font_size = GUIUtil::calculateIdealFontSize(qr_image_width - 2 * QR_IMAGE_TEXT_MARGIN, text, font);
+        font.setPointSizeF(font_size);
+
+        QFontMetrics fm(font);
+        qr_image_height += fm.height() + QR_IMAGE_TEXT_MARGIN;
+    }
+    QImage qrAddrImage(qr_image_width, qr_image_height, QImage::Format_RGB32);
     qrAddrImage.fill(0xffffff);
     {
         QPainter painter(&qrAddrImage);
-        painter.drawImage(QR_IMAGE_MARGIN, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
+        painter.drawImage(QR_IMAGE_MARGIN, QR_IMAGE_MARGIN, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
 
         if (!text.isEmpty()) {
             QRect paddedRect = qrAddrImage.rect();
-            paddedRect.setHeight(QR_IMAGE_SIZE + QR_IMAGE_TEXT_MARGIN);
-
-            QFont font = GUIUtil::fixedPitchFont();
-            font.setStretch(QFont::SemiCondensed);
-            font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
-            const qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 2 * QR_IMAGE_TEXT_MARGIN, text, font);
-            font.setPointSizeF(font_size);
+            paddedRect.setHeight(paddedRect.height() - QR_IMAGE_TEXT_MARGIN);
 
             painter.setFont(font);
             painter.drawText(paddedRect, Qt::AlignBottom | Qt::AlignCenter, text);
