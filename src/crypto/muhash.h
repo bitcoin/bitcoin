@@ -24,7 +24,7 @@ private:
 public:
     static constexpr size_t BYTE_SIZE = 384;
 
-#ifdef HAVE___INT128
+#ifdef __SIZEOF_INT128__
     typedef unsigned __int128 double_limb_t;
     typedef uint64_t limb_t;
     static constexpr int LIMBS = 48;
