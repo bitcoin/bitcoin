@@ -61,12 +61,10 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.log.info("Successful fetch")
         result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
         self.wait_until(lambda: self.check_for_block(short_tip), timeout=1)
-        assert(not "warnings" in result)
+        assert_equal(result, {})
 
         self.log.info("Don't fetch blocks we already have")
-        result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
-        assert("warnings" in result)
-        assert_equal(result["warnings"], "Block already downloaded")
+        assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id)
 
 if __name__ == '__main__':
     GetBlockFromPeerTest().main()
