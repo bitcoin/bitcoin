@@ -37,7 +37,7 @@ class MaxUploadTest(SyscoinTestFramework):
         self.num_nodes = 1
         # SYSCOIN
         self.extra_args = [[
-            "-maxuploadtarget=800",
+            "-maxuploadtarget=800M",
             "-acceptnonstdtxn=1",
         ]]
         self.supports_cli = False
