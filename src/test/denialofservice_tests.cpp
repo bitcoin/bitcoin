@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
     // Update the last block time for the extra peer,
     // and check that the next youngest peer gets evicted.
     vNodes.back()->fDisconnect = false;
-    vNodes.back()->nLastBlockTime = GetTime();
+    vNodes.back()->nLastBlockTime = GetTime<std::chrono::seconds>();
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_block_relay - 1; ++i) {

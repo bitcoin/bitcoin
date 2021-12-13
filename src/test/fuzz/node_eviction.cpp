@@ -21,10 +21,10 @@ FUZZ_TARGET(node_eviction)
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         eviction_candidates.push_back({
             /*id=*/fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-            /*nTimeConnected=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /*nTimeConnected=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
             /*m_min_ping_time=*/std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
-            /*nLastBlockTime=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            /*nLastTXTime=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /*nLastBlockTime=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
+            /*nLastTXTime=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
             /*fRelevantServices=*/fuzzed_data_provider.ConsumeBool(),
             /*fRelayTxes=*/fuzzed_data_provider.ConsumeBool(),
             /*fBloomFilter=*/fuzzed_data_provider.ConsumeBool(),

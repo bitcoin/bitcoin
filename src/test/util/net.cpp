@@ -47,10 +47,10 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
     for (int id = 0; id < n_candidates; ++id) {
         candidates.push_back({
             /*id=*/id,
-            /*nTimeConnected=*/static_cast<int64_t>(random_context.randrange(100)),
+            /*nTimeConnected=*/std::chrono::seconds{random_context.randrange(100)},
             /*m_min_ping_time=*/std::chrono::microseconds{random_context.randrange(100)},
-            /*nLastBlockTime=*/static_cast<int64_t>(random_context.randrange(100)),
-            /*nLastTXTime=*/static_cast<int64_t>(random_context.randrange(100)),
+            /*nLastBlockTime=*/std::chrono::seconds{random_context.randrange(100)},
+            /*nLastTXTime=*/std::chrono::seconds{random_context.randrange(100)},
             /*fRelevantServices=*/random_context.randbool(),
             /*fRelayTxes=*/random_context.randbool(),
             /*fBloomFilter=*/random_context.randbool(),
