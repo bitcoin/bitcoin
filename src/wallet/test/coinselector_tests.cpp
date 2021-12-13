@@ -230,7 +230,11 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     expected_result.Clear();
 
     // Cost of change is less than the difference between target value and utxo sum
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0));
+    add_coin(1 * CENT, 1, expected_result);
+    const auto result41 = SelectCoinsBnB(GroupCoins(utxo_pool), 0.1 * CENT, 0);
+    BOOST_CHECK(result41);
+    BOOST_CHECK_EQUAL(result41->GetSelectedValue(), 1 * CENT);
+    BOOST_CHECK(EquivalentResult(expected_result, *result41));
     expected_result.Clear();
 
     // Select 10 Cent
@@ -254,17 +258,17 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     BOOST_CHECK_EQUAL(result6->GetSelectedValue(), 10 * CENT);
     // FIXME: this test is redundant with the above, because 1 Cent is selected, not "too small"
     // BOOST_CHECK(EquivalentResult(expected_result, *result));
-
-    // Select 0.25 Cent, not possible
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.25 * CENT, 0.5 * CENT));
     expected_result.Clear();
 
     // Iteration exhaustion test
     CAmount target = make_hard_case(17, utxo_pool);
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), target, 0)); // Should exhaust
+    const auto result71 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 0); // Should exhaust
+    BOOST_CHECK(result71);
+    BOOST_CHECK(result71->GetSelectedValue() > target);
     target = make_hard_case(14, utxo_pool);
-    const auto result7 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 0); // Should not exhaust
-    BOOST_CHECK(result7);
+    const auto result72 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 0); // Should not exhaust
+    BOOST_CHECK(result72);
+    BOOST_CHECK_EQUAL(result72->GetSelectedValue(), target);
 
     // Test same value early bailout optimization
     utxo_pool.clear();
@@ -289,16 +293,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     ////////////////////
     // Behavior tests //
     ////////////////////
-    // Select 1 Cent with pool of only greater than 5 Cent
-    utxo_pool.clear();
-    for (int i = 5; i <= 20; ++i) {
-        add_coin(i * CENT, i, utxo_pool);
-    }
-    // Run 100 times, to make sure it is never finding a solution
-    for (int i = 0; i < 100; ++i) {
-        BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 2 * CENT));
-    }
-
     // Make sure that effective value is working in AttemptSelection when BnB is used
     CoinSelectionParams coin_selection_params_bnb(/* change_output_size= */ 0,
                                                   /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(3000),
