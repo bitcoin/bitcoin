@@ -142,17 +142,17 @@ class GetblockstatsTest(BitcoinTestFramework):
         inv_sel_stat = 'asdfghjkl'
         inv_stats = [
             [inv_sel_stat],
-            ['minfee' , inv_sel_stat],
+            ['minfee', inv_sel_stat],
             [inv_sel_stat, 'minfee'],
             ['minfee', inv_sel_stat, 'maxfee'],
         ]
         for inv_stat in inv_stats:
-            assert_raises_rpc_error(-8, 'Invalid selected statistic %s' % inv_sel_stat,
+            assert_raises_rpc_error(-8, f"Invalid selected statistic '{inv_sel_stat}'",
                                     self.nodes[0].getblockstats, hash_or_height=1, stats=inv_stat)
 
         # Make sure we aren't always returning inv_sel_stat as the culprit stat
-        assert_raises_rpc_error(-8, 'Invalid selected statistic aaa%s' % inv_sel_stat,
-                                self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee' , 'aaa%s' % inv_sel_stat])
+        assert_raises_rpc_error(-8, f"Invalid selected statistic 'aaa{inv_sel_stat}'",
+                                self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee', f'aaa{inv_sel_stat}'])
         # Mainchain's genesis block shouldn't be found on regtest
         assert_raises_rpc_error(-5, 'Block not found', self.nodes[0].getblockstats,
                                 hash_or_height='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
