@@ -212,7 +212,7 @@ private:
     /** Set of inputs selected by the algorithm to use in the transaction */
     std::set<CInputCoin> m_selected_inputs;
     /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
-    const CAmount m_target;
+    CAmount m_target;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
     bool m_use_effective{false};
     /** The computed waste */
@@ -234,15 +234,22 @@ public:
     void AddInput(const OutputGroup& group);
 
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
-    void ComputeAndSetWaste(CAmount change_cost);
+    void ComputeAndSetWaste(const CoinSelectionParams& coin_selection_params);
     [[nodiscard]] CAmount GetWaste() const;
+
+    void Merge(const SelectionResult& other);
 
     /** Get m_selected_inputs */
     const std::set<CInputCoin>& GetInputSet() const;
     /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
+
     std::vector<CInputCoin> GetShuffledInputVector() const;
 
     bool operator<(SelectionResult other) const;
+
+    CAmount GetInputsWeight() const;
+
+    CAmount GetChange(const CoinSelectionParams& coin_selection_params) const;
 };
 
 std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change);

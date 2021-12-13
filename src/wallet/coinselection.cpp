@@ -6,6 +6,7 @@
 
 #include <consensus/amount.h>
 #include <policy/feerate.h>
+#include <policy/policy.h>
 #include <util/check.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -386,8 +387,15 @@ CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cos
     return waste;
 }
 
-void SelectionResult::ComputeAndSetWaste(CAmount change_cost)
+void SelectionResult::ComputeAndSetWaste(const CoinSelectionParams& coin_selection_params)
 {
+    const CAmount change = GetChange(coin_selection_params);
+
+    CAmount change_cost = 0;
+    if (change > 0) {
+        change_cost = coin_selection_params.m_cost_of_change;
+    }
+
     m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
 }
 
@@ -410,7 +418,15 @@ void SelectionResult::Clear()
 void SelectionResult::AddInput(const OutputGroup& group)
 {
     util::insert(m_selected_inputs, group.m_outputs);
-    m_use_effective = !group.m_subtract_fee_outputs;
+    m_use_effective = m_use_effective || !group.m_subtract_fee_outputs;
+}
+
+void SelectionResult::Merge(const SelectionResult& other)
+{
+    m_target += other.m_target;
+    m_use_effective |= other.m_use_effective;
+    m_force_no_change |= other.m_force_no_change;
+    util::insert(m_selected_inputs, other.m_selected_inputs);
 }
 
 const std::set<CInputCoin>& SelectionResult::GetInputSet() const
@@ -431,4 +447,53 @@ bool SelectionResult::operator<(SelectionResult other) const
     Assert(other.m_waste.has_value());
     // As this operator is only used in std::min_element, we want the result that has more inputs when waste are equal.
     return *m_waste < *other.m_waste || (*m_waste == *other.m_waste && m_selected_inputs.size() > other.m_selected_inputs.size());
+}
+
+CAmount SelectionResult::GetInputsWeight() const
+{
+    // WU required to store input counter
+    // 1 vbyte for the default case already counted in non_input_size
+    int weight = (GetSizeOfCompactSize(m_selected_inputs.size()) - 1)*4;
+    bool hasWitnessInputs = false;
+
+    for (const auto& coin : m_selected_inputs) {
+        weight += coin.m_input_weight;
+        hasWitnessInputs |= coin.m_isSegwit;
+    }
+
+    // non_input_size counted witness marker and flag as 1vbyte, correcting this now for correct final fee
+    if (hasWitnessInputs) {
+        weight -= 2;
+    } else {
+        weight -= 4;
+
+        // correct for witness stack size counted but not serialized when there is not witness inputs
+        weight -= m_selected_inputs.size();
+    }
+
+    return weight;
+}
+
+CAmount SelectionResult::GetChange(const CoinSelectionParams& coin_selection_params) const
+{
+    if (m_force_no_change) return 0;
+
+    CAmount change = GetSelectedValue() - m_target;
+    // TODO: rename var maybe?
+    if (!m_use_effective) { // opposite of m_subtract_fee_outputs
+        // m_target already includes not_input_fees
+        // but as they are payed by recipients we can add them back to our change
+        const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
+        change += not_input_fees;
+    } else {
+        const auto size = GetVirtualTransactionSize(GetInputsWeight(), 0, 0);
+        change -= coin_selection_params.m_effective_feerate.GetFee(size);
+    }
+    assert(change >= 0);
+
+    if (change <= coin_selection_params.m_cost_of_change) { // TODO: less or less_or_equal
+        change = 0;
+    }
+
+    return change;
 }
