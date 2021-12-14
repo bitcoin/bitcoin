@@ -379,7 +379,14 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const std::string
     auto wallet_file = wallet_path / "wallet.dat";
     fs::copy_file(backup_file, wallet_file, fs::copy_option::fail_if_exists);
 
-    return LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+    auto wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+
+    if (!wallet) {
+        fs::remove(wallet_file);
+        fs::remove(wallet_path);
+    }
+
+    return wallet;
 }
 
 /** @defgroup mapWallet
