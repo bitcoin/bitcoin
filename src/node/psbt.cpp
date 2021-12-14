@@ -105,7 +105,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             }
         );
         if (!MoneyRange(out_amt)) {
-            result.SetInvalid(strprintf("PSBT is not valid. Output amount invalid"));
+            result.SetInvalid("PSBT is not valid. Output amount invalid");
             return result;
         }
 
