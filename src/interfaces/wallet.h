@@ -322,6 +322,9 @@ public:
    //! Return default wallet directory.
    virtual std::string getWalletDir() = 0;
 
+   //! Restore backup wallet
+   virtual std::unique_ptr<Wallet> restoreWallet(const std::string& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+
    //! Return available wallets in wallet directory.
    virtual std::vector<std::string> listWalletDir() = 0;
 
