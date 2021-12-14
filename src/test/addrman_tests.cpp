@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     BOOST_CHECK_EQUAL(addr_ret1.ToString(), "250.1.1.1:8333");
 
     // Test: move addr to tried, select from new expected nothing returned.
-    addrman.Good(CAddress(addr1, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr1, NODE_NONE)));
     BOOST_CHECK_EQUAL(addrman.size(), 1U);
     auto addr_ret2 = addrman.Select(newOnly).first;
     BOOST_CHECK_EQUAL(addr_ret2.ToString(), "[::]:0");
@@ -220,11 +220,11 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     CService addr7 = ResolveService("250.4.6.6", 8333);
 
     BOOST_CHECK(addrman.Add({CAddress(addr5, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
-    addrman.Good(CAddress(addr5, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr5, NODE_NONE)));
     BOOST_CHECK(addrman.Add({CAddress(addr6, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
-    addrman.Good(CAddress(addr6, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr6, NODE_NONE)));
     BOOST_CHECK(addrman.Add({CAddress(addr7, NODE_NONE)}, ResolveService("250.1.1.3", 8333)));
-    addrman.Good(CAddress(addr7, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr7, NODE_NONE)));
 
     // Test: 6 addrs + 1 addr from last test = 7.
     BOOST_CHECK_EQUAL(addrman.size(), 7U);
