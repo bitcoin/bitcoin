@@ -412,6 +412,10 @@ private:
     std::vector<CBlockIndex*> vChain;
 
 public:
+    CChain() = default;
+    CChain(const CChain&) = delete;
+    CChain& operator=(const CChain&) = delete;
+
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
     CBlockIndex *Genesis() const {
         return vChain.size() > 0 ? vChain[0] : nullptr;
