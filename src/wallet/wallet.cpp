@@ -364,7 +364,7 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const std::string
 
     if (!fs::exists(fs::u8path(backup_file))) {
         error = Untranslated("Backup file does not exist");
-        status = DatabaseStatus::FAILED_BAD_PATH;
+        status = DatabaseStatus::FAILED_INVALID_BACKUP_FILE;
         return nullptr;
     }
 

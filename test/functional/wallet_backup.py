@@ -115,12 +115,16 @@ class WalletBackupTest(BitcoinTestFramework):
         nonexistent_wallet_file = os.path.join(self.nodes[0].datadir, 'nonexistent_wallet.bak')
         wallet_name = "res0"
         assert_raises_rpc_error(-8, "Backup file does not exist", node.restorewallet, wallet_name, nonexistent_wallet_file)
+        not_created_wallet_file = os.path.join(node.datadir, self.chain, 'wallets', wallet_name)
+        assert not os.path.exists(not_created_wallet_file)
 
     def restore_wallet_existent_name(self):
         node = self.nodes[3]
-        wallet_file = os.path.join(self.nodes[0].datadir, 'wallet.bak')
+        backup_file = os.path.join(self.nodes[0].datadir, 'wallet.bak')
         wallet_name = "res0"
-        assert_raises_rpc_error(-8, "Wallet name already exists.", node.restorewallet, wallet_name, wallet_file)
+        wallet_file = os.path.join(node.datadir, self.chain, 'wallets', wallet_name)
+        error_message = "Failed to create database path '{}'. Database already exists.".format(wallet_file)
+        assert_raises_rpc_error(-36, error_message, node.restorewallet, wallet_name, backup_file)
 
     def init_three(self):
         self.init_wallet(node=0)
