@@ -1104,7 +1104,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, int64_t nTime)
     CService addr_you = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
     uint64_t your_services{addr.nServices};
 
-    const bool tx_relay = !m_ignore_incoming_txs && pnode.m_tx_relay != nullptr;
+    const bool tx_relay = !m_ignore_incoming_txs && pnode.m_tx_relay != nullptr && !pnode.IsFeelerConn();
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, my_services, nTime,
             your_services, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
             my_services, CService(), // Together the pre-version-31402 serialization of CAddress "addrMe" (without nTime)
