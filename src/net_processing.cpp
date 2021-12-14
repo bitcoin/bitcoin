@@ -444,7 +444,7 @@ private:
      */
     std::map<NodeId, PeerRef> m_peer_map GUARDED_BY(m_peer_mutex);
 
-    std::atomic<std::chrono::microseconds> m_next_send_inv_to_incoming{0us};
+    std::atomic<std::chrono::microseconds> m_next_inv_to_inbounds{0us};
 
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted GUARDED_BY(cs_main) = 0;
@@ -526,8 +526,8 @@ private:
      * peer, a spy node could make multiple inbound connections to us to
      * accurately determine when we received the transaction (and potentially
      * determine the transaction's origin). */
-    std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now,
-                                                     std::chrono::seconds average_interval);
+    std::chrono::microseconds NextInvToInbounds(std::chrono::microseconds now,
+                                                std::chrono::seconds average_interval);
 
     /** Have we requested this block from a peer */
     bool IsBlockRequested(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -830,16 +830,16 @@ static void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUS
     nPreferredDownload += state->fPreferredDownload;
 }
 
-std::chrono::microseconds PeerManagerImpl::PoissonNextSendInbound(std::chrono::microseconds now,
-                                                                  std::chrono::seconds average_interval)
+std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
+                                                             std::chrono::seconds average_interval)
 {
-    if (m_next_send_inv_to_incoming.load() < now) {
+    if (m_next_inv_to_inbounds.load() < now) {
         // If this function were called from multiple threads simultaneously
         // it would possible that both update the next send variable, and return a different result to their caller.
         // This is not possible in practice as only the net processing thread invokes this function.
-        m_next_send_inv_to_incoming = GetExponentialRand(now, average_interval);
+        m_next_inv_to_inbounds = GetExponentialRand(now, average_interval);
     }
-    return m_next_send_inv_to_incoming;
+    return m_next_inv_to_inbounds;
 }
 
 bool PeerManagerImpl::IsBlockRequested(const uint256& hash)
@@ -4809,7 +4809,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 if (pto->m_tx_relay->nNextInvSend < current_time) {
                     fSendTrickle = true;
                     if (pto->IsInboundConn()) {
-                        pto->m_tx_relay->nNextInvSend = PoissonNextSendInbound(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL);
+                        pto->m_tx_relay->nNextInvSend = NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL);
                     } else {
                         pto->m_tx_relay->nNextInvSend = GetExponentialRand(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
                     }
