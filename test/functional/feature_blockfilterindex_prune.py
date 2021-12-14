@@ -14,7 +14,7 @@ from test_framework.util import (
 class FeatureBlockfilterindexPruneTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-fastprune", "-prune=1", "-blockfilterindex=1"]]
+        self.extra_args = [["-fastprune", "-prune=1", "-blockfilterindex=1","-dip3params=9000:9000"]]
 
     def sync_index(self, height):
         expected = {'basic block filter index': {'synced': True, 'best_block_height': height}}
