@@ -19,11 +19,12 @@ class CScheduler;
 class CTxMemPool;
 class ChainstateManager;
 class PeerManager;
+class PeerManager;
 namespace interfaces {
-class Chain;
-class ChainClient;
-class Init;
-class WalletClient;
+    class Chain;
+    class ChainClient;
+    class Init;
+    class WalletClient;
 } // namespace interfaces
 
 //! NodeContext struct containing references to chain state and connection
@@ -46,7 +47,7 @@ struct NodeContext {
     std::unique_ptr<PeerManager> peerman;
     std::unique_ptr<ChainstateManager> chainman;
     std::unique_ptr<BanMan> banman;
-    ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
+    ArgsManager* args{nullptr}; // Currently, a raw pointer because the memory is not managed by this struct
     std::unique_ptr<interfaces::Chain> chain;
     //! List of all chain clients (wallet processes or other client) connected to node.
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
