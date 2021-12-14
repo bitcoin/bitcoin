@@ -901,19 +901,16 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     for (unsigned int i = 1; i < 36; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
         BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-        addrman.Good(addr);
 
         // No collision yet.
-        BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman.Good(addr));
     }
 
     // Collision between 36 and 19.
     CService addr = ResolveService("250.1.1.36");
     BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-    addrman.Good(addr);
+    BOOST_CHECK(!addrman.Good(addr));
 
-    BOOST_CHECK_EQUAL(addrman.size(), 36);
     auto info = addrman.SelectTriedCollision().first;
     BOOST_CHECK_EQUAL(info.ToString(), "250.1.1.19:0");
 
@@ -924,17 +921,17 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     addrman.ResolveCollisions();
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
 
-    // If 36 was swapped for 19, then this should cause no collisions.
-    BOOST_CHECK(!addrman.Add({CAddress(addr, NODE_NONE)}, source));
-    addrman.Good(addr);
-
+    // If 36 was swapped for 19, then adding 36 to tried should fail because we
+    // are attempting to add a duplicate.
+    // We check this by verifying Good() returns false and also verifying that
+    // we have no collisions.
+    BOOST_CHECK(!addrman.Good(addr));
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
 
-    // If we insert 19 it should collide with 36
+    // 19 should fail as a collision (not a duplicate) if we now attempt to move
+    // it to the tried table.
     CService addr19 = ResolveService("250.1.1.19");
-    BOOST_CHECK(!addrman.Add({CAddress(addr19, NODE_NONE)}, source));
-    addrman.Good(addr19);
-
+    BOOST_CHECK(!addrman.Good(addr19));
     BOOST_CHECK_EQUAL(addrman.SelectTriedCollision().first.ToString(), "250.1.1.36:0");
 
     addrman.ResolveCollisions();
