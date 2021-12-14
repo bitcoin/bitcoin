@@ -539,8 +539,8 @@ public:
         const CBlockIndex* block1 = m_node.chainman->m_blockman.LookupBlockIndex(block_hash1);
         const CBlockIndex* block2 = m_node.chainman->m_blockman.LookupBlockIndex(block_hash2);
         const CBlockIndex* ancestor = block1 && block2 ? LastCommonAncestor(block1, block2) : nullptr;
-        // Using & instead of && below to avoid short circuiting and leaving
-        // output uninitialized. Cast bool to int to avoid -Wbitwise-instead-of-logical
+        // Using & instead of && below to avoid short-circuiting and leaving
+        // output uninitialized. Cast bool to int to avoid -Bitwise-instead-of-logical
         // compiler warnings.
         return int{FillBlock(ancestor, ancestor_out, lock, active)} &
                int{FillBlock(block1, block1_out, lock, active)} &
