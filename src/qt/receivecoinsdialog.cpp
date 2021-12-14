@@ -256,9 +256,18 @@ void ReceiveCoinsDialog::copyColumnToClipboard(int column)
 // context menu
 void ReceiveCoinsDialog::showMenu(const QPoint &point)
 {
-    if (!selectedRow().isValid()) {
+    const QModelIndex sel = selectedRow();
+    if (!sel.isValid()) {
         return;
     }
+
+    // disable context menu actions when appropriate
+    const RecentRequestsTableModel* const submodel = model->getRecentRequestsTableModel();
+    const RecentRequestEntry& req = submodel->entry(sel.row());
+    copyLabelAction->setDisabled(req.recipient.label.isEmpty());
+    copyMessageAction->setDisabled(req.recipient.message.isEmpty());
+    copyAmountAction->setDisabled(req.recipient.amount == 0);
+
     contextMenu->exec(QCursor::pos());
 }
 

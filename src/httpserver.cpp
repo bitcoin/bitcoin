@@ -381,13 +381,7 @@ bool InitHTTPServer()
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
     evhttp_set_gencb(http, http_request_cb, nullptr);
-    /* Only POST are supported, but we return HTTP 405 for the others */
-    evhttp_set_allowed_methods(http,
-        EVHTTP_REQ_GET |
-        EVHTTP_REQ_POST |
-        EVHTTP_REQ_HEAD |
-        EVHTTP_REQ_PUT |
-        EVHTTP_REQ_DELETE);
+
     if (!HTTPBindAddresses(http)) {
         LogPrintf("Unable to bind any endpoint for RPC server\n");
         return false;
