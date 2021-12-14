@@ -96,6 +96,8 @@ bool BaseIndex::Init()
                     prune_violation = false;
                     break;
                 }
+                // block->pprev must exist at this point, since block_to_test is part of the chain
+                // and thus must be encountered when going backwards from the tip
                 assert(block->pprev);
                 block = block->pprev;
             }
