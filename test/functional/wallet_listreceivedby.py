@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the listreceivedbyaddress RPC."""
+"""Test the listreceivedbyaddress, listreceivedbylabel, getreceivedybaddress, and getreceivedbylabel RPCs."""
 from decimal import Decimal
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
@@ -17,6 +18,8 @@ from test_framework.wallet_util import test_address
 class ReceivedByTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        # Test deprecated exclude coinbase on second node
+        self.extra_args = [[], ["-deprecatedrpc=exclude_coinbase"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -25,7 +28,6 @@ class ReceivedByTest(BitcoinTestFramework):
     def run_test(self):
         # Generate block to get out of IBD
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
 
         # save the number of coinbase reward addresses so far
         num_cb_reward_addresses = len(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True))
@@ -44,7 +46,6 @@ class ReceivedByTest(BitcoinTestFramework):
                             True)
         # Bury Tx under 10 block so it will be returned by listreceivedbyaddress
         self.generate(self.nodes[1], 10)
-        self.sync_all()
         assert_array_result(self.nodes[1].listreceivedbyaddress(),
                             {"address": addr},
                             {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]})
@@ -79,7 +80,6 @@ class ReceivedByTest(BitcoinTestFramework):
         other_addr = self.nodes[1].getnewaddress()
         txid2 = self.nodes[0].sendtoaddress(other_addr, 0.1)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         # Same test as above should still pass
         expected = {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 11, "txids": [txid, ]}
         res = self.nodes[1].listreceivedbyaddress(0, True, True, addr)
@@ -116,7 +116,6 @@ class ReceivedByTest(BitcoinTestFramework):
 
         # Bury Tx under 10 block so it will be returned by the default getreceivedbyaddress
         self.generate(self.nodes[1], 10)
-        self.sync_all()
         balance = self.nodes[1].getreceivedbyaddress(addr)
         assert_equal(balance, Decimal("0.1"))
 
@@ -145,7 +144,6 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_equal(balance, balance_by_label)
 
         self.generate(self.nodes[1], 10)
-        self.sync_all()
         # listreceivedbylabel should return updated received list
         assert_array_result(self.nodes[1].listreceivedbylabel(),
                             {"label": label},
@@ -166,6 +164,124 @@ class ReceivedByTest(BitcoinTestFramework):
         # Test getreceivedbylabel for 0 amount labels
         balance = self.nodes[1].getreceivedbylabel("mynewlabel")
         assert_equal(balance, Decimal("0.0"))
+
+        self.log.info("Tests for including coinbase outputs")
+
+        # Generate block reward to address with label
+        label = "label"
+        address = self.nodes[0].getnewaddress(label)
+
+        reward = Decimal("25")
+        self.generatetoaddress(self.nodes[0], 1, address, sync_fun=self.no_op)
+        hash = self.nodes[0].getbestblockhash()
+
+        self.log.info("getreceivedbyaddress returns nothing with defaults")
+        balance = self.nodes[0].getreceivedbyaddress(address)
+        assert_equal(balance, 0)
+
+        self.log.info("getreceivedbyaddress returns block reward when including immature coinbase")
+        balance = self.nodes[0].getreceivedbyaddress(address=address, include_immature_coinbase=True)
+        assert_equal(balance, reward)
+
+        self.log.info("getreceivedbylabel returns nothing with defaults")
+        balance = self.nodes[0].getreceivedbylabel("label")
+        assert_equal(balance, 0)
+
+        self.log.info("getreceivedbylabel returns block reward when including immature coinbase")
+        balance = self.nodes[0].getreceivedbylabel(label="label", include_immature_coinbase=True)
+        assert_equal(balance, reward)
+
+        self.log.info("listreceivedbyaddress does not include address with defaults")
+        assert_array_result(self.nodes[0].listreceivedbyaddress(),
+                            {"address": address},
+                            {}, True)
+
+        self.log.info("listreceivedbyaddress includes address when including immature coinbase")
+        assert_array_result(self.nodes[0].listreceivedbyaddress(minconf=1, include_immature_coinbase=True),
+                            {"address": address},
+                            {"address": address, "amount": reward})
+
+        self.log.info("listreceivedbylabel does not include label with defaults")
+        assert_array_result(self.nodes[0].listreceivedbylabel(),
+                            {"label": label},
+                            {}, True)
+
+        self.log.info("listreceivedbylabel includes label when including immature coinbase")
+        assert_array_result(self.nodes[0].listreceivedbylabel(minconf=1, include_immature_coinbase=True),
+                            {"label": label},
+                            {"label": label, "amount": reward})
+
+        self.log.info("Generate 100 more blocks")
+        self.generate(self.nodes[0], COINBASE_MATURITY, sync_fun=self.no_op)
+
+        self.log.info("getreceivedbyaddress returns reward with defaults")
+        balance = self.nodes[0].getreceivedbyaddress(address)
+        assert_equal(balance, reward)
+
+        self.log.info("getreceivedbylabel returns reward with defaults")
+        balance = self.nodes[0].getreceivedbylabel("label")
+        assert_equal(balance, reward)
+
+        self.log.info("listreceivedbyaddress includes address with defaults")
+        assert_array_result(self.nodes[0].listreceivedbyaddress(),
+                            {"address": address},
+                            {"address": address, "amount": reward})
+
+        self.log.info("listreceivedbylabel includes label with defaults")
+        assert_array_result(self.nodes[0].listreceivedbylabel(),
+                            {"label": label},
+                            {"label": label, "amount": reward})
+
+        self.log.info("Invalidate block that paid to address")
+        self.nodes[0].invalidateblock(hash)
+
+        self.log.info("getreceivedbyaddress does not include invalidated block when minconf is 0 when including immature coinbase")
+        balance = self.nodes[0].getreceivedbyaddress(address=address, minconf=0, include_immature_coinbase=True)
+        assert_equal(balance, 0)
+
+        self.log.info("getreceivedbylabel does not include invalidated block when minconf is 0 when including immature coinbase")
+        balance = self.nodes[0].getreceivedbylabel(label="label", minconf=0, include_immature_coinbase=True)
+        assert_equal(balance, 0)
+
+        self.log.info("listreceivedbyaddress does not include invalidated block when minconf is 0 when including immature coinbase")
+        assert_array_result(self.nodes[0].listreceivedbyaddress(minconf=0, include_immature_coinbase=True),
+                            {"address": address},
+                            {}, True)
+
+        self.log.info("listreceivedbylabel does not include invalidated block when minconf is 0 when including immature coinbase")
+        assert_array_result(self.nodes[0].listreceivedbylabel(minconf=0, include_immature_coinbase=True),
+                            {"label": label},
+                            {}, True)
+
+        # Test exclude_coinbase
+        address2 = self.nodes[1].getnewaddress(label)
+        self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 1, address2, sync_fun=self.no_op)
+
+        self.log.info("getreceivedbyaddress returns nothing when excluding coinbase")
+        balance = self.nodes[1].getreceivedbyaddress(address2)
+        assert_equal(balance, 0)
+
+        self.log.info("getreceivedbylabel returns nothing when excluding coinbase")
+        balance = self.nodes[1].getreceivedbylabel("label")
+        assert_equal(balance, 0)
+
+        self.log.info("listreceivedbyaddress does not include address when excluding coinbase")
+        assert_array_result(self.nodes[1].listreceivedbyaddress(),
+                            {"address": address2},
+                            {}, True)
+
+        self.log.info("listreceivedbylabel does not include label when excluding coinbase")
+        assert_array_result(self.nodes[1].listreceivedbylabel(),
+                            {"label": label},
+                            {}, True)
+
+        self.log.info("getreceivedbyaddress throws when setting include_immature_coinbase with deprecated exclude_coinbase")
+        assert_raises_rpc_error(-8, 'include_immature_coinbase is incompatible with deprecated exclude_coinbase', self.nodes[1].getreceivedbyaddress, address2, 1, True)
+
+
+        self.log.info("listreceivedbyaddress throws when setting include_immature_coinbase with deprecated exclude_coinbase")
+        assert_raises_rpc_error(-8, 'include_immature_coinbase is incompatible with deprecated exclude_coinbase', self.nodes[1].listreceivedbyaddress, 1, False, False, "", True)
+
 
 if __name__ == '__main__':
     ReceivedByTest().main()

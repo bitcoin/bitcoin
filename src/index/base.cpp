@@ -91,11 +91,12 @@ bool BaseIndex::Init()
             const CBlockIndex* block = active_chain.Tip();
             prune_violation = true;
             // check backwards from the tip if we have all block data until we reach the indexes bestblock
-            while (block_to_test && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+            while (block_to_test && block && (block->nStatus & BLOCK_HAVE_DATA)) {
                 if (block_to_test == block) {
                     prune_violation = false;
                     break;
                 }
+                assert(block->pprev);
                 block = block->pprev;
             }
         }
@@ -321,7 +322,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 
     {
         // Skip the queue-draining stuff if we know we're caught up with
-        // ::ChainActive().Tip().
+        // m_chain.Tip().
         LOCK(cs_main);
         const CBlockIndex* chain_tip = m_chainstate->m_chain.Tip();
         const CBlockIndex* best_block_index = m_best_block_index.load();

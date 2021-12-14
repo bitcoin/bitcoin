@@ -12,6 +12,7 @@ Developer Notes
       - [Generating Documentation](#generating-documentation)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
+        - [Show sources in debugging](#show-sources-in-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
         - [`debug.log`](#debuglog)
         - [Signet, testnet, and regtest modes](#signet-testnet-and-regtest-modes)
@@ -252,6 +253,35 @@ Development tips and tricks
 
 Run configure with `--enable-debug` to add additional compiler flags that
 produce better debugging builds.
+
+### Show sources in debugging
+
+If you have ccache enabled, absolute paths are stripped from debug information
+with the -fdebug-prefix-map and -fmacro-prefix-map options (if supported by the
+compiler). This might break source file detection in case you move binaries
+after compilation, debug from the directory other than the project root or use
+an IDE that only supports absolute paths for debugging.
+
+There are a few possible fixes:
+
+1. Configure source file mapping.
+
+For `gdb` create or append to `.gdbinit` file:
+```
+set substitute-path ./src /path/to/project/root/src
+```
+
+For `lldb` create or append to `.lldbinit` file:
+```
+settings set target.source-map ./src /path/to/project/root/src
+```
+
+2. Add a symlink to the `./src` directory:
+```
+ln -s /path/to/project/root/src src
+```
+
+3. Use `debugedit` to modify debug information in the binary.
 
 ### Compiling for gprof profiling
 
@@ -999,6 +1029,9 @@ Current subtrees include:
   - Subtree at https://github.com/bitcoin-core/univalue-subtree ; maintained by Core contributors.
   - Deviates from upstream https://github.com/jgarzik/univalue.
 
+- src/minisketch
+  - Upstream at https://github.com/sipa/minisketch ; maintained by Core contributors.
+
 Upgrading LevelDB
 ---------------------
 
@@ -1220,6 +1253,12 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   timestamps in the documentation.
 
   - *Rationale*: User-facing consistency.
+
+- Use `fs::path::u8string()` and `fs::u8path()` functions when converting path
+  to JSON strings, not `fs::PathToString` and `fs::PathFromString`
+
+  - *Rationale*: JSON strings are Unicode strings, not byte strings, and
+    RFC8259 requires JSON to be encoded as UTF-8.
 
 Internal interface guidelines
 -----------------------------

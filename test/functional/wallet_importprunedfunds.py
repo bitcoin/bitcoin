@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importprunedfunds and removeprunedfunds RPCs."""
@@ -26,8 +26,6 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Mining blocks...")
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
-
-        self.sync_all()
 
         # address
         address1 = self.nodes[0].getnewaddress()

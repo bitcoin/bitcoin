@@ -51,23 +51,23 @@ BOOST_AUTO_TEST_CASE(util_datadir)
 {
     // Use local args variable instead of m_args to avoid making assumptions about test setup
     ArgsManager args;
-    args.ForceSetArg("-datadir", m_path_root.string());
+    args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
 
     const fs::path dd_norm = args.GetDataDirBase();
 
-    args.ForceSetArg("-datadir", dd_norm.string() + "/");
+    args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/");
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
-    args.ForceSetArg("-datadir", dd_norm.string() + "/.");
+    args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/.");
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
-    args.ForceSetArg("-datadir", dd_norm.string() + "/./");
+    args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/./");
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
-    args.ForceSetArg("-datadir", dd_norm.string() + "/.//");
+    args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/.//");
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 }
@@ -142,21 +142,32 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
         "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f");
 
     BOOST_CHECK_EQUAL(
-        HexStr(Span<const unsigned char>(
-               ParseHex_expected + sizeof(ParseHex_expected),
-               ParseHex_expected + sizeof(ParseHex_expected))),
+        HexStr(Span{ParseHex_expected}.last(0)),
         "");
 
     BOOST_CHECK_EQUAL(
-        HexStr(Span<const unsigned char>(ParseHex_expected, ParseHex_expected)),
+        HexStr(Span{ParseHex_expected}.first(0)),
         "");
 
-    std::vector<unsigned char> ParseHex_vec(ParseHex_expected, ParseHex_expected + 5);
+    {
+        const std::vector<char> in_s{ParseHex_expected, ParseHex_expected + 5};
+        const Span<const uint8_t> in_u{MakeUCharSpan(in_s)};
+        const Span<const std::byte> in_b{MakeByteSpan(in_s)};
+        const std::string out_exp{"04678afdb0"};
 
-    BOOST_CHECK_EQUAL(
-        HexStr(ParseHex_vec),
-        "04678afdb0"
-    );
+        BOOST_CHECK_EQUAL(HexStr(in_u), out_exp);
+        BOOST_CHECK_EQUAL(HexStr(in_s), out_exp);
+        BOOST_CHECK_EQUAL(HexStr(in_b), out_exp);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(span_write_bytes)
+{
+    std::array mut_arr{uint8_t{0xaa}, uint8_t{0xbb}};
+    const auto mut_bytes{MakeWritableByteSpan(mut_arr)};
+    mut_bytes[1] = std::byte{0x11};
+    BOOST_CHECK_EQUAL(mut_arr.at(0), 0xaa);
+    BOOST_CHECK_EQUAL(mut_arr.at(1), 0x11);
 }
 
 BOOST_AUTO_TEST_CASE(util_Join)
@@ -1181,13 +1192,13 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
 {
     // Test writing setting.
     TestArgsManager args1;
-    args1.ForceSetArg("-datadir", m_path_root.string());
+    args1.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     args1.LockSettings([&](util::Settings& settings) { settings.rw_settings["name"] = "value"; });
     args1.WriteSettingsFile();
 
     // Test reading setting.
     TestArgsManager args2;
-    args2.ForceSetArg("-datadir", m_path_root.string());
+    args2.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     args2.ReadSettingsFile();
     args2.LockSettings([&](util::Settings& settings) { BOOST_CHECK_EQUAL(settings.rw_settings["name"].get_str(), "value"); });
 
@@ -2454,6 +2465,54 @@ BOOST_AUTO_TEST_CASE(remove_prefix)
     BOOST_CHECK_EQUAL(RemovePrefix("f", "foo"), "f");
     BOOST_CHECK_EQUAL(RemovePrefix("", "foo"), "");
     BOOST_CHECK_EQUAL(RemovePrefix("", ""), "");
+}
+
+BOOST_AUTO_TEST_CASE(util_ParseByteUnits)
+{
+    auto noop = ByteUnit::NOOP;
+
+    // no multiplier
+    BOOST_CHECK_EQUAL(ParseByteUnits("1", noop).value(), 1);
+    BOOST_CHECK_EQUAL(ParseByteUnits("0", noop).value(), 0);
+
+    BOOST_CHECK_EQUAL(ParseByteUnits("1k", noop).value(), 1000ULL);
+    BOOST_CHECK_EQUAL(ParseByteUnits("1K", noop).value(), 1ULL << 10);
+
+    BOOST_CHECK_EQUAL(ParseByteUnits("2m", noop).value(), 2'000'000ULL);
+    BOOST_CHECK_EQUAL(ParseByteUnits("2M", noop).value(), 2ULL << 20);
+
+    BOOST_CHECK_EQUAL(ParseByteUnits("3g", noop).value(), 3'000'000'000ULL);
+    BOOST_CHECK_EQUAL(ParseByteUnits("3G", noop).value(), 3ULL << 30);
+
+    BOOST_CHECK_EQUAL(ParseByteUnits("4t", noop).value(), 4'000'000'000'000ULL);
+    BOOST_CHECK_EQUAL(ParseByteUnits("4T", noop).value(), 4ULL << 40);
+
+    // check default multiplier
+    BOOST_CHECK_EQUAL(ParseByteUnits("5", ByteUnit::K).value(), 5ULL << 10);
+
+    // NaN
+    BOOST_CHECK(!ParseByteUnits("", noop));
+    BOOST_CHECK(!ParseByteUnits("foo", noop));
+
+    // whitespace
+    BOOST_CHECK(!ParseByteUnits("123m ", noop));
+    BOOST_CHECK(!ParseByteUnits(" 123m", noop));
+
+    // no +-
+    BOOST_CHECK(!ParseByteUnits("-123m", noop));
+    BOOST_CHECK(!ParseByteUnits("+123m", noop));
+
+    // zero padding
+    BOOST_CHECK_EQUAL(ParseByteUnits("020M", noop).value(), 20ULL << 20);
+
+    // fractions not allowed
+    BOOST_CHECK(!ParseByteUnits("0.5T", noop));
+
+    // overflow
+    BOOST_CHECK(!ParseByteUnits("18446744073709551615g", noop));
+
+    // invalid unit
+    BOOST_CHECK(!ParseByteUnits("1x", noop));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -68,13 +68,14 @@ void CleanupBlockRevFiles()
     LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
     fs::path blocksdir = gArgs.GetBlocksDirPath();
     for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
+        const std::string path = fs::PathToString(it->path().filename());
         if (fs::is_regular_file(*it) &&
-            it->path().filename().string().length() == 12 &&
-            it->path().filename().string().substr(8,4) == ".dat")
+            path.length() == 12 &&
+            path.substr(8,4) == ".dat")
         {
-            if (it->path().filename().string().substr(0, 3) == "blk") {
-                mapBlockFiles[it->path().filename().string().substr(3, 5)] = it->path();
-            } else if (it->path().filename().string().substr(0, 3) == "rev") {
+            if (path.substr(0, 3) == "blk") {
+                mapBlockFiles[path.substr(3, 5)] = it->path();
+            } else if (path.substr(0, 3) == "rev") {
                 remove(it->path());
             }
         }
@@ -204,7 +205,7 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
         FlatFilePos pos(*it, 0);
         fs::remove(BlockFileSeq().FileName(pos));
         fs::remove(UndoFileSeq().FileName(pos));
-        LogPrintf("Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
+        LogPrint(BCLog::BLOCKSTORE, "Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
     }
 }
 
@@ -261,7 +262,7 @@ bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight,
 
     if ((int)nFile != nLastBlockFile) {
         if (!fKnown) {
-            LogPrint(BCLog::VALIDATION, "Leaving block file %i: %s\n", nLastBlockFile, vinfoBlockFile[nLastBlockFile].ToString());
+            LogPrint(BCLog::BLOCKSTORE, "Leaving block file %i: %s\n", nLastBlockFile, vinfoBlockFile[nLastBlockFile].ToString());
         }
         FlushBlockFile(!fKnown, finalize_undo);
         nLastBlockFile = nFile;
@@ -527,14 +528,14 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         for (const fs::path& path : vImportFiles) {
             FILE* file = fsbridge::fopen(path, "rb");
             if (file) {
-                LogPrintf("Importing blocks file %s...\n", path.string());
+                LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
                 chainman.ActiveChainstate().LoadExternalBlockFile(file);
                 if (ShutdownRequested()) {
                     LogPrintf("Shutdown requested. Exit %s\n", __func__);
                     return;
                 }
             } else {
-                LogPrintf("Warning: Could not open blocks file %s\n", path.string());
+                LogPrintf("Warning: Could not open blocks file %s\n", fs::PathToString(path));
             }
         }
 

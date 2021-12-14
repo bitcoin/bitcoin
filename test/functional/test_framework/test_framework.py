@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Base class for RPC testing."""
@@ -19,7 +19,7 @@ import tempfile
 import time
 
 from typing import List
-from .address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from .authproxy import JSONRPCException
 from . import coverage
 from .p2p import NetworkThread
@@ -101,7 +101,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.supports_cli = True
         self.bind_to_localhost_only = True
         self.parse_args()
-        self.disable_syscall_sandbox = self.options.nosandbox
+        self.disable_syscall_sandbox = self.options.nosandbox or self.options.valgrind
         self.default_wallet_name = "default_wallet" if self.options.descriptors else ""
         self.wallet_data_filename = "wallet.dat"
         # Optional list of wallet names that can be set in set_test_params to
@@ -188,7 +188,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("--perf", dest="perf", default=False, action="store_true",
                             help="profile running nodes with perf for the duration of the test")
         parser.add_argument("--valgrind", dest="valgrind", default=False, action="store_true",
-                            help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown, valgrind 3.14 or later required")
+                            help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown. valgrind 3.14 or later required. Forces --nosandbox.")
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
         parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
@@ -413,7 +413,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # To ensure that all nodes are out of IBD, the most recent block
             # must have a timestamp not too old (see IsInitialBlockDownload()).
             self.log.debug('Generate a block with current time')
-            block_hash = self.generate(self.nodes[0], 1)[0]
+            block_hash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
             block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
                 n.submitblock(block)
@@ -423,15 +423,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def import_deterministic_coinbase_privkeys(self):
         for i in range(self.num_nodes):
-            self.init_wallet(i)
+            self.init_wallet(node=i)
 
-    def init_wallet(self, i):
-        wallet_name = self.default_wallet_name if self.wallet_names is None else self.wallet_names[i] if i < len(self.wallet_names) else False
+    def init_wallet(self, *, node):
+        wallet_name = self.default_wallet_name if self.wallet_names is None else self.wallet_names[node] if node < len(self.wallet_names) else False
         if wallet_name is not False:
-            n = self.nodes[i]
+            n = self.nodes[node]
             if wallet_name is not None:
                 n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=True)
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -627,20 +627,27 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.connect_nodes(1, 2)
         self.sync_all()
 
-    def generate(self, generator, *args, **kwargs):
-        blocks = generator.generate(*args, **kwargs)
+    def no_op(self):
+        pass
+
+    def generate(self, generator, *args, sync_fun=None, **kwargs):
+        blocks = generator.generate(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generateblock(self, generator, *args, **kwargs):
-        blocks = generator.generateblock(*args, **kwargs)
+    def generateblock(self, generator, *args, sync_fun=None, **kwargs):
+        blocks = generator.generateblock(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generatetoaddress(self, generator, *args, **kwargs):
-        blocks = generator.generatetoaddress(*args, **kwargs)
+    def generatetoaddress(self, generator, *args, sync_fun=None, **kwargs):
+        blocks = generator.generatetoaddress(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def generatetodescriptor(self, generator, *args, **kwargs):
-        blocks = generator.generatetodescriptor(*args, **kwargs)
+    def generatetodescriptor(self, generator, *args, sync_fun=None, **kwargs):
+        blocks = generator.generatetodescriptor(*args, invalid_call=False, **kwargs)
+        sync_fun() if sync_fun else self.sync_all()
         return blocks
 
     def sync_blocks(self, nodes=None, wait=1, timeout=60):
@@ -770,7 +777,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # block in the cache does not age too much (have an old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
-            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [ADDRESS_BCRT1_P2WSH_OP_TRUE]
+            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [create_deterministic_address_bcrt1_p2tr_op_true()[0]]
             assert_equal(len(gen_addresses), 4)
             for i in range(8):
                 self.generatetoaddress(
@@ -878,6 +885,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET")
+
+    def is_specified_wallet_compiled(self):
+        """Checks whether wallet support for the specified type
+           (legacy or descriptor wallet) was compiled."""
+        if self.options.descriptors:
+            return self.is_sqlite_compiled()
+        else:
+            return self.is_bdb_compiled()
 
     def is_wallet_tool_compiled(self):
         """Checks whether bitcoin-wallet was compiled."""

@@ -221,7 +221,7 @@ namespace GUIUtil
     QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction);
 
     /** Convert seconds into a QString with days, hours, mins, secs */
-    QString formatDurationStr(int secs);
+    QString formatDurationStr(std::chrono::seconds dur);
 
     /** Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
@@ -427,6 +427,15 @@ namespace GUIUtil
      * Shows a QDialog instance asynchronously, and deletes it on close.
      */
     void ShowModalDialogAndDeleteOnClose(QDialog* dialog);
+
+    inline bool IsEscapeOrBack(int key)
+    {
+        if (key == Qt::Key_Escape) return true;
+#ifdef Q_OS_ANDROID
+        if (key == Qt::Key_Back) return true;
+#endif // Q_OS_ANDROID
+        return false;
+    }
 
 } // namespace GUIUtil
 

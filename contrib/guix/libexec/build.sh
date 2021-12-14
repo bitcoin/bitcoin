@@ -147,7 +147,7 @@ case "$HOST" in
         #
         # After the native packages in depends are built, the ld wrapper should
         # no longer affect our build, as clang would instead reach for
-        # x86_64-apple-darwin19-ld from cctools
+        # x86_64-apple-darwin-ld from cctools
         ;;
     *) export GUIX_LD_WRAPPER_DISABLE_RPATH=yes ;;
 esac
@@ -169,8 +169,8 @@ case "$HOST" in
                 arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
                 aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
                 riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
-                powerpc64-linux-gnu)   echo /lib/ld64.so.1;;
-                powerpc64le-linux-gnu) echo /lib/ld64.so.2;;
+                powerpc64-linux-gnu)   echo /lib64/ld64.so.1;;
+                powerpc64le-linux-gnu) echo /lib64/ld64.so.2;;
                 *)                     exit 1 ;;
             esac
         )
@@ -238,9 +238,6 @@ mkdir -p "$OUTDIR"
 
 # CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
-case "$HOST" in
-    *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
-esac
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
@@ -263,7 +260,7 @@ case "$HOST" in
     *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
 esac
 
-# Using --no-tls-get-addr-optimize retains compatibility with glibc 2.17, by
+# Using --no-tls-get-addr-optimize retains compatibility with glibc 2.18, by
 # avoiding a PowerPC64 optimisation available in glibc 2.22 and later.
 # https://sourceware.org/binutils/docs-2.35/ld/PowerPC64-ELF64.html
 case "$HOST" in
@@ -297,7 +294,7 @@ mkdir -p "$DISTSRC"
                     ${HOST_CXXFLAGS:+CXXFLAGS="${HOST_CXXFLAGS}"} \
                     ${HOST_LDFLAGS:+LDFLAGS="${HOST_LDFLAGS}"}
 
-    sed -i.old 's/-lstdc++ //g' config.status libtool src/univalue/config.status src/univalue/libtool
+    sed -i.old 's/-lstdc++ //g' config.status libtool
 
     # Build Bitcoin Core
     make --jobs="$JOBS" ${V:+V=1}
@@ -423,8 +420,8 @@ mkdir -p "$DISTSRC"
                 find "${DISTNAME}" -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin19/osx64}.tar.gz" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin19/osx64}.tar.gz" && exit 1 )
+                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin/osx64}.tar.gz" \
+                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin/osx64}.tar.gz" && exit 1 )
                 ;;
         esac
     )  # $DISTSRC/installed

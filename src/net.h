@@ -6,9 +6,8 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrman.h>
-#include <bloom.h>
 #include <chainparams.h>
+#include <common/bloom.h>
 #include <compat.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
@@ -37,9 +36,10 @@
 #include <thread>
 #include <vector>
 
-class CScheduler;
-class CNode;
+class AddrMan;
 class BanMan;
+class CNode;
+class CScheduler;
 struct bilingual_str;
 
 /** Default for -whitelistrelay. */
@@ -48,7 +48,7 @@ static const bool DEFAULT_WHITELISTRELAY = true;
 static const bool DEFAULT_WHITELISTFORCERELAY = false;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
-static const int TIMEOUT_INTERVAL = 20 * 60;
+static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
 /** Run the feeler connection loop once every 2 minutes. **/
 static constexpr auto FEELER_INTERVAL = 2min;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
@@ -70,7 +70,7 @@ static const bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
-static constexpr uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
+static const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
@@ -241,8 +241,8 @@ public:
     NodeId nodeid;
     ServiceFlags nServices;
     bool fRelayTxes;
-    int64_t nLastSend;
-    int64_t nLastRecv;
+    std::chrono::seconds m_last_send;
+    std::chrono::seconds m_last_recv;
     int64_t nLastTXTime;
     int64_t nLastBlockTime;
     int64_t nTimeConnected;
@@ -308,7 +308,7 @@ public:
     /** read and deserialize data, advances msg_bytes data pointer */
     virtual int Read(Span<const uint8_t>& msg_bytes) = 0;
     // decomposes a message from the context
-    virtual std::optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err) = 0;
+    virtual CNetMessage GetMessage(std::chrono::microseconds time, bool& reject_message) = 0;
     virtual ~TransportDeserializer() {}
 };
 
@@ -372,7 +372,7 @@ public:
         }
         return ret;
     }
-    std::optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
+    CNetMessage GetMessage(std::chrono::microseconds time, bool& reject_message) override;
 };
 
 /** The TransportSerializer prepares messages for the network transport
@@ -420,8 +420,8 @@ public:
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
-    std::atomic<int64_t> nLastSend{0};
-    std::atomic<int64_t> nLastRecv{0};
+    std::atomic<std::chrono::seconds> m_last_send{0s};
+    std::atomic<std::chrono::seconds> m_last_recv{0s};
     //! Unix epoch time at peer connection, in seconds.
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
@@ -784,15 +784,15 @@ public:
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
-        m_peer_connect_timeout = connOptions.m_peer_connect_timeout;
+        m_peer_connect_timeout = std::chrono::seconds{connOptions.m_peer_connect_timeout};
         {
             LOCK(cs_totalBytesSent);
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
-            LOCK(cs_vAddedNodes);
-            vAddedNodes = connOptions.m_added_nodes;
+            LOCK(m_added_nodes_mutex);
+            m_added_nodes = connOptions.m_added_nodes;
         }
         m_onion_binds = connOptions.onion_binds;
     }
@@ -823,8 +823,8 @@ public:
     using NodeFn = std::function<void(CNode*)>;
     void ForEachNode(const NodeFn& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -832,8 +832,8 @@ public:
 
     void ForEachNode(const NodeFn& func) const
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -942,7 +942,7 @@ public:
     std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
-    bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
+    bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
 private:
     struct ListenSocket {
@@ -968,7 +968,7 @@ private:
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
-     * the `vNodes` member.
+     * the `m_nodes` member.
      * @param[in] hSocket Connected socket to communicate with the peer.
      * @param[in] permissionFlags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
@@ -983,9 +983,57 @@ private:
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
-    bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
-    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+
+    /**
+     * Generate a collection of sockets to check for IO readiness.
+     * @param[in] nodes Select from these nodes' sockets.
+     * @param[out] recv_set Sockets to check for read readiness.
+     * @param[out] send_set Sockets to check for write readiness.
+     * @param[out] error_set Sockets to check for errors.
+     * @return true if at least one socket is to be checked (the returned set is not empty)
+     */
+    bool GenerateSelectSet(const std::vector<CNode*>& nodes,
+                           std::set<SOCKET>& recv_set,
+                           std::set<SOCKET>& send_set,
+                           std::set<SOCKET>& error_set);
+
+    /**
+     * Check which sockets are ready for IO.
+     * @param[in] nodes Select from these nodes' sockets.
+     * @param[out] recv_set Sockets which are ready for read.
+     * @param[out] send_set Sockets which are ready for write.
+     * @param[out] error_set Sockets which have errors.
+     * This calls `GenerateSelectSet()` to gather a list of sockets to check.
+     */
+    void SocketEvents(const std::vector<CNode*>& nodes,
+                      std::set<SOCKET>& recv_set,
+                      std::set<SOCKET>& send_set,
+                      std::set<SOCKET>& error_set);
+
+    /**
+     * Check connected and listening sockets for IO readiness and process them accordingly.
+     */
     void SocketHandler();
+
+    /**
+     * Do the read/write for connected sockets that are ready for IO.
+     * @param[in] nodes Nodes to process. The socket of each node is checked against
+     * `recv_set`, `send_set` and `error_set`.
+     * @param[in] recv_set Sockets that are ready for read.
+     * @param[in] send_set Sockets that are ready for send.
+     * @param[in] error_set Sockets that have an exceptional condition (error).
+     */
+    void SocketHandlerConnected(const std::vector<CNode*>& nodes,
+                                const std::set<SOCKET>& recv_set,
+                                const std::set<SOCKET>& send_set,
+                                const std::set<SOCKET>& error_set);
+
+    /**
+     * Accept incoming connections, one from each read-ready listening socket.
+     * @param[in] recv_set Sockets that are ready for read.
+     */
+    void SocketHandlerListening(const std::set<SOCKET>& recv_set);
+
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
@@ -1026,9 +1074,8 @@ private:
     static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
-    mutable RecursiveMutex cs_totalBytesRecv;
     mutable RecursiveMutex cs_totalBytesSent;
-    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv) {0};
+    std::atomic<uint64_t> nTotalBytesRecv{0};
     uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
 
     // outbound limit & stats
@@ -1037,7 +1084,7 @@ private:
     uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
 
     // P2P timeout in seconds
-    int64_t m_peer_connect_timeout;
+    std::chrono::seconds m_peer_connect_timeout;
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
@@ -1051,12 +1098,12 @@ private:
     bool fAddressesInitialized{false};
     AddrMan& addrman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
-    RecursiveMutex m_addr_fetches_mutex;
-    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
-    mutable RecursiveMutex cs_vAddedNodes;
-    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
-    std::list<CNode*> vNodesDisconnected;
-    mutable RecursiveMutex cs_vNodes;
+    Mutex m_addr_fetches_mutex;
+    std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
+    mutable Mutex m_added_nodes_mutex;
+    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::list<CNode*> m_nodes_disconnected;
+    mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
@@ -1176,6 +1223,43 @@ private:
      * an address and port that are designated for incoming Tor connections.
      */
     std::vector<CService> m_onion_binds;
+
+    /**
+     * RAII helper to atomically create a copy of `m_nodes` and add a reference
+     * to each of the nodes. The nodes are released when this object is destroyed.
+     */
+    class NodesSnapshot
+    {
+    public:
+        explicit NodesSnapshot(const CConnman& connman, bool shuffle)
+        {
+            {
+                LOCK(connman.m_nodes_mutex);
+                m_nodes_copy = connman.m_nodes;
+                for (auto& node : m_nodes_copy) {
+                    node->AddRef();
+                }
+            }
+            if (shuffle) {
+                Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
+            }
+        }
+
+        ~NodesSnapshot()
+        {
+            for (auto& node : m_nodes_copy) {
+                node->Release();
+            }
+        }
+
+        const std::vector<CNode*>& Nodes() const
+        {
+            return m_nodes_copy;
+        }
+
+    private:
+        std::vector<CNode*> m_nodes_copy;
+    };
 
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the abandontransaction RPC.
@@ -30,7 +30,6 @@ class AbandonConflictTest(BitcoinTestFramework):
 
     def run_test(self):
         self.generate(self.nodes[1], COINBASE_MATURITY)
-        self.sync_blocks()
         balance = self.nodes[0].getbalance()
         txA = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txB = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
@@ -43,7 +42,6 @@ class AbandonConflictTest(BitcoinTestFramework):
         # Can not abandon confirmed transaction
         assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: self.nodes[0].abandontransaction(txid=txA))
 
-        self.sync_blocks()
         newbalance = self.nodes[0].getbalance()
         assert balance - newbalance < Decimal("0.001")  #no more than fees lost
         balance = newbalance
@@ -120,6 +118,14 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_equal(newbalance, balance + Decimal("30"))
         balance = newbalance
 
+        self.log.info("Check abandoned transactions in listsinceblock")
+        listsinceblock = self.nodes[0].listsinceblock()
+        txAB1_listsinceblock = [d for d in listsinceblock['transactions'] if d['txid'] == txAB1 and d['category'] == 'send']
+        for tx in txAB1_listsinceblock:
+            assert_equal(tx['abandoned'], True)
+            assert_equal(tx['confirmations'], 0)
+            assert_equal(tx['trusted'], False)
+
         # Verify that even with a low min relay fee, the tx is not reaccepted from wallet on startup once abandoned
         self.restart_node(0, extra_args=["-minrelaytxfee=0.00001"])
         assert self.nodes[0].getmempoolinfo()['loaded']
@@ -159,7 +165,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
         signed = self.nodes[0].signrawtransactionwithwallet(tx)
         self.nodes[1].sendrawtransaction(signed["hex"])
-        self.generate(self.nodes[1], 1)
+        self.generate(self.nodes[1], 1, sync_fun=self.no_op)
 
         self.connect_nodes(0, 1)
         self.sync_blocks()
@@ -205,7 +211,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         #assert_equal(newbalance, balance - Decimal("10"))
         self.log.info("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
         self.log.info("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
-        self.log.info(str(balance) + " -> " + str(newbalance) + " ?")
+        assert_equal(balance, newbalance)
 
 
 if __name__ == '__main__':

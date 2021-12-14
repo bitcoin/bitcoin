@@ -19,7 +19,7 @@ CMD_SHEBANG_FILES = "git grep --full-name --line-number -I '^#!'"
 ALLOWED_FILENAME_REGEXP = "^[a-zA-Z0-9/_.@][a-zA-Z0-9/_.@-]*$"
 ALLOWED_SOURCE_FILENAME_REGEXP = "^[a-z0-9_./-]+$"
 ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP = (
-    "^src/(secp256k1/|univalue/|test/fuzz/FuzzedDataProvider.h)"
+    "^src/(secp256k1/|minisketch/|univalue/|test/fuzz/FuzzedDataProvider.h)"
 )
 ALLOWED_PERMISSION_NON_EXECUTABLES = 644
 ALLOWED_PERMISSION_EXECUTABLES = 755

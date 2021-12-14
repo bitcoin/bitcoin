@@ -52,9 +52,7 @@ int main(int argc, char* argv[])
         BasicTestingSetup dummy{CBaseChainParams::REGTEST};
     }
 
-    NodeContext node_context;
-    int unused_exit_status;
-    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node_context, argc, argv, unused_exit_status);
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
     gArgs.ForceSetArg("-listen", "0");
     gArgs.ForceSetArg("-listenonion", "0");
     gArgs.ForceSetArg("-discover", "0");
@@ -71,7 +69,7 @@ int main(int argc, char* argv[])
     #if defined(WIN32)
         if (getenv("QT_QPA_PLATFORM") == nullptr) _putenv_s("QT_QPA_PLATFORM", "minimal");
     #else
-        setenv("QT_QPA_PLATFORM", "minimal", /* overwrite */ 0);
+        setenv("QT_QPA_PLATFORM", "minimal", 0 /* overwrite */);
     #endif
 
     // Don't remove this, it's needed to access

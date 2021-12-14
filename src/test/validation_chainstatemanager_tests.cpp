@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     CChainState& c1 = WITH_LOCK(::cs_main, return manager.InitializeChainstate(&mempool));
     chainstates.push_back(&c1);
     c1.InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+        /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
 
     BOOST_CHECK(!manager.IsSnapshotActive());
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     BOOST_CHECK_EQUAL(manager.SnapshotBlockhash().value(), snapshot_blockhash);
 
     c2.InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+        /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
     WITH_LOCK(::cs_main, c2.InitCoinsCache(1 << 23));
     // Unlike c1, which doesn't have any blocks. Gets us different tip, height.
     c2.LoadGenesisBlock();
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
     CChainState& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool));
     chainstates.push_back(&c1);
     c1.InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+        /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
 
     {
         LOCK(::cs_main);
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
     CChainState& c2 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool, GetRandHash()));
     chainstates.push_back(&c2);
     c2.InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+        /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
 
     {
         LOCK(::cs_main);

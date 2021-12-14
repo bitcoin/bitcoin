@@ -13,7 +13,6 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <node/context.h>
 #include <node/ui_interface.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>
@@ -154,10 +153,11 @@ static bool InitSettings()
 
     std::vector<std::string> errors;
     if (!gArgs.ReadSettingsFile(&errors)) {
-        bilingual_str error = _("Settings file could not be read");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
+        std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be read");
+        std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
+        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
 
-        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Reset | QMessageBox::Abort);
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Reset | QMessageBox::Abort);
         /*: Explanatory text shown on startup when the settings file cannot be read.
             Prompts user to make a choice between resetting or aborting. */
         messagebox.setInformativeText(QObject::tr("Do you want to reset settings to default values, or to abort without making changes?"));
@@ -176,10 +176,11 @@ static bool InitSettings()
 
     errors.clear();
     if (!gArgs.WriteSettingsFile(&errors)) {
-        bilingual_str error = _("Settings file could not be written");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
+        std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be written");
+        std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
+        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
 
-        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Ok);
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Ok);
         /*: Explanatory text shown on startup when the settings file could not be written.
             Prompts user to check that we have the ability to write to the file.
             Explains that the user has the option of running without a settings file.*/
@@ -272,7 +273,6 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     // We don't hold a direct pointer to the splash screen after creation, but the splash
     // screen will take care of deleting itself when finish() happens.
     m_splash->show();
-    connect(this, &BitcoinApplication::requestedInitialize, m_splash, &SplashScreen::handleLoadWallet);
     connect(this, &BitcoinApplication::splashFinished, m_splash, &SplashScreen::finish);
     connect(this, &BitcoinApplication::requestedShutdown, m_splash, &QWidget::close);
 }
@@ -462,9 +462,7 @@ int GuiMain(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
 
-    NodeContext node_context;
-    int unused_exit_status;
-    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node_context, argc, argv, unused_exit_status);
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
 
     SetupEnvironment();
     util::ThreadSetInternalName("main");

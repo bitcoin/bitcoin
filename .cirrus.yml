@@ -51,10 +51,6 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *BASE_TEMPLATE
   << : *MAIN_TEMPLATE
 
-depends_sdk_cache_template: &DEPENDS_SDK_CACHE_TEMPLATE
-  depends_sdk_cache:
-    folder: "depends/sdk-sources"
-
 compute_credits_template: &CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
@@ -79,17 +75,18 @@ task:
   << : *FILTER_TEMPLATE
   windows_container:
     cpu: 4
-    memory: 16G
+    memory: 8G
     image: cirrusci/windowsservercore:visualstudio2019
   timeout_in: 120m
   env:
     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin;%PATH%'
     PYTHONUTF8: 1
-    VCPKG_TAG: '75522bb1f2e7d863078bcd06322348f053a9e33f'
-    VCPKG_FEATURE_FLAGS: 'manifests'
-    QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.12/5.12.11/single/qt-everywhere-src-5.12.11.zip'
-    QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.12.11.zip'
-    QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.12.11'
+    CI_VCPKG_TAG: '2021.05.12'
+    VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
+    VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
+    QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.zip'
+    QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.15.2.zip'
+    QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.15.2'
     QTBASEDIR: 'C:\Qt_static'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
@@ -118,11 +115,23 @@ task:
       - cd %QT_SOURCE_DIR%
       - mkdir build
       - cd build
-      - ..\configure -release -silent -opensource -confirm-license -opengl desktop -no-shared -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -no-libjpeg -nomake examples -nomake tests -nomake tools -no-dbus -no-libudev -no-icu -no-gtk -no-opengles3 -no-angle -no-sql-sqlite -no-sql-odbc -no-sqlite -no-libudev -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcanvas3d -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquickcontrols -skip qtquickcontrols2 -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-sql -no-feature-sqlmodel -prefix %QTBASEDIR%
+      - ..\configure -release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml -prefix %QTBASEDIR%
       - jom
       - jom install
-  vcpkg_cache:
-    folder: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
+  vcpkg_tools_cache:
+    folder: '%VCPKG_DOWNLOADS%\tools'
+    reupload_on_changes: false
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+  vcpkg_binary_cache:
+    folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+    populate_script:
+      - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
   install_python_script:
     - choco install --yes --no-progress python3 --version=3.9.6
     - pip install zmq
@@ -131,7 +140,7 @@ task:
     - cd ..
     - git clone --quiet https://github.com/microsoft/vcpkg.git
     - cd vcpkg
-    - git -c advice.detachedHead=false checkout %VCPKG_TAG%
+    - git -c advice.detachedHead=false checkout %CI_VCPKG_TAG%
     - .\bootstrap-vcpkg -disableMetrics
     - echo set(VCPKG_BUILD_TYPE release) >> triplets\x64-windows-static.cmake
     - .\vcpkg integrate install
@@ -151,7 +160,7 @@ task:
     - netsh int ipv4 set dynamicport tcp start=1025 num=64511
     - netsh int ipv6 set dynamicport tcp start=1025 num=64511
     # Exclude feature_dbcrash for now due to timeout
-    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --failfast --extended --exclude feature_dbcrash
+    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --extended --exclude feature_dbcrash
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
@@ -195,10 +204,10 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: '[depends, sanitizers: thread (TSan), no gui] [hirsute]'
+  name: '[TSan, depends, no gui] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:hirsute
+    image: ubuntu:jammy
     cpu: 6  # Increase CPU and Memory to avoid timeout
     memory: 24G
   env:
@@ -207,7 +216,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: '[depends, sanitizers: memory (MSan)] [focal]'
+  name: '[MSan, depends] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -216,16 +225,16 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [hirsute]'
+  name: '[ASan + LSan + UBSan + integer, no depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:hirsute
+    image: ubuntu:jammy
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: '[no depends, sanitizers: fuzzer,address,undefined,integer] [focal]'
+  name: '[fuzzer,address,undefined,integer, no depends] [focal]'
   only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_BASE_BRANCH == $CIRRUS_DEFAULT_BRANCH
   << : *GLOBAL_TASK_TEMPLATE
   container:
@@ -260,18 +269,22 @@ task:
 
 task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
-  << : *GLOBAL_TASK_TEMPLATE
+  << : *BASE_TEMPLATE
+  macos_sdk_cache:
+    folder: "depends/SDKs/$MACOS_SDK"
+    fingerprint_key: "$MACOS_SDK"
+  << : *MAIN_TEMPLATE
   container:
     image: ubuntu:focal
   env:
+    MACOS_SDK: "Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers"
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 11 native [gui] [no depends]'
+  name: 'macOS 11 native [gui, sqlite only] [no depends]'
   brew_install_script:
-    - brew install boost libevent berkeley-db4 qt@5 miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
+    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
@@ -284,8 +297,10 @@ task:
 
 task:
   name: 'ARM64 Android APK [focal]'
-  << : *DEPENDS_SDK_CACHE_TEMPLATE
   << : *BASE_TEMPLATE
+  android_sdk_cache:
+    folder: "depends/SDKs/android"
+    fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.1.7779620"
   depends_sources_cache:
     folder: "depends/sources"
     fingerprint_script: git rev-list -1 HEAD ./depends

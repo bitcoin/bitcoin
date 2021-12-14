@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -92,6 +92,7 @@ fi
 
 EXIT_CODE=0
 
+# shellcheck disable=SC2046
 if ! PYTHONWARNINGS="ignore" flake8 --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}") $(
     if [[ $# == 0 ]]; then
         git ls-files "*.py"
@@ -102,7 +103,8 @@ if ! PYTHONWARNINGS="ignore" flake8 --ignore=B,C,E,F,I,N,W --select=$(IFS=","; e
     EXIT_CODE=1
 fi
 
-if ! mypy --ignore-missing-imports --show-error-codes $(git ls-files "test/functional/*.py" "contrib/devtools/*.py"); then
+mapfile -t FILES < <(git ls-files "test/functional/*.py" "contrib/devtools/*.py")
+if ! mypy --show-error-codes "${FILES[@]}"; then
     EXIT_CODE=1
 fi
 

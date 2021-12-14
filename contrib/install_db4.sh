@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ expand_path() {
   cd "${1}" && pwd -P
 }
 
-BDB_PREFIX="$(expand_path ${1})/db4"; shift;
+BDB_PREFIX="$(expand_path "${1}")/db4"; shift;
 BDB_VERSION='db-4.8.30.NC'
 BDB_HASH='12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef'
 BDB_URL="https://download.oracle.com/berkeley-db/${BDB_VERSION}.tar.gz"
@@ -55,12 +55,21 @@ http_get() {
     echo "File ${2} already exists; not downloading again"
   elif check_exists curl; then
     curl --insecure --retry 5 "${1}" -o "${2}"
-  else
+  elif check_exists wget; then
     wget --no-check-certificate "${1}" -O "${2}"
+  else
+    echo "Simple transfer utilities 'curl' and 'wget' not found. Please install one of them and try again."
+    exit 1
   fi
 
   sha256_check "${3}" "${2}"
 }
+
+# Ensure the commands we use exist on the system
+if ! check_exists patch; then
+    echo "Command-line tool 'patch' not found. Install patch and try again."
+    exit 1
+fi
 
 mkdir -p "${BDB_PREFIX}"
 http_get "${BDB_URL}" "${BDB_VERSION}.tar.gz" "${BDB_HASH}"

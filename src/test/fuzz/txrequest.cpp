@@ -204,7 +204,7 @@ public:
         }
 
         // Call TxRequestTracker's implementation.
-        m_tracker.ReceivedInv(peer, GenTxid{is_wtxid, TXHASHES[txhash]}, preferred, reqtime);
+        m_tracker.ReceivedInv(peer, is_wtxid ? GenTxid::Wtxid(TXHASHES[txhash]) : GenTxid::Txid(TXHASHES[txhash]), preferred, reqtime);
     }
 
     void RequestedTx(int peer, int txhash, std::chrono::microseconds exptime)
@@ -252,7 +252,7 @@ public:
             for (int peer2 = 0; peer2 < MAX_PEERS; ++peer2) {
                 Announcement& ann2 = m_announcements[txhash][peer2];
                 if (ann2.m_state == State::REQUESTED && ann2.m_time <= m_now) {
-                    expected_expired.emplace_back(peer2, GenTxid{ann2.m_is_wtxid, TXHASHES[txhash]});
+                    expected_expired.emplace_back(peer2, ann2.m_is_wtxid ? GenTxid::Wtxid(TXHASHES[txhash]) : GenTxid::Txid(TXHASHES[txhash]));
                     ann2.m_state = State::COMPLETED;
                     break;
                 }

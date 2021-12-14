@@ -61,6 +61,12 @@ P2P and network changes
   They will become eligible for address gossip after sending an ADDR, ADDRV2,
   or GETADDR message. (#21528)
 
+Fee estimation changes
+----------------------
+
+- Fee estimation now takes the feerate of replacement (RBF) transactions into
+  account. (#22539)
+
 Rescan startup parameter removed
 --------------------------------
 
@@ -71,11 +77,34 @@ Otherwise, please use the `rescanblockchain` RPC to trigger a rescan. (#23123)
 Updated RPCs
 ------------
 
+- `upgradewallet` will now automatically flush the keypool if upgrading
+  from a non-HD wallet to an HD wallet, to immediately start using the
+  newly-generated HD keys. (#23093)
+
+- a new RPC `newkeypool` has been added, which will flush (entirely
+  clear and refill) the keypool. (#23093)
+
+- The `validateaddress` RPC now returns an `error_locations` array for invalid
+  addresses, with the indices of invalid character locations in the address (if
+  known). For example, this will attempt to locate up to two Bech32 errors, and
+  return their locations if successful. Success and correctness are only guaranteed
+  if fewer than two substitution errors have been made.
+  The error message returned in the `error` field now also returns more specific
+  errors when decoding fails. (#16807)
+
 - The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs
   `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`,
   `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`,
   `/rest/block` no longer return the `addresses` and `reqSigs` fields, which
   were previously deprecated in 22.0. (#22650)
+- The `getblock` RPC command now supports verbose level 3 containing transaction inputs
+  `prevout` information.  The existing `/rest/block/` REST endpoint is modified to contain
+  this information too. Every `vin` field will contain an additional `prevout` subfield
+  describing the spent output. `prevout` contains the following keys:
+  - `generated` - true if the spent coins was a coinbase.
+  - `height`
+  - `value`
+  - `scriptPubKey`
 
 - `listunspent` now includes `ancestorcount`, `ancestorsize`, and
   `ancestorfees` for each transaction output that is still in the mempool.
@@ -84,6 +113,15 @@ Updated RPCs
 - `lockunspent` now optionally takes a third parameter, `persistent`, which
   causes the lock to be written persistently to the wallet database. This
   allows UTXOs to remain locked even after node restarts or crashes. (#23065)
+
+- The top-level fee fields `fee`, `modifiedfee`, `ancestorfees` and `descendantfees`
+  returned by RPCs `getmempoolentry`,`getrawmempool(verbose=true)`,
+  `getmempoolancestors(verbose=true)` and `getmempooldescendants(verbose=true)`
+  are deprecated and will be removed in the next major version (use
+  `-deprecated=fees` if needed in this version). The same fee fields can be accessed
+  through the `fees` object in the result. WARNING: deprecated
+  fields `ancestorfees` and `descendantfees` are denominated in sats, whereas all
+  fields in the `fees` object are denominated in BTC. (#22689)
 
 New RPCs
 --------
@@ -112,6 +150,10 @@ Updated settings
   persistence.  `-persistmempool` is now treated like other boolean options to
   mean `-persistmempool=1`. Passing `-persistmempool=0`, `-persistmempool=1`
   and `-nopersistmempool` is unaffected. (#23061)
+
+- `-maxuploadtarget` now allows human readable byte units [k|K|m|M|g|G|t|T].
+  E.g. `-maxuploadtarget=500g`. No whitespace, +- or fractions allowed.
+  Default is `M` if no suffix provided. (#23249)
 
 Tools and Utilities
 -------------------

@@ -264,7 +264,8 @@ $(foreach package,$(packages),$(eval $(package)_type=$(host_arch)_$(host_os)))
 $(foreach package,$(all_packages),$(eval $(call int_vars,$(package))))
 
 #include package files
-$(foreach package,$(all_packages),$(eval include packages/$(package).mk))
+$(foreach native_package,$(native_packages),$(eval include packages/$(native_package).mk))
+$(foreach package,$(packages),$(eval include packages/$(package).mk))
 
 #compute a hash of all files that comprise this package's build recipe
 $(foreach package,$(all_packages),$(eval $(call int_get_build_recipe_hash,$(package))))

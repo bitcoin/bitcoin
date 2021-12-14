@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
@@ -77,7 +77,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
         # 1. Have nodes mine a block (leave IBD)
-        [self.generatetoaddress(n, 1, n.get_deterministic_priv_key().address) for n in self.nodes]
+        [self.generate(n, 1, sync_fun=self.no_op) for n in self.nodes]
         tips = [int("0x" + n.getbestblockhash(), 0) for n in self.nodes]
 
         # 2. Send one block that builds on each tip.
@@ -225,10 +225,9 @@ class AcceptBlockTest(BitcoinTestFramework):
         block_289f.solve()
         block_290f = create_block(block_289f.sha256, create_coinbase(290), block_289f.nTime+1)
         block_290f.solve()
-        block_291 = create_block(block_290f.sha256, create_coinbase(291), block_290f.nTime+1)
         # block_291 spends a coinbase below maturity!
-        block_291.vtx.append(create_tx_with_script(block_290f.vtx[0], 0, script_sig=b"42", amount=1))
-        block_291.hashMerkleRoot = block_291.calc_merkle_root()
+        tx_to_add = create_tx_with_script(block_290f.vtx[0], 0, script_sig=b"42", amount=1)
+        block_291 = create_block(block_290f.sha256, create_coinbase(291), block_290f.nTime+1, txlist=[tx_to_add])
         block_291.solve()
         block_292 = create_block(block_291.sha256, create_coinbase(292), block_291.nTime+1)
         block_292.solve()

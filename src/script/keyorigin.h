@@ -18,6 +18,25 @@ struct KeyOriginInfo
         return std::equal(std::begin(a.fingerprint), std::end(a.fingerprint), std::begin(b.fingerprint)) && a.path == b.path;
     }
 
+    friend bool operator<(const KeyOriginInfo& a, const KeyOriginInfo& b)
+    {
+        // Compare the fingerprints lexicographically
+        int fpr_cmp = memcmp(a.fingerprint, b.fingerprint, 4);
+        if (fpr_cmp < 0) {
+            return true;
+        } else if (fpr_cmp > 0) {
+            return false;
+        }
+        // Compare the sizes of the paths, shorter is "less than"
+        if (a.path.size() < b.path.size()) {
+            return true;
+        } else if (a.path.size() > b.path.size()) {
+            return false;
+        }
+        // Paths same length, compare them lexicographically
+        return a.path < b.path;
+    }
+
     SERIALIZE_METHODS(KeyOriginInfo, obj) { READWRITE(obj.fingerprint, obj.path); }
 
     void clear()

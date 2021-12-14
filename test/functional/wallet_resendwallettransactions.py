@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet resends transactions periodically."""
@@ -48,7 +48,6 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block_time = int(time.time()) + 6 * 60
         node.setmocktime(block_time)
         block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
-        block.rehash()
         block.solve()
         node.submitblock(block.serialize().hex())
 
