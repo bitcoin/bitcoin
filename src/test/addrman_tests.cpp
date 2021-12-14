@@ -823,6 +823,8 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     // Should swap 36 for 19.
     addrman->ResolveCollisions();
     BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    AddressPosition addr_pos{addrman->FindAddressEntry(CAddress(addr, NODE_NONE)).value()};
+    BOOST_CHECK(addr_pos.tried);
 
     // If 36 was swapped for 19, then adding 36 to tried should fail because we
     // are attempting to add a duplicate.
@@ -837,8 +839,15 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(!addrman->Good(addr19));
     BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToString(), "250.1.1.36:0");
 
+    // Eviction is also successful if too much time has passed since last try
+    SetMockTime(GetTime() + 4 * 60 *60);
     addrman->ResolveCollisions();
     BOOST_CHECK(addrman->SelectTriedCollision().first.ToString() == "[::]:0");
+    //Now 19 is in tried again, and 36 back to new
+    AddressPosition addr_pos19{addrman->FindAddressEntry(CAddress(addr19, NODE_NONE)).value()};
+    BOOST_CHECK(addr_pos19.tried);
+    AddressPosition addr_pos36{addrman->FindAddressEntry(CAddress(addr, NODE_NONE)).value()};
+    BOOST_CHECK(!addr_pos36.tried);
 }
 
 static CDataStream AddrmanToStream(const AddrMan& addrman)
