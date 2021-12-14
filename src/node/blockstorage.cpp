@@ -348,7 +348,7 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
         }
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
-        // in the block file info as below; note that this does not catch the case where the undo writes are keeping up
+        // in the block file info as below; note that this does not catch the case where to undo writes are keeping up
         // with the block writes (usually when a synced up node is getting newly mined blocks) -- this case is caught in
         // the FindBlockPos function
         if (_pos.nFile < nLastBlockFile && static_cast<uint32_t>(pindex->nHeight) == vinfoBlockFile[_pos.nFile].nHeightLast) {
@@ -539,7 +539,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             }
         }
 
-        // scan for better chains in the block chain database, that are not yet connected in the active best chain
+        // scan for better chains in the blockchain database, that are not yet connected in the active best chain
 
         // We can't hold cs_main during ActivateBestChain even though we're accessing
         // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
