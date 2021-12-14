@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
 #include <pubkey.h>
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
@@ -200,22 +202,57 @@ bool FuzzedSock::IsConnected(std::string& errmsg) const
     return false;
 }
 
-void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, PeerManager& peerman, CNode& node) noexcept
 {
+    const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
     const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
     const NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     const int32_t version = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max());
     const bool filter_txs = fuzzed_data_provider.ConsumeBool();
 
-    node.nServices = remote_services;
-    node.m_permissionFlags = permission_flags;
-    if (init_version) {
-        node.nVersion = version;
-        node.SetCommonVersion(std::min(version, PROTOCOL_VERSION));
+    const CNetMsgMaker mm{0};
+
+    CSerializedNetMsg msg_version{
+        mm.Make(NetMsgType::VERSION,
+                version,                                        //
+                Using<CustomUintFormatter<8>>(remote_services), //
+                int64_t{},                                      // dummy time
+                int64_t{},                                      // ignored service bits
+                CService{},                                     // dummy
+                int64_t{},                                      // ignored service bits
+                CService{},                                     // ignored
+                uint64_t{1},                                    // dummy nonce
+                std::string{},                                  // dummy subver
+                int32_t{},                                      // dummy starting_height
+                filter_txs),
+    };
+
+    (void)connman.ReceiveMsgFrom(node, msg_version);
+    node.fPauseSend = false;
+    connman.ProcessMessagesOnce(node);
+    {
+        LOCK(node.cs_sendProcessing);
+        peerman.SendMessages(&node);
     }
+    if (node.fDisconnect) return;
+    assert(node.nVersion == version);
+    assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
+    assert(node.nServices == remote_services);
     if (node.m_tx_relay != nullptr) {
         LOCK(node.m_tx_relay->cs_filter);
-        node.m_tx_relay->fRelayTxes = filter_txs;
+        assert(node.m_tx_relay->fRelayTxes == filter_txs);
+    }
+    node.m_permissionFlags = permission_flags;
+    if (successfully_connected) {
+        CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
+        (void)connman.ReceiveMsgFrom(node, msg_verack);
+        node.fPauseSend = false;
+        connman.ProcessMessagesOnce(node);
+        {
+            LOCK(node.cs_sendProcessing);
+            peerman.SendMessages(&node);
+        }
+        assert(node.fSuccessfullyConnected == true);
     }
 }
 
