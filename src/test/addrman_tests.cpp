@@ -816,19 +816,21 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
     for (unsigned int i = 1; i < 23; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
         BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-        addrman.Good(addr);
 
-        // No collisions yet.
-        BOOST_CHECK(addrman.size() == i);
+        // No collisions in tried.
+        BOOST_CHECK(addrman.Good(addr));
         BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
     }
 
     // Ensure Good handles duplicates well.
+    // If an address is a duplicate, Good will return false but will not count it as a collision.
     for (unsigned int i = 1; i < 23; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
-        addrman.Good(addr);
 
-        BOOST_CHECK(addrman.size() == 22);
+        // Unable to add duplicate address to tried table.
+        BOOST_CHECK(!addrman.Good(addr));
+
+        // Verify duplicate address not marked as a collision.
         BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
     }
 }
