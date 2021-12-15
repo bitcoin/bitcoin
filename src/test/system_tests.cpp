@@ -58,10 +58,8 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
 #ifdef WIN32
-        // Windows requires single quotes to prevent escaping double quotes from the JSON...
-        const UniValue result = RunCommandParseJSON("echo '{\"success\": true}'");
+        const UniValue result = RunCommandParseJSON("cmd.exe /c echo {\"success\": true}");
 #else
-        // ... but Linux and macOS echo a single quote if it's used
         const UniValue result = RunCommandParseJSON("echo \"{\"success\": true}\"");
 #endif
         BOOST_CHECK(result.isObject());
