@@ -388,9 +388,13 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
     std::vector<OutputGroup> all_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, false /* positive_only */);
+    CAmount knapsack_target = nTargetValue;
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    if (auto knapsack_result{KnapsackSolver(all_groups, nTargetValue + coin_selection_params.m_change_fee)}) {
+    if (!coin_selection_params.m_subtract_fee_outputs) {
+        knapsack_target += coin_selection_params.m_change_fee;
+    }
+    if (auto knapsack_result{KnapsackSolver(all_groups, knapsack_target)}) {
         knapsack_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*knapsack_result);
     }
