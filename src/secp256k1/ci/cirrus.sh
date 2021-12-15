@@ -26,15 +26,11 @@ make
 
 # Print information about binaries so that we can see that the architecture is correct
 file *tests* || true
-file bench_* || true
+file bench* || true
 file .libs/* || true
 
 # This tells `make check` to wrap test invocations.
 export LOG_COMPILER="$WRAPPER_CMD"
-
-# This limits the iterations in the tests and benchmarks.
-export SECP256K1_TEST_ITERS="$TEST_ITERS"
-export SECP256K1_BENCH_ITERS="$BENCH_ITERS"
 
 make "$BUILD"
 
@@ -49,23 +45,22 @@ then
     {
         $EXEC ./bench_ecmult
         $EXEC ./bench_internal
-        $EXEC ./bench_sign
-        $EXEC ./bench_verify
+        $EXEC ./bench
     } >> bench.log 2>&1
-    if [ "$RECOVERY" = "yes" ]
-    then
-        $EXEC ./bench_recover >> bench.log 2>&1
-    fi
-    if [ "$ECDH" = "yes" ]
-    then
-        $EXEC ./bench_ecdh >> bench.log 2>&1
-    fi
-    if [ "$SCHNORRSIG" = "yes" ]
-    then
-        $EXEC ./bench_schnorrsig >> bench.log 2>&1
-    fi
 fi
+
 if [ "$CTIMETEST" = "yes" ]
 then
     ./libtool --mode=execute valgrind --error-exitcode=42 ./valgrind_ctime_test > valgrind_ctime_test.log 2>&1
 fi
+
+# Rebuild precomputed files (if not cross-compiling).
+if [ -z "$HOST" ]
+then
+    make clean-precomp
+    make precomp
+fi
+
+# Check that no repo files have been modified by the build.
+# (This fails for example if the precomp files need to be updated in the repo.)
+git diff --exit-code

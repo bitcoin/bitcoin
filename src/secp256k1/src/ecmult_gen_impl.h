@@ -12,130 +12,54 @@
 #include "group.h"
 #include "ecmult_gen.h"
 #include "hash_impl.h"
-#ifdef USE_ECMULT_STATIC_PRECOMPUTATION
-#include "ecmult_static_context.h"
-#endif
+#include "ecmult_gen_static_prec_table.h"
 
-#ifndef USE_ECMULT_STATIC_PRECOMPUTATION
-    static const size_t SECP256K1_ECMULT_GEN_CONTEXT_PREALLOCATED_SIZE = ROUND_TO_ALIGN(sizeof(*((secp256k1_ecmult_gen_context*) NULL)->prec));
-#else
-    static const size_t SECP256K1_ECMULT_GEN_CONTEXT_PREALLOCATED_SIZE = 0;
-#endif
-
-static void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context *ctx) {
-    ctx->prec = NULL;
-}
-
-static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx, void **prealloc) {
-#ifndef USE_ECMULT_STATIC_PRECOMPUTATION
-    secp256k1_ge prec[ECMULT_GEN_PREC_N * ECMULT_GEN_PREC_G];
-    secp256k1_gej gj;
-    secp256k1_gej nums_gej;
-    int i, j;
-    size_t const prealloc_size = SECP256K1_ECMULT_GEN_CONTEXT_PREALLOCATED_SIZE;
-    void* const base = *prealloc;
-#endif
-
-    if (ctx->prec != NULL) {
-        return;
-    }
-#ifndef USE_ECMULT_STATIC_PRECOMPUTATION
-    ctx->prec = (secp256k1_ge_storage (*)[ECMULT_GEN_PREC_N][ECMULT_GEN_PREC_G])manual_alloc(prealloc, prealloc_size, base, prealloc_size);
-
-    /* get the generator */
-    secp256k1_gej_set_ge(&gj, &secp256k1_ge_const_g);
-
-    /* Construct a group element with no known corresponding scalar (nothing up my sleeve). */
-    {
-        static const unsigned char nums_b32[33] = "The scalar for this x is unknown";
-        secp256k1_fe nums_x;
-        secp256k1_ge nums_ge;
-        int r;
-        r = secp256k1_fe_set_b32(&nums_x, nums_b32);
-        (void)r;
-        VERIFY_CHECK(r);
-        r = secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0);
-        (void)r;
-        VERIFY_CHECK(r);
-        secp256k1_gej_set_ge(&nums_gej, &nums_ge);
-        /* Add G to make the bits in x uniformly distributed. */
-        secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, &secp256k1_ge_const_g, NULL);
-    }
-
-    /* compute prec. */
-    {
-        secp256k1_gej precj[ECMULT_GEN_PREC_N * ECMULT_GEN_PREC_G]; /* Jacobian versions of prec. */
-        secp256k1_gej gbase;
-        secp256k1_gej numsbase;
-        gbase = gj; /* PREC_G^j * G */
-        numsbase = nums_gej; /* 2^j * nums. */
-        for (j = 0; j < ECMULT_GEN_PREC_N; j++) {
-            /* Set precj[j*PREC_G .. j*PREC_G+(PREC_G-1)] to (numsbase, numsbase + gbase, ..., numsbase + (PREC_G-1)*gbase). */
-            precj[j*ECMULT_GEN_PREC_G] = numsbase;
-            for (i = 1; i < ECMULT_GEN_PREC_G; i++) {
-                secp256k1_gej_add_var(&precj[j*ECMULT_GEN_PREC_G + i], &precj[j*ECMULT_GEN_PREC_G + i - 1], &gbase, NULL);
-            }
-            /* Multiply gbase by PREC_G. */
-            for (i = 0; i < ECMULT_GEN_PREC_B; i++) {
-                secp256k1_gej_double_var(&gbase, &gbase, NULL);
-            }
-            /* Multiply numbase by 2. */
-            secp256k1_gej_double_var(&numsbase, &numsbase, NULL);
-            if (j == ECMULT_GEN_PREC_N - 2) {
-                /* In the last iteration, numsbase is (1 - 2^j) * nums instead. */
-                secp256k1_gej_neg(&numsbase, &numsbase);
-                secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej, NULL);
-            }
-        }
-        secp256k1_ge_set_all_gej_var(prec, precj, ECMULT_GEN_PREC_N * ECMULT_GEN_PREC_G);
-    }
-    for (j = 0; j < ECMULT_GEN_PREC_N; j++) {
-        for (i = 0; i < ECMULT_GEN_PREC_G; i++) {
-            secp256k1_ge_to_storage(&(*ctx->prec)[j][i], &prec[j*ECMULT_GEN_PREC_G + i]);
-        }
-    }
-#else
-    (void)prealloc;
-    ctx->prec = (secp256k1_ge_storage (*)[ECMULT_GEN_PREC_N][ECMULT_GEN_PREC_G])secp256k1_ecmult_static_context;
-#endif
+static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx) {
     secp256k1_ecmult_gen_blind(ctx, NULL);
+    ctx->built = 1;
 }
 
 static int secp256k1_ecmult_gen_context_is_built(const secp256k1_ecmult_gen_context* ctx) {
-    return ctx->prec != NULL;
-}
-
-static void secp256k1_ecmult_gen_context_finalize_memcpy(secp256k1_ecmult_gen_context *dst, const secp256k1_ecmult_gen_context *src) {
-#ifndef USE_ECMULT_STATIC_PRECOMPUTATION
-    if (src->prec != NULL) {
-        /* We cast to void* first to suppress a -Wcast-align warning. */
-        dst->prec = (secp256k1_ge_storage (*)[ECMULT_GEN_PREC_N][ECMULT_GEN_PREC_G])(void*)((unsigned char*)dst + ((unsigned char*)src->prec - (unsigned char*)src));
-    }
-#else
-    (void)dst, (void)src;
-#endif
+    return ctx->built;
 }
 
 static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context *ctx) {
+    ctx->built = 0;
     secp256k1_scalar_clear(&ctx->blind);
     secp256k1_gej_clear(&ctx->initial);
-    ctx->prec = NULL;
 }
 
+/* For accelerating the computation of a*G:
+ * To harden against timing attacks, use the following mechanism:
+ * * Break up the multiplicand into groups of PREC_BITS bits, called n_0, n_1, n_2, ..., n_(PREC_N-1).
+ * * Compute sum(n_i * (PREC_G)^i * G + U_i, i=0 ... PREC_N-1), where:
+ *   * U_i = U * 2^i, for i=0 ... PREC_N-2
+ *   * U_i = U * (1-2^(PREC_N-1)), for i=PREC_N-1
+ *   where U is a point with no known corresponding scalar. Note that sum(U_i, i=0 ... PREC_N-1) = 0.
+ * For each i, and each of the PREC_G possible values of n_i, (n_i * (PREC_G)^i * G + U_i) is
+ * precomputed (call it prec(i, n_i)). The formula now becomes sum(prec(i, n_i), i=0 ... PREC_N-1).
+ * None of the resulting prec group elements have a known scalar, and neither do any of
+ * the intermediate sums while computing a*G.
+ * The prec values are stored in secp256k1_ecmult_gen_prec_table[i][n_i] = n_i * (PREC_G)^i * G + U_i.
+ */
 static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, const secp256k1_scalar *gn) {
+    int bits = ECMULT_GEN_PREC_BITS;
+    int g = ECMULT_GEN_PREC_G(bits);
+    int n = ECMULT_GEN_PREC_N(bits);
+
     secp256k1_ge add;
     secp256k1_ge_storage adds;
     secp256k1_scalar gnb;
-    int bits;
-    int i, j;
+    int i, j, n_i;
+    
     memset(&adds, 0, sizeof(adds));
     *r = ctx->initial;
     /* Blind scalar/point multiplication by computing (n-b)G + bG instead of nG. */
     secp256k1_scalar_add(&gnb, gn, &ctx->blind);
     add.infinity = 0;
-    for (j = 0; j < ECMULT_GEN_PREC_N; j++) {
-        bits = secp256k1_scalar_get_bits(&gnb, j * ECMULT_GEN_PREC_B, ECMULT_GEN_PREC_B);
-        for (i = 0; i < ECMULT_GEN_PREC_G; i++) {
+    for (i = 0; i < n; i++) {
+        n_i = secp256k1_scalar_get_bits(&gnb, i * bits, bits);
+        for (j = 0; j < g; j++) {
             /** This uses a conditional move to avoid any secret data in array indexes.
              *   _Any_ use of secret indexes has been demonstrated to result in timing
              *   sidechannels, even when the cache-line access patterns are uniform.
@@ -146,12 +70,12 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
              *    by Dag Arne Osvik, Adi Shamir, and Eran Tromer
              *    (https://www.tau.ac.il/~tromer/papers/cache.pdf)
              */
-            secp256k1_ge_storage_cmov(&adds, &(*ctx->prec)[j][i], i == bits);
+            secp256k1_ge_storage_cmov(&adds, &secp256k1_ecmult_gen_prec_table[i][j], j == n_i);
         }
         secp256k1_ge_from_storage(&add, &adds);
         secp256k1_gej_add_ge(r, r, &add);
     }
-    bits = 0;
+    n_i = 0;
     secp256k1_ge_clear(&add);
     secp256k1_scalar_clear(&gnb);
 }

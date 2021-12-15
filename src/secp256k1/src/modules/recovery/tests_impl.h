@@ -34,6 +34,7 @@ void test_ecdsa_recovery_api(void) {
     secp256k1_context *sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
     secp256k1_context *vrfy = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
     secp256k1_context *both = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    secp256k1_context *sttc = secp256k1_context_clone(secp256k1_context_no_precomp);
     secp256k1_pubkey pubkey;
     secp256k1_pubkey recpubkey;
     secp256k1_ecdsa_signature normal_sig;
@@ -53,10 +54,12 @@ void test_ecdsa_recovery_api(void) {
     secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_error_callback(vrfy, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_error_callback(both, counting_illegal_callback_fn, &ecount);
+    secp256k1_context_set_error_callback(sttc, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_illegal_callback(none, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_illegal_callback(sign, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_illegal_callback(both, counting_illegal_callback_fn, &ecount);
+    secp256k1_context_set_illegal_callback(sttc, counting_illegal_callback_fn, &ecount);
 
     /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
@@ -64,48 +67,50 @@ void test_ecdsa_recovery_api(void) {
 
     /* Check bad contexts and NULLs for signing */
     ecount = 0;
-    CHECK(secp256k1_ecdsa_sign_recoverable(none, &recsig, message, privkey, NULL, NULL) == 0);
-    CHECK(ecount == 1);
+    CHECK(secp256k1_ecdsa_sign_recoverable(none, &recsig, message, privkey, NULL, NULL) == 1);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_sign_recoverable(sign, &recsig, message, privkey, NULL, NULL) == 1);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_sign_recoverable(vrfy, &recsig, message, privkey, NULL, NULL) == 0);
-    CHECK(ecount == 2);
+    CHECK(ecount == 0);
+    CHECK(secp256k1_ecdsa_sign_recoverable(vrfy, &recsig, message, privkey, NULL, NULL) == 1);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, NULL, NULL) == 1);
-    CHECK(ecount == 2);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, NULL, message, privkey, NULL, NULL) == 0);
-    CHECK(ecount == 3);
+    CHECK(ecount == 1);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, NULL, privkey, NULL, NULL) == 0);
-    CHECK(ecount == 4);
+    CHECK(ecount == 2);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, NULL, NULL, NULL) == 0);
-    CHECK(ecount == 5);
+    CHECK(ecount == 3);
+    CHECK(secp256k1_ecdsa_sign_recoverable(sttc, &recsig, message, privkey, NULL, NULL) == 0);
+    CHECK(ecount == 4);
     /* This will fail or succeed randomly, and in either case will not ARG_CHECK failure */
     secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, recovery_test_nonce_function, NULL);
-    CHECK(ecount == 5);
+    CHECK(ecount == 4);
     /* These will all fail, but not in ARG_CHECK way */
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, zero_privkey, NULL, NULL) == 0);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, over_privkey, NULL, NULL) == 0);
     /* This one will succeed. */
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, NULL, NULL) == 1);
-    CHECK(ecount == 5);
+    CHECK(ecount == 4);
 
     /* Check signing with a goofy nonce function */
 
     /* Check bad contexts and NULLs for recovery */
     ecount = 0;
-    CHECK(secp256k1_ecdsa_recover(none, &recpubkey, &recsig, message) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_recover(sign, &recpubkey, &recsig, message) == 0);
-    CHECK(ecount == 2);
+    CHECK(secp256k1_ecdsa_recover(none, &recpubkey, &recsig, message) == 1);
+    CHECK(ecount == 0);
+    CHECK(secp256k1_ecdsa_recover(sign, &recpubkey, &recsig, message) == 1);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_recover(vrfy, &recpubkey, &recsig, message) == 1);
-    CHECK(ecount == 2);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_recover(both, &recpubkey, &recsig, message) == 1);
-    CHECK(ecount == 2);
+    CHECK(ecount == 0);
     CHECK(secp256k1_ecdsa_recover(both, NULL, &recsig, message) == 0);
-    CHECK(ecount == 3);
+    CHECK(ecount == 1);
     CHECK(secp256k1_ecdsa_recover(both, &recpubkey, NULL, message) == 0);
-    CHECK(ecount == 4);
+    CHECK(ecount == 2);
     CHECK(secp256k1_ecdsa_recover(both, &recpubkey, &recsig, NULL) == 0);
-    CHECK(ecount == 5);
+    CHECK(ecount == 3);
 
     /* Check NULLs for conversion */
     CHECK(secp256k1_ecdsa_sign(both, &normal_sig, message, privkey, NULL, NULL) == 1);
@@ -145,6 +150,7 @@ void test_ecdsa_recovery_api(void) {
     secp256k1_context_destroy(sign);
     secp256k1_context_destroy(vrfy);
     secp256k1_context_destroy(both);
+    secp256k1_context_destroy(sttc);
 }
 
 void test_ecdsa_recovery_end_to_end(void) {
