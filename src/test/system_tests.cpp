@@ -28,15 +28,6 @@ BOOST_AUTO_TEST_CASE(dummy)
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 
-bool checkMessage(const std::runtime_error& ex)
-{
-    // On Linux & Mac: "No such file or directory"
-    // On Windows: "The system cannot find the file specified."
-    const std::string what(ex.what());
-    BOOST_CHECK(what.find("file") != std::string::npos);
-    return true;
-}
-
 BOOST_AUTO_TEST_CASE(run_command)
 {
     {
@@ -56,7 +47,17 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // An invalid command is handled by Boost
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), boost::process::process_error, checkMessage); // Command failed
+#ifdef WIN32
+        const std::string expected{"The system cannot find the file specified."};
+#else
+        const std::string expected{"No such file or directory"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), boost::process::process_error, [&](const boost::process::process_error& e) {
+            const std::string what(e.what());
+            BOOST_CHECK(what.find("RunCommandParseJSON error:") == std::string::npos);
+            BOOST_CHECK(what.find(expected) != std::string::npos);
+            return true;
+        });
     }
     {
         // Return non-zero exit code, no output to stderr
