@@ -69,6 +69,7 @@ BITCOIN_TESTS =\
   test/allocator_tests.cpp \
   test/amount_tests.cpp \
   test/arith_uint256_tests.cpp \
+  test/banman_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
