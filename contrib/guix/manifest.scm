@@ -24,6 +24,7 @@
              (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
+             (gnu packages python-crypto)
              (gnu packages python-web)
              (gnu packages shells)
              (gnu packages tls)
@@ -247,34 +248,6 @@ functionality of the Microsoft tool signtool.exe - more exactly the Authenticode
 signing and timestamping. But osslsigncode is based on OpenSSL and cURL, and
 thus should be able to compile on most platforms where these exist.")
     (license license:gpl3+))) ; license is with openssl exception
-
-(define-public python-asn1crypto
-  (package
-    (name "python-asn1crypto")
-    (version "1.4.0")
-    (source
-     (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://github.com/wbond/asn1crypto")
-             (commit version)))
-       (file-name (git-file-name name version))
-       (sha256
-        (base32
-         "19abibn6jw20mzi1ln4n9jjvpdka8ygm4m439hplyrdfqbvgm01r"))))
-    (build-system python-build-system)
-    (arguments
-     '(#:phases
-       (modify-phases %standard-phases
-         (replace 'check
-           (lambda _
-             (invoke "python" "run.py" "tests"))))))
-    (home-page "https://github.com/wbond/asn1crypto")
-    (synopsis "ASN.1 parser and serializer in Python")
-    (description "asn1crypto is an ASN.1 parser and serializer with definitions
-for private keys, public keys, certificates, CRL, OCSP, CMS, PKCS#3, PKCS#7,
-PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
-    (license license:expat)))
 
 (define-public python-elfesteem
   (let ((commit "87bbd79ab7e361004c98cc8601d4e5f029fd8bd5"))
