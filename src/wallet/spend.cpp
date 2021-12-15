@@ -23,9 +23,9 @@ using interfaces::FoundBlock;
 
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig)
+int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, const CCoinControl* coin_control)
 {
-    return CalculateMaximumSignedInputSize(wtx.tx->vout[out], &wallet, use_max_sig);
+    return CalculateMaximumSignedInputSize(wtx.tx->vout[out], &wallet, coin_control);
 }
 
 std::string COutput::ToString() const
@@ -33,20 +33,20 @@ std::string COutput::ToString() const
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
 }
 
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* provider, bool use_max_sig)
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* provider, const CCoinControl* coin_control)
 {
     CMutableTransaction txn;
-    txn.vin.push_back(CTxIn(COutPoint()));
-    if (!provider || !DummySignInput(*provider, txn.vin[0], txout, use_max_sig)) {
+    txn.vin.push_back(CTxIn(outpoint));
+    if (!provider || !DummySignInput(*provider, txn.vin[0], txout, coin_control)) {
         return -1;
     }
     return GetVirtualTransactionInputSize(txn.vin[0]);
 }
 
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, bool use_max_sig)
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, const CCoinControl* coin_control)
 {
     const std::unique_ptr<SigningProvider> provider = wallet->GetSolvingProvider(txout.scriptPubKey);
-    return CalculateMaximumSignedInputSize(txout, provider.get(), use_max_sig);
+    return CalculateMaximumSignedInputSize(txout, COutPoint(), provider.get(), coin_control);
 }
 
 // txouts needs to be in the order of tx.vin
@@ -194,7 +194,7 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.push_back(COutput(wallet, wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
+            vCoins.push_back(COutput(wallet, wtx, i, nDepth, spendable, solvable, safeTx, coinControl));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -456,7 +456,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             if (wtx.tx->vout.size() <= outpoint.n) {
                 return std::nullopt;
             }
-            input_bytes = GetTxSpendSize(wallet, wtx, outpoint.n, false);
+            input_bytes = GetTxSpendSize(wallet, wtx, outpoint.n, &coin_control);
             txout = wtx.tx->vout.at(outpoint.n);
         }
         if (input_bytes == -1) {
@@ -465,7 +465,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
                 // Not ours, and we don't have solving data.
                 return std::nullopt;
             }
-            input_bytes = CalculateMaximumSignedInputSize(txout, &coin_control.m_external_provider, /* use_max_sig */ true);
+            input_bytes = CalculateMaximumSignedInputSize(txout, outpoint, &coin_control.m_external_provider, &coin_control);
         }
 
         CInputCoin coin(outpoint, txout, input_bytes);
