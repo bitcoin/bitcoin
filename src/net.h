@@ -97,6 +97,7 @@ static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 static constexpr size_t V2_MIN_PACKET_LENGTH = BIP324_LENGTH_FIELD_LEN + BIP324_HEADER_LEN + RFC8439_EXPANSION;
+static constexpr bool DEFAULT_V2_TRANSPORT{false};
 
 typedef int64_t NodeId;
 
