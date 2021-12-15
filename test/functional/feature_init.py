@@ -70,6 +70,8 @@ class InitStressTest(BitcoinTestFramework):
             'net thread start',
             'addcon thread start',
             'msghand thread start',
+            'Checking all blk files are present',
+            'init message: Starting network threads'
         ]
         if self.is_wallet_compiled():
             lines_to_terminate_after.append('Verifying wallet')
