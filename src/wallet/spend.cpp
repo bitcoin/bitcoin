@@ -23,7 +23,7 @@ using interfaces::FoundBlock;
 
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, const CCoinControl* coin_control)
+TxSize GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, const CCoinControl* coin_control)
 {
     return CalculateMaximumSignedInputSize(wtx.tx->vout[out], &wallet, coin_control);
 }
@@ -33,17 +33,19 @@ std::string COutput::ToString() const
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
 }
 
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* provider, const CCoinControl* coin_control)
+TxSize CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* provider, const CCoinControl* coin_control)
 {
     CMutableTransaction txn;
     txn.vin.push_back(CTxIn(outpoint));
     if (!provider || !DummySignInput(*provider, txn.vin[0], txout, coin_control)) {
-        return -1;
+        return {-1, -1};
     }
-    return GetVirtualTransactionInputSize(txn.vin[0]);
+    int64_t vsize = GetVirtualTransactionInputSize(txn.vin[0]);
+    int64_t weight = GetTransactionInputWeight(txn.vin[0]);
+    return TxSize{vsize, weight};
 }
 
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, const CCoinControl* coin_control)
+TxSize CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, const CCoinControl* coin_control)
 {
     const std::unique_ptr<SigningProvider> provider = wallet->GetSolvingProvider(txout.scriptPubKey);
     return CalculateMaximumSignedInputSize(txout, COutPoint(), provider.get(), coin_control);
@@ -446,7 +448,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     std::vector<COutPoint> vPresetInputs;
     coin_control.ListSelected(vPresetInputs);
     for (const COutPoint& outpoint : vPresetInputs) {
-        int input_bytes = -1;
+        TxSize input_size{-1, -1};
         CTxOut txout;
         std::map<uint256, CWalletTx>::const_iterator it = wallet.mapWallet.find(outpoint.hash);
         if (it != wallet.mapWallet.end()) {
@@ -455,19 +457,19 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             if (wtx.tx->vout.size() <= outpoint.n) {
                 return std::nullopt;
             }
-            input_bytes = GetTxSpendSize(wallet, wtx, outpoint.n, &coin_control);
+            input_size = GetTxSpendSize(wallet, wtx, outpoint.n, &coin_control);
             txout = wtx.tx->vout.at(outpoint.n);
         }
-        if (input_bytes == -1) {
+        if (input_size.vsize == -1) {
             // The input is external. We either did not find the tx in mapWallet, or we did but couldn't compute the input size with wallet data
             if (!coin_control.GetExternalOutput(outpoint, txout)) {
                 // Not ours, and we don't have solving data.
                 return std::nullopt;
             }
-            input_bytes = CalculateMaximumSignedInputSize(txout, outpoint, &coin_control.m_external_provider, &coin_control);
+            input_size = CalculateMaximumSignedInputSize(txout, outpoint, &coin_control.m_external_provider, &coin_control);
         }
 
-        CInputCoin coin(outpoint, txout, input_bytes);
+        CInputCoin coin(outpoint, txout, input_size.vsize, input_size.weight);
         if (coin.m_input_bytes == -1) {
             return std::nullopt; // Not solvable, can't estimate size for fee
         }
@@ -700,7 +702,7 @@ static bool CreateTransactionInternal(
     coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
     // Get size of spending the change output
-    int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet);
+    int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet).vsize;
     // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
     // as lower-bound to allow BnB to do it's thing
     if (change_spend_size == -1) {

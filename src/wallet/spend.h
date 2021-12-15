@@ -10,8 +10,13 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+struct TxSize {
+    int64_t vsize{-1};
+    int64_t weight{-1};
+};
+
 /** Get the marginal bytes if spending the specified output from this transaction */
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, const CCoinControl* coin_control = nullptr);
+TxSize GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, const CCoinControl* coin_control = nullptr);
 
 class COutput
 {
@@ -29,7 +34,7 @@ public:
     int nDepth;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
-    int nInputBytes;
+    TxSize nInputSize;
 
     /** Whether we have the private keys to spend this output */
     bool fSpendable;
@@ -46,11 +51,11 @@ public:
 
     COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, const CCoinControl* coin_control = nullptr)
     {
-        tx = &wtx; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1;
+        tx = &wtx; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputSize = {-1, -1};
         // If known and signable by the given wallet, compute nInputSize
         // Failure will keep this value -1
         if (fSpendable) {
-            nInputBytes = GetTxSpendSize(wallet, wtx, i, coin_control);
+            nInputSize = GetTxSpendSize(wallet, wtx, i, coin_control);
         }
     }
 
@@ -58,18 +63,14 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(tx->tx, i, nInputBytes);
+        return CInputCoin(tx->tx, i, nInputSize.vsize, nInputSize.weight);
     }
 };
 
 //Get the marginal bytes of spending the specified output
-struct TxSize {
-    int64_t vsize{-1};
-    int64_t weight{-1};
-};
+TxSize CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, const CCoinControl* coin_control = nullptr);
+TxSize CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* pwallet, const CCoinControl* coin_control = nullptr);
 
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, const CCoinControl* coin_control = nullptr);
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* pwallet, const CCoinControl* coin_control = nullptr);
 /** Calculate the size of the transaction assuming all signatures are max size
 * Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
 * NOTE: this requires that all inputs must be in mapWallet (eg the tx should
