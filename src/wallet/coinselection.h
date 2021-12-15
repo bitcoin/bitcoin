@@ -32,10 +32,11 @@ public:
         effective_value = txout.nValue;
     }
 
-    CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes, int input_weight) : CInputCoin(tx, i)
+    CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes, int input_weight, bool isSegwit) : CInputCoin(tx, i)
     {
         m_input_bytes = input_bytes;
         m_input_weight = input_weight;
+        m_isSegwit = isSegwit;
     }
 
     CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in)
@@ -45,10 +46,11 @@ public:
         effective_value = txout.nValue;
     }
 
-    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in, int input_bytes, int input_weight) : CInputCoin(outpoint_in, txout_in)
+    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in, int input_bytes, int input_weight, bool isSegwit) : CInputCoin(outpoint_in, txout_in)
     {
         m_input_bytes = input_bytes;
         m_input_weight = input_weight;
+        m_isSegwit = isSegwit;
     }
 
     COutPoint outpoint;
@@ -60,6 +62,8 @@ public:
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
     int m_input_bytes{-1};
     int m_input_weight{-1};
+
+    bool m_isSegwit;
 
     bool operator<(const CInputCoin& rhs) const {
         return outpoint < rhs.outpoint;

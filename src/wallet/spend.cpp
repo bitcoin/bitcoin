@@ -469,7 +469,14 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             input_size = CalculateMaximumSignedInputSize(txout, outpoint, &coin_control.m_external_provider, &coin_control);
         }
 
-        CInputCoin coin(outpoint, txout, input_size.vsize, input_size.weight);
+        const auto& provider = wallet.GetSolvingProvider(txout.scriptPubKey);
+        bool isSegwit = false;
+        if (provider) {
+            isSegwit = IsSegWitOutput(*provider, txout.scriptPubKey);
+        } else {
+            isSegwit = IsSegWitOutput(coin_control.m_external_provider, txout.scriptPubKey);
+        }
+        CInputCoin coin(outpoint, txout, input_size.vsize, input_size.weight, isSegwit);
         if (coin.m_input_bytes == -1) {
             return std::nullopt; // Not solvable, can't estimate size for fee
         }

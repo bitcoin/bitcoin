@@ -49,13 +49,18 @@ public:
      */
     bool fSafe;
 
+    bool isSegwit;
+
     COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, const CCoinControl* coin_control = nullptr)
     {
         tx = &wtx; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputSize = {-1, -1};
+        const CTxOut &txout = wtx.tx->vout[i];
+        const auto provider = wallet.GetSolvingProvider(txout.scriptPubKey);
         // If known and signable by the given wallet, compute nInputSize
         // Failure will keep this value -1
-        if (fSpendable) {
+        if (fSpendable && provider) {
             nInputSize = GetTxSpendSize(wallet, wtx, i, coin_control);
+            isSegwit = IsSegWitOutput(*provider, txout.scriptPubKey);
         }
     }
 
@@ -63,7 +68,7 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(tx->tx, i, nInputSize.vsize, nInputSize.weight);
+        return CInputCoin(tx->tx, i, nInputSize.vsize, nInputSize.weight, isSegwit);
     }
 };
 
