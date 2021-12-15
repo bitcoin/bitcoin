@@ -217,10 +217,12 @@ private:
     bool m_use_effective{false};
     /** The computed waste */
     std::optional<CAmount> m_waste;
+    /** Force no change even if more than enough inputs are selected */
+    bool m_force_no_change{false};
 
 public:
-    explicit SelectionResult(const CAmount target)
-        : m_target(target) {}
+    explicit SelectionResult(const CAmount target, const bool force_no_change = false)
+        : m_target(target), m_force_no_change(force_no_change) {}
 
     SelectionResult() = delete;
 

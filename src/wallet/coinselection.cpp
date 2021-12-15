@@ -63,7 +63,7 @@ static const size_t TOTAL_TRIES = 100000;
 
 std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
 {
-    SelectionResult result(selection_target);
+    SelectionResult result(selection_target, /* force_no_change=*/ true);
     CAmount curr_value = 0;
 
     std::vector<bool> curr_selection; // select the utxo at this index
