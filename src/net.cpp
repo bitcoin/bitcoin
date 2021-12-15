@@ -1090,7 +1090,7 @@ bool CConnman::AttemptToEvictConnection()
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
                 // follow when the incoming connection is from another masternode. When a message other than MNAUTH
                 // is received after VERSION/VERACK, the protection is lifted immediately.
-                bool isProtected = GetTimeSeconds() - node->nTimeConnected < INBOUND_EVICTION_PROTECTION_TIME;
+                bool isProtected = (GetTime<std::chrono::seconds>() - node->m_connected) < INBOUND_EVICTION_PROTECTION_TIME;
                 if (node->nTimeFirstMessageReceived != 0 && !node->fFirstMessageIsMNAUTH) {
                     isProtected = false;
                 }

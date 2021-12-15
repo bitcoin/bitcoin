@@ -83,7 +83,7 @@ static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
 static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 /** SYSCOIN Eviction protection time for incoming connections  */
-static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
+static constexpr std::chrono::seconds INBOUND_EVICTION_PROTECTION_TIME{1};
 /** Number of file descriptors required for message capture **/
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 
