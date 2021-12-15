@@ -37,13 +37,6 @@ bool checkMessage(const std::runtime_error& ex)
     return true;
 }
 
-bool checkMessageStdErr(const std::runtime_error& ex)
-{
-    const std::string what(ex.what());
-    BOOST_CHECK(what.find("RunCommandParseJSON error:") != std::string::npos);
-    return checkMessage(ex);
-}
-
 BOOST_AUTO_TEST_CASE(run_command)
 {
     {
@@ -79,7 +72,19 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Return non-zero exit code, with error message for stderr
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("ls nosuchfile"), std::runtime_error, checkMessageStdErr);
+#ifdef WIN32
+        const std::string command{"cmd.exe /c dir nosuchfile"};
+        const std::string expected{"File Not Found"};
+#else
+        const std::string command{"ls nosuchfile"};
+        const std::string expected{"No such file or directory"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
+            const std::string what(e.what());
+            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned", command)) != std::string::npos);
+            BOOST_CHECK(what.find(expected) != std::string::npos);
+            return true;
+        });
     }
     {
         BOOST_REQUIRE_THROW(RunCommandParseJSON("echo \"{\""), std::runtime_error); // Unable to parse JSON
