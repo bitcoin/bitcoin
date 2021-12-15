@@ -85,7 +85,7 @@ class TimeoutsTest(SyscoinTestFramework):
         ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
-            self.mock_forward(5)
+            self.mock_forward(2)
             no_verack_node.wait_for_disconnect(timeout=1)
             no_version_node.wait_for_disconnect(timeout=1)
             no_send_node.wait_for_disconnect(timeout=1)

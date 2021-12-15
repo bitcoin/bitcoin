@@ -131,6 +131,10 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     options.m_max_outbound_full_relay = max_outbound_full_relay;
     options.nMaxFeeler = MAX_FEELER_CONNECTIONS;
 
+    const auto time_init{GetTime<std::chrono::seconds>()};
+    SetMockTime(time_init);
+    // SYSCOIN we increased stale time to 10x bitcoin's because our target spacing is 1 min vs 10 min
+    const auto time_later{time_init + 30 * std::chrono::seconds{chainparams.GetConsensus().nPowTargetSpacing} + 1s};
     connman->Init(options);
     std::vector<CNode *> vNodes;
 
@@ -146,8 +150,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
         BOOST_CHECK(node->fDisconnect == false);
     }
 
-    // SYSCOIN we increased stale time to 10x bitcoin's because our target spacing is 1 min vs 10 min
-    SetMockTime(GetTime() + 30 * chainparams.GetConsensus().nPowTargetSpacing + 1);
+    SetMockTime(time_later);
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer
@@ -162,7 +165,9 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
+    SetMockTime(time_init);
     AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+    SetMockTime(time_later);
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_full_relay; ++i) {
@@ -238,7 +243,7 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
     // Update the last block time for the extra peer,
     // and check that the next youngest peer gets evicted.
     vNodes.back()->fDisconnect = false;
-    vNodes.back()->nLastBlockTime = GetTime();
+    vNodes.back()->m_last_block_time = GetTime<std::chrono::seconds>();
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_block_relay - 1; ++i) {
