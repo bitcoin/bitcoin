@@ -57,21 +57,23 @@ class InitStressTest(BitcoinTestFramework):
             assert_equal(200, node.getblockcount())
 
         lines_to_terminate_after = [
+            'Validating signatures for all blocks',
             'scheduler thread start',
+            'Starting HTTP server',
             'Loading P2P addresses',
             'Loading banlist',
             'Loading block index',
             'Switching active chainstate',
+            'Checking all blk files are present',
             'Loaded best chain:',
             'init message: Verifying blocks',
+            'init message: Starting network threads',
+            'net thread start',
+            'addcon thread start',
             'loadblk thread start',
             # TODO: reenable - see above TODO
             # 'txindex thread start',
-            'net thread start',
-            'addcon thread start',
-            'msghand thread start',
-            'Checking all blk files are present',
-            'init message: Starting network threads'
+            'msghand thread start'
         ]
         if self.is_wallet_compiled():
             lines_to_terminate_after.append('Verifying wallet')
