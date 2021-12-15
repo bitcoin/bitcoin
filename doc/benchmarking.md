@@ -2,29 +2,60 @@ Benchmarking
 ============
 
 Bitcoin Core has an internal benchmarking framework, with benchmarks
-for cryptographic algorithms such as SHA1, SHA256, SHA512 and RIPEMD160. As well as the rolling bloom filter.
+for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filter, coins selection,
+thread queue, wallet balance.
+
+Running
+---------------------
+
+For benchmarking, you only need to compile `bitcoin_bench`.  The bench runner
+warns if you configure with `--enable-debug`, but consider if building without
+it will impact the benchmark(s) you are interested in by unlatching log printers
+and lock analysis.
+
+    make -C src bitcoin_bench
 
 After compiling bitcoin-core, the benchmarks can be run with:
-`src/bench/bench_bitcoin`
+
+    src/bench/bench_bitcoin
 
 The output will look similar to:
 ```
-#Benchmark,count,min,max,average
-RIPEMD160,448,0.001245033173334,0.002638196945190,0.002461894814457
-RollingBloom-refresh,1,0.000635000000000,0.000635000000000,0.000635000000000
-RollingBloom-refresh,1,0.000108000000000,0.000108000000000,0.000108000000000
-RollingBloom-refresh,1,0.000107000000000,0.000107000000000,0.000107000000000
-RollingBloom-refresh,1,0.000204000000000,0.000204000000000,0.000204000000000
-SHA1,640,0.000909024336207,0.001938136418660,0.001843086257577
-SHA256,256,0.002209486499909,0.008500099182129,0.004300644621253
-SHA512,384,0.001319904176016,0.002813005447388,0.002615700786312
-Sleep100ms,10,0.205592155456543,0.210056066513062,0.104166316986084
-Trig,67108864,0.000000014997003,0.000000015448112,0.000000015188842
+|               ns/op |                op/s |    err% |     total | benchmark
+|--------------------:|--------------------:|--------:|----------:|:----------
+|       57,927,463.00 |               17.26 |    3.6% |      0.66 | `AddrManAdd`
+|          677,816.00 |            1,475.33 |    4.9% |      0.01 | `AddrManGetAddr`
+
+...
+
+|             ns/byte |              byte/s |    err% |     total | benchmark
+|--------------------:|--------------------:|--------:|----------:|:----------
+|              127.32 |        7,854,302.69 |    0.3% |      0.00 | `Base58CheckEncode`
+|               31.95 |       31,303,226.99 |    0.2% |      0.00 | `Base58Decode`
+
+...
 ```
 
+Help
+---------------------
+
+    src/bench/bench_bitcoin -?
+
+To print the various options, like listing the benchmarks without running them
+or using a regex filter to only run certain benchmarks.
+
+Notes
+---------------------
 More benchmarks are needed for, in no particular order:
 - Script Validation
-- CCoinDBView caching
 - Coins database
 - Memory pool
-- Wallet coin selection
+- Cuckoo Cache
+- P2P throughput
+
+Going Further
+--------------------
+
+To monitor Bitcoin Core performance more in depth (like reindex or IBD): https://github.com/chaincodelabs/bitcoinperf
+
+To generate Flame Graphs for Bitcoin Core: https://github.com/eklitzke/bitcoin/blob/flamegraphs/doc/flamegraphs.md

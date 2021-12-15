@@ -1,37 +1,34 @@
 // Copyright 2014 BitPay Inc.
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <iomanip>
-#include <sstream>
 #include <stdio.h>
 #include "univalue.h"
 #include "univalue_escapes.h"
 
-using namespace std;
-
-static string json_escape(const string& inS)
+static std::string json_escape(const std::string& inS)
 {
-    string outS;
+    std::string outS;
     outS.reserve(inS.size() * 2);
 
     for (unsigned int i = 0; i < inS.size(); i++) {
-        unsigned char ch = inS[i];
+        unsigned char ch = static_cast<unsigned char>(inS[i]);
         const char *escStr = escapes[ch];
 
         if (escStr)
             outS += escStr;
         else
-            outS += ch;
+            outS += static_cast<char>(ch);
     }
 
     return outS;
 }
 
-string UniValue::write(unsigned int prettyIndent,
-                       unsigned int indentLevel) const
+std::string UniValue::write(unsigned int prettyIndent,
+                            unsigned int indentLevel) const
 {
-    string s;
+    std::string s;
     s.reserve(1024);
 
     unsigned int modIndent = indentLevel;
@@ -62,12 +59,12 @@ string UniValue::write(unsigned int prettyIndent,
     return s;
 }
 
-static void indentStr(unsigned int prettyIndent, unsigned int indentLevel, string& s)
+static void indentStr(unsigned int prettyIndent, unsigned int indentLevel, std::string& s)
 {
     s.append(prettyIndent * indentLevel, ' ');
 }
 
-void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, string& s) const
+void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const
 {
     s += "[";
     if (prettyIndent)
@@ -79,8 +76,6 @@ void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, s
         s += values[i].write(prettyIndent, indentLevel + 1);
         if (i != (values.size() - 1)) {
             s += ",";
-            if (prettyIndent)
-                s += " ";
         }
         if (prettyIndent)
             s += "\n";
@@ -91,7 +86,7 @@ void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, s
     s += "]";
 }
 
-void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, string& s) const
+void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const
 {
     s += "{";
     if (prettyIndent)

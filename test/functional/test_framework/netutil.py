@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Linux network utilities.
@@ -9,23 +9,21 @@ Roughly based on http://voorloopnul.com/blog/a-python-netstat-in-less-than-100-l
 
 import sys
 import socket
-import fcntl
 import struct
 import array
 import os
-from binascii import unhexlify, hexlify
 
-STATE_ESTABLISHED = '01'
-STATE_SYN_SENT  = '02'
-STATE_SYN_RECV = '03'
-STATE_FIN_WAIT1 = '04'
-STATE_FIN_WAIT2 = '05'
-STATE_TIME_WAIT = '06'
-STATE_CLOSE = '07'
-STATE_CLOSE_WAIT = '08'
-STATE_LAST_ACK = '09'
+# STATE_ESTABLISHED = '01'
+# STATE_SYN_SENT  = '02'
+# STATE_SYN_RECV = '03'
+# STATE_FIN_WAIT1 = '04'
+# STATE_FIN_WAIT2 = '05'
+# STATE_TIME_WAIT = '06'
+# STATE_CLOSE = '07'
+# STATE_CLOSE_WAIT = '08'
+# STATE_LAST_ACK = '09'
 STATE_LISTEN = '0A'
-STATE_CLOSING = '0B'
+# STATE_CLOSING = '0B'
 
 def get_socket_inodes(pid):
     '''
@@ -45,7 +43,7 @@ def _remove_empty(array):
 def _convert_ip_port(array):
     host,port = array.split(':')
     # convert host from mangled-per-four-bytes form as used by kernel
-    host = unhexlify(host)
+    host = bytes.fromhex(host)
     host_out = ''
     for x in range(0, len(host) // 4):
         (val,) = struct.unpack('=I', host[x*4:(x+1)*4])
@@ -85,11 +83,13 @@ def get_bind_addrs(pid):
             bind_addrs.append(conn[1])
     return bind_addrs
 
-# from: http://code.activestate.com/recipes/439093/
+# from: https://code.activestate.com/recipes/439093/
 def all_interfaces():
     '''
     Return all interfaces that are up
     '''
+    import fcntl  # Linux only, so only import when required
+
     is_64bits = sys.maxsize > 2**32
     struct_size = 40 if is_64bits else 32
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -106,7 +106,7 @@ def all_interfaces():
             max_possible *= 2
         else:
             break
-    namestr = names.tostring()
+    namestr = names.tobytes()
     return [(namestr[i:i+16].split(b'\0', 1)[0],
              socket.inet_ntoa(namestr[i+20:i+24]))
             for i in range(0, outbytes, struct_size)]
@@ -128,17 +128,17 @@ def addr_to_hex(addr):
                 if i == 0 or i == (len(addr)-1): # skip empty component at beginning or end
                     continue
                 x += 1 # :: skips to suffix
-                assert(x < 2)
+                assert x < 2
             else: # two bytes per component
                 val = int(comp, 16)
                 sub[x].append(val >> 8)
                 sub[x].append(val & 0xff)
         nullbytes = 16 - len(sub[0]) - len(sub[1])
-        assert((x == 0 and nullbytes == 0) or (x == 1 and nullbytes > 0))
+        assert (x == 0 and nullbytes == 0) or (x == 1 and nullbytes > 0)
         addr = sub[0] + ([0] * nullbytes) + sub[1]
     else:
         raise ValueError('Could not parse address %s' % addr)
-    return hexlify(bytearray(addr)).decode('ascii')
+    return bytearray(addr).hex()
 
 def test_ipv6_local():
     '''
@@ -150,7 +150,7 @@ def test_ipv6_local():
     have_ipv6 = True
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        s.connect(('::1', 0))
+        s.connect(('::1', 1))
     except socket.error:
         have_ipv6 = False
     return have_ipv6

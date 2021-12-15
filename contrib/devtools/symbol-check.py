@@ -1,164 +1,295 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-A script to check that the (Linux) executables produced by gitian only contain
-allowed gcc, glibc and libstdc++ version symbols.  This makes sure they are
-still compatible with the minimum supported Linux distribution versions.
+A script to check that release executables only contain certain symbols
+and are only linked against allowed libraries.
 
 Example usage:
 
-    find ../gitian-builder/build -type f -executable | xargs python contrib/devtools/symbol-check.py
+    find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
-from __future__ import division, print_function, unicode_literals
-import subprocess
-import re
 import sys
-import os
+from typing import List, Dict
 
-# Debian 6.0.9 (Squeeze) has:
+import lief #type:ignore
+
+# temporary constant, to be replaced with lief.ELF.ARCH.RISCV
+# https://github.com/lief-project/LIEF/pull/562
+LIEF_ELF_ARCH_RISCV = lief.ELF.ARCH(243)
+
+# Debian 9 (Stretch) EOL: 2022. https://wiki.debian.org/DebianReleases#Production_Releases
 #
-# - g++ version 4.4.5 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=g%2B%2B)
-# - libc version 2.11.3 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libc6)
-# - libstdc++ version 4.4.5 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libstdc%2B%2B6)
+# - g++ version 6.3.0 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=g%2B%2B)
+# - libc version 2.24 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=libc6)
 #
-# Ubuntu 10.04.4 (Lucid Lynx) has:
+# Ubuntu 16.04 (Xenial) EOL: 2026. https://wiki.ubuntu.com/Releases
 #
-# - g++ version 4.4.3 (http://packages.ubuntu.com/search?keywords=g%2B%2B&searchon=names&suite=lucid&section=all)
-# - libc version 2.11.1 (http://packages.ubuntu.com/search?keywords=libc6&searchon=names&suite=lucid&section=all)
-# - libstdc++ version 4.4.3 (http://packages.ubuntu.com/search?suite=lucid&section=all&arch=any&keywords=libstdc%2B%2B&searchon=names)
+# - g++ version 5.3.1
+# - libc version 2.23
 #
-# Taking the minimum of these as our target.
+# CentOS Stream 8 EOL: 2024. https://wiki.centos.org/About/Product
 #
-# According to GNU ABI document (http://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html) this corresponds to:
-#   GCC 4.4.0: GCC_4.4.0
-#   GCC 4.4.2: GLIBCXX_3.4.13, CXXABI_1.3.3
-#   (glibc)    GLIBC_2_11
+# - g++ version 8.5.0 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
+# - libc version 2.28 (http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/)
 #
+# See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
+
 MAX_VERSIONS = {
-'GCC':     (4,4,0),
-'CXXABI':  (1,3,3),
-'GLIBCXX': (3,4,13),
-'GLIBC':   (2,11)
+'GCC':       (4,8,0),
+'GLIBC': {
+    lief.ELF.ARCH.i386:   (2,18),
+    lief.ELF.ARCH.x86_64: (2,18),
+    lief.ELF.ARCH.ARM:    (2,18),
+    lief.ELF.ARCH.AARCH64:(2,18),
+    lief.ELF.ARCH.PPC64:  (2,18),
+    LIEF_ELF_ARCH_RISCV:  (2,27),
+},
+'LIBATOMIC': (1,0),
+'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
 # See here for a description of _IO_stdin_used:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
-b'_edata', b'_end', b'_init', b'__bss_start', b'_fini', b'_IO_stdin_used'
+'_edata', '_end', '__end__', '_init', '__bss_start', '__bss_start__', '_bss_end__',
+'__bss_end__', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr',
+'environ', '_environ', '__environ',
 }
-READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
-CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
+
+# Expected linker-loader names can be found here:
+# https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
+ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
+    lief.ELF.ARCH.i386:    {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux.so.2",
+    },
+    lief.ELF.ARCH.x86_64:  {
+        lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
+    },
+    lief.ELF.ARCH.ARM:     {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
+    },
+    lief.ELF.ARCH.AARCH64: {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-aarch64.so.1",
+    },
+    lief.ELF.ARCH.PPC64:   {
+        lief.ENDIANNESS.BIG: "/lib64/ld64.so.1",
+        lief.ENDIANNESS.LITTLE: "/lib64/ld64.so.2",
+    },
+    LIEF_ELF_ARCH_RISCV:    {
+        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-riscv64-lp64d.so.1",
+    },
+}
+
 # Allowed NEEDED libraries
-ALLOWED_LIBRARIES = {
+ELF_ALLOWED_LIBRARIES = {
 # bitcoind and bitcoin-qt
-b'libgcc_s.so.1', # GCC base support
-b'libc.so.6', # C library
-b'libpthread.so.0', # threading
-b'libanl.so.1', # DNS resolve
-b'libm.so.6', # math library
-b'librt.so.1', # real-time (clock)
-b'ld-linux-x86-64.so.2', # 64-bit dynamic linker
-b'ld-linux.so.2', # 32-bit dynamic linker
+'libgcc_s.so.1', # GCC base support
+'libc.so.6', # C library
+'libpthread.so.0', # threading
+'libm.so.6', # math library
+'librt.so.1', # real-time (clock)
+'libatomic.so.1',
+'ld-linux-x86-64.so.2', # 64-bit dynamic linker
+'ld-linux.so.2', # 32-bit dynamic linker
+'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
+'ld-linux-armhf.so.3', # 32-bit ARM dynamic linker
+'ld64.so.1', # POWER64 ABIv1 dynamic linker
+'ld64.so.2', # POWER64 ABIv2 dynamic linker
+'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
-b'libX11-xcb.so.1', # part of X11
-b'libX11.so.6', # part of X11
-b'libxcb.so.1', # part of X11
-b'libfontconfig.so.1', # font support
-b'libfreetype.so.6', # font parsing
-b'libdl.so.2' # programming interface to dynamic linker
+'libxcb.so.1', # part of X11
+'libxkbcommon.so.0', # keyboard keymapping
+'libxkbcommon-x11.so.0', # keyboard keymapping
+'libfontconfig.so.1', # font support
+'libfreetype.so.6', # font parsing
+'libdl.so.2', # programming interface to dynamic linker
+'libxcb-icccm.so.4',
+'libxcb-image.so.0',
+'libxcb-shm.so.0',
+'libxcb-keysyms.so.1',
+'libxcb-randr.so.0',
+'libxcb-render-util.so.0',
+'libxcb-render.so.0',
+'libxcb-shape.so.0',
+'libxcb-sync.so.1',
+'libxcb-xfixes.so.0',
+'libxcb-xinerama.so.0',
+'libxcb-xkb.so.1',
 }
 
-class CPPFilt(object):
-    '''
-    Demangle C++ symbol names.
+MACHO_ALLOWED_LIBRARIES = {
+# bitcoind and bitcoin-qt
+'libc++.1.dylib', # C++ Standard Library
+'libSystem.B.dylib', # libc, libm, libpthread, libinfo
+# bitcoin-qt only
+'AppKit', # user interface
+'ApplicationServices', # common application tasks.
+'Carbon', # deprecated c back-compat API
+'ColorSync',
+'CoreFoundation', # low level func, data types
+'CoreGraphics', # 2D rendering
+'CoreServices', # operating system services
+'CoreText', # interface for laying out text and handling fonts.
+'CoreVideo', # video processing
+'Foundation', # base layer functionality for apps/frameworks
+'ImageIO', # read and write image file formats.
+'IOKit', # user-space access to hardware devices and drivers.
+'IOSurface', # cross process image/drawing buffers
+'libobjc.A.dylib', # Objective-C runtime library
+'Metal', # 3D graphics
+'Security', # access control and authentication
+'QuartzCore', # animation
+}
 
-    Use a pipe to the 'c++filt' command.
-    '''
-    def __init__(self):
-        self.proc = subprocess.Popen(CPPFILT_CMD, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+PE_ALLOWED_LIBRARIES = {
+'ADVAPI32.dll', # security & registry
+'IPHLPAPI.DLL', # IP helper API
+'KERNEL32.dll', # win32 base APIs
+'msvcrt.dll', # C standard library for MSVC
+'SHELL32.dll', # shell API
+'USER32.dll', # user interface
+'WS2_32.dll', # sockets
+# bitcoin-qt only
+'dwmapi.dll', # desktop window manager
+'GDI32.dll', # graphics device interface
+'IMM32.dll', # input method editor
+'NETAPI32.dll',
+'ole32.dll', # component object model
+'OLEAUT32.dll', # OLE Automation API
+'SHLWAPI.dll', # light weight shell API
+'USERENV.dll',
+'UxTheme.dll',
+'VERSION.dll', # version checking
+'WINMM.dll', # WinMM audio API
+'WTSAPI32.dll',
+}
 
-    def __call__(self, mangled):
-        self.proc.stdin.write(mangled + b'\n')
-        self.proc.stdin.flush()
-        return self.proc.stdout.readline().rstrip()
-
-    def close(self):
-        self.proc.stdin.close()
-        self.proc.stdout.close()
-        self.proc.wait()
-
-def read_symbols(executable, imports=True):
-    '''
-    Parse an ELF executable and return a list of (symbol,version) tuples
-    for dynamic, imported symbols.
-    '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Could not read symbols for %s: %s' % (executable, stderr.strip()))
-    syms = []
-    for line in stdout.split(b'\n'):
-        line = line.split()
-        if len(line)>7 and re.match(b'[0-9]+:$', line[0]):
-            (sym, _, version) = line[7].partition(b'@')
-            is_import = line[6] == b'UND'
-            if version.startswith(b'@'):
-                version = version[1:]
-            if is_import == imports:
-                syms.append((sym, version))
-    return syms
-
-def check_version(max_versions, version):
-    if b'_' in version:
-        (lib, _, ver) = version.rpartition(b'_')
-    else:
-        lib = version
-        ver = '0'
-    ver = tuple([int(x) for x in ver.split(b'.')])
+def check_version(max_versions, version, arch) -> bool:
+    (lib, _, ver) = version.rpartition('_')
+    ver = tuple([int(x) for x in ver.split('.')])
     if not lib in max_versions:
         return False
-    return ver <= max_versions[lib]
+    if isinstance(max_versions[lib], tuple):
+        return ver <= max_versions[lib]
+    else:
+        return ver <= max_versions[lib][arch]
 
-def read_libraries(filename):
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
-    libraries = []
-    for line in stdout.split(b'\n'):
-        tokens = line.split()
-        if len(tokens)>2 and tokens[1] == b'(NEEDED)':
-            match = re.match(b'^Shared library: \[(.*)\]$', b' '.join(tokens[2:]))
-            if match:
-                libraries.append(match.group(1))
-            else:
-                raise ValueError('Unparseable (NEEDED) specification')
-    return libraries
+def check_imported_symbols(binary) -> bool:
+    ok: bool = True
+
+    for symbol in binary.imported_symbols:
+        if not symbol.imported:
+            continue
+
+        version = symbol.symbol_version if symbol.has_version else None
+
+        if version:
+            aux_version = version.symbol_version_auxiliary.name if version.has_auxiliary_version else None
+            if aux_version and not check_version(MAX_VERSIONS, aux_version, binary.header.machine_type):
+                print(f'{filename}: symbol {symbol.name} from unsupported version {version}')
+                ok = False
+    return ok
+
+def check_exported_symbols(binary) -> bool:
+    ok: bool = True
+
+    for symbol in binary.dynamic_symbols:
+        if not symbol.exported:
+            continue
+        name = symbol.name
+        if binary.header.machine_type == LIEF_ELF_ARCH_RISCV or name in IGNORE_EXPORTS:
+            continue
+        print(f'{binary.name}: export of symbol {name} not allowed!')
+        ok = False
+    return ok
+
+def check_ELF_libraries(binary) -> bool:
+    ok: bool = True
+    for library in binary.libraries:
+        if library not in ELF_ALLOWED_LIBRARIES:
+            print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')
+            ok = False
+    return ok
+
+def check_MACHO_libraries(binary) -> bool:
+    ok: bool = True
+    for dylib in binary.libraries:
+        split = dylib.name.split('/')
+        if split[-1] not in MACHO_ALLOWED_LIBRARIES:
+            print(f'{split[-1]} is not in ALLOWED_LIBRARIES!')
+            ok = False
+    return ok
+
+def check_MACHO_min_os(binary) -> bool:
+    if binary.build_version.minos == [10,15,0]:
+        return True
+    return False
+
+def check_MACHO_sdk(binary) -> bool:
+    if binary.build_version.sdk == [10, 15, 6]:
+        return True
+    return False
+
+def check_PE_libraries(binary) -> bool:
+    ok: bool = True
+    for dylib in binary.libraries:
+        if dylib not in PE_ALLOWED_LIBRARIES:
+            print(f'{dylib} is not in ALLOWED_LIBRARIES!')
+            ok = False
+    return ok
+
+def check_PE_subsystem_version(binary) -> bool:
+    major: int = binary.optional_header.major_subsystem_version
+    minor: int = binary.optional_header.minor_subsystem_version
+    if major == 6 and minor == 1:
+        return True
+    return False
+
+def check_ELF_interpreter(binary) -> bool:
+    expected_interpreter = ELF_INTERPRETER_NAMES[binary.header.machine_type][binary.abstract.header.endianness]
+
+    return binary.concrete.interpreter == expected_interpreter
+
+CHECKS = {
+'ELF': [
+    ('IMPORTED_SYMBOLS', check_imported_symbols),
+    ('EXPORTED_SYMBOLS', check_exported_symbols),
+    ('LIBRARY_DEPENDENCIES', check_ELF_libraries),
+    ('INTERPRETER_NAME', check_ELF_interpreter),
+],
+'MACHO': [
+    ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
+    ('MIN_OS', check_MACHO_min_os),
+    ('SDK', check_MACHO_sdk),
+],
+'PE' : [
+    ('DYNAMIC_LIBRARIES', check_PE_libraries),
+    ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
+]
+}
 
 if __name__ == '__main__':
-    cppfilt = CPPFilt()
-    retval = 0
+    retval: int = 0
     for filename in sys.argv[1:]:
-        # Check imported symbols
-        for sym,version in read_symbols(filename, True):
-            if version and not check_version(MAX_VERSIONS, version):
-                print('%s: symbol %s from unsupported version %s' % (filename, cppfilt(sym).decode('utf-8'), version.decode('utf-8')))
+        try:
+            binary = lief.parse(filename)
+            etype = binary.format.name
+            if etype == lief.EXE_FORMATS.UNKNOWN:
+                print(f'{filename}: unknown executable format')
                 retval = 1
-        # Check exported symbols
-        for sym,version in read_symbols(filename, False):
-            if sym in IGNORE_EXPORTS:
                 continue
-            print('%s: export of symbol %s not allowed' % (filename, cppfilt(sym).decode('utf-8')))
-            retval = 1
-        # Check dependency libraries
-        for library_name in read_libraries(filename):
-            if library_name not in ALLOWED_LIBRARIES:
-                print('%s: NEEDED library %s is not allowed' % (filename, library_name.decode('utf-8')))
+
+            failed: List[str] = []
+            for (name, func) in CHECKS[etype]:
+                if not func(binary):
+                    failed.append(name)
+            if failed:
+                print(f'{filename}: failed {" ".join(failed)}')
                 retval = 1
-
-    exit(retval)
-
-
+        except IOError:
+            print(f'{filename}: cannot open')
+            retval = 1
+    sys.exit(retval)

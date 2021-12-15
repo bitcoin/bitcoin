@@ -1,0 +1,69 @@
+From 9563cef873ae82e06f60708d706d054717e801ce Mon Sep 17 00:00:00 2001
+From: Carl Dong <contact@carldong.me>
+Date: Thu, 18 Jul 2019 17:22:05 -0400
+Subject: [PATCH] Wrap xlib related code blocks in #if's
+
+They are not necessary to compile QT.
+---
+ qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp b/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
+index 7c62c2e2b3..c05c6c0a07 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
++++ b/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
+@@ -49,7 +49,9 @@
+ #include <QtGui/QWindow>
+ #include <QtGui/QBitmap>
+ #include <QtGui/private/qguiapplication_p.h>
++#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
+ #include <X11/cursorfont.h>
++#endif
+ #include <xcb/xfixes.h>
+ #include <xcb/xcb_image.h>
+ 
+@@ -391,6 +391,7 @@ void QXcbCursor::changeCursor(QCursor *cursor, QWindow *window)
+     xcb_flush(xcb_connection());
+ }
+ 
++#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
+ static int cursorIdForShape(int cshape)
+ {
+     int cursorId = 0;
+@@ -444,6 +445,7 @@ static int cursorIdForShape(int cshape)
+     }
+     return cursorId;
+ }
++#endif
+ 
+ xcb_cursor_t QXcbCursor::createNonStandardCursor(int cshape)
+ {
+@@ -556,7 +558,9 @@ static xcb_cursor_t loadCursor(void *dpy, int cshape)
+ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+ {
+     xcb_connection_t *conn = xcb_connection();
++#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
+     int cursorId = cursorIdForShape(cshape);
++#endif
+     xcb_cursor_t cursor = XCB_NONE;
+ 
+     // Try Xcursor first
+@@ -586,6 +590,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+     // Non-standard X11 cursors are created from bitmaps
+     cursor = createNonStandardCursor(cshape);
+ 
++#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
+     // Create a glpyh cursor if everything else failed
+     if (!cursor && cursorId) {
+         cursor = xcb_generate_id(conn);
+@@ -593,6 +598,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+                                 cursorId, cursorId + 1,
+                                 0xFFFF, 0xFFFF, 0xFFFF, 0, 0, 0);
+     }
++#endif
+ 
+     if (cursor && cshape >= 0 && cshape < Qt::LastCursor && connection()->hasXFixes()) {
+         const char *name = cursorNames[cshape].front();
+-- 
+2.22.0
+

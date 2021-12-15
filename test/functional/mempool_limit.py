@@ -1,48 +1,92 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool limiting together/eviction with the wallet."""
 
+from decimal import Decimal
+
+from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_rpc_error,
+    gen_return_txouts,
+)
+from test_framework.wallet import MiniWallet
+
 
 class MempoolLimitTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-maxmempool=5", "-spendzeroconfchange=0"]]
+        self.extra_args = [[
+            "-acceptnonstdtxn=1",
+            "-maxmempool=5",
+            "-spendzeroconfchange=0",
+        ]]
+        self.supports_cli = False
+
+    def send_large_txs(self, node, miniwallet, txouts, fee, tx_batch_size):
+        for _ in range(tx_batch_size):
+            tx = miniwallet.create_self_transfer(from_node=node, fee_rate=0, mempool_valid=False)['tx']
+            for txout in txouts:
+                tx.vout.append(txout)
+            tx.vout[0].nValue -= int(fee * COIN)
+            res = node.testmempoolaccept([tx.serialize().hex()])[0]
+            assert_equal(res['fees']['base'], fee)
+            miniwallet.sendrawtransaction(from_node=node, tx_hex=tx.serialize().hex())
 
     def run_test(self):
         txouts = gen_return_txouts()
-        relayfee = self.nodes[0].getnetworkinfo()['relayfee']
+        node = self.nodes[0]
+        miniwallet = MiniWallet(node)
+        relayfee = node.getnetworkinfo()['relayfee']
 
-        txids = []
-        utxos = create_confirmed_utxos(relayfee, self.nodes[0], 91)
+        self.log.info('Check that mempoolminfee is minrelaytxfee')
+        assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
+        assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        #create a mempool tx that will be evicted
-        us0 = utxos.pop()
-        inputs = [{ "txid" : us0["txid"], "vout" : us0["vout"]}]
-        outputs = {self.nodes[0].getnewaddress() : 0.0001}
-        tx = self.nodes[0].createrawtransaction(inputs, outputs)
-        self.nodes[0].settxfee(relayfee) # specifically fund this tx with low fee
-        txF = self.nodes[0].fundrawtransaction(tx)
-        self.nodes[0].settxfee(0) # return to automatic fee selection
-        txFS = self.nodes[0].signrawtransaction(txF['hex'])
-        txid = self.nodes[0].sendrawtransaction(txFS['hex'])
+        tx_batch_size = 25
+        num_of_batches = 3
+        # Generate UTXOs to flood the mempool
+        # 1 to create a tx initially that will be evicted from the mempool later
+        # 3 batches of multiple transactions with a fee rate much higher than the previous UTXO
+        # And 1 more to verify that this tx does not get added to the mempool with a fee rate less than the mempoolminfee
+        self.generate(miniwallet, 1 + (num_of_batches * tx_batch_size) + 1)
 
-        relayfee = self.nodes[0].getnetworkinfo()['relayfee']
-        base_fee = relayfee*100
-        for i in range (3):
-            txids.append([])
-            txids[i] = create_lots_of_big_transactions(self.nodes[0], txouts, utxos[30*i:30*i+30], 30, (i+1)*base_fee)
+        # Mine 99 blocks so that the UTXOs are allowed to be spent
+        self.generate(node, COINBASE_MATURITY - 1)
 
-        # by now, the tx should be evicted, check confirmation state
-        assert(txid not in self.nodes[0].getrawmempool())
-        txdata = self.nodes[0].gettransaction(txid)
-        assert(txdata['confirmations'] ==  0) #confirmation should still be 0
+        self.log.info('Create a mempool tx that will be evicted')
+        tx_to_be_evicted_id = miniwallet.send_self_transfer(from_node=node, fee_rate=relayfee)["txid"]
+
+        # Increase the tx fee rate to give the subsequent transactions a higher priority in the mempool
+        # The tx has an approx. vsize of 65k, i.e. multiplying the previous fee rate (in sats/kvB)
+        # by 130 should result in a fee that corresponds to 2x of that fee rate
+        base_fee = relayfee * 130
+
+        self.log.info("Fill up the mempool with txs with higher fee rate")
+        for batch_of_txid in range(num_of_batches):
+            fee = (batch_of_txid + 1) * base_fee
+            self.send_large_txs(node, miniwallet, txouts, fee, tx_batch_size)
+
+        self.log.info('The tx should be evicted by now')
+        # The number of transactions created should be greater than the ones present in the mempool
+        assert_greater_than(tx_batch_size * num_of_batches, len(node.getrawmempool()))
+        # Initial tx created should not be present in the mempool anymore as it had a lower fee rate
+        assert tx_to_be_evicted_id not in node.getrawmempool()
+
+        self.log.info('Check that mempoolminfee is larger than minrelaytxfee')
+        assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
+        assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+
+        # Deliberately try to create a tx with a fee less than the minimum mempool fee to assert that it does not get added to the mempool
+        self.log.info('Create a mempool tx that will not pass mempoolminfee')
+        assert_raises_rpc_error(-26, "mempool min fee not met", miniwallet.send_self_transfer, from_node=node, fee_rate=relayfee, mempool_valid=False)
+
 
 if __name__ == '__main__':
     MempoolLimitTest().main()

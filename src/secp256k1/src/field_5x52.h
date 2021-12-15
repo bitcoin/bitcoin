@@ -1,16 +1,18 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
-#ifndef _SECP256K1_FIELD_REPR_
-#define _SECP256K1_FIELD_REPR_
+#ifndef SECP256K1_FIELD_REPR_H
+#define SECP256K1_FIELD_REPR_H
 
 #include <stdint.h>
 
 typedef struct {
-    /* X = sum(i=0..4, elem[i]*2^52) mod n */
+    /* X = sum(i=0..4, n[i]*2^(i*52)) mod p
+     * where p = 2^256 - 0x1000003D1
+     */
     uint64_t n[5];
 #ifdef VERIFY
     int magnitude;
@@ -44,4 +46,10 @@ typedef struct {
     (d6) | (((uint64_t)(d7)) << 32) \
 }}
 
-#endif
+#define SECP256K1_FE_STORAGE_CONST_GET(d) \
+    (uint32_t)(d.n[3] >> 32), (uint32_t)d.n[3], \
+    (uint32_t)(d.n[2] >> 32), (uint32_t)d.n[2], \
+    (uint32_t)(d.n[1] >> 32), (uint32_t)d.n[1], \
+    (uint32_t)(d.n[0] >> 32), (uint32_t)d.n[0]
+
+#endif /* SECP256K1_FIELD_REPR_H */

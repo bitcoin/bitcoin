@@ -1,7 +1,7 @@
 m4_define([libunivalue_major_version], [1])
 m4_define([libunivalue_minor_version], [1])
-m4_define([libunivalue_micro_version], [2])
-m4_define([libunivalue_interface_age], [2])
+m4_define([libunivalue_micro_version], [4])
+m4_define([libunivalue_interface_age], [4])
 # If you need a modifier for the version number. 
 # Normally empty, but can be used to make "fixup" releases.
 m4_define([libunivalue_extraversion], [])
@@ -14,7 +14,7 @@ m4_define([libunivalue_age], [m4_eval(libunivalue_binary_age - libunivalue_inter
 m4_define([libunivalue_version], [libunivalue_major_version().libunivalue_minor_version().libunivalue_micro_version()libunivalue_extraversion()])
 
 
-AC_INIT([univalue], [1.0.2],
+AC_INIT([univalue], [1.0.4],
         [http://github.com/jgarzik/univalue/])
 
 dnl make the compilation flags quiet unless V=1 is used
@@ -44,6 +44,9 @@ AC_SUBST(LIBUNIVALUE_AGE)
 
 LT_INIT
 LT_LANG([C++])
+
+dnl Require C++11 compiler (no GNU extensions)
+AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory], [nodefault])
 
 case $host in
   *mingw*)

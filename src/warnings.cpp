@@ -1,83 +1,60 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "sync.h"
-#include "clientversion.h"
-#include "util.h"
-#include "warnings.h"
+#include <warnings.h>
 
-CCriticalSection cs_warnings;
-std::string strMiscWarning;
-bool fLargeWorkForkFound = false;
-bool fLargeWorkInvalidChainFound = false;
+#include <sync.h>
+#include <util/string.h>
+#include <util/system.h>
+#include <util/translation.h>
 
-void SetMiscWarning(const std::string& strWarning)
+#include <vector>
+
+static Mutex g_warnings_mutex;
+static bilingual_str g_misc_warnings GUARDED_BY(g_warnings_mutex);
+static bool fLargeWorkInvalidChainFound GUARDED_BY(g_warnings_mutex) = false;
+
+void SetMiscWarning(const bilingual_str& warning)
 {
-    LOCK(cs_warnings);
-    strMiscWarning = strWarning;
-}
-
-void SetfLargeWorkForkFound(bool flag)
-{
-    LOCK(cs_warnings);
-    fLargeWorkForkFound = flag;
-}
-
-bool GetfLargeWorkForkFound()
-{
-    LOCK(cs_warnings);
-    return fLargeWorkForkFound;
+    LOCK(g_warnings_mutex);
+    g_misc_warnings = warning;
 }
 
 void SetfLargeWorkInvalidChainFound(bool flag)
 {
-    LOCK(cs_warnings);
+    LOCK(g_warnings_mutex);
     fLargeWorkInvalidChainFound = flag;
 }
 
-std::string GetWarnings(const std::string& strFor)
+bilingual_str GetWarnings(bool verbose)
 {
-    std::string strStatusBar;
-    std::string strRPC;
-    std::string strGUI;
-    const std::string uiAlertSeperator = "<hr />";
+    bilingual_str warnings_concise;
+    std::vector<bilingual_str> warnings_verbose;
 
-    LOCK(cs_warnings);
+    LOCK(g_warnings_mutex);
 
+    // Pre-release build warning
     if (!CLIENT_VERSION_IS_RELEASE) {
-        strStatusBar = "This is a pre-release test build - use at your own risk - do not use for mining or merchant applications";
-        strGUI = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
+        warnings_concise = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
+        warnings_verbose.emplace_back(warnings_concise);
     }
-
-    if (GetBoolArg("-testsafemode", DEFAULT_TESTSAFEMODE))
-        strStatusBar = strRPC = strGUI = "testsafemode enabled";
 
     // Misc warnings like out of disk space and clock is wrong
-    if (strMiscWarning != "")
-    {
-        strStatusBar = strMiscWarning;
-        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + strMiscWarning;
+    if (!g_misc_warnings.empty()) {
+        warnings_concise = g_misc_warnings;
+        warnings_verbose.emplace_back(warnings_concise);
     }
 
-    if (fLargeWorkForkFound)
-    {
-        strStatusBar = strRPC = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.";
-        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.");
-    }
-    else if (fLargeWorkInvalidChainFound)
-    {
-        strStatusBar = strRPC = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
-        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
+    if (fLargeWorkInvalidChainFound) {
+        warnings_concise = _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
+        warnings_verbose.emplace_back(warnings_concise);
     }
 
-    if (strFor == "gui")
-        return strGUI;
-    else if (strFor == "statusbar")
-        return strStatusBar;
-    else if (strFor == "rpc")
-        return strRPC;
-    assert(!"GetWarnings(): invalid parameter");
-    return "error";
+    if (verbose) {
+        return Join(warnings_verbose, Untranslated("<hr />"));
+    }
+
+    return warnings_concise;
 }

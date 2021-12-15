@@ -21,8 +21,7 @@ void BlockHandle::EncodeTo(std::string* dst) const {
 }
 
 Status BlockHandle::DecodeFrom(Slice* input) {
-  if (GetVarint64(input, &offset_) &&
-      GetVarint64(input, &size_)) {
+  if (GetVarint64(input, &offset_) && GetVarint64(input, &size_)) {
     return Status::OK();
   } else {
     return Status::Corruption("bad block handle");
@@ -62,10 +61,8 @@ Status Footer::DecodeFrom(Slice* input) {
   return result;
 }
 
-Status ReadBlock(RandomAccessFile* file,
-                 const ReadOptions& options,
-                 const BlockHandle& handle,
-                 BlockContents* result) {
+Status ReadBlock(RandomAccessFile* file, const ReadOptions& options,
+                 const BlockHandle& handle, BlockContents* result) {
   result->data = Slice();
   result->cachable = false;
   result->heap_allocated = false;
@@ -82,17 +79,17 @@ Status ReadBlock(RandomAccessFile* file,
   }
   if (contents.size() != n + kBlockTrailerSize) {
     delete[] buf;
-    return Status::Corruption("truncated block read");
+    return Status::Corruption("truncated block read", file->GetName());
   }
 
   // Check the crc of the type and the block contents
-  const char* data = contents.data();    // Pointer to where Read put the data
+  const char* data = contents.data();  // Pointer to where Read put the data
   if (options.verify_checksums) {
     const uint32_t crc = crc32c::Unmask(DecodeFixed32(data + n + 1));
     const uint32_t actual = crc32c::Value(data, n + 1);
     if (actual != crc) {
       delete[] buf;
-      s = Status::Corruption("block checksum mismatch");
+      s = Status::Corruption("block checksum mismatch", file->GetName());
       return s;
     }
   }
@@ -119,13 +116,13 @@ Status ReadBlock(RandomAccessFile* file,
       size_t ulength = 0;
       if (!port::Snappy_GetUncompressedLength(data, n, &ulength)) {
         delete[] buf;
-        return Status::Corruption("corrupted compressed block contents");
+        return Status::Corruption("corrupted compressed block contents", file->GetName());
       }
       char* ubuf = new char[ulength];
       if (!port::Snappy_Uncompress(data, n, ubuf)) {
         delete[] buf;
         delete[] ubuf;
-        return Status::Corruption("corrupted compressed block contents");
+        return Status::Corruption("corrupted compressed block contents", file->GetName());
       }
       delete[] buf;
       result->data = Slice(ubuf, ulength);
@@ -135,7 +132,7 @@ Status ReadBlock(RandomAccessFile* file,
     }
     default:
       delete[] buf;
-      return Status::Corruption("bad block type");
+      return Status::Corruption("bad block type", file->GetName());
   }
 
   return Status::OK();

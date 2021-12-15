@@ -1,16 +1,16 @@
-// Copyright (c) 2013-2016 The Bitcoin Core developers
+// Copyright (c) 2013-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "hash.h"
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
-
-#include <vector>
+#include <clientversion.h>
+#include <crypto/siphash.h>
+#include <hash.h>
+#include <test/util/setup_common.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(hash_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(hash_tests)
 
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {
@@ -25,22 +25,22 @@ BOOST_AUTO_TEST_CASE(murmurhash3)
     //
     // The magic number 0xFBA4C795 comes from CBloomFilter::Hash()
 
-    T(0x00000000, 0x00000000, "");
-    T(0x6a396f08, 0xFBA4C795, "");
-    T(0x81f16f39, 0xffffffff, "");
+    T(0x00000000U, 0x00000000, "");
+    T(0x6a396f08U, 0xFBA4C795, "");
+    T(0x81f16f39U, 0xffffffff, "");
 
-    T(0x514e28b7, 0x00000000, "00");
-    T(0xea3f0b17, 0xFBA4C795, "00");
-    T(0xfd6cf10d, 0x00000000, "ff");
+    T(0x514e28b7U, 0x00000000, "00");
+    T(0xea3f0b17U, 0xFBA4C795, "00");
+    T(0xfd6cf10dU, 0x00000000, "ff");
 
-    T(0x16c6b7ab, 0x00000000, "0011");
-    T(0x8eb51c3d, 0x00000000, "001122");
-    T(0xb4471bf8, 0x00000000, "00112233");
-    T(0xe2301fa8, 0x00000000, "0011223344");
-    T(0xfc2e4a15, 0x00000000, "001122334455");
-    T(0xb074502c, 0x00000000, "00112233445566");
-    T(0x8034d2a0, 0x00000000, "0011223344556677");
-    T(0xb4698def, 0x00000000, "001122334455667788");
+    T(0x16c6b7abU, 0x00000000, "0011");
+    T(0x8eb51c3dU, 0x00000000, "001122");
+    T(0xb4471bf8U, 0x00000000, "00112233");
+    T(0xe2301fa8U, 0x00000000, "0011223344");
+    T(0xfc2e4a15U, 0x00000000, "001122334455");
+    T(0xb074502cU, 0x00000000, "00112233445566");
+    T(0x8034d2a0U, 0x00000000, "0011223344556677");
+    T(0xb4698defU, 0x00000000, "001122334455667788");
 
 #undef T
 }
@@ -107,14 +107,14 @@ BOOST_AUTO_TEST_CASE(siphash)
 
     // Check test vectors from spec, one byte at a time
     CSipHasher hasher2(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
-    for (uint8_t x=0; x<ARRAYLEN(siphash_4_2_testvec); ++x)
+    for (uint8_t x=0; x<std::size(siphash_4_2_testvec); ++x)
     {
         BOOST_CHECK_EQUAL(hasher2.Finalize(), siphash_4_2_testvec[x]);
         hasher2.Write(&x, 1);
     }
     // Check test vectors from spec, eight bytes at a time
     CSipHasher hasher3(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
-    for (uint8_t x=0; x<ARRAYLEN(siphash_4_2_testvec); x+=8)
+    for (uint8_t x=0; x<std::size(siphash_4_2_testvec); x+=8)
     {
         BOOST_CHECK_EQUAL(hasher3.Finalize(), siphash_4_2_testvec[x]);
         hasher3.Write(uint64_t(x)|(uint64_t(x+1)<<8)|(uint64_t(x+2)<<16)|(uint64_t(x+3)<<24)|

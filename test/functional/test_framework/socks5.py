@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Dummy Socks5 server for testing."""
 
-import socket, threading, queue
+import socket
+import threading
+import queue
 import logging
 
 logger = logging.getLogger("TestFramework.socks5")
 
-### Protocol constants
+# Protocol constants
 class Command:
     CONNECT = 0x01
 
@@ -18,7 +20,7 @@ class AddressType:
     DOMAINNAME = 0x03
     IPV6 = 0x04
 
-### Utility functions
+# Utility functions
 def recvall(s, n):
     """Receive n bytes from a socket, or fail."""
     rv = bytearray()
@@ -30,8 +32,8 @@ def recvall(s, n):
         n -= len(d)
     return rv
 
-### Implementation classes
-class Socks5Configuration(object):
+# Implementation classes
+class Socks5Configuration():
     """Proxy configuration."""
     def __init__(self):
         self.addr = None # Bind address (must be set)
@@ -39,7 +41,7 @@ class Socks5Configuration(object):
         self.unauth = False  # Support unauthenticated
         self.auth = False  # Support authentication
 
-class Socks5Command(object):
+class Socks5Command():
     """Information about an incoming socks5 command."""
     def __init__(self, cmd, atyp, addr, port, username, password):
         self.cmd = cmd # Command (one of Command.*)
@@ -51,11 +53,10 @@ class Socks5Command(object):
     def __repr__(self):
         return 'Socks5Command(%s,%s,%s,%s,%s,%s)' % (self.cmd, self.atyp, self.addr, self.port, self.username, self.password)
 
-class Socks5Connection(object):
-    def __init__(self, serv, conn, peer):
+class Socks5Connection():
+    def __init__(self, serv, conn):
         self.serv = serv
         self.conn = conn
-        self.peer = peer
 
     def handle(self):
         """Handle socks5 request according to RFC192."""
@@ -91,7 +92,7 @@ class Socks5Connection(object):
                 self.conn.sendall(bytearray([0x01, 0x00]))
 
             # Read connect request
-            (ver,cmd,rsv,atyp) = recvall(self.conn, 4)
+            ver, cmd, _, atyp = recvall(self.conn, 4)
             if ver != 0x05:
                 raise IOError('Invalid socks version %i in connect request' % ver)
             if cmd != Command.CONNECT:
@@ -122,7 +123,7 @@ class Socks5Connection(object):
         finally:
             self.conn.close()
 
-class Socks5Server(object):
+class Socks5Server():
     def __init__(self, conf):
         self.conf = conf
         self.s = socket.socket(conf.af)
@@ -135,15 +136,15 @@ class Socks5Server(object):
 
     def run(self):
         while self.running:
-            (sockconn, peer) = self.s.accept()
+            (sockconn, _) = self.s.accept()
             if self.running:
-                conn = Socks5Connection(self, sockconn, peer)
+                conn = Socks5Connection(self, sockconn)
                 thread = threading.Thread(None, conn.handle)
                 thread.daemon = True
                 thread.start()
-    
+
     def start(self):
-        assert(not self.running)
+        assert not self.running
         self.running = True
         self.thread = threading.Thread(None, self.run)
         self.thread.daemon = True

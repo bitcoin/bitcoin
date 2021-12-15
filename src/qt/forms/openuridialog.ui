@@ -11,16 +11,9 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Open URI</string>
+   <string>Open bitcoin URI</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Open payment request from URI or file</string>
-     </property>
-    </widget>
-   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -31,18 +24,30 @@
       </widget>
      </item>
      <item>
-      <widget class="QValidatedLineEdit" name="uriEdit"/>
+      <widget class="QValidatedLineEdit" name="uriEdit">
+       <property name="placeholderText">
+        <string notr="true">bitcoin:</string>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="selectFileButton">
+      <widget class="QToolButton" name="pasteButton">
        <property name="toolTip">
-        <string>Select payment request file</string>
+        <string extracomment="Tooltip text for button that allows you to paste an address that is in your clipboard.">Paste address from clipboard</string>
        </property>
        <property name="text">
-        <string notr="true">…</string>
+        <string/>
        </property>
-       <property name="autoDefault">
-        <bool>false</bool>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste
+        </iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>22</width>
+         <height>22</height>
+        </size>
        </property>
       </widget>
      </item>
@@ -77,7 +82,7 @@
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qvalidatedlineedit.h</header>
+   <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

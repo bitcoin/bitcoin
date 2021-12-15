@@ -1,0 +1,25 @@
+# Copyright (c) 2013-2020 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+LIBTEST_FUZZ=libtest_fuzz.a
+
+EXTRA_LIBRARIES += \
+    $(LIBTEST_FUZZ)
+
+TEST_FUZZ_H = \
+    test/fuzz/fuzz.h \
+    test/fuzz/FuzzedDataProvider.h \
+    test/fuzz/util.h
+
+libtest_fuzz_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libtest_fuzz_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtest_fuzz_a_SOURCES = \
+  test/fuzz/fuzz.cpp \
+  test/fuzz/util.cpp \
+  $(TEST_FUZZ_H)
+
+LIBTEST_FUZZ += $(LIBBITCOIN_SERVER)
+LIBTEST_FUZZ += $(LIBBITCOIN_COMMON)
+LIBTEST_FUZZ += $(LIBBITCOIN_UTIL)
+LIBTEST_FUZZ += $(LIBBITCOIN_CRYPTO_BASE)

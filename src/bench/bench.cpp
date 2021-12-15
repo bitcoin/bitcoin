@@ -1,24 +1,48 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
-#include "perf.h"
+#include <bench/bench.h>
 
-#include <assert.h>
+#include <test/util/setup_common.h>
+
+#include <chrono>
+#include <fstream>
+#include <functional>
 #include <iostream>
-#include <iomanip>
-#include <sys/time.h>
+#include <map>
+#include <regex>
+#include <string>
+#include <vector>
 
-benchmark::BenchRunner::BenchmarkMap &benchmark::BenchRunner::benchmarks() {
-    static std::map<std::string, benchmark::BenchFunction> benchmarks_map;
-    return benchmarks_map;
+using namespace std::chrono_literals;
+
+const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
+namespace {
+
+void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const std::string& filename, const char* tpl)
+{
+    if (benchmarkResults.empty() || filename.empty()) {
+        // nothing to write, bail out
+        return;
+    }
+    std::ofstream fout(filename);
+    if (fout.is_open()) {
+        ankerl::nanobench::render(tpl, benchmarkResults, fout);
+    } else {
+        std::cout << "Could write to file '" << filename << "'" << std::endl;
+    }
+
+    std::cout << "Created '" << filename << "'" << std::endl;
 }
 
-static double gettimedouble(void) {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_usec * 0.000001 + tv.tv_sec;
+} // namespace
+
+benchmark::BenchRunner::BenchmarkMap& benchmark::BenchRunner::benchmarks()
+{
+    static std::map<std::string, BenchFunction> benchmarks_map;
+    return benchmarks_map;
 }
 
 benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction func)
@@ -26,80 +50,47 @@ benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction f
     benchmarks().insert(std::make_pair(name, func));
 }
 
-void
-benchmark::BenchRunner::RunAll(double elapsedTimeForOne)
+void benchmark::BenchRunner::RunAll(const Args& args)
 {
-    perf_init();
-    std::cout << "#Benchmark" << "," << "count" << "," << "min" << "," << "max" << "," << "average" << ","
-              << "min_cycles" << "," << "max_cycles" << "," << "average_cycles" << "\n";
+    std::regex reFilter(args.regex_filter);
+    std::smatch baseMatch;
 
-    for (const auto &p: benchmarks()) {
-        State state(p.first, elapsedTimeForOne);
-        p.second(state);
-    }
-    perf_fini();
-}
-
-bool benchmark::State::KeepRunning()
-{
-    if (count & countMask) {
-      ++count;
-      return true;
-    }
-    double now;
-    uint64_t nowCycles;
-    if (count == 0) {
-        lastTime = beginTime = now = gettimedouble();
-        lastCycles = beginCycles = nowCycles = perf_cpucycles();
-    }
-    else {
-        now = gettimedouble();
-        double elapsed = now - lastTime;
-        double elapsedOne = elapsed * countMaskInv;
-        if (elapsedOne < minTime) minTime = elapsedOne;
-        if (elapsedOne > maxTime) maxTime = elapsedOne;
-
-        // We only use relative values, so don't have to handle 64-bit wrap-around specially
-        nowCycles = perf_cpucycles();
-        uint64_t elapsedOneCycles = (nowCycles - lastCycles) * countMaskInv;
-        if (elapsedOneCycles < minCycles) minCycles = elapsedOneCycles;
-        if (elapsedOneCycles > maxCycles) maxCycles = elapsedOneCycles;
-
-        if (elapsed*128 < maxElapsed) {
-          // If the execution was much too fast (1/128th of maxElapsed), increase the count mask by 8x and restart timing.
-          // The restart avoids including the overhead of this code in the measurement.
-          countMask = ((countMask<<3)|7) & ((1LL<<60)-1);
-          countMaskInv = 1./(countMask+1);
-          count = 0;
-          minTime = std::numeric_limits<double>::max();
-          maxTime = std::numeric_limits<double>::min();
-          minCycles = std::numeric_limits<uint64_t>::max();
-          maxCycles = std::numeric_limits<uint64_t>::min();
-          return true;
+    std::vector<ankerl::nanobench::Result> benchmarkResults;
+    for (const auto& p : benchmarks()) {
+        if (!std::regex_match(p.first, baseMatch, reFilter)) {
+            continue;
         }
-        if (elapsed*16 < maxElapsed) {
-          uint64_t newCountMask = ((countMask<<1)|1) & ((1LL<<60)-1);
-          if ((count & newCountMask)==0) {
-              countMask = newCountMask;
-              countMaskInv = 1./(countMask+1);
-          }
+
+        if (args.is_list_only) {
+            std::cout << p.first << std::endl;
+            continue;
+        }
+
+        Bench bench;
+        bench.name(p.first);
+        if (args.min_time > 0ms) {
+            // convert to nanos before dividing to reduce rounding errors
+            std::chrono::nanoseconds min_time_ns = args.min_time;
+            bench.minEpochTime(min_time_ns / bench.epochs());
+        }
+
+        if (args.asymptote.empty()) {
+            p.second(bench);
+        } else {
+            for (auto n : args.asymptote) {
+                bench.complexityN(n);
+                p.second(bench);
+            }
+            std::cout << bench.complexityBigO() << std::endl;
+        }
+
+        if (!bench.results().empty()) {
+            benchmarkResults.push_back(bench.results().back());
         }
     }
-    lastTime = now;
-    lastCycles = nowCycles;
-    ++count;
 
-    if (now - beginTime < maxElapsed) return true; // Keep going
-
-    --count;
-
-    assert(count != 0 && "count == 0 => (now == 0 && beginTime == 0) => return above");
-
-    // Output results
-    double average = (now-beginTime)/count;
-    int64_t averageCycles = (nowCycles-beginCycles)/count;
-    std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << ","
-              << minCycles << "," << maxCycles << "," << averageCycles << "\n";
-
-    return false;
+    GenerateTemplateResults(benchmarkResults, args.output_csv, "# Benchmark, evals, iterations, total, min, max, median\n"
+                                                               "{{#result}}{{name}}, {{epochs}}, {{average(iterations)}}, {{sumProduct(iterations, elapsed)}}, {{minimum(elapsed)}}, {{maximum(elapsed)}}, {{median(elapsed)}}\n"
+                                                               "{{/result}}");
+    GenerateTemplateResults(benchmarkResults, args.output_json, ankerl::nanobench::templates::json());
 }

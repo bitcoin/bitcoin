@@ -1,11 +1,11 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
-#ifndef _SECP256K1_FIELD_INNER5X52_IMPL_H_
-#define _SECP256K1_FIELD_INNER5X52_IMPL_H_
+#ifndef SECP256K1_FIELD_INNER5X52_IMPL_H
+#define SECP256K1_FIELD_INNER5X52_IMPL_H
 
 #include <stdint.h>
 
@@ -32,9 +32,11 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint64_t *r, const uint64_t 
     VERIFY_BITS(b[3], 56);
     VERIFY_BITS(b[4], 52);
     VERIFY_CHECK(r != b);
+    VERIFY_CHECK(a != b);
 
     /*  [... a b c] is a shorthand for ... + a<<104 + b<<52 + c<<0 mod n.
-     *  px is a shorthand for sum(a[i]*b[x-i], i=0..x).
+     *  for 0 <= x <= 4, px is a shorthand for sum(a[i]*b[x-i], i=0..x).
+     *  for 4 <= x <= 8, px is a shorthand for sum(a[i]*b[x-i], i=(x-4)..4)
      *  Note that [x 0 0 0 0 0] = [x*R].
      */
 
@@ -274,4 +276,4 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint64_t *r, const uint64_t 
     /* [r4 r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 }
 
-#endif
+#endif /* SECP256K1_FIELD_INNER5X52_IMPL_H */

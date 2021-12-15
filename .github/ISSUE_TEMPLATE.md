@@ -1,37 +1,27 @@
-<!--- Remove sections that do not apply -->
+<!-- This issue tracker is only for technical issues related to Bitcoin Core.
 
-This issue tracker is only for technical issues related to bitcoin-core.
+General bitcoin questions and/or support requests are best directed to the Bitcoin StackExchange at https://bitcoin.stackexchange.com.
 
-General bitcoin questions and/or support requests and are best directed to the [Bitcoin StackExchange](https://bitcoin.stackexchange.com).
+For reporting security issues, please read instructions at https://bitcoincore.org/en/contact/.
 
-For reporting security issues, please read instructions at [https://bitcoincore.org/en/contact/](https://bitcoincore.org/en/contact/).
+If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running memtest and observe CPU temperature with a load-test tool such as linpack before creating an issue!
 
-### Describe the issue
+Any report, issue or feature request related to the GUI should be reported at
+https://github.com/bitcoin-core/gui/issues/
+-->
 
-### Can you reliably reproduce the issue?
-#### If so, please list the steps to reproduce below:
-1.
-2.
-3.
+<!-- Describe the issue -->
+<!--- What behavior did you expect? -->
 
-### Expected behaviour
-Tell us what should happen
+<!--- What was the actual behavior (provide screenshots if the issue is GUI-related)? -->
 
-### Actual behaviour
-Tell us what happens instead
+<!--- How reliably can you reproduce the issue, what are the steps to do so? -->
 
-### Screenshots.
-If the issue is related to the GUI, screenshots can be added to this issue via drag & drop.
+<!-- What version of Bitcoin Core are you using, where did you get it (website, self-compiled, etc)? -->
 
-### What version of bitcoin-core are you using?
-List the version number/commit ID, and if it is an official binary, self compiled or a distribution package such as PPA.
+<!-- What type of machine are you observing the error on (OS/CPU and disk type)? -->
 
-### Machine specs:
-- OS:
-- CPU:
-- RAM:
-- Disk size:
-- Disk Type (HD/SDD):
+<!-- GUI-related issue? What is your operating system and its version? If Linux, what is your desktop environment and graphical shell? -->
 
-### Any extra information that might be useful in the debugging process.
-This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred.
+<!-- Any extra information that might be useful in the debugging process. -->
+<!--- This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred. -->

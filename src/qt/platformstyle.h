@@ -1,4 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,8 +21,8 @@ public:
     bool getImagesOnButtons() const { return imagesOnButtons; }
     bool getUseExtraSpacing() const { return useExtraSpacing; }
 
-    QColor TextColor() const { return textColor; }
-    QColor SingleColor() const { return singleColor; }
+    QColor TextColor() const;
+    QColor SingleColor() const;
 
     /** Colorize an image (given filename) with the icon color */
     QImage SingleColorImage(const QString& filename) const;
@@ -32,9 +32,6 @@ public:
 
     /** Colorize an icon (given object) with the icon color */
     QIcon SingleColorIcon(const QIcon& icon) const;
-
-    /** Colorize an icon (given filename) with the text color */
-    QIcon TextColorIcon(const QString& filename) const;
 
     /** Colorize an icon (given object) with the text color */
     QIcon TextColorIcon(const QIcon& icon) const;
@@ -46,9 +43,6 @@ private:
     bool imagesOnButtons;
     bool colorizeIcons;
     bool useExtraSpacing;
-    QColor singleColor;
-    QColor textColor;
-    /* ... more to come later */
 };
 
 #endif // BITCOIN_QT_PLATFORMSTYLE_H

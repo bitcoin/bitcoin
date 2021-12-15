@@ -1,10 +1,10 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "scriptnum10.h"
-#include "script/script.h"
-#include "test/test_bitcoin.h"
+#include <script/script.h>
+#include <test/scriptnum10.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 #include <limits.h>
@@ -29,10 +29,7 @@ static void CheckCreateVch(const int64_t& num)
     CScriptNum scriptnum(num);
     BOOST_CHECK(verify(bignum, scriptnum));
 
-    std::vector<unsigned char> vch = bignum.getvch();
-
     CScriptNum10 bignum2(bignum.getvch(), false);
-    vch = scriptnum.getvch();
     CScriptNum scriptnum2(scriptnum.getvch(), false);
     BOOST_CHECK(verify(bignum2, scriptnum2));
 
@@ -90,11 +87,10 @@ static void CheckSubtract(const int64_t& num1, const int64_t& num2)
     const CScriptNum10 bignum2(num2);
     const CScriptNum scriptnum1(num1);
     const CScriptNum scriptnum2(num2);
-    bool invalid = false;
 
     // int64_t overflow is undefined.
-    invalid = ((num2 > 0 && num1 < std::numeric_limits<int64_t>::min() + num2) ||
-               (num2 < 0 && num1 > std::numeric_limits<int64_t>::max() + num2));
+    bool invalid = ((num2 > 0 && num1 < std::numeric_limits<int64_t>::min() + num2) ||
+                    (num2 < 0 && num1 > std::numeric_limits<int64_t>::max() + num2));
     if (!invalid)
     {
         BOOST_CHECK(verify(bignum1 - bignum2, scriptnum1 - scriptnum2));
@@ -168,9 +164,9 @@ static void RunOperators(const int64_t& num1, const int64_t& num2)
 
 BOOST_AUTO_TEST_CASE(creation)
 {
-    for(size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
+    for(size_t i = 0; i < std::size(values); ++i)
     {
-        for(size_t j = 0; j < sizeof(offsets) / sizeof(offsets[0]); ++j)
+        for(size_t j = 0; j < std::size(offsets); ++j)
         {
             RunCreate(values[i]);
             RunCreate(values[i] + offsets[j]);
@@ -181,9 +177,9 @@ BOOST_AUTO_TEST_CASE(creation)
 
 BOOST_AUTO_TEST_CASE(operators)
 {
-    for(size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
+    for(size_t i = 0; i < std::size(values); ++i)
     {
-        for(size_t j = 0; j < sizeof(offsets) / sizeof(offsets[0]); ++j)
+        for(size_t j = 0; j < std::size(offsets); ++j)
         {
             RunOperators(values[i], values[i]);
             RunOperators(values[i], -values[i]);

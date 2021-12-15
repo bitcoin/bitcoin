@@ -1,6 +1,6 @@
 // Copyright 2014 BitPay Inc.
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <string.h>
 #include <vector>
@@ -8,7 +8,13 @@
 #include "univalue.h"
 #include "univalue_utffilter.h"
 
-using namespace std;
+/*
+ * According to stackexchange, the original json test suite wanted
+ * to limit depth to 22.  Widely-deployed PHP bails at depth 512,
+ * so we will follow PHP's lead, which should be more than sufficient
+ * (further stackexchange comments indicate depth > 32 rarely occurs).
+ */
+static const size_t MAX_JSON_DEPTH = 512;
 
 static bool json_isdigit(int ch)
 {
@@ -42,21 +48,21 @@ static const char *hatoui(const char *first, const char *last,
     return first;
 }
 
-enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
-                            const char *raw)
+enum jtokentype getJsonToken(std::string& tokenVal, unsigned int& consumed,
+                            const char *raw, const char *end)
 {
     tokenVal.clear();
     consumed = 0;
 
     const char *rawStart = raw;
 
-    while ((*raw) && (json_isspace(*raw)))             // skip whitespace
+    while (raw < end && (json_isspace(*raw)))          // skip whitespace
         raw++;
 
-    switch (*raw) {
-
-    case 0:
+    if (raw >= end)
         return JTOK_NONE;
+
+    switch (*raw) {
 
     case '{':
         raw++;
@@ -114,7 +120,7 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
     case '8':
     case '9': {
         // part 1: int
-        string numStr;
+        std::string numStr;
 
         const char *first = raw;
 
@@ -127,40 +133,40 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
         numStr += *raw;                       // copy first char
         raw++;
 
-        if ((*first == '-') && (!json_isdigit(*raw)))
+        if ((*first == '-') && (raw < end) && (!json_isdigit(*raw)))
             return JTOK_ERR;
 
-        while ((*raw) && json_isdigit(*raw)) {     // copy digits
+        while (raw < end && json_isdigit(*raw)) {  // copy digits
             numStr += *raw;
             raw++;
         }
 
         // part 2: frac
-        if (*raw == '.') {
+        if (raw < end && *raw == '.') {
             numStr += *raw;                   // copy .
             raw++;
 
-            if (!json_isdigit(*raw))
+            if (raw >= end || !json_isdigit(*raw))
                 return JTOK_ERR;
-            while ((*raw) && json_isdigit(*raw)) { // copy digits
+            while (raw < end && json_isdigit(*raw)) { // copy digits
                 numStr += *raw;
                 raw++;
             }
         }
 
         // part 3: exp
-        if (*raw == 'e' || *raw == 'E') {
+        if (raw < end && (*raw == 'e' || *raw == 'E')) {
             numStr += *raw;                   // copy E
             raw++;
 
-            if (*raw == '-' || *raw == '+') { // copy +/-
+            if (raw < end && (*raw == '-' || *raw == '+')) { // copy +/-
                 numStr += *raw;
                 raw++;
             }
 
-            if (!json_isdigit(*raw))
+            if (raw >= end || !json_isdigit(*raw))
                 return JTOK_ERR;
-            while ((*raw) && json_isdigit(*raw)) { // copy digits
+            while (raw < end && json_isdigit(*raw)) { // copy digits
                 numStr += *raw;
                 raw++;
             }
@@ -174,15 +180,18 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
     case '"': {
         raw++;                                // skip "
 
-        string valStr;
+        std::string valStr;
         JSONUTF8StringFilter writer(valStr);
 
-        while (*raw) {
-            if ((unsigned char)*raw < 0x20)
+        while (true) {
+            if (raw >= end || (unsigned char)*raw < 0x20)
                 return JTOK_ERR;
 
             else if (*raw == '\\') {
                 raw++;                        // skip backslash
+
+                if (raw >= end)
+                    return JTOK_ERR;
 
                 switch (*raw) {
                 case '"':  writer.push_back('\"'); break;
@@ -196,7 +205,8 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
 
                 case 'u': {
                     unsigned int codepoint;
-                    if (hatoui(raw + 1, raw + 1 + 4, codepoint) !=
+                    if (raw + 1 + 4 >= end ||
+                        hatoui(raw + 1, raw + 1 + 4, codepoint) !=
                                raw + 1 + 4)
                         return JTOK_ERR;
                     writer.push_back_u(codepoint);
@@ -217,7 +227,7 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
             }
 
             else {
-                writer.push_back(*raw);
+                writer.push_back(static_cast<unsigned char>(*raw));
                 raw++;
             }
         }
@@ -234,7 +244,7 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
     }
 }
 
-enum expect_bits {
+enum expect_bits : unsigned {
     EXP_OBJ_NAME = (1U << 0),
     EXP_COLON = (1U << 1),
     EXP_ARR_VALUE = (1U << 2),
@@ -246,21 +256,22 @@ enum expect_bits {
 #define setExpect(bit) (expectMask |= EXP_##bit)
 #define clearExpect(bit) (expectMask &= ~EXP_##bit)
 
-bool UniValue::read(const char *raw)
+bool UniValue::read(const char *raw, size_t size)
 {
     clear();
 
     uint32_t expectMask = 0;
-    vector<UniValue*> stack;
+    std::vector<UniValue*> stack;
 
-    string tokenVal;
+    std::string tokenVal;
     unsigned int consumed;
     enum jtokentype tok = JTOK_NONE;
     enum jtokentype last_tok = JTOK_NONE;
+    const char* end = raw + size;
     do {
         last_tok = tok;
 
-        tok = getJsonToken(tokenVal, consumed, raw);
+        tok = getJsonToken(tokenVal, consumed, raw, end);
         if (tok == JTOK_NONE || tok == JTOK_ERR)
             return false;
         raw += consumed;
@@ -320,6 +331,9 @@ bool UniValue::read(const char *raw)
                 stack.push_back(newTop);
             }
 
+            if (stack.size() > MAX_JSON_DEPTH)
+                return false;
+
             if (utyp == VOBJ)
                 setExpect(OBJ_NAME);
             else
@@ -371,9 +385,6 @@ bool UniValue::read(const char *raw)
         case JTOK_KW_NULL:
         case JTOK_KW_TRUE:
         case JTOK_KW_FALSE: {
-            if (!stack.size())
-                return false;
-
             UniValue tmpVal;
             switch (tok) {
             case JTOK_KW_NULL:
@@ -388,6 +399,11 @@ bool UniValue::read(const char *raw)
             default: /* impossible */ break;
             }
 
+            if (!stack.size()) {
+                *this = tmpVal;
+                break;
+            }
+
             UniValue *top = stack.back();
             top->values.push_back(tmpVal);
 
@@ -396,10 +412,12 @@ bool UniValue::read(const char *raw)
             }
 
         case JTOK_NUMBER: {
-            if (!stack.size())
-                return false;
-
             UniValue tmpVal(VNUM, tokenVal);
+            if (!stack.size()) {
+                *this = tmpVal;
+                break;
+            }
+
             UniValue *top = stack.back();
             top->values.push_back(tmpVal);
 
@@ -408,17 +426,18 @@ bool UniValue::read(const char *raw)
             }
 
         case JTOK_STRING: {
-            if (!stack.size())
-                return false;
-
-            UniValue *top = stack.back();
-
             if (expect(OBJ_NAME)) {
+                UniValue *top = stack.back();
                 top->keys.push_back(tokenVal);
                 clearExpect(OBJ_NAME);
                 setExpect(COLON);
             } else {
                 UniValue tmpVal(VSTR, tokenVal);
+                if (!stack.size()) {
+                    *this = tmpVal;
+                    break;
+                }
+                UniValue *top = stack.back();
                 top->values.push_back(tmpVal);
             }
 
@@ -432,7 +451,7 @@ bool UniValue::read(const char *raw)
     } while (!stack.empty ());
 
     /* Check that nothing follows the initial construct (parsed above).  */
-    tok = getJsonToken(tokenVal, consumed, raw);
+    tok = getJsonToken(tokenVal, consumed, raw, end);
     if (tok != JTOK_NONE)
         return false;
 

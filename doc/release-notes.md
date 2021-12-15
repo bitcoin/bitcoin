@@ -1,14 +1,28 @@
-(note: this is a temporary file, to be added-to by anybody, and moved to
-release-notes at release time)
+*After branching off for a major version release of Bitcoin Core, use this
+template to create the initial release notes draft.*
+
+*The release notes draft is a temporary file that can be added to by anyone. See
+[/doc/developer-notes.md#release-notes](/doc/developer-notes.md#release-notes)
+for the process.*
+
+*Create the draft, named* "*version* Release Notes Draft"
+*(e.g. "22.0 Release Notes Draft"), as a collaborative wiki in:*
+
+https://github.com/bitcoin-core/bitcoin-devwiki/wiki/
+
+*Before the final release, move the notes back to this git repository.*
+
+*version* Release Notes Draft
+===============================
 
 Bitcoin Core version *version* is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-*version*/>
+  <https://bitcoincore.org/bin/bitcoin-core-*version*/>
 
-This is a new major version release, including new features, various bugfixes
-and performance improvements, as well as updated translations.
+This release includes new features, various bug fixes and performance
+improvements, as well as updated translations.
 
-Please report bugs using the issue tracker at github:
+Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/bitcoin/bitcoin/issues>
 
@@ -16,86 +30,163 @@ To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
+How to Upgrade
+==============
+
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes in some cases), then run the
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+or `bitcoind`/`bitcoin-qt` (on Linux).
+
+Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+possible, but it might take some time if the data directory needs to be migrated. Old
+wallet versions of Bitcoin Core are generally supported.
+
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
-the Linux kernel, macOS 10.8+, and Windows Vista and later.
-
-Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support).
-No attempt is made to prevent installing or running the software on Windows XP, you
-can still do so at your own risk but be aware that there are known instabilities.
-Please do not report issues about Windows XP to the issue tracker.
-
-Bitcoin Core should also work on most other Unix-like systems but is not
-frequently tested on them.
+Bitcoin Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.15+, and Windows 7 and newer.  Bitcoin
+Core should also work on most other Unix-like systems but is not as
+frequently tested on them.  It is not recommended to use Bitcoin Core on
+unsupported systems.
 
 Notable changes
 ===============
 
-Low-level RPC changes
----------------------
+P2P and network changes
+-----------------------
 
-- The new database model no longer stores information about transaction
-  versions of unspent outputs. This means that:
-  - The `gettxout` RPC no longer has a `version` field in the response.
-  - The `gettxoutsetinfo` RPC reports `hash_serialized_2` instead of `hash_serialized`,
-    which does not commit to the transaction versions of unspent outputs, but does
-    commit to the height and coinbase information.
-  - The `gettxoutsetinfo` response now contains `disk_size` and `bogosize` instead of
-    `bytes_serialized`. The first is a more accurate estimate of actual disk usage, but
-    is not deterministic. The second is unrelated to disk usage, but is a
-    database-independent metric of UTXO set size: it counts every UTXO entry as 50 + the
-    length of its scriptPubKey.
-  - The `getutxos` REST path no longer reports the `txvers` field in JSON format,
-    and always reports 0 for transaction versions in the binary format
+- A bitcoind node will no longer rumour addresses to inbound peers by default.
+  They will become eligible for address gossip after sending an ADDR, ADDRV2,
+  or GETADDR message. (#21528)
 
+Fee estimation changes
+----------------------
 
-- Error codes have been updated to be more accurate for the following error cases:
-  - `getblock` now returns RPC_MISC_ERROR if the block can't be found on disk (for
-  example if the block has been pruned). Previously returned RPC_INTERNAL_ERROR.
-  - `pruneblockchain` now returns RPC_MISC_ERROR if the blocks cannot be pruned
-  because the node is not in pruned mode. Previously returned RPC_METHOD_NOT_FOUND.
-  - `pruneblockchain` now returns RPC_INVALID_PARAMETER if the blocks cannot be pruned
-  because the supplied timestamp is too late. Previously returned RPC_INTERNAL_ERROR.
-  - `pruneblockchain` now returns RPC_MISC_ERROR if the blocks cannot be pruned
-  because the blockchain is too short. Previously returned RPC_INTERNAL_ERROR.
-  - `setban` now returns RPC_CLIENT_INVALID_IP_OR_SUBNET if the supplied IP address
-  or subnet is invalid. Previously returned RPC_CLIENT_NODE_ALREADY_ADDED.
-  - `setban` now returns RPC_CLIENT_INVALID_IP_OR_SUBNET if the user tries to unban
-  a node that has not previously been banned. Previously returned RPC_MISC_ERROR.
-  - `removeprunedfunds` now returns RPC_WALLET_ERROR if bitcoind is unable to remove
-  the transaction. Previously returned RPC_INTERNAL_ERROR.
-  - `removeprunedfunds` now returns RPC_INVALID_PARAMETER if the transaction does not
-  exist in the wallet. Previously returned RPC_INTERNAL_ERROR.
-  - `fundrawtransaction` now returns RPC_INVALID_ADDRESS_OR_KEY if an invalid change
-  address is provided. Previously returned RPC_INVALID_PARAMETER.
-  - `fundrawtransaction` now returns RPC_WALLET_ERROR if bitcoind is unable to create
-  the transaction. The error message provides further details. Previously returned
-  RPC_INTERNAL_ERROR.
-  - `bumpfee` now returns RPC_INVALID_PARAMETER if the provided transaction has
-  descendants in the wallet. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_INVALID_PARAMETER if the provided transaction has
-  descendants in the mempool. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has
-  has been mined or conflicts with a mined transaction. Previously returned
-  RPC_INVALID_ADDRESS_OR_KEY.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction is not
-  BIP 125 replaceable. Previously returned RPC_INVALID_ADDRESS_OR_KEY.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has already
-  been bumped by a different transaction. Previously returned RPC_INVALID_REQUEST.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction contains
-  inputs which don't belong to this wallet. Previously returned RPC_INVALID_ADDRESS_OR_KEY.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has multiple change
-  outputs. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has no change
-  output. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the fee is too high. Previously returned
-  RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the fee is too low. Previously returned
-  RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the change output is too small to bump the
-  fee. Previously returned RPC_MISC_ERROR.
+- Fee estimation now takes the feerate of replacement (RBF) transactions into
+  account. (#22539)
+
+Rescan startup parameter removed
+--------------------------------
+
+The `-rescan` startup parameter has been removed. Wallets which require
+rescanning due to corruption will still be rescanned on startup.
+Otherwise, please use the `rescanblockchain` RPC to trigger a rescan. (#23123)
+
+Updated RPCs
+------------
+
+- `upgradewallet` will now automatically flush the keypool if upgrading
+  from a non-HD wallet to an HD wallet, to immediately start using the
+  newly-generated HD keys. (#23093)
+
+- a new RPC `newkeypool` has been added, which will flush (entirely
+  clear and refill) the keypool. (#23093)
+
+- The `validateaddress` RPC now returns an `error_locations` array for invalid
+  addresses, with the indices of invalid character locations in the address (if
+  known). For example, this will attempt to locate up to two Bech32 errors, and
+  return their locations if successful. Success and correctness are only guaranteed
+  if fewer than two substitution errors have been made.
+  The error message returned in the `error` field now also returns more specific
+  errors when decoding fails. (#16807)
+
+- The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs
+  `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`,
+  `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`,
+  `/rest/block` no longer return the `addresses` and `reqSigs` fields, which
+  were previously deprecated in 22.0. (#22650)
+- The `getblock` RPC command now supports verbose level 3 containing transaction inputs
+  `prevout` information.  The existing `/rest/block/` REST endpoint is modified to contain
+  this information too. Every `vin` field will contain an additional `prevout` subfield
+  describing the spent output. `prevout` contains the following keys:
+  - `generated` - true if the spent coins was a coinbase.
+  - `height`
+  - `value`
+  - `scriptPubKey`
+
+- `listunspent` now includes `ancestorcount`, `ancestorsize`, and
+  `ancestorfees` for each transaction output that is still in the mempool.
+  (#12677)
+
+- `lockunspent` now optionally takes a third parameter, `persistent`, which
+  causes the lock to be written persistently to the wallet database. This
+  allows UTXOs to remain locked even after node restarts or crashes. (#23065)
+
+- The top-level fee fields `fee`, `modifiedfee`, `ancestorfees` and `descendantfees`
+  returned by RPCs `getmempoolentry`,`getrawmempool(verbose=true)`,
+  `getmempoolancestors(verbose=true)` and `getmempooldescendants(verbose=true)`
+  are deprecated and will be removed in the next major version (use
+  `-deprecated=fees` if needed in this version). The same fee fields can be accessed
+  through the `fees` object in the result. WARNING: deprecated
+  fields `ancestorfees` and `descendantfees` are denominated in sats, whereas all
+  fields in the `fees` object are denominated in BTC. (#22689)
+
+New RPCs
+--------
+
+Build System
+------------
+
+Files
+-----
+
+* On startup, the list of banned hosts and networks (via `setban` RPC) in
+  `banlist.dat` is ignored and only `banlist.json` is considered. Bitcoin Core
+  version 22.x is the only version that can read `banlist.dat` and also write
+  it to `banlist.json`. If `banlist.json` already exists, version 22.x will not
+  try to translate the `banlist.dat` into json. After an upgrade, `listbanned`
+  can be used to double check the parsed entries. (#22570)
+
+New settings
+------------
+
+Updated settings
+----------------
+
+- In previous releases, the meaning of the command line option
+  `-persistmempool` (without a value provided) incorrectly disabled mempool
+  persistence.  `-persistmempool` is now treated like other boolean options to
+  mean `-persistmempool=1`. Passing `-persistmempool=0`, `-persistmempool=1`
+  and `-nopersistmempool` is unaffected. (#23061)
+
+- `-maxuploadtarget` now allows human readable byte units [k|K|m|M|g|G|t|T].
+  E.g. `-maxuploadtarget=500g`. No whitespace, +- or fractions allowed.
+  Default is `M` if no suffix provided. (#23249)
+
+Tools and Utilities
+-------------------
+
+- Update `-getinfo` to return data in a user-friendly format that also reduces vertical space. (#21832)
+
+- CLI `-addrinfo` now returns a single field for the number of `onion` addresses
+  known to the node instead of separate `torv2` and `torv3` fields, as support
+  for Tor V2 addresses was removed from Bitcoin Core in 22.0. (#22544)
+
+Wallet
+------
+
+GUI changes
+-----------
+
+- UTXOs which are locked via the GUI are now stored persistently in the
+  wallet database, so are not lost on node shutdown or crash. (#23065)
+
+Low-level changes
+=================
+
+RPC
+---
+
+- `getblockchaininfo` now returns a new `time` field, that provides the chain tip time. (#22407)
+
+Tests
+-----
+
+- For the `regtest` network the activation heights of several softforks were
+  set to block height 1. They can be changed by the runtime setting
+  `-testactivationheight=name@height`. (#22818)
 
 Credits
 =======
@@ -103,4 +194,5 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as to everyone that helped with translations on
+[Transifex](https://www.transifex.com/bitcoin/bitcoin/).

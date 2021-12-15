@@ -4,25 +4,22 @@
 
 #include "helpers/memenv/memenv.h"
 
+#include <string>
+#include <vector>
+
 #include "db/db_impl.h"
 #include "leveldb/db.h"
 #include "leveldb/env.h"
 #include "util/testharness.h"
-#include <string>
-#include <vector>
 
 namespace leveldb {
 
 class MemEnvTest {
  public:
-  Env* env_;
+  MemEnvTest() : env_(NewMemEnv(Env::Default())) {}
+  ~MemEnvTest() { delete env_; }
 
-  MemEnvTest()
-      : env_(NewMemEnv(Env::Default())) {
-  }
-  ~MemEnvTest() {
-    delete env_;
-  }
+  Env* env_;
 };
 
 TEST(MemEnvTest, Basics) {
@@ -109,25 +106,25 @@ TEST(MemEnvTest, ReadWrite) {
 
   // Read sequentially.
   ASSERT_OK(env_->NewSequentialFile("/dir/f", &seq_file));
-  ASSERT_OK(seq_file->Read(5, &result, scratch)); // Read "hello".
+  ASSERT_OK(seq_file->Read(5, &result, scratch));  // Read "hello".
   ASSERT_EQ(0, result.compare("hello"));
   ASSERT_OK(seq_file->Skip(1));
-  ASSERT_OK(seq_file->Read(1000, &result, scratch)); // Read "world".
+  ASSERT_OK(seq_file->Read(1000, &result, scratch));  // Read "world".
   ASSERT_EQ(0, result.compare("world"));
-  ASSERT_OK(seq_file->Read(1000, &result, scratch)); // Try reading past EOF.
+  ASSERT_OK(seq_file->Read(1000, &result, scratch));  // Try reading past EOF.
   ASSERT_EQ(0, result.size());
-  ASSERT_OK(seq_file->Skip(100)); // Try to skip past end of file.
+  ASSERT_OK(seq_file->Skip(100));  // Try to skip past end of file.
   ASSERT_OK(seq_file->Read(1000, &result, scratch));
   ASSERT_EQ(0, result.size());
   delete seq_file;
 
   // Random reads.
   ASSERT_OK(env_->NewRandomAccessFile("/dir/f", &rand_file));
-  ASSERT_OK(rand_file->Read(6, 5, &result, scratch)); // Read "world".
+  ASSERT_OK(rand_file->Read(6, 5, &result, scratch));  // Read "world".
   ASSERT_EQ(0, result.compare("world"));
-  ASSERT_OK(rand_file->Read(0, 5, &result, scratch)); // Read "hello".
+  ASSERT_OK(rand_file->Read(0, 5, &result, scratch));  // Read "hello".
   ASSERT_EQ(0, result.compare("hello"));
-  ASSERT_OK(rand_file->Read(10, 100, &result, scratch)); // Read "d".
+  ASSERT_OK(rand_file->Read(10, 100, &result, scratch));  // Read "d".
   ASSERT_EQ(0, result.compare("d"));
 
   // Too high offset.
@@ -176,7 +173,7 @@ TEST(MemEnvTest, LargeWrite) {
   SequentialFile* seq_file;
   Slice result;
   ASSERT_OK(env_->NewSequentialFile("/dir/f", &seq_file));
-  ASSERT_OK(seq_file->Read(3, &result, scratch)); // Read "foo".
+  ASSERT_OK(seq_file->Read(3, &result, scratch));  // Read "foo".
   ASSERT_EQ(0, result.compare("foo"));
 
   size_t read = 0;
@@ -188,7 +185,30 @@ TEST(MemEnvTest, LargeWrite) {
   }
   ASSERT_TRUE(write_data == read_data);
   delete seq_file;
-  delete [] scratch;
+  delete[] scratch;
+}
+
+TEST(MemEnvTest, OverwriteOpenFile) {
+  const char kWrite1Data[] = "Write #1 data";
+  const size_t kFileDataLen = sizeof(kWrite1Data) - 1;
+  const std::string kTestFileName = test::TmpDir() + "/leveldb-TestFile.dat";
+
+  ASSERT_OK(WriteStringToFile(env_, kWrite1Data, kTestFileName));
+
+  RandomAccessFile* rand_file;
+  ASSERT_OK(env_->NewRandomAccessFile(kTestFileName, &rand_file));
+
+  const char kWrite2Data[] = "Write #2 data";
+  ASSERT_OK(WriteStringToFile(env_, kWrite2Data, kTestFileName));
+
+  // Verify that overwriting an open file will result in the new file data
+  // being read from files opened before the write.
+  Slice result;
+  char scratch[kFileDataLen];
+  ASSERT_OK(rand_file->Read(0, kFileDataLen, &result, scratch));
+  ASSERT_EQ(0, result.compare(kWrite2Data));
+
+  delete rand_file;
 }
 
 TEST(MemEnvTest, DBTest) {
@@ -236,6 +256,4 @@ TEST(MemEnvTest, DBTest) {
 
 }  // namespace leveldb
 
-int main(int argc, char** argv) {
-  return leveldb::test::RunAllTests();
-}
+int main(int argc, char** argv) { return leveldb::test::RunAllTests(); }
