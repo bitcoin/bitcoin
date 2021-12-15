@@ -37,12 +37,6 @@ bool checkMessage(const std::runtime_error& ex)
     return true;
 }
 
-bool checkMessageFalse(const std::runtime_error& ex)
-{
-    BOOST_CHECK_EQUAL(ex.what(), std::string("RunCommandParseJSON error: process(false) returned 1: \n"));
-    return true;
-}
-
 bool checkMessageStdErr(const std::runtime_error& ex)
 {
     const std::string what(ex.what());
@@ -73,7 +67,15 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Return non-zero exit code, no output to stderr
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("false"), std::runtime_error, checkMessageFalse);
+#ifdef WIN32
+        const std::string command{"cmd.exe /c call"};
+#else
+        const std::string command{"false"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
+            BOOST_CHECK(std::string(e.what()).find(strprintf("RunCommandParseJSON error: process(%s) returned 1: \n", command)) != std::string::npos);
+            return true;
+        });
     }
     {
         // Return non-zero exit code, with error message for stderr
