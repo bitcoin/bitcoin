@@ -277,7 +277,7 @@ class PruneTest(BitcoinTestFramework):
         self.start_node(node_number)
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
-        assert_raises_rpc_error(-1, "not in prune mode", node.pruneblockchain, 500)
+        assert_raises_rpc_error(-1, "Cannot prune blocks because node is not in prune mode", node.pruneblockchain, 500)
 
         # now re-start in manual pruning mode
         self.restart_node(node_number, extra_args=["-prune=1"])
@@ -308,11 +308,18 @@ class PruneTest(BitcoinTestFramework):
         self.generate(node, 6, sync_fun=self.no_op)
         assert_equal(node.getblockchaininfo()["blocks"], 1001)
 
+        # prune parameter in the future (block or timestamp) should raise an exception
+        future_parameter = height(1001) + 5
+        if use_timestamp:
+            assert_raises_rpc_error(-8, "Could not find block with at least the specified timestamp", node.pruneblockchain, future_parameter)
+        else:
+            assert_raises_rpc_error(-8, "Blockchain is shorter than the attempted prune height", node.pruneblockchain, future_parameter)
+
         # Pruned block should still know the number of transactions
         assert_equal(node.getblockheader(node.getblockhash(1))["nTx"], block1_details["nTx"])
 
         # negative heights should raise an exception
-        assert_raises_rpc_error(-8, "Negative", node.pruneblockchain, -10)
+        assert_raises_rpc_error(-8, "Negative block height", node.pruneblockchain, -10)
 
         # height=100 too low to prune first block file so this is a no-op
         prune(100)
