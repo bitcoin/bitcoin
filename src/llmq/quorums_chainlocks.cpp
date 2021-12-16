@@ -703,9 +703,9 @@ void CChainLocksHandler::TrySignChainTip()
                 return;
             }
             auto it = mapAttemptSignedRequestIds.find(requestId);
-            // check to make sure we haven't signed any conflicting blocks at this requestId, first-come-first-server
+            // check to make sure we haven't signed any conflicting blocks at this requestId, first-come-first-serve
             if (it != mapAttemptSignedRequestIds.end() && msgHash != it->second) {
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, msgHash.ToString(), it->second.ToString());
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
                 return;
             }
             mapSignedRequestIds.emplace(requestId, std::make_pair(nHeight, msgHash));

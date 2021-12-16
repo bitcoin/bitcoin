@@ -153,11 +153,10 @@ used to lock the chain.
 
 ## Conflicting signed blocks
 
-It is possible for a malicious quorum to double-sign two different blocks
+It is not possible for a malicious quorum to double-sign two different blocks
 and to produce two valid conflicting recovered signatures. `CLSIG` messages
-from honest LLMQs should still form a majority and lock the chain. In the worst
-case, with `signersSize / 2` malicious or disrupted quorums, no majority is
-formed and nodes fall back to the first-seen and most-work rules. Note that
+from LLMQs are signable on a first-come-first-serve basis meaning for a height/quorum hash pair only the first blockhash is allowed to be signed. This differs from dip-0022 of Dashpay but makes a tradeoff around securely forming a chainlock rather than having an intermittent assumption that majority consensus will resolve a chainlock. Instead of having the risk of multiple chainlocks signed at differing blockhashes for a certain height we allow for only the first one to be signed at any blockhash for a certain height and dissallow subsequent attempts. This increases the chance of no chainlocks forming as if there are conflicts the majority of quorums will likely not be in agreement on the chainlock however there is a decreased risk of invalid or conflicting chainlocks from establishing and creating forks amongst miners. In the case where no majority is
+formed the nodes fall back to the first-seen and most-work/longest-chain rules. Note that
 there must be an even number of active quorums for this to work as described.
 
 ## Calculations
