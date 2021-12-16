@@ -167,7 +167,7 @@ masternodes. To withhold a ChainLock an attacker would need to disrupt at least
 `signersSize / 2` quorums at the same time and to create a malicious ChainLock
 he would need to control at least `signersSize / 2 + 1` of them.
 
-For multi-quorum calculations we use [Python Script](dip-0022/quorum_attack.py).
+For multi-quorum calculations we use [Python Script](quorum_attack.py).
 
 The success probabilities for an attacker that controls `m` out of the `N`
 total masternodes and quorum overlap ratio `r` would then be as follows:
