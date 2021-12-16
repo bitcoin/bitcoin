@@ -215,7 +215,15 @@ static RPCHelpMan loadwallet()
     WalletContext& context = EnsureWalletContext(request.context);
     const std::string name(request.params[0].get_str());
 
-    auto [wallet, warnings] = LoadWalletHelper(context, request.params[1], name);
+    DatabaseOptions options;
+    DatabaseStatus status;
+    options.require_existing = true;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
+    std::shared_ptr<CWallet> const wallet = LoadWallet(context, name, load_on_start, options, status, error, warnings);
+
+    HandleWalletError(wallet, status, error);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
