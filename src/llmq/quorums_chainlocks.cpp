@@ -157,6 +157,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
     if (it1 != bestChainLockCandidates.end()) {
         bestChainLockWithKnownBlock = *it1->second;
         bestChainLockBlockIndex = pindex;
+        mapAttemptSignedRequestIds.clear();
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG from candidates (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
         return true;
     }
@@ -187,6 +188,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlock = clsigAgg;
                 bestChainLockBlockIndex = pindex;
+                mapAttemptSignedRequestIds.clear();
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
                 return true;
@@ -530,6 +532,7 @@ void CChainLocksHandler::CheckActiveState()
             bestChainLockBlockIndex = nullptr;
             bestChainLockCandidates.clear();
             bestChainLockShares.clear();
+            mapAttemptSignedRequestIds.clear();
         }
     }
 }
@@ -601,18 +604,18 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
 
-        if (pindex->nHeight == signingState.GetLastSignedHeight()) {
+        if (nHeight == signingState.GetLastSignedHeight()) {
             // already signed this one
             return;
         }
 
-        if (bestChainLockWithKnownBlock.nHeight >= pindex->nHeight) {
+        if (bestChainLockWithKnownBlock.nHeight >= nHeight) {
             // already got the same CLSIG or a better one, reset and bail out
             signingState.SetLastSignedHeight(bestChainLockWithKnownBlock.nHeight);
             return;
         }
 
-        if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        if (InternalHasConflictingChainLock(nHeight, msgHash)) {
             // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
             // the correct chain.
             return;
@@ -630,7 +633,7 @@ void CChainLocksHandler::TrySignChainTip()
     std::map<CQuorumCPtr, CChainLockSigCPtr> mapSharesAtTip;
     {
         LOCK(cs);
-        const auto it = bestChainLockShares.find(pindex->nHeight);
+        const auto it = bestChainLockShares.find(nHeight);
         if (it != bestChainLockShares.end()) {
             mapSharesAtTip = it->second;
         }
@@ -638,14 +641,14 @@ void CChainLocksHandler::TrySignChainTip()
     bool fMemberOfSomeQuorum{false};
     signingState.BumpAttempt();
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
-        int nQuorumIndex = (pindex->nHeight + i) % quorums_scanned.size();
+        int nQuorumIndex = (nHeight + i) % quorums_scanned.size();
         const CQuorumCPtr& quorum = quorums_scanned[nQuorumIndex];
         if (quorum == nullptr) {
             return;
         }
         if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
                 continue;
-            }
+        }
         fMemberOfSomeQuorum = true;
         if (i > 0) {
             int nQuorumIndexPrev = (nQuorumIndex + 1) % quorums_scanned.size();
@@ -659,30 +662,30 @@ void CChainLocksHandler::TrySignChainTip()
                         break;
                     }
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) didn't sign a chainlock at height %d yet\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), pindex->nHeight);
+                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), nHeight);
                 }
             }
             if (it2 == mapSharesAtTip.end()) {
                 if (signingState.GetAttempt() <= (int)i) {
                     // previous quorum did not sign a chainlock, bail out for now
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum did not sign a chainlock at height %d yet\n", __func__, pindex->nHeight);
+                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum did not sign a chainlock at height %d yet\n", __func__, nHeight);
                     return;
                 }
                 // else
                 // waiting for previous quorum(s) to sign anything for too long already,
                 // just sign whatever we think is a good tip
-            } else if (it2->second->blockHash != pindex->GetBlockHash()) {
+            } else if (it2->second->blockHash != msgHash) {
                 LOCK(cs_main);
                 auto shareBlockIndex = chainman.m_blockman.LookupBlockIndex(it2->second->blockHash);
-                if (shareBlockIndex != nullptr && shareBlockIndex->nHeight == pindex->nHeight) {
+                if (shareBlockIndex != nullptr && shareBlockIndex->nHeight == nHeight) {
                     // previous quorum signed an alternative chain tip, sign it too instead
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an alternative chaintip (%s != %s) at height %d, join it\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
+                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), msgHash.ToString(), nHeight);
                     pindex = shareBlockIndex;
                 } else if (signingState.GetAttempt() <= (int)i) {
                     // previous quorum signed some different hash we have no idea about, bail out for now
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an unknown or an invalid blockHash (%s != %s) at height %d\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
+                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), msgHash.ToString(), nHeight);
                     return;
                 }
                 // else
@@ -691,21 +694,28 @@ void CChainLocksHandler::TrySignChainTip()
             }
         }
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- use quorum (%d, %s) and try to sign %s at height %d\n",
-                __func__, nQuorumIndex, quorums_scanned[nQuorumIndex]->qc->quorumHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
-        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, pindex->nHeight, quorum->qc->quorumHash));
+                __func__, nQuorumIndex, quorums_scanned[nQuorumIndex]->qc->quorumHash.ToString(), msgHash.ToString(), nHeight);
+        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, nHeight, quorum->qc->quorumHash));
         {
             LOCK(cs);
-            if (bestChainLockWithKnownBlock.nHeight >= pindex->nHeight) {
+            if (bestChainLockWithKnownBlock.nHeight >= nHeight) {
                 // might have happened while we didn't hold cs
                 return;
             }
-            mapSignedRequestIds.emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
+            auto it = mapAttemptSignedRequestIds.find(requestId);
+            // check to make sure we haven't signed any conflicting blocks at this requestId, first-come-first-server
+            if (it != mapAttemptSignedRequestIds.end() && msgHash != it->second) {
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, msgHash.ToString(), it->second.ToString());
+                return;
+            }
+            mapSignedRequestIds.emplace(requestId, std::make_pair(nHeight, msgHash));
+            mapAttemptSignedRequestIds.emplace(requestId, msgHash);
         }
-        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc->quorumHash);
+        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash);
     }
     if (!fMemberOfSomeQuorum || signingState.GetAttempt() >= (int)quorums_scanned.size()) {
         // not a member or tried too many times, nothing to do
-        signingState.SetLastSignedHeight(pindex->nHeight);
+        signingState.SetLastSignedHeight(nHeight);
     }
 }
 
