@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # This script was written by UdjinM6 based on dip-0008/quorum_attack.py
 
-from math import comb, exp, floor, log
+from math import comb, floor, log
 
 
 ###This function takes inputs and outputs the probability
@@ -54,7 +54,7 @@ for i in range(len(quorums)):
             for k in range(0, q_c):
                 try:
                     chance *= pcalc(threshold, bft_left)
-                except Exception as e:
+                except Exception:
                     chance = 0.0
                     break
                 bft_left -= floor(threshold * (1 - overlap))

@@ -71,7 +71,7 @@ class InitStressTest(SyscoinTestFramework):
             'net thread start',
             'addcon thread start',
             'loadblk thread start',
-            # TODO: reenable - see above TODO
+            # TODO: re-enable - see above TODO
             # 'txindex thread start',
             'msghand thread start'
         ]
