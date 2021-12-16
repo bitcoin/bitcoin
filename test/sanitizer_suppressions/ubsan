@@ -76,7 +76,6 @@ implicit-integer-sign-change:test/skiplist_tests.cpp
 implicit-integer-sign-change:test/streams_tests.cpp
 implicit-integer-sign-change:test/transaction_tests.cpp
 implicit-integer-sign-change:txmempool.cpp
-implicit-integer-sign-change:validation.cpp
 implicit-integer-sign-change:zmq/zmqpublishnotifier.cpp
 implicit-signed-integer-truncation,implicit-integer-sign-change:chain.h
 implicit-signed-integer-truncation,implicit-integer-sign-change:test/skiplist_tests.cpp
