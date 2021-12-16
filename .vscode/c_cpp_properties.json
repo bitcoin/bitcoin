@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/../itcoin-pbft/usrlocal/include",
+                "/usr/include",
+                "/usr/local/include"
+            ],
+            "defines": [
+                "HAVE_CONFIG_H"
+            ],
+            "compilerPath": "/usr/bin/g++-10",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

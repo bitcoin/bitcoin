@@ -1,0 +1,12 @@
+{
+  // The following will hide the js and map files in the editor
+  "files.exclude": {
+    "**/*.o": true
+  },
+
+  // Python settings
+  "python.analysis.extraPaths": [
+    "./contrib/signet",
+    "./test/functional"
+  ]
+}
