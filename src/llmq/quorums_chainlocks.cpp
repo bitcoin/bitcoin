@@ -589,12 +589,6 @@ void CChainLocksHandler::TrySignChainTip()
     }
     const uint256 msgHash = pindex->GetBlockHash();
     const int32_t nHeight = pindex->nHeight;
-    auto it = mapAttemptSignedRequestIds.find(nHeight);
-    // check to make sure we haven't signed any conflicting blocks at this height, first-come-first-serve
-    if (it != mapAttemptSignedRequestIds.end() && msgHash != it->second) {
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
-        return;
-    }
 
 
     // DIP8 defines a process called "Signing attempts" which should run before the CLSIG is finalized
@@ -626,6 +620,12 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
         mapSignedRequestIds.clear();
+        auto it = mapAttemptSignedRequestIds.find(nHeight);
+        // check to make sure we haven't signed any conflicting blocks at this height, first-come-first-serve
+        if (it != mapAttemptSignedRequestIds.end() && msgHash != it->second) {
+            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
+            return;
+        }
     }
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, msgHash.ToString(), nHeight);
@@ -645,6 +645,7 @@ void CChainLocksHandler::TrySignChainTip()
     }
     bool fMemberOfSomeQuorum{false};
     bool fSignedAsMemberOfSomeQuorum{false};
+    const auto heightHashKP = std::make_pair(nHeight, msgHash);
     signingState.BumpAttempt();
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         int nQuorumIndex = (nHeight + i) % quorums_scanned.size();
@@ -709,7 +710,7 @@ void CChainLocksHandler::TrySignChainTip()
                 return;
             }
             fSignedAsMemberOfSomeQuorum = true;
-            mapSignedRequestIds.emplace(requestId, std::make_pair(nHeight, msgHash));
+            mapSignedRequestIds.emplace(requestId, heightHashKP);
         }
         quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash);
     }
@@ -718,6 +719,7 @@ void CChainLocksHandler::TrySignChainTip()
         signingState.SetLastSignedHeight(nHeight);
     }
     if(fSignedAsMemberOfSomeQuorum) {
+        LOCK(cs);
         mapAttemptSignedRequestIds.emplace(nHeight, msgHash);
     }
 }
