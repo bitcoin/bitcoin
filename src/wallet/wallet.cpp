@@ -992,29 +992,36 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
-    std::string command = m_args.GetArg("-walletnotify", "");
-
-    if (!command.empty())
-    {
-        boost::replace_all(command, "%s", hash.GetHex());
-        if (auto* conf = wtx.state<TxStateConfirmed>())
-        {
-            boost::replace_all(command, "%b", conf->confirmed_block_hash.GetHex());
-            boost::replace_all(command, "%h", ToString(conf->confirmed_block_height));
-        } else {
-            boost::replace_all(command, "%b", "unconfirmed");
-            boost::replace_all(command, "%h", "-1");
-        }
-#ifndef WIN32
+    if (m_args.IsArgSet("-walletnotify")) {
+#ifdef WIN32
         // Substituting the wallet name isn't currently supported on windows
         // because windows shell escaping has not been implemented yet:
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
         // A few ways it could be implemented in the future are described in:
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
-        boost::replace_all(command, "%w", ShellEscape(GetName()));
+        const std::string walletname_escaped = "wallet_name_substitution_is_not_available_on_Windows";
+#else
+        const std::string walletname_escaped = ShellEscape(GetName());
 #endif
-        std::thread t(runCommand, command);
-        t.detach(); // thread runs free
+        const std::string txid_hex = hash.GetHex();
+        std::string blockhash_hex, blockheight_str;
+        if (auto* conf = wtx.state<TxStateConfirmed>()) {
+            blockhash_hex = conf->confirmed_block_hash.GetHex();
+            blockheight_str = ToString(conf->confirmed_block_height);
+        } else {
+            blockhash_hex = "unconfirmed";
+            blockheight_str = "-1";
+        }
+
+        for (std::string command : m_args.GetArgs("-walletnotify")) {
+            boost::replace_all(command, "%s", txid_hex);
+            boost::replace_all(command, "%b", blockhash_hex);
+            boost::replace_all(command, "%h", blockheight_str);
+            boost::replace_all(command, "%w", walletname_escaped);
+
+            std::thread t(runCommand, command);
+            t.detach(); // thread runs free
+        }
     }
 #endif
 
