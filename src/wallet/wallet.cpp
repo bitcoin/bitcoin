@@ -1145,29 +1145,36 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
 #if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
-    std::string command = m_notify_tx_changed_script;
-
-    if (!command.empty())
-    {
-        ReplaceAll(command, "%s", hash.GetHex());
-        if (auto* conf = wtx.state<TxStateConfirmed>())
-        {
-            ReplaceAll(command, "%b", conf->confirmed_block_hash.GetHex());
-            ReplaceAll(command, "%h", ToString(conf->confirmed_block_height));
-        } else {
-            ReplaceAll(command, "%b", "unconfirmed");
-            ReplaceAll(command, "%h", "-1");
-        }
-#ifndef WIN32
+    if (!m_notify_tx_changed_scripts.empty()) {
+#ifdef WIN32
         // Substituting the wallet name isn't currently supported on windows
         // because windows shell escaping has not been implemented yet:
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
         // A few ways it could be implemented in the future are described in:
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
-        ReplaceAll(command, "%w", ShellEscape(GetName()));
+        const std::string walletname_escaped = "wallet_name_substitution_is_not_available_on_Windows";
+#else
+        const std::string walletname_escaped = ShellEscape(GetName());
 #endif
-        std::thread t(runCommand, command);
-        t.detach(); // thread runs free
+        const std::string txid_hex = hash.GetHex();
+        std::string blockhash_hex, blockheight_str;
+        if (auto* conf = wtx.state<TxStateConfirmed>()) {
+            blockhash_hex = conf->confirmed_block_hash.GetHex();
+            blockheight_str = ToString(conf->confirmed_block_height);
+        } else {
+            blockhash_hex = "unconfirmed";
+            blockheight_str = "-1";
+        }
+
+        for (std::string command : m_notify_tx_changed_scripts) {
+            ReplaceAll(command, "%s", txid_hex);
+            ReplaceAll(command, "%b", blockhash_hex);
+            ReplaceAll(command, "%h", blockheight_str);
+            ReplaceAll(command, "%w", walletname_escaped);
+
+            std::thread t(runCommand, command);
+            t.detach(); // thread runs free
+        }
     }
 #endif
 
@@ -2868,7 +2875,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     // should be possible to use std::allocate_shared.
     std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), ReleaseWallet);
     walletInstance->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
-    walletInstance->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
+    walletInstance->m_notify_tx_changed_scripts = args.GetArgs("-walletnotify");
 
     // Load wallet
     bool rescan_required = false;
