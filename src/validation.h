@@ -200,7 +200,10 @@ struct MempoolAcceptResult {
         INVALID, //!> Invalid.
         MEMPOOL_ENTRY, //!> Valid, transaction was already in the mempool.
     };
+    /** Result type. Present in all MempoolAcceptResults. */
     const ResultType m_result_type;
+
+    /** Contains information about why the transaction failed. */
     const TxValidationState m_state;
 
     // The following fields are only present when m_result_type = ResultType::VALID or MEMPOOL_ENTRY
