@@ -100,6 +100,13 @@ struct Params {
      */
     bool signet_blocks{false};
     std::vector<uint8_t> signet_challenge;
+
+    /**
+     * ITCOIN_SPECIFIC
+     * If true, validation check on block subsidy is skipped
+     * and the block subsidy value in the miner is taken from command line arguments -blocksubsidy
+     */
+    bool allow_any_block_subsidy{false};
 };
 } // namespace Consensus
 
