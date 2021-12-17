@@ -844,6 +844,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Bikin dompet</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Dompet</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Nama Dompet</translation>
     </message>
@@ -854,6 +858,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Enkripsi Dompet</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opsi Lanjutan</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1037,7 +1045,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation>%1 akan mengunduh dan menyimpan salinan Bitcoin block chain.</translation>
+        <translation>%1 akan mengunduh dan menyimpan salinan Bitcoin blockchain.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>

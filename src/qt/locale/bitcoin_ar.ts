@@ -89,7 +89,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>تصدير قائمة العناوين</translation>
+        <translation>صدّر قائمة العناوين</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -135,7 +135,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation>إظهار كلمة المرور</translation>
+        <translation>أظهر كلمة المرور</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -442,10 +442,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Processing blocks on disk...</source>
         <translation>معالجة الكتل على القرص...</translation>
-    </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Processed %n blocks of transaction history.</numerusform><numerusform>Processed %n block of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform><numerusform>تمت معالجة٪ n من كتل سجل المعاملات.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -838,6 +834,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>إنشاء محفظة</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>محفظة</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>إسم المحفظة</translation>
     </message>
@@ -848,6 +848,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>تشفير محفظة</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>خيارات متقدمة</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -877,7 +881,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create</source>
         <translation>إنشاء</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>تم تجميعه بدون دعم sqlite (مطلوب لمحافظ الواصف)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1041,10 +1049,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation>خطأ</translation>
     </message>
-    <message numerus="yes">
-        <source>(of %n GB needed)</source>
-        <translation><numerusform>(من %n جيجابايت اللازمة)</numerusform><numerusform>(من %n جيجابايت اللازمة)</numerusform><numerusform>(من %n جيجابايت اللازمة)</numerusform><numerusform>(من %n جيجابايت اللازمة)</numerusform><numerusform>(من %n جيجابايت اللازمة)</numerusform><numerusform>(من %n جيجابايت اللازمة)</numerusform></translation>
-    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -1124,7 +1128,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>default wallet</source>
-        <translation>محفظة إفتراضية</translation>
+        <translation>المحفظة الإفتراضية</translation>
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
@@ -1708,29 +1712,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 ms</source>
         <translation>%1 جزء من الثانية</translation>
     </message>
-    <message numerus="yes">
-        <source>%n minute(s)</source>
-        <translation><numerusform>%n دقيقة</numerusform><numerusform>%n دقيقة</numerusform><numerusform>%n دقيقة</numerusform><numerusform>%n دقيقة</numerusform><numerusform>%n دقيقة</numerusform><numerusform>%n دقيقة</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n ساعة</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعة</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n أيام</numerusform><numerusform>%n يوم</numerusform><numerusform>%n أيام</numerusform><numerusform>%n يوم</numerusform><numerusform>%n أيام</numerusform><numerusform>%n أيام</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n أسابيع</numerusform><numerusform>%n أسابيع</numerusform><numerusform>%n أسابيع</numerusform><numerusform>%n أسابيع</numerusform><numerusform>%n أسابيع</numerusform><numerusform>%n أسابيع</numerusform></translation>
-    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 و %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n سنوات</numerusform><numerusform>%n سنوات</numerusform><numerusform>%n سنوات</numerusform><numerusform>%n سنوات</numerusform><numerusform>%n سنوات</numerusform><numerusform>%n سنوات</numerusform></translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1909,6 +1893,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Synced Blocks</source>
         <translation>كتل متزامنة</translation>
+    </message>
+    <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>يستخدم النظام المستقل المعين لتنويع اختيار الأقران.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>تعيين AS</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2325,6 +2317,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Choose...</source>
         <translation>إختر …</translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>يمكن أن يؤدي استخدام الرسوم الاحتياطية إلى إرسال معاملة تستغرق عدة ساعات أو أيام (أو أبدًا) للتأكيد. ضع في اعتبارك اختيار الرسوم يدويًا أو انتظر حتى تتحقق من صحة السلسلة الكاملة.</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
@@ -2902,10 +2898,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Credit</source>
         <translation>رصيد</translation>
     </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>تنضج خلال %n كتل إضافية</numerusform><numerusform>تنضج خلال %n كتل إضافية</numerusform><numerusform>تنضج خلال %n كتل إضافية</numerusform><numerusform>تنضج خلال %n كتل إضافية</numerusform><numerusform>تنضج خلال %n كتل إضافية</numerusform><numerusform>تنضج خلال %n كتل إضافية</numerusform></translation>
-    </message>
     <message>
         <source>not accepted</source>
         <translation>غير مقبولة</translation>
@@ -3011,10 +3003,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Label</source>
         <translation>وسم</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>مفتوح لـ %n كتلة إضافية</numerusform><numerusform>مفتوح لـ %n كتلة إضافية</numerusform><numerusform>مفتوح لـ %n كتلة إضافية</numerusform><numerusform>مفتوح لـ %n كتلة إضافية</numerusform><numerusform>مفتوح لـ %n كتلة إضافية</numerusform><numerusform>مفتوح لـ %n كتلة إضافية</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3361,7 +3349,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>default wallet</source>
-        <translation>المحفظة إفتراضية</translation>
+        <translation>المحفظة الإفتراضية</translation>
     </message>
 </context>
 <context>
@@ -3494,8 +3482,24 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>غير قادر على اعادة الكتل. سوف تحتاج الى اعادة بناء قاعدة البيانات باستخدام - reindex-chainstate</translation>
     </message>
     <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>تعذر إرجاع قاعدة البيانات إلى حالة ما قبل الانقسام. سوف تحتاج إلى إعادة تنزيل blockchain</translation>
+    </message>
+    <message>
+        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
+        <translation>تحذير: يبدو أن الشبكة لا توافق تمامًا! يبدو أن بعض عمال المناجم يواجهون مشكلات.</translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation>تحذير: لا يبدو أننا نتفق تمامًا مع أقراننا! قد تحتاج إلى الترقية ، أو قد تحتاج العقد الأخرى إلى الترقية.</translation>
+    </message>
+    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-الحد الأقصى للذاكرة على الأقل %d ميغابايت</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>لا يمكن الحل - %s العنوان:  '%s'</translation>
     </message>
     <message>
         <source>Change index out of range</source>
@@ -3512,6 +3516,14 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>هل تريد إعادة بناء قاعدة بيانات الكتل الآن؟</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation>Error initializing block database</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation>Error initializing wallet database environment %s!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -3586,8 +3598,36 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>SQLiteDatabase: فشل في تحضير التصريح لجلب التطبيق id: %s</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: Failed to fetch the application id: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation>SQLiteDatabase: Failed to prepare statement to verify database: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation>SQLiteDatabase: Failed to read database verification error: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation>SQLiteDatabase: Unexpected application id. Expected %u, got %u</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Specified blocks directory "%s" does not exist.</translation>
+    </message>
+    <message>
         <source>Unknown address type '%s'</source>
         <translation>عنوان  غير صحيح : '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Unknown change type '%s'</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3638,8 +3678,16 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation> غير قادر على توليد مفاتيح.</translation>
     </message>
     <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation>Unsupported logging category %s=%s.</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>ترقية قاعدة بيانات UTXO</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>User Agent comment (%s) contains unsafe characters.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3650,6 +3698,14 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>يلزم إعادة كتابة المحفظة: إعادة تشغيل %s لإكمال العملية</translation>
     </message>
     <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Error: Listening for incoming connections failed (listen returned error %s)</translation>
+    </message>
+    <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>قيمة غير صالحة لـ -maxtxfee=&lt;amount&gt;: '%s' (يجب أن تحتوي على الحد الأدنى للعمولة من %s على الأقل لتجنب المعاملات العالقة.</translation>
     </message>
@@ -3658,8 +3714,28 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>قيمة المعاملة صغيرة جدًا ولا يمكن إرسالها بعد خصم الرسوم</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>تحتاج إلى إعادة إنشاء قاعدة البيانات باستخدام -reindex للعودة إلى الوضعية الغير مجردة. هذا سوف يعيد تحميل سلسلة الكتل بأكملها</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>A fatal internal error occurred, see debug.log for details</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Cannot set -peerblockfilters without -blockfilterindex.</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
@@ -3674,8 +3750,52 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>خطأ في ترقية قاعدة بيانات chainstate</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>خطأ : مساحة القرص منخفضة ل %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Error: Keypool ran out, please call keypoolrefill first</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>Fee rate (%s) is lower than the minimum fee rate setting (%s)</translation>
+    </message>
+    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>عنوان اونيون غير صحيح : '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Invalid -proxy address or hostname: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation>Invalid netmask specified in -whitelist: '%s'</translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>Need to specify a port with -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Prune mode is incompatible with -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>Reducing -maxconnections from %d to %d, because of system limitations.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>لم يتم التعرف على القسم  [%s]</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -3690,6 +3810,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <source>Specified -walletdir "%s" is a relative path</source>
         <translation>ملف المحفظة المحدد "%s" غير موجود
 </translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Specified -walletdir "%s" is not a directory</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist
@@ -3718,6 +3842,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>يتعذر الربط مع %s على هذا الكمبيوتر (الربط انتج خطأ %s)</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Unable to create the PID file '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>غير قادر على توليد مفاتيح أولية</translation>
     </message>
@@ -3736,6 +3864,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>هذه هي رسوم المعاملة التي قد تدفعها عندما تكون عملية حساب الرسوم غير متوفرة.</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>

@@ -7,9 +7,13 @@ architectures:
 - "amd64"
 packages:
 - "faketime"
+- "python3-pip"
 remotes:
 - "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
   "dir": "signature"
+- "url": "https://github.com/achow101/signapple.git"
+  "dir": "signapple"
+  "commit": "b084cbbf44d5330448ffce0c7d118f75781b64bd"
 files:
 - "bitcoin-osx-unsigned.tar.gz"
 script: |
@@ -30,11 +34,19 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=bitcoin-osx-unsigned.tar.gz
+  # Install signapple
+  cd signapple
+  python3 -m pip install -U pip setuptools
+  python3 -m pip install .
+  export PATH="$HOME/.local/bin":$PATH
+  cd ..
+
+  UNSIGNED_TARBALL=bitcoin-osx-unsigned.tar.gz
+  UNSIGNED_APP=dist/Bitcoin-Qt.app
   SIGNED=bitcoin-osx-signed.dmg
 
-  tar -xf ${UNSIGNED}
+  tar -xf ${UNSIGNED_TARBALL}
   OSX_VOLNAME="$(cat osx_volname)"
-  ./detached-sig-apply.sh ${UNSIGNED} signature/osx
+  ./detached-sig-apply.sh ${UNSIGNED_APP} signature/osx/dist
   ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "${OSX_VOLNAME}" -no-pad -r -dir-mode 0755 -apple -o uncompressed.dmg signed-app
   ${WRAP_DIR}/dmg dmg uncompressed.dmg ${OUTDIR}/${SIGNED}

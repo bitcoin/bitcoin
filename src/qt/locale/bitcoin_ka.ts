@@ -498,8 +498,16 @@
         <translation>ნაგულისხმევი საფულე</translation>
     </message>
     <message>
+        <source>No wallets available</source>
+        <translation>არ არის ჩატვირთული საფულე.</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;ფანჯარა</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>ძირითადი ფანჯარა</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -613,6 +621,10 @@
         <translation>თანხა</translation>
     </message>
     <message>
+        <source>Received with address</source>
+        <translation>მიღებულია მისამართისამებრ</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>თარიღი</translation>
     </message>
@@ -698,6 +710,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>საფულე</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

@@ -146,6 +146,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Әмиян</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

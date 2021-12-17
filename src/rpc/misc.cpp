@@ -387,7 +387,8 @@ static RPCHelpMan setmocktime()
     }
     SetMockTime(time);
     if (request.context.Has<NodeContext>()) {
-        for (const auto& chain_client : request.context.Get<NodeContext>().chain_clients) {
+        const auto& chain_clients = request.context.Get<NodeContext>().chain_clients;
+        for (const auto& chain_client : chain_clients) {
             chain_client->setMockTime(time);
         }
     }

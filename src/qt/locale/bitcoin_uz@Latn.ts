@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Manzil yoki yorliqni tahrirlash uchun oʻng tugmani bosing</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Yangi manzil yaratish</translation>
     </message>

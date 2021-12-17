@@ -462,6 +462,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Maciņš</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

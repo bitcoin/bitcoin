@@ -845,6 +845,10 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation>Crear cartera</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Cartera</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Nom de la cartera</translation>
     </message>
@@ -855,6 +859,10 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Xifrar la cartera</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opcions avançades</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

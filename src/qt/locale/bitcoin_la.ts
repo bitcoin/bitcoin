@@ -10,8 +10,20 @@
         <translation>Crea novam inscriptionem</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;Novus</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Copia inscriptionem iam selectam in latibulum systematis</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Transcribe</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>C&amp;laude</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -50,6 +62,10 @@
         <translation>&amp;Muta</translation>
     </message>
     <message>
+        <source>Export Address List</source>
+        <translation>Exporta Index Inscriptionum</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma Separata Plica (*.csv)</translation>
     </message>
@@ -86,6 +102,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Itera novam tesseram</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation>Ostende tesseram</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -166,7 +186,11 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Interdictum usque ad</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -202,6 +226,10 @@
         <translation>Exi applicatione</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;De %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Informatio de &amp;Qt</translation>
     </message>
@@ -224,6 +252,18 @@
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Muta tesseram...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Aperi &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Creare Cassidilium</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Creare novum cassidilium</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -349,6 +389,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Bytes:</source>
+        <translation>Octecti:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Quantitas:</translation>
     </message>
@@ -390,6 +434,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Cassidile</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -766,6 +814,10 @@
     <message>
         <source>Insufficient funds!</source>
         <translation>Inopia nummorum</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>Octecti:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -1296,7 +1348,11 @@
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Creare novum casidillium</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>

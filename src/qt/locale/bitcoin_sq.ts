@@ -367,6 +367,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Portofol</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

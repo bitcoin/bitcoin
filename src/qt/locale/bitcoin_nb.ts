@@ -39,7 +39,7 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksport</translation>
+        <translation>&amp;Eksporter</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -84,7 +84,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>R&amp;ediger</translation>
+        <translation>&amp;Rediger</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -126,19 +126,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Oppgi passord setning</translation>
+        <translation>Oppgi passordfrase</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Ny passord setning</translation>
+        <translation>Ny passordfrase</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Repeter passorsetningen</translation>
+        <translation>Repeter passordfrasen</translation>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation>Vis adgangsfrase</translation>
+        <translation>Vis passordfrase</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -146,7 +146,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Denne operasjonen krever passordsetningen for å låse opp lommeboken.</translation>
+        <translation>Denne operasjonen krever passordfrasen for å låse opp lommeboken.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -154,7 +154,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Denne operasjonen krever passordsetningen for å dekryptere lommeboken.</translation>
+        <translation>Denne operasjonen krever passordfrasen for å dekryptere lommeboken.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -162,7 +162,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Endre passordsetningen</translation>
+        <translation>Endre passordfrase</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -170,7 +170,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Advarsel: Dersom du krypterer lommeboken og mister passordsetningen vil du &lt;b&gt;MISTE ALLE DINE BITCOIN&lt;/b&gt;!</translation>
+        <translation>Advarsel: Dersom du krypterer lommeboken og mister passordfrasen vil du &lt;b&gt;MISTE ALLE DINE BITCOIN&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -186,7 +186,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation>Svriv inn den gamle passfrasen og den nye passordfrasen for lommeboken.</translation>
+        <translation>Skriv inn den gamle passordfrasen og den nye passordfrasen for lommeboken.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -218,7 +218,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>De oppgitte passordsetningene er forskjellige.</translation>
+        <translation>De oppgitte passordfrasene er forskjellige.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -226,7 +226,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Passordsetningen som ble oppgitt for å dekryptere lommeboken var feil.</translation>
+        <translation>Passordfrasen som ble oppgitt for å dekryptere lommeboken var feil.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
@@ -234,7 +234,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Passordsetningen for lommeboken ble endret</translation>
+        <translation>Passordfrasen for lommeboken ble endret</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -320,7 +320,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Endre passordsetning</translation>
+        <translation>&amp;Endre passordfrase...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
@@ -372,7 +372,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Endre passordsetningen for kryptering av lommeboken</translation>
+        <translation>Endre passordfrasen for kryptering av lommeboken</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -844,6 +844,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Lag lommebok</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Lommebok</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Lommeboknavn</translation>
     </message>
@@ -854,6 +858,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Krypter Lommebok</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Avanserte alternativer</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1059,7 +1067,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(of %n GB needed)</source>
         <translation><numerusform>(av %n GB som trengs)</numerusform><numerusform>(av %n GB som trengs)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB kreves for hele kjeden)</numerusform><numerusform>(%n GB kreves for hele kjeden)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -3757,6 +3769,10 @@ Gå til Fil &gt; Åpne lommebok for å laste en lommebok.
     <message>
         <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
         <translation>%s korrupt. Prøv å bruk lommebokverktøyet bitcoin-wallet til å fikse det eller laste en backup.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
+        <translation>Kan ikke oppgradere en delt lommebok uten HD uten å oppgradere til støtte for forhåndsdelt tastatur. Bruk -upgradewallet = 169900 eller -upgradewallet uten versjon spesifisert.</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>

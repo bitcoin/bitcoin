@@ -132,6 +132,10 @@
         <translation>Паўтарыце новую кодавую фразу</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Паказаць кодавую фразу</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Зашыфраваць гаманец.</translation>
     </message>
@@ -552,6 +556,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Гаманец</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

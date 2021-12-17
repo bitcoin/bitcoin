@@ -844,6 +844,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Opret tegnebog</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Tegnebog</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Navn på tegnebog</translation>
     </message>
@@ -854,6 +858,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Kryptér tegnebog</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Avancerede Indstillinger</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -2737,7 +2745,7 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>En besked, som blev føjet til “bitcon:”-URI'en, som vil gemmes med transaktionen til din reference. Bemærk: Denne besked vil ikke blive sendt over Bitcoin-netværket.</translation>
+        <translation>En besked, som blev føjet til “bitcoin:”-URI'en, som vil gemmes med transaktionen til din reference. Bemærk: Denne besked vil ikke blive sendt over Bitcoin-netværket.</translation>
     </message>
     <message>
         <source>Pay To:</source>

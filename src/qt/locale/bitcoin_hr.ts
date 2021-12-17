@@ -822,6 +822,10 @@
         <translation>Stvorite novčanik</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Novčanik</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>Ime novčanika</translation>
     </message>

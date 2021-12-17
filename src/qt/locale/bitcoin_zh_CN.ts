@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>22000631@qq.com guanlonghuang</translation>
+        <translation>鼠标右击编辑地址或标签</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -845,6 +845,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>创建钱包</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>钱包</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation>钱包名称</translation>
     </message>
@@ -855,6 +859,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Encrypt Wallet</source>
         <translation>加密钱包</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>进阶设定</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -3120,7 +3128,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>在额外的%n个区块前状态待定</numerusform></translation>
+        <translation><numerusform>在进一步同步完%n个区块前状态待定</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
