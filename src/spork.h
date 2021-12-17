@@ -74,9 +74,9 @@ private:
     std::vector<unsigned char> vchSig;
 
 public:
-    int32_t nSporkID;
-    int64_t nValue;
-    int64_t nTimeSigned;
+    int32_t nSporkID{0};
+    int64_t nValue{0};
+    int64_t nTimeSigned{0};
 
     CSporkMessage(int32_t nSporkID, int64_t nValue, int64_t nTimeSigned) :
         nSporkID(nSporkID),
@@ -215,14 +215,19 @@ public:
     void CheckAndRemove();
 
     /**
-     * ProcessSpork is used to handle the 'getsporks' and 'spork' p2p messages.
+     * ProcessSporkMessages is used to call ProcessSpork and ProcessGetSporks. See below
+     */
+    void ProcessSporkMessages(CNode* pfrom, std::string_view strCommand, CDataStream& vRecv, CConnman& connman);
+
+    /**
+     * ProcessSpork is used to handle the 'spork' p2p message.
      *
-     * For 'getsporks', it sends active sporks to the requesting peer. For 'spork',
-     * it validates the spork and adds it to the internal spork storage and
+     * For 'spork', it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
+    void ProcessSporkMessages(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman);
     void ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman);
-
+    void ProcessGetSporks(CNode* pfrom, const std::string& strCommand, CConnman& connman);
     /**
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
      * and broadcast the spork message.
