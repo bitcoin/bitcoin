@@ -28,7 +28,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state)
     if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
 
-    // Check for negative or overflow output values
+    // Check for negative or overflow output values (see CVE-2010-5139)
     CAmount nValueOut = 0;
     for (const auto& txout : tx.vout) {
         if (txout.nValue < 0)

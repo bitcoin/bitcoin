@@ -9,6 +9,7 @@ from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
 import hashlib
+from subprocess import CalledProcessError
 import inspect
 import json
 import logging
@@ -16,7 +17,6 @@ import os
 import random
 import shutil
 import re
-from subprocess import CalledProcessError
 import time
 
 from . import coverage
@@ -36,6 +36,13 @@ def set_timeout_scale(_timeout_scale):
 
 # Assert functions
 ##################
+
+def assert_approx(v, vexp, vspan=0.00001):
+    """Assert that `v` is within `vspan` of `vexp`"""
+    if v < vexp - vspan:
+        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+    if v > vexp + vspan:
+        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
@@ -254,9 +261,10 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 15
 # Don't assign rpc or p2p ports lower than this
-PORT_MIN = 11000
+PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
+
 
 class PortSeed:
     # Must be initialized with a unique integer for each process
@@ -444,10 +452,6 @@ def connect_nodes(from_connection, node_num):
     # * Must have a verack message before anything else
     wait_until(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
     wait_until(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
-
-def connect_nodes_bi(nodes, a, b):
-    connect_nodes(nodes[a], b)
-    connect_nodes(nodes[b], a)
 
 def isolate_node(node, timeout=5):
     node.setnetworkactive(False)
