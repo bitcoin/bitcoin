@@ -271,7 +271,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, tx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
+    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
         return false;
     }
 
@@ -307,7 +307,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, dummyReserveKey, state)) {
+    if (!pwallet->CommitTransaction(tx, {}, {}, state)) {
         strResult = state.GetRejectReason();
         return false;
     }

@@ -286,7 +286,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         CReserveKey m_key(m_wallet.get());
         CTransactionRef tx;
-        if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, m_key, fee, change_pos,
+        if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, fee, change_pos,
                 fail_reason, coin_control, sign)) {
             return {};
         }
@@ -301,7 +301,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         CReserveKey m_key(m_wallet.get());
         CValidationState state;
-        if (!m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form), m_key, state)) {
+        if (!m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form), state)) {
             reject_reason = state.GetRejectReason();
             return false;
         }
