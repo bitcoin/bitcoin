@@ -157,7 +157,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
     if (it1 != bestChainLockCandidates.end()) {
         bestChainLockWithKnownBlock = *it1->second;
         bestChainLockBlockIndex = pindex;
-        mapAttemptSignedRequestIds.clear();
+        mapAttemptSignedRequestIds.erase(pindex->nHeight);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG from candidates (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
         return true;
     }
@@ -188,7 +188,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlock = clsigAgg;
                 bestChainLockBlockIndex = pindex;
-                mapAttemptSignedRequestIds.clear();
+                mapAttemptSignedRequestIds.erase(pindex->nHeight);
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
                 return true;
@@ -589,7 +589,12 @@ void CChainLocksHandler::TrySignChainTip()
     }
     const uint256 msgHash = pindex->GetBlockHash();
     const int32_t nHeight = pindex->nHeight;
-    
+    auto it = mapAttemptSignedRequestIds.find(nHeight);
+    // check to make sure we haven't signed any conflicting blocks at this height, first-come-first-serve
+    if (it != mapAttemptSignedRequestIds.end() && msgHash != it->second) {
+        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
+        return;
+    }
 
 
     // DIP8 defines a process called "Signing attempts" which should run before the CLSIG is finalized
@@ -639,6 +644,7 @@ void CChainLocksHandler::TrySignChainTip()
         }
     }
     bool fMemberOfSomeQuorum{false};
+    bool fSignedAsMemberOfSomeQuorum{false};
     signingState.BumpAttempt();
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         int nQuorumIndex = (nHeight + i) % quorums_scanned.size();
@@ -702,20 +708,17 @@ void CChainLocksHandler::TrySignChainTip()
                 // might have happened while we didn't hold cs
                 return;
             }
-            auto it = mapAttemptSignedRequestIds.find(requestId);
-            // check to make sure we haven't signed any conflicting blocks at this requestId, first-come-first-serve
-            if (it != mapAttemptSignedRequestIds.end() && msgHash != it->second) {
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
-                return;
-            }
+            fSignedAsMemberOfSomeQuorum = true;
             mapSignedRequestIds.emplace(requestId, std::make_pair(nHeight, msgHash));
-            mapAttemptSignedRequestIds.emplace(requestId, msgHash);
         }
         quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash);
     }
     if (!fMemberOfSomeQuorum || signingState.GetAttempt() >= (int)quorums_scanned.size()) {
         // not a member or tried too many times, nothing to do
         signingState.SetLastSignedHeight(nHeight);
+    }
+    if(fSignedAsMemberOfSomeQuorum) {
+        mapAttemptSignedRequestIds.emplace(nHeight, msgHash);
     }
 }
 

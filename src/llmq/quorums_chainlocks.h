@@ -69,7 +69,7 @@ private:
     std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates GUARDED_BY(cs);
 
     std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds GUARDED_BY(cs);
-    std::map<uint256, uint256> mapAttemptSignedRequestIds GUARDED_BY(cs);
+    std::map<int, uint256> mapAttemptSignedRequestIds GUARDED_BY(cs);
 
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
 
