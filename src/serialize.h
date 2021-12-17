@@ -970,6 +970,25 @@ void Unserialize(Stream& is, std::basic_string<C>& str)
         is.read((char*)str.data(), nSize * sizeof(C));
 }
 
+/**
+ * string_view
+ */
+template<typename Stream, typename C>
+void Serialize(Stream& os, const std::basic_string_view<C>& str)
+{
+    WriteCompactSize(os, str.size());
+    if (!str.empty())
+        os.write((char*)str.data(), str.size() * sizeof(C));
+}
+
+template<typename Stream, typename C>
+void Unserialize(Stream& is, std::basic_string_view<C>& str)
+{
+    unsigned int nSize = ReadCompactSize(is);
+    str.resize(nSize);
+    if (nSize != 0)
+        is.read((char*)str.data(), nSize * sizeof(C));
+}
 
 
 /**
