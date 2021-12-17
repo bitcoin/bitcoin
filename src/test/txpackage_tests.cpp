@@ -327,4 +327,124 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_child->GetHash())));
     }
 }
+
+// Tests for packages containing transactions that have same-txid-different-witness equivalents in
+// the mempool.
+BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
+{
+    LOCK(cs_main);
+
+    // Transactions with a same-txid-different-witness transaction in the mempool should be ignored,
+    // and the mempool entry's wtxid returned.
+    CScript witnessScript = CScript() << OP_DROP << OP_TRUE;
+    CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
+    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[0], /*vout=*/ 0,
+                                                    /*input_height=*/ 0, /*input_signing_key=*/ coinbaseKey,
+                                                    /*output_destination=*/ scriptPubKey,
+                                                    /*output_amount=*/ CAmount(49 * COIN), /*submit=*/ false);
+    CTransactionRef ptx_parent = MakeTransactionRef(mtx_parent);
+
+    // Make two children with the same txid but different witnesses.
+    CScriptWitness witness1;
+    witness1.stack.push_back(std::vector<unsigned char>(1));
+    witness1.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
+
+    CScriptWitness witness2(witness1);
+    witness2.stack.push_back(std::vector<unsigned char>(2));
+    witness2.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
+
+    CKey child_key;
+    child_key.MakeNewKey(true);
+    CScript child_locking_script = GetScriptForDestination(WitnessV0KeyHash(child_key.GetPubKey()));
+    CMutableTransaction mtx_child1;
+    mtx_child1.nVersion = 1;
+    mtx_child1.vin.resize(1);
+    mtx_child1.vin[0].prevout.hash = ptx_parent->GetHash();
+    mtx_child1.vin[0].prevout.n = 0;
+    mtx_child1.vin[0].scriptSig = CScript();
+    mtx_child1.vin[0].scriptWitness = witness1;
+    mtx_child1.vout.resize(1);
+    mtx_child1.vout[0].nValue = CAmount(48 * COIN);
+    mtx_child1.vout[0].scriptPubKey = child_locking_script;
+
+    CMutableTransaction mtx_child2{mtx_child1};
+    mtx_child2.vin[0].scriptWitness = witness2;
+
+    CTransactionRef ptx_child1 = MakeTransactionRef(mtx_child1);
+    CTransactionRef ptx_child2 = MakeTransactionRef(mtx_child2);
+
+    // child1 and child2 have the same txid
+    BOOST_CHECK_EQUAL(ptx_child1->GetHash(), ptx_child2->GetHash());
+    // child1 and child2 have different wtxids
+    BOOST_CHECK(ptx_child1->GetWitnessHash() != ptx_child2->GetWitnessHash());
+
+    // Try submitting Package1{parent, child1} and Package2{parent, child2} where the children are
+    // same-txid-different-witness.
+    {
+        const auto submit_witness1 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                       {ptx_parent, ptx_child1}, /*test_accept=*/ false);
+        BOOST_CHECK_MESSAGE(submit_witness1.m_state.IsValid(),
+                            "Package validation unexpectedly failed: " << submit_witness1.m_state.GetRejectReason());
+        auto it_parent1 = submit_witness1.m_tx_results.find(ptx_parent->GetWitnessHash());
+        auto it_child1 = submit_witness1.m_tx_results.find(ptx_child1->GetWitnessHash());
+        BOOST_CHECK(it_parent1 != submit_witness1.m_tx_results.end());
+        BOOST_CHECK_MESSAGE(it_parent1->second.m_state.IsValid(),
+                            "Transaction unexpectedly failed: " << it_parent1->second.m_state.GetRejectReason());
+        BOOST_CHECK(it_child1 != submit_witness1.m_tx_results.end());
+        BOOST_CHECK_MESSAGE(it_child1->second.m_state.IsValid(),
+                            "Transaction unexpectedly failed: " << it_child1->second.m_state.GetRejectReason());
+
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_parent->GetHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_child1->GetHash())));
+
+        const auto submit_witness2 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                       {ptx_parent, ptx_child2}, /*test_accept=*/ false);
+        BOOST_CHECK_MESSAGE(submit_witness2.m_state.IsValid(),
+                            "Package validation unexpectedly failed: " << submit_witness2.m_state.GetRejectReason());
+        auto it_parent2_deduped = submit_witness2.m_tx_results.find(ptx_parent->GetWitnessHash());
+        auto it_child2 = submit_witness2.m_tx_results.find(ptx_child2->GetWitnessHash());
+        BOOST_CHECK(it_parent2_deduped != submit_witness2.m_tx_results.end());
+        BOOST_CHECK(it_parent2_deduped->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
+        BOOST_CHECK(it_child2 != submit_witness2.m_tx_results.end());
+        BOOST_CHECK(it_child2->second.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS);
+        BOOST_CHECK_EQUAL(ptx_child1->GetWitnessHash(), it_child2->second.m_other_wtxid.value());
+
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_child2->GetHash())));
+        BOOST_CHECK(!m_node.mempool->exists(GenTxid::Wtxid(ptx_child2->GetWitnessHash())));
+    }
+
+    // Try submitting Package1{child2, grandchild} where child2 is same-txid-different-witness as
+    // the in-mempool transaction, child1. Since child1 exists in the mempool and its outputs are
+    // available, child2 should be ignored and grandchild should be accepted.
+    //
+    // This tests a potential censorship vector in which an attacker broadcasts a competing package
+    // where a parent's witness is mutated. The honest package should be accepted despite the fact
+    // that we don't allow witness replacement.
+    CKey grandchild_key;
+    grandchild_key.MakeNewKey(true);
+    CScript grandchild_locking_script = GetScriptForDestination(WitnessV0KeyHash(grandchild_key.GetPubKey()));
+    auto mtx_grandchild = CreateValidMempoolTransaction(/*input_transaction=*/ ptx_child2, /* vout=*/ 0,
+                                                        /*input_height=*/ 0, /*input_signing_key=*/ child_key,
+                                                        /*output_destination=*/ grandchild_locking_script,
+                                                        /*output_amount=*/ CAmount(47 * COIN), /*submit=*/ false);
+    CTransactionRef ptx_grandchild = MakeTransactionRef(mtx_grandchild);
+
+    // We already submitted child1 above.
+    {
+        const auto submit_spend_ignored = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                            {ptx_child2, ptx_grandchild}, /*test_accept=*/ false);
+        BOOST_CHECK_MESSAGE(submit_spend_ignored.m_state.IsValid(),
+                            "Package validation unexpectedly failed: " << submit_spend_ignored.m_state.GetRejectReason());
+        auto it_child2_ignored = submit_spend_ignored.m_tx_results.find(ptx_child2->GetWitnessHash());
+        auto it_grandchild = submit_spend_ignored.m_tx_results.find(ptx_grandchild->GetWitnessHash());
+        BOOST_CHECK(it_child2_ignored != submit_spend_ignored.m_tx_results.end());
+        BOOST_CHECK(it_child2_ignored->second.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS);
+        BOOST_CHECK(it_grandchild != submit_spend_ignored.m_tx_results.end());
+        BOOST_CHECK(it_grandchild->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_child2->GetHash())));
+        BOOST_CHECK(!m_node.mempool->exists(GenTxid::Wtxid(ptx_child2->GetWitnessHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Wtxid(ptx_grandchild->GetWitnessHash())));
+    }
+}
 BOOST_AUTO_TEST_SUITE_END()
