@@ -70,8 +70,7 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
     std::unique_ptr<CWalletTx> wtx = MakeUnique<CWalletTx>(&testWallet, MakeTransactionRef(std::move(tx)));
     if (fIsFromMe)
     {
-        wtx->fDebitCached = true;
-        wtx->nDebitCached = 1;
+        wtx->m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
     }
     COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
@@ -116,7 +115,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
 {
     static std::vector<OutputGroup> static_groups;
     static_groups.clear();
-    for (auto& coin : coins) static_groups.emplace_back(coin.GetInputCoin(), coin.nDepth, coin.tx->fDebitCached && coin.tx->nDebitCached == 1 /* HACK: we can't figure out the is_me flag so we use the conditions defined above; perhaps set safe to false for !fIsFromMe in add_coin() */, 0, 0);
+    for (auto& coin : coins) static_groups.emplace_back(coin.GetInputCoin(), coin.nDepth, coin.tx->m_amounts[CWalletTx::DEBIT].m_cached[ISMINE_SPENDABLE] && coin.tx->m_amounts[CWalletTx::DEBIT].m_value[ISMINE_SPENDABLE] == 1 /* HACK: we can't figure out the is_me flag so we use the conditions defined above; perhaps set safe to false for !fIsFromMe in add_coin() */, 0, 0);
     return static_groups;
 }
 
