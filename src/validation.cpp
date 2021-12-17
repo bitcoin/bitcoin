@@ -1274,9 +1274,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             // transaction for the mempool one. Note that we are ignoring the validity of the
             // package transaction passed in.
             // TODO: allow witness replacement in packages.
-            auto iter = m_pool.GetIter(wtxid);
+            auto iter = m_pool.GetIter(txid);
             assert(iter != std::nullopt);
-            results.emplace(txid, MempoolAcceptResult::MempoolTx(iter.value()->GetTxSize(), iter.value()->GetFee()));
+            // Provide the wtxid of the mempool tx so that the caller can look it up in the mempool.
+            results.emplace(wtxid, MempoolAcceptResult::MempoolTxDifferentWitness(iter.value()->GetTx().GetWitnessHash()));
         } else {
             // Transaction does not already exist in the mempool.
             txns_new.push_back(tx);
