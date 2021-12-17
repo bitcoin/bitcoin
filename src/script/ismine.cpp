@@ -8,7 +8,6 @@
 #include <key.h>
 #include <keystore.h>
 #include <script/script.h>
-#include <script/sign.h>
 
 
 typedef std::vector<unsigned char> valtype;

@@ -7,15 +7,12 @@
 #include <base58.h>
 #include <bech32.h>
 #include <chainparams.h>
-#include <script/script.h>
-#include <util/strencodings.h>
 
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
 #include <assert.h>
 #include <string.h>
-#include <algorithm>
 
 namespace
 {

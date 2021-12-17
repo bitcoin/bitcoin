@@ -4,7 +4,6 @@
 
 #include <core_io.h>
 
-#include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <key_io.h>
 #include <primitives/transaction.h>
@@ -13,7 +12,6 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
-#include <util/system.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 

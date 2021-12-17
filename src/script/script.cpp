@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <script/script.h>
-#include <tinyformat.h>
 #include <util/strencodings.h>
 
 const char* GetOpName(opcodetype opcode)

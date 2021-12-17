@@ -9,18 +9,14 @@
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
-#include <coins.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <hash.h>
-#include <net.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
-#include <script/standard.h>
 #include <timedata.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -37,7 +33,6 @@
 #include <masternode/payments.h>
 
 #include <algorithm>
-#include <queue>
 #include <utility>
 
 // Unconfirmed transactions in the memory pool often depend on other

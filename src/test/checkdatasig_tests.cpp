@@ -11,7 +11,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <array>
-#include <bitset>
 
 typedef std::vector<uint8_t> valtype;
 typedef std::vector<valtype> stacktype;

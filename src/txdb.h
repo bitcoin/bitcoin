@@ -12,7 +12,6 @@
 #include <primitives/block.h>
 #include <spentindex.h>
 
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>

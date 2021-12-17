@@ -5,7 +5,6 @@
 #include <test/setup_common.h>
 #include <string>
 #include <boost/test/unit_test.hpp>
-#include <util/asmap.h>
 #include <test/data/asmap.raw.h>
 
 #include <hash.h>

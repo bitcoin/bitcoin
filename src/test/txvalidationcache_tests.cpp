@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
-#include <key.h>
 #include <validation.h>
 #include <txmempool.h>
 #include <script/standard.h>
@@ -11,7 +10,6 @@
 #include <test/setup_common.h>
 #include <core_io.h>
 #include <keystore.h>
-#include <policy/policy.h>
 
 #include <boost/test/unit_test.hpp>
 

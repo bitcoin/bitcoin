@@ -11,11 +11,8 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/setup_common.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <version.h>
-
-#include <iostream>
 
 #include <boost/test/unit_test.hpp>
 

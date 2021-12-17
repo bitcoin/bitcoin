@@ -6,10 +6,10 @@
 #include <consensus/validation.h>
 #include <net.h>
 #include <txmempool.h>
+#include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <node/transaction.h>
-#include <util/validation.h>
 
 #include <future>
 

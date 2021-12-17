@@ -5,7 +5,6 @@
 
 #include <script/sigcache.h>
 
-#include <memusage.h>
 #include <pubkey.h>
 #include <random.h>
 #include <uint256.h>
@@ -13,7 +12,6 @@
 
 #include <cuckoocache.h>
 
-#include <algorithm>
 #include <mutex>
 #include <shared_mutex>
 #include <vector>

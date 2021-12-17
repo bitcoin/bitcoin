@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 #include <util/system.h>
-#include <validation.h>
 #include <checkqueue.h>
 #include <prevector.h>
 #include <vector>

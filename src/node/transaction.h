@@ -7,7 +7,6 @@
 
 #include <attributes.h>
 #include <primitives/transaction.h>
-#include <uint256.h>
 #include <util/error.h>
 
 /**

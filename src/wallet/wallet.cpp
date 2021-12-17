@@ -50,7 +50,6 @@
 #include <llmq/chainlocks.h>
 
 #include <assert.h>
-#include <future>
 
 #include <boost/algorithm/string/replace.hpp>
 

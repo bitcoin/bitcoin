@@ -4,12 +4,10 @@
 
 #include <bench/bench.h>
 
-#include <validation.h>
 #include <base58.h>
 
 #include <array>
 #include <vector>
-#include <string>
 
 
 static void Base58Encode(benchmark::Bench& bench)

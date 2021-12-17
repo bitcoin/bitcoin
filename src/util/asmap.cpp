@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <vector>
-#include <assert.h>
 #include <crypto/common.h>
 
 namespace {

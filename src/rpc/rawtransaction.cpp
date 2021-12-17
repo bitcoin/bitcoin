@@ -7,7 +7,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
-#include <compat/byteswap.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <index/txindex.h>
@@ -16,7 +15,6 @@
 #include <key_io.h>
 #include <keystore.h>
 #include <merkleblock.h>
-#include <net.h>
 #include <node/transaction.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -25,7 +23,6 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/script.h>
-#include <script/script_error.h>
 #include <script/sign.h>
 #include <script/standard.h>
 #include <txmempool.h>
@@ -37,11 +34,8 @@
 #include <validationinterface.h>
 
 #include <evo/specialtx.h>
-#include <evo/providertx.h>
-#include <evo/cbtx.h>
 
 #include <llmq/chainlocks.h>
-#include <llmq/commitment.h>
 #include <llmq/instantsend.h>
 
 #include <stdint.h>

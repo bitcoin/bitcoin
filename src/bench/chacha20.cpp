@@ -2,10 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <iostream>
 
 #include <bench/bench.h>
-#include <hash.h>
 #include <crypto/chacha20.h>
 
 /* Number of bytes to process per iteration */

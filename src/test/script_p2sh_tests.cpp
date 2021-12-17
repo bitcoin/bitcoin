@@ -10,7 +10,6 @@
 #include <policy/policy.h>
 #include <script/script.h>
 #include <script/script_error.h>
-#include <policy/settings.h>
 #include <script/sign.h>
 #include <script/ismine.h>
 #include <test/setup_common.h>

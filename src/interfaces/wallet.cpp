@@ -5,16 +5,12 @@
 #include <interfaces/wallet.h>
 
 #include <amount.h>
-#include <chain.h>
 #include <coinjoin/client.h>
 #include <consensus/validation.h>
-#include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <net.h>
-#include <policy/feerate.h>
 #include <policy/fees.h>
-#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <scheduler.h>
@@ -22,7 +18,6 @@
 #include <script/standard.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
-#include <timedata.h>
 #include <txmempool.h> // for mempool.cs
 #include <ui_interface.h>
 #include <uint256.h>
@@ -32,7 +27,6 @@
 #include <wallet/rpcwallet.h>
 #include <wallet/load.h>
 #include <wallet/wallet.h>
-#include <wallet/walletutil.h>
 
 #include <memory>
 #include <string>

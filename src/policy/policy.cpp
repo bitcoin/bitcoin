@@ -7,11 +7,8 @@
 
 #include <policy/policy.h>
 
-#include <validation.h>
 #include <coins.h>
 #include <policy/settings.h>
-#include <tinyformat.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 
 

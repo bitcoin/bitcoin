@@ -11,7 +11,6 @@
 #include <qt/walletview.h>
 
 #include <cassert>
-#include <cstdio>
 
 #include <QHBoxLayout>
 #include <QLabel>

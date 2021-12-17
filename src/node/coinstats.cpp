@@ -5,9 +5,7 @@
 
 #include <node/coinstats.h>
 
-#include <amount.h>
 #include <coins.h>
-#include <chain.h>
 #include <hash.h>
 #include <serialize.h>
 #include <validation.h>

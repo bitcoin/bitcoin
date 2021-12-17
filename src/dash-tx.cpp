@@ -13,7 +13,6 @@
 #include <core_io.h>
 #include <key_io.h>
 #include <keystore.h>
-#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/sign.h>

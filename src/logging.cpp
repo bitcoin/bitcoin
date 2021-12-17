@@ -8,8 +8,6 @@
 #include <util/threadnames.h>
 #include <util/time.h>
 
-#include <mutex>
-
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
 BCLog::Logger& LogInstance()

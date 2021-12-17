@@ -9,11 +9,9 @@
 #include <key_io.h>
 #include <merkleblock.h>
 #include <primitives/block.h>
-#include <random.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <test/setup_common.h>
 

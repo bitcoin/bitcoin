@@ -9,7 +9,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <threadinterrupt.h>
-#include <uint256.h>
 #include <validationinterface.h>
 
 class CBlockIndex;
