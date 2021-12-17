@@ -712,7 +712,23 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         size_t nLimitDescendantSize = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT)*1000;
         std::string errString;
         if (!pool.CalculateMemPoolAncestors(entry, setAncestors, nLimitAncestors, nLimitAncestorSize, nLimitDescendants, nLimitDescendantSize, errString)) {
-            return state.DoS(0, false, REJECT_NONSTANDARD, "too-long-mempool-chain", false, errString);
+            setAncestors.clear();
+            // If CalculateMemPoolAncestors fails second time, we want the original error string.
+            std::string dummy_err_string;
+            // If the new transaction is relatively small (up to 40k weight)
+            // and has at most one ancestor (ie ancestor limit of 2, including
+            // the new transaction), allow it if its parent has exactly the
+            // descendant limit descendants.
+            //
+            // This allows protocols which rely on distrusting counterparties
+            // being able to broadcast descendants of an unconfirmed transaction
+            // to be secure by simply only having two immediately-spendable
+            // outputs - one for each counterparty. For more info on the uses for
+            // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
+            if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
+                    !pool.CalculateMemPoolAncestors(entry, setAncestors, 2, nLimitAncestorSize, nLimitDescendants + 1, nLimitDescendantSize + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string)) {
+                return state.DoS(0, false, REJECT_NONSTANDARD, "too-long-mempool-chain", false, errString);
+            }
         }
 
         // check special TXs after all the other checks. If we'd do this before the other checks, we might end up
