@@ -1250,10 +1250,14 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
     LOCK(m_pool.cs);
     std::map<const uint256, const MempoolAcceptResult> results;
-    // As node operators are free to set their mempool policies however they please, it's possible
-    // for package transaction(s) to already be in the mempool, and we don't want to reject the
-    // entire package in that case (as that could be a censorship vector).  Filter the transactions
-    // that are already in mempool and add their information to results, since we already have them.
+    // Node operators are free to set their mempool policies however they please, nodes may receive
+    // transactions in different orders, and malicious counterparties may try to take advantage of
+    // policy differences to pin or delay propagation of transactions. As such, it's possible for
+    // some package transaction(s) to already be in the mempool, and we don't want to reject the
+    // entire package in that case (as that could be a censorship vector). De-duplicate the
+    // transactions that are already in the mempool, and only call AcceptMultipleTransactions() with
+    // the new transactions. This ensures we don't double-count transaction counts and sizes when
+    // checking ancestor/descendant limits, or double-count transaction fees for fee-related policy.
     std::vector<CTransactionRef> txns_new;
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
