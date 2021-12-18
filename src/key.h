@@ -75,7 +75,7 @@ public:
         if (size_t(pend - pbegin) != keydata.size()) {
             fValid = false;
         } else if (Check(&pbegin[0])) {
-            memcpy(keydata.data(), (unsigned char*)&pbegin[0], keydata.size());
+            memcpy(keydata.data(), reinterpret_cast<const unsigned char*>(&pbegin[0]), keydata.size());
             fValid = true;
             fCompressed = fCompressedIn;
         } else {

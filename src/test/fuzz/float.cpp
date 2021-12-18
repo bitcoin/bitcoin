@@ -51,7 +51,7 @@ FUZZ_TARGET(float)
         if constexpr (std::numeric_limits<double>::is_iec559) {
             if (!std::isnan(d)) {
                 uint64_t encoded_in_memory;
-                std::copy((const unsigned char*)&d, (const unsigned char*)(&d + 1), (unsigned char*)&encoded_in_memory);
+                std::copy(reinterpret_cast<const unsigned char*>(&d), reinterpret_cast<const unsigned char*>(&d + 1), reinterpret_cast<unsigned char*>(&encoded_in_memory));
                 assert(encoded_in_memory == encoded);
             }
         }

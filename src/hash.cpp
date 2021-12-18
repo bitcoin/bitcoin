@@ -90,7 +90,7 @@ CHashWriter TaggedHash(const std::string& tag)
 {
     CHashWriter writer(SER_GETHASH, 0);
     uint256 taghash;
-    CSHA256().Write((const unsigned char*)tag.data(), tag.size()).Finalize(taghash.begin());
+    CSHA256().Write(reinterpret_cast<const unsigned char*>(tag.data()), tag.size()).Finalize(taghash.begin());
     writer << taghash << taghash;
     return writer;
 }

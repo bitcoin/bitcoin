@@ -68,7 +68,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
             txCredit.vout[0].scriptPubKey.data(),
             txCredit.vout[0].scriptPubKey.size(),
             txCredit.vout[0].nValue,
-            (const unsigned char*)stream.data(), stream.size(), 0, flags, nullptr);
+            reinterpret_cast<const unsigned char*>(stream.data()), stream.size(), 0, flags, nullptr);
         assert(csuccess == 1);
 #endif
     });

@@ -65,12 +65,12 @@ void inline __attribute__((always_inline)) Unshuffle(__m128i& s0, __m128i& s1)
 
 __m128i inline  __attribute__((always_inline)) Load(const unsigned char* in)
 {
-    return _mm_shuffle_epi8(_mm_loadu_si128((const __m128i*)in), _mm_load_si128((const __m128i*)MASK));
+    return _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)), _mm_load_si128(reinterpret_cast<const __m128i*>(MASK)));
 }
 
 void inline  __attribute__((always_inline)) Save(unsigned char* out, __m128i s)
 {
-    _mm_storeu_si128((__m128i*)out, _mm_shuffle_epi8(s, _mm_load_si128((const __m128i*)MASK)));
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(out), _mm_shuffle_epi8(s, _mm_load_si128(reinterpret_cast<const __m128i*>(MASK))));
 }
 }
 
@@ -80,8 +80,8 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
     __m128i m0, m1, m2, m3, s0, s1, so0, so1;
 
     /* Load state */
-    s0 = _mm_loadu_si128((const __m128i*)s);
-    s1 = _mm_loadu_si128((const __m128i*)(s + 4));
+    s0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(s));
+    s1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(s + 4));
     Shuffle(s0, s1);
 
     while (blocks--) {
@@ -134,8 +134,8 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
     }
 
     Unshuffle(s0, s1);
-    _mm_storeu_si128((__m128i*)s, s0);
-    _mm_storeu_si128((__m128i*)(s + 4), s1);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(s), s0);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(s + 4), s1);
 }
 }
 
@@ -147,8 +147,8 @@ void Transform_2way(unsigned char* out, const unsigned char* in)
     __m128i bm0, bm1, bm2, bm3, bs0, bs1, bso0, bso1;
 
     /* Transform 1 */
-    bs0 = as0 = _mm_load_si128((const __m128i*)INIT0);
-    bs1 = as1 = _mm_load_si128((const __m128i*)INIT1);
+    bs0 = as0 = _mm_load_si128(reinterpret_cast<const __m128i*>(INIT0));
+    bs1 = as1 = _mm_load_si128(reinterpret_cast<const __m128i*>(INIT1));
     am0 = Load(in);
     bm0 = Load(in + 64);
     QuadRound(as0, as1, am0, 0xe9b5dba5b5c0fbcfull, 0x71374491428a2f98ull);
@@ -217,10 +217,10 @@ void Transform_2way(unsigned char* out, const unsigned char* in)
     ShiftMessageC(bm1, bm2, bm3);
     QuadRound(as0, as1, am3, 0xc67178f2bef9A3f7ull, 0xa4506ceb90befffaull);
     QuadRound(bs0, bs1, bm3, 0xc67178f2bef9A3f7ull, 0xa4506ceb90befffaull);
-    as0 = _mm_add_epi32(as0, _mm_load_si128((const __m128i*)INIT0));
-    bs0 = _mm_add_epi32(bs0, _mm_load_si128((const __m128i*)INIT0));
-    as1 = _mm_add_epi32(as1, _mm_load_si128((const __m128i*)INIT1));
-    bs1 = _mm_add_epi32(bs1, _mm_load_si128((const __m128i*)INIT1));
+    as0 = _mm_add_epi32(as0, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT0)));
+    bs0 = _mm_add_epi32(bs0, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT0)));
+    as1 = _mm_add_epi32(as1, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT1)));
+    bs1 = _mm_add_epi32(bs1, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT1)));
 
     /* Transform 2 */
     aso0 = as0;
@@ -273,8 +273,8 @@ void Transform_2way(unsigned char* out, const unsigned char* in)
     bm1 = bs1;
 
     /* Transform 3 */
-    bs0 = as0 = _mm_load_si128((const __m128i*)INIT0);
-    bs1 = as1 = _mm_load_si128((const __m128i*)INIT1);
+    bs0 = as0 = _mm_load_si128(reinterpret_cast<const __m128i*>(INIT0));
+    bs1 = as1 = _mm_load_si128(reinterpret_cast<const __m128i*>(INIT1));
     QuadRound(as0, as1, am0, 0xe9b5dba5B5c0fbcfull, 0x71374491428a2f98ull);
     QuadRound(bs0, bs1, bm0, 0xe9b5dba5B5c0fbcfull, 0x71374491428a2f98ull);
     QuadRound(as0, as1, am1, 0xab1c5ed5923f82a4ull, 0x59f111f13956c25bull);
@@ -337,10 +337,10 @@ void Transform_2way(unsigned char* out, const unsigned char* in)
     ShiftMessageC(bm1, bm2, bm3);
     QuadRound(as0, as1, am3, 0xc67178f2bef9a3f7ull, 0xa4506ceb90befffaull);
     QuadRound(bs0, bs1, bm3, 0xc67178f2bef9a3f7ull, 0xa4506ceb90befffaull);
-    as0 = _mm_add_epi32(as0, _mm_load_si128((const __m128i*)INIT0));
-    bs0 = _mm_add_epi32(bs0, _mm_load_si128((const __m128i*)INIT0));
-    as1 = _mm_add_epi32(as1, _mm_load_si128((const __m128i*)INIT1));
-    bs1 = _mm_add_epi32(bs1, _mm_load_si128((const __m128i*)INIT1));
+    as0 = _mm_add_epi32(as0, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT0)));
+    bs0 = _mm_add_epi32(bs0, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT0)));
+    as1 = _mm_add_epi32(as1, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT1)));
+    bs1 = _mm_add_epi32(bs1, _mm_load_si128(reinterpret_cast<const __m128i*>(INIT1)));
 
     /* Extract hash into out */
     Unshuffle(as0, as1);

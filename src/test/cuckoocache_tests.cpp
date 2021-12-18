@@ -61,7 +61,7 @@ static double test_cache(size_t megabytes, double load)
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
     for (uint32_t i = 0; i < n_insert; ++i) {
-        uint32_t* ptr = (uint32_t*)hashes[i].begin();
+        uint32_t* ptr = reinterpret_cast<uint32_t*>(hashes[i].begin());
         for (uint8_t j = 0; j < 8; ++j)
             *(ptr++) = InsecureRand32();
     }
@@ -132,7 +132,7 @@ static void test_cache_erase(size_t megabytes)
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
     for (uint32_t i = 0; i < n_insert; ++i) {
-        uint32_t* ptr = (uint32_t*)hashes[i].begin();
+        uint32_t* ptr = reinterpret_cast<uint32_t*>(hashes[i].begin());
         for (uint8_t j = 0; j < 8; ++j)
             *(ptr++) = InsecureRand32();
     }
@@ -195,7 +195,7 @@ static void test_cache_erase_parallel(size_t megabytes)
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
     for (uint32_t i = 0; i < n_insert; ++i) {
-        uint32_t* ptr = (uint32_t*)hashes[i].begin();
+        uint32_t* ptr = reinterpret_cast<uint32_t*>(hashes[i].begin());
         for (uint8_t j = 0; j < 8; ++j)
             *(ptr++) = InsecureRand32();
     }
@@ -306,7 +306,7 @@ static void test_cache_generations()
             inserts.resize(n_insert);
             reads.reserve(n_insert / 2);
             for (uint32_t i = 0; i < n_insert; ++i) {
-                uint32_t* ptr = (uint32_t*)inserts[i].begin();
+                uint32_t* ptr = reinterpret_cast<uint32_t*>(inserts[i].begin());
                 for (uint8_t j = 0; j < 8; ++j)
                     *(ptr++) = InsecureRand32();
             }

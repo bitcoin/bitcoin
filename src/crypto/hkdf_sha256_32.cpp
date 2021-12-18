@@ -9,7 +9,7 @@
 
 CHKDF_HMAC_SHA256_L32::CHKDF_HMAC_SHA256_L32(const unsigned char* ikm, size_t ikmlen, const std::string& salt)
 {
-    CHMAC_SHA256((const unsigned char*)salt.data(), salt.size()).Write(ikm, ikmlen).Finalize(m_prk);
+    CHMAC_SHA256(reinterpret_cast<const unsigned char*>(salt.data()), salt.size()).Write(ikm, ikmlen).Finalize(m_prk);
 }
 
 void CHKDF_HMAC_SHA256_L32::Expand32(const std::string& info, unsigned char hash[OUTPUT_SIZE])
@@ -17,5 +17,5 @@ void CHKDF_HMAC_SHA256_L32::Expand32(const std::string& info, unsigned char hash
     // expand a 32byte key (single round)
     assert(info.size() <= 128);
     static const unsigned char one[1] = {1};
-    CHMAC_SHA256(m_prk, 32).Write((const unsigned char*)info.data(), info.size()).Write(one, 1).Finalize(hash);
+    CHMAC_SHA256(m_prk, 32).Write(reinterpret_cast<const unsigned char*>(info.data()), info.size()).Write(one, 1).Finalize(hash);
 }

@@ -43,7 +43,7 @@ void base_blob<BITS>::SetHex(const char* psz)
     size_t digits = 0;
     while (::HexDigit(psz[digits]) != -1)
         digits++;
-    unsigned char* p1 = (unsigned char*)m_data;
+    unsigned char* p1 = reinterpret_cast<unsigned char*>(m_data);
     unsigned char* pend = p1 + WIDTH;
     while (digits > 0 && p1 < pend) {
         *p1 = ::HexDigit(psz[--digits]);

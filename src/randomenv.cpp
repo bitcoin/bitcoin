@@ -111,7 +111,7 @@ CSHA512& operator<<(CSHA512& hasher, const T& data) {
     static_assert(!std::is_same<typename std::decay<T>::type, unsigned char*>::value, "Calling operator<<(CSHA512, unsigned char*) is probably not what you want");
     static_assert(!std::is_same<typename std::decay<T>::type, const char*>::value, "Calling operator<<(CSHA512, const char*) is probably not what you want");
     static_assert(!std::is_same<typename std::decay<T>::type, const unsigned char*>::value, "Calling operator<<(CSHA512, const unsigned char*) is probably not what you want");
-    hasher.Write((const unsigned char*)&data, sizeof(data));
+    hasher.Write(reinterpret_cast<const unsigned char*>(&data), sizeof(data));
     return hasher;
 }
 
@@ -121,13 +121,13 @@ void AddSockaddr(CSHA512& hasher, const struct sockaddr *addr)
     if (addr == nullptr) return;
     switch (addr->sa_family) {
     case AF_INET:
-        hasher.Write((const unsigned char*)addr, sizeof(sockaddr_in));
+        hasher.Write(reinterpret_cast<const unsigned char*>(addr), sizeof(sockaddr_in));
         break;
     case AF_INET6:
-        hasher.Write((const unsigned char*)addr, sizeof(sockaddr_in6));
+        hasher.Write(reinterpret_cast<const unsigned char*>(addr), sizeof(sockaddr_in6));
         break;
     default:
-        hasher.Write((const unsigned char*)&addr->sa_family, sizeof(addr->sa_family));
+        hasher.Write(reinterpret_cast<const unsigned char*>(&addr->sa_family), sizeof(addr->sa_family));
     }
 }
 
@@ -139,7 +139,7 @@ void AddFile(CSHA512& hasher, const char *path)
     if (f != -1) {
         unsigned char fbuf[4096];
         int n;
-        hasher.Write((const unsigned char*)&f, sizeof(f));
+        hasher.Write(reinterpret_cast<const unsigned char*>(&f), sizeof(f));
         if (fstat(f, &sb) == 0) hasher << sb;
         do {
             n = read(f, fbuf, sizeof(fbuf));
@@ -155,7 +155,7 @@ void AddPath(CSHA512& hasher, const char *path)
 {
     struct stat sb = {};
     if (stat(path, &sb) == 0) {
-        hasher.Write((const unsigned char*)path, strlen(path) + 1);
+        hasher.Write(reinterpret_cast<const unsigned char*>(path), strlen(path) + 1);
         hasher << sb;
     }
 }
@@ -171,7 +171,7 @@ void AddSysctl(CSHA512& hasher)
     int ret = sysctl(CTL, sizeof...(S), buffer, &siz, nullptr, 0);
     if (ret == 0 || (ret == -1 && errno == ENOMEM)) {
         hasher << sizeof(CTL);
-        hasher.Write((const unsigned char*)CTL, sizeof(CTL));
+        hasher.Write(reinterpret_cast<const unsigned char*>(CTL), sizeof(CTL));
         if (siz > sizeof(buffer)) siz = sizeof(buffer);
         hasher << siz;
         hasher.Write(buffer, siz);
@@ -319,7 +319,7 @@ void RandAddStaticEnv(CSHA512& hasher)
 #endif
 #ifdef __VERSION__
     const char* COMPILER_VERSION = __VERSION__;
-    hasher.Write((const unsigned char*)COMPILER_VERSION, strlen(COMPILER_VERSION) + 1);
+    hasher.Write(reinterpret_cast<const unsigned char*>(COMPILER_VERSION), strlen(COMPILER_VERSION) + 1);
 #endif
 
     // Bitcoin client version
@@ -334,16 +334,16 @@ void RandAddStaticEnv(CSHA512& hasher)
     hasher << getauxval(AT_HWCAP2);
 #  endif
 #  ifdef AT_RANDOM
-    const unsigned char* random_aux = (const unsigned char*)getauxval(AT_RANDOM);
+    const unsigned char* random_aux = reinterpret_cast<const unsigned char*>(getauxval(AT_RANDOM));
     if (random_aux) hasher.Write(random_aux, 16);
 #  endif
 #  ifdef AT_PLATFORM
-    const char* platform_str = (const char*)getauxval(AT_PLATFORM);
-    if (platform_str) hasher.Write((const unsigned char*)platform_str, strlen(platform_str) + 1);
+    const char* platform_str = reinterpret_cast<const char*>(getauxval(AT_PLATFORM));
+    if (platform_str) hasher.Write(reinterpret_cast<const unsigned char*>(platform_str), strlen(platform_str) + 1);
 #  endif
 #  ifdef AT_EXECFN
-    const char* exec_str = (const char*)getauxval(AT_EXECFN);
-    if (exec_str) hasher.Write((const unsigned char*)exec_str, strlen(exec_str) + 1);
+    const char* exec_str = reinterpret_cast<const char*>(getauxval(AT_EXECFN));
+    if (exec_str) hasher.Write(reinterpret_cast<const unsigned char*>(exec_str), strlen(exec_str) + 1);
 #  endif
 #endif // HAVE_STRONG_GETAUXVAL
 
@@ -357,7 +357,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     // Hostname
     char hname[256];
     if (gethostname(hname, 256) == 0) {
-        hasher.Write((const unsigned char*)hname, strnlen(hname, 256));
+        hasher.Write(reinterpret_cast<const unsigned char*>(hname), strnlen(hname, 256));
     }
 
 #if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
@@ -366,9 +366,9 @@ void RandAddStaticEnv(CSHA512& hasher)
     getifaddrs(&ifad);
     struct ifaddrs *ifit = ifad;
     while (ifit != nullptr) {
-        hasher.Write((const unsigned char*)&ifit, sizeof(ifit));
-        hasher.Write((const unsigned char*)ifit->ifa_name, strlen(ifit->ifa_name) + 1);
-        hasher.Write((const unsigned char*)&ifit->ifa_flags, sizeof(ifit->ifa_flags));
+        hasher.Write(reinterpret_cast<const unsigned char*>(&ifit), sizeof(ifit));
+        hasher.Write(reinterpret_cast<const unsigned char*>(ifit->ifa_name), strlen(ifit->ifa_name) + 1);
+        hasher.Write(reinterpret_cast<const unsigned char*>(&ifit->ifa_flags), sizeof(ifit->ifa_flags));
         AddSockaddr(hasher, ifit->ifa_addr);
         AddSockaddr(hasher, ifit->ifa_netmask);
         AddSockaddr(hasher, ifit->ifa_dstaddr);
@@ -381,11 +381,11 @@ void RandAddStaticEnv(CSHA512& hasher)
     // UNIX kernel information
     struct utsname name;
     if (uname(&name) != -1) {
-        hasher.Write((const unsigned char*)&name.sysname, strlen(name.sysname) + 1);
-        hasher.Write((const unsigned char*)&name.nodename, strlen(name.nodename) + 1);
-        hasher.Write((const unsigned char*)&name.release, strlen(name.release) + 1);
-        hasher.Write((const unsigned char*)&name.version, strlen(name.version) + 1);
-        hasher.Write((const unsigned char*)&name.machine, strlen(name.machine) + 1);
+        hasher.Write(reinterpret_cast<const unsigned char*>(&name.sysname), strlen(name.sysname) + 1);
+        hasher.Write(reinterpret_cast<const unsigned char*>(&name.nodename), strlen(name.nodename) + 1);
+        hasher.Write(reinterpret_cast<const unsigned char*>(&name.release), strlen(name.release) + 1);
+        hasher.Write(reinterpret_cast<const unsigned char*>(&name.version), strlen(name.version) + 1);
+        hasher.Write(reinterpret_cast<const unsigned char*>(&name.machine), strlen(name.machine) + 1);
     }
 
     /* Path and filesystem provided data */
@@ -485,7 +485,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     // Env variables
     if (environ) {
         for (size_t i = 0; environ[i]; ++i) {
-            hasher.Write((const unsigned char*)environ[i], strlen(environ[i]));
+            hasher.Write(reinterpret_cast<const unsigned char*>(environ[i]), strlen(environ[i]));
         }
     }
 

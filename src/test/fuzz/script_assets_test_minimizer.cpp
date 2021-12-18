@@ -192,7 +192,7 @@ void test_init()
 FUZZ_TARGET_INIT_HIDDEN(script_assets_test_minimizer, test_init, /*hidden=*/true)
 {
     if (buffer.size() < 2 || buffer.back() != '\n' || buffer[buffer.size() - 2] != ',') return;
-    const std::string str((const char*)buffer.data(), buffer.size() - 2);
+    const std::string str(reinterpret_cast<const char*>(buffer.data()), buffer.size() - 2);
     try {
         Test(str);
     } catch (const std::runtime_error&) {

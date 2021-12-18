@@ -96,7 +96,7 @@ bool IsBDBFile(const fs::path& path)
 
     file.seekg(12, std::ios::beg); // Magic bytes start at offset 12
     uint32_t data = 0;
-    file.read((char*) &data, sizeof(data)); // Read 4 bytes of file to compare against magic
+    file.read(reinterpret_cast<char*>(&data), sizeof(data)); // Read 4 bytes of file to compare against magic
 
     // Berkeley DB Btree magic bytes, from:
     //  https://github.com/file/file/blob/5824af38469ec1ca9ac3ffd251e7afe9dc11e227/magic/Magdir/database#L74-L75

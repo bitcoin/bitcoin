@@ -535,7 +535,7 @@ std::string HTTPRequest::ReadBody()
      * better to not copy into an intermediate string but use a stream
      * abstraction to consume the evbuffer on the fly in the parsing algorithm.
      */
-    const char* data = (const char*)evbuffer_pullup(buf, size);
+    const char* data = reinterpret_cast<const char*>(evbuffer_pullup(buf, size));
     if (!data) // returns nullptr in case of empty buffer
         return "";
     std::string rv(data, size);

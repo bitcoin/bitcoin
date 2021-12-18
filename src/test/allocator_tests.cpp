@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_live)
     void *a0 = pool.alloc(16);
     BOOST_CHECK(a0);
     // Test reading and writing the allocated memory
-    *((uint32_t*)a0) = 0x1234;
-    BOOST_CHECK(*((uint32_t*)a0) == 0x1234);
+    *reinterpret_cast<uint32_t*>(a0) = 0x1234;
+    BOOST_CHECK(*(reinterpret_cast<uint32_t*>(a0)) == 0x1234);
 
     pool.free(a0);
     try { // Test exception on double-free

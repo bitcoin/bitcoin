@@ -190,7 +190,7 @@ static void SeedHardwareFast(CSHA512& hasher) noexcept {
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
     if (g_rdrand_supported) {
         uint64_t out = GetRdRand();
-        hasher.Write((const unsigned char*)&out, sizeof(out));
+        hasher.Write(reinterpret_cast<const unsigned char*>(&out), sizeof(out));
         return;
     }
 #endif
@@ -204,7 +204,7 @@ static void SeedHardwareSlow(CSHA512& hasher) noexcept {
     if (g_rdseed_supported) {
         for (int i = 0; i < 4; ++i) {
             uint64_t out = GetRdSeed();
-            hasher.Write((const unsigned char*)&out, sizeof(out));
+            hasher.Write(reinterpret_cast<const unsigned char*>(&out), sizeof(out));
         }
         return;
     }
@@ -214,7 +214,7 @@ static void SeedHardwareSlow(CSHA512& hasher) noexcept {
         for (int i = 0; i < 4; ++i) {
             uint64_t out = 0;
             for (int j = 0; j < 1024; ++j) out ^= GetRdRand();
-            hasher.Write((const unsigned char*)&out, sizeof(out));
+            hasher.Write(reinterpret_cast<const unsigned char*>(&out), sizeof(out));
         }
         return;
     }
@@ -238,7 +238,7 @@ static void Strengthen(const unsigned char (&seed)[32], int microseconds, CSHA51
         }
         // Benchmark operation and feed it into outer hasher.
         int64_t perf = GetPerformanceCounter();
-        hasher.Write((const unsigned char*)&perf, sizeof(perf));
+        hasher.Write(reinterpret_cast<const unsigned char*>(&perf), sizeof(perf));
     } while (GetTimeMicros() < stop);
 
     // Produce output from inner state and feed it to outer hasher.
@@ -378,11 +378,11 @@ public:
     {
         LOCK(m_events_mutex);
 
-        m_events_hasher.Write((const unsigned char *)&event_info, sizeof(event_info));
+        m_events_hasher.Write(reinterpret_cast<const unsigned char*>(&event_info), sizeof(event_info));
         // Get the low four bytes of the performance counter. This translates to roughly the
         // subsecond part.
         uint32_t perfcounter = (GetPerformanceCounter() & 0xffffffff);
-        m_events_hasher.Write((const unsigned char*)&perfcounter, sizeof(perfcounter));
+        m_events_hasher.Write(reinterpret_cast<const unsigned char*>(&perfcounter), sizeof(perfcounter));
     }
 
     /**
@@ -419,7 +419,7 @@ public:
             // Write the current state of the RNG into the hasher
             hasher.Write(m_state, 32);
             // Write a new counter number into the state
-            hasher.Write((const unsigned char*)&m_counter, sizeof(m_counter));
+            hasher.Write(reinterpret_cast<const unsigned char*>(&m_counter), sizeof(m_counter));
             ++m_counter;
             // Finalize the hasher
             hasher.Finalize(buf);
@@ -455,7 +455,7 @@ RNGState& GetRNGState() noexcept
 static void SeedTimestamp(CSHA512& hasher) noexcept
 {
     int64_t perfcounter = GetPerformanceCounter();
-    hasher.Write((const unsigned char*)&perfcounter, sizeof(perfcounter));
+    hasher.Write(reinterpret_cast<const unsigned char*>(&perfcounter), sizeof(perfcounter));
 }
 
 static void SeedFast(CSHA512& hasher) noexcept
@@ -464,7 +464,7 @@ static void SeedFast(CSHA512& hasher) noexcept
 
     // Stack pointer to indirectly commit to thread/callstack
     const unsigned char* ptr = buffer;
-    hasher.Write((const unsigned char*)&ptr, sizeof(ptr));
+    hasher.Write(reinterpret_cast<const unsigned char*>(&ptr), sizeof(ptr));
 
     // Hardware randomness is very fast when available; use it always.
     SeedHardwareFast(hasher);
@@ -675,8 +675,8 @@ bool Random_SanityCheck()
 
     // We called GetPerformanceCounter. Use it as entropy.
     CSHA512 to_add;
-    to_add.Write((const unsigned char*)&start, sizeof(start));
-    to_add.Write((const unsigned char*)&stop, sizeof(stop));
+    to_add.Write(reinterpret_cast<const unsigned char*>(&start), sizeof(start));
+    to_add.Write(reinterpret_cast<const unsigned char*>(&stop), sizeof(stop));
     GetRNGState().MixExtract(nullptr, 0, std::move(to_add), false);
 
     return true;

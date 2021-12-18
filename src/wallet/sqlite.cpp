@@ -196,7 +196,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
             error = strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret));
             break;
         }
-        const char* msg = (const char*)sqlite3_column_text(stmt, 0);
+        const char* msg = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         if (!msg) {
             error = strprintf(_("SQLiteDatabase: Failed to read database verification error: %s"), sqlite3_errstr(ret));
             break;

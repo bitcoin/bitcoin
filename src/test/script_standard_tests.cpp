@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(bip341_spk_test_vectors)
     using control_set = decltype(TaprootSpendData::scripts)::mapped_type;
 
     UniValue tests;
-    tests.read((const char*)json_tests::bip341_wallet_vectors, sizeof(json_tests::bip341_wallet_vectors));
+    tests.read(reinterpret_cast<const char*>(json_tests::bip341_wallet_vectors), sizeof(json_tests::bip341_wallet_vectors));
 
     const auto& vectors = tests["scriptPubKey"];
 
