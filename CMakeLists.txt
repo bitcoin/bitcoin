@@ -310,6 +310,13 @@ if(WIN32)
     # As a best effort, target Windows 8.
     try_append_linker_flag("-Wl,--major-subsystem-version,6" TARGET core_interface)
     try_append_linker_flag("-Wl,--minor-subsystem-version,2" TARGET core_interface)
+
+    find_library(MINGWTHRD_LIBRARY mingwthrd)
+    if (MINGWTHRD_LIBRARY)
+      target_link_libraries(core_interface INTERFACE
+        ${MINGWTHRD_LIBRARY}
+      )
+    endif()
   endif()
 
   # Workaround producing large object files, which cannot be handled by the assembler.
