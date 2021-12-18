@@ -14,7 +14,7 @@ export PACKAGES="python3-zmq"
 if [ -n "$QEMU_USER_CMD" ]; then
   # Likely cross-compiling, so install the needed gcc and qemu-user
   export DPKG_ADD_ARCH="s390x"
-  export PACKAGES="$PACKAGES g++-s390x-linux-gnu qemu-user libc6:s390x libstdc++6:s390x libfontconfig1:s390x libxcb1:s390x"
+  export PACKAGES="$PACKAGES g++-s390x-linux-gnu qemu-user libc6:s390x libstdc++6:s390x"
 fi
 # Use debian to avoid 404 apt errors
 export CONTAINER_NAME=ci_s390x
@@ -22,4 +22,4 @@ export DOCKER_NAME_TAG="debian:focal"
 export RUN_UNIT_TESTS=true
 export RUN_FUNCTIONAL_TESTS=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-reduce-exports --with-incompatible-bdb"
+export BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"  # GUI tests disabled for now, see https://github.com/bitcoin/bitcoin/issues/23730
