@@ -314,9 +314,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
                 chacha20.Keystream(output.data(), output.size());
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_keystream_bytes(&ctx, djb_output.data(), djb_output.size());
-                if (output.data() != NULL && djb_output.data() != NULL) {
-                    assert(memcmp(output.data(), djb_output.data(), integralInRange) == 0);
-                }
+                assert(output == djb_output);
             },
             [&] {
                 uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
@@ -325,6 +323,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
                 chacha20.Crypt(input.data(), output.data(), input.size());
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_encrypt_bytes(&ctx, input.data(), djb_output.data(), input.size());
+                assert(output == djb_output);
             });
     }
 }
