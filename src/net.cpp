@@ -3029,7 +3029,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     TRACE6(net, outbound_message,
         pnode->GetId(),
         pnode->m_addr_name.c_str(),
-        pnode->ConnectionTypeAsString().c_str(),
+        (uint32_t)pnode->GetConnectionType(),
         msg.m_type.c_str(),
         msg.data.size(),
         msg.data.data()

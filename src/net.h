@@ -660,6 +660,8 @@ public:
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
+    ConnectionType GetConnectionType() const { return m_conn_type; }
+
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
     void PongReceived(std::chrono::microseconds ping_time) {
         m_last_ping_time = ping_time;

@@ -4146,7 +4146,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     TRACE6(net, inbound_message,
         pfrom->GetId(),
         pfrom->m_addr_name.c_str(),
-        pfrom->ConnectionTypeAsString().c_str(),
+        (uint32_t)pfrom->GetConnectionType(),
         msg.m_command.c_str(),
         msg.m_recv.size(),
         msg.m_recv.data()

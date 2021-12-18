@@ -33,6 +33,8 @@
 import sys
 from bcc import BPF, USDT
 
+from net_common import describe_conn_type
+
 # BCC: The C program to be compiled to an eBPF program (by BCC) and loaded into
 # a sandboxed Linux kernel VM.
 program = """
@@ -46,7 +48,6 @@ program = """
 
 // Tor v3 addresses are 62 chars + 6 chars for the port (':12345').
 #define MAX_PEER_ADDR_LENGTH 62 + 6
-#define MAX_PEER_CONN_TYPE_LENGTH 20
 #define MAX_MSG_TYPE_LENGTH 20
 #define MAX_MSG_DATA_LENGTH PCPU_MIN_UNIT_SIZE - 200
 
@@ -54,7 +55,7 @@ struct p2p_message
 {
     u64     peer_id;
     char    peer_addr[MAX_PEER_ADDR_LENGTH];
-    char    peer_conn_type[MAX_PEER_CONN_TYPE_LENGTH];
+    u32     peer_conn_type;
     char    msg_type[MAX_MSG_TYPE_LENGTH];
     u64     msg_size;
     u8      msg[MAX_MSG_DATA_LENGTH];
@@ -82,7 +83,7 @@ int trace_inbound_message(struct pt_regs *ctx) {
 
     bpf_usdt_readarg(1, ctx, &msg->peer_id);
     bpf_usdt_readarg_p(2, ctx, &msg->peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg->peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
+    bpf_usdt_readarg(3, ctx, &msg->peer_conn_type);
     bpf_usdt_readarg_p(4, ctx, &msg->msg_type, MAX_MSG_TYPE_LENGTH);
     bpf_usdt_readarg(5, ctx, &msg->msg_size);
     bpf_usdt_readarg_p(6, ctx, &msg->msg, MIN(msg->msg_size, MAX_MSG_DATA_LENGTH));
@@ -102,7 +103,7 @@ int trace_outbound_message(struct pt_regs *ctx) {
 
     bpf_usdt_readarg(1, ctx, &msg->peer_id);
     bpf_usdt_readarg_p(2, ctx, &msg->peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg->peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
+    bpf_usdt_readarg(3, ctx, &msg->peer_conn_type);
     bpf_usdt_readarg_p(4, ctx, &msg->msg_type, MAX_MSG_TYPE_LENGTH);
     bpf_usdt_readarg(5, ctx, &msg->msg_size);
     bpf_usdt_readarg_p(6, ctx, &msg->msg,  MIN(msg->msg_size, MAX_MSG_DATA_LENGTH));
@@ -112,7 +113,6 @@ int trace_outbound_message(struct pt_regs *ctx) {
 };
 """
 
-
 def print_message(event, inbound):
     print(f"%s %s msg '%s' from peer %d (%s, %s) with %d bytes: %s" %
           (
@@ -121,7 +121,7 @@ def print_message(event, inbound):
               "inbound" if inbound else "outbound",
               event.msg_type.decode("utf-8"),
               event.peer_id,
-              event.peer_conn_type.decode("utf-8"),
+              describe_conn_type(event.peer_conn_type),
               event.peer_addr.decode("utf-8"),
               event.msg_size,
               bytes(event.msg[:event.msg_size]).hex(),
