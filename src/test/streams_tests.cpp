@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     CDataStream data_copy(data);
     uint32_t serialized_int1;
     data >> serialized_int1;
-    BOOST_CHECK_EQUAL(serialized_int1, (uint32_t)0x7700C35A); // NOTE: Serialized as LE
+    BOOST_CHECK_EQUAL(serialized_int1, uint32_t{0x7700C35A}); // NOTE: Serialized as LE
     uint16_t serialized_int2;
     data >> serialized_int2;
-    BOOST_CHECK_EQUAL(serialized_int2, (uint16_t)0x1072); // NOTE: Serialized as LE
+    BOOST_CHECK_EQUAL(serialized_int2, uint16_t{0x1072}); // NOTE: Serialized as LE
 
     BitStreamReader<CDataStream> bit_reader(data_copy);
     BOOST_CHECK_EQUAL(bit_reader.Read(1), 0U);
