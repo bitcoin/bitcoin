@@ -282,13 +282,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 11 native [gui, sqlite only] [no depends]'
+  name: 'macOS 12 native [gui, system sqlite only] [no depends]'
   brew_install_script:
-    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
+    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: big-sur-xcode-12.5  # https://cirrus-ci.org/guide/macOS
+    image: monterey-xcode-13.2  # https://cirrus-ci.org/guide/macOS
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     CI_USE_APT_INSTALL: "no"
