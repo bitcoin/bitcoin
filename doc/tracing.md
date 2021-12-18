@@ -63,7 +63,7 @@ information about our peer, the connection and the message as arguments.
 Arguments passed:
 1. Peer ID as `int64`
 2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
-3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+3. Connection Type (`0` inbound, `1` outbound-full-relay, `2` manual, `3` feeler, `4` block-relay, `5` addr-fetch) as `uint32`
 4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
 5. Message Size in bytes as `uint64`
 6. Message Bytes as `pointer to unsigned chars` (i.e. bytes)
@@ -82,7 +82,7 @@ information about our peer, the connection and the message as arguments.
 Arguments passed:
 1. Peer ID as `int64`
 2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
-3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+3. Connection Type (`0` inbound, `1` outbound-full-relay, `2` manual, `3` feeler, `4` block-relay, `5` addr-fetch) as `uint32`
 4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
 5. Message Size in bytes as `uint64`
 6. Message Bytes as `pointer to unsigned chars` (i.e. bytes)
@@ -190,7 +190,7 @@ For example:
 TRACE6(net, inbound_message,
     pnode->GetId(),
     pnode->m_addr_name.c_str(),
-    pnode->ConnectionTypeAsString().c_str(),
+    pnode->GetConnectionType(),
     sanitizedType.c_str(),
     msg.data.size(),
     msg.data.data()
