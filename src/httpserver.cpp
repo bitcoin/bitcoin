@@ -597,9 +597,8 @@ CService HTTPRequest::GetPeer() const
 #ifdef HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
         evhttp_connection_get_peer(con, &address, &port);
 #else
-        evhttp_connection_get_peer(con, (char**)&address, &port);
+        evhttp_connection_get_peer(con, const_cast<char**>(reinterpret_cast<const char**>(&address)), &port);
 #endif // HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
-
         peer = LookupNumeric(address, port);
     }
     return peer;

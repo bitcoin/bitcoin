@@ -340,7 +340,7 @@ public:
         test.SetupArgs({{"-value", flags}});
         const char* argv[] = {"ignored", arg};
         std::string error;
-        bool success = test.ParseParameters(arg ? 2 : 1, (char**)argv, error);
+        bool success = test.ParseParameters(arg ? 2 : 1, const_cast<char**>(argv), error);
 
         BOOST_CHECK_EQUAL(test.GetSetting("-value").write(), expect.setting.write());
         auto settings_list = test.GetSettingsList("-value");
@@ -445,13 +445,13 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     std::string error;
     LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, ccc, d});
-    BOOST_CHECK(testArgs.ParseParameters(0, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.ParseParameters(0, const_cast<char**>(argv_test), error));
     BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
 
-    BOOST_CHECK(testArgs.ParseParameters(1, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.ParseParameters(1, const_cast<char**>(argv_test), error));
     BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
 
-    BOOST_CHECK(testArgs.ParseParameters(7, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.ParseParameters(7, const_cast<char**>(argv_test), error));
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
@@ -476,17 +476,17 @@ BOOST_AUTO_TEST_CASE(util_ParseInvalidParameters)
 
     const char* argv[] = {"ignored", "-registered"};
     std::string error;
-    BOOST_CHECK(test.ParseParameters(2, (char**)argv, error));
+    BOOST_CHECK(test.ParseParameters(2, const_cast<char**>(argv), error));
     BOOST_CHECK_EQUAL(error, "");
 
     argv[1] = "-unregistered";
-    BOOST_CHECK(!test.ParseParameters(2, (char**)argv, error));
+    BOOST_CHECK(!test.ParseParameters(2, const_cast<char**>(argv), error));
     BOOST_CHECK_EQUAL(error, "Invalid parameter -unregistered");
 
     // Make sure registered parameters prefixed with a chain name trigger errors.
     // (Previously, they were accepted and ignored.)
     argv[1] = "-test.registered";
-    BOOST_CHECK(!test.ParseParameters(2, (char**)argv, error));
+    BOOST_CHECK(!test.ParseParameters(2, const_cast<char**>(argv), error));
     BOOST_CHECK_EQUAL(error, "Invalid parameter -test.registered");
 }
 
@@ -497,7 +497,7 @@ static void TestParse(const std::string& str, bool expected_bool, int64_t expect
     std::string arg = "-value=" + str;
     const char* argv[] = {"ignored", arg.c_str()};
     std::string error;
-    BOOST_CHECK(test.ParseParameters(2, (char**)argv, error));
+    BOOST_CHECK(test.ParseParameters(2, const_cast<char**>(argv), error));
     BOOST_CHECK_EQUAL(test.GetBoolArg("-value", false), expected_bool);
     BOOST_CHECK_EQUAL(test.GetBoolArg("-value", true), expected_bool);
     BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99998), expected_int);
@@ -559,7 +559,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     std::string error;
     LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, c, d, e, f});
-    BOOST_CHECK(testArgs.ParseParameters(7, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.ParseParameters(7, const_cast<char**>(argv_test), error));
 
     // Each letter should be set.
     for (const char opt : "abcdef")
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
     testArgs.SetupArgs({foo, bar});
     std::string error;
-    BOOST_CHECK(testArgs.ParseParameters(4, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.ParseParameters(4, const_cast<char**>(argv_test), error));
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // Config test
     const char *conf_test = "nofoo=1\nfoo=1\nnobar=0\n";
-    BOOST_CHECK(testArgs.ParseParameters(1, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.ParseParameters(1, const_cast<char**>(argv_test), error));
     testArgs.ReadConfigString(conf_test);
 
     // This was passed twice, second one overrides the negative setting,
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // Combined test
     const char *combo_test_args[] = {"ignored", "-nofoo", "-bar"};
     const char *combo_test_conf = "foo=1\nnobar=1\n";
-    BOOST_CHECK(testArgs.ParseParameters(3, (char**)combo_test_args, error));
+    BOOST_CHECK(testArgs.ParseParameters(3, const_cast<char**>(combo_test_args), error));
     testArgs.ReadConfigString(combo_test_conf);
 
     // Command line overrides, but doesn't erase old setting
@@ -883,38 +883,38 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     const char* testnetconf = "testnet=1\nregtest=0\n[test]\nregtest=1";
     std::string error;
 
-    BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, const_cast<char**>(argv_testnet), error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "main");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(2, const_cast<char**>(argv_testnet), error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
+    BOOST_CHECK(test_args.ParseParameters(2, const_cast<char**>(argv_regtest), error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "regtest");
 
-    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_test_no_reg, error));
+    BOOST_CHECK(test_args.ParseParameters(3, const_cast<char**>(argv_test_no_reg), error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
+    BOOST_CHECK(test_args.ParseParameters(3, const_cast<char**>(argv_both), error));
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, const_cast<char**>(argv_testnet), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(2, const_cast<char**>(argv_testnet), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
+    BOOST_CHECK(test_args.ParseParameters(2, const_cast<char**>(argv_regtest), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_test_no_reg, error));
+    BOOST_CHECK(test_args.ParseParameters(3, const_cast<char**>(argv_test_no_reg), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
+    BOOST_CHECK(test_args.ParseParameters(3, const_cast<char**>(argv_both), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
@@ -922,23 +922,23 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     // [test] regtest=1 potentially relevant) doesn't break things
     test_args.SelectConfigNetwork("test");
 
-    BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, const_cast<char**>(argv_testnet), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(2, const_cast<char**>(argv_testnet), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
+    BOOST_CHECK(test_args.ParseParameters(2, const_cast<char**>(argv_regtest), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_test_no_reg, error));
+    BOOST_CHECK(test_args.ParseParameters(2, const_cast<char**>(argv_test_no_reg), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
+    BOOST_CHECK(test_args.ParseParameters(3, const_cast<char**>(argv_both), error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 }
