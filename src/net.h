@@ -449,6 +449,7 @@ public:
             case ConnectionType::MANUAL:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::FEELER:
+            case ConnectionType::MANUAL_BLOCK_RELAY:
                 return false;
         } // no default case, so the compiler can warn about missing cases
 
@@ -479,10 +480,21 @@ public:
         return m_conn_type == ConnectionType::INBOUND;
     }
 
+    bool IsManualBlockRelayConn() const
+    {
+        return m_conn_type == ConnectionType::MANUAL_BLOCK_RELAY;
+    }
+
+    bool IsBlockRelayConn() const
+    {
+        return IsAutomaticBlockRelayConn() || IsManualBlockRelayConn();
+    }
+
     bool ExpectServicesFromConn() const {
         switch (m_conn_type) {
             case ConnectionType::INBOUND:
             case ConnectionType::MANUAL:
+            case ConnectionType::MANUAL_BLOCK_RELAY:
             case ConnectionType::FEELER:
                 return false;
             case ConnectionType::OUTBOUND_FULL_RELAY:

@@ -74,6 +74,18 @@ enum class ConnectionType {
      * AddrMan is empty.
      */
     ADDR_FETCH,
+
+    /**
+     * Manual-block-relay connections are manually added nodes (via -addnode)
+     * that behave like BLOCK_RELAY connections in that they don't participate in
+     * transaction and address relay, and also share the properties of MANUAL
+     * connections. When the node is connected to a privacy network such as
+     * Tor, manual block-relay-only connections to IPv4 or IPv6 nodes can be
+     * used for hardening against eclipse attacks, while at the same time
+     * making fingerprinting attacks more difficult and preserving a higher degree
+     * of privacy by not transmitting transactions and addresses over these links.
+     */
+    MANUAL_BLOCK_RELAY,
 };
 
 /** Convert ConnectionType enum to a string value */

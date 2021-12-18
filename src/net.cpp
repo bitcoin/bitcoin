@@ -1079,6 +1079,7 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     switch (conn_type) {
     case ConnectionType::INBOUND:
     case ConnectionType::MANUAL:
+    case ConnectionType::MANUAL_BLOCK_RELAY:
         return false;
     case ConnectionType::OUTBOUND_FULL_RELAY:
         max_connections = m_max_outbound_full_relay;
@@ -1727,6 +1728,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::FEELER:
                         break;
                     case ConnectionType::MANUAL:
+                    case ConnectionType::MANUAL_BLOCK_RELAY:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
                         CAddress address{pnode->addr};
