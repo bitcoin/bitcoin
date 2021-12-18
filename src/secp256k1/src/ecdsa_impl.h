@@ -112,7 +112,7 @@ static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char 
     if (secp256k1_der_read_len(&rlen, sig, sigend) == 0) {
         return 0;
     }
-    if (rlen == 0 || *sig + rlen > sigend) {
+    if (rlen == 0 || rlen > (size_t)(sigend - *sig)) {
         /* Exceeds bounds or not at least length 1 (X.690-0207 8.3.1).  */
         return 0;
     }
@@ -204,7 +204,7 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const secp256k1_scalar *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_scalar *sigr, const secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const secp256k1_scalar *message) {
     unsigned char c[32];
     secp256k1_scalar sn, u1, u2;
 #if !defined(EXHAUSTIVE_TEST_ORDER)
@@ -221,7 +221,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
     secp256k1_scalar_mul(&u1, &sn, message);
     secp256k1_scalar_mul(&u2, &sn, sigr);
     secp256k1_gej_set_ge(&pubkeyj, pubkey);
-    secp256k1_ecmult(ctx, &pr, &pubkeyj, &u2, &u1);
+    secp256k1_ecmult(&pr, &pubkeyj, &u2, &u1);
     if (secp256k1_gej_is_infinity(&pr)) {
         return 0;
     }
@@ -304,12 +304,12 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     high = secp256k1_scalar_is_high(sigs);
     secp256k1_scalar_cond_negate(sigs, high);
     if (recid) {
-            *recid ^= high;
+        *recid ^= high;
     }
     /* P.x = order is on the curve, so technically sig->r could end up being zero, which would be an invalid signature.
      * This is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N.
      */
-    return !secp256k1_scalar_is_zero(sigr) & !secp256k1_scalar_is_zero(sigs);
+    return (int)(!secp256k1_scalar_is_zero(sigr)) & (int)(!secp256k1_scalar_is_zero(sigs));
 }
 
 #endif /* SECP256K1_ECDSA_IMPL_H */

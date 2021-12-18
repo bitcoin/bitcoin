@@ -19,9 +19,9 @@ env:
   RECOVERY: no
   SCHNORRSIG: no
   ### test options
-  TEST_ITERS:
+  SECP256K1_TEST_ITERS:
   BENCH: yes
-  BENCH_ITERS: 2
+  SECP256K1_BENCH_ITERS: 2
   CTIMETEST: yes
 
 cat_logs_snippet: &CAT_LOGS
@@ -171,7 +171,7 @@ task:
     memory: 1G
   env:
     WRAPPER_CMD: qemu-s390x
-    TEST_ITERS: 16
+    SECP256K1_TEST_ITERS: 16
     HOST: s390x-linux-gnu
     WITH_VALGRIND: no
     ECDH: yes
@@ -194,7 +194,7 @@ task:
     memory: 1G
   env:
     WRAPPER_CMD: qemu-arm
-    TEST_ITERS: 16
+    SECP256K1_TEST_ITERS: 16
     HOST: arm-linux-gnueabihf
     WITH_VALGRIND: no
     ECDH: yes
@@ -218,7 +218,7 @@ task:
     memory: 1G
   env:
     WRAPPER_CMD: qemu-aarch64
-    TEST_ITERS: 16
+    SECP256K1_TEST_ITERS: 16
     HOST: aarch64-linux-gnu
     WITH_VALGRIND: no
     ECDH: yes
@@ -239,7 +239,7 @@ task:
     memory: 1G
   env:
     WRAPPER_CMD: qemu-ppc64le
-    TEST_ITERS: 16
+    SECP256K1_TEST_ITERS: 16
     HOST: powerpc64le-linux-gnu
     WITH_VALGRIND: no
     ECDH: yes
@@ -260,7 +260,7 @@ task:
     memory: 1G
   env:
     WRAPPER_CMD: wine64-stable
-    TEST_ITERS: 16
+    SECP256K1_TEST_ITERS: 16
     HOST: x86_64-w64-mingw32
     WITH_VALGRIND: no
     ECDH: yes
@@ -278,28 +278,26 @@ task:
   container:
     dockerfile: ci/linux-debian.Dockerfile
     cpu: 1
-    memory: 1G
+    memory: 2G
   env:
     ECDH: yes
     RECOVERY: yes
     EXPERIMENTAL: yes
     SCHNORRSIG: yes
     CTIMETEST: no
-    EXTRAFLAGS: "--disable-openssl-tests"
   matrix:
     - name: "Valgrind (memcheck)"
       env:
         # The `--error-exitcode` is required to make the test fail if valgrind found errors, otherwise it'll return 0 (https://www.valgrind.org/docs/manual/manual-core.html)
         WRAPPER_CMD: "valgrind --error-exitcode=42"
-        TEST_ITERS: 16
+        SECP256K1_TEST_ITERS: 2
     - name: "UBSan, ASan, LSan"
       env:
-        CFLAGS: "-fsanitize=undefined,address"
-        CFLAGS_FOR_BUILD: "-fsanitize=undefined,address"
+        CFLAGS: "-fsanitize=undefined,address -g"
         UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
         ASAN_OPTIONS: "strict_string_checks=1:detect_stack_use_after_return=1:detect_leaks=1"
         LSAN_OPTIONS: "use_unaligned=1"
-        TEST_ITERS: 32
+        SECP256K1_TEST_ITERS: 32
   # Try to cover many configurations with just a tiny matrix.
   matrix:
     - env:
@@ -330,7 +328,7 @@ task:
     # ./configure correctly errors out when given CC=g++.
     # We hack around this by passing CC=g++ only to make.
     CC: gcc
-    MAKEFLAGS: -j2 CC=g++ CFLAGS=-fpermissive
+    MAKEFLAGS: -j2 CC=g++ CFLAGS=-fpermissive\ -g
     WERROR_CFLAGS:
     EXPERIMENTAL: yes
     ECDH: yes

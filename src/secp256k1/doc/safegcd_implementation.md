@@ -569,8 +569,14 @@ bits efficiently, which is possible on most platforms; it is abstracted here as 
 
 ```python
 def count_trailing_zeros(v):
-    """For a non-zero value v, find z such that v=(d<<z) for some odd d."""
-    return (v & -v).bit_length() - 1
+    """
+    When v is zero, consider all N zero bits as "trailing".
+    For a non-zero value v, find z such that v=(d<<z) for some odd d.
+    """
+    if v == 0:
+        return N
+    else:
+        return (v & -v).bit_length() - 1
 
 i = N # divsteps left to do
 while True:
@@ -601,7 +607,7 @@ becomes negative, or when *i* reaches *0*. Combined, this is equivalent to addin
 It is easy to find what that multiple is: we want a number *w* such that *g+w&thinsp;f* has a few bottom
 zero bits. If that number of bits is *L*, we want *g+w&thinsp;f mod 2<sup>L</sup> = 0*, or *w = -g/f mod 2<sup>L</sup>*. Since *f*
 is odd, such a *w* exists for any *L*. *L* cannot be more than *i* steps (as we'd finish the loop before
-doing more) or more than *&eta;+1* steps (as we'd run `eta, f, g = -eta, g, f` at that point), but
+doing more) or more than *&eta;+1* steps (as we'd run `eta, f, g = -eta, g, -f` at that point), but
 apart from that, we're only limited by the complexity of computing *w*.
 
 This code demonstrates how to cancel up to 4 bits per step:
@@ -618,7 +624,7 @@ while True:
         break
     # We know g is odd now
     if eta < 0:
-        eta, f, g = -eta, g, f
+        eta, f, g = -eta, g, -f
     # Compute limit on number of bits to cancel
     limit = min(min(eta + 1, i), 4)
     # Compute w = -g/f mod 2**limit, using the table value for -1/f mod 2**4. Note that f is
