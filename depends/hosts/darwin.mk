@@ -109,8 +109,8 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
                -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
                -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 
-darwin_CFLAGS=-pipe -std=$(C_STANDARD)
-darwin_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
+darwin_CFLAGS=-pipe -std=$(C_STANDARD) -fvisibility=hidden
+darwin_CXXFLAGS=-pipe -std=$(CXX_STANDARD) -fvisibility=hidden
 
 ifneq ($(LTO),)
 darwin_CFLAGS += -flto
