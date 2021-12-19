@@ -2166,7 +2166,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         block.vtx.size(),
         nInputs,
         nSigOpsCost,
-        GetTimeMicros() - nTimeStart // in microseconds (µs)
+        nTime5 - nTimeStart // in microseconds (µs)
     );
 
     return true;
