@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     BOOST_CHECK_EQUAL(addr_ret1.ToString(), "250.1.1.1:8333");
 
     // Test: move addr to tried, select from new expected nothing returned.
-    addrman.Good(CAddress(addr1, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr1, NODE_NONE)));
     BOOST_CHECK_EQUAL(addrman.size(), 1U);
     auto addr_ret2 = addrman.Select(newOnly).first;
     BOOST_CHECK_EQUAL(addr_ret2.ToString(), "[::]:0");
@@ -220,11 +220,11 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     CService addr7 = ResolveService("250.4.6.6", 8333);
 
     BOOST_CHECK(addrman.Add({CAddress(addr5, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
-    addrman.Good(CAddress(addr5, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr5, NODE_NONE)));
     BOOST_CHECK(addrman.Add({CAddress(addr6, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
-    addrman.Good(CAddress(addr6, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr6, NODE_NONE)));
     BOOST_CHECK(addrman.Add({CAddress(addr7, NODE_NONE)}, ResolveService("250.1.1.3", 8333)));
-    addrman.Good(CAddress(addr7, NODE_NONE));
+    BOOST_CHECK(addrman.Good(CAddress(addr7, NODE_NONE)));
 
     // Test: 6 addrs + 1 addr from last test = 7.
     BOOST_CHECK_EQUAL(addrman.size(), 7U);
@@ -816,19 +816,21 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
     for (unsigned int i = 1; i < 23; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
         BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-        addrman.Good(addr);
 
-        // No collisions yet.
-        BOOST_CHECK(addrman.size() == i);
+        // No collisions in tried.
+        BOOST_CHECK(addrman.Good(addr));
         BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
     }
 
     // Ensure Good handles duplicates well.
+    // If an address is a duplicate, Good will return false but will not count it as a collision.
     for (unsigned int i = 1; i < 23; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
-        addrman.Good(addr);
 
-        BOOST_CHECK(addrman.size() == 22);
+        // Unable to add duplicate address to tried table.
+        BOOST_CHECK(!addrman.Good(addr));
+
+        // Verify duplicate address not marked as a collision.
         BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
     }
 }
@@ -842,22 +844,20 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     for (unsigned int i = 1; i < 36; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
         BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-        addrman.Good(addr);
 
         // No collision yet.
-        BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman.Good(addr));
     }
 
-    // Collision between 36 and 19.
+    // Collision in tried table between 36 and 19.
     CService addr36 = ResolveService("250.1.1.36");
     BOOST_CHECK(addrman.Add({CAddress(addr36, NODE_NONE)}, source));
-    addrman.Good(addr36);
-
-    BOOST_CHECK(addrman.size() == 36);
+    BOOST_CHECK(!addrman.Good(addr36));
     BOOST_CHECK_EQUAL(addrman.SelectTriedCollision().first.ToString(), "250.1.1.19:0");
 
     // 36 should be discarded and 19 not evicted.
+    // This means we keep 19 in the tried table and
+    // 36 stays in the new table.
     addrman.ResolveCollisions();
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
 
@@ -865,26 +865,24 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     for (unsigned int i = 37; i < 59; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
         BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-        addrman.Good(addr);
-
-        BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman.Good(addr));
     }
 
-    // Cause a collision.
+    // Cause a collision in the tried table.
     CService addr59 = ResolveService("250.1.1.59");
     BOOST_CHECK(addrman.Add({CAddress(addr59, NODE_NONE)}, source));
-    addrman.Good(addr59);
-    BOOST_CHECK(addrman.size() == 59);
+    BOOST_CHECK(!addrman.Good(addr59));
 
     BOOST_CHECK_EQUAL(addrman.SelectTriedCollision().first.ToString(), "250.1.1.10:0");
 
-    // Cause a second collision.
+    // Cause a second collision in the new table.
     BOOST_CHECK(!addrman.Add({CAddress(addr36, NODE_NONE)}, source));
-    addrman.Good(addr36);
-    BOOST_CHECK(addrman.size() == 59);
 
+    // 36 still cannot be moved from new to tried due to colliding with 19
+    BOOST_CHECK(!addrman.Good(addr36));
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() != "[::]:0");
+
+    // Resolve all collisions.
     addrman.ResolveCollisions();
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
 }
@@ -903,19 +901,16 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     for (unsigned int i = 1; i < 36; i++) {
         CService addr = ResolveService("250.1.1." + ToString(i));
         BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-        addrman.Good(addr);
 
         // No collision yet.
-        BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
+        BOOST_CHECK(addrman.Good(addr));
     }
 
     // Collision between 36 and 19.
     CService addr = ResolveService("250.1.1.36");
     BOOST_CHECK(addrman.Add({CAddress(addr, NODE_NONE)}, source));
-    addrman.Good(addr);
+    BOOST_CHECK(!addrman.Good(addr));
 
-    BOOST_CHECK_EQUAL(addrman.size(), 36);
     auto info = addrman.SelectTriedCollision().first;
     BOOST_CHECK_EQUAL(info.ToString(), "250.1.1.19:0");
 
@@ -926,17 +921,17 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     addrman.ResolveCollisions();
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
 
-    // If 36 was swapped for 19, then this should cause no collisions.
-    BOOST_CHECK(!addrman.Add({CAddress(addr, NODE_NONE)}, source));
-    addrman.Good(addr);
-
+    // If 36 was swapped for 19, then adding 36 to tried should fail because we
+    // are attempting to add a duplicate.
+    // We check this by verifying Good() returns false and also verifying that
+    // we have no collisions.
+    BOOST_CHECK(!addrman.Good(addr));
     BOOST_CHECK(addrman.SelectTriedCollision().first.ToString() == "[::]:0");
 
-    // If we insert 19 it should collide with 36
+    // 19 should fail as a collision (not a duplicate) if we now attempt to move
+    // it to the tried table.
     CService addr19 = ResolveService("250.1.1.19");
-    BOOST_CHECK(!addrman.Add({CAddress(addr19, NODE_NONE)}, source));
-    addrman.Good(addr19);
-
+    BOOST_CHECK(!addrman.Good(addr19));
     BOOST_CHECK_EQUAL(addrman.SelectTriedCollision().first.ToString(), "250.1.1.36:0");
 
     addrman.ResolveCollisions();
