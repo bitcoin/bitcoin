@@ -23,6 +23,9 @@ set -eu
 # https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself#246128
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+# Update LD_LIBRARY_PATH to include boost libraries
+export LD_LIBRARY_PATH=${MYDIR}/../../itcoin-pbft/usrlocal/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+
 # These should probably be taken from cmdline
 DATADIR="${MYDIR}/datadir"
 WALLET_NAME=itcoin_signer
