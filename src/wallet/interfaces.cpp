@@ -4,7 +4,7 @@
 
 #include <interfaces/wallet.h>
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <policy/fees.h>
@@ -24,7 +24,7 @@
 #include <wallet/ismine.h>
 #include <wallet/load.h>
 #include <wallet/receive.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 
@@ -82,7 +82,10 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
 {
     WalletTxStatus result;
-    result.block_height = wtx.m_confirm.block_height > 0 ? wtx.m_confirm.block_height : std::numeric_limits<int>::max();
+    result.block_height =
+        wtx.state<TxStateConfirmed>() ? wtx.state<TxStateConfirmed>()->confirmed_block_height :
+        wtx.state<TxStateConflicted>() ? wtx.state<TxStateConflicted>()->conflicting_block_height :
+        std::numeric_limits<int>::max();
     result.blocks_to_maturity = wallet.GetTxBlocksToMaturity(wtx);
     result.depth_in_main_chain = wallet.GetTxDepthInMainChain(wtx);
     result.time_received = wtx.nTimeReceived;
@@ -214,15 +217,17 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->DisplayAddress(dest);
     }
-    void lockCoin(const COutPoint& output) override
+    bool lockCoin(const COutPoint& output, const bool write_to_db) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->LockCoin(output);
+        std::unique_ptr<WalletBatch> batch = write_to_db ? std::make_unique<WalletBatch>(m_wallet->GetDatabase()) : nullptr;
+        return m_wallet->LockCoin(output, batch.get());
     }
-    void unlockCoin(const COutPoint& output) override
+    bool unlockCoin(const COutPoint& output) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->UnlockCoin(output);
+        std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(m_wallet->GetDatabase());
+        return m_wallet->UnlockCoin(output, batch.get());
     }
     bool isLockedCoin(const COutPoint& output) override
     {
@@ -547,15 +552,21 @@ public:
         options.require_existing = true;
         return MakeWallet(m_context, LoadWallet(m_context, name, true /* load_on_start */, options, status, error, warnings));
     }
+    std::unique_ptr<Wallet> restoreWallet(const std::string& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    {
+        DatabaseStatus status;
+
+        return MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
+    }
     std::string getWalletDir() override
     {
-        return GetWalletDir().string();
+        return fs::PathToString(GetWalletDir());
     }
     std::vector<std::string> listWalletDir() override
     {
         std::vector<std::string> paths;
         for (auto& path : ListDatabases(GetWalletDir())) {
-            paths.push_back(path.string());
+            paths.push_back(fs::PathToString(path));
         }
         return paths;
     }

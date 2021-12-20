@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Check that it's not possible to start a second bitcoind instance using the same datadir or wallet."""
@@ -35,7 +35,7 @@ class FilelockTest(BitcoinTestFramework):
                 wallet_dir = os.path.join(datadir, 'wallets')
                 self.log.info("Check that we can't start a second bitcoind instance using the same wallet")
                 if descriptors:
-                    expected_msg = "Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?"
+                    expected_msg = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
                 else:
                     expected_msg = "Error: Error initializing wallet database environment"
                 self.nodes[1].assert_start_raises_init_error(extra_args=[f'-walletdir={wallet_dir}', f'-wallet={wallet_name}', '-noserver'], expected_msg=expected_msg, match=ErrorMatch.PARTIAL_REGEX)

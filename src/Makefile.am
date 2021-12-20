@@ -6,27 +6,16 @@
 print-%: FORCE
 	@echo '$*'='$($*)'
 
-DIST_SUBDIRS = secp256k1 univalue
+DIST_SUBDIRS = secp256k1
 
-AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
-AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
+AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS)
+AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS)
 AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
 
-if EMBEDDED_UNIVALUE
-LIBUNIVALUE = univalue/libunivalue.la
-
-$(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-else
-LIBUNIVALUE = $(UNIVALUE_LIBS)
-endif
-
-BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
-
-BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
@@ -80,6 +69,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_ZMQ)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
+noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
@@ -117,13 +107,13 @@ endif
 BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
+  addrman_impl.h \
   attributes.h \
   banman.h \
   base58.h \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
-  bloom.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -131,6 +121,7 @@ BITCOIN_CORE_H = \
   checkqueue.h \
   clientversion.h \
   coins.h \
+  common/bloom.h \
   compat.h \
   compat/assumptions.h \
   compat/byteswap.h \
@@ -175,7 +166,6 @@ BITCOIN_CORE_H = \
   mapport.h \
   memusage.h \
   merkleblock.h \
-  miner.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -184,9 +174,13 @@ BITCOIN_CORE_H = \
   netbase.h \
   netmessagemaker.h \
   node/blockstorage.h \
+  node/caches.h \
+  node/chainstate.h \
   node/coin.h \
   node/coinstats.h \
   node/context.h \
+  node/miner.h \
+  node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
   node/ui_interface.h \
@@ -208,12 +202,12 @@ BITCOIN_CORE_H = \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/mining.h \
-  rpc/net.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
   rpc/request.h \
   rpc/server.h \
+  rpc/server_util.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
@@ -254,6 +248,7 @@ BITCOIN_CORE_H = \
   util/macros.h \
   util/message.h \
   util/moneystr.h \
+  util/overloaded.h \
   util/rbf.h \
   util/readwritefile.h \
   util/serfloat.h \
@@ -261,6 +256,7 @@ BITCOIN_CORE_H = \
   util/sock.h \
   util/spanparsing.h \
   util/string.h \
+  util/syscall_sandbox.h \
   util/system.h \
   util/thread.h \
   util/threadnames.h \
@@ -288,7 +284,8 @@ BITCOIN_CORE_H = \
   wallet/ismine.h \
   wallet/load.h \
   wallet/receive.h \
-  wallet/rpcwallet.h \
+  wallet/rpc/util.h \
+  wallet/rpc/wallet.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \
   wallet/spend.h \
@@ -341,14 +338,17 @@ libbitcoin_server_a_SOURCES = \
   index/txindex.cpp \
   init.cpp \
   mapport.cpp \
-  miner.cpp \
   net.cpp \
   net_processing.cpp \
   node/blockstorage.cpp \
+  node/caches.cpp \
+  node/chainstate.cpp \
   node/coin.cpp \
   node/coinstats.cpp \
   node/context.cpp \
   node/interfaces.cpp \
+  node/miner.cpp \
+  node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/ui_interface.cpp \
@@ -365,6 +365,7 @@ libbitcoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/server_util.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   signet.cpp \
@@ -414,8 +415,15 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/interfaces.cpp \
   wallet/load.cpp \
   wallet/receive.cpp \
-  wallet/rpcdump.cpp \
-  wallet/rpcwallet.cpp \
+  wallet/rpc/addresses.cpp \
+  wallet/rpc/backup.cpp \
+  wallet/rpc/coins.cpp \
+  wallet/rpc/encrypt.cpp \
+  wallet/rpc/spend.cpp \
+  wallet/rpc/signmessage.cpp \
+  wallet/rpc/transactions.cpp \
+  wallet/rpc/util.cpp \
+  wallet/rpc/wallet.cpp \
   wallet/scriptpubkeyman.cpp \
   wallet/spend.cpp \
   wallet/transaction.cpp \
@@ -498,9 +506,9 @@ crypto_libbitcoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
-  amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  consensus/amount.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -537,9 +545,9 @@ libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
-  bloom.cpp \
   chainparams.cpp \
   coins.cpp \
+  common/bloom.cpp \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
@@ -571,7 +579,7 @@ libbitcoin_common_a_SOURCES = \
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
-# backward-compatibility objects and their sanity checks are linked.
+# sanity checks are linked.
 libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
@@ -611,17 +619,13 @@ libbitcoin_util_a_SOURCES = \
   util/spanparsing.cpp \
   util/strencodings.cpp \
   util/string.cpp \
+  util/syscall_sandbox.cpp \
   util/time.cpp \
   util/tokenpipe.cpp \
   $(BITCOIN_CORE_H)
 
 if USE_LIBEVENT
 libbitcoin_util_a_SOURCES += util/url.cpp
-endif
-
-if GLIBC_BACK_COMPAT
-libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
-AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
 # cli: shared between bitcoin-cli and bitcoin-qt
@@ -715,10 +719,22 @@ bitcoin_tx_LDADD += $(BOOST_LIBS)
 
 # bitcoin-wallet binary #
 bitcoin_wallet_SOURCES = bitcoin-wallet.cpp
+bitcoin_wallet_SOURCES += init/bitcoin-wallet.cpp
 bitcoin_wallet_CPPFLAGS = $(bitcoin_bin_cppflags)
 bitcoin_wallet_CXXFLAGS = $(bitcoin_bin_cxxflags)
 bitcoin_wallet_LDFLAGS = $(bitcoin_bin_ldflags)
-bitcoin_wallet_LDADD = $(LIBBITCOIN_WALLET_TOOL) $(bitcoin_bin_ldadd)
+bitcoin_wallet_LDADD = \
+  $(LIBBITCOIN_WALLET_TOOL) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBSECP256K1) \
+  $(BOOST_LIBS) \
+  $(BDB_LIBS) \
+  $(SQLITE_LIBS)
 
 if TARGET_WINDOWS
 bitcoin_wallet_SOURCES += bitcoin-wallet-res.rc
@@ -750,10 +766,6 @@ bitcoin_util_LDADD += $(BOOST_LIBS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
-
-if GLIBC_BACK_COMPAT
-  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
-endif
 
 libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
@@ -803,7 +815,6 @@ $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in:  $(am__configure_deps)
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
-	-$(MAKE) -C univalue clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
@@ -814,20 +825,8 @@ clean-local:
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
 check-symbols: $(bin_PROGRAMS)
-if TARGET_DARWIN
-	@echo "Checking macOS dynamic libraries..."
+	@echo "Running symbol and dynamic library checks..."
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
-endif
-
-if TARGET_WINDOWS
-	@echo "Checking Windows dynamic libraries..."
-	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
-endif
-
-if TARGET_LINUX
-	@echo "Checking glibc back compat..."
-	$(AM_V_at) CPPFILT='$(CPPFILT)' $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
-endif
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
@@ -870,10 +869,10 @@ nodist_libbitcoin_ipc_a_SOURCES = $(libbitcoin_ipc_mpgen_output)
 CLEANFILES += $(libbitcoin_ipc_mpgen_output)
 endif
 
-if EMBEDDED_LEVELDB
+include Makefile.minisketch.include
+
 include Makefile.crc32c.include
 include Makefile.leveldb.include
-endif
 
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
@@ -893,3 +892,5 @@ endif
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
 endif
+
+include Makefile.univalue.include

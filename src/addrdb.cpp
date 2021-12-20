@@ -58,7 +58,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     if (fileout.IsNull()) {
         fileout.fclose();
         remove(pathTmp);
-        return error("%s: Failed to open file %s", __func__, pathTmp.string());
+        return error("%s: Failed to open file %s", __func__, fs::PathToString(pathTmp));
     }
 
     // Serialize
@@ -70,7 +70,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     if (!FileCommit(fileout.Get())) {
         fileout.fclose();
         remove(pathTmp);
-        return error("%s: Failed to flush file %s", __func__, pathTmp.string());
+        return error("%s: Failed to flush file %s", __func__, fs::PathToString(pathTmp));
     }
     fileout.fclose();
 
@@ -122,8 +122,8 @@ void DeserializeFileDB(const fs::path& path, Data& data, int version)
 } // namespace
 
 CBanDB::CBanDB(fs::path ban_list_path)
-    : m_banlist_dat(ban_list_path.string() + ".dat"),
-      m_banlist_json(ban_list_path.string() + ".json")
+    : m_banlist_dat(ban_list_path + ".dat"),
+      m_banlist_json(ban_list_path + ".json")
 {
 }
 
@@ -143,7 +143,7 @@ bool CBanDB::Write(const banmap_t& banSet)
 bool CBanDB::Read(banmap_t& banSet)
 {
     if (fs::exists(m_banlist_dat)) {
-        LogPrintf("banlist.dat ignored because it can only be read by " PACKAGE_NAME " version 22.x. Remove %s to silence this warning.\n", m_banlist_dat);
+        LogPrintf("banlist.dat ignored because it can only be read by " PACKAGE_NAME " version 22.x. Remove %s to silence this warning.\n", fs::quoted(fs::PathToString(m_banlist_dat)));
     }
     // If the JSON banlist does not exist, then recreate it
     if (!fs::exists(m_banlist_json)) {
@@ -155,7 +155,7 @@ bool CBanDB::Read(banmap_t& banSet)
 
     if (!util::ReadSettings(m_banlist_json, settings, errors)) {
         for (const auto& err : errors) {
-            LogPrintf("Cannot load banlist %s: %s\n", m_banlist_json.string(), err);
+            LogPrintf("Cannot load banlist %s: %s\n", fs::PathToString(m_banlist_json), err);
         }
         return false;
     }
@@ -163,28 +163,28 @@ bool CBanDB::Read(banmap_t& banSet)
     try {
         BanMapFromJson(settings[JSON_KEY], banSet);
     } catch (const std::runtime_error& e) {
-        LogPrintf("Cannot parse banlist %s: %s\n", m_banlist_json.string(), e.what());
+        LogPrintf("Cannot parse banlist %s: %s\n", fs::PathToString(m_banlist_json), e.what());
         return false;
     }
 
     return true;
 }
 
-bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr)
+bool DumpPeerAddresses(const ArgsManager& args, const AddrMan& addr)
 {
     const auto pathAddr = args.GetDataDirNet() / "peers.dat";
     return SerializeFileDB("peers", pathAddr, addr, CLIENT_VERSION);
 }
 
-void ReadFromStream(CAddrMan& addr, CDataStream& ssPeers)
+void ReadFromStream(AddrMan& addr, CDataStream& ssPeers)
 {
     DeserializeDB(ssPeers, addr, false);
 }
 
-std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<CAddrMan>& addrman)
+std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<AddrMan>& addrman)
 {
-    auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
-    addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+    auto check_addrman = std::clamp<int32_t>(args.GetIntArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
+    addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
 
     int64_t nStart = GetTimeMillis();
     const auto path_addr{args.GetDataDirNet() / "peers.dat"};
@@ -193,13 +193,13 @@ std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const A
         LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
     } catch (const DbNotFoundError&) {
         // Addrman can be in an inconsistent state after failure, reset it
-        addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
-        LogPrintf("Creating peers.dat because the file was not found (%s)\n", path_addr);
+        addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+        LogPrintf("Creating peers.dat because the file was not found (%s)\n", fs::quoted(fs::PathToString(path_addr)));
         DumpPeerAddresses(args, *addrman);
     } catch (const std::exception& e) {
         addrman = nullptr;
         return strprintf(_("Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start."),
-                         e.what(), PACKAGE_BUGREPORT, path_addr);
+                         e.what(), PACKAGE_BUGREPORT, fs::quoted(fs::PathToString(path_addr)));
     }
     return std::nullopt;
 }
@@ -215,7 +215,7 @@ std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
     std::vector<CAddress> anchors;
     try {
         DeserializeFileDB(anchors_db_path, anchors, CLIENT_VERSION | ADDRV2_FORMAT);
-        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), anchors_db_path.filename());
+        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), fs::quoted(fs::PathToString(anchors_db_path.filename())));
     } catch (const std::exception&) {
         anchors.clear();
     }

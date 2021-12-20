@@ -23,10 +23,9 @@ There are several ways to see your local onion address in Bitcoin Core:
 You may set the `-debug=tor` config logging option to have additional
 information in the debug log about your Tor configuration.
 
-CLI `-addrinfo` returns the number of addresses known to your node per network
-type, including Tor v2 and v3. This is useful to see how many onion addresses
-are known to your node for `-onlynet=onion` and how many Tor v3 addresses it
-knows when upgrading to Bitcoin Core v22.0 and up that supports Tor v3 only.
+CLI `-addrinfo` returns the number of addresses known to your node per
+network. This can be useful to see how many onion peers your node knows,
+e.g. for `-onlynet=onion`.
 
 ## 1. Run Bitcoin Core behind a Tor proxy
 
@@ -134,7 +133,7 @@ You can also check the group of the cookie file. On most Linux systems, the Tor
 auth cookie will usually be `/run/tor/control.authcookie`:
 
 ```
-stat -c '%G' /run/tor/control.authcookie
+TORGROUP=$(stat -c '%G' /run/tor/control.authcookie)
 ```
 
 Once you have determined the `${TORGROUP}` and selected the `${USER}` that will

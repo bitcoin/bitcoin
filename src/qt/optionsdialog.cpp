@@ -210,6 +210,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->spendZeroConfChange, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Network */
     connect(ui->allowIncoming, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
+    connect(ui->enableServer, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocks, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocksTor, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Display */
@@ -246,6 +247,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
     mapper->addMapping(ui->mapPortNatpmp, OptionsModel::MapPortNatpmp);
     mapper->addMapping(ui->allowIncoming, OptionsModel::Listen);
+    mapper->addMapping(ui->enableServer, OptionsModel::Server);
 
     mapper->addMapping(ui->connectSocks, OptionsModel::ProxyUse);
     mapper->addMapping(ui->proxyIp, OptionsModel::ProxyIP);
@@ -290,16 +292,29 @@ void OptionsDialog::on_resetButton_clicked()
 
         /* reset all options and close GUI */
         model->Reset();
-        QApplication::quit();
+        close();
+        Q_EMIT quitOnReset();
     }
 }
 
 void OptionsDialog::on_openBitcoinConfButton_clicked()
 {
-    /* explain the purpose of the config file */
-    QMessageBox::information(this, tr("Configuration options"),
-        tr("The configuration file is used to specify advanced user options which override GUI settings. "
-           "Additionally, any command-line options will override this configuration file."));
+    QMessageBox config_msgbox(this);
+    config_msgbox.setIcon(QMessageBox::Information);
+    //: Window title text of pop-up box that allows opening up of configuration file.
+    config_msgbox.setWindowTitle(tr("Configuration options"));
+    /*: Explanatory text about the priority order of instructions considered by client.
+        The order from high to low being: command-line, configuration file, GUI settings. */
+    config_msgbox.setText(tr("The configuration file is used to specify advanced user options which override GUI settings. "
+                             "Additionally, any command-line options will override this configuration file."));
+
+    QPushButton* open_button = config_msgbox.addButton(tr("Continue"), QMessageBox::ActionRole);
+    config_msgbox.addButton(tr("Cancel"), QMessageBox::RejectRole);
+    open_button->setDefault(true);
+
+    config_msgbox.exec();
+
+    if (config_msgbox.clickedButton() != open_button) return;
 
     /* show an error if there was some problem opening the file */
     if (!GUIUtil::openBitcoinConf())

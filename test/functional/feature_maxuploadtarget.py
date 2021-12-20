@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test behavior of -maxuploadtarget.
@@ -36,9 +36,8 @@ class MaxUploadTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[
-            "-maxuploadtarget=800",
+            "-maxuploadtarget=800M",
             "-acceptnonstdtxn=1",
-            "-peertimeout=9999",  # bump because mocktime might cause a disconnect otherwise
         ]]
         self.supports_cli = False
 

@@ -71,16 +71,19 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
+- [Assumeutxo design](assumeutxo.md)
 - [bitcoin.conf Configuration File](bitcoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
 - [I2P Support](i2p.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 - [Managing Wallets](managing-wallets.md)
+- [Multisig Tutorial](multisig-tutorial.md)
 - [PSBT support](psbt.md)
 - [Reduce Memory](reduce-memory.md)
 - [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
+- [Transaction Relay Policy](policy/README.md)
 - [ZMQ](zmq.md)
 
 License

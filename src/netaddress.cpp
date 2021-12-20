@@ -165,7 +165,7 @@ void CNetAddr::SetLegacyIPv6(Span<const uint8_t> ipv6)
 }
 
 /**
- * Create an "internal" address that represents a name or FQDN. CAddrMan uses
+ * Create an "internal" address that represents a name or FQDN. AddrMan uses
  * these fake addresses to keep track of which DNS seeds were used.
  * @returns Whether or not the operation was successful.
  * @see NET_INTERNAL, INTERNAL_IN_IPV6_PREFIX, CNetAddr::IsInternal(), CNetAddr::IsRFC4193()
@@ -196,7 +196,7 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
     SHA3_256 hasher;
 
-    hasher.Write(MakeSpan(prefix).first(prefix_len));
+    hasher.Write(Span{prefix}.first(prefix_len));
     hasher.Write(addr_pubkey);
     hasher.Write(VERSION);
 
@@ -303,7 +303,7 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
 
 CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
 {
-    SetLegacyIPv6(Span<const uint8_t>(reinterpret_cast<const uint8_t*>(&ipv6Addr), sizeof(ipv6Addr)));
+    SetLegacyIPv6({reinterpret_cast<const uint8_t*>(&ipv6Addr), sizeof(ipv6Addr)});
     m_scope_id = scope;
 }
 
@@ -663,7 +663,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
 }
 
 /**
- * Try to get our IPv6 address.
+ * Try to get our IPv6 (or CJDNS) address.
  *
  * @param[out] pipv6Addr The in6_addr struct to which to copy.
  *
@@ -674,7 +674,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
  */
 bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 {
-    if (!IsIPv6()) {
+    if (!IsIPv6() && !IsCJDNS()) {
         return false;
     }
     assert(sizeof(*pipv6Addr) == m_addr.size());
@@ -693,13 +693,13 @@ uint32_t CNetAddr::GetLinkedIPv4() const
         return ReadBE32(m_addr.data());
     } else if (IsRFC6052() || IsRFC6145()) {
         // mapped IPv4, SIIT translated IPv4: the IPv4 address is the last 4 bytes of the address
-        return ReadBE32(MakeSpan(m_addr).last(ADDR_IPV4_SIZE).data());
+        return ReadBE32(Span{m_addr}.last(ADDR_IPV4_SIZE).data());
     } else if (IsRFC3964()) {
         // 6to4 tunneled IPv4: the IPv4 address is in bytes 2-6
-        return ReadBE32(MakeSpan(m_addr).subspan(2, ADDR_IPV4_SIZE).data());
+        return ReadBE32(Span{m_addr}.subspan(2, ADDR_IPV4_SIZE).data());
     } else if (IsRFC4380()) {
         // Teredo tunneled IPv4: the IPv4 address is in the last 4 bytes of the address, but bitflipped
-        return ~ReadBE32(MakeSpan(m_addr).last(ADDR_IPV4_SIZE).data());
+        return ~ReadBE32(Span{m_addr}.last(ADDR_IPV4_SIZE).data());
     }
     assert(false);
 }
@@ -794,8 +794,14 @@ std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) co
         vchRet.push_back((ipv4 >> 24) & 0xFF);
         vchRet.push_back((ipv4 >> 16) & 0xFF);
         return vchRet;
-    } else if (IsTor() || IsI2P() || IsCJDNS()) {
+    } else if (IsTor() || IsI2P()) {
         nBits = 4;
+    } else if (IsCJDNS()) {
+        // Treat in the same way as Tor and I2P because the address in all of
+        // them is "random" bytes (derived from a public key). However in CJDNS
+        // the first byte is a constant 0xfc, so the random bytes come after it.
+        // Thus skip the constant 8 bits at the start.
+        nBits = 12;
     } else if (IsHeNet()) {
         // for he.net, use /36 groups
         nBits = 36;
@@ -890,6 +896,11 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
     case NET_I2P:
         switch (ourNet) {
         case NET_I2P: return REACH_PRIVATE;
+        default: return REACH_DEFAULT;
+        }
+    case NET_CJDNS:
+        switch (ourNet) {
+        case NET_CJDNS: return REACH_PRIVATE;
         default: return REACH_DEFAULT;
         }
     case NET_TEREDO:
@@ -993,7 +1004,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         paddrin->sin_port = htons(port);
         return true;
     }
-    if (IsIPv6()) {
+    if (IsIPv6() || IsCJDNS()) {
         if (*addrlen < (socklen_t)sizeof(struct sockaddr_in6))
             return false;
         *addrlen = sizeof(struct sockaddr_in6);

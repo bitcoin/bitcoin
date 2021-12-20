@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/nanobench.h>
 
 #include <bech32.h>
 #include <util/strencodings.h>

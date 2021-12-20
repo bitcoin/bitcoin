@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bloom.h>
+#include <common/bloom.h>
 
 #include <clientversion.h>
 #include <key.h>
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
     CBloomFilter filter(2, 0.001, 0, BLOOM_UPDATE_ALL);
     filter.insert(vchPubKey);
     uint160 hash = pubkey.GetID();
-    filter.insert(std::vector<unsigned char>(hash.begin(), hash.end()));
+    filter.insert(hash);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << filter;

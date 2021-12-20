@@ -21,7 +21,7 @@ FUZZ_TARGET(crypto_aes256cbc)
     AES256CBCEncrypt encrypt{key.data(), iv.data(), pad};
     AES256CBCDecrypt decrypt{key.data(), iv.data(), pad};
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         const std::vector<uint8_t> plaintext = ConsumeRandomLengthByteVector(fuzzed_data_provider);
         std::vector<uint8_t> ciphertext(plaintext.size() + AES_BLOCKSIZE);
         const int encrypt_ret = encrypt.Encrypt(plaintext.data(), plaintext.size(), ciphertext.data());

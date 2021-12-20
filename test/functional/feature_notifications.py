@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
@@ -27,6 +27,9 @@ class NotificationsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        # The experimental syscall sandbox feature (-sandbox) is not compatible with -alertnotify,
+        # -blocknotify or -walletnotify (which all invoke execve).
+        self.disable_syscall_sandbox = True
 
     def setup_network(self):
         self.wallet = ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
@@ -42,7 +45,6 @@ class NotificationsTest(BitcoinTestFramework):
             f"-alertnotify=echo > {os.path.join(self.alertnotify_dir, '%s')}",
             f"-blocknotify=echo > {os.path.join(self.blocknotify_dir, '%s')}",
         ], [
-            "-rescan",
             f"-walletnotify=echo %h_%b > {os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))}",
         ]]
         self.wallet_names = [self.default_wallet_name, self.wallet]
@@ -91,15 +93,14 @@ class NotificationsTest(BitcoinTestFramework):
 
             # directory content should equal the generated transaction hashes
             tx_details = list(map(lambda t: (t['txid'], t['blockheight'], t['blockhash']), self.nodes[1].listtransactions("*", block_count)))
-            self.stop_node(1)
             self.expect_wallet_notify(tx_details)
 
             self.log.info("test -walletnotify after rescan")
-            # restart node to rescan to force wallet notifications
-            self.start_node(1)
-            self.connect_nodes(0, 1)
-
+            # rescan to force wallet notifications
+            self.nodes[1].rescanblockchain()
             self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
+
+            self.connect_nodes(0, 1)
 
             # directory content should equal the generated transaction hashes
             tx_details = list(map(lambda t: (t['txid'], t['blockheight'], t['blockhash']), self.nodes[1].listtransactions("*", block_count)))
@@ -111,7 +112,6 @@ class NotificationsTest(BitcoinTestFramework):
             self.log.info("test -walletnotify with conflicting transactions")
             self.nodes[0].rescanblockchain()
             self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_UNSPENDABLE)
-            self.sync_blocks()
 
             # Generate transaction on node 0, sync mempools, and check for
             # notification on node 1.
@@ -148,7 +148,7 @@ class NotificationsTest(BitcoinTestFramework):
             # about newly confirmed bump2 and newly conflicted tx2.
             self.disconnect_nodes(0, 1)
             bump2 = self.nodes[0].bumpfee(tx2)["txid"]
-            blockhash2 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+            blockhash2 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
             blockheight2 = self.nodes[0].getblockcount()
             assert_equal(self.nodes[0].gettransaction(bump2)["confirmations"], 1)
             assert_equal(tx2 in self.nodes[1].getrawmempool(), True)

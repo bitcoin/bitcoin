@@ -182,14 +182,14 @@ void AddressBookPage::onEditAction()
     if(indexes.isEmpty())
         return;
 
-    EditAddressDialog dlg(
+    auto dlg = new EditAddressDialog(
         tab == SendingTab ?
         EditAddressDialog::EditSendingAddress :
         EditAddressDialog::EditReceivingAddress, this);
-    dlg.setModel(model);
+    dlg->setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
-    dlg.loadRow(origIndex.row());
-    dlg.exec();
+    dlg->loadRow(origIndex.row());
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void AddressBookPage::on_newAddress_clicked()
@@ -282,7 +282,7 @@ void AddressBookPage::on_exportButton_clicked()
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
         /*: Expanded name of the CSV file format.
-            See https://en.wikipedia.org/wiki/Comma-separated_values */
+            See: https://en.wikipedia.org/wiki/Comma-separated_values. */
         tr("Comma separated file") + QLatin1String(" (*.csv)"), nullptr);
 
     if (filename.isNull())

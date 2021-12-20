@@ -137,20 +137,20 @@ BOOST_AUTO_TEST_CASE(intarg)
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     SetupArgs({foo, bar});
     ResetArgs("");
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-foo", 11), 11);
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-foo", 0), 0);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 11), 11);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 0), 0);
 
     ResetArgs("-foo -bar");
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-foo", 11), 0);
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-bar", 11), 0);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 11), 0);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 0);
 
     ResetArgs("-foo=11 -bar=12");
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-foo", 0), 11);
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-bar", 11), 12);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 0), 11);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 12);
 
     ResetArgs("-foo=NaN -bar=NotANumber");
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-foo", 1), 0);
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-bar", 11), 0);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 1), 0);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 0);
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(doubledash)
 
     ResetArgs("--foo=verbose --bar=1");
     BOOST_CHECK_EQUAL(m_local_args.GetArg("-foo", ""), "verbose");
-    BOOST_CHECK_EQUAL(m_local_args.GetArg("-bar", 0), 1);
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 0), 1);
 }
 
 BOOST_AUTO_TEST_CASE(boolargno)
@@ -194,8 +194,8 @@ BOOST_AUTO_TEST_CASE(boolargno)
 
 BOOST_AUTO_TEST_CASE(logargs)
 {
-    const auto okaylog_bool = std::make_pair("-okaylog-bool", ArgsManager::ALLOW_BOOL);
-    const auto okaylog_negbool = std::make_pair("-okaylog-negbool", ArgsManager::ALLOW_BOOL);
+    const auto okaylog_bool = std::make_pair("-okaylog-bool", ArgsManager::ALLOW_ANY);
+    const auto okaylog_negbool = std::make_pair("-okaylog-negbool", ArgsManager::ALLOW_ANY);
     const auto okaylog = std::make_pair("-okaylog", ArgsManager::ALLOW_ANY);
     const auto dontlog = std::make_pair("-dontlog", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE);
     SetupArgs({okaylog_bool, okaylog_negbool, okaylog, dontlog});

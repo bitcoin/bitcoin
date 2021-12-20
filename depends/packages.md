@@ -178,8 +178,8 @@ not sufficient to just say `libprimary`.
 For us, it's much easier to just link a static `libsecondary` into a shared
 `libprimary`. Especially because in our case, we are linking against a dummy
 `libprimary` anyway that we'll throw away. We don't care if the end-user has a
-static or dynamic `libseconday`, that's not our concern. With a static
-`libseconday`, when we need to link `libprimary` into our executable, there's no
+static or dynamic `libsecondary`, that's not our concern. With a static
+`libsecondary`, when we need to link `libprimary` into our executable, there's no
 dependency chain to worry about as `libprimary` has all the symbols.
 
 ## Build targets:

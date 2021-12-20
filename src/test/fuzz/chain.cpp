@@ -35,7 +35,7 @@ FUZZ_TARGET(chain)
     (void)CDiskBlockIndex{*disk_block_index};
     (void)disk_block_index->BuildSkip();
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         const BlockStatus block_status = fuzzed_data_provider.PickValueInArray({
             BlockStatus::BLOCK_VALID_UNKNOWN,
             BlockStatus::BLOCK_VALID_RESERVED,

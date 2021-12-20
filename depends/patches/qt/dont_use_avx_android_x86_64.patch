@@ -1,0 +1,32 @@
+Android: don't use avx and avx2 when building for Android x86_64
+
+AVX and AVX2 are not supported on x86_64 ABI.
+See:
+ - https://developer.android.com/ndk/guides/abis#86-64
+ - https://bugreports.qt.io/browse/QTBUG-86785
+
+Upstream commits:
+ - Qt 6.0: ff1a44be33f4bc05d502a2ca49171e0408992f61
+ - Qt 5.15: 8b2cc0f6deb038a4c9d4f0d9b690c7726bd809a9
+
+
+--- old/qtbase/configure.json
++++ new/qtbase/configure.json
+@@ -1098,7 +1098,7 @@
+         },
+         "avx": {
+             "label": "AVX",
+-            "condition": "features.sse4_2 && tests.avx",
++            "condition": "features.sse4_2 && tests.avx && (!config.android || !arch.x86_64)",
+             "output": [
+                 "privateConfig",
+                 { "type": "define", "name": "QT_COMPILER_SUPPORTS_AVX", "value": 1 }
+@@ -1114,7 +1114,7 @@
+         },
+         "avx2": {
+             "label": "AVX2",
+-            "condition": "features.avx && tests.avx2",
++            "condition": "features.avx && tests.avx2 && (!config.android || !arch.x86_64)",
+             "output": [
+                 "privateConfig",
+                 "privateFeature",

@@ -20,4 +20,4 @@ void SetfLargeWorkInvalidChainFound(bool flag);
  */
 bilingual_str GetWarnings(bool verbose);
 
-#endif //  BITCOIN_WARNINGS_H
+#endif // BITCOIN_WARNINGS_H

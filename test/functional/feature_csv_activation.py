@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test CSV soft fork activation.
@@ -41,7 +41,6 @@ from itertools import product
 import time
 
 from test_framework.blocktools import (
-    CSV_ACTIVATION_HEIGHT,
     create_block,
     create_coinbase,
 )
@@ -89,13 +88,16 @@ def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
 
+CSV_ACTIVATION_HEIGHT = 432
+
+
 class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
         self.extra_args = [[
-            '-peertimeout=999999',  # bump because mocktime might cause a disconnect otherwise
             '-whitelist=noban@127.0.0.1',
+            f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
         self.supports_cli = False
@@ -171,11 +173,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         return test_blocks
 
     def create_test_block(self, txs):
-        block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600)
-        block.nVersion = 4
-        block.vtx.extend(txs)
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
+        block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600, txlist=txs)
         block.solve()
         return block
 

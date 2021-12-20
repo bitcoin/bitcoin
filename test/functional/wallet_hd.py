@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Hierarchical Deterministic wallet function."""
@@ -103,7 +103,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.sync_all()
 
         # Needs rescan
-        self.restart_node(1, extra_args=self.extra_args[1] + ['-rescan'])
+        self.nodes[1].rescanblockchain()
         assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
         # Try a RPC based rescan
@@ -129,7 +129,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # send a tx and make sure its using the internal chain for the changeoutput
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        outs = self.nodes[1].decoderawtransaction(self.nodes[1].gettransaction(txid)['hex'])['vout']
+        outs = self.nodes[1].gettransaction(txid=txid, verbose=True)['decoded']['vout']
         keypath = ""
         for out in outs:
             if out['value'] != 1:
@@ -229,7 +229,6 @@ class WalletHDTest(BitcoinTestFramework):
             txid = self.nodes[0].sendtoaddress(addr, 1)
             origin_rpc.sendrawtransaction(self.nodes[0].gettransaction(txid)['hex'])
             self.generate(self.nodes[0], 1)
-            self.sync_blocks()
             origin_rpc.gettransaction(txid)
             assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', restore_rpc.gettransaction, txid)
             out_of_kp_txid = txid
@@ -240,7 +239,6 @@ class WalletHDTest(BitcoinTestFramework):
             txid = self.nodes[0].sendtoaddress(last_addr, 1)
             origin_rpc.sendrawtransaction(self.nodes[0].gettransaction(txid)['hex'])
             self.generate(self.nodes[0], 1)
-            self.sync_blocks()
             origin_rpc.gettransaction(txid)
             restore_rpc.gettransaction(txid)
             assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', restore_rpc.gettransaction, out_of_kp_txid)

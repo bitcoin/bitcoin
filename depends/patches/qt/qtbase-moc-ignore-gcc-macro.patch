@@ -7,7 +7,7 @@ Upstream report: https://bugreports.qt.io/browse/QTBUG-83160
 diff --git a/qtbase/src/tools/moc/main.cpp b/qtbase/src/tools/moc/main.cpp
 --- a/qtbase/src/tools/moc/main.cpp
 +++ b/qtbase/src/tools/moc/main.cpp
-@@ -188,6 +188,7 @@ int runMoc(int argc, char **argv)
+@@ -238,6 +238,7 @@ int runMoc(int argc, char **argv)
      dummyVariadicFunctionMacro.arguments += Symbol(0, PP_IDENTIFIER, "__VA_ARGS__");
      pp.macros["__attribute__"] = dummyVariadicFunctionMacro;
      pp.macros["__declspec"] = dummyVariadicFunctionMacro;

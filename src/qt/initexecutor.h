@@ -40,6 +40,7 @@ private:
     void handleRunawayException(const std::exception* e);
 
     interfaces::Node& m_node;
+    QObject m_context;
     QThread m_thread;
 };
 
