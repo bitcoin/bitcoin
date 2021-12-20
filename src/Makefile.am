@@ -17,7 +17,7 @@ EXTRA_LIBRARIES =
 
 BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
-LIBBITCOIN_SERVER=libbitcoin_server.a
+LIBBITCOIN_NODE=libbitcoin_node.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
@@ -61,7 +61,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_CONSENSUS) \
-  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_NODE) \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_IPC) \
   $(LIBBITCOIN_WALLET) \
@@ -316,9 +316,9 @@ ipc/capnp/libbitcoin_ipc_a-ipc.$(OBJEXT): $(libbitcoin_ipc_mpgen_input:=.h)
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
 # libbitcoin_common or libbitcoin_util libraries, instead.
-libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoin_server_a_SOURCES = \
+libbitcoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libbitcoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_node_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
@@ -381,10 +381,10 @@ libbitcoin_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
-libbitcoin_server_a_SOURCES += wallet/init.cpp
+libbitcoin_node_a_SOURCES += wallet/init.cpp
 endif
 if !ENABLE_WALLET
-libbitcoin_server_a_SOURCES += dummywallet.cpp
+libbitcoin_node_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
@@ -669,13 +669,13 @@ bitcoind_SOURCES = $(bitcoin_daemon_sources) init/bitcoind.cpp
 bitcoind_CPPFLAGS = $(bitcoin_bin_cppflags)
 bitcoind_CXXFLAGS = $(bitcoin_bin_cxxflags)
 bitcoind_LDFLAGS = $(bitcoin_bin_ldflags)
-bitcoind_LDADD = $(LIBBITCOIN_SERVER) $(bitcoin_bin_ldadd)
+bitcoind_LDADD = $(LIBBITCOIN_NODE) $(bitcoin_bin_ldadd)
 
 bitcoin_node_SOURCES = $(bitcoin_daemon_sources) init/bitcoin-node.cpp
 bitcoin_node_CPPFLAGS = $(bitcoin_bin_cppflags)
 bitcoin_node_CXXFLAGS = $(bitcoin_bin_cxxflags)
 bitcoin_node_LDFLAGS = $(bitcoin_bin_ldflags)
-bitcoin_node_LDADD = $(LIBBITCOIN_SERVER) $(bitcoin_bin_ldadd) $(LIBBITCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
+bitcoin_node_LDADD = $(LIBBITCOIN_NODE) $(bitcoin_bin_ldadd) $(LIBBITCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
 # bitcoin-cli binary #
 bitcoin_cli_SOURCES = bitcoin-cli.cpp
