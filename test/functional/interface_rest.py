@@ -41,7 +41,7 @@ class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-rest"], []]
+        self.extra_args = [["-rest", "-blockfilterindex=1"], []]
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
@@ -272,11 +272,14 @@ class RESTTest (BitcoinTestFramework):
         self.generate(self.nodes[1], 5)
         json_obj = self.test_rest_request(f"/headers/5/{bb_hash}")
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
+        json_obj = self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}")
+        assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
+        self.test_rest_request(f"/blockfilter/basic/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
 
         # Test number parsing
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
             assert_equal(
-                bytes(f'Header count out of range: {num}\r\n', 'ascii'),
+                bytes(f'Header count out of acceptable range (1-2000): {num}\r\n', 'ascii'),
                 self.test_rest_request(f"/headers/{num}/{bb_hash}", ret_type=RetType.BYTES, status=400),
             )
 
