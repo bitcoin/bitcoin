@@ -176,17 +176,12 @@ third acts as a duration threshold in milliseconds. When the `ConnectBlock()`
 function takes longer than the threshold, information about the block, is
 printed. For more details, see the header comment in the script.
 
-By default, `bpftrace` limits strings to 64 bytes due to the limited stack size
-in the kernel VM. Block hashes as zero-terminated hex strings are 65 bytes which
-exceed the string limit. The string size limit can be set to 65 bytes with the
-environment variable `BPFTRACE_STRLEN`.
-
 The following command can be used to benchmark, for example, `ConnectBlock()`
 between height 20000 and 38000 on SigNet while logging all blocks that take
 longer than 25ms to connect.
 
 ```
-$ BPFTRACE_STRLEN=65 bpftrace contrib/tracing/connectblock_benchmark.bt 20000 38000 25
+$ bpftrace contrib/tracing/connectblock_benchmark.bt 20000 38000 25
 ```
 
 In a different terminal, starting Bitcoin Core in SigNet mode and with
@@ -238,4 +233,63 @@ Histogram of block connection times in milliseconds (ms).
 [8, 16)                9 |                                                    |
 [16, 32)               9 |                                                    |
 [32, 64)               4 |                                                    |
+```
+
+### log_utxocache_flush.py
+
+A BCC Python script to log the cache and index flushes. Based on the
+`utxocache:flush` tracepoint.
+
+```bash
+$ python3 contrib/tracing/log_utxocache_flush.py ./src/bitcoind
+```
+
+```
+Logging utxocache flushes. Ctrl-C to end...
+Duration (µs)   Mode       Coins Count     Memory Usage    Prune    Full Flush
+0               PERIODIC   28484           3929.87 kB      False    False
+1               PERIODIC   28485           3930.00 kB      False    False
+0               PERIODIC   28489           3930.51 kB      False    False
+1               PERIODIC   28490           3930.64 kB      False    False
+0               PERIODIC   28491           3930.77 kB      False    False
+0               PERIODIC   28491           3930.77 kB      False    False
+0               PERIODIC   28496           3931.41 kB      False    False
+1               PERIODIC   28496           3931.41 kB      False    False
+0               PERIODIC   28497           3931.54 kB      False    False
+1               PERIODIC   28497           3931.54 kB      False    False
+1               PERIODIC   28499           3931.79 kB      False    False
+.
+.
+.
+53788           ALWAYS     30076           4136.27 kB      False    False
+7463            ALWAYS     0               245.84 kB       False    False
+```
+
+### log_utxos.bt
+
+A `bpftrace` script to log information about the coins that are added, spent, or
+uncached from the UTXO set. Based on the `utxocache:add`, `utxocache:spend` and
+`utxocache:uncache` tracepoints.
+
+```bash
+$ bpftrace contrib/tracing/log_utxos.bt
+```
+
+It should produce an output similar to the following.
+
+```bash
+Attaching 4 probes...
+OP      Outpoint                                                                           Value  Height Coinbase
+Added   6ba9ad857e1ef2eb2a2c94f06813c414c7ab273e3d6bd7ad64e000315a887e7c:1                 10000 2094512 No
+Spent   fa7dc4db56637a151f6649d8f26732956d1c5424c82aae400a83d02b2cc2c87b:0             182264897 2094512 No
+Added   eeb2f099b1af6a2a12e6ddd2eeb16fc5968582241d7f08ba202d28b60ac264c7:0                 10000 2094512 No
+Added   eeb2f099b1af6a2a12e6ddd2eeb16fc5968582241d7f08ba202d28b60ac264c7:1             182254756 2094512 No
+Added   a0c7f4ec9cccef2d89672a624a4e6c8237a17572efdd4679eea9e9ee70d2db04:0              10072679 2094513 Yes
+Spent   25e0df5cc1aeb1b78e6056bf403e5e8b7e41f138060ca0a50a50134df0549a5e:2                   540 2094508 No
+Spent   42f383c04e09c26a2378272ec33aa0c1bf4883ca5ab739e8b7e06be5a5787d61:1               3848399 2007724 No
+Added   f85e3b4b89270863a389395cc9a4123e417ab19384cef96533c6649abd6b0561:0               3788399 2094513 No
+Added   f85e3b4b89270863a389395cc9a4123e417ab19384cef96533c6649abd6b0561:2                   540 2094513 No
+Spent   a05880b8c77971ed0b9f73062c7c4cdb0ff3856ab14cbf8bc481ed571cd34b83:1            5591281046 2094511 No
+Added   eb689865f7d957938978d6207918748f74e6aa074f47874724327089445b0960:0            5589696005 2094513 No
+Added   eb689865f7d957938978d6207918748f74e6aa074f47874724327089445b0960:1               1565556 2094513 No
 ```

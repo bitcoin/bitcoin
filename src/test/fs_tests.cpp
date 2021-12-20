@@ -11,6 +11,33 @@
 
 BOOST_FIXTURE_TEST_SUITE(fs_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(fsbridge_pathtostring)
+{
+    std::string u8_str = "fs_tests_₿_🏃";
+    BOOST_CHECK_EQUAL(fs::PathToString(fs::PathFromString(u8_str)), u8_str);
+    BOOST_CHECK_EQUAL(fs::u8path(u8_str).u8string(), u8_str);
+    BOOST_CHECK_EQUAL(fs::PathFromString(u8_str).u8string(), u8_str);
+    BOOST_CHECK_EQUAL(fs::PathToString(fs::u8path(u8_str)), u8_str);
+#ifndef WIN32
+    // On non-windows systems, verify that arbitrary byte strings containing
+    // invalid UTF-8 can be round tripped successfully with PathToString and
+    // PathFromString. On non-windows systems, paths are just byte strings so
+    // these functions do not do any encoding. On windows, paths are Unicode,
+    // and these functions do encoding and decoding, so the behavior of this
+    // test would be undefined.
+    std::string invalid_u8_str = "\xf0";
+    BOOST_CHECK_EQUAL(invalid_u8_str.size(), 1);
+    BOOST_CHECK_EQUAL(fs::PathToString(fs::PathFromString(invalid_u8_str)), invalid_u8_str);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(fsbridge_stem)
+{
+    std::string test_filename = "fs_tests_₿_🏃.dat";
+    std::string expected_stem = "fs_tests_₿_🏃";
+    BOOST_CHECK_EQUAL(fs::PathToString(fs::PathFromString(test_filename).stem()), expected_stem);
+}
+
 BOOST_AUTO_TEST_CASE(fsbridge_fstream)
 {
     fs::path tmpfolder = m_args.GetDataDirBase();

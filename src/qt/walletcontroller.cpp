@@ -280,9 +280,9 @@ void CreateWalletActivity::create()
 {
     m_create_wallet_dialog = new CreateWalletDialog(m_parent_widget);
 
-    std::vector<ExternalSigner> signers;
+    std::vector<std::unique_ptr<interfaces::ExternalSigner>> signers;
     try {
-        signers = node().externalSigners();
+        signers = node().listExternalSigners();
     } catch (const std::runtime_error& e) {
         QMessageBox::critical(nullptr, tr("Can't list signers"), e.what());
     }

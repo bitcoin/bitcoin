@@ -7,7 +7,12 @@
 
 #include <QDialog>
 
+#include <memory>
+
+namespace interfaces {
 class ExternalSigner;
+} // namespace interfaces
+
 class WalletModel;
 
 namespace Ui {
@@ -24,7 +29,7 @@ public:
     explicit CreateWalletDialog(QWidget* parent);
     virtual ~CreateWalletDialog();
 
-    void setSigners(const std::vector<ExternalSigner>& signers);
+    void setSigners(const std::vector<std::unique_ptr<interfaces::ExternalSigner>>& signers);
 
     QString walletName() const;
     bool isEncryptWalletChecked() const;

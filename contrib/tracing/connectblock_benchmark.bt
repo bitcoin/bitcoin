@@ -4,11 +4,8 @@
 
   USAGE:
 
-  BPFTRACE_STRLEN=65 bpftrace contrib/tracing/connectblock_benchmark.bt <start height> <end height> <logging threshold in ms>
+  bpftrace contrib/tracing/connectblock_benchmark.bt <start height> <end height> <logging threshold in ms>
 
-  - The environment variable BPFTRACE_STRLEN needs to be set to 65 chars as
-    strings are limited to 64 chars by default. Hex strings with Bitcoin block
-    hashes are 64 hex chars + 1 null-termination char.
   - <start height> sets the height at which the benchmark should start. Setting
     the start height to 0 starts the benchmark immediately, even before the
     first block is connected.
@@ -23,7 +20,7 @@
 
   EXAMPLES:
 
-  BPFTRACE_STRLEN=65 bpftrace contrib/tracing/connectblock_benchmark.bt 300000 680000 1000
+  bpftrace contrib/tracing/connectblock_benchmark.bt 300000 680000 1000
 
   When run together 'bitcoind -reindex', this benchmarks the time it takes to
   connect the blocks between height 300.000 and 680.000 (inclusive) and prints
@@ -31,7 +28,7 @@
   histogram with block connection times when the benchmark is finished.
 
 
-  BPFTRACE_STRLEN=65 bpftrace contrib/tracing/connectblock_benchmark.bt 0 0 500
+  bpftrace contrib/tracing/connectblock_benchmark.bt 0 0 500
 
   When running together 'bitcoind', all newly connected blocks that
   take longer than 500ms to connect are logged. A histogram with block
@@ -107,14 +104,23 @@ usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 
 */
 usdt:./src/bitcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
 {
-  $hash_str = str(arg0);
+  $hash = arg0;
   $height = (int32) arg1;
   $transactions = (uint64) arg2;
   $inputs = (int32) arg3;
   $sigops = (int64) arg4;
   $duration = (int64) arg5;
 
-  printf("Block %d (%s)  %4d tx  %5d ins  %5d sigops  took %4d ms\n", $height, $hash_str, $transactions, $inputs, $sigops, (uint64) $duration / 1000);
+
+  printf("Block %d (", $height);
+  /* Prints each byte of the block hash as hex in big-endian (the block-explorer format) */
+  $p = $hash + 31;
+  unroll(32) {
+      $b = *(uint8*)$p;
+      printf("%02x", $b);
+      $p -= 1;
+  }
+  printf(")  %4d tx  %5d ins  %5d sigops  took %4d ms\n", $transactions, $inputs, $sigops, (uint64) $duration / 1000);
 }
 
 

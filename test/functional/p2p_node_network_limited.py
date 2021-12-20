@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_NETWORK_LIMITED.
@@ -59,8 +59,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
 
         self.log.info("Mine enough blocks to reach the NODE_NETWORK_LIMITED range.")
         self.connect_nodes(0, 1)
-        blocks = self.generatetoaddress(self.nodes[1], 292, self.nodes[1].get_deterministic_priv_key().address)
-        self.sync_blocks([self.nodes[0], self.nodes[1]])
+        blocks = self.generate(self.nodes[1], 292, sync_fun=lambda: self.sync_blocks([self.nodes[0], self.nodes[1]]))
 
         self.log.info("Make sure we can max retrieve block at tip-288.")
         node.send_getdata_for_block(blocks[1])  # last block in valid range
@@ -101,7 +100,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.disconnect_all()
 
         # mine 10 blocks on node 0 (pruned node)
-        self.generatetoaddress(self.nodes[0], 10, self.nodes[0].get_deterministic_priv_key().address)
+        self.generate(self.nodes[0], 10, sync_fun=self.no_op)
 
         # connect node1 (non pruned) with node0 (pruned) and check if the can sync
         self.connect_nodes(0, 1)

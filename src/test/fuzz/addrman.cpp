@@ -29,7 +29,7 @@ FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
-    AddrMan addr_man(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addr_man(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/0);
     try {
         ReadFromStream(addr_man, data_stream);
     } catch (const std::exception&) {
@@ -113,7 +113,7 @@ class AddrManDeterministic : public AddrMan
 {
 public:
     explicit AddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
-        : AddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
+        : AddrMan(std::move(asmap), /*deterministic=*/true, /*consistency_check_ratio=*/0)
     {
         WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
     }
@@ -137,24 +137,29 @@ public:
         // Check that all values in `mapInfo` are equal to all values in `other.mapInfo`.
         // Keys may be different.
 
-        using AddrInfoHasher = std::function<size_t(const AddrInfo&)>;
-        using AddrInfoEq = std::function<bool(const AddrInfo&, const AddrInfo&)>;
-
-        CNetAddrHash netaddr_hasher;
-
-        AddrInfoHasher addrinfo_hasher = [&netaddr_hasher](const AddrInfo& a) {
-            return netaddr_hasher(static_cast<CNetAddr>(a)) ^ netaddr_hasher(a.source) ^
-                   a.nLastSuccess ^ a.nAttempts ^ a.nRefCount ^ a.fInTried;
+        auto addrinfo_hasher = [](const AddrInfo& a) {
+            CSipHasher hasher(0, 0);
+            auto addr_key = a.GetKey();
+            auto source_key = a.source.GetAddrBytes();
+            hasher.Write(a.nLastSuccess);
+            hasher.Write(a.nAttempts);
+            hasher.Write(a.nRefCount);
+            hasher.Write(a.fInTried);
+            hasher.Write(a.GetNetwork());
+            hasher.Write(a.source.GetNetwork());
+            hasher.Write(addr_key.size());
+            hasher.Write(source_key.size());
+            hasher.Write(addr_key.data(), addr_key.size());
+            hasher.Write(source_key.data(), source_key.size());
+            return (size_t)hasher.Finalize();
         };
 
-        AddrInfoEq addrinfo_eq = [](const AddrInfo& lhs, const AddrInfo& rhs) {
-            return static_cast<CNetAddr>(lhs) == static_cast<CNetAddr>(rhs) &&
-                   lhs.source == rhs.source && lhs.nLastSuccess == rhs.nLastSuccess &&
-                   lhs.nAttempts == rhs.nAttempts && lhs.nRefCount == rhs.nRefCount &&
-                   lhs.fInTried == rhs.fInTried;
+        auto addrinfo_eq = [](const AddrInfo& lhs, const AddrInfo& rhs) {
+            return std::tie(static_cast<const CService&>(lhs), lhs.source, lhs.nLastSuccess, lhs.nAttempts, lhs.nRefCount, lhs.fInTried) ==
+                   std::tie(static_cast<const CService&>(rhs), rhs.source, rhs.nLastSuccess, rhs.nAttempts, rhs.nRefCount, rhs.fInTried);
         };
 
-        using Addresses = std::unordered_set<AddrInfo, AddrInfoHasher, AddrInfoEq>;
+        using Addresses = std::unordered_set<AddrInfo, decltype(addrinfo_hasher), decltype(addrinfo_eq)>;
 
         const size_t num_addresses{m_impl->mapInfo.size()};
 
@@ -231,7 +236,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
         }
     }
     AddrManDeterministic& addr_man = *addr_man_ptr;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -242,7 +247,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
             },
             [&] {
                 std::vector<CAddress> addresses;
-                while (fuzzed_data_provider.ConsumeBool()) {
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                     const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
                     if (!opt_address) {
                         break;
@@ -281,9 +286,9 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
     }
     const AddrMan& const_addr_man{addr_man};
     (void)const_addr_man.GetAddr(
-        /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        /* network */ std::nullopt);
+        /*max_addresses=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /*network=*/std::nullopt);
     (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool());
     (void)const_addr_man.size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);

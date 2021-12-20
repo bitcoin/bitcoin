@@ -57,3 +57,11 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v22.0**):
   with mainnet activation as of **v0.21.1** ([PR 21377](https://github.com/bitcoin/bitcoin/pull/21377),
   [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
+* [`BIP 380`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki)
+  [`381`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki)
+  [`382`](https://github.com/bitcoin/bips/blob/master/bip-0382.mediawiki)
+  [`383`](https://github.com/bitcoin/bips/blob/master/bip-0383.mediawiki)
+  [`384`](https://github.com/bitcoin/bips/blob/master/bip-0384.mediawiki)
+  [`385`](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki):
+  Output Script Descriptors, and most of Script Expressions are implemented as of **v0.17.0** ([PR 13697](https://github.com/bitcoin/bitcoin/pull/13697)).
+* [`BIP 386`](https://github.com/bitcoin/bips/blob/master/bip-0386.mediawiki): tr() Output Script Descriptors are implemented as of **v22.0** ([PR 22051](https://github.com/bitcoin/bitcoin/pull/22051)).

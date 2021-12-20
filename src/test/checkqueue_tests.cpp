@@ -18,7 +18,17 @@
 #include <utility>
 #include <vector>
 
-BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, TestingSetup)
+/**
+ * Identical to TestingSetup but excludes lock contention logging, as some of
+ * these tests are designed to be heavily contested to trigger race conditions
+ * or other issues.
+ */
+struct NoLockLoggingTestingSetup : public TestingSetup {
+    NoLockLoggingTestingSetup()
+        : TestingSetup{CBaseChainParams::MAIN, /*extra_args=*/{"-debugexclude=lock"}} {}
+};
+
+BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, NoLockLoggingTestingSetup)
 
 static const unsigned int QUEUE_BATCH_SIZE = 128;
 static const int SCRIPT_CHECK_THREADS = 3;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction time during old block rescanning
@@ -10,7 +10,8 @@ import time
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_equal
+    assert_equal,
+    set_node_times,
 )
 
 
@@ -35,9 +36,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time)
-        usernode.setmocktime(cur_time)
-        restorenode.setmocktime(cur_time)
+        set_node_times(self.nodes, cur_time)
 
         # prepare miner wallet
         minernode.createwallet(wallet_name='default')
@@ -63,46 +62,40 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
 
         # generate some btc to create transactions and check blockcount
         initial_mine = COINBASE_MATURITY + 1
-        minernode.generatetoaddress(initial_mine, m1)
+        self.generatetoaddress(minernode, initial_mine, m1)
         assert_equal(minernode.getblockcount(), initial_mine + 200)
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time + ten_days)
-        usernode.setmocktime(cur_time + ten_days)
-        restorenode.setmocktime(cur_time + ten_days)
+        set_node_times(self.nodes, cur_time + ten_days)
         # send 10 btc to user's first watch-only address
         self.log.info('Send 10 btc to user')
         miner_wallet.sendtoaddress(wo1, 10)
 
         # generate blocks and check blockcount
-        minernode.generatetoaddress(COINBASE_MATURITY, m1)
+        self.generatetoaddress(minernode, COINBASE_MATURITY, m1)
         assert_equal(minernode.getblockcount(), initial_mine + 300)
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time + ten_days + ten_days)
-        usernode.setmocktime(cur_time + ten_days + ten_days)
-        restorenode.setmocktime(cur_time + ten_days + ten_days)
+        set_node_times(self.nodes, cur_time + ten_days + ten_days)
         # send 5 btc to our second watch-only address
         self.log.info('Send 5 btc to user')
         miner_wallet.sendtoaddress(wo2, 5)
 
         # generate blocks and check blockcount
-        minernode.generatetoaddress(COINBASE_MATURITY, m1)
+        self.generatetoaddress(minernode, COINBASE_MATURITY, m1)
         assert_equal(minernode.getblockcount(), initial_mine + 400)
 
         # synchronize nodes and time
         self.sync_all()
-        minernode.setmocktime(cur_time + ten_days + ten_days + ten_days)
-        usernode.setmocktime(cur_time + ten_days + ten_days + ten_days)
-        restorenode.setmocktime(cur_time + ten_days + ten_days + ten_days)
+        set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days)
         # send 1 btc to our third watch-only address
         self.log.info('Send 1 btc to user')
         miner_wallet.sendtoaddress(wo3, 1)
 
         # generate more blocks and check blockcount
-        minernode.generatetoaddress(COINBASE_MATURITY, m1)
+        self.generatetoaddress(minernode, COINBASE_MATURITY, m1)
         assert_equal(minernode.getblockcount(), initial_mine + 500)
 
         self.log.info('Check user\'s final balance and transaction count')
@@ -125,6 +118,14 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         self.log.info('Restore user wallet on another node without rescan')
         restorenode.createwallet(wallet_name='wo', disable_private_keys=True)
         restorewo_wallet = restorenode.get_wallet_rpc('wo')
+
+        # for descriptor wallets, the test framework maps the importaddress RPC to the
+        # importdescriptors RPC (with argument 'timestamp'='now'), which always rescans
+        # blocks of the past 2 hours, based on the current MTP timestamp; in order to avoid
+        # importing the last address (wo3), we advance the time further and generate 10 blocks
+        if self.options.descriptors:
+            set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days)
+            self.generatetoaddress(minernode, 10, m1)
 
         restorewo_wallet.importaddress(wo1, rescan=False)
         restorewo_wallet.importaddress(wo2, rescan=False)

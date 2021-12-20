@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <optional>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -91,7 +92,7 @@ std::vector<unsigned char> ParseHex(const char* psz)
         signed char c = HexDigit(*psz++);
         if (c == (signed char)-1)
             break;
-        unsigned char n = (c << 4);
+        auto n{uint8_t(c << 4)};
         c = HexDigit(*psz++);
         if (c == (signed char)-1)
             break;
@@ -138,15 +139,9 @@ std::string EncodeBase64(Span<const unsigned char> input)
     return str;
 }
 
-std::string EncodeBase64(const std::string& str)
-{
-    return EncodeBase64(MakeUCharSpan(str));
-}
-
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 {
-    static const int decode64_table[256] =
-    {
+    static const int8_t decode64_table[256]{
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1,
@@ -168,7 +163,7 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
     while (*p != 0) {
         int x = decode64_table[(unsigned char)*p];
         if (x == -1) break;
-        val.push_back(x);
+        val.push_back(uint8_t(x));
         ++p;
     }
 
@@ -224,8 +219,7 @@ std::string EncodeBase32(const std::string& str, bool pad)
 
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 {
-    static const int decode32_table[256] =
-    {
+    static const int8_t decode32_table[256]{
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1,
@@ -247,7 +241,7 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
     while (*p != 0) {
         int x = decode32_table[(unsigned char)*p];
         if (x == -1) break;
-        val.push_back(x);
+        val.push_back(uint8_t(x));
         ++p;
     }
 
@@ -495,14 +489,14 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
 std::string ToLower(const std::string& str)
 {
     std::string r;
-    for (auto ch : str) r += ToLower((unsigned char)ch);
+    for (auto ch : str) r += ToLower(ch);
     return r;
 }
 
 std::string ToUpper(const std::string& str)
 {
     std::string r;
-    for (auto ch : str) r += ToUpper((unsigned char)ch);
+    for (auto ch : str) r += ToUpper(ch);
     return r;
 }
 
@@ -525,4 +519,49 @@ std::string HexStr(const Span<const uint8_t> s)
     }
     assert(it == rv.end());
     return rv;
+}
+
+std::optional<uint64_t> ParseByteUnits(const std::string& str, ByteUnit default_multiplier)
+{
+    if (str.empty()) {
+        return std::nullopt;
+    }
+    auto multiplier = default_multiplier;
+    char unit = str.back();
+    switch (unit) {
+    case 'k':
+        multiplier = ByteUnit::k;
+        break;
+    case 'K':
+        multiplier = ByteUnit::K;
+        break;
+    case 'm':
+        multiplier = ByteUnit::m;
+        break;
+    case 'M':
+        multiplier = ByteUnit::M;
+        break;
+    case 'g':
+        multiplier = ByteUnit::g;
+        break;
+    case 'G':
+        multiplier = ByteUnit::G;
+        break;
+    case 't':
+        multiplier = ByteUnit::t;
+        break;
+    case 'T':
+        multiplier = ByteUnit::T;
+        break;
+    default:
+        unit = 0;
+        break;
+    }
+
+    uint64_t unit_amount = static_cast<uint64_t>(multiplier);
+    auto parsed_num = ToIntegral<uint64_t>(unit ? str.substr(0, str.size() - 1) : str);
+    if (!parsed_num || parsed_num > std::numeric_limits<uint64_t>::max() / unit_amount) { // check overflow
+        return std::nullopt;
+    }
+    return *parsed_num * unit_amount;
 }

@@ -25,16 +25,4 @@ std::string getnewaddress(CWallet& w)
     return EncodeDestination(dest);
 }
 
-void importaddress(CWallet& wallet, const std::string& address)
-{
-    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
-    LOCK2(wallet.cs_wallet, spk_man->cs_KeyStore);
-    const auto dest = DecodeDestination(address);
-    assert(IsValidDestination(dest));
-    const auto script = GetScriptForDestination(dest);
-    wallet.MarkDirty();
-    assert(!spk_man->HaveWatchOnly(script));
-    if (!spk_man->AddWatchOnly(script, 0 /* nCreateTime */)) assert(false);
-    wallet.SetAddressBook(dest, /* label */ "", "receive");
-}
 #endif // ENABLE_WALLET

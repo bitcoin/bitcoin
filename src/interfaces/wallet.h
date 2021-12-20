@@ -13,12 +13,13 @@
 #include <util/message.h>
 #include <util/ui_change_type.h>
 
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
-#include <stdint.h>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -34,7 +35,7 @@ struct CRecipient;
 struct PartiallySignedTransaction;
 struct WalletContext;
 struct bilingual_str;
-typedef uint8_t isminefilter;
+using isminefilter = std::underlying_type<isminetype>::type;
 
 namespace interfaces {
 
@@ -320,6 +321,9 @@ public:
 
    //! Return default wallet directory.
    virtual std::string getWalletDir() = 0;
+
+   //! Restore backup wallet
+   virtual std::unique_ptr<Wallet> restoreWallet(const std::string& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Return available wallets in wallet directory.
    virtual std::vector<std::string> listWalletDir() = 0;

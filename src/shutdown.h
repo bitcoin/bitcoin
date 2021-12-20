@@ -32,4 +32,4 @@ bool ShutdownRequested();
  */
 void WaitForShutdown();
 
-#endif
+#endif // BITCOIN_SHUTDOWN_H

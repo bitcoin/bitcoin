@@ -34,6 +34,8 @@ using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wall
 struct WalletContext {
     interfaces::Chain* chain{nullptr};
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
+    // It is unsafe to lock this after locking a CWallet::cs_wallet mutex because
+    // this could introduce inconsistent lock ordering and cause deadlocks.
     Mutex wallets_mutex;
     std::vector<std::shared_ptr<CWallet>> wallets GUARDED_BY(wallets_mutex);
     std::list<LoadWalletFn> wallet_load_fns GUARDED_BY(wallets_mutex);

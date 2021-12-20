@@ -41,9 +41,7 @@ void initialize_script()
 FUZZ_TARGET_INIT(script, initialize_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const std::optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
-    if (!script_opt) return;
-    const CScript script{*script_opt};
+    const CScript script{ConsumeScript(fuzzed_data_provider)};
 
     CompressedScript compressed;
     if (CompressScript(script, compressed)) {
@@ -166,7 +164,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
         const std::string encoded_dest{EncodeDestination(tx_destination_1)};
         const UniValue json_dest{DescribeAddress(tx_destination_1)};
         Assert(tx_destination_1 == DecodeDestination(encoded_dest));
-        (void)GetKeyForDestination(/* store */ {}, tx_destination_1);
+        (void)GetKeyForDestination(/*store=*/{}, tx_destination_1);
         const CScript dest{GetScriptForDestination(tx_destination_1)};
         const bool valid{IsValidDestination(tx_destination_1)};
         Assert(dest.empty() != valid);

@@ -38,7 +38,7 @@ FUZZ_TARGET_INIT(utxo_snapshot, initialize_chain)
     {
         CAutoFile outfile{fsbridge::fopen(snapshot_path, "wb"), SER_DISK, CLIENT_VERSION};
         const auto file_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
-        outfile << Span<const uint8_t>{file_data};
+        outfile << Span{file_data};
     }
 
     const auto ActivateFuzzedSnapshot{[&] {
@@ -49,7 +49,7 @@ FUZZ_TARGET_INIT(utxo_snapshot, initialize_chain)
         } catch (const std::ios_base::failure&) {
             return false;
         }
-        return chainman.ActivateSnapshot(infile, metadata, /* in_memory */ true);
+        return chainman.ActivateSnapshot(infile, metadata, /*in_memory=*/true);
     }};
 
     if (fuzzed_data_provider.ConsumeBool()) {

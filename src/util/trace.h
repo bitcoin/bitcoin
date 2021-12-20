@@ -42,4 +42,4 @@
 #endif
 
 
-#endif /* BITCOIN_UTIL_TRACE_H */
+#endif // BITCOIN_UTIL_TRACE_H

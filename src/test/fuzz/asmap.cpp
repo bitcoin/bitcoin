@@ -49,7 +49,7 @@ FUZZ_TARGET(asmap)
     CNetAddr net_addr;
     if (ipv6) {
         assert(addr_size == ADDR_IPV6_SIZE);
-        net_addr.SetLegacyIPv6(Span<const uint8_t>(addr_data, addr_size));
+        net_addr.SetLegacyIPv6({addr_data, addr_size});
     } else {
         assert(addr_size == ADDR_IPV4_SIZE);
         in_addr ipv4;

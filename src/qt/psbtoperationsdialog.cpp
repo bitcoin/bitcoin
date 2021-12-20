@@ -110,8 +110,8 @@ void PSBTOperationsDialog::broadcastTransaction()
 
     CTransactionRef tx = MakeTransactionRef(mtx);
     std::string err_string;
-    TransactionError error = BroadcastTransaction(
-        *m_client_model->node().context(), tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /* relay */ true, /* await_callback */ false);
+    TransactionError error =
+        m_client_model->node().broadcastTransaction(tx, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), err_string);
 
     if (error == TransactionError::OK) {
         showStatus(tr("Transaction broadcast successfully! Transaction ID: %1")

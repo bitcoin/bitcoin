@@ -53,6 +53,7 @@ static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
  */
 class AddrMan
 {
+protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
@@ -69,11 +70,25 @@ public:
     //! Return the number of (unique) addresses in all tables.
     size_t size() const;
 
-    //! Add addresses to addrman's new table.
+    /**
+     * Attempt to add one or more addresses to addrman's new table.
+     *
+     * @param[in] vAddr           Address records to attempt to add.
+     * @param[in] source          The address of the node that sent us these addr records.
+     * @param[in] nTimePenalty    A "time penalty" to apply to the address record's nTime. If a peer
+     *                            sends us an address record with nTime=n, then we'll add it to our
+     *                            addrman with nTime=(n - nTimePenalty).
+     * @return    true if at least one address is successfully added. */
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty = 0);
 
-    //! Mark an entry as accessible, possibly moving it from "new" to "tried".
-    void Good(const CService& addr, int64_t nTime = GetAdjustedTime());
+    /**
+     * Mark an address record as accessible and attempt to move it to addrman's tried table.
+     *
+     * @param[in] addr            Address record to attempt to move to tried table.
+     * @param[in] nTime           The time that we were last connected to this peer.
+     * @return    true if the address is successfully moved from the new table to the tried table.
+     */
+    bool Good(const CService& addr, int64_t nTime = GetAdjustedTime());
 
     //! Mark an entry as connection attempted to.
     void Attempt(const CService& addr, bool fCountFailure, int64_t nTime = GetAdjustedTime());
@@ -127,9 +142,6 @@ public:
     void SetServices(const CService& addr, ServiceFlags nServices);
 
     const std::vector<bool>& GetAsmap() const;
-
-    friend class AddrManTest;
-    friend class AddrManDeterministic;
 };
 
 #endif // BITCOIN_ADDRMAN_H

@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 {
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, vch};
     BOOST_CHECK_EQUAL(reader.size(), 6U);
     BOOST_CHECK(!reader.empty());
 
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
-    VectorReader new_reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader new_reader{SER_NETWORK, INIT_PROTO_VERSION, vch};
     new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
     BOOST_CHECK_EQUAL(new_reader.size(), 2U);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 {
     std::vector<uint8_t> data{0x82, 0xa7, 0x31};
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, data};
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+            ds.str());
 
     in.push_back('\x0f');
     in.push_back('\xf0');
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+            ds.str());
 
     // Multi character key
 
@@ -210,12 +210,14 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+            ds.str());
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
 {
-    FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
+    fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
+    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+
     // The value at each offset is the offset.
     for (uint8_t j = 0; j < 40; ++j) {
         fwrite(&j, 1, 1, file);
@@ -343,7 +345,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // We can explicitly close the file, or the destructor will do it.
     bf.fclose();
 
-    fs::remove("streams_test_tmp");
+    fs::remove(streams_test_filename);
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
@@ -351,8 +353,9 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
     // Make this test deterministic.
     SeedInsecureRand(SeedRand::ZEROS);
 
+    fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
-        FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
+        FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
         size_t fileSize = InsecureRandRange(256);
         for (uint8_t i = 0; i < fileSize; ++i) {
             fwrite(&i, 1, 1, file);
@@ -453,7 +456,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 maxPos = currentPos;
         }
     }
-    fs::remove("streams_test_tmp");
+    fs::remove(streams_test_filename);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

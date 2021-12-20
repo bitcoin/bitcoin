@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """A limited-functionality wallet, which may replace a real wallet in tests"""
@@ -9,7 +9,7 @@ from decimal import Decimal
 from enum import Enum
 from random import choice
 from typing import Optional
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.address import create_deterministic_address_bcrt1_p2tr_op_true
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
 from test_framework.messages import (
@@ -24,8 +24,9 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     LegacySignatureHash,
-    OP_TRUE,
+    LEAF_VERSION_TAPSCRIPT,
     OP_NOP,
+    OP_TRUE,
     SIGHASH_ALL,
 )
 from test_framework.script_util import (
@@ -43,7 +44,7 @@ class MiniWalletMode(Enum):
     """Determines the transaction type the MiniWallet is creating and spending.
 
     For most purposes, the default mode ADDRESS_OP_TRUE should be sufficient;
-    it simply uses a fixed bech32 P2WSH address whose coins are spent with a
+    it simply uses a fixed bech32m P2TR address whose coins are spent with a
     witness stack of OP_TRUE, i.e. following an anyone-can-spend policy.
     However, if the transactions need to be modified by the user (e.g. prepending
     scriptSig for testing opcodes that are activated by a soft-fork), or the txs
@@ -53,7 +54,7 @@ class MiniWalletMode(Enum):
                     |      output       |           |  tx is   | can modify |  needs
          mode       |    description    |  address  | standard | scriptSig  | signing
     ----------------+-------------------+-----------+----------+------------+----------
-    ADDRESS_OP_TRUE | anyone-can-spend  |  bech32   |   yes    |    no      |   no
+    ADDRESS_OP_TRUE | anyone-can-spend  |  bech32m  |   yes    |    no      |   no
     RAW_OP_TRUE     | anyone-can-spend  |  - (raw)  |   no     |    yes     |   no
     RAW_P2PK        | pay-to-public-key |  - (raw)  |   yes    |    yes     |   yes
     """
@@ -79,7 +80,7 @@ class MiniWallet:
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
+            self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
     def rescan_utxos(self):
@@ -88,13 +89,13 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount']})
+            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'height': utxo['height']})
 
     def scan_tx(self, tx):
         """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
+                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value'], 'height': 0})
 
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
@@ -111,12 +112,13 @@ class MiniWallet:
                 break
         tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
 
-    def generate(self, num_blocks):
+    def generate(self, num_blocks, **kwargs):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
-        blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor())
+        blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor(), **kwargs)
         for b in blocks:
-            cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
-            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
+            block_info = self._test_node.getblock(blockhash=b, verbosity=2)
+            cb_tx = block_info['tx'][0]
+            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
         return blocks
 
     def get_descriptor(self):
@@ -131,10 +133,9 @@ class MiniWallet:
 
         Args:
         txid: get the first utxo we find from a specific transaction
-
-        Note: Can be used to get the change output immediately after a send_self_transfer
         """
         index = -1  # by default the last utxo
+        self._utxos = sorted(self._utxos, key=lambda k: (k['value'], -k['height']))  # Put the largest utxo last
         if txid:
             utxo = next(filter(lambda utxo: txid == utxo['txid'], self._utxos))
             index = self._utxos.index(utxo)
@@ -170,10 +171,9 @@ class MiniWallet:
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
-        self._utxos = sorted(self._utxos, key=lambda k: k['value'])
-        utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
+        utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._priv_key is None:
-            vsize = Decimal(96)  # anyone-can-spend
+            vsize = Decimal(104)  # anyone-can-spend
         else:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         send_value = int(COIN * (utxo_to_spend['value'] - fee_rate * (vsize / 1000)))
@@ -190,10 +190,10 @@ class MiniWallet:
                 self.sign_tx(tx)
             else:
                 # anyone-can-spend
-                tx.vin[0].scriptSig = CScript([OP_NOP] * 35)  # pad to identical size
+                tx.vin[0].scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
         else:
             tx.wit.vtxinwit = [CTxInWitness()]
-            tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+            tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
         tx_hex = tx.serialize().hex()
 
         tx_info = from_node.testmempoolaccept([tx_hex])[0]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
@@ -209,7 +209,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_addrv2('unrecognized network',
             [
                 'received: addrv2 (25 bytes)',
-                'IP 9.9.9.9 mapped',
+                '9.9.9.9:8333 mapped',
                 'Added 1 addresses',
             ],
             bytes.fromhex(
