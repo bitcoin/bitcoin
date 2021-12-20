@@ -68,6 +68,7 @@ public:
 
         // ITCOIN_SPECIFIC START
         consensus.allow_any_block_subsidy = false;
+        consensus.signet_solution_independent_blockchain = false;
         // ITCOIN_SPECIFIC END
 
         consensus.signet_challenge.clear();
@@ -188,6 +189,7 @@ public:
 
         // ITCOIN_SPECIFIC START
         consensus.allow_any_block_subsidy = false;
+        consensus.signet_solution_independent_blockchain = false;
         // ITCOIN_SPECIFIC END
 
         consensus.signet_challenge.clear();
@@ -326,6 +328,7 @@ public:
 
         // ITCOIN_SPECIFIC START
         consensus.allow_any_block_subsidy = true;
+        consensus.signet_solution_independent_blockchain = true;
         // ITCOIN_SPECIFIC END
 
         consensus.signet_challenge.assign(bin.begin(), bin.end());
@@ -421,6 +424,7 @@ public:
 
         // ITCOIN_SPECIFIC START
         consensus.allow_any_block_subsidy = false;
+        consensus.signet_solution_independent_blockchain = false;
         // ITCOIN_SPECIFIC END
 
         consensus.signet_challenge.clear();

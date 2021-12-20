@@ -3372,8 +3372,16 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
+        // ITCOIN_SPECIFIC START
+        // if signet_solution_independent_blockchain is enabled in consensus params,
+        // then the merkle root calculation will exclude the signet solution
         bool mutated;
-        uint256 hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
+        uint256 hashMerkleRoot2;
+        if (consensusParams.signet_blocks && consensusParams.signet_solution_independent_blockchain)
+            hashMerkleRoot2 = BlockSignetMerkleRoot(block, &mutated);
+        else
+            hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
+        // ITCOIN_SPECIFIC END
         if (block.hashMerkleRoot != hashMerkleRoot2)
             return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txnmrklroot", "hashMerkleRoot mismatch");
 

@@ -3,7 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
+#include <consensus/validation.h>
 #include <hash.h>
+#include <signet.h>
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -83,3 +85,23 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
 
+// ITCOIN_SPECIFIC START, a new method to calculate signet merkle roots
+uint256 BlockSignetMerkleRoot(const CBlock& block, bool* mutated)
+{
+    const int cidx = GetWitnessCommitmentIndex(block);
+    if (cidx == NO_WITNESS_COMMITMENT) 
+    {
+        return BlockMerkleRoot(block, mutated);
+    }
+    else
+    {
+        CMutableTransaction modified_cb(*block.vtx.at(0));
+        CScript& witness_commitment = modified_cb.vout.at(cidx).scriptPubKey;
+        
+        std::vector<uint8_t> unused_signet_solution;
+        FetchAndClearCommitmentSection(SIGNET_HEADER, witness_commitment, unused_signet_solution);
+        
+        return ComputeModifiedMerkleRoot(modified_cb, block, mutated);
+    }
+}
+// ITCOIN_SPECIFIC END

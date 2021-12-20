@@ -24,4 +24,11 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
  */
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr);
 
+/*
+ * ITCOIN_SPECIFIC
+ * Compute the Merkle root of a deterministic signet transactions in a block.
+ * *mutated is set to true if a duplicated subtree was found.
+ */
+uint256 BlockSignetMerkleRoot(const CBlock& block, bool* mutated = nullptr);
+
 #endif // BITCOIN_CONSENSUS_MERKLE_H

@@ -23,11 +23,9 @@
 #include <util/system.h>
 #include <uint256.h>
 
-static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
-
 static constexpr unsigned int BLOCK_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_NULLDUMMY;
 
-static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
+bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
 {
     CScript replacement;
     bool found_header = false;
@@ -54,7 +52,7 @@ static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CSc
     return found_header;
 }
 
-static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block)
+uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
@@ -62,7 +60,7 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
     for (size_t s = 1; s < block.vtx.size(); ++s) {
         leaves[s] = block.vtx[s]->GetHash();
     }
-    return ComputeMerkleRoot(std::move(leaves));
+    return ComputeMerkleRoot(std::move(leaves), mutated);
 }
 
 Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
@@ -110,10 +108,11 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
 
     std::vector<uint8_t> block_data;
     CVectorWriter writer(SER_NETWORK, INIT_PROTO_VERSION, block_data, 0);
-    writer << block.nVersion;
-    writer << block.hashPrevBlock;
-    writer << signet_merkle;
-    writer << block.nTime;
+    // ITCOIN_SPECIFIC START, include pow fields (nBits, nNonce) in block signature
+    CBlockHeader signet_block_header(block);
+    signet_block_header.hashMerkleRoot = signet_merkle;
+    signet_block_header.Serialize(writer);
+    // ITCOIN_SPECIFIC END
     tx_to_spend.vin[0].scriptSig << block_data;
     tx_spending.vin[0].prevout = COutPoint(tx_to_spend.GetHash(), 0);
 

@@ -3,6 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
+#include <signet.h>
+#include <util/strencodings.h>
+
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -348,4 +351,70 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
 
     BOOST_CHECK_EQUAL(merkleRootofHashes, blockWitness);
 }
+
+// ITCOIN_SPECIFIC START
+BOOST_AUTO_TEST_CASE(merkle_test_BlockSignet)
+{
+    CBlock block01, block02, block03;
+    block01.vtx.resize(2);
+    block02.vtx.resize(2);
+    block03.vtx.resize(2);
+
+    for (std::size_t pos = 0; pos < block01.vtx.size(); pos++) 
+    {
+        CMutableTransaction mtx01, mtx02, mtx03;
+        mtx01.nLockTime = pos;
+        mtx02.nLockTime = pos;
+        mtx03.nLockTime = pos;
+        if (pos == 0)
+        {
+            CScript witness01 = CScript()
+                << OP_RETURN
+                << ParseHex("aa21a9edba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad") // Withenss header + an example of SHA256 hash
+                << ParseHex( HexStr(SIGNET_HEADER) + "abababababababab" );
+            
+            CScript witness02 = CScript()
+                << OP_RETURN
+                << ParseHex("aa21a9edba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad") // Withenss header + an example of SHA256 hash
+                << ParseHex( HexStr(SIGNET_HEADER) + "acacacacacacacac" );
+            
+            CScript witness03 = CScript()
+                << OP_RETURN
+                << ParseHex("aa21a9edba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20076ef") // Withenss header + another example of SHA256 hash
+                << ParseHex( HexStr(SIGNET_HEADER) + "acacacacacacacac" );
+
+            CTxOut out01(0, witness01), out02(0, witness02), out03(0, witness03);
+            mtx01.vout.push_back(out01);
+            mtx02.vout.push_back(out02);
+            mtx03.vout.push_back(out03);
+        }
+        block01.vtx[pos] = MakeTransactionRef(std::move(mtx01));
+        block02.vtx[pos] = MakeTransactionRef(std::move(mtx02));
+        block03.vtx[pos] = MakeTransactionRef(std::move(mtx03));
+    }
+
+    uint256 signet_merkle_01 = BlockSignetMerkleRoot(block01);
+    uint256 signet_merkle_02 = BlockSignetMerkleRoot(block02);
+    uint256 signet_merkle_03 = BlockSignetMerkleRoot(block03);
+
+    uint256 witness_merkle_01 = BlockWitnessMerkleRoot(block01);
+    uint256 witness_merkle_02 = BlockWitnessMerkleRoot(block02);
+    uint256 witness_merkle_03 = BlockWitnessMerkleRoot(block03);
+
+    uint256 merkle_01 = BlockMerkleRoot(block01);
+    uint256 merkle_02 = BlockMerkleRoot(block02);
+    uint256 merkle_03 = BlockMerkleRoot(block03);
+
+    BOOST_CHECK(merkle_01 != merkle_02);
+    BOOST_CHECK(merkle_01 != merkle_03);
+    BOOST_CHECK(merkle_02 != merkle_03);
+
+    BOOST_CHECK_EQUAL(witness_merkle_01, witness_merkle_02);
+    BOOST_CHECK_EQUAL(witness_merkle_01, witness_merkle_03);
+
+    BOOST_CHECK_EQUAL(signet_merkle_01, signet_merkle_02);
+    BOOST_CHECK(signet_merkle_01 != signet_merkle_03);
+    BOOST_CHECK(signet_merkle_02 != signet_merkle_03);
+}
+// ITCOIN_SPECIFIC END
 BOOST_AUTO_TEST_SUITE_END()

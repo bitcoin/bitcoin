@@ -11,6 +11,12 @@
 
 #include <optional.h>
 
+constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
+
+bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result);
+
+uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block, bool* mutated = nullptr);
+
 /**
  * Extract signature and check whether a block has a valid solution
  */

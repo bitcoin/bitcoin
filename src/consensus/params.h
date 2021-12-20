@@ -107,6 +107,13 @@ struct Params {
      * and the block subsidy value in the miner is taken from command line arguments -blocksubsidy
      */
     bool allow_any_block_subsidy{false};
+    
+    /**
+     * ITCOIN_SPECIFIC
+     * If true, the solution to the signet challenge is excluded from the block merkle root
+     * and can be appended after pow. When true, the blockchain is not valid for bitcoin libraries verifying proof-of-work solutions
+     */
+    bool signet_solution_independent_blockchain{false};
 };
 } // namespace Consensus
 
