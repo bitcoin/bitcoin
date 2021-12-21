@@ -14,6 +14,7 @@
 #include <string>
 #include <key_io.h>
 #include <timedata.h>
+#include <util/ranges.h>
 const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
 CSporkManager sporkManager;
@@ -242,22 +243,21 @@ int64_t CSporkManager::GetSporkValue(int32_t nSporkID) const
         return nSporkValue;
     }
 
-    for (const auto& sporkDef : sporkDefs) {
-        if (sporkDef.sporkId == nSporkID) {
-            return sporkDef.defaultValue;
-        }
-    }
 
-    LogPrint(BCLog::SPORK, "CSporkManager::GetSporkValue -- Unknown Spork ID %d\n", nSporkID);
-    return -1;
+    if (auto optSpork = ranges::find_if_opt(sporkDefs,
+                                            [&nSporkID](const auto& sporkDef){return sporkDef.sporkId == nSporkID;})) {
+        return optSpork->defaultValue;
+    } else {
+        LogPrint(BCLog::SPORK, "CSporkManager::GetSporkValue -- Unknown Spork ID %d\n", nSporkID);
+        return -1;
+    }
 }
 
 int32_t CSporkManager::GetSporkIDByName(const std::string& strName)
 {
-    for (const auto& sporkDef : sporkDefs) {
-        if (sporkDef.name == strName) {
-            return sporkDef.sporkId;
-        }
+    if (auto optSpork = ranges::find_if_opt(sporkDefs,
+                                            [&strName](const auto& sporkDef){return sporkDef.name == strName;})) {
+        return optSpork->sporkId;
     }
 
     LogPrint(BCLog::SPORK, "CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);

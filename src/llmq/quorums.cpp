@@ -58,12 +58,9 @@ void CQuorum::Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlock
 
 bool CQuorum::IsMember(const uint256& proTxHash) const
 {
-    for (auto& dmn : members) {
-        if (dmn->proTxHash == proTxHash) {
-            return true;
-        }
-    }
-    return false;
+    return ranges::any_of(members, [&proTxHash](const auto& dmn){
+        return dmn->proTxHash == proTxHash;
+    });
 }
 
 bool CQuorum::IsValidMember(const uint256& proTxHash) const

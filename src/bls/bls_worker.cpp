@@ -6,6 +6,7 @@
 #include <hash.h>
 #include <serialize.h>
 
+#include <util/ranges.h>
 #include <util/system.h>
 
 #include <memory>
@@ -109,13 +110,9 @@ bool CBLSWorker::GenerateContributions(size_t quorumThreshold, const BLSIdVector
         };
         futures.emplace_back(workerPool.push(f));
     }
-    bool success = true;
-    for (auto& f : futures) {
-        if (!f.get()) {
-            success = false;
-        }
-    }
-    return success;
+    return ranges::all_of(futures, [](auto& f){
+        return f.get();
+    });
 }
 
 // aggregates a single vector of BLS objects in parallel
@@ -807,13 +804,9 @@ void CBLSWorker::AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& p
 
     std::unique_lock<std::mutex> l(sigVerifyMutex);
 
-    bool foundDuplicate = false;
-    for (const auto& s : sigVerifyQueue) {
-        if (s.msgHash == msgHash) {
-            foundDuplicate = true;
-            break;
-        }
-    }
+    bool foundDuplicate = ranges::any_of(sigVerifyQueue, [&msgHash](const auto& job){
+        return job.msgHash == msgHash;
+    });
 
     if (foundDuplicate) {
         // batched/aggregated verification does not allow duplicate hashes, so we push what we currently have and start

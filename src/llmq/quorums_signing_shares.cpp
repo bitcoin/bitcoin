@@ -255,11 +255,10 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
             BanNode(pfrom->GetId());
             return;
         }
-        for (const auto& ann : msgs) {
-            if (!ProcessMessageSigSesAnn(pfrom, ann)) {
-                BanNode(pfrom->GetId());
-                return;
-            }
+        if (!ranges::all_of(msgs,
+                            [this, &pfrom](const auto& ann){ return ProcessMessageSigSesAnn(pfrom, ann); })) {
+            BanNode(pfrom->GetId());
+            return;
         }
     } else if (strCommand == NetMsgType::QSIGSHARESINV) {
         std::vector<CSigSharesInv> msgs;
@@ -269,11 +268,10 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
             BanNode(pfrom->GetId());
             return;
         }
-        for (const auto& inv : msgs) {
-            if (!ProcessMessageSigSharesInv(pfrom, inv)) {
-                BanNode(pfrom->GetId());
-                return;
-            }
+        if (!ranges::all_of(msgs,
+                            [this, &pfrom](const auto& inv){ return ProcessMessageSigSharesInv(pfrom, inv); })) {
+            BanNode(pfrom->GetId());
+            return;
         }
     } else if (strCommand == NetMsgType::QGETSIGSHARES) {
         std::vector<CSigSharesInv> msgs;
@@ -283,11 +281,10 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
             BanNode(pfrom->GetId());
             return;
         }
-        for (const auto& inv : msgs) {
-            if (!ProcessMessageGetSigShares(pfrom, inv)) {
-                BanNode(pfrom->GetId());
-                return;
-            }
+        if (!ranges::all_of(msgs,
+                            [this, &pfrom](const auto& inv){ return ProcessMessageGetSigShares(pfrom, inv); })) {
+            BanNode(pfrom->GetId());
+            return;
         }
     } else if (strCommand == NetMsgType::QBSIGSHARES) {
         std::vector<CBatchedSigShares> msgs;
@@ -301,11 +298,10 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
             BanNode(pfrom->GetId());
             return;
         }
-        for (const auto& bs : msgs) {
-            if (!ProcessMessageBatchedSigShares(pfrom, bs)) {
-                BanNode(pfrom->GetId());
-                return;
-            }
+        if (!ranges::all_of(msgs,
+                            [this, &pfrom](const auto& bs){ return ProcessMessageBatchedSigShares(pfrom, bs); })) {
+            BanNode(pfrom->GetId());
+            return;
         }
     }
 }
