@@ -21,6 +21,8 @@ import collections
 import shlex
 import sys
 
+from test_framework.conftest import ITCOIN_PBFT_ROOT_DIR
+
 from .authproxy import JSONRPCException
 from .descriptors import descsum_create
 from .messages import MY_SUBVERSION
@@ -186,9 +188,9 @@ class TestNode():
 
         # Add a new stdout and stderr file each time bitcoind is started
         if stderr is None:
-            stderr = tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False)
+            stderr = tempfile.NamedTemporaryFile(dir=self.stderr_dir, prefix="core_", delete=False)
         if stdout is None:
-            stdout = tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False)
+            stdout = tempfile.NamedTemporaryFile(dir=self.stdout_dir, prefix="core_", delete=False)
         self.stderr = stderr
         self.stdout = stdout
 
@@ -201,7 +203,10 @@ class TestNode():
         delete_cookie_file(self.datadir, self.chain)
 
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
-        subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
+        subp_env = dict(os.environ, 
+            LIBC_FATAL_STDERR_="1", 
+            LD_LIBRARY_PATH=f'$LD_LIBRARY_PATH:{ITCOIN_PBFT_ROOT_DIR}/usrlocal/lib'
+        )
 
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
@@ -617,7 +622,8 @@ class TestNodeCLI():
             p_args += [command]
         p_args += pos_args + named_args
         self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
-        process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        subp_env = dict(os.environ, LD_LIBRARY_PATH=f'$LD_LIBRARY_PATH:{ITCOIN_PBFT_ROOT_DIR}/usrlocal/lib')
+        process = subprocess.Popen(p_args, env=subp_env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()
         if returncode:
