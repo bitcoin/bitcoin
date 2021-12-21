@@ -273,8 +273,14 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request(f"/headers/5/{bb_hash}")
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
         json_obj = self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}")
+        first_filter_header = json_obj[0]
         assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
-        self.test_rest_request(f"/blockfilter/basic/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
+        json_obj = self.test_rest_request(f"/blockfilter/basic/{bb_hash}")
+
+        # Compare with normal RPC blockfilter response
+        rpc_blockfilter = self.nodes[0].getblockfilter(bb_hash)
+        assert_equal(first_filter_header, rpc_blockfilter['header'])
+        assert_equal(json_obj['filter'], rpc_blockfilter['filter'])
 
         # Test number parsing
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
