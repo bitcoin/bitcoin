@@ -92,6 +92,28 @@ fi
 CPPFLAGS="-I${depends_prefix}/include/ ${CPPFLAGS}"
 LDFLAGS="-L${depends_prefix}/lib ${LDFLAGS}"
 
+if test -n "@CC_FOR_BUILD@" -a -z "${CC_FOR_BUILD}"; then
+  CC_FOR_BUILD="@CC_FOR_BUILD@"
+fi
+if test -n "@CXX_FOR_BUILD@" -a -z "${CXX_FOR_BUILD}"; then
+  CXX_FOR_BUILD="@CXX_FOR_BUILD@"
+fi
+if test -n "@AR_FOR_BUILD@"; then
+  AR_FOR_BUILD="@AR_FOR_BUILD@"
+fi
+if test -n "@TAR_FOR_BUILD@"; then
+  TAR_FOR_BUILD="@TAR_FOR_BUILD@"
+fi
+if test -n "@RANLIB_FOR_BUILD@"; then
+  RANLIB_FOR_BUILD="@RANLIB_FOR_BUILD@"
+fi
+if test -n "@NM_FOR_BUILD@"; then
+  NM_FOR_BUILD="@NM_FOR_BUILD@"
+fi
+if test -n "@STRIP_FOR_BUILD@"; then
+  STRIP_FOR_BUILD="@STRIP_FOR_BUILD@"
+fi
+
 if test -n "@CC@" -a -z "${CC}"; then
   CC="@CC@"
 fi
