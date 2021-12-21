@@ -83,12 +83,9 @@ bool CQuorum::SetSecretKeyShare(const CBLSSecretKey& secretKeyShare)
 
 bool CQuorum::IsMember(const uint256& proTxHash) const
 {
-    for (auto& dmn : members) {
-        if (dmn->proTxHash == proTxHash) {
-            return true;
-        }
-    }
-    return false;
+    return ranges::any_of(members, [&proTxHash](const auto& dmn){
+        return dmn->proTxHash == proTxHash;
+    });
 }
 
 bool CQuorum::IsValidMember(const uint256& proTxHash) const
@@ -208,15 +205,10 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex)
         const auto vecQuorums = ScanQuorums(llmq.first, pIndex, llmq.second.signingActiveQuorumCount + 1);
 
         // First check if we are member of any quorum of this type
-        bool fWeAreQuorumTypeMember{false};
-
         auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
-        for (const auto& pQuorum : vecQuorums) {
-            if (pQuorum->IsValidMember(proTxHash)) {
-                fWeAreQuorumTypeMember = true;
-                break;
-            }
-        }
+        bool fWeAreQuorumTypeMember = ranges::any_of(vecQuorums, [&proTxHash](const auto& pQuorum) {
+            return pQuorum->IsValidMember(proTxHash);
+        });
 
         for (const auto& pQuorum : vecQuorums) {
             // If there is already a thread running for this specific quorum skip it

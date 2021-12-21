@@ -136,7 +136,7 @@ bool CCoinJoinBroadcastTx::IsValidStructure() const
     if (tx->vin.size() > CCoinJoin::GetMaxPoolParticipants() * COINJOIN_ENTRY_MAX_SIZE) {
         return false;
     }
-    return std::all_of(tx->vout.cbegin(), tx->vout.cend(), [] (const auto& txOut){
+    return ranges::all_of(tx->vout, [] (const auto& txOut){
         return CCoinJoin::IsDenominatedAmount(txOut.nValue) && txOut.scriptPubKey.IsPayToPublicKeyHash();
     });
 }
@@ -389,11 +389,10 @@ bool CCoinJoin::IsCollateralAmount(CAmount nInputAmount)
 
 int CCoinJoin::CalculateAmountPriority(CAmount nInputAmount)
 {
-    for (const auto& d : GetStandardDenominations()) {
-        // large denoms have lower value
-        if (nInputAmount == d) {
-            return (float)COIN / d * 10000;
-        }
+    if (auto optDenom = ranges::find_if_opt(GetStandardDenominations(), [&nInputAmount](const auto& denom) {
+        return nInputAmount == denom;
+    })) {
+        return (float)COIN / *optDenom * 10000;
     }
     if (nInputAmount < COIN) {
         return 20000;

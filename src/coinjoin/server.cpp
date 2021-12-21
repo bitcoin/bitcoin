@@ -15,6 +15,7 @@
 #include <script/interpreter.h>
 #include <shutdown.h>
 #include <txmempool.h>
+#include <util/ranges.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <validation.h>
@@ -81,13 +82,14 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode* pfrom, const std::string& strComman
             TRY_LOCK(cs_vecqueue, lockRecv);
             if (!lockRecv) return;
 
-            for (const auto& q : vecCoinJoinQueue) {
-                if (WITH_LOCK(activeMasternodeInfoCs, return q.masternodeOutpoint == activeMasternodeInfo.outpoint)) {
-                    // refuse to create another queue this often
-                    LogPrint(BCLog::COINJOIN, "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
-                    PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
-                    return;
-                }
+            auto mnOutpoint = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint);
+
+            if (ranges::any_of(vecCoinJoinQueue,
+                               [&mnOutpoint](const auto& q){return q.masternodeOutpoint == mnOutpoint;})) {
+                // refuse to create another queue this often
+                LogPrint(BCLog::COINJOIN, "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
+                PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
+                return;
             }
         }
 
@@ -400,13 +402,9 @@ void CCoinJoinServer::ChargeFees(CConnman& connman) const
     if (nState == POOL_STATE_ACCEPTING_ENTRIES) {
         LOCK(cs_coinjoin);
         for (const auto& txCollateral : vecSessionCollaterals) {
-            bool fFound = false;
-            for (const auto& entry : vecEntries) {
-                if (*entry.txCollateral == *txCollateral) {
-                    fFound = true;
-                    break;
-                }
-            }
+            bool fFound = ranges::any_of(vecEntries, [&txCollateral](const auto& entry){
+                return *entry.txCollateral == *txCollateral;
+            });
 
             // This queue entry didn't send us the promised transaction
             if (!fFound) {
@@ -608,15 +606,16 @@ bool CCoinJoinServer::AddEntry(CConnman& connman, const CCoinJoinEntry& entry, P
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- txin=%s\n", __func__, txin.ToString());
         LOCK(cs_coinjoin);
         for (const auto& inner_entry : vecEntries) {
-            for (const auto& txdsin : inner_entry.vecTxDSIn) {
-                if (txdsin.prevout == txin.prevout) {
-                    LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: already have this txin in entries\n", __func__);
-                    nMessageIDRet = ERR_ALREADY_HAVE;
-                    // Two peers sent the same input? Can't really say who is the malicious one here,
-                    // could be that someone is picking someone else's inputs randomly trying to force
-                    // collateral consumption. Do not punish.
-                    return false;
-                }
+            if (ranges::any_of(inner_entry.vecTxDSIn,
+                            [&txin](const auto& txdsin){
+                                    return txdsin.prevout == txin.prevout;
+                            })) {
+                LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: already have this txin in entries\n", __func__);
+                nMessageIDRet = ERR_ALREADY_HAVE;
+                // Two peers sent the same input? Can't really say who is the malicious one here,
+                // could be that someone is picking someone else's inputs randomly trying to force
+                // collateral consumption. Do not punish.
+                return false;
             }
         }
         vin.emplace_back(txin);
@@ -647,11 +646,10 @@ bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
 
     LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
-        for (const auto& txdsin : entry.vecTxDSIn) {
-            if (txdsin.scriptSig == txinNew.scriptSig) {
-                LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- already exists\n");
-                return false;
-            }
+        if (ranges::any_of(entry.vecTxDSIn,
+                        [&txinNew](const auto& txdsin){ return txdsin.scriptSig == txinNew.scriptSig; })){
+            LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- already exists\n");
+            return false;
         }
     }
 
@@ -683,13 +681,10 @@ bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
 bool CCoinJoinServer::IsSignaturesComplete() const
 {
     LOCK(cs_coinjoin);
-    for (const auto& entry : vecEntries) {
-        for (const auto& txdsin : entry.vecTxDSIn) {
-            if (!txdsin.fHasSig) return false;
-        }
-    }
 
-    return true;
+    return ranges::all_of(vecEntries, [](const auto& entry){
+        return ranges::all_of(entry.vecTxDSIn, [](const auto& txdsin){return txdsin.fHasSig;});
+    });
 }
 
 bool CCoinJoinServer::IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet) const

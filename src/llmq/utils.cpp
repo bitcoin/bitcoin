@@ -16,6 +16,7 @@
 #include <random.h>
 #include <spork.h>
 #include <timedata.h>
+#include <util/ranges.h>
 #include <validation.h>
 #include <versionbits.h>
 
@@ -291,12 +292,7 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
     // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
     // fail while we are on the brink of a new quorum
     auto quorums = quorumManager->ScanQuorums(llmqType, GetLLMQParams(llmqType).signingActiveQuorumCount + 1);
-    for (const auto& q : quorums) {
-        if (q->qc->quorumHash == quorumHash) {
-            return true;
-        }
-    }
-    return false;
+    return ranges::any_of(quorums, [&quorumHash](const auto& q){ return q->qc->quorumHash == quorumHash; });
 }
 
 bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
@@ -374,13 +370,11 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
         if (!fLLMQTypePresent || !fModePresent || fTooManyEntries) {
             throw std::invalid_argument(strprintf("Invalid format in -llmq-qvvec-sync: %s", strEntry));
         }
-        for (const auto& p : Params().GetConsensus().llmqs) {
-            if (p.second.name == strLLMQType) {
-                llmqType = p.first;
-                break;
-            }
-        }
-        if (llmqType == Consensus::LLMQType::LLMQ_NONE) {
+
+        if (auto optLLMQParams = ranges::find_if_opt(Params().GetConsensus().llmqs,
+                                                     [&strLLMQType](const auto& p){return p.second.name == strLLMQType;})) {
+            llmqType = optLLMQParams->first;
+        } else {
             throw std::invalid_argument(strprintf("Invalid llmqType in -llmq-qvvec-sync: %s", strEntry));
         }
         if (mapQuorumVvecSyncEntries.count(llmqType) > 0) {

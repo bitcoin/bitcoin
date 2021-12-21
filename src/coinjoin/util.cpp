@@ -12,6 +12,8 @@
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 
+#include <numeric>
+
 inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
 {
     assert(nSizePrev <= nSizeNew);
@@ -221,12 +223,10 @@ CAmount CTransactionBuilder::GetAmountLeft(const CAmount nAmountInitial, const C
 
 CAmount CTransactionBuilder::GetAmountUsed() const
 {
-    CAmount nAmountUsed{0};
     LOCK(cs_outputs);
-    for (const auto& out : vecOutputs) {
-        nAmountUsed += out->GetAmount();
-    }
-    return nAmountUsed;
+    return std::accumulate(vecOutputs.begin(), vecOutputs.end(), CAmount{0}, [](const CAmount& a, const auto& b){
+        return a + b->GetAmount();
+    });
 }
 
 CAmount CTransactionBuilder::GetFee(unsigned int nBytes) const

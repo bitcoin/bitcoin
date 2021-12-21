@@ -301,12 +301,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
 
     receivedVvecs[member->idx] = qc.vvec;
 
-    int receivedCount = 0;
-    for (const auto& m : members) {
-        if (!m->contributions.empty()) {
-            receivedCount++;
-        }
-    }
+    int receivedCount = ranges::count_if(members, [](const auto& m){return !m->contributions.empty();});
 
     logger.Batch("received and relayed contribution. received=%d/%d, time=%d", receivedCount, members.size(), t1.count());
 
@@ -1174,12 +1169,7 @@ void CDKGSession::ReceiveMessage(const CDKGPrematureCommitment& qc, bool& retBan
         return true;
     });
 
-    int receivedCount = 0;
-    for (const auto& m : members) {
-        if (!m->prematureCommitments.empty()) {
-            receivedCount++;
-        }
-    }
+    int receivedCount = ranges::count_if(members, [](const auto& m){ return !m->prematureCommitments.empty(); });
 
     t1.stop();
 

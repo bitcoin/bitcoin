@@ -87,7 +87,7 @@ public:
             ret.emplace_back(std::make_pair(bm.first, std::move(msg)));
         }
 
-        return std::move(ret);
+        return ret;
     }
 };
 

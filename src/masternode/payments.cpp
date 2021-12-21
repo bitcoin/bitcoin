@@ -16,6 +16,7 @@
 #include <primitives/block.h>
 #include <script/standard.h>
 #include <tinyformat.h>
+#include <util/ranges.h>
 #include <util/system.h>
 #include <validation.h>
 
@@ -324,13 +325,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
     }
 
     for (const auto& txout : voutMasternodePayments) {
-        bool found = false;
-        for (const auto& txout2 : txNew.vout) {
-            if (txout == txout2) {
-                found = true;
-                break;
-            }
-        }
+        bool found = ranges::any_of(txNew.vout, [&txout](const auto& txout2) {return txout == txout2;});
         if (!found) {
             CTxDestination dest;
             if (!ExtractDestination(txout.scriptPubKey, dest))

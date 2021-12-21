@@ -12,6 +12,7 @@
 #include <net.h>
 #include <shutdown.h>
 #include <validation.h>
+#include <util/ranges.h>
 
 
 void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
@@ -45,13 +46,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
         if (pnode->m_masternode_probe_connection && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
 
 #ifdef ENABLE_WALLET
-        bool fFound = false;
-        for (const auto& dmn : vecDmns) {
-            if (pnode->addr == dmn->pdmnState->addr) {
-                fFound = true;
-                break;
-            }
-        }
+        bool fFound = ranges::any_of(vecDmns, [&pnode](const auto& dmn){ return pnode->addr == dmn->pdmnState->addr; });
         if (fFound) return; // do NOT disconnect mixing masternodes
 #endif // ENABLE_WALLET
         if (fLogIPs) {

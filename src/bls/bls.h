@@ -9,6 +9,7 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/strencodings.h>
+#include <util/ranges.h>
 
 // bls-dash uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
 #undef ERROR
@@ -108,7 +109,7 @@ public:
             return;
         }
 
-        if (std::all_of(vecBytes.begin(), vecBytes.end(), [](uint8_t c) { return c == 0; })) {
+        if (ranges::all_of(vecBytes, [](uint8_t c) { return c == 0; })) {
             Reset();
         } else {
             try {
