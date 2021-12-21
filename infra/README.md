@@ -1,8 +1,14 @@
 # Bitcoin infrastructure utilities
 
+This README makes the following assumptions:
+
+- Ubuntu 20.04 LTS
+- username: ubuntu
+- working directory for repos: /home/ubuntu
+
 ## Prerequisites
 
-To use the utilities in this folder, you have to install the Boost library in `itcoin-core/../itcoin-pbft/usrlocal`, and the following procedure is provided as an example.
+To use the utilities in this folder, you have to install the Boost library in `itcoin-core/../itcoin-pbft/usrlocal`.
 
 ```bash
 cd ~
@@ -13,7 +19,7 @@ cd ~/boost_1_75_0
 ./b2 install
 ```
 
-Additional itcoin-core dependencies can be installed from official repo in Ubuntu 20.04 LTS
+Additional itcoin-core dependencies can be installed from official repo.
 
 ```bash
 sudo apt install \
@@ -64,6 +70,10 @@ rm -rf datadir
 
 # Continue mine the new network
 ./continue-mining-local.sh
+
+# If needed, in a new terminal window, bitcoin-cli can be used to query blockchain status
+cd ~/itcoin-core/infra
+LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib ../target/bin/bitcoin-cli -datadir=/home/ubuntu/itcoin-core/infra/datadir getblockchaininfo
 ```
 
 ## Running the itcoin-core tests with custom boost libraries
@@ -71,12 +81,14 @@ rm -rf datadir
 Run all tests with:
 
 ```bash
+cd ~/itcoin-core
 LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib make check
 LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib test/functional/test_runner.py > $HOME/itcoin-draft-notes/`date +%Y%m%d%H%M%S`_test_runner_py_results.log 2>&1
 ```
 
 Or run single tests with:
 
-```
-LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib test/functional/wallet_send.py
+```bash
+cd ~/itcoin-core
+LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib test/functional/feature_signet_solution_independent_blockchain_1_of_2.py 
 ```
