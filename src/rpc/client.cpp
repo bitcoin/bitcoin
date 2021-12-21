@@ -128,6 +128,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createpsbt", 1, "outputs" },
     { "createpsbt", 2, "locktime" },
     { "combinepsbt", 0, "txs"},
+    { "joinpsbts", 0, "txs"},
     { "finalizepsbt", 1, "extract"},
     { "converttopsbt", 1, "permitsigdata"},
     { "gettxout", 1, "n" },
