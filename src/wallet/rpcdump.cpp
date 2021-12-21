@@ -119,6 +119,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
     }
 
+    WalletBatch batch(pwallet->GetDBHandle());
     WalletRescanReserver reserver(pwallet);
     bool fRescan = true;
     {
@@ -166,7 +167,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
             pwallet->UpdateTimeFirstKey(1);
             pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
 
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
         }
@@ -209,19 +210,21 @@ UniValue abortrescan(const JSONRPCRequest& request)
 static void ImportAddress(CWallet*, const CTxDestination& dest, const std::string& strLabel);
 static void ImportScript(CWallet * const pwallet, const CScript& script, const std::string& strLabel, bool isRedeemScript) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
+    WalletBatch batch(pwallet->GetDBHandle());
+
     if (!isRedeemScript && ::IsMine(*pwallet, script) == ISMINE_SPENDABLE) {
         throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
     }
 
     pwallet->MarkDirty();
 
-    if (!pwallet->HaveWatchOnly(script) && !pwallet->AddWatchOnly(script, 0 /* nCreateTime */)) {
+    if (!pwallet->HaveWatchOnly(script) && !pwallet->AddWatchOnlyWithDB(batch, script, 0 /* nCreateTime */)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
     }
 
     if (isRedeemScript) {
         const CScriptID id(script);
-        if (!pwallet->HaveCScript(id) && !pwallet->AddCScript(script)) {
+        if (!pwallet->HaveCScript(id) && !pwallet->AddCScriptWithDB(batch, script)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
         }
         ImportAddress(pwallet, id, strLabel);
@@ -561,6 +564,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled when blocks are pruned");
     }
 
+    WalletBatch batch(pwallet->GetDBHandle());
     WalletRescanReserver reserver(pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
@@ -649,7 +653,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 continue;
             }
             pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 fGood = false;
                 continue;
             }
@@ -668,7 +672,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 pwallet->WalletLogPrintf("Skipping import of %s (script already present)\n", HexStr(script));
                 continue;
             }
-            if(!pwallet->AddCScript(script)) {
+            if(!pwallet->AddCScriptWithDB(batch, script)) {
                 pwallet->WalletLogPrintf("Error importing script %s\n", HexStr(script));
                 fGood = false;
                 continue;
@@ -746,6 +750,8 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     bool fGood = true;
 
+    WalletBatch batch(pwallet->GetDBHandle());
+
     int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
 
@@ -774,7 +780,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
                 continue;
             }
             pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 fGood = false;
                 continue;
             }
@@ -806,7 +812,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
                 continue;
             }
             pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 fGood = false;
                 continue;
             }
@@ -1419,43 +1425,17 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
 
         // All good, time to import
         pwallet->MarkDirty();
-        for (const auto& entry : import_data.import_scripts) {
-            if (!pwallet->HaveCScript(CScriptID(entry)) && !pwallet->AddCScript(entry)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
-            }
+        if (!pwallet->ImportScripts(import_data.import_scripts)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
         }
-        for (const auto& entry : privkey_map) {
-            const CKey& key = entry.second;
-            CPubKey pubkey = key.GetPubKey();
-            const CKeyID& id = entry.first;
-            assert(key.VerifyPubKey(pubkey));
-            pwallet->mapKeyMetadata[id].nCreateTime = timestamp;
-            // If the private key is not present in the wallet, insert it.
-            if (!pwallet->HaveKey(id) && !pwallet->AddKeyPubKey(key, pubkey)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-            }
-            pwallet->UpdateTimeFirstKey(timestamp);
+        if (!pwallet->ImportPrivKeys(privkey_map, timestamp)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
         }
-        for (const auto& entry : pubkey_map) {
-            const CPubKey& pubkey = entry.second;
-            const CKeyID& id = entry.first;
-            CPubKey temp;
-            if (!pwallet->GetPubKey(id, temp) && !pwallet->AddWatchOnly(GetScriptForRawPubKey(pubkey), timestamp)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-            }
+        if (!pwallet->ImportPubKeys(pubkey_map, timestamp)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
-
-        for (const CScript& script : script_pub_keys) {
-            if (!have_solving_data || !::IsMine(*pwallet, script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
-                if (!pwallet->AddWatchOnly(script, timestamp)) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-                }
-            }
-            CTxDestination dest;
-            ExtractDestination(script, dest);
-            if (!internal && IsValidDestination(dest)) {
-                pwallet->SetAddressBook(dest, label, "receive");
-            }
+        if (!pwallet->ImportScriptPubKeys(label, script_pub_keys, have_solving_data, internal, timestamp)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
 
         result.pushKV("success", UniValue(true));
