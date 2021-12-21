@@ -37,7 +37,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
         return nullptr;
     }
 
-    wallet_instance->SetMinVersion(FEATURE_HD);
+    wallet_instance->SetMinVersion(FEATURE_COMPRPUBKEY);
 
     // generate a new HD seed
     // NOTE: we do not yet create HD wallets by default
