@@ -52,7 +52,7 @@ builddocker: &builddocker
   stage: build docker
   script:
     # no need to run tests again here
-    - if [ "$DOCKER_BUILD" = "true" ]; then $DOCKER_RUN_IN_BUILDER ./ci/dash/build_depends.sh && $DOCKER_RUN_IN_BUILDER ./ci/dash/build_src.sh && BUILD_DIR=build-ci/dashcore-$BUILD_TARGET ./docker/build-docker.sh; fi
+    - if [ "$DOCKER_BUILD" = "true" ]; then $DOCKER_RUN_IN_BUILDER ./ci/dash/build_depends.sh && $DOCKER_RUN_IN_BUILDER ./ci/dash/build_src.sh && BUILD_DIR=build-ci/dashcore-$BUILD_TARGET ./ci/dash/build-docker.sh; fi
 
     - MAKEJOBS=-j3
     - RUN_UNIT_TESTS=true
@@ -190,7 +190,7 @@ after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
 after_success:
-    - if [ "$DOCKER_BUILD" = "true" ]; then docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD && ./docker/push-docker.sh; fi
+    - if [ "$DOCKER_BUILD" = "true" ]; then docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD && ./ci/dash/push-docker.sh; fi
     - stage: lint
       name: 'lint'
       env:
