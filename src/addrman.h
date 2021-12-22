@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <util/time.h>
 #include <utility>
 #include <vector>
 
