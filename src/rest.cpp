@@ -195,7 +195,7 @@ static bool rest_headers(const std::any& context,
 
     const auto parsed_count{ToIntegral<size_t>(path[0])};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, path[0]));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, path[0]));
     }
 
     std::string hashStr = path[1];
@@ -371,7 +371,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
     const auto parsed_count{ToIntegral<size_t>(uri_parts[1])};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, uri_parts[1]));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, uri_parts[1]));
     }
 
     std::vector<const CBlockIndex*> headers;
