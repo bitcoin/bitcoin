@@ -112,7 +112,7 @@ Arguments passed:
 
 #### Tracepoint `utxocache:flush`
 
-Is called *after* the caches and indexes are flushed depending on the mode
+Is called *after* the caches are flushed depending on the mode
 `CChainState::FlushStateToDisk` is called with.
 
 Arguments passed:
@@ -122,7 +122,6 @@ Arguments passed:
 3. Number of coins flushed as `uint64`
 4. Memory usage in bytes as `uint64`
 5. If the flush was pruned as `bool`
-6. If it was full flush as `bool`
 
 #### Tracepoint `utxocache:add`
 
