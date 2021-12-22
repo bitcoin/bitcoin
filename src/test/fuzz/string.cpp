@@ -289,7 +289,7 @@ FUZZ_TARGET(string)
 
     {
         const int64_t atoi64_result = atoi64_legacy(random_string_1);
-        const int64_t locale_independent_atoi_result = LocaleIndependentAtoi<int64_t>(random_string_1);
+        const int64_t locale_independent_atoi_result = LocaleIndependentAtoi64(random_string_1);
         assert(atoi64_result == locale_independent_atoi_result || locale_independent_atoi_result == 0);
     }
 }

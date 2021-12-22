@@ -254,9 +254,9 @@ public:
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
         const auto it_op = mapValue.find("n");
-        nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi<int64_t>(it_op->second) : -1;
+        nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi64(it_op->second) : -1;
         const auto it_ts = mapValue.find("timesmart");
-        nTimeSmart = (it_ts != mapValue.end()) ? static_cast<unsigned int>(LocaleIndependentAtoi<int64_t>(it_ts->second)) : 0;
+        nTimeSmart = (it_ts != mapValue.end()) ? static_cast<unsigned int>(LocaleIndependentAtoi64(it_ts->second)) : 0;
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");

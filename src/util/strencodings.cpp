@@ -565,3 +565,31 @@ std::optional<uint64_t> ParseByteUnits(const std::string& str, ByteUnit default_
     }
     return *parsed_num * unit_amount;
 }
+
+int64_t LocaleIndependentAtoi64(const std::string& str)
+{
+    int64_t result;
+    // Emulate atoi(...) handling of white space and leading +/-.
+    std::string s = TrimString(str);
+    if (!s.empty() && s[0] == '+') {
+        if (s.length() >= 2 && s[1] == '-') {
+            return 0;
+        }
+        s = s.substr(1);
+    }
+
+    auto [_, error_condition] = std::from_chars(s.data(), s.data() + s.size(), result);
+
+    if (error_condition == std::errc::result_out_of_range) {
+        if (s.length() >= 1 && s[0] == '-') {
+            // Saturate underflow, per strtoll's behavior.
+            return std::numeric_limits<int64_t>::min();
+        } else {
+            // Saturate overflow, per strtoll's behavior.
+            return std::numeric_limits<int64_t>::max();
+        }
+    } else if (error_condition != std::errc{}) {
+        return 0;
+    }
+    return result;
+}

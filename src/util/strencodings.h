@@ -94,8 +94,11 @@ void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
 // which provide parse error feedback.
 //
 // The goal of LocaleIndependentAtoi is to replicate the exact defined behaviour
-// of atoi and atoi64 as they behave under the "C" locale.
-template <typename T>
+// of atoi as it behaves under the "C" locale.
+//
+// Prevent use of LocaleIndependentAtoi for int64_t, since the function below
+// should be used for backwards compatibility with older versions of Bitcoin Core.
+template <typename T, typename std::enable_if<!std::is_same<T, int64_t>::value>::type* = nullptr>
 T LocaleIndependentAtoi(const std::string& str)
 {
     static_assert(std::is_integral<T>::value);
@@ -114,6 +117,21 @@ T LocaleIndependentAtoi(const std::string& str)
     }
     return result;
 }
+
+/**
+ * LocaleIndependentAtoi64 is provided for backwards compatibility reasons.
+ * Since its behavior differs from standard atoi functionality, it is not a
+ * template-specialization of the above function.
+ *
+ * New code should use ToIntegral or the ParseInt* functions which provide
+ * parse error feedback.
+ *
+ * This aims to replicate the exact behaviour of atoi64 in previous versions of
+ * Bitcoin Core. The old atoi64 utility function actually made use of `strtoll`
+ * in its implementation (or Microsoft's `_atoi64`), which saturates over- and
+ * underflows. That behavior is reproduced here.
+ */
+int64_t LocaleIndependentAtoi64(const std::string& str);
 
 /**
  * Tests if the given character is a decimal digit.
