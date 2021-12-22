@@ -194,7 +194,7 @@ static bool rest_headers(const CoreContext& context,
 
     const auto parsed_count{ToIntegral<size_t>(path[0])};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, path[0]));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, path[0]));
     }
 
     std::string hashStr = path[1];
@@ -340,11 +340,10 @@ static bool rest_block_notxdetails(const CoreContext& context, HTTPRequest* req,
     return rest_block(context, req, strURIPart, false);
 }
 
-
 static bool rest_filter_header(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
@@ -370,10 +369,10 @@ static bool rest_filter_header(const CoreContext& context, HTTPRequest* req, con
 
     const auto parsed_count{ToIntegral<size_t>(uri_parts[1])};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, uri_parts[1]));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, uri_parts[1]));
     }
 
-    std::vector<const CBlockIndex *> headers;
+    std::vector<const CBlockIndex*> headers;
     headers.reserve(*parsed_count);
     {
         ChainstateManager* maybe_chainman = GetChainman(context, req);
@@ -394,7 +393,7 @@ static bool rest_filter_header(const CoreContext& context, HTTPRequest* req, con
 
     std::vector<uint256> filter_headers;
     filter_headers.reserve(*parsed_count);
-    for (const CBlockIndex *pindex : headers) {
+    for (const CBlockIndex* pindex : headers) {
         uint256 filter_header;
         if (!index->LookupFilterHeader(pindex, filter_header)) {
             std::string errmsg = "Filter not found.";
@@ -412,7 +411,7 @@ static bool rest_filter_header(const CoreContext& context, HTTPRequest* req, con
 
     switch (rf) {
     case RetFormat::BINARY: {
-        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssHeader{SER_NETWORK, PROTOCOL_VERSION};
         for (const uint256& header : filter_headers) {
             ssHeader << header;
         }
@@ -423,7 +422,7 @@ static bool rest_filter_header(const CoreContext& context, HTTPRequest* req, con
         return true;
     }
     case RetFormat::HEX: {
-        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssHeader{SER_NETWORK, PROTOCOL_VERSION};
         for (const uint256& header : filter_headers) {
             ssHeader << header;
         }
@@ -452,8 +451,8 @@ static bool rest_filter_header(const CoreContext& context, HTTPRequest* req, con
 
 static bool rest_block_filter(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
@@ -511,7 +510,7 @@ static bool rest_block_filter(const CoreContext& context, HTTPRequest* req, cons
 
     switch (rf) {
     case RetFormat::BINARY: {
-        CDataStream ssResp(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssResp{SER_NETWORK, PROTOCOL_VERSION};
         ssResp << filter;
 
         std::string binaryResp = ssResp.str();
@@ -520,7 +519,7 @@ static bool rest_block_filter(const CoreContext& context, HTTPRequest* req, cons
         return true;
     }
     case RetFormat::HEX: {
-        CDataStream ssResp(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssResp{SER_NETWORK, PROTOCOL_VERSION};
         ssResp << filter;
 
         std::string strHex = HexStr(ssResp) + "\n";
