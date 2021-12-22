@@ -82,7 +82,7 @@ public:
     /** Progress message during initialization. */
     ADD_SIGNALS_DECL_WRAPPER(InitMessage, void, const std::string& message);
 
-    /** Wallet client created. */
+    /** Wallet loader created. */
     ADD_SIGNALS_DECL_WRAPPER(InitWallet, void, );
 
     /** Number of network connections changed. */
