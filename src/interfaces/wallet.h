@@ -259,6 +259,9 @@ public:
     // Return whether private keys enabled.
     virtual bool privateKeysDisabled() = 0;
 
+    // Return whether the wallet contains a Taproot scriptPubKeyMan
+    virtual bool taprootEnabled() = 0;
+
     // Return whether wallet uses an external signer.
     virtual bool hasExternalSigner() = 0;
 
