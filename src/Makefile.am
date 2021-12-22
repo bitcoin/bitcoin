@@ -29,6 +29,7 @@ LIBBITCOIN_NODE=libbitcoin_node.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
+LIBBITCOIN_KERNEL=libbitcoin_kernel.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.la
 LIBBITCOINQT=qt/libbitcoinqt.a
@@ -39,6 +40,9 @@ LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
 LIBBITCOINCONSENSUS=libbitcoinconsensus.la
+endif
+if BUILD_BITCOIN_KERNEL_LIB
+LIBBITCOINKERNEL=libbitcoinkernel.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -798,8 +802,39 @@ bitcoin_util_LDADD = \
 #
 
 # bitcoin-chainstate binary #
-bitcoin_chainstate_SOURCES = \
-  bitcoin-chainstate.cpp \
+bitcoin_chainstate_SOURCES = bitcoin-chainstate.cpp
+bitcoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+bitcoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bitcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+bitcoin_chainstate_LDADD = $(LIBBITCOINKERNEL)
+#
+
+# bitcoinkernel library #
+if BUILD_BITCOIN_KERNEL_LIB
+lib_LTLIBRARIES += $(LIBBITCOINKERNEL)
+
+libbitcoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
+libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1)
+libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+
+# libbitcoinkernel requires default symbol visibility, explicitly specify that
+# here so that things still work even when user configures with
+#   --enable-reduce-exports
+#
+# Note this is a quick hack that will be removed as we incrementally define what
+# to export from the library.
+libbitcoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
+
+# TODO: For now, Specify -static in both CXXFLAGS and LDFLAGS when building for
+#       windows targets so libtool will only build a static version of this
+#       library. There are unresolved problems when building dll's for mingw-w64
+#       and attempting to statically embed libstdc++, libpthread, etc.
+if TARGET_WINDOWS
+libbitcoinkernel_la_LDFLAGS += -static
+libbitcoinkernel_la_CXXFLAGS += -static
+endif
+
+libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
   blockfilter.cpp \
@@ -879,19 +914,11 @@ bitcoin_chainstate_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   warnings.cpp
-bitcoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-bitcoin_chainstate_LDADD = \
-  $(LIBBITCOIN_CRYPTO) \
-  $(LIBUNIVALUE) \
-  $(LIBSECP256K1) \
-  $(LIBLEVELDB) \
-  $(LIBMEMENV)
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
-bitcoin_chainstate-clientversion.$(OBJEXT): obj/build.h
+libbitcoinkernel_la-clientversion.l$(OBJEXT): obj/build.h
+endif # BUILD_BITCOIN_KERNEL_LIB
 #
 
 # bitcoinconsensus library #
