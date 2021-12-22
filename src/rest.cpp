@@ -341,11 +341,10 @@ static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req, co
     return rest_block(context, req, strURIPart, TxVerbosity::SHOW_TXID);
 }
 
-
 static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
@@ -375,7 +374,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
         return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, uri_parts[1]));
     }
 
-    std::vector<const CBlockIndex *> headers;
+    std::vector<const CBlockIndex*> headers;
     headers.reserve(*parsed_count);
     {
         ChainstateManager* maybe_chainman = GetChainman(context, req);
@@ -396,7 +395,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
     std::vector<uint256> filter_headers;
     filter_headers.reserve(*parsed_count);
-    for (const CBlockIndex *pindex : headers) {
+    for (const CBlockIndex* pindex : headers) {
         uint256 filter_header;
         if (!index->LookupFilterHeader(pindex, filter_header)) {
             std::string errmsg = "Filter not found.";
@@ -454,12 +453,12 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
 static bool rest_block_filter(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
-    //request is sent over URI scheme /rest/blockfilter/filtertype/blockhash
+    // request is sent over URI scheme /rest/blockfilter/filtertype/blockhash
     std::vector<std::string> uri_parts;
     boost::split(uri_parts, param, boost::is_any_of("/"));
     if (uri_parts.size() != 2) {
