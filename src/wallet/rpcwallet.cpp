@@ -11,7 +11,6 @@
 #include <httpserver.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <keepass.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <rpc/mining.h>
@@ -2819,61 +2818,6 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
     return true;
 }
 
-static UniValue keepass(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
-    std::string strCommand;
-
-    if (!request.params[0].isNull())
-        strCommand = request.params[0].get_str();
-
-    if (request.fHelp  ||
-        (strCommand != "genkey" && strCommand != "init" && strCommand != "setpassphrase"))
-        throw std::runtime_error(
-            "keepass <genkey|init|setpassphrase>\n");
-
-    if (strCommand == "genkey")
-    {
-        SecureString sResult;
-        // Generate RSA key
-        SecureString sKey = CKeePassIntegrator::generateKeePassKey();
-        sResult = "Generated Key: ";
-        sResult += sKey;
-        return sResult.c_str();
-    }
-    else if(strCommand == "init")
-    {
-        // Generate base64 encoded 256 bit RSA key and associate with KeePassHttp
-        SecureString sResult;
-        SecureString sKey;
-        std::string strId;
-        keePassInt.rpcAssociate(strId, sKey);
-        sResult = "Association successful. Id: ";
-        sResult += strId.c_str();
-        sResult += " - Key: ";
-        sResult += sKey.c_str();
-        return sResult.c_str();
-    }
-    else if(strCommand == "setpassphrase")
-    {
-        if(request.params.size() != 2) {
-            return "setlogin: invalid number of parameters. Requires a passphrase";
-        }
-
-        SecureString sPassphrase = SecureString(request.params[1].get_str().c_str());
-
-        keePassInt.updatePassphrase(sPassphrase);
-
-        return "setlogin: Updated credentials.";
-    }
-
-    return "Invalid command";
-}
-
 static UniValue loadwallet(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -4247,7 +4191,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "importprunedfunds",                &importprunedfunds,             {"rawtransaction","txoutproof"} },
     { "wallet",             "importpubkey",                     &importpubkey,                  {"pubkey","label","rescan"} },
     { "wallet",             "importwallet",                     &importwallet,                  {"filename"} },
-    { "wallet",             "keepass",                          &keepass,                       {} },
     { "wallet",             "keypoolrefill",                    &keypoolrefill,                 {"newsize"} },
     { "wallet",             "listaddressbalances",              &listaddressbalances,           {"minamount"} },
     { "wallet",             "listaddressgroupings",             &listaddressgroupings,          {} },

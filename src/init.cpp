@@ -1757,8 +1757,6 @@ bool AppInitMain(InitInterfaces& interfaces)
         }
     }
 
-    // Initialize KeePass Integration
-    g_wallet_init_interface.InitKeePass();
     // ********************************************************* Step 6: network initialization
     // Note that we absolutely cannot open any actual connections
     // until the very end ("start node") as the UTXO/block state
