@@ -114,10 +114,10 @@ public:
      * @param[in] nTime           The time that we were last connected to this peer.
      * @return    true if the address is successfully moved from the new table to the tried table.
      */
-    bool Good(const CService& addr, int64_t nTime = GetAdjustedTime());
+    bool Good(const CService& addr, int64_t nTime = GetTime());
 
     //! Mark an entry as connection attempted to.
-    void Attempt(const CService& addr, bool fCountFailure, int64_t nTime = GetAdjustedTime());
+    void Attempt(const CService& addr, bool fCountFailure, int64_t nTime = GetTime());
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
     void ResolveCollisions();
@@ -162,7 +162,7 @@ public:
      * @param[in]   addr     The address of the peer we were connected to
      * @param[in]   nTime    The time that we were last connected to this peer
      */
-    void Connected(const CService& addr, int64_t nTime = GetAdjustedTime());
+    void Connected(const CService& addr, int64_t nTime = GetTime());
 
     //! Update an entry's service bits.
     void SetServices(const CService& addr, ServiceFlags nServices);

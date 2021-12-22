@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
 {
     auto addrman = TestAddrMan();
     CAddress addr{CAddress(ResolveService("253.3.3.3", 8333), NODE_NONE)};
-    int64_t start_time{GetAdjustedTime()};
+    int64_t start_time{GetTime()};
     addr.nTime = start_time;
 
     // test that multiplicity stays at 1 if nTime doesn't increase
@@ -292,15 +292,15 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     BOOST_CHECK_EQUAL(vAddr1.size(), 0U);
 
     CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
-    addr1.nTime = GetAdjustedTime(); // Set time so isTerrible = false
+    addr1.nTime = GetTime(); // Set time so isTerrible = false
     CAddress addr2 = CAddress(ResolveService("250.251.2.2", 9999), NODE_NONE);
-    addr2.nTime = GetAdjustedTime();
+    addr2.nTime = GetTime();
     CAddress addr3 = CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE);
-    addr3.nTime = GetAdjustedTime();
+    addr3.nTime = GetTime();
     CAddress addr4 = CAddress(ResolveService("252.253.3.4", 8333), NODE_NONE);
-    addr4.nTime = GetAdjustedTime();
+    addr4.nTime = GetTime();
     CAddress addr5 = CAddress(ResolveService("252.254.4.5", 8333), NODE_NONE);
-    addr5.nTime = GetAdjustedTime();
+    addr5.nTime = GetTime();
     CNetAddr source1 = ResolveIP("250.1.2.1");
     CNetAddr source2 = ResolveIP("250.2.3.3");
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
         CAddress addr = CAddress(ResolveService(strAddr), NODE_NONE);
 
         // Ensure that for all addrs in addrman, isTerrible == false.
-        addr.nTime = GetAdjustedTime();
+        addr.nTime = GetTime();
         addrman->Add({addr}, ResolveIP(strAddr));
         if (i % 8 == 0)
             addrman->Good(addr);
@@ -818,7 +818,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     // Ensure test of address fails, so that it is evicted.
     // Update entry in tried by setting last good connection in the deep past.
     BOOST_CHECK(!addrman->Good(info, /*nTime=*/1));
-    addrman->Attempt(info, /*fCountFailure=*/false, /*nTime=*/GetAdjustedTime() - 61);
+    addrman->Attempt(info, /*fCountFailure=*/false, /*nTime=*/GetTime() - 61);
 
     // Should swap 36 for 19.
     addrman->ResolveCollisions();
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     CNetAddr source{ResolveIP("252.2.2.2")};
     CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
 
-    int64_t start_time{GetAdjustedTime() - 10000};
+    int64_t start_time{GetTime() - 10000};
     addr.nTime = start_time;
     BOOST_CHECK(addrman->Add({addr}, source));
     BOOST_CHECK_EQUAL(addrman->size(), 1U);
