@@ -172,7 +172,7 @@ def check_NX(binary) -> bool:
     '''
     return binary.has_nx
 
-def check_control_flow(binary) -> bool:
+def check_MACHO_control_flow(binary) -> bool:
     '''
     Check for control flow instrumentation
     '''
@@ -205,7 +205,7 @@ BASE_MACHO = [
     ('NX', check_NX),
     ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
     ('Canary', check_MACHO_Canary),
-    ('CONTROL_FLOW', check_control_flow),
+    ('CONTROL_FLOW', check_MACHO_control_flow),
 ]
 
 CHECKS = {
