@@ -2,6 +2,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+
+noinst_LTLIBRARIES += leveldb/libleveldb.la leveldb/libmemenv.la
+
 LIBLEVELDB_INT = leveldb/libleveldb.a
 LIBMEMENV_INT  = leveldb/libmemenv.a
 
@@ -141,7 +144,15 @@ else
 leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix.cc
 endif
 
+leveldb_libleveldb_la_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
+leveldb_libleveldb_la_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
+leveldb_libleveldb_la_SOURCES = $(leveldb_libleveldb_a_SOURCES)
+
 leveldb_libmemenv_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
 leveldb_libmemenv_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
 leveldb_libmemenv_a_SOURCES =  leveldb/helpers/memenv/memenv.cc
 leveldb_libmemenv_a_SOURCES += leveldb/helpers/memenv/memenv.h
+
+leveldb_libmemenv_la_CPPFLAGS = $(leveldb_libmemenv_a_CPPFLAGS)
+leveldb_libmemenv_la_CXXFLAGS = $(leveldb_libmemenv_a_CXXFLAGS)
+leveldb_libmemenv_la_SOURCES =  $(leveldb_libmemenv_a_SOURCES)
