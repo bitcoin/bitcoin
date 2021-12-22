@@ -20,6 +20,7 @@
 #include <bls-dash/schemes.hpp>
 #include <bls-dash/threshold.hpp>
 #undef DOUBLE
+#undef SEED
 
 #include <array>
 #include <mutex>
