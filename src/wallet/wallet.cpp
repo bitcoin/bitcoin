@@ -2380,6 +2380,14 @@ bool CWalletTx::SubmitMemoryPoolAndRelay(std::string& err_string, bool relay, in
     if (!pwallet->GetBroadcastTransactions()) return false;
     // Don't relay abandoned transactions
     if (isAbandoned()) return false;
+    // Don't try to submit coinbase transactions. These would fail anyway but would
+    // cause log spam.
+    if (IsCoinBase()) return false;
+    // Don't try to submit conflicted or confirmed transactions.
+    if (GetDepthInMainChain(locked_chain) != 0) return false;
+    // Don't try to submit transactions locked via InstantSend.
+    if (IsLockedByInstantSend()) return false;
+
     // Submit transaction to mempool for relay
     pwallet->WalletLogPrintf("Submitting wtx %s to mempool for relay\n", GetHash().ToString());
     // We must set fInMempool here - while it will be re-set to true by the
@@ -2682,8 +2690,9 @@ void CWallet::ResendWalletTransactions()
         // Relay transactions
         for (std::pair<const uint256, CWalletTx>& item : mapWallet) {
             CWalletTx& wtx = item.second;
-            // only rebroadcast unconfirmed txes older than 5 minutes before the
-            // last block was found
+            // Attempt to rebroadcast all txes more than 5 minutes older than
+            // the last block. SubmitMemoryPoolAndRelay() will not rebroadcast
+            // any confirmed or conflicting txs.
             if (wtx.nTimeReceived > m_best_block_time - 5 * 60) continue;
             std::string unused_err_string;
             if (wtx.SubmitMemoryPoolAndRelay(unused_err_string, true, *locked_chain)) ++submitted_tx_count;
