@@ -49,12 +49,17 @@ static std::vector<bool> FromBytes(const unsigned char* source, int vector_size)
     return result;
 }
 
+/* Utility function to create a deterministic addrman, as used in most tests */
+static std::unique_ptr<AddrMan> TestAddrMan(std::vector<bool> asmap = std::vector<bool>())
+{
+    return std::make_unique<AddrMan>(asmap, /*deterministic=*/true, /*consistency_check_ratio=*/100);
+}
 
 BOOST_FIXTURE_TEST_SUITE(addrman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(addrman_simple)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -88,7 +93,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     BOOST_CHECK(addrman->size() >= 1);
 
     // Test: reset addrman and test AddrMan::Add multiple addresses works as expected
-    addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    addrman = TestAddrMan();
     std::vector<CAddress> vAddr;
     vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
     vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
@@ -98,7 +103,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -127,7 +132,7 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
 
 BOOST_AUTO_TEST_CASE(addrman_select)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -186,7 +191,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
 BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -215,7 +220,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 
 BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     CNetAddr source = ResolveIP("252.2.2.2");
 
@@ -246,7 +251,7 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 
 BOOST_AUTO_TEST_CASE(addrman_getaddr)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     // Test: Sanity check, GetAddr should never return anything if addrman
     //  is empty.
@@ -567,9 +572,9 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
     std::vector<bool> asmap1 = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
 
-    auto addrman_asmap1 = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
-    auto addrman_asmap1_dup = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
-    auto addrman_noasmap = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman_asmap1 = TestAddrMan(asmap1);
+    auto addrman_asmap1_dup = TestAddrMan(asmap1);
+    auto addrman_noasmap = TestAddrMan();
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
@@ -597,8 +602,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(addr_pos1.position != addr_pos3.position);
 
     // deserializing non-asmaped peers.dat to asmaped addrman
-    addrman_asmap1 = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
-    addrman_noasmap = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    addrman_asmap1 = TestAddrMan(asmap1);
+    addrman_noasmap = TestAddrMan();
     addrman_noasmap->Add({addr}, default_source);
     stream << *addrman_noasmap;
     stream >> *addrman_asmap1;
@@ -609,8 +614,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     BOOST_CHECK(addr_pos4 == addr_pos2);
 
     // used to map to different buckets, now maps to the same bucket.
-    addrman_asmap1 = std::make_unique<AddrMan>(asmap1, /*deterministic=*/true, /*consistency_check_ratio=*/100);
-    addrman_noasmap = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    addrman_asmap1 = TestAddrMan(asmap1);
+    addrman_noasmap = TestAddrMan();
     CAddress addr1 = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.2.1.1"), NODE_NONE);
     addrman_noasmap->Add({addr, addr2}, default_source);
@@ -629,7 +634,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
 {
     // Confirm that invalid addresses are ignored in unserialization.
 
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
 
     const CAddress new1{ResolveService("5.5.5.5"), NODE_NONE};
@@ -661,14 +666,14 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     BOOST_REQUIRE(pos + sizeof(tried2_raw_replacement) <= stream.size());
     memcpy(stream.data() + pos, tried2_raw_replacement, sizeof(tried2_raw_replacement));
 
-    addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    addrman = TestAddrMan();
     stream >> *addrman;
     BOOST_CHECK_EQUAL(addrman->size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     BOOST_CHECK(addrman->size() == 0);
 
@@ -701,7 +706,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 
 BOOST_AUTO_TEST_CASE(addrman_noevict)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     // Add 35 addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -753,7 +758,7 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
 
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 {
-    auto addrman = std::make_unique<AddrMan>(std::vector<bool>(), /*deterministic=*/true, /*consistency_check_ratio=*/100);
+    auto addrman = TestAddrMan();
 
     BOOST_CHECK(addrman->size() == 0);
 
