@@ -64,12 +64,13 @@ using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeHandler;
 using interfaces::Node;
-using interfaces::WalletClient;
 // SYSCOIN
 using interfaces::EVO;
 namespace Masternode {
 using interfaces::Masternode::Sync;
 }
+using interfaces::WalletLoader;
+
 namespace node {
 namespace {
 // SYSCOIN
@@ -326,9 +327,9 @@ public:
     {
         return BroadcastTransaction(*m_context, std::move(tx), err_string, max_tx_fee, /*relay=*/ true, /*wait_callback=*/ false);
     }
-    WalletClient& walletClient() override
+    WalletLoader& walletLoader() override
     {
-        return *Assert(m_context->wallet_client);
+        return *Assert(m_context->wallet_loader);
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {

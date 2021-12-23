@@ -39,7 +39,7 @@ struct bilingual_str;
 
 namespace interfaces {
 class Handler;
-class WalletClient;
+class WalletLoader;
 struct BlockTip;
 
 //! Block and header tip information
@@ -211,14 +211,14 @@ public:
     //! Broadcast transaction.
     virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
 
-    //! Get wallet client.
-    virtual WalletClient& walletClient() = 0;
     // SYSCOIN
     //! Return interface for accessing evo related handler.
     virtual EVO& evo() = 0;
 
     //! Return interface for accessing masternode related handler.
     virtual Masternode::Sync& masternodeSync() = 0;
+    //! Get wallet loader.
+    virtual WalletLoader& walletLoader() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
@@ -240,7 +240,7 @@ public:
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
 
-    //! Register handler for wallet client constructed messages.
+    //! Register handler for wallet loader constructed messages.
     using InitWalletFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) = 0;
 

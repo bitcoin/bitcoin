@@ -41,7 +41,7 @@ using interfaces::MakeHandler;
 using interfaces::Wallet;
 using interfaces::WalletAddress;
 using interfaces::WalletBalances;
-using interfaces::WalletClient;
+using interfaces::WalletLoader;
 using interfaces::WalletOrderForm;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
@@ -523,15 +523,15 @@ public:
     std::shared_ptr<CWallet> m_wallet;
 };
 
-class WalletClientImpl : public WalletClient
+class WalletLoaderImpl : public WalletLoader
 {
 public:
-    WalletClientImpl(Chain& chain, ArgsManager& args)
+    WalletLoaderImpl(Chain& chain, ArgsManager& args)
     {
         m_context.chain = &chain;
         m_context.args = &args;
     }
-    ~WalletClientImpl() override { UnloadWallets(m_context); }
+    ~WalletLoaderImpl() override { UnloadWallets(m_context); }
 
     //! ChainClient methods
     void registerRpcs() override
@@ -591,7 +591,7 @@ public:
     void stop() override { return StopWallets(m_context); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
 
-    //! WalletClient methods
+    //! WalletLoader methods
     std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         std::shared_ptr<CWallet> wallet;
@@ -652,8 +652,8 @@ public:
 namespace interfaces {
 std::unique_ptr<Wallet> MakeWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(context, wallet) : nullptr; }
 
-std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args)
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args)
 {
-    return std::make_unique<wallet::WalletClientImpl>(chain, args);
+    return std::make_unique<wallet::WalletLoaderImpl>(chain, args);
 }
 } // namespace interfaces
