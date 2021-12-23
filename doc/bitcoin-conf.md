@@ -62,3 +62,9 @@ Linux | `$HOME/.bitcoin/` | `/home/username/.bitcoin/bitcoin.conf`
 macOS | `$HOME/Library/Application Support/Bitcoin/` | `/Users/username/Library/Application Support/Bitcoin/bitcoin.conf`
 
 You can find an example bitcoin.conf file in [share/examples/bitcoin.conf](../share/examples/bitcoin.conf).
+
+### Command-line options and Security
+
+`-*notify` configuration parameters accept shell commands to be executed based on different events. These are useful for notifying the user of certain events; however, they can be misused by malicious software or social engineering attacks. Restrict scripts and commands in the shell/system used for bitcoind to avoid running potentially unsafe scripts.
+
+
