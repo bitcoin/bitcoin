@@ -191,8 +191,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            m_cache_sizes.block_tree_db,
                                            m_cache_sizes.coins_db,
                                            m_cache_sizes.coins,
-                                           true,
-                                           true);
+                                           /*block_tree_db_in_memory=*/true,
+                                           /*coins_db_in_memory=*/true);
     assert(!maybe_load_error.has_value());
 
     auto maybe_verify_error = VerifyLoadedChainstate(
@@ -202,7 +202,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         chainparams.GetConsensus(),
         m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
         m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
-        static_cast<int64_t(*)()>(GetTime));
+        /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime));
     assert(!maybe_verify_error.has_value());
 
     BlockValidationState state;

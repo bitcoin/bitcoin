@@ -1415,10 +1415,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               cache_sizes.block_tree_db,
                                               cache_sizes.coins_db,
                                               cache_sizes.coins,
-                                              false,
-                                              false,
-                                              ShutdownRequested,
-                                              []() {
+                                              /*block_tree_db_in_memory=*/false,
+                                              /*coins_db_in_memory=*/false,
+                                              /*shutdown_requested=*/ShutdownRequested,
+                                              /*coins_error_cb=*/[]() {
                                                   uiInterface.ThreadSafeMessageBox(
                                                                                    _("Error reading from database, shutting down."),
                                                                                    "", CClientUIInterface::MSG_ERROR);
@@ -1476,7 +1476,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                                             chainparams.GetConsensus(),
                                                             check_blocks,
                                                             args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                                            static_cast<int64_t(*)()>(GetTime));
+                                                            /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime));
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
                 maybe_verify_error = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
