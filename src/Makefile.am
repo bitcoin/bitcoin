@@ -120,6 +120,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 
 BITCOIN_KERNEL_H = \
+  kernel/init/common.h \
   kernel/timedata.h
 
 # bitcoin core #

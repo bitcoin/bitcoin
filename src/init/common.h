@@ -8,11 +8,11 @@
 #ifndef BITCOIN_INIT_COMMON_H
 #define BITCOIN_INIT_COMMON_H
 
+#include <kernel/init/common.h>
+
 class ArgsManager;
 
 namespace init {
-void SetGlobals();
-void UnsetGlobals();
 /**
  *  Ensure a usable environment with all
  *  necessary library support.
