@@ -9,7 +9,7 @@ import os
 import json
 from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, find_output
+from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, find_output
 
 # Create one-input, one-output, no-fee transaction:
 class PSBTTest(BitcoinTestFramework):
@@ -28,7 +28,7 @@ class PSBTTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        # Create and fund a raw tx for sending 10 BTC
+        # Create and fund a raw tx for sending 10 DASH
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
 
         # Node 1 should not be able to add anything to it but still return the psbtx same as before
@@ -70,6 +70,15 @@ class PSBTTest(BitcoinTestFramework):
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(rawtx)
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
+
+        # feeRate of 0.1 DASH / KB produces a total fee slightly below -maxtxfee (~0.06650000):
+        res = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2pkh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 0.1})
+        assert_greater_than(res["fee"], 0.06)
+        assert_greater_than(0.07, res["fee"])
+
+        # feeRate of 10 DASH / KB produces a total fee well above -maxtxfee
+        # previously this was silenty capped at -maxtxfee
+        assert_raises_rpc_error(-4, "Fee exceeds maximum configured by -maxtxfee", self.nodes[1].walletcreatefundedpsbt, [{"txid":txid,"vout":p2pkh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 10})
 
         # partially sign multisig things with node 1
         psbtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2sh_pos}], {self.nodes[1].getnewaddress():9.99})['psbt']

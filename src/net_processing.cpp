@@ -1445,6 +1445,15 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     return true;
 }
 
+void RelayTransaction(const uint256& txid, const CConnman& connman)
+{
+    CInv inv(CCoinJoin::GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid);
+    connman.ForEachNode([&inv](CNode* pnode)
+    {
+        pnode->PushInventory(inv);
+    });
+}
+
 static void RelayAddress(const CAddress& addr, bool fReachable, CConnman* connman)
 {
 
@@ -2080,7 +2089,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
         if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2 /* pfMissingInputs */,
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
-            connman->RelayTransaction(orphanTx);
+            RelayTransaction(orphanTx.GetHash(), *connman);
             for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(orphanHash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
@@ -3172,7 +3181,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             mempool.check(&::ChainstateActive().CoinsTip());
-            connman->RelayTransaction(tx);
+            RelayTransaction(tx.GetHash(), *connman);
 
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
@@ -3250,7 +3259,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 int nDoS = 0;
                 if (!state.IsInvalid(nDoS) || nDoS == 0) {
                     LogPrintf("Force relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
-                    connman->RelayTransaction(tx);
+                    RelayTransaction(tx.GetHash(), *connman);
                 } else {
                     LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
                 }
@@ -4519,7 +4528,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         //
         std::vector<CInv> vInv;
         {
-            LOCK2(mempool.cs, pto->cs_inventory);
+            LOCK(pto->cs_inventory);
 
             size_t reserve = std::min<size_t>(pto->setInventoryTxToSend.size(), INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000);
             reserve = std::max<size_t>(reserve, pto->vInventoryBlockToSend.size());

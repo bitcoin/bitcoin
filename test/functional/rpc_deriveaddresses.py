@@ -13,14 +13,14 @@ class DeriveaddressesTest(BitcoinTestFramework):
         self.supports_cli = 1
 
     def run_test(self):
-        assert_raises_rpc_error(-5, "Invalid descriptor", self.nodes[0].deriveaddresses, "a")
+        assert_raises_rpc_error(-5, "Missing checksum", self.nodes[0].deriveaddresses, "a")
 
         descriptor = descsum_create("pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/0)")
         address = "yZTyMdEJjZWJi6CwY6g3WurLESH3UsWrrM"
         assert_equal(self.nodes[0].deriveaddresses(descriptor), [address])
 
         descriptor = descriptor[:-9]
-        assert_raises_rpc_error(-5, "Invalid descriptor", self.nodes[0].deriveaddresses, descriptor)
+        assert_raises_rpc_error(-5, "Missing checksum", self.nodes[0].deriveaddresses, descriptor)
 
         descriptor_pubkey = descsum_create("pkh(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/1/0)")
         address = "yZTyMdEJjZWJi6CwY6g3WurLESH3UsWrrM"

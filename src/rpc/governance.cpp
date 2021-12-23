@@ -17,7 +17,6 @@
 #include <net.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
-#include <txmempool.h>
 #include <util/system.h>
 #include <validation.h>
 #include <wallet/rpcwallet.h>
@@ -206,7 +205,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     auto locked_chain = wallet->chain().lock();
-    LOCK2(mempool.cs, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     {
         LOCK(cs_main);
@@ -243,11 +242,9 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteGovernanceObject failed");
     }
 
-    // -- make our change address
-    CReserveKey reservekey(pwallet);
     // -- send the tx to the network
     CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, reservekey, state)) {
+    if (!pwallet->CommitTransaction(tx, {}, {}, state)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
     }
 

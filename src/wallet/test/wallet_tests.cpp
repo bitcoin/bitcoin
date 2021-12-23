@@ -364,17 +364,16 @@ public:
     CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
-        CReserveKey reservekey(wallet.get());
         CAmount fee;
         int changePos = -1;
         std::string error;
         CCoinControl dummy;
         {
             auto locked_chain = m_chain->lock();
-            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, reservekey, fee, changePos, error, dummy));
+            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, fee, changePos, error, dummy));
         }
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reservekey, state));
+        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -526,13 +525,12 @@ public:
     bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, int nChangePosRequest = -1, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
         CTransactionRef tx;
-        CReserveKey reservekey(wallet.get());
         CAmount nFeeRet;
         int nChangePos = nChangePosRequest;
         std::string strError;
 
         auto locked_chain = wallet->chain().lock();
-        bool fCreationSucceeded = wallet->CreateTransaction(*locked_chain, GetRecipients(vecEntries), tx, reservekey, nFeeRet, nChangePos, strError, coinControl);
+        bool fCreationSucceeded = wallet->CreateTransaction(*locked_chain, GetRecipients(vecEntries), tx, nFeeRet, nChangePos, strError, coinControl);
         bool fHitMaxTries = strError == strExceededMaxTries;
         // This should never happen.
         if (fHitMaxTries) {
@@ -579,14 +577,13 @@ public:
     std::vector<COutPoint> GetCoins(const std::vector<std::pair<CAmount, bool>>& vecEntries)
     {
         CTransactionRef tx;
-        CReserveKey reserveKey(wallet.get());
         CAmount nFeeRet;
         int nChangePosRet = -1;
         std::string strError;
         CCoinControl coinControl;
-        BOOST_CHECK(wallet->CreateTransaction(*wallet->chain().lock(), GetRecipients(vecEntries), tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
+        BOOST_CHECK(wallet->CreateTransaction(*wallet->chain().lock(), GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl));
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reserveKey, state));
+        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -918,8 +915,6 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     // Create two conflicting transactions, add one to the wallet and mine the other one.
     CTransactionRef tx1;
     CTransactionRef tx2;
-    CReserveKey reservekey1(wallet.get());
-    CReserveKey reservekey2(wallet.get());
     CAmount fee;
     int changePos = -1;
     std::string error;
@@ -927,13 +922,12 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     {
         auto locked_chain = wallet->chain().lock();
         BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
-                                            tx1, reservekey1, fee, changePos, error, dummy));
+                                            tx1, fee, changePos, error, dummy));
         BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
-                                            tx2, reservekey2, fee, changePos, error, dummy));
+                                            tx2, fee, changePos, error, dummy));
     }
     CValidationState state;
-    BOOST_CHECK(wallet->CommitTransaction(tx1, {}, {}, reservekey1, state));
-    reservekey2.KeepKey();
+    BOOST_CHECK(wallet->CommitTransaction(tx1, {}, {}, state));
     BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 0);
     CreateAndProcessBlock({CMutableTransaction(*tx2)}, GetScriptForRawPubKey({}));
 

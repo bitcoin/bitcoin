@@ -18,7 +18,6 @@
 #include <script/standard.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
-#include <txmempool.h> // for mempool.cs
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
@@ -284,10 +283,10 @@ public:
         std::string& fail_reason) override
     {
         auto locked_chain = m_wallet->chain().lock();
-        LOCK2(mempool.cs, m_wallet->cs_wallet);
+        LOCK(m_wallet->cs_wallet);
         CReserveKey m_key(m_wallet.get());
         CTransactionRef tx;
-        if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, m_key, fee, change_pos,
+        if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, fee, change_pos,
                 fail_reason, coin_control, sign)) {
             return {};
         }
@@ -299,10 +298,10 @@ public:
         std::string& reject_reason) override
     {
         auto locked_chain = m_wallet->chain().lock();
-        LOCK2(mempool.cs, m_wallet->cs_wallet);
+        LOCK(m_wallet->cs_wallet);
         CReserveKey m_key(m_wallet.get());
         CValidationState state;
-        if (!m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form), m_key, state)) {
+        if (!m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form), state)) {
             reject_reason = state.GetRejectReason();
             return false;
         }
