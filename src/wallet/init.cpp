@@ -130,7 +130,7 @@ void WalletInit::Construct(NodeContext& node) const
         LogPrintf("Wallet disabled!\n");
         return;
     }
-    auto wallet_client = node.init->makeWalletClient(*node.chain);
-    node.wallet_client = wallet_client.get();
-    node.chain_clients.emplace_back(std::move(wallet_client));
+    auto wallet_loader = node.init->makeWalletLoader(*node.chain);
+    node.wallet_loader = wallet_loader.get();
+    node.chain_clients.emplace_back(std::move(wallet_loader));
 }

@@ -138,8 +138,8 @@ void TestGUI(interfaces::Node& node)
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    auto wallet_client = interfaces::MakeWalletClient(*test.m_node.chain, *Assert(test.m_node.args));
-    test.m_node.wallet_client = wallet_client.get();
+    auto wallet_loader = interfaces::MakeWalletLoader(*test.m_node.chain, *Assert(test.m_node.args));
+    test.m_node.wallet_loader = wallet_loader.get();
     node.setContext(&test.m_node);
     const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", gArgs, CreateMockWalletDatabase());
     wallet->LoadWallet();
@@ -175,7 +175,7 @@ void TestGUI(interfaces::Node& node)
     TransactionView transactionView(platformStyle.get());
     OptionsModel optionsModel;
     ClientModel clientModel(node, &optionsModel);
-    WalletContext& context = *node.walletClient().context();
+    WalletContext& context = *node.walletLoader().context();
     AddWallet(context, wallet);
     WalletModel walletModel(interfaces::MakeWallet(context, wallet), clientModel, platformStyle.get());
     RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
