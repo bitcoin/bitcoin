@@ -275,7 +275,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
     for (CChainState* chainstate : chainman.GetAll()) {
         if (!is_coinsview_empty(chainstate)) {
             const CBlockIndex* tip = chainstate->m_chain.Tip();
-            if (tip && tip->nTime > get_unix_time_seconds() + 2 * 60 * 60) {
+            if (tip && tip->nTime > get_unix_time_seconds() + MAX_FUTURE_BLOCK_TIME) {
                 return ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE;
             }
             const bool v19active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V19)};

@@ -279,37 +279,37 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    auto rv = LoadChainstate(fReindex.load(),
-                             *Assert(m_node.chainman.get()),
-                             *Assert(m_node.govman.get()),
-                             *Assert(m_node.mn_metaman.get()),
-                             *Assert(m_node.mn_sync.get()),
-                             *Assert(m_node.sporkman.get()),
-                             m_node.mn_activeman,
-                             m_node.chain_helper,
-                             m_node.cpoolman,
-                             m_node.dmnman,
-                             m_node.evodb,
-                             m_node.mnhf_manager,
-                             m_node.llmq_ctx,
-                             Assert(m_node.mempool.get()),
-                             fPruneMode,
-                             m_args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
-                             !m_args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE),
-                             m_args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
-                             m_args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
-                             m_args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
-                             chainparams.GetConsensus(),
-                             chainparams.NetworkIDString(),
-                             m_args.GetBoolArg("-reindex-chainstate", false),
-                             m_cache_sizes.block_tree_db,
-                             m_cache_sizes.coins_db,
-                             m_cache_sizes.coins,
-                             /*block_tree_db_in_memory=*/true,
-                             /*coins_db_in_memory=*/true);
-    assert(!rv.has_value());
+    auto maybe_load_error = LoadChainstate(fReindex.load(),
+                                           *Assert(m_node.chainman.get()),
+                                           *Assert(m_node.govman.get()),
+                                           *Assert(m_node.mn_metaman.get()),
+                                           *Assert(m_node.mn_sync.get()),
+                                           *Assert(m_node.sporkman.get()),
+                                           m_node.mn_activeman,
+                                           m_node.chain_helper,
+                                           m_node.cpoolman,
+                                           m_node.dmnman,
+                                           m_node.evodb,
+                                           m_node.mnhf_manager,
+                                           m_node.llmq_ctx,
+                                           Assert(m_node.mempool.get()),
+                                           fPruneMode,
+                                           m_args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
+                                           !m_args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE),
+                                           m_args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
+                                           m_args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
+                                           m_args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
+                                           chainparams.GetConsensus(),
+                                           chainparams.NetworkIDString(),
+                                           m_args.GetBoolArg("-reindex-chainstate", false),
+                                           m_cache_sizes.block_tree_db,
+                                           m_cache_sizes.coins_db,
+                                           m_cache_sizes.coins,
+                                           /*block_tree_db_in_memory=*/true,
+                                           /*coins_db_in_memory=*/true);
+    assert(!maybe_load_error.has_value());
 
-    auto maybe_verify_failure = VerifyLoadedChainstate(
+    auto maybe_verify_error = VerifyLoadedChainstate(
         *Assert(m_node.chainman),
         *Assert(m_node.evodb.get()),
         fReindex.load(),
@@ -317,11 +317,11 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         chainparams.GetConsensus(),
         m_args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
         m_args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-        static_cast<int64_t(*)()>(GetTime),
+        /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime),
         [](bool bls_state) {
             LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls_state);
         });
-    assert(!maybe_verify_failure.has_value());
+    assert(!maybe_verify_error.has_value());
 
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),

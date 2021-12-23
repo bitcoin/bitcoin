@@ -1833,48 +1833,48 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         uiInterface.InitMessage(_("Loading block index…").translated);
         const auto load_block_index_start_time{SteadyClock::now()};
-        std::optional<ChainstateLoadingError> rv;
+        std::optional<ChainstateLoadingError> maybe_load_error;
         try {
-            rv = LoadChainstate(fReset,
-                                chainman,
-                                *node.govman,
-                                *node.mn_metaman,
-                                *node.mn_sync,
-                                *node.sporkman,
-                                node.mn_activeman,
-                                node.chain_helper,
-                                node.cpoolman,
-                                node.dmnman,
-                                node.evodb,
-                                node.mnhf_manager,
-                                node.llmq_ctx,
-                                Assert(node.mempool.get()),
-                                fPruneMode,
-                                args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
-                                is_governance_enabled,
-                                args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
-                                args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
-                                args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
-                                chainparams.GetConsensus(),
-                                chainparams.NetworkIDString(),
-                                fReindexChainState,
-                                cache_sizes.block_tree_db,
-                                cache_sizes.coins_db,
-                                cache_sizes.coins,
-                                /*block_tree_db_in_memory=*/false,
-                                /*coins_db_in_memory=*/false,
-                                ShutdownRequested,
-                                []() {
-                                    uiInterface.ThreadSafeMessageBox(
-                                        _("Error reading from database, shutting down."),
-                                        "", CClientUIInterface::MSG_ERROR);
-                                });
+            maybe_load_error = LoadChainstate(fReset,
+                                              chainman,
+                                              *node.govman,
+                                              *node.mn_metaman,
+                                              *node.mn_sync,
+                                              *node.sporkman,
+                                              node.mn_activeman,
+                                              node.chain_helper,
+                                              node.cpoolman,
+                                              node.dmnman,
+                                              node.evodb,
+                                              node.mnhf_manager,
+                                              node.llmq_ctx,
+                                              Assert(node.mempool.get()),
+                                              fPruneMode,
+                                              args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
+                                              is_governance_enabled,
+                                              args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
+                                              args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
+                                              args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
+                                              chainparams.GetConsensus(),
+                                              chainparams.NetworkIDString(),
+                                              fReindexChainState,
+                                              cache_sizes.block_tree_db,
+                                              cache_sizes.coins_db,
+                                              cache_sizes.coins,
+                                              /*block_tree_db_in_memory=*/false,
+                                              /*coins_db_in_memory=*/false,
+                                              /*shutdown_requested=*/ShutdownRequested,
+                                              /*coins_error_cb=*/[]() {
+                                                  uiInterface.ThreadSafeMessageBox(
+                                                      _("Error reading from database, shutting down."),
+                                                      "", CClientUIInterface::MSG_ERROR);
+                                              });
         } catch (const std::exception& e) {
             LogPrintf("%s\n", e.what());
-            rv = ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
+            maybe_load_error = ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
         }
-        if (rv.has_value()) {
-            switch (rv.value()) {
+        if (maybe_load_error.has_value()) {
+            switch (maybe_load_error.value()) {
             case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
                 strLoadError = _("Error loading block database");
                 break;
@@ -1930,7 +1930,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
             LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
 
-            std::optional<ChainstateLoadVerifyError> rv2;
+            std::optional<ChainstateLoadVerifyError> maybe_verify_error;
             try {
                 uiInterface.InitMessage(_("Verifying blocks…").translated);
                 auto check_blocks = args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
@@ -1938,23 +1938,23 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                               MIN_BLOCKS_TO_KEEP);
                 }
-                rv2 = VerifyLoadedChainstate(chainman,
-                                             *Assert(node.evodb.get()),
-                                             fReset,
-                                             fReindexChainState,
-                                             chainparams.GetConsensus(),
-                                             check_blocks,
-                                             args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                             static_cast<int64_t(*)()>(GetTime),
-                                             [](bool bls_state) {
-                                                LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls_state);
-                                             });
+                maybe_verify_error = VerifyLoadedChainstate(chainman,
+                                                            *Assert(node.evodb.get()),
+                                                            fReset,
+                                                            fReindexChainState,
+                                                            chainparams.GetConsensus(),
+                                                            check_blocks,
+                                                            args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                                                            /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime),
+                                                            [](bool bls_state) {
+                                                                LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls_state);
+                                                            });
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
-                rv2 = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
+                maybe_verify_error = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
             }
-            if (rv2.has_value()) {
-                switch (rv2.value()) {
+            if (maybe_verify_error.has_value()) {
+                switch (maybe_verify_error.value()) {
                 case ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE:
                     strLoadError = _("The block database contains a block which appears to be from the future. "
                                      "This may be due to your computer's date and time being set incorrectly. "
