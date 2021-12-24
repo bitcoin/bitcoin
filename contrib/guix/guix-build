@@ -146,9 +146,12 @@ avail_KiB="$(df -Pk "$VERSION_BASE" | sed 1d | tr -s ' ' | cut -d' ' -f4)"
 total_required_KiB=0
 for host in $HOSTS; do
     case "$host" in
-        *darwin*) required_KiB=440000 ;;
-        *mingw*)  required_KiB=7600000 ;;
-        *)        required_KiB=6400000 ;;
+        *darwin*)       required_KiB=440000 ;;
+        *mingw*)        required_KiB=8700000 ;;
+        *x86_64-linux*) required_KiB=6100000 ;;
+        *arm-linux*)    required_KiB=4800000 ;;
+        *riscv64*)      required_KiB=6600000 ;;
+        *)              required_KiB=7400000 ;;
     esac
     total_required_KiB=$((total_required_KiB+required_KiB))
 done
