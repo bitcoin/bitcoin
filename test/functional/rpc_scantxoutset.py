@@ -31,9 +31,12 @@ class ScantxoutsetTest(BitcoinTestFramework):
         pubk2 = self.nodes[0].getaddressinfo(addr_LEGACY)['pubkey']
         addr_BECH32 = self.nodes[0].getnewaddress("", "bech32")
         pubk3 = self.nodes[0].getaddressinfo(addr_BECH32)['pubkey']
-        self.nodes[0].sendtoaddress(addr_P2SH_SEGWIT, 0.001)
-        self.nodes[0].sendtoaddress(addr_LEGACY, 0.002)
-        self.nodes[0].sendtoaddress(addr_BECH32, 0.004)
+        txid = self.nodes[0].sendtoaddress(addr_P2SH_SEGWIT, 0.001)
+        self.nodes[0].lockunspent(unlock=False, transactions=[{"txid": txid, "vout": 0}, {"txid": txid, "vout": 1}])
+        txid = self.nodes[0].sendtoaddress(addr_LEGACY, 0.002)
+        self.nodes[0].lockunspent(unlock=False, transactions=[{"txid": txid, "vout": 0}, {"txid": txid, "vout": 1}])
+        txid = self.nodes[0].sendtoaddress(addr_BECH32, 0.004)
+        self.nodes[0].lockunspent(unlock=False, transactions=[{"txid": txid, "vout": 0}, {"txid": txid, "vout": 1}])
 
         #send to child keys of tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK
         self.nodes[0].sendtoaddress("mkHV1C6JLheLoUSSZYk7x3FH5tnx9bu7yc", 0.008) # (m/0'/0'/0')
