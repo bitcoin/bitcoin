@@ -122,16 +122,8 @@ std::string LabelFromValue(const UniValue& value)
     return label;
 }
 
-std::tuple<std::shared_ptr<CWallet>, std::vector<bilingual_str>> LoadWalletHelper(WalletContext& context, UniValue load_on_start_param, const std::string wallet_name)
+void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
 {
-    DatabaseOptions options;
-    DatabaseStatus status;
-    options.require_existing = true;
-    bilingual_str error;
-    std::vector<bilingual_str> warnings;
-    std::optional<bool> load_on_start = load_on_start_param.isNull() ? std::nullopt : std::optional<bool>(load_on_start_param.get_bool());
-    std::shared_ptr<CWallet> const wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
-
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the
         // wallet directory exists, but doesn't contain a data file.
@@ -144,11 +136,15 @@ std::tuple<std::shared_ptr<CWallet>, std::vector<bilingual_str>> LoadWalletHelpe
             case DatabaseStatus::FAILED_ALREADY_LOADED:
                 code = RPC_WALLET_ALREADY_LOADED;
                 break;
+            case DatabaseStatus::FAILED_ALREADY_EXISTS:
+                code = RPC_WALLET_ALREADY_EXISTS;
+                break;
+            case DatabaseStatus::FAILED_INVALID_BACKUP_FILE:
+                code = RPC_INVALID_PARAMETER;
+                break;
             default: // RPC_WALLET_ERROR is returned for all other cases.
                 break;
         }
         throw JSONRPCError(code, error.original);
     }
-
-    return { wallet, warnings };
 }

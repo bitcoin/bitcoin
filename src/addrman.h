@@ -81,8 +81,14 @@ public:
      * @return    true if at least one address is successfully added. */
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty = 0);
 
-    //! Mark an entry as accessible, possibly moving it from "new" to "tried".
-    void Good(const CService& addr, int64_t nTime = GetAdjustedTime());
+    /**
+     * Mark an address record as accessible and attempt to move it to addrman's tried table.
+     *
+     * @param[in] addr            Address record to attempt to move to tried table.
+     * @param[in] nTime           The time that we were last connected to this peer.
+     * @return    true if the address is successfully moved from the new table to the tried table.
+     */
+    bool Good(const CService& addr, int64_t nTime = GetAdjustedTime());
 
     //! Mark an entry as connection attempted to.
     void Attempt(const CService& addr, bool fCountFailure, int64_t nTime = GetAdjustedTime());

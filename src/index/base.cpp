@@ -65,7 +65,7 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator);
+        m_best_block_index = m_chainstate->FindForkInGlobalIndex(locator);
     }
     m_synced = m_best_block_index.load() == active_chain.Tip();
     if (!m_synced) {
@@ -96,6 +96,8 @@ bool BaseIndex::Init()
                     prune_violation = false;
                     break;
                 }
+                // block->pprev must exist at this point, since block_to_test is part of the chain
+                // and thus must be encountered when going backwards from the tip
                 assert(block->pprev);
                 block = block->pprev;
             }

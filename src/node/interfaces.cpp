@@ -63,7 +63,7 @@ using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeHandler;
 using interfaces::Node;
-using interfaces::WalletClient;
+using interfaces::WalletLoader;
 
 namespace node {
 namespace {
@@ -280,9 +280,9 @@ public:
     {
         return BroadcastTransaction(*m_context, std::move(tx), err_string, max_tx_fee, /*relay=*/ true, /*wait_callback=*/ false);
     }
-    WalletClient& walletClient() override
+    WalletLoader& walletLoader() override
     {
-        return *Assert(m_context->wallet_client);
+        return *Assert(m_context->wallet_loader);
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
@@ -494,8 +494,8 @@ public:
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        if (CBlockIndex* fork = m_node.chainman->m_blockman.FindForkInGlobalIndex(active, locator)) {
+        const CChainState& active = Assert(m_node.chainman)->ActiveChainstate();
+        if (CBlockIndex* fork = active.FindForkInGlobalIndex(locator)) {
             return fork->nHeight;
         }
         return std::nullopt;

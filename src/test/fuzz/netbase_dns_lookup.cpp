@@ -64,7 +64,7 @@ FUZZ_TARGET(netbase_dns_lookup)
     }
     {
         CSubNet resolved_subnet;
-        if (LookupSubNet(name, resolved_subnet, fuzzed_dns_lookup_function)) {
+        if (LookupSubNet(name, resolved_subnet)) {
             assert(resolved_subnet.IsValid());
         }
     }

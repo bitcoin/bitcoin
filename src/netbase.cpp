@@ -676,40 +676,36 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uin
     return true;
 }
 
-bool LookupSubNet(const std::string& strSubnet, CSubNet& ret, DNSLookupFn dns_lookup_function)
+bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 {
-    if (!ValidAsCString(strSubnet)) {
+    if (!ValidAsCString(subnet_str)) {
         return false;
     }
-    size_t slash = strSubnet.find_last_of('/');
-    CNetAddr network;
 
-    std::string strAddress = strSubnet.substr(0, slash);
-    if (LookupHost(strAddress, network, false, dns_lookup_function))
-    {
-        if (slash != strSubnet.npos)
-        {
-            std::string strNetmask = strSubnet.substr(slash + 1);
-            uint8_t n;
-            if (ParseUInt8(strNetmask, &n)) {
-                // If valid number, assume CIDR variable-length subnet masking
-                ret = CSubNet(network, n);
-                return ret.IsValid();
-            }
-            else // If not a valid number, try full netmask syntax
-            {
-                CNetAddr netmask;
-                // Never allow lookup for netmask
-                if (LookupHost(strNetmask, netmask, false, dns_lookup_function)) {
-                    ret = CSubNet(network, netmask);
-                    return ret.IsValid();
+    const size_t slash_pos{subnet_str.find_last_of('/')};
+    const std::string str_addr{subnet_str.substr(0, slash_pos)};
+    CNetAddr addr;
+
+    if (LookupHost(str_addr, addr, /*fAllowLookup=*/false)) {
+        if (slash_pos != subnet_str.npos) {
+            const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
+            uint8_t netmask;
+            if (ParseUInt8(netmask_str, &netmask)) {
+                // Valid number; assume CIDR variable-length subnet masking.
+                subnet_out = CSubNet{addr, netmask};
+                return subnet_out.IsValid();
+            } else {
+                // Invalid number; try full netmask syntax. Never allow lookup for netmask.
+                CNetAddr full_netmask;
+                if (LookupHost(netmask_str, full_netmask, /*fAllowLookup=*/false)) {
+                    subnet_out = CSubNet{addr, full_netmask};
+                    return subnet_out.IsValid();
                 }
             }
-        }
-        else // Single IP subnet (<ipv4>/32 or <ipv6>/128)
-        {
-            ret = CSubNet(network);
-            return ret.IsValid();
+        } else {
+            // Single IP subnet (<ipv4>/32 or <ipv6>/128).
+            subnet_out = CSubNet{addr};
+            return subnet_out.IsValid();
         }
     }
     return false;

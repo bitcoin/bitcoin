@@ -9,6 +9,9 @@ C = EllipticCurve([F(0), F(7)])
 
 """Base point of secp256k1"""
 G = C.lift_x(0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798)
+if int(G[1]) & 1:
+    # G.y is even
+    G = -G
 
 """Prime order of secp256k1"""
 N = C.order()

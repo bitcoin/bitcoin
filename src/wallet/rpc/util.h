@@ -12,6 +12,7 @@
 
 struct bilingual_str;
 class CWallet;
+enum class DatabaseStatus;
 class JSONRPCRequest;
 class LegacyScriptPubKeyMan;
 class UniValue;
@@ -37,6 +38,6 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param);
 bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wallet);
 std::string LabelFromValue(const UniValue& value);
 
-std::tuple<std::shared_ptr<CWallet>, std::vector<bilingual_str>> LoadWalletHelper(WalletContext& context, UniValue load_on_start_param, const std::string wallet_name);
+void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error);
 
 #endif // BITCOIN_WALLET_RPC_UTIL_H

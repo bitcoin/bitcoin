@@ -64,11 +64,11 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     FastRandomContext random_context{true};
     int num_peers{12};
 
-    // Expect half of the peers with greatest uptime (the lowest nTimeConnected)
+    // Expect half of the peers with greatest uptime (the lowest m_connected)
     // to be protected from eviction.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
             c.m_network = NET_IPV4;
         },
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // Verify in the opposite direction.
     BOOST_CHECK(IsProtected(
         num_peers, [num_peers](NodeEvictionCandidate& c) {
-            c.nTimeConnected = num_peers - c.id;
+            c.m_connected = std::chrono::seconds{num_peers - c.id};
             c.m_is_local = false;
             c.m_network = NET_IPV6;
         },
@@ -101,10 +101,10 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 onion peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest nTimeConnected), if no localhost or I2P peers.
+    // sorted by longest uptime (lowest m_connected), if no localhost or I2P peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
             c.m_network = (c.id == 3 || c.id > 7) ? NET_ONION : NET_IPV6;
         },
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 localhost peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest nTimeConnected), if no onion or I2P peers.
+    // sorted by longest uptime (lowest m_connected), if no onion or I2P peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id > 6);
             c.m_network = NET_IPV6;
         },
@@ -147,10 +147,10 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 I2P peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest nTimeConnected), if no onion or localhost peers.
+    // sorted by longest uptime (lowest m_connected), if no onion or localhost peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
             c.m_network = (c.id == 4 || c.id > 8) ? NET_I2P : NET_IPV6;
         },
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // stable sort breaks tie with array order of localhost first.
     BOOST_CHECK(IsProtected(
         4, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 4);
             c.m_network = (c.id == 3) ? NET_ONION : NET_IPV4;
         },
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // uptime; stable sort breaks tie with array order of localhost first.
     BOOST_CHECK(IsProtected(
         7, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 6);
             c.m_network = (c.id == 5) ? NET_ONION : NET_IPV4;
         },
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // by uptime; stable sort breaks tie with array order of localhost first.
     BOOST_CHECK(IsProtected(
         8, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 6);
             c.m_network = (c.id == 5) ? NET_ONION : NET_IPV4;
         },
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // uptime; stable sort breaks ties with the array order of localhost first.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 6 || c.id == 9 || c.id == 11);
             c.m_network = (c.id == 7 || c.id == 8 || c.id == 10) ? NET_ONION : NET_IPV6;
         },
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // protect 2 localhost and 1 onion, plus 3 other peers, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id > 4 && c.id < 9);
             c.m_network = (c.id == 10) ? NET_ONION : NET_IPV4;
         },
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // protect 2 localhost and 2 onions, plus 4 other peers, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         16, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 6 || c.id == 9 || c.id == 11 || c.id == 12);
             c.m_network = (c.id == 8 || c.id == 10) ? NET_ONION : NET_IPV6;
         },
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // others, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         16, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id > 10);
             c.m_network = (c.id == 10) ? NET_ONION : NET_IPV4;
         },
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // plus 4 others, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         16, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 15);
             c.m_network = (c.id > 6 && c.id < 11) ? NET_ONION : NET_IPV6;
         },
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // others, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
             if (c.id == 8 || c.id == 10) {
                 c.m_network = NET_ONION;
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // by longest uptime; stable sort breaks tie with array order of I2P first.
     BOOST_CHECK(IsProtected(
         4, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 3);
             if (c.id == 4) {
                 c.m_network = NET_I2P;
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // by longest uptime; stable sort breaks tie with array order of I2P first.
     BOOST_CHECK(IsProtected(
         7, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 4);
             if (c.id == 6) {
                 c.m_network = NET_I2P;
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // by uptime; stable sort breaks tie with array order of I2P then localhost.
     BOOST_CHECK(IsProtected(
         8, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 6);
             if (c.id == 5) {
                 c.m_network = NET_I2P;
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // for 8 total, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         16, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 6 || c.id > 11);
             if (c.id == 7 || c.id == 11) {
                 c.m_network = NET_I2P;
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         24, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 12);
             if (c.id > 14 && c.id < 23) { // 4 protected instead of usual 2
                 c.m_network = NET_I2P;
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // unused localhost slot), plus 6 others for 12/24 total, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         24, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 15);
             if (c.id == 12 || c.id == 14 || c.id == 17) {
                 c.m_network = NET_I2P;
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // for 12/24 total, sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         24, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 13);
             if (c.id > 16) {
                 c.m_network = NET_I2P;
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // by longest uptime.
     BOOST_CHECK(IsProtected(
         24, [](NodeEvictionCandidate& c) {
-            c.nTimeConnected = c.id;
+            c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id > 15);
             if (c.id > 10 && c.id < 15) {
                 c.m_network = NET_I2P;
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
         // into our mempool should be protected from eviction.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.nLastTXTime = number_of_nodes - candidate.id;
+                            candidate.m_last_tx_time = std::chrono::seconds{number_of_nodes - candidate.id};
                         },
                         {0, 1, 2, 3}, random_context));
 
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
         // blocks should be protected from eviction.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.nLastBlockTime = number_of_nodes - candidate.id;
+                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
                             if (candidate.id <= 7) {
                                 candidate.fRelayTxes = false;
                                 candidate.fRelevantServices = true;
@@ -504,14 +504,14 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
         // protected from eviction.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.nLastBlockTime = number_of_nodes - candidate.id;
+                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
                         },
                         {0, 1, 2, 3}, random_context));
 
         // Combination of the previous two tests.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.nLastBlockTime = number_of_nodes - candidate.id;
+                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
                             if (candidate.id <= 7) {
                                 candidate.fRelayTxes = false;
                                 candidate.fRelevantServices = true;
@@ -524,8 +524,8 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
                             candidate.nKeyedNetGroup = number_of_nodes - candidate.id;           // 4 protected
                             candidate.m_min_ping_time = std::chrono::microseconds{candidate.id}; // 8 protected
-                            candidate.nLastTXTime = number_of_nodes - candidate.id;              // 4 protected
-                            candidate.nLastBlockTime = number_of_nodes - candidate.id;           // 4 protected
+                            candidate.m_last_tx_time = std::chrono::seconds{number_of_nodes - candidate.id};    // 4 protected
+                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id}; // 4 protected
                         },
                         {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, random_context));
 
