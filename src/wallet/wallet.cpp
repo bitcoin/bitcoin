@@ -249,7 +249,11 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
 
-    if (wallet_creation_flags & WALLET_FLAG_DESCRIPTORS) options.require_format = DatabaseFormat::SQLITE;
+    if (wallet_creation_flags & WALLET_FLAG_DESCRIPTORS) {
+        error = Untranslated("Descriptor wallets not supported.") + Untranslated(" ") + error;
+        status = DatabaseStatus::FAILED_CREATE;
+        return nullptr;
+    }
 
     // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
     bool create_blank = (wallet_creation_flags & WALLET_FLAG_BLANK_WALLET);

@@ -57,6 +57,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.log.info("Create a new block with an anyone-can-spend coinbase.")
         height = 1
         block = create_block(tip, create_coinbase(height), block_time)
+        block.nVersion = 0x20000000
         block.solve()
         # Save the coinbase for later
         block1 = block

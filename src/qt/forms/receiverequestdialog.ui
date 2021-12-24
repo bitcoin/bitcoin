@@ -65,7 +65,7 @@
    <item row="2" column="1" alignment="Qt::AlignTop">
     <widget class="QLabel" name="uri_content">
      <property name="text">
-      <string notr="true">bitcoin:BC1...</string>
+      <string notr="true">litecoin:LTC1...</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>

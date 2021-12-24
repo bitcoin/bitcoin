@@ -237,7 +237,7 @@ class SegWitTest(BitcoinTestFramework):
 
     # Helper functions
 
-    def build_next_block(self, version=4):
+    def build_next_block(self, version=VB_TOP_BITS):
         """Build a block on top of node0's tip."""
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
@@ -405,7 +405,7 @@ class SegWitTest(BitcoinTestFramework):
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block1, True)
 
-        block2 = self.build_next_block(version=4)
+        block2 = self.build_next_block()
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
@@ -556,7 +556,9 @@ class SegWitTest(BitcoinTestFramework):
             # 'non-mandatory-script-verify-flag (Witness program was passed an
             # empty witness)' (otherwise).
             # TODO: support multiple acceptable reject reasons.
-            test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=False)
+            # Litecoin: BTC applied these rules for all transactions once P2SH is enabled, on LTC we enforce
+            # these rules only when segwit was activated
+            # test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=False)
 
         self.connect_nodes(0, 2)
 
@@ -1942,6 +1944,11 @@ class SegWitTest(BitcoinTestFramework):
     def test_upgrade_after_activation(self):
         """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
 
+        block = self.build_next_block(version=4)
+        block.solve()
+        resp = self.nodes[0].submitblock(block.serialize().hex())
+        assert_equal(resp, 'bad-version(0x00000004)')
+
         self.restart_node(2, extra_args=["-segwitheight={}".format(SEGWIT_HEIGHT)])
         self.connect_nodes(0, 2)
 
@@ -2093,7 +2100,7 @@ class SegWitTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(address_type='bech32'), 5)
         self.nodes[0].generate(1)
-        unspent = next(u for u in self.nodes[0].listunspent() if u['spendable'] and u['address'].startswith('bcrt'))
+        unspent = next(u for u in self.nodes[0].listunspent() if u['spendable'] and u['address'].startswith('rltc'))
 
         raw = self.nodes[0].createrawtransaction([{"txid": unspent['txid'], "vout": unspent['vout']}], {self.nodes[0].getnewaddress(): 1})
         tx = FromHex(CTransaction(), raw)

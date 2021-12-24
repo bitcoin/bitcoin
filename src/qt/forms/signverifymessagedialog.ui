@@ -30,7 +30,7 @@
        <item>
         <widget class="QLabel" name="infoLabel_SM">
          <property name="text">
-          <string>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</string>
+          <string>You can sign messages/agreements with your addresses to prove you can receive litecoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</string>
          </property>
          <property name="textFormat">
           <enum>Qt::PlainText</enum>
@@ -48,7 +48,7 @@
          <item>
           <widget class="QValidatedLineEdit" name="addressIn_SM">
            <property name="toolTip">
-            <string>The Bitcoin address to sign the message with</string>
+            <string>The Litecoin address to sign the message with</string>
            </property>
           </widget>
          </item>
@@ -158,7 +158,7 @@
          <item>
           <widget class="QPushButton" name="signMessageButton_SM">
            <property name="toolTip">
-            <string>Sign the message to prove you own this Bitcoin address</string>
+            <string>Sign the message to prove you own this Litecoin address</string>
            </property>
            <property name="text">
             <string>Sign &amp;Message</string>
@@ -264,7 +264,7 @@
          <item>
           <widget class="QValidatedLineEdit" name="addressIn_VM">
            <property name="toolTip">
-            <string>The Bitcoin address the message was signed with</string>
+            <string>The Litecoin address the message was signed with</string>
            </property>
           </widget>
          </item>
@@ -315,7 +315,7 @@
          <item>
           <widget class="QPushButton" name="verifyMessageButton_VM">
            <property name="toolTip">
-            <string>Verify the message to ensure it was signed with the specified Bitcoin address</string>
+            <string>Verify the message to ensure it was signed with the specified Litecoin address</string>
            </property>
            <property name="text">
             <string>Verify &amp;Message</string>

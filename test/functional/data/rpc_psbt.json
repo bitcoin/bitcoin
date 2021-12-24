@@ -50,13 +50,13 @@
             ],
             "outputs" : [
                 {
-                    "bcrt1qmpwzkuwsqc9snjvgdt4czhjsnywa5yjdqpxskv":1.49990000
+                    "rltc1q638jrseqgunlwra8sdd27ezy4zttavdu06u8c4":1.49990000
                 },
                 {
-                    "bcrt1qqzh2ngh97ru8dfvgma25d6r595wcwqy0cee4cc": 1
+                    "rltc1q39vc4y54cwm5ksm5n0ejjqgeq48zk5rtcrqdj2": 1
                 }
             ],
-            "result" : "cHNidP8BAJoCAAAAAljoeiG1ba8MI76OcHBFbDNvfLqlyHV5JPVFiHuyq911AAAAAAD/////g40EJ9DsZQpoqka7CwmK6kQiwHGyyng1Kgd5WdB86h0BAAAAAP////8CcKrwCAAAAAAWABTYXCtx0AYLCcmIauuBXlCZHdoSTQDh9QUAAAAAFgAUAK6pouXw+HaliN9VRuh0LR2HAI8AAAAAAAAAAAA="
+            "result" : "cHNidP8BAJoCAAAAAljoeiG1ba8MI76OcHBFbDNvfLqlyHV5JPVFiHuyq911AAAAAAD/////g40EJ9DsZQpoqka7CwmK6kQiwHGyyng1Kgd5WdB86h0BAAAAAP////8CcKrwCAAAAAAWABTUTyHDIEcn9w+ng1qvZESolr6xvADh9QUAAAAAFgAUiVmKkpXDt0tDdJvzKQEZBU4rUGsAAAAAAAAAAAA="
         }
     ],
     "signer" : [

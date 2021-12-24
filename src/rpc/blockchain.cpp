@@ -813,8 +813,8 @@ static RPCHelpMan getblockheader()
                         RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
                 },
                 RPCExamples{
-                    HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-            + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+                    HelpExampleCli("getblockheader", "\"e2acdf2dd19a702e5d12a925f1e984b01e47a933562ca893656d4afb38b44ee3\"")
+            + HelpExampleRpc("getblockheader", "\"e2acdf2dd19a702e5d12a925f1e984b01e47a933562ca893656d4afb38b44ee3\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -931,8 +931,8 @@ static RPCHelpMan getblock()
                 }},
         },
                 RPCExamples{
-                    HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-            + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+                    HelpExampleCli("getblock", "\"e2acdf2dd19a702e5d12a925f1e984b01e47a933562ca893656d4afb38b44ee3\"")
+            + HelpExampleRpc("getblock", "\"e2acdf2dd19a702e5d12a925f1e984b01e47a933562ca893656d4afb38b44ee3\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1106,8 +1106,8 @@ static RPCHelpMan gettxout()
                                 {RPCResult::Type::STR_HEX, "hex", ""},
                                 {RPCResult::Type::NUM, "reqSigs", "Number of required signatures"},
                                 {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
-                                {RPCResult::Type::ARR, "addresses", "array of bitcoin addresses",
-                                    {{RPCResult::Type::STR, "address", "bitcoin address"}}},
+                                {RPCResult::Type::ARR, "addresses", "array of litecoin addresses",
+                                    {{RPCResult::Type::STR, "address", "litecoin address"}}},
                             }},
                         {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
                     }},
@@ -1211,29 +1211,36 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
     softforks.pushKV(name, rv);
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void VBSoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For BIP9 deployments.
     // Deployments that are never active are hidden.
     if (consensusParams.vDeployments[id].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
 
-    UniValue bip9(UniValue::VOBJ);
+    UniValue version_bits(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
     switch (thresholdState) {
-    case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
-    case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
-    case ThresholdState::LOCKED_IN: bip9.pushKV("status", "locked_in"); break;
-    case ThresholdState::ACTIVE: bip9.pushKV("status", "active"); break;
-    case ThresholdState::FAILED: bip9.pushKV("status", "failed"); break;
+    case ThresholdState::DEFINED: version_bits.pushKV("status", "defined"); break;
+    case ThresholdState::STARTED: version_bits.pushKV("status", "started"); break;
+    case ThresholdState::LOCKED_IN: version_bits.pushKV("status", "locked_in"); break;
+    case ThresholdState::ACTIVE: version_bits.pushKV("status", "active"); break;
+    case ThresholdState::FAILED: version_bits.pushKV("status", "failed"); break;
     }
     if (ThresholdState::STARTED == thresholdState)
     {
-        bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
+        version_bits.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
-    bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
-    bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+    bool fHeightBased = consensusParams.vDeployments[id].nStartTime == 0 && consensusParams.vDeployments[id].nTimeout == 0;
+    if (fHeightBased) {
+        version_bits.pushKV("start_height", consensusParams.vDeployments[id].nStartHeight);
+        version_bits.pushKV("timeout_height", consensusParams.vDeployments[id].nTimeoutHeight);
+    } else {
+        version_bits.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
+        version_bits.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+    }
+
     int64_t since_height = VersionBitsTipStateSinceHeight(consensusParams, id);
-    bip9.pushKV("since", since_height);
+    version_bits.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
@@ -1243,13 +1250,12 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
         statsUV.pushKV("possible", statsStruct.possible);
-        bip9.pushKV("statistics", statsUV);
+        version_bits.pushKV("statistics", statsUV);
     }
-    bip9.pushKV("min_activation_height", consensusParams.vDeployments[id].min_activation_height);
 
     UniValue rv(UniValue::VOBJ);
-    rv.pushKV("type", "bip9");
-    rv.pushKV("bip9", bip9);
+    rv.pushKV("type", fHeightBased ? "bip8" : "bip9");
+    rv.pushKV(fHeightBased ? "bip8" : "bip9", version_bits);
     if (ThresholdState::ACTIVE == thresholdState) {
         rv.pushKV("height", since_height);
     }
@@ -1292,7 +1298,8 @@ RPCHelpMan getblockchaininfo()
                                     {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
                                     {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
                                     {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
-                                    {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
+                                    {RPCResult::Type::NUM, "start_height", "minimum block height at which the bit gains its meaning"},
+                                    {RPCResult::Type::NUM, "timeout_height", "block height at which the deployment is considered failed if not yet locked in"},
                                     {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)",
                                     {
                                         {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},
@@ -1353,8 +1360,8 @@ RPCHelpMan getblockchaininfo()
     BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height);
     BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
     BuriedForkDescPushBack(softforks, "segwit", consensusParams.SegwitHeight);
-    BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
-    BIP9SoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
+    VBSoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+    VBSoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);

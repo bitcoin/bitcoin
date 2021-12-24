@@ -349,7 +349,7 @@ class ZMQTest (BitcoinTestFramework):
             raw_tx = self.nodes[0].getrawtransaction(orig_txid)
             bump_info = self.nodes[0].bumpfee(orig_txid)
             # Mine the pre-bump tx
-            block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(self.nodes[0].getblockcount()+1))
+            block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(self.nodes[0].getblockcount()+1), version=0x20000000)
             tx = FromHex(CTransaction(), raw_tx)
             block.vtx.append(tx)
             for txid in more_tx:

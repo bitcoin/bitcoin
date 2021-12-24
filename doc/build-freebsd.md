@@ -2,7 +2,7 @@ FreeBSD build guide
 ======================
 (updated for FreeBSD 12.0)
 
-This guide describes how to build bitcoind and command-line utilities on FreeBSD.
+This guide describes how to build litecoind and command-line utilities on FreeBSD.
 
 This guide does not contain instructions for building the GUI.
 
@@ -13,7 +13,7 @@ You will need the following dependencies, which can be installed as root via pkg
 ```bash
 pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
 
-git clone https://github.com/bitcoin/bitcoin.git
+git clone https://github.com/litecoin-project/litecoin.git
 ```
 
 In order to run the test suite (recommended), you will need to have Python 3 installed:
@@ -34,7 +34,7 @@ BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 export BDB_PREFIX="$PWD/db4"
 ```
 
-## Building Bitcoin Core
+## Building Litecoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 

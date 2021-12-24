@@ -26,14 +26,13 @@ struct BIP9Deployment {
     /** Bit position to select the particular bit in nVersion. */
     int bit;
     /** Start MedianTime for version bits miner confirmation. Can be a date in the past */
-    int64_t nStartTime;
+    int64_t nStartTime = 0;
     /** Timeout/expiry MedianTime for the deployment attempt. */
-    int64_t nTimeout;
-    /** If lock in occurs, delay activation until at least this block
-     *  height.  Note that activation will only occur on a retarget
-     *  boundary.
-     */
-    int min_activation_height{0};
+    int64_t nTimeout = 0;
+    /** Start block height for version bits miner confirmation. Should be a retarget block, can be in the past */
+    int64_t nStartHeight = 0;
+    /** Timeout/expiry block height for the deployment attempt. Should be a retarget block. */
+    int64_t nTimeoutHeight = 0;
 
     /** Constant for nTimeout very far in the future. */
     static constexpr int64_t NO_TIMEOUT = std::numeric_limits<int64_t>::max();
@@ -56,8 +55,8 @@ struct BIP9Deployment {
 struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
-    /* Block hash that is excepted from BIP16 enforcement */
-    uint256 BIP16Exception;
+    /** Block height at which BIP16 becomes active */
+    int BIP16Height;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;

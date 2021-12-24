@@ -243,6 +243,11 @@ public:
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
      */
     bool HaveTxsDownloaded() const { return nChainTx != 0; }
+    
+    uint256 GetBlockPoWHash() const
+    {
+        return GetBlockHeader().GetPoWHash();
+    }
 
     int64_t GetBlockTime() const
     {

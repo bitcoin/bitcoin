@@ -16,14 +16,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoin-wallet (CLI tool for " PACKAGE_NAME " wallets)"
+            VALUE "CompanyName",        "Litecoin"
+            VALUE "FileDescription",    "litecoin-wallet (CLI tool for " PACKAGE_NAME " wallets)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcoin-wallet"
+            VALUE "InternalName",       "litecoin-wallet"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoin-wallet.exe"
-            VALUE "ProductName",        "bitcoin-wallet"
+            VALUE "OriginalFilename",   "litecoin-wallet.exe"
+            VALUE "ProductName",        "litecoin-wallet"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

@@ -50,7 +50,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             txid = w0.sendrawtransaction(signed_tx)
             self.sync_all()
 
-            assert_raises_rpc_error(-32, 'Using bumpfee with wallets that have private keys disabled is deprecated. Use psbtbumpfee instead or restart bitcoind with -deprecatedrpc=bumpfee. This functionality will be removed in 0.22', noprivs0.bumpfee, txid)
+            assert_raises_rpc_error(-32, 'Using bumpfee with wallets that have private keys disabled is deprecated. Use psbtbumpfee instead or restart litecoind with -deprecatedrpc=bumpfee. This functionality will be removed in 0.22', noprivs0.bumpfee, txid)
             bumped_psbt = noprivs1.bumpfee(txid)
             assert 'psbt' in bumped_psbt
         else:

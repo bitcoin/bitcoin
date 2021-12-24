@@ -73,7 +73,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 "-limitancestorcount=50",
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
-                "-limitdescendantsize=101",
+                "-limitdescendantsize=101"
             ],
         ]
         self.supports_cli = False

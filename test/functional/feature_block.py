@@ -587,6 +587,7 @@ class FullBlockTest(BitcoinTestFramework):
         height = self.block_heights[self.tip.sha256] + 1
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         b44 = CBlock()
+        b44.nVersion = 0x20000000
         b44.nTime = self.tip.nTime + 1
         b44.hashPrevBlock = self.tip.sha256
         b44.nBits = 0x207fffff
@@ -601,6 +602,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block with a non-coinbase as the first tx")
         non_coinbase = self.create_tx(out[15], 0, 1)
         b45 = CBlock()
+        b45.nVersion = 0x20000000
         b45.nTime = self.tip.nTime + 1
         b45.hashPrevBlock = self.tip.sha256
         b45.nBits = 0x207fffff
@@ -616,6 +618,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block with no transactions")
         self.move_tip(44)
         b46 = CBlock()
+        b46.nVersion = 0x20000000
         b46.nTime = b44.nTime + 1
         b46.hashPrevBlock = b44.sha256
         b46.nBits = 0x207fffff
@@ -632,7 +635,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b47 = self.next_block(47)
         target = uint256_from_compact(b47.nBits)
-        while b47.sha256 <= target:
+        while b47.scrypt256 <= target:
             # Rehash nonces until an invalid too-high-hash block is found.
             b47.nNonce += 1
             b47.rehash()
@@ -1323,7 +1326,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx.rehash()
         return tx
 
-    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=4):
+    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=0x20000000):
         if self.tip is None:
             base_block_hash = self.genesis_hash
             block_time = int(time.time()) + 1

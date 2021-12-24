@@ -77,7 +77,7 @@ class RESTTest (BitcoinTestFramework):
 
     def run_test(self):
         self.url = urllib.parse.urlparse(self.nodes[0].url)
-        self.log.info("Mine blocks and send Bitcoin to node 1")
+        self.log.info("Mine blocks and send Litecoin to node 1")
 
         # Random address so node1's balance doesn't increase
         not_related_address = "2MxqoHEdNQTyYeX1mHcbrrpzgojbosTpCvJ"

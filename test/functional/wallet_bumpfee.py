@@ -56,6 +56,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
+
         # Encrypt wallet for test_locked_wallet_fails test
         self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
         self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
@@ -135,7 +136,7 @@ class BumpFeeTest(BitcoinTestFramework):
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
             assert_raises_rpc_error(-3, "Expected type string for estimate_mode, got {}".format(k),
                 rbf_node.bumpfee, rbfid, {"estimate_mode": v})
-        for mode in ["foo", Decimal("3.1415"), "sat/B", "BTC/kB"]:
+        for mode in ["foo", Decimal("3.1415"), "sat/B", "LTC/kB"]:
             assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                 rbf_node.bumpfee, rbfid, {"estimate_mode": mode})
 
@@ -567,7 +568,7 @@ def submit_block_with_tx(node, tx):
     tip = node.getbestblockhash()
     height = node.getblockcount() + 1
     block_time = node.getblockheader(tip)["mediantime"] + 1
-    block = create_block(int(tip, 16), create_coinbase(height), block_time)
+    block = create_block(int(tip, 16), create_coinbase(height), block_time, version=0x20000000)
     block.vtx.append(ctx)
     block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()
