@@ -27,7 +27,7 @@ void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& bench
         // nothing to write, bail out
         return;
     }
-    std::ofstream fout(filename);
+    fsbridge::ofstream fout{filename};
     if (fout.is_open()) {
         ankerl::nanobench::render(tpl, benchmarkResults, fout);
     } else {
