@@ -7,7 +7,6 @@
 #ifndef WIN32
 #include <cstring>
 #include <fcntl.h>
-#include <string>
 #include <sys/file.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -19,6 +18,9 @@
 #include <limits>
 #include <windows.h>
 #endif
+
+#include <cassert>
+#include <string>
 
 namespace fsbridge {
 
