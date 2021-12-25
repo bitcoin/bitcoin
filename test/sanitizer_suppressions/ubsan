@@ -40,6 +40,7 @@ unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:pubkey.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:stl_bvector.h
+unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
@@ -95,6 +96,7 @@ implicit-signed-integer-truncation:torcontrol.cpp
 implicit-unsigned-integer-truncation:*/include/c++/
 implicit-unsigned-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:leveldb/
+implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 # std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
 implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
 shift-base:*/include/c++/
@@ -105,4 +107,5 @@ shift-base:leveldb/
 shift-base:minisketch/
 shift-base:net_processing.cpp
 shift-base:streams.h
+shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 shift-base:util/bip32.cpp
