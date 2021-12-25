@@ -1,13 +1,13 @@
-Watercoin Core integration/staging tree
+Roleplaycoin Core integration/staging tree
 =====================================
 
-What is Watercoin?
+What is Roleplaycoin?
 ----------------
 
-Watercoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Watercoin uses peer-to-peer technology to operate
+Roleplaycoin is an experimental roleplayer digital currency that enables instant payments to
+anyone, anywhere in the world. Roleplaycoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Watercoin Core is the name of open source
+out collectively by the network. Roleplaycoin Core is the name of open source
 software which enables the use of this currency.
 
 License
@@ -20,8 +20,8 @@ Development Process
 -------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/pzxnv7/watercoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Watercoin Core.
+completely stable. [Tags](https://github.com/pzxnv7/roleplaycoin/tags) are created
+regularly from release branches to indicate new official, stable release versions of Roleplaycoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
