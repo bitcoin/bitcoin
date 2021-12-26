@@ -52,6 +52,8 @@ import tornado.ioloop
 import tornado.web
 import tornado.httpclient
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
+from collections import deque
+
 
 HTTP_TIMEOUT = 30
 USER_AGENT = "AuthServiceProxy/0.1"
@@ -192,14 +194,16 @@ class AuthServiceProxy():
 app_log = logging.getLogger('tornado.application')
 
 
-class Fetch:
-    _node = AuthServiceProxy(sys.argv[1])
+class Balancer:
+    _node = deque(list(map(AuthServiceProxy, sys.argv[2:])))
     @classmethod
     @property
     def node(cls):
-        return cls._node
+        cls._node.rotate()
+        return cls._node[0]
 class rest_tx(tornado.web.RequestHandler):
-    rpc = Fetch.node.getrawtransaction
+    def initialize(self):
+        self.rpc = Balancer.node.getrawtransaction
     async def get(self, txhash, encoding):
         try:
             result = await self.rpc(txhash, 1 if encoding == ".json" else 0)
@@ -216,9 +220,10 @@ class rest_tx(tornado.web.RequestHandler):
             self.set_header("Content-Type", 'application/plain')
             self.write(result)
 
-def rest_block(details, rpc_shared = Fetch.node.getblock):
+def rest_block(details, rpc_shared = Balancer.node.getblock):
     class inner(tornado.web.RequestHandler):
-        rpc = rpc_shared
+        def initialize(self):
+            self.rpc = rpc_shared
         async def get(self, blockhash, encoding):
             try:
                 result = await self.rpc(blockhash, 0 if encoding in [".hex", ".bin"] else (2 if details else 1))
@@ -237,7 +242,8 @@ def rest_block(details, rpc_shared = Fetch.node.getblock):
     return inner
 
 class rest_chaininfo(tornado.web.RequestHandler):
-    rpc = Fetch.node.getblockchaininfo
+    def initialize(self):
+        self.rpc = Balancer.node.getblockchaininfo
     async def get(self):
         try:
             result = await self.rpc()
@@ -247,7 +253,8 @@ class rest_chaininfo(tornado.web.RequestHandler):
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(result, default=EncodeDecimal))
 class rest_mempool_info(tornado.web.RequestHandler):
-    rpc = Fetch.node.getmempoolinfo
+    def initialize(self):
+        self.rpc = Balancer.node.getmempoolinfo
     async def get(self):
         try:
             result = await self.rpc()
@@ -257,7 +264,8 @@ class rest_mempool_info(tornado.web.RequestHandler):
         self.set_header("Content-Type", 'application/json')
         self.write(json.dumps(result, default=EncodeDecimal))
 class rest_mempool_contents(tornado.web.RequestHandler):
-    rpc = Fetch.node.getrawmempool
+    def initialize(self):
+        self.rpc = Balancer.node.getrawmempool
     async def get(self):
         try:
             result = await self.rpc(1) 
@@ -268,7 +276,8 @@ class rest_mempool_contents(tornado.web.RequestHandler):
         self.write(json.dumps(result, default=EncodeDecimal))
 
 class rest_headers(tornado.web.RequestHandler):
-    rpc = Fetch.node.getblockheader
+    def initialize(self):
+        self.rpc = Balancer.node.getblockheader
     async def get(self, strcount, starthash, encoding):
         count = int(strcount)
         if count > 2000 or count < 1:
@@ -300,7 +309,8 @@ class rest_headers(tornado.web.RequestHandler):
             self.write(json.dumps(result, default=EncodeDecimal))
 
 class rest_blockhash_by_height(tornado.web.RequestHandler):
-    rpc = Fetch.node.getblockhash
+    def initialize(self):
+        self.rpc = Balancer.node.getblockhash
     async def get(self, str_height, encoding):
         height = int(str_height)
         try:
@@ -319,7 +329,8 @@ class rest_blockhash_by_height(tornado.web.RequestHandler):
             self.write(result)
 
 class rest_getutxos(tornado.web.RequestHandler):
-    rpc = Fetch.node.gettxout
+    def initialize(self):
+        self.rpc = Balancer.node.gettxout
     match_txid = re.compile("([0-9a-fA-F]{64}):[0-9]+")
     MAX_QUERY = 15
     async def get(self, encoding):
@@ -371,7 +382,7 @@ def make_app():
         (f"/rest/getutxos/{format_ext}", rest_getutxos), 
         ])
 
-port = int(sys.argv[2])
+port = int(sys.argv[1])
 if __name__ == "__main__":
     app = make_app()
     app.listen(port)
