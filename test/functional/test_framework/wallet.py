@@ -10,6 +10,7 @@ from enum import Enum
 from random import choice
 from typing import Optional
 from test_framework.address import (
+    base58_to_byte,
     create_deterministic_address_bcrt1_p2tr_op_true,
     key_to_p2pkh,
     key_to_p2sh_p2wpkh,
@@ -39,6 +40,8 @@ from test_framework.script_util import (
     key_to_p2pkh_script,
     key_to_p2sh_p2wpkh_script,
     key_to_p2wpkh_script,
+    keyhash_to_p2pkh_script,
+    scripthash_to_p2sh_script,
 )
 from test_framework.util import (
     assert_equal,
@@ -238,6 +241,18 @@ def getnewdestination(address_type='bech32'):
     else:
         assert False
     return pubkey, scriptpubkey, address
+
+
+def address_to_scriptpubkey(address):
+    """Converts a given address to the corresponding output script (scriptPubKey)."""
+    payload, version = base58_to_byte(address)
+    if version == 111:  # testnet pubkey hash
+        return keyhash_to_p2pkh_script(payload)
+    elif version == 196:  # testnet script hash
+        return scripthash_to_p2sh_script(payload)
+    # TODO: also support other address formats
+    else:
+        assert False
 
 
 def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
