@@ -1,12 +1,14 @@
-Bitcoin Core integration/staging tree
+:coin: Bitcoin Core integration/staging Tree
 =====================================
 
-https://bitcoincore.org
+<p align="center">
+  <a href="https://bitcoincore.org">⭐ Visit our Website ⇗ ⭐</a>
+</p>
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+- For an immediately usable, binary version of the Bitcoin Core software, see
+[here ⇗](https://bitcoincore.org/en/download/).
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+- Further information about Bitcoin Core is available in the [doc folder ](/doc).
 
 What is Bitcoin?
 ----------------
