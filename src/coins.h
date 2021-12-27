@@ -113,7 +113,7 @@ struct CCoinsCacheEntry
          * consensus failure, since the coin's state won't get written to the
          * parent when the cache is flushed.
          */
-        DIRTY = (1 << 0),
+        DIRTY = 1,
         /**
          * FRESH means the parent cache does not have this coin or that it is a
          * spent coin in the parent cache. If a FRESH coin in the cache is
@@ -123,7 +123,7 @@ struct CCoinsCacheEntry
          * consensus failure, since it might not be deleted from the parent
          * when this cache is flushed.
          */
-        FRESH = (1 << 1),
+        FRESH = 1 << 1,
     };
 
     CCoinsCacheEntry() : flags(0) {}
