@@ -28,7 +28,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
     CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
     for (size_t o = 0; o < tx->vout.size(); o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
-        // IsSpent doesnt mean the coin is spent, it means the output doesnt' exist.
+        // IsSpent does not mean the coin is spent, it means the output does not exist.
         // So if the output does exist, then this transaction exists in the chain.
         if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
     }

@@ -1132,7 +1132,7 @@ void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
         auto it = pendingNoTxInstantSendLocks.begin();
         while (it != pendingNoTxInstantSendLocks.end()) {
             if (it->second.second->txid == tx->GetHash()) {
-                // we received an islock ealier
+                // we received an islock earlier
                 LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s\n", __func__,
                          tx->GetHash().ToString(), it->first.ToString());
                 islock = it->second.second;
@@ -1227,7 +1227,7 @@ void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx, const CBlock
     auto it = pendingNoTxInstantSendLocks.begin();
     while (it != pendingNoTxInstantSendLocks.end()) {
         if (it->second.second->txid == tx->GetHash()) {
-            // we received an islock ealier, let's put it back into pending and verify/lock
+            // we received an islock earlier, let's put it back into pending and verify/lock
             LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s\n", __func__,
                      tx->GetHash().ToString(), it->first.ToString());
             pendingInstantSendLocks.try_emplace(it->first, it->second);

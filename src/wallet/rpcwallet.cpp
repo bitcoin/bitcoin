@@ -884,7 +884,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment"},
                     {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
-            "                           Those recipients will receive less dashs than you enter in their corresponding amount field.\n"
+            "                           Those recipients will receive less dash than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.",
                         {
                             {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Subtract fee from this address"},
@@ -1967,7 +1967,7 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"walletpassphrase",
                 "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-                "This is needed prior to performing transactions related to private keys such as sending dashs\n"
+                "This is needed prior to performing transactions related to private keys such as sending dash\n"
                 "\nNote:\n"
                 "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
                 "time that overrides the old one.\n",
@@ -2232,7 +2232,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
                 "\nUpdates list of temporarily unspendable outputs.\n"
                 "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
                 "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
-                "A locked transaction output will not be chosen by automatic coin selection, when spending dashs.\n"
+                "A locked transaction output will not be chosen by automatic coin selection, when spending dash.\n"
                 "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
                 "is always cleared (by virtue of process exit) when a node stops or fails.\n"
                 "Also see the listunspent call\n",

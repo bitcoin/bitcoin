@@ -160,7 +160,7 @@ public:
      * Called when a ChainLock invalidated a IS Lock, removes any chained/children IS Locks and the invalidated IS Lock
      * @param islockHash IS Lock hash which has been invalidated
      * @param txid Transaction id associated with the islockHash
-     * @param nHeight height of the block which recieved a chainlock and invalidated the IS Lock
+     * @param nHeight height of the block which received a chainlock and invalidated the IS Lock
      * @return A vector of IS Lock hashes of all IS Locks removed
      */
     std::vector<uint256> RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid, int nHeight);
@@ -196,7 +196,7 @@ private:
 
     // Incoming and not verified yet
     std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks GUARDED_BY(cs);
-    // Tried to veryfy but there is no tx yet
+    // Tried to verify but there is no tx yet
     std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingNoTxInstantSendLocks GUARDED_BY(cs);
 
     // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking

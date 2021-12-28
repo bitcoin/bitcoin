@@ -47,7 +47,7 @@ if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" $SOURCED_FILES $(git ls-files -- '*.sh' |
 fi
 
 if ! command -v yq > /dev/null; then
-    echo "Skipping Gitian desriptor scripts checking since yq is not installed."
+    echo "Skipping Gitian descriptor scripts checking since yq is not installed."
     exit $EXIT_CODE
 fi
 

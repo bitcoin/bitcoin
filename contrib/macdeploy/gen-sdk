@@ -57,8 +57,8 @@ def run():
         out_sdktgz_path = pathlib.Path("./{}.tar.gz".format(out_name))
 
     def tarfp_add_with_base_change(tarfp, dir_to_add, alt_base_dir):
-        """Add all files in dir_to_add to tarfp, but prepent MEMBERPREFIX to the files'
-        names
+        """Add all files in dir_to_add to tarfp, but prepent MEMBERPREFIX to the file's
+        name
 
         e.g. if the only file under /root/bazdir is /root/bazdir/qux, invoking:
 
