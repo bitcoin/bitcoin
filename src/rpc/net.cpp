@@ -276,11 +276,12 @@ static RPCHelpMan addnode()
                 {
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
+                    {"p2p_v2", RPCArg::Type::BOOL, RPCArg::Default{false}, "Peer supports BIP324 v2 transport protocol"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
-            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
+                    HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\" true")
+            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\" true")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -296,17 +297,21 @@ static RPCHelpMan addnode()
     CConnman& connman = EnsureConnman(node);
 
     std::string strNode = request.params[0].get_str();
+    bool use_p2p_v2 = !request.params[2].isNull() && request.params[2].get_bool();
 
     if (strCommand == "onetry")
     {
         CAddress addr;
+        if (use_p2p_v2) {
+            addr.nServices = ServiceFlags(addr.nServices | NODE_P2P_V2);
+        }
         connman.OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), ConnectionType::MANUAL);
         return NullUniValue;
     }
 
     if (strCommand == "add")
     {
-        if (!connman.AddNode(strNode)) {
+        if (!connman.AddNode(strNode, use_p2p_v2)) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
         }
     }
