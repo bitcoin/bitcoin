@@ -1422,13 +1422,13 @@ void CWallet::BlockConnected(const CBlock& block, const std::vector<CTransaction
 
     for (const CTransactionRef& ptx : vtxConflicted) {
         SyncTransaction(ptx, {} /* block hash */, 0 /* position in block */);
-        // UNKNOWN because it's a manual removal, not using mempool logic
-        TransactionRemovedFromMempool(ptx, MemPoolRemovalReason::UNKNOWN);
+        // MANUAL because it's a manual removal, not using mempool logic
+        TransactionRemovedFromMempool(ptx, MemPoolRemovalReason::MANUAL);
     }
     for (size_t i = 0; i < block.vtx.size(); i++) {
         SyncTransaction(block.vtx[i], block_hash, i);
-        // UNKNOWN because it's a manual removal, not using mempool logic
-        TransactionRemovedFromMempool(block.vtx[i], MemPoolRemovalReason::UNKNOWN);
+        // MANUAL because it's a manual removal, not using mempool logic
+        TransactionRemovedFromMempool(block.vtx[i], MemPoolRemovalReason::MANUAL);
     }
 
     m_last_block_processed = block_hash;

@@ -351,12 +351,12 @@ struct TxMempoolInfo
  * this is passed to the notification signal.
  */
 enum class MemPoolRemovalReason {
-    UNKNOWN = 0, //!< Manually removed or unknown reason
     EXPIRY,      //!< Expired from mempool
     SIZELIMIT,   //!< Removed in size limiting
     REORG,       //!< Removed for reorganization
     BLOCK,       //!< Removed for block
     CONFLICT,    //!< Removed for conflict with in-block transaction
+    MANUAL       //!< Removed manually
 };
 
 class SaltedTxidHasher
@@ -461,6 +461,8 @@ private:
     mutable bool m_has_epoch_guard;
 
     void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    bool m_is_loaded GUARDED_BY(cs){false};
 
 public:
 
@@ -614,7 +616,7 @@ public:
     bool getSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
     bool removeSpentIndex(const uint256 txhash);
 
-    void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
+    void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void removeConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -659,7 +661,7 @@ public:
      *  Set updateDescendants to true when removing a tx that was in a block, so
      *  that any in-mempool descendants have their ancestor state updated.
      */
-    void RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** When adding transactions from a disconnected block back to the mempool,
      *  new mempool entries may have children in the mempool (which is generally
@@ -711,6 +713,12 @@ public:
      * The counts include the transaction itself.
      */
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const;
+
+    /** @returns true if the mempool is fully loaded */
+    bool IsLoaded() const;
+
+    /** Sets the current loaded state */
+    void SetIsLoaded(bool loaded);
 
     unsigned long size() const
     {
@@ -777,7 +785,7 @@ private:
      *  transactions in a chain before we've updated all the state for the
      *  removal.
      */
-    void removeUnchecked(txiter entry, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 public:
     /** EpochGuard: RAII-style guard for using epoch-based graph traversal algorithms.
      *     When walking ancestors or descendants, we generally want to avoid

@@ -438,7 +438,9 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
 
 static std::string EntryDescriptionString()
 {
-    return "    \"size\" : n,                 (numeric) transaction size in bytes\n"
+    return "    \"vsize\" : n,                (numeric) virtual transaction size. This can be different from actual serialized size for high-sigop transactions.\n"
+           "    \"size\" : n,                 (numeric) (DEPRECATED) same as vsize. Only returned if dashd is started with -deprecatedrpc=size\n"
+           "                                  size will be completely removed in v0.20.\n"
            "    \"fee\" : n,                  (numeric) transaction fee in " + CURRENCY_UNIT + " (DEPRECATED)\n"
            "    \"modifiedfee\" : n,          (numeric) transaction fee with fee deltas used for mining priority (DEPRECATED)\n"
            "    \"time\" : n,                 (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
@@ -475,7 +477,8 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     fees.pushKV("descendant", ValueFromAmount(e.GetModFeesWithDescendants()));
     info.pushKV("fees", fees);
 
-    info.pushKV("size", (int)e.GetTxSize());
+    info.pushKV("vsize", (int)e.GetTxSize());
+    if (IsDeprecatedRPCEnabled("size")) info.pushKV("size", (int)e.GetTxSize());
     info.pushKV("fee", ValueFromAmount(e.GetFee()));
     info.pushKV("modifiedfee", ValueFromAmount(e.GetModifiedFee()));
     info.pushKV("time", e.GetTime());
@@ -1725,6 +1728,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     // Make sure this call is atomic in the pool.
     LOCK(pool.cs);
     UniValue ret(UniValue::VOBJ);
+    ret.pushKV("loaded", pool.IsLoaded());
     ret.pushKV("size", (int64_t)pool.size());
     ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
     ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
@@ -1746,6 +1750,7 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
                 {},
                 RPCResult{
             "{\n"
+            "  \"loaded\": true|false         (boolean) True if the mempool is fully loaded\n"
             "  \"size\": xxxxx,               (numeric) Current tx count\n"
             "  \"bytes\": xxxxx,              (numeric) Sum of all tx sizes\n"
             "  \"usage\": xxxxx,              (numeric) Total memory usage for the mempool\n"
@@ -2387,11 +2392,11 @@ static UniValue savemempool(const JSONRPCRequest& request)
             }.ToString());
     }
 
-    if (!g_is_mempool_loaded) {
+    if (!::mempool.IsLoaded()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 
-    if (!DumpMempool()) {
+    if (!DumpMempool(::mempool)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
     }
 
