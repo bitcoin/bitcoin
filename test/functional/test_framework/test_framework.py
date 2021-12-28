@@ -288,7 +288,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             exit_code = TEST_EXIT_SKIPPED
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
+            self.log.error("")
             self.log.error("Hint: Call {} '{}' to consolidate all logs".format(os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../combine_logs.py"), self.options.tmpdir))
+            self.log.error("")
+            self.log.error("If this failure happened unexpectedly or intermittently, please file a bug and provide a link or upload of the combined log.")
+            self.log.error(self.config['environment']['PACKAGE_BUGREPORT'])
+            self.log.error("")
             exit_code = TEST_EXIT_FAILED
         logging.shutdown()
         if cleanup_tree_on_exit:
@@ -647,6 +652,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
 
+    def skip_if_no_wallet_tool(self):
+        """Skip the running test if dash-wallet has not been compiled."""
+        if not self.is_wallet_tool_compiled():
+            raise SkipTest("dash-wallet has not been compiled")
+
     def skip_if_no_cli(self):
         """Skip the running test if dash-cli has not been compiled."""
         if not self.is_cli_compiled():
@@ -659,6 +669,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET")
+
+    def is_wallet_tool_compiled(self):
+        """Checks whether dash-wallet was compiled."""
+        return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""

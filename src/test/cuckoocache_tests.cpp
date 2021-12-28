@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
  */
 BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
     size_t megabytes = 4;
     cc.setup_bytes(megabytes << 20);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 template <typename Cache>
 static double test_cache(size_t megabytes, double load)
 {
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -124,7 +124,7 @@ template <typename Cache>
 static void test_cache_erase(size_t megabytes)
 {
     double load = 1;
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -187,7 +187,7 @@ template <typename Cache>
 static void test_cache_erase_parallel(size_t megabytes)
 {
     double load = 1;
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
@@ -291,7 +291,7 @@ static void test_cache_generations()
     // iterations with non-deterministic values, so it isn't "overfit" to the
     // specific entropy in FastRandomContext(true) and implementation of the
     // cache.
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
 
     // block_activity models a chunk of network activity. n_insert elements are
     // added to the cache. The first and last n/4 are stored for removal later
