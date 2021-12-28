@@ -52,7 +52,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: ./docker
-        file: ./docker/Dockerfile.GitHubActions
+        file: ./contrib/containers/deploy/Dockerfile.GitHubActions
         push: true
         tags: ${{ steps.docker_meta.outputs.tags }}
         labels: ${{ steps.docker_meta.outputs.labels }}

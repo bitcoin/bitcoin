@@ -1,0 +1,4 @@
+**
+!contrib/containers/ci/Dockerfile
+!contrib/containers/deploy/Dockerfile
+!contrib/containers/develop/Dockerfile

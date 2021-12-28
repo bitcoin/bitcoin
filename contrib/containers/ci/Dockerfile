@@ -69,6 +69,7 @@ RUN mkdir /dash-src && \
   chown $USER_ID:$GROUP_ID /dash-src && \
   chown $USER_ID:$GROUP_ID /cache && \
   chown $USER_ID:$GROUP_ID /cache -R
+
 WORKDIR /dash-src
 
 USER dash

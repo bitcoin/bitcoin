@@ -26,10 +26,10 @@ builder-image:
   before_script:
     - echo $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
   script:
-    - cd ci
+    - cd contrib/containers/ci
     - docker pull $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG || true
     - docker pull $CI_REGISTRY_IMAGE:builder-develop || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG --cache-from $CI_REGISTRY_IMAGE:builder-develop -t $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG -f Dockerfile.builder .
+    - docker build --cache-from $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG --cache-from $CI_REGISTRY_IMAGE:builder-develop -t $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG -f Dockerfile .
     - docker push $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
 
 .build-depends-template:
@@ -63,7 +63,7 @@ builder-image:
     # Let all branches share the same cache, which is ok because the depends subsystem is able to handle this properly (it works with hashes of all scripts)
     key:
       files:
-        - ci/Dockerfile.builder
+        - contrib/containers/ci/Dockerfile
       prefix: ${CI_JOB_NAME}
     paths:
       - depends/built
@@ -80,7 +80,7 @@ builder-image:
   before_script:
     - export CACHE_DIR=$CI_PROJECT_DIR/cache
     - echo BUILD_TARGET=$BUILD_TARGET
-    - source ./ci/matrix.sh
+    - source ./ci/dash/matrix.sh
 
     # Setup some environment variables
     - |
@@ -109,13 +109,13 @@ builder-image:
   stage: build
   extends: .base-template
   script:
-    - ./ci/build_src.sh
-    - ./ci/test_unittests.sh # Run unit tests in build stage to avoid creating too many parallel jobs
+    - ./ci/dash/build_src.sh
+    - ./ci/dash/test_unittests.sh # Run unit tests in build stage to avoid creating too many parallel jobs
   cache:
     # Let all branches share the same cache, which is ok because ccache is able to handle it
     key:
       files:
-        - ci/Dockerfile.builder
+        - contrib/containers/ci/Dockerfile
       prefix: ${CI_JOB_NAME}
     paths:
       - cache/ccache
@@ -141,7 +141,7 @@ builder-image:
     INTEGRATION_TESTS_ARGS: "--extended --exclude feature_pruning,feature_dbcrash"
   script:
     - echo "INTEGRATION_TESTS_ARGS=${INTEGRATION_TESTS_ARGS}"
-    - ./ci/test_integrationtests.sh $INTEGRATION_TESTS_ARGS
+    - ./ci/dash/test_integrationtests.sh $INTEGRATION_TESTS_ARGS
   after_script:
     - mkdir -p $CI_PROJECT_DIR/testlogs
   artifacts:

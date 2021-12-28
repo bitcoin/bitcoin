@@ -6,7 +6,7 @@ export LC_ALL=C.UTF-8
 
 set -e
 
-source ./ci/matrix.sh
+source ./ci/dash/matrix.sh
 
 if [ "$RUN_UNITTESTS" != "true" ]; then
   echo "Skipping unit tests"
