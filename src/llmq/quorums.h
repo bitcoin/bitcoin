@@ -56,14 +56,14 @@ public:
     };
 
 private:
-    Consensus::LLMQType llmqType;
+    Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
     uint256 quorumHash;
-    uint16_t nDataMask;
+    uint16_t nDataMask{0};
     uint256 proTxHash;
-    Errors nError;
+    Errors nError{UNDEFINED};
 
-    int64_t nTime;
-    bool fProcessed;
+    int64_t nTime{GetTime()};
+    bool fProcessed{false};
 
     static constexpr int64_t EXPIRATION_TIMEOUT{300};
 
@@ -74,10 +74,8 @@ public:
         llmqType(llmqTypeIn),
         quorumHash(quorumHashIn),
         nDataMask(nDataMaskIn),
-        proTxHash(proTxHashIn),
-        nError(UNDEFINED),
-        nTime(GetTime()),
-        fProcessed(false) {}
+        proTxHash(proTxHashIn)
+        {}
 
     SERIALIZE_METHODS(CQuorumDataRequest, obj)
     {
@@ -153,7 +151,7 @@ class CQuorum
 public:
     const Consensus::LLMQParams& params;
     CFinalCommitmentPtr qc;
-    const CBlockIndex* m_quorum_base_block_index;
+    const CBlockIndex* m_quorum_base_block_index{nullptr};
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
 

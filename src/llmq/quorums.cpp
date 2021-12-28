@@ -624,8 +624,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
     }
 
     if (strCommand == NetMsgType::QDATA) {
-        auto verifiedProRegTxHash = pFrom->GetVerifiedProRegTxHash();
-        if ((!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) || pFrom == nullptr || (verifiedProRegTxHash.IsNull() && !pFrom->qwatch)) {
+        if ((!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) || pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
             errorHandler("Not a verified masternode or a qwatch connection");
             return;
         }
@@ -635,7 +634,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
 
         {
             LOCK2(cs_main, cs_data_requests);
-            auto it = mapQuorumDataRequests.find(std::make_pair(verifiedProRegTxHash, true));
+            auto it = mapQuorumDataRequests.find(std::make_pair(pFrom->GetVerifiedProRegTxHash(), true));
             if (it == mapQuorumDataRequests.end()) {
                 errorHandler("Not requested");
                 return;

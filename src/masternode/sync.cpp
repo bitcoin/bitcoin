@@ -16,10 +16,10 @@
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
-CMasternodeSync::CMasternodeSync()
+CMasternodeSync::CMasternodeSync() :
+    nTimeAssetSyncStarted(GetTime()),
+    nTimeLastBumped(GetTime())
 {
-    nTimeAssetSyncStarted = GetTime();
-    nTimeLastBumped = GetTime();
 }
 
 void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)

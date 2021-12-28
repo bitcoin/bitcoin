@@ -321,7 +321,7 @@ public:
         bufValid = true;
     }
 
-    CBLSLazyWrapper(const CBLSLazyWrapper& r)
+    explicit CBLSLazyWrapper(const CBLSLazyWrapper& r)
     {
         *this = r;
     }

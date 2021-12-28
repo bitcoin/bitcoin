@@ -702,18 +702,18 @@ crash_info GetCrashInfoFromException(const std::exception_ptr& e)
     try {
         // rethrow and catch the exception as there is no other way to reliably cast to the real type (not possible with RTTI)
         std::rethrow_exception(e);
-    } catch (const std::exception& e) {
+    } catch (const std::exception& e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
-    } catch (const std::string& e) {
+        what = GetExceptionWhat(e2);
+    } catch (const std::string& e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
-    } catch (const char* e) {
+        what = GetExceptionWhat(e2);
+    } catch (const char* e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
-    } catch (int e) {
+        what = GetExceptionWhat(e2);
+    } catch (int e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
+        what = GetExceptionWhat(e2);
     } catch (...) {
         type = getExceptionType();
         what = "<unknown>";
@@ -740,7 +740,6 @@ static void terminate_handler()
     auto exc = std::current_exception();
 
     crash_info ci;
-    ci.crashDescription = "std::terminate() called, aborting";
 
     if (exc) {
         auto ci2 = GetCrashInfoFromException(exc);
@@ -750,9 +749,8 @@ static void terminate_handler()
     } else {
         ci.crashDescription = "std::terminate() called due unknown reason";
         ci.stackframes = GetStackFrames(0, 16);
+        ci.stackframeInfos = GetStackFrameInfos(ci.stackframes);
     }
-
-    ci.stackframeInfos = GetStackFrameInfos(ci.stackframes);
 
     PrintCrashInfo(ci);
 

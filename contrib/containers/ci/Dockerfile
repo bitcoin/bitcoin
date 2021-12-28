@@ -43,8 +43,14 @@ RUN apt-get update && apt-get install $APT_ARGS g++-arm-linux-gnueabihf && rm -r
 RUN apt-get update && apt-get install $APT_ARGS g++-mingw-w64-x86-64 && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install $APT_ARGS wine-stable wine32 wine64 bc nsis xorriso libncurses5 && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install $APT_ARGS python3-zmq && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install $APT_ARGS cppcheck gawk jq && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS gawk jq && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install $APT_ARGS imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools && rm -rf /var/lib/apt/lists/*
+
+ARG CPPCHECK_VERSION=2.4
+RUN curl -sL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" | tar -xvzf - --directory /tmp/
+RUN cd /tmp/cppcheck-${CPPCHECK_VERSION} && mkdir build && cd build && cmake .. && cmake --build . -j 8
+ENV PATH "/tmp/cppcheck-${CPPCHECK_VERSION}/build/bin:${PATH}"
+RUN mkdir /usr/local/share/Cppcheck && ln -s /tmp/cppcheck-${CPPCHECK_VERSION}/cfg/ /usr/local/share/Cppcheck/cfg
 
 ARG SHELLCHECK_VERSION=v0.7.1
 RUN curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/

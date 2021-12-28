@@ -35,9 +35,9 @@ std::string CChainLockSig::ToString() const
     return strprintf("CChainLockSig(nHeight=%d, blockHash=%s)", nHeight, blockHash.ToString());
 }
 
-CChainLocksHandler::CChainLocksHandler()
+CChainLocksHandler::CChainLocksHandler() :
+    scheduler(std::make_unique<CScheduler>())
 {
-    scheduler = std::make_unique<CScheduler>();
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler.get());
     scheduler_thread = std::make_unique<std::thread>(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }

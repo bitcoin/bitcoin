@@ -58,13 +58,13 @@ public:
 
 public:
     CDeterministicMNState() = default;
-    explicit CDeterministicMNState(const CProRegTx& proTx)
+    explicit CDeterministicMNState(const CProRegTx& proTx) :
+            keyIDOwner(proTx.keyIDOwner),
+            keyIDVoting(proTx.keyIDVoting),
+            addr(proTx.addr),
+            scriptPayout(proTx.scriptPayout)
     {
-        keyIDOwner = proTx.keyIDOwner;
         pubKeyOperator.Set(proTx.pubKeyOperator);
-        keyIDVoting = proTx.keyIDVoting;
-        addr = proTx.addr;
-        scriptPayout = proTx.scriptPayout;
     }
     template <typename Stream>
     CDeterministicMNState(deserialize_type, Stream& s)
@@ -228,7 +228,7 @@ public:
 
     uint256 proTxHash;
     COutPoint collateralOutpoint;
-    uint16_t nOperatorReward;
+    uint16_t nOperatorReward{0};
     CDeterministicMNStateCPtr pdmnState;
 
     template <typename Stream, typename Operation>

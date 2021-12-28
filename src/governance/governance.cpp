@@ -592,9 +592,9 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
         return false;
     }
 
-    auto it = setHash->find(inv.hash);
-    if (it == setHash->end()) {
-        setHash->insert(inv.hash);
+    const auto& [_, inserted] = setHash->insert(inv.hash);
+
+    if (inserted) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest added inv to requested set\n");
     }
 

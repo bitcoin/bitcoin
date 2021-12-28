@@ -262,14 +262,12 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
         mapCurrentMNVotes.erase(it);
     }
 
-    if (!removedVotes.empty()) {
-        std::string removedStr;
-        for (auto& h : removedVotes) {
-            removedStr += strprintf("  %s\n", h.ToString());
-        }
-        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr); /* Continued */
-        fDirtyCache = true;
+    std::string removedStr;
+    for (auto& h : removedVotes) {
+        removedStr += strprintf("  %s\n", h.ToString());
     }
+    LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr); /* Continued */
+    fDirtyCache = true;
 
     return removedVotes;
 }

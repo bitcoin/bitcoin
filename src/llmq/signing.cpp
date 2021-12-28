@@ -38,9 +38,9 @@ UniValue CRecoveredSig::ToJson() const
     return ret;
 }
 
-CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory, bool fWipe)
+CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory, bool fWipe) :
+        db(std::make_unique<CDBWrapper>(fMemory ? "" : (GetDataDir() / "llmq/recsigdb"), 8 << 20, fMemory, fWipe))
 {
-    db = std::make_unique<CDBWrapper>(fMemory ? "" : (GetDataDir() / "llmq/recsigdb"), 8 << 20, fMemory, fWipe);
     MigrateRecoveredSigs();
 }
 

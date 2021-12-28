@@ -121,15 +121,15 @@ class CHDPubKey
 {
 private:
     static const int CURRENT_VERSION = 1;
-    int nVersion;
+    int nVersion{CHDPubKey::CURRENT_VERSION};
 
 public:
     CExtPubKey extPubKey;
     uint256 hdchainID;
-    uint32_t nAccountIndex;
-    uint32_t nChangeIndex;
+    uint32_t nAccountIndex{0};
+    uint32_t nChangeIndex{0};
 
-    CHDPubKey() : nVersion(CHDPubKey::CURRENT_VERSION), nAccountIndex(0), nChangeIndex(0) {}
+    CHDPubKey() = default;
 
     SERIALIZE_METHODS(CHDPubKey, obj)
     {

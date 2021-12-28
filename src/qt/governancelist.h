@@ -35,7 +35,7 @@ private:
     QString m_url;
 
 public:
-    Proposal(const CGovernanceObject* p, QObject* parent = nullptr);
+    explicit Proposal(const CGovernanceObject* p, QObject* parent = nullptr);
     QString title() const;
     QString hash() const;
     QDateTime startDate() const;

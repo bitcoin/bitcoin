@@ -319,10 +319,10 @@ static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
     blsWorker.Start();
 
     // Benchmark.
-    size_t i = 0;
     bench.minEpochIterations(1000).run([&] {
         if (futures.size() < 100) {
             while (futures.size() < 10000) {
+                size_t i = 0;
                 auto f = blsWorker.AsyncVerifySig(sigs[i], pubKeys[i], msgHashes[i], cancelCond);
                 futures.emplace_back(std::make_pair(i, std::move(f)));
                 i = (i + 1) % pubKeys.size();

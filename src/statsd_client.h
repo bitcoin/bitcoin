@@ -2,6 +2,7 @@
 #define BITCOIN_STATSD_CLIENT_H
 
 #include <string>
+#include <memory>
 
 static const bool DEFAULT_STATSD_ENABLE = false;
 static const int DEFAULT_STATSD_PORT = 8125;
@@ -56,7 +57,7 @@ class StatsdClient {
         static void cleanup(std::string& key);
 
     protected:
-        struct _StatsdClientData* d;
+        std::unique_ptr<struct _StatsdClientData> d;
 };
 
 } // namespace statsd

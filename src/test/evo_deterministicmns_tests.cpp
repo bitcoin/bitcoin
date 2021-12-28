@@ -543,7 +543,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
     operatorKey.MakeNewKey();
 
     auto scriptPayout = GetScriptForDestination(payoutKey.GetPubKey().GetID());
-    auto scriptCollateral = GetScriptForDestination(collateralKey.GetPubKey().GetID());
 
     CProRegTx payload;
     payload.addr = LookupNumeric("1.1.1.1", 2);

@@ -22,42 +22,74 @@ ENABLED_CHECKS=(
     "Unused variable"
     "The function '.*' overrides a function in a base class but is not marked with a 'override' specifier."
 # Enabale to catch all warnings
-#    ".*"
-# We may choose to enable these in the future
-#    "Variable '.*' is assigned in constructor body. Consider performing initialization in initialization list."
-#    "Member variable '.*' is not initialized in the constructor."
-#    "Consider using std::copy algorithm instead of a raw loop."
-#    "Consider using std::any_of algorithm instead of a raw loop."
-#    "Consider using std::accumulate algorithm instead of a raw loop."
-#    "Consider using std::copy algorithm instead of a raw loop."
-#    "Consider using std::transform algorithm instead of a raw loop."
-#    "Consider using std::find_if algorithm instead of a raw loop."
+    ".*"
 )
 
 IGNORED_WARNINGS=(
     "src/bls/bls.h:.* Struct 'CBLSIdImplicit' has a constructor with 1 argument that is not explicit."
-    "src/llmq/init.cpp:.* warning: Variable 'llmqDbTmp' is assigned a value that is never used."
-    "src/llmq/quorums.cpp:.* warning: Parameter '_blsWorker' can be declared with const"
+    "src/llmq/dkgsessionmgr.h:.* warning: struct member 'ContributionsCacheEntry::entryTime' is never used."
+    "src/llmq/instantsend.h:.* warning: struct member 'NonLockedTxInfo::pindexMined' is never used."
+    "src/rpc/masternode.cpp:.*:21: warning: Consider using std::copy algorithm instead of a raw loop." # UniValue doesn't support std::copy
+    "src/spork.h:.* warning: struct member 'CSporkDef::defaultValue' is never used."
+    "src/test/dip0020opcodes_tests.cpp:.* warning: There is an unknown macro here somewhere. Configuration is required. If BOOST_FIXTURE_TEST_SUITE is a macro then please configure it."
+    "src/ctpl_stl.h:.*22: warning: Dereferencing '_f' after it is deallocated / released"
+
 
 # General catchall, for some reason any value named 'hash' is viewed as never used.
     "Variable 'hash' is assigned a value that is never used."
 
 # The following can be useful to ignore when the catch all is used
 #    "Consider performing initialization in initialization list."
-#    "Consider using std::transform algorithm instead of a raw loop."
-#    "Consider using std::accumulate algorithm instead of a raw loop."
+    "Consider using std::transform algorithm instead of a raw loop."
+    "Consider using std::accumulate algorithm instead of a raw loop."
 #    "Consider using std::any_of algorithm instead of a raw loop."
 #    "Consider using std::count_if algorithm instead of a raw loop."
-#    "Member variable '.*' is not initialized in the constructor."
 #    "Consider using std::find_if algorithm instead of a raw loop."
+#    "Member variable '.*' is not initialized in the constructor."
 )
 
 # We should attempt to update this with all dash specific code
-FILES=$(git ls-files -- "src/bls/*.cpp" "src/bls/*.h" "src/coinjoin/*.cpp" "src/coinjoin/*.h" "src/evo/*.cpp" \
-                        "src/evo/*.h" "src/governance/*.cpp" "src/governance/*.h" "src/llmq/*.cpp" "src/llmq/*.h" \
-                        "src/masternode/*.cpp" "src/masternode/*.h" "src/dsnotificationinterface.*" "src/spork.*" \
-                        "src/rpc/coinjoin.cpp" "src/rpc/governance.cpp" "src/rpc/masternode.cpp" "src/rpc/rpcevo.cpp" \
-                        "src/rpc/rpcquorums.cpp")
+FILES=$(git ls-files -- "src/batchedlogger.*" \
+                        "src/bench/bls*.cpp" \
+                        "src/bls/*.cpp" \
+                        "src/bls/*.h" \
+                        "src/cachemap.h" \
+                        "src/cachemultimap.h" \
+                        "src/coinjoin/*.cpp" \
+                        "src/coinjoin/*.h" \
+                        "src/ctpl_stl.h" \
+                        "src/cxxtimer.hpp" \
+                        "src/dsnotificationinterface.*" \
+                        "src/evo/*.cpp" \
+                        "src/evo/*.h" \
+                        "src/governance/*.cpp" \
+                        "src/governance/*.h" \
+                        "src/hdchain.*" \
+                        "src/keepass.*" \
+                        "src/llmq/*.cpp" \
+                        "src/llmq/*.h" \
+                        "src/masternode/*.cpp" \
+                        "src/masternode/*.h" \
+                        "src/messagesigner.*" \
+                        "src/netfulfilledman.*" \
+                        "src/qt/governancelist.*" \
+                        "src/qt/masternodelist.*" \
+                        "src/rpc/coinjoin.cpp" \
+                        "src/rpc/governance.cpp" \
+                        "src/rpc/masternode.cpp" \
+                        "src/rpc/rpcevo.cpp" \
+                        "src/rpc/rpcquorums.cpp" \
+                        "src/spork.*" \
+                        "src/saltedhasher.*" \
+                        "src/stacktraces.*" \
+                        "src/statsd_client.*" \
+                        "src/test/block_reward_reallocation_tests.cpp" \
+                        "src/test/bls_tests.cpp" \
+                        "src/test/dip0020opcodes_tests.cpp" \
+                        "src/test/dynamic_activation*.cpp" \
+                        "src/test/evo*.cpp" \
+                        "src/test/governance*.cpp" \
+                        "src/unordered_lru_cache.h")
 
 
 if ! command -v cppcheck > /dev/null; then
