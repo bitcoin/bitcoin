@@ -579,9 +579,9 @@ bool CGovernanceManager::ConfirmInventoryRequest(const GenTxid& gtxid)
         return false;
     }
 
-    auto it = setHash->find(hash);
-    if (it == setHash->end()) {
-        setHash->insert(hash);
+    const auto& [_, inserted] = setHash->insert(hash);
+
+    if (inserted) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest added inv to requested set\n");
     }
 

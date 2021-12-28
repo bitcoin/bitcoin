@@ -25,7 +25,7 @@ struct DKG
 
     BLSVerificationVectorPtr quorumVvec;
 
-    DKG(int quorumSize)
+    explicit DKG(int quorumSize)
     {
         members.reserve(quorumSize);
         ids.reserve(quorumSize);

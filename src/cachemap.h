@@ -124,7 +124,7 @@ public:
         if(it == mapIndex.end()) {
             return false;
         }
-        item_t& item = *(it->second);
+        const item_t& item = *(it->second);
         value = item.value;
         return true;
     }

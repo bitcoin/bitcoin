@@ -24,8 +24,6 @@ private:
     fulfilledreqmap_t mapFulfilledRequests;
     mutable RecursiveMutex cs_mapFulfilledRequests;
 
-    void RemoveFulfilledRequest(const CService& addr, const std::string& strRequest);
-
 public:
     CNetFulfilledRequestManager() {}
 

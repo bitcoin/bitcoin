@@ -55,7 +55,7 @@ class CQuorum
 public:
     const Consensus::LLMQParams& params;
     CFinalCommitmentPtr qc;
-    const CBlockIndex* m_quorum_base_block_index;
+    const CBlockIndex* m_quorum_base_block_index{nullptr};
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
 

@@ -48,7 +48,7 @@ private:
     std::atomic<int64_t> nTimeLastUpdateBlockTip {0};
 
 public:
-    CMasternodeSync() = default;
+    CMasternodeSync();
 
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);

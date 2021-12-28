@@ -21,8 +21,7 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CConnman &_connman, PeerManager& _peerman, ChainstateManager& _chainman, bool unitTests, bool fWipe) :
-    blsWorker(_blsWorker),
+CDKGSessionManager::CDKGSessionManager(CBLSWorker& blsWorker, CConnman &_connman, PeerManager& _peerman, ChainstateManager& _chainman, bool unitTests, bool fWipe) :
     connman(_connman),
     peerman(_peerman)
 {

@@ -17,6 +17,12 @@
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
+CMasternodeSync::CMasternodeSync() :
+    nTimeAssetSyncStarted(GetTime()),
+    nTimeLastBumped(GetTime())
+{
+}
+
 void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 {
     // Avoid resetting the sync process if we just "recently" received a new block

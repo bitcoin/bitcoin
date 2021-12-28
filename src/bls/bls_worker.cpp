@@ -150,11 +150,11 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
                bool _parallel,
                ctpl::thread_pool& _workerPool,
                DoneCallback _doneCallback) :
+            inputVec(std::make_shared<std::vector<const T*>>(count)),
             parallel(_parallel),
             workerPool(_workerPool),
             doneCallback(std::move(_doneCallback))
     {
-        inputVec = std::make_shared<std::vector<const T*> >(count);
         for (size_t i = 0; i < count; i++) {
             (*inputVec)[i] = pointer(_inputVec[start + i]);
         }

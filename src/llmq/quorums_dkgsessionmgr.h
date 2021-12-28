@@ -23,7 +23,6 @@ class CDKGSessionManager
 
 private:
     std::unique_ptr<CDBWrapper> db{nullptr};
-    CBLSWorker& blsWorker;
     std::map<uint8_t, CDKGSessionHandler> dkgSessionHandlers;
 
     mutable RecursiveMutex contributionsCacheCs;
