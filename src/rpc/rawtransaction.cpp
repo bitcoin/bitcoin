@@ -532,33 +532,44 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+static std::string GetAllOutputTypes()
+{
+    std::string ret;
+    for (int i = TX_NONSTANDARD; i <= TX_NULL_DATA; ++i) {
+        if (i != TX_NONSTANDARD) ret += ", ";
+        ret += GetTxnOutputType(static_cast<txnouttype>(i));
+    }
+    return ret;
+}
+
 static UniValue decodescript(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            RPCHelpMan{"decodescript",
+    const RPCHelpMan help{"decodescript",
                 "\nDecode a hex-encoded script.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded script"},
                 },
                 RPCResult{
             "{\n"
-            "  \"asm\":\"asm\",   (string) Script public key\n"
-            "  \"hex\":\"hex\",   (string) hex-encoded public key\n"
-            "  \"type\":\"type\", (string) The output type\n"
-            "  \"reqSigs\": n,    (numeric) The required signatures\n"
-            "  \"addresses\": [   (json array of string)\n"
-            "     \"address\"     (string) dash address\n"
+            "  \"asm\":\"asm\",          (string) Script public key\n"
+            "  \"type\":\"type\",        (string) The output type (e.g. "+GetAllOutputTypes()+")\n"
+            "  \"reqSigs\": n,         (numeric) The required signatures\n"
+            "  \"addresses\": [        (json array of string)\n"
+            "     \"address\"          (string) dash address\n"
             "     ,...\n"
             "  ],\n"
-            "  \"p2sh\",\"address\" (string) address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH).\n"
+            "  \"p2sh\":\"str\"          (string) address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH).\n"
             "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("decodescript", "\"hexstring\"")
             + HelpExampleRpc("decodescript", "\"hexstring\"")
                 },
-            }.ToString());
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
+    }
 
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
@@ -570,7 +581,7 @@ static UniValue decodescript(const JSONRPCRequest& request)
     } else {
         // Empty scripts are valid
     }
-    ScriptPubKeyToUniv(script, r, false);
+    ScriptPubKeyToUniv(script, r, /* fIncludeHex */ false);
 
     UniValue type;
 

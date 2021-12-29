@@ -1206,7 +1206,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
     // too low to be a block time (corresponds to timestamp from Sep 2001).
     if (heightParam > 1000000000) {
         // Add a 2 hour buffer to include blocks which might have had old timestamps
-        CBlockIndex* pindex = ::ChainActive().FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW);
+        CBlockIndex* pindex = ::ChainActive().FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp.");
         }

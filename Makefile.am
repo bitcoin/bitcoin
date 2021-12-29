@@ -47,9 +47,9 @@ OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = ar,bg,ca,cs,da,de,es,fa,fi,fr,gd,gl,he,hu,it,ja,ko,lt,lv,pl,pt,ru,sk,sl,sv,uk,zh_CN,zh_TW
 
 DIST_CONTRIB = \
+           $(top_srcdir)/contrib/debian/copyright \
 	       $(top_srcdir)/contrib/linearize/linearize-data.py \
 	       $(top_srcdir)/contrib/linearize/linearize-hashes.py
-
 DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
   $(top_srcdir)/share/rpcauth

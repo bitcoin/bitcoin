@@ -6,7 +6,7 @@
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_greater_than_or_equal
 
 def expect_http_status(expected_http_status, expected_rpc_code,
                        fcn, *args):
@@ -21,6 +21,16 @@ class RPCInterfaceTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+
+    def test_getrpcinfo(self):
+        self.log.info("Testing getrpcinfo...")
+
+        info = self.nodes[0].getrpcinfo()
+        assert_equal(len(info['active_commands']), 1)
+
+        command = info['active_commands'][0]
+        assert_equal(command['method'], 'getrpcinfo')
+        assert_greater_than_or_equal(command['duration'], 0)
 
     def test_batch_request(self):
         self.log.info("Testing basic JSON-RPC batch request...")
@@ -55,6 +65,7 @@ class RPCInterfaceTest(BitcoinTestFramework):
         expect_http_status(500, -8, self.nodes[0].getblockhash, 42)
 
     def run_test(self):
+        self.test_getrpcinfo()
         self.test_batch_request()
         self.test_http_status_codes()
 

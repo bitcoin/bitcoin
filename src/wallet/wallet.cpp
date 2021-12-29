@@ -2205,7 +2205,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     uint256 start_block;
     {
         auto locked_chain = chain().lock();
-        const Optional<int> start_height = locked_chain->findFirstBlockWithTime(startTime - TIMESTAMP_WINDOW, &start_block);
+        const Optional<int> start_height = locked_chain->findFirstBlockWithTimeAndHeight(startTime - TIMESTAMP_WINDOW, 0, &start_block);
         const Optional<int> tip_height = locked_chain->getHeight();
         WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, tip_height && start_height ? *tip_height - *start_height + 1 : 0);
     }
@@ -3579,7 +3579,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         {
             CAmount nAmountAvailable{0};
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control);
+            AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0, coin_control.m_min_depth);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.use_bnb = false; // never use BnB
 
@@ -5223,7 +5223,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         // unless a full rescan was requested
         if (gArgs.GetArg("-rescan", 0) != 2) {
             if (walletInstance->nTimeFirstKey) {
-                if (Optional<int> first_block = locked_chain->findFirstBlockWithTimeAndHeight(walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW, rescan_height)) {
+                if (Optional<int> first_block = locked_chain->findFirstBlockWithTimeAndHeight(walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW, rescan_height, nullptr)) {
                     rescan_height = *first_block;
                 }
             }
