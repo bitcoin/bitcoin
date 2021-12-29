@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test coinstatsindex across nodes.
@@ -40,7 +40,9 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.supports_cli = False
         self.extra_args = [
-            [],
+            # Explicitly set the output type in order to have consistent tx vsize / fees
+            # for both legacy and descriptor wallets (disables the change address type detection algorithm)
+            ["-addresstype=bech32", "-changetype=bech32"],
             ["-coinstatsindex"]
         ]
 
@@ -71,8 +73,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         address = self.nodes[0].get_deterministic_priv_key().address
         node.sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
         self.generate(node, 1)
-
-        self.sync_blocks(timeout=120)
 
         self.log.info("Test that gettxoutsetinfo() output is consistent with or without coinstatsindex option")
         res0 = node.gettxoutsetinfo('none')
@@ -170,7 +170,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         # Include both txs in a block
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         for hash_option in index_hash_options:
             # Check all amounts were registered correctly
@@ -228,7 +227,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res9 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res8, res9)
 
-        self.generate(index_node, 1)
+        self.generate(index_node, 1, sync_fun=self.no_op)
         res10 = index_node.gettxoutsetinfo('muhash')
         assert(res8['txouts'] < res10['txouts'])
 
@@ -254,7 +253,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 110)
 
         # Add two new blocks
-        block = self.generate(index_node, 2)[1]
+        block = self.generate(index_node, 2, sync_fun=self.no_op)[1]
         res = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
 
         # Test that the result of the reorged block is not returned for its old block height
@@ -271,7 +270,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Add another block, so we don't depend on reconsiderblock remembering which
         # blocks were touched by invalidateblock
         self.generate(index_node, 1)
-        self.sync_all()
 
         # Ensure that removing and re-adding blocks yields consistent results
         block = index_node.getblockhash(99)
@@ -279,14 +277,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         index_node.reconsiderblock(block)
         res3 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
         assert_equal(res2, res3)
-
-        self.log.info("Test that a node aware of stale blocks syncs them as well")
-        node = self.nodes[0]
-        # Ensure the node is aware of a stale block prior to restart
-        node.getblock(reorg_block)
-
-        self.restart_node(0, ["-coinstatsindex"])
-        assert_raises_rpc_error(-32603, "Unable to get data because coinstatsindex is still syncing.", node.gettxoutsetinfo, 'muhash', reorg_block)
 
     def _test_index_rejects_hash_serialized(self):
         self.log.info("Test that the rpc raises if the legacy hash is passed with the index")

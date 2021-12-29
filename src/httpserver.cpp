@@ -12,6 +12,7 @@
 #include <shutdown.h>
 #include <sync.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
@@ -279,6 +280,7 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 static bool ThreadHTTP(struct event_base* base)
 {
     util::ThreadRename("http");
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_HTTP_SERVER);
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
     event_base_dispatch(base);
     // Event loop will be interrupted by InterruptHTTPServer()
@@ -289,7 +291,7 @@ static bool ThreadHTTP(struct event_base* base)
 /** Bind HTTP server to specified addresses */
 static bool HTTPBindAddresses(struct evhttp* http)
 {
-    uint16_t http_port{static_cast<uint16_t>(gArgs.GetArg("-rpcport", BaseParams().RPCPort()))};
+    uint16_t http_port{static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", BaseParams().RPCPort()))};
     std::vector<std::pair<std::string, uint16_t>> endpoints;
 
     // Determine what addresses to bind to
@@ -332,6 +334,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
 static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 {
     util::ThreadRename(strprintf("httpworker.%i", worker_num));
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_HTTP_SERVER_WORKER);
     queue->Run();
 }
 
@@ -374,7 +377,7 @@ bool InitHTTPServer()
         return false;
     }
 
-    evhttp_set_timeout(http, gArgs.GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
+    evhttp_set_timeout(http, gArgs.GetIntArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
     evhttp_set_gencb(http, http_request_cb, nullptr);
@@ -385,7 +388,7 @@ bool InitHTTPServer()
     }
 
     LogPrint(BCLog::HTTP, "Initialized HTTP server\n");
-    int workQueueDepth = std::max((long)gArgs.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
+    int workQueueDepth = std::max((long)gArgs.GetIntArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
 
     g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth);
@@ -415,7 +418,7 @@ static std::vector<std::thread> g_thread_http_workers;
 void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
-    int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
+    int rpcThreads = std::max((long)gArgs.GetIntArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
     g_thread_http = std::thread(ThreadHTTP, eventBase);
 

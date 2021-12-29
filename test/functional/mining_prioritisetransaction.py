@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the prioritisetransaction mining RPC."""
@@ -13,7 +13,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, create_co
 class PrioritiseTransactionTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 2
+        self.num_nodes = 1
         self.extra_args = [[
             "-printpriority=1",
             "-acceptnonstdtxn=1",
@@ -105,7 +105,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # the other high fee transactions. Keep mining until our mempool has
         # decreased by all the high fee size that we calculated above.
         while (self.nodes[0].getmempoolinfo()['bytes'] > sizes[0] + sizes[1]):
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # High fee transaction should not have been mined, but other high fee rate
         # transactions should have been.

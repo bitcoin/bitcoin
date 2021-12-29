@@ -5,9 +5,6 @@
 
 #include <chain.h>
 
-/**
- * CChain implementation
- */
 void CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == nullptr) {
         vChain.clear();

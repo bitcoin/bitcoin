@@ -12,7 +12,6 @@
 
 std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
 {
-    const size_t offset = wallet_dir.string().size() + (wallet_dir == wallet_dir.root_name() ? 0 : 1);
     std::vector<fs::path> paths;
     boost::system::error_code ec;
 
@@ -20,17 +19,15 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
         if (ec) {
             if (fs::is_directory(*it)) {
                 it.no_push();
-                LogPrintf("%s: %s %s -- skipping.\n", __func__, ec.message(), it->path().string());
+                LogPrintf("%s: %s %s -- skipping.\n", __func__, ec.message(), fs::PathToString(it->path()));
             } else {
-                LogPrintf("%s: %s %s\n", __func__, ec.message(), it->path().string());
+                LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(it->path()));
             }
             continue;
         }
 
         try {
-            // Get wallet path relative to walletdir by removing walletdir from the wallet path.
-            // This can be replaced by boost::filesystem::lexically_relative once boost is bumped to 1.60.
-            const fs::path path = it->path().string().substr(offset);
+            const fs::path path{it->path().lexically_relative(wallet_dir)};
 
             if (it->status().type() == fs::directory_file &&
                 (IsBDBFile(BDBDataFile(it->path())) || IsSQLiteFile(SQLiteDataFile(it->path())))) {
@@ -50,7 +47,7 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
                 }
             }
         } catch (const std::exception& e) {
-            LogPrintf("%s: Error scanning %s: %s\n", __func__, it->path().string(), e.what());
+            LogPrintf("%s: Error scanning %s: %s\n", __func__, fs::PathToString(it->path()), e.what());
             it.no_push();
         }
     }
@@ -85,7 +82,7 @@ bool IsBDBFile(const fs::path& path)
     // This check also prevents opening lock files.
     boost::system::error_code ec;
     auto size = fs::file_size(path, ec);
-    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), path.string());
+    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
     if (size < 4096) return false;
 
     fsbridge::ifstream file(path, std::ios::binary);
@@ -109,7 +106,7 @@ bool IsSQLiteFile(const fs::path& path)
     // A SQLite Database file is at least 512 bytes.
     boost::system::error_code ec;
     auto size = fs::file_size(path, ec);
-    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), path.string());
+    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
     if (size < 512) return false;
 
     fsbridge::ifstream file(path, std::ios::binary);

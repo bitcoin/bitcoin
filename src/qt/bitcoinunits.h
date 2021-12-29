@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_BITCOINUNITS_H
 #define BITCOIN_QT_BITCOINUNITS_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QAbstractListModel>
 #include <QString>

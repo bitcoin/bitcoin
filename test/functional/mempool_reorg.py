@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool re-org scenarios.
@@ -79,9 +79,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])
         self.log.info("Generate a block")
         last_block = self.generate(self.nodes[0], 1)
-        # Sync blocks, so that peer 1 gets the block before timelock_tx
+        # generate() implicitly syncs blocks, so that peer 1 gets the block before timelock_tx
         # Otherwise, peer 1 would put the timelock_tx in m_recent_rejects
-        self.sync_all()
 
         self.log.info("The time-locked transaction can now be spent")
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)

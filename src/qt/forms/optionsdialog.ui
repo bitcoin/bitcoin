@@ -179,12 +179,22 @@
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
-             <height>20</height>
+             <height>40</height>
             </size>
            </property>
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="enableServer">
+         <property name="toolTip">
+          <string extracomment="Tooltip text for Options window setting that enables the RPC server.">This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</string>
+         </property>
+         <property name="text">
+          <string extracomment="An Options window setting to enable the RPC server.">Enable R&amp;PC server</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_Main">
@@ -729,10 +739,10 @@
          <item>
           <widget class="QLabel" name="thirdPartyTxUrlsLabel">
            <property name="toolTip">
-            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="text">
-            <string>&amp;Third party transaction URLs</string>
+            <string>&amp;Third-party transaction URLs</string>
            </property>
            <property name="buddy">
             <cstring>thirdPartyTxUrls</cstring>
@@ -742,7 +752,7 @@
          <item>
           <widget class="QLineEdit" name="thirdPartyTxUrls">
            <property name="toolTip">
-            <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="placeholderText">
             <string notr="true">https://example.com/tx/%s</string>

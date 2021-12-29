@@ -33,7 +33,7 @@
 // see https://semver.org/
 #define ANKERL_NANOBENCH_VERSION_MAJOR 4 // incompatible API changes
 #define ANKERL_NANOBENCH_VERSION_MINOR 3 // backwards-compatible changes
-#define ANKERL_NANOBENCH_VERSION_PATCH 4 // backwards-compatible bug fixes
+#define ANKERL_NANOBENCH_VERSION_PATCH 6 // backwards-compatible bug fixes
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // public facing api - as minimal as possible
@@ -88,13 +88,15 @@
         } while (0)
 #endif
 
-#if defined(__linux__) && defined(PERF_EVENT_IOC_ID) && defined(PERF_COUNT_HW_REF_CPU_CYCLES) && defined(PERF_FLAG_FD_CLOEXEC) && \
-    !defined(ANKERL_NANOBENCH_DISABLE_PERF_COUNTERS)
-// only enable perf counters on kernel 3.14 which seems to have all the necessary defines. The three PERF_... defines are not in
-// kernel 2.6.32 (all others are).
-#    define ANKERL_NANOBENCH_PRIVATE_PERF_COUNTERS() 1
-#else
-#    define ANKERL_NANOBENCH_PRIVATE_PERF_COUNTERS() 0
+#define ANKERL_NANOBENCH_PRIVATE_PERF_COUNTERS() 0
+#if defined(__linux__) && !defined(ANKERL_NANOBENCH_DISABLE_PERF_COUNTERS)
+#    include <linux/version.h>
+#    if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+// PERF_COUNT_HW_REF_CPU_CYCLES only available since kernel 3.3
+// PERF_FLAG_FD_CLOEXEC since kernel 3.14
+#        undef ANKERL_NANOBENCH_PRIVATE_PERF_COUNTERS
+#        define ANKERL_NANOBENCH_PRIVATE_PERF_COUNTERS() 1
+#    endif
 #endif
 
 #if defined(__clang__)
@@ -2210,20 +2212,20 @@ struct IterationLogic::Impl {
             columns.emplace_back(10, 1, "err%", "%", rErrorMedian * 100.0);
 
             double rInsMedian = -1.0;
-            if (mResult.has(Result::Measure::instructions)) {
+            if (mBench.performanceCounters() && mResult.has(Result::Measure::instructions)) {
                 rInsMedian = mResult.median(Result::Measure::instructions);
                 columns.emplace_back(18, 2, "ins/" + mBench.unit(), "", rInsMedian / mBench.batch());
             }
 
             double rCycMedian = -1.0;
-            if (mResult.has(Result::Measure::cpucycles)) {
+            if (mBench.performanceCounters() && mResult.has(Result::Measure::cpucycles)) {
                 rCycMedian = mResult.median(Result::Measure::cpucycles);
                 columns.emplace_back(18, 2, "cyc/" + mBench.unit(), "", rCycMedian / mBench.batch());
             }
             if (rInsMedian > 0.0 && rCycMedian > 0.0) {
                 columns.emplace_back(9, 3, "IPC", "", rCycMedian <= 0.0 ? 0.0 : rInsMedian / rCycMedian);
             }
-            if (mResult.has(Result::Measure::branchinstructions)) {
+            if (mBench.performanceCounters() && mResult.has(Result::Measure::branchinstructions)) {
                 double rBraMedian = mResult.median(Result::Measure::branchinstructions);
                 columns.emplace_back(17, 2, "bra/" + mBench.unit(), "", rBraMedian / mBench.batch());
                 if (mResult.has(Result::Measure::branchmisses)) {
@@ -2402,6 +2404,14 @@ public:
         return (a + divisor / 2) / divisor;
     }
 
+    ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
+    static inline uint32_t mix(uint32_t x) noexcept {
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        return x;
+    }
+
     template <typename Op>
     ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
     void calibrate(Op&& op) {
@@ -2441,15 +2451,10 @@ public:
             uint64_t const numIters = 100000U + (std::random_device{}() & 3);
             uint64_t n = numIters;
             uint32_t x = 1234567;
-            auto fn = [&]() {
-                x ^= x << 13;
-                x ^= x >> 17;
-                x ^= x << 5;
-            };
 
             beginMeasure();
             while (n-- > 0) {
-                fn();
+                x = mix(x);
             }
             endMeasure();
             detail::doNotOptimizeAway(x);
@@ -2459,8 +2464,8 @@ public:
             beginMeasure();
             while (n-- > 0) {
                 // we now run *twice* so we can easily calculate the overhead
-                fn();
-                fn();
+                x = mix(x);
+                x = mix(x);
             }
             endMeasure();
             detail::doNotOptimizeAway(x);

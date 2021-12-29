@@ -25,25 +25,25 @@ bool VerifyWallets(WalletContext& context)
     ArgsManager& args = *Assert(context.args);
 
     if (args.IsArgSet("-walletdir")) {
-        fs::path wallet_dir = args.GetArg("-walletdir", "");
+        fs::path wallet_dir = fs::PathFromString(args.GetArg("-walletdir", ""));
         boost::system::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
         fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error);
         if (error || !fs::exists(wallet_dir)) {
-            chain.initError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.string()));
+            chain.initError(strprintf(_("Specified -walletdir \"%s\" does not exist"), fs::PathToString(wallet_dir)));
             return false;
         } else if (!fs::is_directory(wallet_dir)) {
-            chain.initError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), wallet_dir.string()));
+            chain.initError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), fs::PathToString(wallet_dir)));
             return false;
         // The canonical path transforms relative paths into absolute ones, so we check the non-canonical version
         } else if (!wallet_dir.is_absolute()) {
-            chain.initError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), wallet_dir.string()));
+            chain.initError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), fs::PathToString(wallet_dir)));
             return false;
         }
-        args.ForceSetArg("-walletdir", canonical_wallet_dir.string());
+        args.ForceSetArg("-walletdir", fs::PathToString(canonical_wallet_dir));
     }
 
-    LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
+    LogPrintf("Using wallet directory %s\n", fs::PathToString(GetWalletDir()));
 
     chain.initMessage(_("Verifying wallet(s)…").translated);
 
@@ -70,7 +70,7 @@ bool VerifyWallets(WalletContext& context)
 
     for (const auto& wallet : chain.getSettingsList("wallet")) {
         const auto& wallet_file = wallet.get_str();
-        const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), wallet_file);
+        const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(wallet_file));
 
         if (!wallet_paths.insert(path).second) {
             chain.initWarning(strprintf(_("Ignoring duplicate -wallet %s."), wallet_file));
@@ -102,7 +102,7 @@ bool LoadWallets(WalletContext& context)
         std::set<fs::path> wallet_paths;
         for (const auto& wallet : chain.getSettingsList("wallet")) {
             const auto& name = wallet.get_str();
-            if (!wallet_paths.insert(name).second) {
+            if (!wallet_paths.insert(fs::PathFromString(name)).second) {
                 continue;
             }
             DatabaseOptions options;

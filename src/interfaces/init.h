@@ -14,7 +14,7 @@ class Chain;
 class Echo;
 class Ipc;
 class Node;
-class WalletClient;
+class WalletLoader;
 
 //! Initial interface created when a process is first started, and used to give
 //! and get access to other interfaces (Node, Chain, Wallet, etc).
@@ -29,7 +29,7 @@ public:
     virtual ~Init() = default;
     virtual std::unique_ptr<Node> makeNode();
     virtual std::unique_ptr<Chain> makeChain();
-    virtual std::unique_ptr<WalletClient> makeWalletClient(Chain& chain);
+    virtual std::unique_ptr<WalletLoader> makeWalletLoader(Chain& chain);
     virtual std::unique_ptr<Echo> makeEcho();
     virtual Ipc* ipc();
 };

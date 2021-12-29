@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """upgradewallet RPC functional test
@@ -119,8 +119,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
 
     def run_test(self):
-        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress())
-        self.dumb_sync_blocks()
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress(), sync_fun=lambda: self.dumb_sync_blocks())
         # # Sanity check the test framework:
         res = self.nodes[0].getblockchaininfo()
         assert_equal(res['blocks'], COINBASE_MATURITY + 1)
@@ -131,8 +130,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         # Send coins to old wallets for later conversion checks.
         v16_3_wallet  = v16_3_node.get_wallet_rpc('wallet.dat')
         v16_3_address = v16_3_wallet.getnewaddress()
-        self.generatetoaddress(node_master, COINBASE_MATURITY + 1, v16_3_address)
-        self.dumb_sync_blocks()
+        self.generatetoaddress(node_master, COINBASE_MATURITY + 1, v16_3_address, sync_fun=lambda: self.dumb_sync_blocks())
         v16_3_balance = v16_3_wallet.getbalance()
 
         self.log.info("Test upgradewallet RPC...")
@@ -234,18 +232,13 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(1, hd_chain_version)
         seed_id = bytearray(seed_id)
         seed_id.reverse()
-        old_kvs = new_kvs
-        # First 2 keys should still be non-HD
-        for i in range(0, 2):
-            info = wallet.getaddressinfo(wallet.getnewaddress())
-            assert 'hdkeypath' not in info
-            assert 'hdseedid' not in info
-        # Next key should be HD
+
+        # New keys (including change) should be HD (the two old keys have been flushed)
         info = wallet.getaddressinfo(wallet.getnewaddress())
         assert_equal(seed_id.hex(), info['hdseedid'])
         assert_equal('m/0\'/0\'/0\'', info['hdkeypath'])
         prev_seed_id = info['hdseedid']
-        # Change key should be the same keypool
+        # Change key should be HD and from the same keypool
         info = wallet.getaddressinfo(wallet.getrawchangeaddress())
         assert_equal(prev_seed_id, info['hdseedid'])
         assert_equal('m/0\'/0\'/1\'', info['hdkeypath'])
@@ -291,14 +284,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         hd_chain_version, external_counter, seed_id, internal_counter = struct.unpack('<iI20sI', hd_chain)
         assert_equal(2, hd_chain_version)
         assert_equal(2, internal_counter)
-        # Drain the keypool by fetching one external key and one change key. Should still be the same keypool
-        info = wallet.getaddressinfo(wallet.getnewaddress())
-        assert 'hdseedid' not in info
-        assert 'hdkeypath' not in info
-        info = wallet.getaddressinfo(wallet.getrawchangeaddress())
-        assert 'hdseedid' not in info
-        assert 'hdkeypath' not in info
-        # The next addresses are HD and should be on different HD chains
+        # The next addresses are HD and should be on different HD chains (the one remaining key in each pool should have been flushed)
         info = wallet.getaddressinfo(wallet.getnewaddress())
         ext_id = info['hdseedid']
         assert_equal('m/0\'/0\'/0\'', info['hdkeypath'])

@@ -328,7 +328,7 @@ void Session::GenerateAndSavePrivateKey(const Sock& sock)
     if (!WriteBinaryFile(m_private_key_file,
                          std::string(m_private_key.begin(), m_private_key.end()))) {
         throw std::runtime_error(
-            strprintf("Cannot save I2P private key to %s", m_private_key_file));
+            strprintf("Cannot save I2P private key to %s", fs::quoted(fs::PathToString(m_private_key_file))));
     }
 }
 

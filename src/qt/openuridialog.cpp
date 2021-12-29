@@ -6,15 +6,20 @@
 #include <qt/forms/ui_openuridialog.h>
 
 #include <qt/guiutil.h>
+#include <qt/platformstyle.h>
 #include <qt/sendcoinsrecipient.h>
 
+#include <QAbstractButton>
+#include <QLineEdit>
 #include <QUrl>
 
-OpenURIDialog::OpenURIDialog(QWidget *parent) :
-    QDialog(parent, GUIUtil::dialog_flags),
-    ui(new Ui::OpenURIDialog)
+OpenURIDialog::OpenURIDialog(const PlatformStyle* platformStyle, QWidget* parent) : QDialog(parent, GUIUtil::dialog_flags),
+                                                                                    ui(new Ui::OpenURIDialog),
+                                                                                    m_platform_style(platformStyle)
 {
     ui->setupUi(this);
+    ui->pasteButton->setIcon(m_platform_style->SingleColorIcon(":/icons/editpaste"));
+    QObject::connect(ui->pasteButton, &QAbstractButton::clicked, ui->uriEdit, &QLineEdit::paste);
 
     GUIUtil::handleCloseWindowShortcut(this);
 }
@@ -32,11 +37,19 @@ QString OpenURIDialog::getURI()
 void OpenURIDialog::accept()
 {
     SendCoinsRecipient rcp;
-    if(GUIUtil::parseBitcoinURI(getURI(), &rcp))
-    {
+    if (GUIUtil::parseBitcoinURI(getURI(), &rcp)) {
         /* Only accept value URIs */
         QDialog::accept();
     } else {
         ui->uriEdit->setValid(false);
     }
+}
+
+void OpenURIDialog::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::PaletteChange) {
+        ui->pasteButton->setIcon(m_platform_style->SingleColorIcon(":/icons/editpaste"));
+    }
+
+    QDialog::changeEvent(e);
 }

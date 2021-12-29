@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP66 (DER SIG).
@@ -8,7 +8,6 @@ Test the DERSIG soft-fork activation on regtest.
 """
 
 from test_framework.blocktools import (
-    DERSIG_HEIGHT,
     create_block,
     create_coinbase,
 )
@@ -42,10 +41,14 @@ def unDERify(tx):
     tx.vin[0].scriptSig = CScript(newscript)
 
 
+DERSIG_HEIGHT = 102
+
+
 class BIP66Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[
+            f'-testactivationheight=dersig@{DERSIG_HEIGHT}',
             '-whitelist=noban@127.0.0.1',
             '-par=1',  # Use only one script thread to get the exact log msg for testing
         ]]
@@ -82,11 +85,7 @@ class BIP66Test(BitcoinTestFramework):
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
-        block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
-        block.nVersion = 2
-        block.vtx.append(spendtx)
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
+        block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time, txlist=[spendtx])
         block.solve()
 
         assert_equal(self.nodes[0].getblockcount(), DERSIG_HEIGHT - 2)
@@ -99,9 +98,7 @@ class BIP66Test(BitcoinTestFramework):
         self.log.info("Test that blocks must now be at least version 3")
         tip = block.sha256
         block_time += 1
-        block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
-        block.nVersion = 2
-        block.rehash()
+        block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time, version=2)
         block.solve()
 
         with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash}, bad-version(0x00000002)']):
@@ -110,7 +107,7 @@ class BIP66Test(BitcoinTestFramework):
             peer.sync_with_ping()
 
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
-        block.nVersion = 3
+        block.nVersion = 4
 
         spendtx = self.create_tx(self.coinbase_txids[1])
         unDERify(spendtx)
@@ -131,7 +128,6 @@ class BIP66Test(BitcoinTestFramework):
         # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block.solve()
 
         with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)']):
@@ -139,10 +135,9 @@ class BIP66Test(BitcoinTestFramework):
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
 
-        self.log.info("Test that a version 3 block with a DERSIG-compliant transaction is accepted")
+        self.log.info("Test that a block with a DERSIG-compliant transaction is accepted")
         block.vtx[1] = self.create_tx(self.coinbase_txids[1])
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block.solve()
 
         self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules

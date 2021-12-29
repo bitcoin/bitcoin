@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
@@ -19,7 +19,6 @@ from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
     assert_raises_rpc_error,
 )
 from test_framework.script_util import (
@@ -27,7 +26,7 @@ from test_framework.script_util import (
     DUMMY_2_P2WPKH_SCRIPT,
 )
 from test_framework.wallet import MiniWallet
-
+from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
 MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(BitcoinTestFramework):
@@ -45,14 +44,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         ]
         self.supports_cli = False
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
         # the pre-mined test framework chain contains coinbase outputs to the
-        # MiniWallet's default address ADDRESS_BCRT1_P2WSH_OP_TRUE in blocks
-        # 76-100 (see method BitcoinTestFramework._initialize_chain())
+        # MiniWallet's default address in blocks 76-100 (see method
+        # BitcoinTestFramework._initialize_chain())
         self.wallet.rescan_utxos()
 
         self.log.info("Running test simple doublespend...")
@@ -96,23 +92,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
         """Create a txout with a given amount and scriptPubKey
 
-        Assumes that MiniWallet has enough funds to cover the amount and the fixed fee
-        (from it's internal utxos, the one with the largest value is taken).
-
         confirmed - txouts created will be confirmed in the blockchain;
                     unconfirmed otherwise.
         """
-        # MiniWallet only supports sweeping utxos to its own internal scriptPubKey, so in
-        # order to create an output with arbitrary amount/scriptPubKey, we have to add it
-        # manually after calling the create_self_transfer method. The MiniWallet output's
-        # nValue has to be adapted accordingly (amount and fee deduction). To keep things
-        # simple, we use a fixed fee of 1000 Satoshis here.
-        fee = 1000
-        tx = self.wallet.create_self_transfer(from_node=node, fee_rate=0, mempool_valid=False)['tx']
-        assert_greater_than(tx.vout[0].nValue, amount + fee)
-        tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
-        tx.vout.append(CTxOut(amount, scriptPubKey))  # desired output -> to be returned
-        txid = self.wallet.sendrawtransaction(from_node=node, tx_hex=tx.serialize().hex())
+        txid, n = self.wallet.send_to(from_node=node, scriptPubKey=scriptPubKey, amount=amount)
 
         # If requested, ensure txouts are confirmed.
         if confirmed:
@@ -125,7 +108,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 assert new_size < mempool_size
                 mempool_size = new_size
 
-        return COutPoint(int(txid, 16), 1)
+        return COutPoint(int(txid, 16), n)
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
@@ -545,9 +528,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert tx2b_txid in self.nodes[0].getrawmempool()
 
     def test_rpc(self):
-        us0 = self.nodes[0].listunspent()[0]
+        us0 = self.wallet.get_utxo()
         ins = [us0]
-        outs = {self.nodes[0].getnewaddress(): Decimal(1.0000000)}
+        outs = {ADDRESS_BCRT1_UNSPENDABLE: Decimal(1.0000000)}
         rawtx0 = self.nodes[0].createrawtransaction(ins, outs, 0, True)
         rawtx1 = self.nodes[0].createrawtransaction(ins, outs, 0, False)
         json0 = self.nodes[0].decoderawtransaction(rawtx0)
@@ -555,14 +538,16 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(json0["vin"][0]["sequence"], 4294967293)
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
 
-        rawtx2 = self.nodes[0].createrawtransaction([], outs)
-        frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})
-        frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": False})
+        if self.is_specified_wallet_compiled():
+            self.init_wallet(node=0)
+            rawtx2 = self.nodes[0].createrawtransaction([], outs)
+            frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})
+            frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": False})
 
-        json0 = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
-        json1 = self.nodes[0].decoderawtransaction(frawtx2b['hex'])
-        assert_equal(json0["vin"][0]["sequence"], 4294967293)
-        assert_equal(json1["vin"][0]["sequence"], 4294967294)
+            json0 = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
+            json1 = self.nodes[0].decoderawtransaction(frawtx2b['hex'])
+            assert_equal(json0["vin"][0]["sequence"], 4294967293)
+            assert_equal(json1["vin"][0]["sequence"], 4294967294)
 
     def test_no_inherited_signaling(self):
         confirmed_utxo = self.wallet.get_utxo()

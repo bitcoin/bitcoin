@@ -4,7 +4,7 @@
 
 #include <interfaces/wallet.h>
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <policy/fees.h>
@@ -24,7 +24,7 @@
 #include <wallet/ismine.h>
 #include <wallet/load.h>
 #include <wallet/receive.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 
@@ -40,7 +40,7 @@ using interfaces::MakeHandler;
 using interfaces::Wallet;
 using interfaces::WalletAddress;
 using interfaces::WalletBalances;
-using interfaces::WalletClient;
+using interfaces::WalletLoader;
 using interfaces::WalletOrderForm;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
@@ -82,7 +82,10 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
 {
     WalletTxStatus result;
-    result.block_height = wtx.m_confirm.block_height > 0 ? wtx.m_confirm.block_height : std::numeric_limits<int>::max();
+    result.block_height =
+        wtx.state<TxStateConfirmed>() ? wtx.state<TxStateConfirmed>()->confirmed_block_height :
+        wtx.state<TxStateConflicted>() ? wtx.state<TxStateConflicted>()->conflicting_block_height :
+        std::numeric_limits<int>::max();
     result.blocks_to_maturity = wallet.GetTxBlocksToMaturity(wtx);
     result.depth_in_main_chain = wallet.GetTxDepthInMainChain(wtx);
     result.time_received = wtx.nTimeReceived;
@@ -214,15 +217,17 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->DisplayAddress(dest);
     }
-    void lockCoin(const COutPoint& output) override
+    bool lockCoin(const COutPoint& output, const bool write_to_db) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->LockCoin(output);
+        std::unique_ptr<WalletBatch> batch = write_to_db ? std::make_unique<WalletBatch>(m_wallet->GetDatabase()) : nullptr;
+        return m_wallet->LockCoin(output, batch.get());
     }
-    void unlockCoin(const COutPoint& output) override
+    bool unlockCoin(const COutPoint& output) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->UnlockCoin(output);
+        std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(m_wallet->GetDatabase());
+        return m_wallet->UnlockCoin(output, batch.get());
     }
     bool isLockedCoin(const COutPoint& output) override
     {
@@ -456,6 +461,11 @@ public:
     bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
     bool hasExternalSigner() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
+    bool taprootEnabled() override {
+        if (m_wallet->IsLegacy()) return false;
+        auto spk_man = m_wallet->GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/false);
+        return spk_man != nullptr;
+    }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
@@ -500,15 +510,15 @@ public:
     std::shared_ptr<CWallet> m_wallet;
 };
 
-class WalletClientImpl : public WalletClient
+class WalletLoaderImpl : public WalletLoader
 {
 public:
-    WalletClientImpl(Chain& chain, ArgsManager& args)
+    WalletLoaderImpl(Chain& chain, ArgsManager& args)
     {
         m_context.chain = &chain;
         m_context.args = &args;
     }
-    ~WalletClientImpl() override { UnloadWallets(m_context); }
+    ~WalletLoaderImpl() override { UnloadWallets(m_context); }
 
     //! ChainClient methods
     void registerRpcs() override
@@ -529,7 +539,7 @@ public:
     void stop() override { return StopWallets(m_context); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
 
-    //! WalletClient methods
+    //! WalletLoader methods
     std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         std::shared_ptr<CWallet> wallet;
@@ -547,15 +557,21 @@ public:
         options.require_existing = true;
         return MakeWallet(m_context, LoadWallet(m_context, name, true /* load_on_start */, options, status, error, warnings));
     }
+    std::unique_ptr<Wallet> restoreWallet(const std::string& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    {
+        DatabaseStatus status;
+
+        return MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
+    }
     std::string getWalletDir() override
     {
-        return GetWalletDir().string();
+        return fs::PathToString(GetWalletDir());
     }
     std::vector<std::string> listWalletDir() override
     {
         std::vector<std::string> paths;
         for (auto& path : ListDatabases(GetWalletDir())) {
-            paths.push_back(path.string());
+            paths.push_back(fs::PathToString(path));
         }
         return paths;
     }
@@ -584,8 +600,8 @@ public:
 namespace interfaces {
 std::unique_ptr<Wallet> MakeWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(context, wallet) : nullptr; }
 
-std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args)
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args)
 {
-    return std::make_unique<wallet::WalletClientImpl>(chain, args);
+    return std::make_unique<wallet::WalletLoaderImpl>(chain, args);
 }
 } // namespace interfaces

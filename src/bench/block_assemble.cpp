@@ -34,10 +34,10 @@ static void AssembleBlock(benchmark::Bench& bench)
             txs.at(b) = MakeTransactionRef(tx);
     }
     {
-        LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
+        LOCK(::cs_main);
 
         for (const auto& txr : txs) {
-            const MempoolAcceptResult res = ::AcceptToMemoryPool(test_setup->m_node.chainman->ActiveChainstate(), *test_setup->m_node.mempool, txr, false /* bypass_limits */);
+            const MempoolAcceptResult res = test_setup->m_node.chainman->ProcessTransaction(txr);
             assert(res.m_result_type == MempoolAcceptResult::ResultType::VALID);
         }
     }

@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\qt\main.cpp" />
-    <ClCompile Include="..\..\src\init\bitcoind.cpp" />
+    <ClCompile Include="..\..\src\init\bitcoin-qt.cpp" />
     <ResourceCompile Include="..\..\src\qt\res\bitcoin-qt-res.rc" />
   </ItemGroup>
   <ItemGroup>

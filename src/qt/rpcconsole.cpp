@@ -14,6 +14,7 @@
 #include <netbase.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
+#include <qt/guiutil.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/platformstyle.h>
 #include <qt/walletmodel.h>
@@ -247,10 +248,11 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                                 UniValue subelement;
                                 if (lastResult.isArray())
                                 {
-                                    for(char argch: curarg)
-                                        if (!IsDigit(argch))
-                                            throw std::runtime_error("Invalid result query");
-                                    subelement = lastResult[atoi(curarg.c_str())];
+                                    const auto parsed{ToIntegral<size_t>(curarg)};
+                                    if (!parsed) {
+                                        throw std::runtime_error("Invalid result query");
+                                    }
+                                    subelement = lastResult[parsed.value()];
                                 }
                                 else if (lastResult.isObject())
                                     subelement = find_value(lastResult, curarg);
@@ -495,14 +497,28 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     constexpr QChar nonbreaking_hyphen(8209);
     const std::vector<QString> CONNECTION_TYPE_DOC{
+        //: Explanatory text for an inbound peer connection.
         tr("Inbound: initiated by peer"),
+        /*: Explanatory text for an outbound peer connection that
+            relays all network information. This is the default behavior for
+            outbound connections. */
         tr("Outbound Full Relay: default"),
+        /*: Explanatory text for an outbound peer connection that relays
+            network information about blocks and not transactions or addresses. */
         tr("Outbound Block Relay: does not relay transactions or addresses"),
+        /*: Explanatory text for an outbound peer connection that was
+            established manually through one of several methods. The numbered
+            arguments are stand-ins for the methods available to establish
+            manual connections. */
         tr("Outbound Manual: added using RPC %1 or %2/%3 configuration options")
             .arg("addnode")
             .arg(QString(nonbreaking_hyphen) + "addnode")
             .arg(QString(nonbreaking_hyphen) + "connect"),
+        /*: Explanatory text for a short-lived outbound peer connection that
+            is used to test the aliveness of known addresses. */
         tr("Outbound Feeler: short-lived, for testing addresses"),
+        /*: Explanatory text for a short-lived outbound peer connection that is used
+            to request addresses from a peer. */
         tr("Outbound Address Fetch: short-lived, for soliciting addresses")};
     const QString list{"<ul><li>" + Join(CONNECTION_TYPE_DOC, QString("</li><li>")) + "</li></ul>"};
     ui->peerConnectionTypeLabel->setToolTip(ui->peerConnectionTypeLabel->toolTip().arg(list));
@@ -851,7 +867,11 @@ void RPCConsole::clear(bool keep_prompt)
     }
 
     // Set default style sheet
+#ifdef Q_OS_MAC
+    QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont(/*use_embedded_font=*/true));
+#else
     QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont());
+#endif
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
@@ -891,8 +911,7 @@ void RPCConsole::clear(bool keep_prompt)
 
 void RPCConsole::keyPressEvent(QKeyEvent *event)
 {
-    if(windowType() != Qt::Widget && event->key() == Qt::Key_Escape)
-    {
+    if (windowType() != Qt::Widget && GUIUtil::IsEscapeOrBack(event->key())) {
         close();
     }
 }
@@ -1122,7 +1141,7 @@ void RPCConsole::on_sldGraphRange_valueChanged(int value)
 void RPCConsole::setTrafficGraphRange(int mins)
 {
     ui->trafficGraph->setGraphRangeMins(mins);
-    ui->lblGraphRange->setText(GUIUtil::formatDurationStr(mins * 60));
+    ui->lblGraphRange->setText(GUIUtil::formatDurationStr(std::chrono::minutes{mins}));
 }
 
 void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)
@@ -1153,12 +1172,12 @@ void RPCConsole::updateDetailWidget()
     if (stats->nodeStats.m_bip152_highbandwidth_from) bip152_hb_settings += (bip152_hb_settings.isEmpty() ? ts.from : QLatin1Char('/') + ts.from);
     if (bip152_hb_settings.isEmpty()) bip152_hb_settings = ts.no;
     ui->peerHighBandwidth->setText(bip152_hb_settings);
-    const int64_t time_now{GetTimeSeconds()};
-    ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.nTimeConnected));
-    ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.nLastBlockTime));
-    ui->peerLastTx->setText(TimeDurationField(time_now, stats->nodeStats.nLastTXTime));
-    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.nLastSend));
-    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.nLastRecv));
+    const auto time_now{GetTime<std::chrono::seconds>()};
+    ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.m_connected));
+    ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.m_last_block_time));
+    ui->peerLastTx->setText(TimeDurationField(time_now, stats->nodeStats.m_last_tx_time));
+    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.m_last_send));
+    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.m_last_recv));
     ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));

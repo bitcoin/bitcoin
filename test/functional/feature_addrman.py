@@ -5,6 +5,7 @@
 """Test addrman functionality"""
 
 import os
+import re
 import struct
 
 from test_framework.messages import ser_uint256, hash256
@@ -17,7 +18,7 @@ from test_framework.util import assert_equal
 def serialize_addrman(
     *,
     format=1,
-    lowest_compatible=3,
+    lowest_compatible=4,
     net_magic="regtest",
     bucket_key=1,
     len_new=None,
@@ -56,7 +57,7 @@ class AddrmanTest(BitcoinTestFramework):
         init_error = lambda reason: (
             f"Error: Invalid or corrupt peers.dat \\({reason}\\). If you believe this "
             f"is a bug, please report it to {self.config['environment']['PACKAGE_BUGREPORT']}. "
-            f'As a workaround, you can move the file \\("{peers_dat}"\\) out of the way \\(rename, '
+            f'As a workaround, you can move the file \\("{re.escape(peers_dat)}"\\) out of the way \\(rename, '
             "move, or delete\\) to have a new one created on the next start."
         )
 
@@ -74,7 +75,7 @@ class AddrmanTest(BitcoinTestFramework):
             expected_msg=init_error(
                 "Unsupported format of addrman database: 1. It is compatible with "
                 "formats >=111, but the maximum supported by this version of "
-                f"{self.config['environment']['PACKAGE_NAME']} is 3.: (.+)"
+                f"{self.config['environment']['PACKAGE_NAME']} is 4.: (.+)"
             ),
             match=ErrorMatch.FULL_REGEX,
         )
@@ -108,7 +109,7 @@ class AddrmanTest(BitcoinTestFramework):
         self.stop_node(0)
         write_addrman(peers_dat, len_tried=-1)
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg=init_error("Corrupt CAddrMan serialization: nTried=-1, should be in \\[0, 16384\\]:.*"),
+            expected_msg=init_error("Corrupt AddrMan serialization: nTried=-1, should be in \\[0, 16384\\]:.*"),
             match=ErrorMatch.FULL_REGEX,
         )
 
@@ -116,7 +117,7 @@ class AddrmanTest(BitcoinTestFramework):
         self.stop_node(0)
         write_addrman(peers_dat, len_new=-1)
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg=init_error("Corrupt CAddrMan serialization: nNew=-1, should be in \\[0, 65536\\]:.*"),
+            expected_msg=init_error("Corrupt AddrMan serialization: nNew=-1, should be in \\[0, 65536\\]:.*"),
             match=ErrorMatch.FULL_REGEX,
         )
 

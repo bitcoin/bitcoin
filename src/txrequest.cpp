@@ -300,7 +300,7 @@ std::map<uint256, TxHashInfo> ComputeTxHashInfo(const Index& index, const Priori
 
 GenTxid ToGenTxid(const Announcement& ann)
 {
-    return {ann.m_is_wtxid, ann.m_txhash};
+    return ann.m_is_wtxid ? GenTxid::Wtxid(ann.m_txhash) : GenTxid::Txid(ann.m_txhash);
 }
 
 }  // namespace

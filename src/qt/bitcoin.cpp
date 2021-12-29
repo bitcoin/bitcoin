@@ -13,7 +13,6 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <node/context.h>
 #include <node/ui_interface.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>
@@ -46,7 +45,6 @@
 
 #include <QApplication>
 #include <QDebug>
-#include <QFontDatabase>
 #include <QLatin1String>
 #include <QLibraryInfo>
 #include <QLocale>
@@ -55,6 +53,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
+#include <QWindow>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -66,6 +65,8 @@ Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 Q_IMPORT_PLUGIN(QMacStylePlugin);
+#elif defined(QT_QPA_PLATFORM_ANDROID)
+Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 #endif
 #endif
 
@@ -154,10 +155,11 @@ static bool InitSettings()
 
     std::vector<std::string> errors;
     if (!gArgs.ReadSettingsFile(&errors)) {
-        bilingual_str error = _("Settings file could not be read");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
+        std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be read");
+        std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
+        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
 
-        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Reset | QMessageBox::Abort);
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Reset | QMessageBox::Abort);
         /*: Explanatory text shown on startup when the settings file cannot be read.
             Prompts user to make a choice between resetting or aborting. */
         messagebox.setInformativeText(QObject::tr("Do you want to reset settings to default values, or to abort without making changes?"));
@@ -176,10 +178,11 @@ static bool InitSettings()
 
     errors.clear();
     if (!gArgs.WriteSettingsFile(&errors)) {
-        bilingual_str error = _("Settings file could not be written");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
+        std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be written");
+        std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
+        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
 
-        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Ok);
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Ok);
         /*: Explanatory text shown on startup when the settings file could not be written.
             Prompts user to check that we have the ability to write to the file.
             Explains that the user has the option of running without a settings file.*/
@@ -259,6 +262,7 @@ void BitcoinApplication::createOptionsModel(bool resetSettings)
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
     window = new BitcoinGUI(node(), platformStyle, networkStyle, nullptr);
+    connect(window, &BitcoinGUI::quitRequested, this, &BitcoinApplication::requestShutdown);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, &QTimer::timeout, window, &BitcoinGUI::detectShutdown);
@@ -271,7 +275,6 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     // We don't hold a direct pointer to the splash screen after creation, but the splash
     // screen will take care of deleting itself when finish() happens.
     m_splash->show();
-    connect(this, &BitcoinApplication::requestedInitialize, m_splash, &SplashScreen::handleLoadWallet);
     connect(this, &BitcoinApplication::splashFinished, m_splash, &SplashScreen::finish);
     connect(this, &BitcoinApplication::requestedShutdown, m_splash, &QWidget::close);
 }
@@ -296,7 +299,7 @@ void BitcoinApplication::startThread()
 
     /*  communication to and from thread */
     connect(&m_executor.value(), &InitExecutor::initializeResult, this, &BitcoinApplication::initializeResult);
-    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &BitcoinApplication::shutdownResult);
+    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &QCoreApplication::quit);
     connect(&m_executor.value(), &InitExecutor::runawayException, this, &BitcoinApplication::handleRunawayException);
     connect(this, &BitcoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &BitcoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
@@ -326,13 +329,17 @@ void BitcoinApplication::requestInitialize()
 
 void BitcoinApplication::requestShutdown()
 {
+    for (const auto w : QGuiApplication::topLevelWindows()) {
+        w->hide();
+    }
+
     // Show a simple window indicating shutdown status
     // Do this first as some of the steps may take some time below,
     // for example the RPC console may still be executing a command.
     shutdownWindow.reset(ShutdownWindow::showShutdownWindow(window));
 
     qDebug() << __func__ << ": Requesting shutdown";
-    window->hide();
+
     // Must disconnect node signals otherwise current thread can deadlock since
     // no event loop is running.
     window->unsubscribeFromCoreSignals();
@@ -409,13 +416,8 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
         pollShutdownTimer->start(200);
     } else {
         Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
-        quit(); // Exit first main loop invocation
+        requestShutdown();
     }
-}
-
-void BitcoinApplication::shutdownResult()
-{
-    quit(); // Exit second main loop invocation after shutdown finished
 }
 
 void BitcoinApplication::handleRunawayException(const QString &message)
@@ -462,9 +464,7 @@ int GuiMain(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
 
-    NodeContext node_context;
-    int unused_exit_status;
-    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node_context, argc, argv, unused_exit_status);
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
 
     SetupEnvironment();
     util::ThreadSetInternalName("main");
@@ -491,7 +491,7 @@ int GuiMain(int argc, char* argv[])
 #endif
 
     BitcoinApplication app;
-    QFontDatabase::addApplicationFont(":/fonts/monospace");
+    GUIUtil::LoadFont(QStringLiteral(":/fonts/monospace"));
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
@@ -639,8 +639,6 @@ int GuiMain(int argc, char* argv[])
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(PACKAGE_NAME), (HWND)app.getMainWinId());
 #endif
-            app.exec();
-            app.requestShutdown();
             app.exec();
             rv = app.getReturnValue();
         } else {

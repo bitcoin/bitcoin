@@ -66,6 +66,7 @@ private:
     bool m_shutdown = false;
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_init_wallet;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
     std::list<std::unique_ptr<interfaces::Wallet>> m_connected_wallets;
     std::list<std::unique_ptr<interfaces::Handler>> m_connected_wallet_handlers;

@@ -4,18 +4,77 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import argparse
+import io
+import requests
 import subprocess
 import sys
-import requests
 
 DEFAULT_GLOBAL_FAUCET = 'https://signetfaucet.com/claim'
+DEFAULT_GLOBAL_CAPTCHA = 'https://signetfaucet.com/captcha'
 GLOBAL_FIRST_BLOCK_HASH = '00000086d6b2636cb2a392d45edc4ec544a10024d30141c9adf4bfd9de533b53'
+
+# braille unicode block
+BASE = 0x2800
+BIT_PER_PIXEL = [
+    [0x01, 0x08],
+    [0x02, 0x10],
+    [0x04, 0x20],
+    [0x40, 0x80],
+]
+BW = 2
+BH = 4
+
+# imagemagick or compatible fork (used for converting SVG)
+CONVERT = 'convert'
+
+class PPMImage:
+    '''
+    Load a PPM image (Pillow-ish API).
+    '''
+    def __init__(self, f):
+        if f.readline() != b'P6\n':
+            raise ValueError('Invalid ppm format: header')
+        line = f.readline()
+        (width, height) = (int(x) for x in line.rstrip().split(b' '))
+        if f.readline() != b'255\n':
+            raise ValueError('Invalid ppm format: color depth')
+        data = f.read(width * height * 3)
+        stride = width * 3
+        self.size = (width, height)
+        self._grid = [[tuple(data[stride * y + 3 * x:stride * y + 3 * (x + 1)]) for x in range(width)] for y in range(height)]
+
+    def getpixel(self, pos):
+        return self._grid[pos[1]][pos[0]]
+
+def print_image(img, threshold=128):
+    '''Print black-and-white image to terminal in braille unicode characters.'''
+    x_blocks = (img.size[0] + BW - 1) // BW
+    y_blocks = (img.size[1] + BH - 1) // BH
+
+    for yb in range(y_blocks):
+        line = []
+        for xb in range(x_blocks):
+            ch = BASE
+            for y in range(BH):
+                for x in range(BW):
+                    try:
+                        val = img.getpixel((xb * BW + x, yb * BH + y))
+                    except IndexError:
+                        pass
+                    else:
+                        if val[0] < threshold:
+                            ch |= BIT_PER_PIXEL[y][x]
+            line.append(chr(ch))
+        print(''.join(line))
 
 parser = argparse.ArgumentParser(description='Script to get coins from a faucet.', epilog='You may need to start with double-dash (--) when providing bitcoin-cli arguments.')
 parser.add_argument('-c', '--cmd', dest='cmd', default='bitcoin-cli', help='bitcoin-cli command to use')
 parser.add_argument('-f', '--faucet', dest='faucet', default=DEFAULT_GLOBAL_FAUCET, help='URL of the faucet')
+parser.add_argument('-g', '--captcha', dest='captcha', default=DEFAULT_GLOBAL_CAPTCHA, help='URL of the faucet captcha, or empty if no captcha is needed')
 parser.add_argument('-a', '--addr', dest='addr', default='', help='Bitcoin address to which the faucet should send')
 parser.add_argument('-p', '--password', dest='password', default='', help='Faucet password, if any')
+parser.add_argument('-n', '--amount', dest='amount', default='0.001', help='Amount to request (0.001-0.1, default is 0.001)')
+parser.add_argument('-i', '--imagemagick', dest='imagemagick', default=CONVERT, help='Path to imagemagick convert utility')
 parser.add_argument('bitcoin_cli_args', nargs='*', help='Arguments to pass on to bitcoin-cli (default: -signet)')
 
 args = parser.parse_args()
@@ -43,14 +102,43 @@ if args.faucet.lower() == DEFAULT_GLOBAL_FAUCET:
     if curr_signet_hash != GLOBAL_FIRST_BLOCK_HASH:
         print('The global faucet cannot be used with a custom Signet network. Please use the global signet or setup your custom faucet to use this functionality.\n')
         exit(1)
+else:
+    # For custom faucets, don't request captcha by default.
+    if args.captcha == DEFAULT_GLOBAL_CAPTCHA:
+        args.captcha = ''
 
 if args.addr == '':
     # get address for receiving coins
     args.addr = bitcoin_cli(['getnewaddress', 'faucet', 'bech32'])
 
-data = {'address': args.addr, 'password': args.password}
+data = {'address': args.addr, 'password': args.password, 'amount': args.amount}
+
+# Store cookies
+# for debugging: print(session.cookies.get_dict())
+session = requests.Session()
+
+if args.captcha != '': # Retrieve a captcha
+    try:
+        res = session.get(args.captcha)
+    except:
+        print('Unexpected error when contacting faucet:', sys.exc_info()[0])
+        exit(1)
+
+    # Convert SVG image to PPM, and load it
+    try:
+        rv = subprocess.run([args.imagemagick, '-', '-depth', '8', 'ppm:-'], input=res.content, check=True, capture_output=True)
+    except FileNotFoundError:
+        print('The binary', args.imagemagick, 'could not be found. Please make sure ImageMagick (or a compatible fork) is installed and that the correct path is specified.')
+        exit(1)
+    img = PPMImage(io.BytesIO(rv.stdout))
+
+    # Terminal interaction
+    print_image(img)
+    print('Enter captcha: ', end='')
+    data['captcha'] = input()
+
 try:
-    res = requests.post(args.faucet, data=data)
+    res = session.post(args.faucet, data=data)
 except:
     print('Unexpected error when contacting faucet:', sys.exc_info()[0])
     exit(1)
