@@ -100,3 +100,7 @@ gdb src/test/test_bitcoin core
 
 (gbd) bt  # produce a backtrace for where a segfault occurred
 ```
+
+#### Additional guide
+Below is a great guide on how to run the tests if you're not able to compile the tests successfully yet:
+https://jonatack.github.io/articles/how-to-compile-bitcoin-core-and-run-the-tests
