@@ -40,6 +40,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\consensus\dynengine.h" />
     <ClInclude Include="..\..\src\consensus\dynvm.h" />
+    <ClInclude Include="..\..\src\crypto\aes256.hpp" />
     <ClInclude Include="..\..\src\primitives\contract.h" />
     <ClInclude Include="..\..\src\primitives\contract_manager.h" />
     <ClInclude Include="..\..\src\primitives\dynnft.h" />

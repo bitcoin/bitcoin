@@ -1347,8 +1347,11 @@ bool CChainState::IsInitialBlockDownload() const
         return true;
     if (m_chain.Tip()->nChainWork < nMinimumChainWork)
         return true;
-    if (m_chain.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
-        return true;
+
+    if (!IS_TESTNET)        //testnet doesnt care how old blocks are
+        if (m_chain.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
+            return true;
+
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     m_cached_finished_ibd.store(true, std::memory_order_relaxed);
     return false;
@@ -3873,15 +3876,15 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     start = 5;
                 }
 
-                bool foundContract = true;
+                bool foundCreateContract = true;
                 if (size > 4) {
                     for (int y = 0; y < 4; y++)
                         if (vout.scriptPubKey[start + y] != 0x36)
-                            foundContract = false;
+                            foundCreateContract = false;
                 } else
-                    foundContract = false;
+                    foundCreateContract = false;
 
-                if (foundContract) {
+                if (foundCreateContract) {
 
                     //load contract code to string
                     std::string code;
@@ -3943,6 +3946,18 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                         //TODO - fail validation
                     }
                 }
+
+
+                bool foundExecContract = false;
+                if (size > 4)
+                    foundExecContract = ((vout.scriptPubKey[start] == 0x36) && (vout.scriptPubKey[start + 1] == 0x36) &&
+                                                (vout.scriptPubKey[start + 2] == 0x36) && (vout.scriptPubKey[start + 3] == 0x37));
+
+                //execute contracts mined into a block
+                if (foundExecContract) {
+
+                }
+
 
                 bool foundNFTAssetClassCreate = false;
                 if (size > 4)

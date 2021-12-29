@@ -527,9 +527,9 @@ static RPCHelpMan sendtoaddress()
 
 
     std::vector<unsigned char> vecContract;
-    if (request.createContractCode.size() > 0) {
-        if (request.createContractCode.size() % 2 == 0) {
-            vecContract = ParseHex(request.createContractCode.c_str());
+    if (request.contractCommand.size() > 0) {
+        if (request.contractCommand.size() % 2 == 0) {
+            vecContract = ParseHex(request.contractCommand.c_str());
         }
         //TODO - error
     }

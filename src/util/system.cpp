@@ -17,6 +17,8 @@
 #include <util/string.h>
 #include <util/translation.h>
 
+#include "global.h"
+
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
@@ -705,7 +707,10 @@ fs::path GetDefaultDataDir()
     // Unix-like: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Dynamo";
+    if (IS_TESTNET)
+        return GetSpecialFolderPath(CSIDL_APPDATA) / "Dynamo-Test";
+    else
+        return GetSpecialFolderPath(CSIDL_APPDATA) / "Dynamo";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -718,7 +723,10 @@ fs::path GetDefaultDataDir()
     return pathRet / "Library/Application Support/Dynamo";
 #else
     // Unix-like
-    return pathRet / ".dynamo";
+    if (IS_TESTNET)
+        return pathRet / ".dynamo-test";
+    else
+        return pathRet / ".dynamo";
 #endif
 #endif
 }

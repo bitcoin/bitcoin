@@ -272,8 +272,8 @@ public:
 
 
         if (IS_TESTNET) {
-            vSeeds.emplace_back("10.1.0.114");
-            vSeeds.emplace_back("10.1.0.49");
+            vSeeds.emplace_back("testnet1.dynamocoin.org");
+            vSeeds.emplace_back("testnet2.dynamocoin.org");
         } else {
             vSeeds.emplace_back("prod1.dynamocoin.org");
             vSeeds.emplace_back("prod2.dynamocoin.org");
@@ -283,22 +283,6 @@ public:
         }
 
 
-
-
-        /*
-        vSeeds.emplace_back("seed.bitcoin.sipa.be"); // Pieter Wuille, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("dnsseed.bluematt.me"); // Matt Corallo, only supports x9
-        vSeeds.emplace_back("dnsseed.bitcoin.dashjr.org"); // Luke Dashjr
-        vSeeds.emplace_back("seed.bitcoinstats.com"); // Christian Decker, supports x1 - xf
-        vSeeds.emplace_back("seed.bitcoin.jonasschnelli.ch"); // Jonas Schnelli, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("seed.btc.petertodd.org"); // Peter Todd, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("seed.bitcoin.sprovoost.nl"); // Sjors Provoost
-        vSeeds.emplace_back("dnsseed.emzy.de"); // Stephan Oeste
-        vSeeds.emplace_back("seed.bitcoin.wiz.biz"); // Jason Maurice
-        */
-
-
-
         //vFixedSeeds = std::vector<SeedSpec6>(std::begin(pnSeed6_main), std::end(pnSeed6_main));
 
         fDefaultConsistencyChecks = false;
@@ -306,11 +290,17 @@ public:
         m_is_test_chain = false;
         m_is_mockable_chain = false;
 
-        checkpointData = {
-            {
-                {0, uint256S(genesisHash)},
-                {290000, uint256S("0x00000001e7fcb8a16e33f38168561ccb803110f86e9c3505358ba22f7f444fa5")},
-                /*
+        if (IS_TESTNET) 
+            checkpointData = {{
+                {0, uint256S(genesisHash)}
+            }};
+
+        else {
+            checkpointData = {
+                {
+                    {0, uint256S(genesisHash)},
+                    {290000, uint256S("0x00000001e7fcb8a16e33f38168561ccb803110f86e9c3505358ba22f7f444fa5")},
+                    /*
 
                 { 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")},
                 { 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")},
@@ -326,8 +316,8 @@ public:
                 {279000, uint256S("0x0000000000000001ae8c72a0b0c301f67e3afca10e819efa9041e458e9bd7e40")},
                 {295000, uint256S("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983")},
                 */
-            }
-        };
+                }};
+        }
 
         m_assumeutxo_data = MapAssumeutxo{
          // TODO to be specified in a future patch.

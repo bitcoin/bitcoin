@@ -36,7 +36,7 @@ public:
     std::string authUser;
     std::string peerAddr;
     const std::any& context;
-    std::string createContractCode;
+    std::string contractCommand;
     std::string nftCommand;
 
     explicit JSONRPCRequest(const std::any& context) : id(NullUniValue), params(NullUniValue), context(context) {}
@@ -46,7 +46,7 @@ public:
     //! added or removed above.
     JSONRPCRequest(const JSONRPCRequest& other, const std::any& context)
         : id(other.id), strMethod(other.strMethod), params(other.params), mode(other.mode), URI(other.URI),
-          authUser(other.authUser), peerAddr(other.peerAddr), context(context), createContractCode(other.createContractCode), nftCommand(other.nftCommand)
+          authUser(other.authUser), peerAddr(other.peerAddr), context(context), contractCommand(other.contractCommand), nftCommand(other.nftCommand)
     {
     }
 
