@@ -34,7 +34,19 @@ and tests weren't explicitly disabled.
            export BDB_PREFIX='<PATH-TO>/db4'
            ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" ...
        ```
+4. Compile from a tagged release branch, unless you wish to test a specific branch or PR.
+    * See tags and descriptions ordered by most recent last: ```git tag -n | sort -V```
+    * To switch to a specific tagged release: ```git checkout <TAG>``` (for ex: ```git checkout v0.21.0```)
 
+5. Compile/build Bitcoin from source:
+    * ``` export BDB_PREFIX='<PATH-TO>/db4' ``` (for ex: ``` export BDB_PREFIX='/home/pi/bitcoin/db4' ```
+    * ```./autogen.sh```
+    * If using BDB4.8 (backwards-compatible version of BerkeleyDB used for wallets, recommended): ```./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"```, otherwise: ```./configure --with-incompatible-bdb```
+    * Compilation using ```make```
+        * Use multiple CPU cores to compile to significantly reduce times (recommended): 
+            * Linux: ```make -j "$(($(nproc)+1))"```
+            * macOS: ```make -j "$(($(sysctl -n hw.physicalcpu)+1))"```
+        * Single core: ```make```
 
 To run the unit tests manually, launch `src/test/test_bitcoin`. To recompile
 after a test file was modified, run `make` and then run the test again. If you
