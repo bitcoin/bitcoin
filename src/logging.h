@@ -6,6 +6,7 @@
 #ifndef BITCOIN_LOGGING_H
 #define BITCOIN_LOGGING_H
 
+#include <crypto/siphash.h>
 #include <fs.h>
 #include <tinyformat.h>
 #include <threadsafety.h>
@@ -28,6 +29,29 @@ static const bool DEFAULT_LOGSOURCELOCATIONS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
+
+// TODO: use C++20 std::sourcelocation when available
+struct SourceLocation {
+    std::string m_file;
+    int m_line{0};
+
+    bool operator==(const SourceLocation& other) const
+    {
+        return m_file.compare(other.m_file) == 0 &&
+               m_line == other.m_line;
+    }
+};
+
+struct SourceLocationHasher {
+    size_t operator()(const SourceLocation& source_location) const noexcept
+    {
+        // Use CSipHasher(0, 0) as a simple way to get uniform distribution.
+        return static_cast<size_t>(CSipHasher(0, 0)
+                                       .Write(std::hash<std::string>{}(source_location.m_file))
+                                       .Write(std::hash<int>{}(source_location.m_line))
+                                       .Finalize());
+    }
+};
 
 struct LogCategory {
     std::string category;
@@ -150,7 +174,9 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags category, const BCLog::Level level);
+        void LogPrintStr(const std::string& str, const std::string& logging_function,
+                         const SourceLocation& source_location, const BCLog::LogFlags category,
+                         const BCLog::Level level);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const
@@ -227,7 +253,9 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
             /* Original format string will have newline so don't add one here */
             log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
         }
-        LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
+
+        const SourceLocation source_location{source_file, source_line};
+        LogInstance().LogPrintStr(log_msg, logging_function, source_location, flag, level);
     }
 }
 
