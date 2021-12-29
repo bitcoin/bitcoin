@@ -10,12 +10,31 @@ The build system is set up to compile an executable called `test_bitcoin`
 that runs all of the unit tests. The main source file for the test library is found in
 `util/setup_common.cpp`.
 
+All steps are to be run from your terminal emulator, i.e. the command line.
+
 ### Compiling/running unit tests
 
 Unit tests will be automatically compiled if dependencies were met in `./configure`
 and tests weren't explicitly disabled.
 
-After configuring, they can be run with `make check`.
+1. Ensure the dependencies are installed. Note that `ccache` at the end of the list isn't strictly required, but you'll probably want to install it (see below).
+     * Linux: ```sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler git libsqlite3-dev ccache```
+     * macOS: ```(with command line tools and Homebrew already installed): brew install automake berkeley-db4 libtool boost miniupnpc pkg-config python qt libevent qrencode sqlite ccache```
+
+2. Download the Bitcoin source files by git cloning the repository:
+    ```git clone https://github.com/bitcoin/bitcoin.git```
+
+3. Install Berkeley DB (BDB) v4.8, a backward-compatible version needed for the wallet, using the installation script included in the Bitcoin Core contrib directory. If you have another version of BDB already installed that you wish to use, skip this section and add ```--with-incompatible-bdb``` to your ```./configure``` options below instead.
+
+    * Enter your local copy of the bitcoin repository: ```cd bitcoin```
+    * Now that you are in the root of the bitcoin repository, run: ``` ./contrib/install_db4.sh `pwd` ```
+    * Take note of the instructions displayed in the terminal at the end of the BDB installation process: 
+        ```db4 build complete.
+           When compiling bitcoind, run `./configure` in the following way:
+           export BDB_PREFIX='<PATH-TO>/db4'
+           ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" ...
+       ```
+
 
 To run the unit tests manually, launch `src/test/test_bitcoin`. To recompile
 after a test file was modified, run `make` and then run the test again. If you
