@@ -1,12 +1,12 @@
 Bitcoin Core integration/staging tree
 =====================================
 
-https://bitcoincore.org
+https://www.bitcoin.org
 
 For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+https://www.bitcoin.org/en/download/.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+Further information about Bitcoin is available in the [doc folder](/doc).
 
 What is Bitcoin?
 ----------------
@@ -22,7 +22,7 @@ For more information read the original Bitcoin whitepaper.
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Bitcoin is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
