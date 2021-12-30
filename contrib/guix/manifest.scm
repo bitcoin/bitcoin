@@ -653,5 +653,5 @@ inspecting signatures in Mach-O binaries.")
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
+           (list clang-toolchain-10 binutils font-tuffy cmake xorriso python-signapple))
           (else '())))))
