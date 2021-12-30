@@ -1,5 +1,5 @@
 name: "Check Potential Conflicts"
-on: pull_request
+on: pull_request_target
 
 permissions:
   contents: read
@@ -19,6 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check potential conflicts
-        uses: outsideris/potential-conflicts-checker-action@0.1.0
+        uses: PastaPastaPasta/potential-conflicts-checker-action@0.1.1
         with:
           ghToken: "${{ secrets.GITHUB_TOKEN }}"
