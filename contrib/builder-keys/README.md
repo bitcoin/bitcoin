@@ -19,8 +19,15 @@ gpg --refresh-keys
 To fetch keys of builders and active developers, feed the list of fingerprints
 of the primary keys into gpg:
 
+using \*NIX:
 ```sh
 while read fingerprint keyholder_name; do gpg --keyserver hkps://keys.openpgp.org --recv-keys ${fingerprint}; done < ./keys.txt
+```
+
+
+using Windows (tested with Gpg4win 4.0.0, and FAILS with Gp4win 3.1.13, so make sure you're up to date!):
+```
+FOR /F "tokens=1" %i IN (keys.txt) DO gpg --keyserver hkps://keys.openpgp.org --recv-keys %i
 ```
 
 Add your key to the list if you provided Guix attestations for two major or
