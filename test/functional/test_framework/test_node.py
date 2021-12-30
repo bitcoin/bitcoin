@@ -138,6 +138,7 @@ class TestNode():
         self.cleanup_on_exit = True # Whether to kill the node when this object goes away
         # Cache perf subprocesses here by their data output filename.
         self.perf_subprocesses = {}
+        self.perf_available = False
 
         self.p2ps = []
         self.timeout_factor = timeout_factor
@@ -537,6 +538,7 @@ class TestNode():
         ]
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.perf_subprocesses[profile_name] = subp
+        self.perf_available = True
 
         return subp
 

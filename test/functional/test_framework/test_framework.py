@@ -317,11 +317,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 node.cleanup_on_exit = False
             self.log.info("Note: bitcoinds were not stopped and may still be running")
 
+        perf_active = any(bool(node.perf_available) for node in self.nodes)
         should_clean_up = (
             not self.options.nocleanup and
             not self.options.noshutdown and
             self.success != TestStatus.FAILED and
-            not self.options.perf
+            not perf_active
         )
         if should_clean_up:
             self.log.info("Cleaning up {} on exit".format(self.options.tmpdir))
