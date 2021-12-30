@@ -409,16 +409,6 @@ certificates or paths. Supports various options, including: validation at a
 specific moment in time, whitelisting and revocation checks.")
       (license license:expat))))
 
-(define-public python-requests-2.25.1
-  (package (inherit python-requests)
-    (version "2.25.1")
-    (source (origin
-              (method url-fetch)
-              (uri (pypi-uri "requests" version))
-              (sha256
-               (base32
-                "015qflyqsgsz09gnar69s6ga74ivq5kch69s4qxz3904m7a3v5r7"))))))
-
 (define-public python-altgraph
   (package
     (name "python-altgraph")
@@ -511,7 +501,7 @@ and endian independent.")
          ("python-oscrypto" ,python-oscrypto)
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
-         ("python-requests" ,python-requests-2.25.1)
+         ("python-requests" ,python-requests)
          ("python-macholib" ,python-macholib)
          ("libcrypto" ,openssl)))
       ;; There are no tests, but attempting to run python setup.py test leads to
