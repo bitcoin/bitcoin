@@ -1,0 +1,24 @@
+name: "Check Potential Conflicts"
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write
+  # Enforce other not needed permissions are off
+  actions: none
+  checks: none
+  deployments: none
+  issues: none
+  packages: none
+  repository-projects: none
+  security-events: none
+  statuses: none
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check potential conflicts
+        uses: outsideris/potential-conflicts-checker-action@0.1.0
+        with:
+          ghToken: "${{ secrets.GITHUB_TOKEN }}"
