@@ -12,6 +12,6 @@ export DEP_OPTS="CC=clang-18 CXX='clang++-18 -stdlib=libc++'"
 export TEST_RUNNER_EXTRA="--extended --exclude feature_pruning,feature_dbcrash,wallet_multiwallet.py" # Temporarily suppress ASan heap-use-after-free (see issue #14163)
 export TEST_RUNNER_EXTRA="${TEST_RUNNER_EXTRA} --timeout-factor=4"  # Increase timeout because sanitizers slow down
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-gui=no --with-sanitizers=thread CC=clang-18 CXX=clang++-18 CXXFLAGS='-g' --with-boost-process"
+export BITCOIN_CONFIG="--enable-zmq --with-sanitizers=thread CC=clang-18 CXX=clang++-18 CXXFLAGS='-g' --with-boost-process"
 export CPPFLAGS="-DARENA_DEBUG -DDEBUG_LOCKORDER -DDEBUG_LOCKCONTENTION"
 export PYZMQ=true
