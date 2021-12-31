@@ -89,16 +89,7 @@ redistributed.
 
 [`xorrisofs`](https://www.gnu.org/software/xorriso/) is used to create the DMG.
 
-`xorrisofs` cannot compress DMGs, so afterwards, the DMG tool from the
-`libdmg-hfsplus` project is used to compress it. There are several bugs in this
-tool and its maintainer has seemingly abandoned the project.
-
-The DMG tool has the ability to create DMGs from scratch as well, but this functionality is
-broken. Only the compression feature is currently used. Ideally, the creation could be fixed
-and `xorrisofs` would no longer be necessary.
-
-Background images and other features can be added to DMG files by inserting a
-`.DS_Store` during creation.
+A background image is added to DMG files by inserting a `.DS_Store` during creation.
 
 As of OS X 10.9 Mavericks, using an Apple-blessed key to sign binaries is a requirement in
 order to satisfy the new Gatekeeper requirements. Because this private key cannot be

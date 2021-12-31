@@ -12,7 +12,7 @@ if ENABLE_MAN
 SUBDIRS += doc/man
 endif
 .PHONY: deploy FORCE
-.INTERMEDIATE: $(OSX_TEMP_ISO) $(COVERAGE_INFO)
+.INTERMEDIATE: $(COVERAGE_INFO)
 
 export PYTHONPATH
 
@@ -37,7 +37,6 @@ space := $(empty) $(empty)
 OSX_APP=Bitcoin-Qt.app
 OSX_VOLNAME = $(subst $(space),-,$(PACKAGE_NAME))
 OSX_DMG = $(OSX_VOLNAME).dmg
-OSX_TEMP_ISO = $(OSX_DMG:.dmg=).temp.iso
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
 OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
@@ -129,11 +128,8 @@ deploydir: $(OSX_DMG)
 else !BUILD_DARWIN
 APP_DIST_DIR=$(top_builddir)/dist
 
-$(OSX_TEMP_ISO): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt
+$(OSX_DMG): deploydir
 	$(XORRISOFS) -D -l -V "$(OSX_VOLNAME)" -no-pad -r -dir-mode 0755 -o $@ $(APP_DIST_DIR) -- $(if $(SOURCE_DATE_EPOCH),-volume_date all_file_dates =$(SOURCE_DATE_EPOCH))
-
-$(OSX_DMG): $(OSX_TEMP_ISO)
-	$(DMG) dmg "$<" "$@"
 
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	INSTALLNAMETOOL=$(INSTALLNAMETOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR)
@@ -141,7 +137,6 @@ $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(OSX_APP_BUILT) $(OSX_PAC
 deploydir: $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt
 endif !BUILD_DARWIN
 
-appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
 endif
 
