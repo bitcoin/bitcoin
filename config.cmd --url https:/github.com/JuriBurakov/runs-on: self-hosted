@@ -1,0 +1,1 @@
+runs-on: self-hosted
