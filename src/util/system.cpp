@@ -11,6 +11,7 @@
 
 #include <chainparamsbase.h>
 #include <fs.h>
+#include <conf_file.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/getuniquepath.h>
@@ -447,12 +448,22 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
         path /= fs::PathFromString(BaseParams().DataDir());
 
     if (fs::create_directories(path)) {
-        // This is the first run, create wallets subdirectory too
-        fs::create_directories(path / "wallets");
+        // This is the first run, create wallets subdirectory and bitcoin.conf
+        SetupDatadir(path);
     }
 
     path = StripRedundantLastElementsOfPath(path);
     return path;
+}
+
+void SetupDatadir(fs::path path)
+{
+    fs::create_directories(path / "wallets");
+
+    std::string conf_filename(BITCOIN_CONF_FILENAME);
+    std::string example_conf_filename = conf_filename;
+    std::ofstream conf_file((path / example_conf_filename).string().c_str());
+    conf_file << DEFAULT_BITCOIN_CONF_TEXT << std::endl;
 }
 
 void ArgsManager::ClearPathCache()
