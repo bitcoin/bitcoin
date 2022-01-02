@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -195,7 +195,7 @@ static bool rest_headers(const std::any& context,
 
     const auto parsed_count{ToIntegral<size_t>(path[0])};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, path[0]));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, path[0]));
     }
 
     std::string hashStr = path[1];
@@ -341,11 +341,10 @@ static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req, co
     return rest_block(context, req, strURIPart, TxVerbosity::SHOW_TXID);
 }
 
-
 static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
@@ -372,10 +371,10 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
     const auto parsed_count{ToIntegral<size_t>(uri_parts[1])};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count out of acceptable range (1-%u): %s",  MAX_REST_HEADERS_RESULTS, uri_parts[1]));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, uri_parts[1]));
     }
 
-    std::vector<const CBlockIndex *> headers;
+    std::vector<const CBlockIndex*> headers;
     headers.reserve(*parsed_count);
     {
         ChainstateManager* maybe_chainman = GetChainman(context, req);
@@ -396,7 +395,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
     std::vector<uint256> filter_headers;
     filter_headers.reserve(*parsed_count);
-    for (const CBlockIndex *pindex : headers) {
+    for (const CBlockIndex* pindex : headers) {
         uint256 filter_header;
         if (!index->LookupFilterHeader(pindex, filter_header)) {
             std::string errmsg = "Filter not found.";
@@ -414,7 +413,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
     switch (rf) {
     case RetFormat::BINARY: {
-        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssHeader{SER_NETWORK, PROTOCOL_VERSION};
         for (const uint256& header : filter_headers) {
             ssHeader << header;
         }
@@ -425,7 +424,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
         return true;
     }
     case RetFormat::HEX: {
-        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssHeader{SER_NETWORK, PROTOCOL_VERSION};
         for (const uint256& header : filter_headers) {
             ssHeader << header;
         }
@@ -454,12 +453,12 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
 static bool rest_block_filter(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
-    //request is sent over URI scheme /rest/blockfilter/filtertype/blockhash
+    // request is sent over URI scheme /rest/blockfilter/filtertype/blockhash
     std::vector<std::string> uri_parts;
     boost::split(uri_parts, param, boost::is_any_of("/"));
     if (uri_parts.size() != 2) {
@@ -514,7 +513,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
 
     switch (rf) {
     case RetFormat::BINARY: {
-        CDataStream ssResp(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssResp{SER_NETWORK, PROTOCOL_VERSION};
         ssResp << filter;
 
         std::string binaryResp = ssResp.str();
@@ -523,7 +522,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
         return true;
     }
     case RetFormat::HEX: {
-        CDataStream ssResp(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssResp{SER_NETWORK, PROTOCOL_VERSION};
         ssResp << filter;
 
         std::string strHex = HexStr(ssResp) + "\n";

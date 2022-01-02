@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1222,7 +1222,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "A function is needed within P2WSH";
         return nullptr;
     }
-    error = strprintf("%s is not a valid descriptor function", std::string(expr.begin(), expr.end()));
+    error = strprintf("'%s' is not a valid descriptor function", std::string(expr.begin(), expr.end()));
     return nullptr;
 }
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -2006,9 +2006,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // another edge case to deal with.
 
     // testnet3 has no blocks before the BIP34 height with indicated heights
-    // post BIP34 before approximately height 486,000,000 and presumably will
-    // be reset before it reaches block 1,983,702 and starts doing unnecessary
-    // BIP30 checking again.
+    // post BIP34 before approximately height 486,000,000. After block
+    // 1,983,702 testnet3 starts doing unnecessary BIP30 checking again.
     assert(pindex->pprev);
     CBlockIndex* pindexBIP34height = pindex->pprev->GetAncestor(m_params.GetConsensus().BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.

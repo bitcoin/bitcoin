@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -402,7 +402,7 @@ private:
     void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height);
 
     /**
-     * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
+     * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than a user-defined target.
      * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
      * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
      * (which in this case means the blockchain must be re-downloaded.)
