@@ -7,6 +7,7 @@
 
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <txdb.h>
 
 #include <atomic>
 #include <cstdint>
@@ -20,7 +21,9 @@ class CBlockIndex;
 class CBlockUndo;
 class CChain;
 class CChainParams;
+class CChainState;
 class ChainstateManager;
+struct CCheckpointData;
 struct FlatFilePos;
 namespace Consensus {
 struct Params;
@@ -44,6 +47,87 @@ extern bool fHavePruned;
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
+
+typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+
+struct CBlockIndexWorkComparator
+{
+    bool operator()(const CBlockIndex *pa, const CBlockIndex *pb) const;
+};
+
+/**
+ * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
+ * to determine where the most-work tip is.
+ *
+ * This data is used mostly in `CChainState` - information about, e.g.,
+ * candidate tips is not maintained here.
+ */
+class BlockManager
+{
+    friend CChainState;
+
+private:
+    /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
+    void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height);
+
+    /**
+     * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than a user-defined target.
+     * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
+     * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
+     * (which in this case means the blockchain must be re-downloaded.)
+     *
+     * Pruning functions are called from FlushStateToDisk when the global fCheckForPruning flag has been set.
+     * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
+     * Pruning cannot take place until the longest chain is at least a certain length (100000 on mainnet, 1000 on testnet, 1000 on regtest).
+     * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
+     * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
+     * A db flag records the fact that at least some block files have been pruned.
+     *
+     * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
+     */
+    void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd);
+
+public:
+    BlockMap m_block_index GUARDED_BY(cs_main);
+
+    /**
+     * All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
+     * Pruned nodes may have entries where B is missing data.
+     */
+    std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
+
+    std::unique_ptr<CBlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
+
+    bool LoadBlockIndexDB(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /**
+     * Load the blocktree off disk and into memory. Populate certain metadata
+     * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
+     * collections like setDirtyBlockIndex.
+     */
+    bool LoadBlockIndex(
+        const Consensus::Params& consensus_params,
+        ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Clear all data members. */
+    void Unload() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    CBlockIndex* AddToBlockIndex(const CBlockHeader& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Create a new block index entry for a given block hash */
+    CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Mark one block file as pruned (modify associated database entries)
+    void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Returns last CBlockIndex* that is a checkpoint
+    CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    ~BlockManager() {
+        Unload();
+    }
+};
 
 //! Check whether the block associated with this index entry is pruned or not.
 bool IsBlockPruned(const CBlockIndex* pblockindex);
