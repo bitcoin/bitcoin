@@ -284,6 +284,8 @@ static bool rest_block(const std::any& context,
     std::string hashStr;
     const RESTResponseFormat rf = ParseDataFormat(hashStr, strURIPart);
 
+    const int tx_ser_flags{RPCSerializationFlags()};
+
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
@@ -311,7 +313,7 @@ static bool rest_block(const std::any& context,
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssBlock{SER_NETWORK, PROTOCOL_VERSION | tx_ser_flags};
         ssBlock << block;
         std::string binaryBlock = ssBlock.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
@@ -320,7 +322,7 @@ static bool rest_block(const std::any& context,
     }
 
     case RESTResponseFormat::HEX: {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssBlock{SER_NETWORK, PROTOCOL_VERSION | tx_ser_flags};
         ssBlock << block;
         std::string strHex = HexStr(ssBlock) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
@@ -329,7 +331,7 @@ static bool rest_block(const std::any& context,
     }
 
     case RESTResponseFormat::JSON: {
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, tx_ser_flags, block, tip, pblockindex, tx_verbosity);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -630,6 +632,8 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     std::string hashStr;
     const RESTResponseFormat rf = ParseDataFormat(hashStr, strURIPart);
 
+    const int tx_ser_flags{RPCSerializationFlags()};
+
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
@@ -648,7 +652,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssTx{SER_NETWORK, PROTOCOL_VERSION | tx_ser_flags};
         ssTx << tx;
 
         std::string binaryTx = ssTx.str();
@@ -658,7 +662,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     }
 
     case RESTResponseFormat::HEX: {
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssTx{SER_NETWORK, PROTOCOL_VERSION | tx_ser_flags};
         ssTx << tx;
 
         std::string strHex = HexStr(ssTx) + "\n";

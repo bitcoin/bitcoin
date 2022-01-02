@@ -162,7 +162,7 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     return result;
 }
 
-UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, TxVerbosity verbosity)
+UniValue blockToJSON(BlockManager& blockman, int tx_ser_flags, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, TxVerbosity verbosity)
 {
     UniValue result = blockheaderToJSON(tip, blockindex);
 
@@ -188,7 +188,7 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
                 // coinbase transaction (i.e. i == 0) doesn't have undo data
                 const CTxUndo* txundo = (have_undo && i > 0) ? &blockUndo.vtxundo.at(i - 1) : nullptr;
                 UniValue objTx(UniValue::VOBJ);
-                TxToUniv(*tx, /*block_hash=*/uint256(), /*entry=*/objTx, /*include_hex=*/true, RPCSerializationFlags(), txundo, verbosity);
+                TxToUniv(*tx, /*block_hash=*/uint256(), /*entry=*/objTx, /*include_hex=*/true, tx_ser_flags, txundo, verbosity);
                 txs.push_back(objTx);
             }
             break;
@@ -700,6 +700,8 @@ static RPCHelpMan getblock()
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
+    const int tx_ser_flags{RPCSerializationFlags()};
+
     int verbosity = 1;
     if (!request.params[1].isNull()) {
         if (request.params[1].isBool()) {
@@ -727,7 +729,7 @@ static RPCHelpMan getblock()
 
     if (verbosity <= 0)
     {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        CDataStream ssBlock{SER_NETWORK, PROTOCOL_VERSION | tx_ser_flags};
         ssBlock << block;
         std::string strHex = HexStr(ssBlock);
         return strHex;
@@ -742,7 +744,7 @@ static RPCHelpMan getblock()
         tx_verbosity = TxVerbosity::SHOW_DETAILS_AND_PREVOUT;
     }
 
-    return blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity);
+    return blockToJSON(chainman.m_blockman, tx_ser_flags, block, tip, pblockindex, tx_verbosity);
 },
     };
 }
