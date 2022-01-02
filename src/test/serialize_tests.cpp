@@ -61,7 +61,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(sizes)
 {
-    BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(char(0), 0));
+    BOOST_CHECK_EQUAL(sizeof(unsigned char), GetSerializeSize((unsigned char)0, 0));
     BOOST_CHECK_EQUAL(sizeof(int8_t), GetSerializeSize(int8_t(0), 0));
     BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(uint8_t(0), 0));
     BOOST_CHECK_EQUAL(sizeof(int16_t), GetSerializeSize(int16_t(0), 0));
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(sizes)
     BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(bool(0), 0));
 
     // Sanity-check GetSerializeSize and c++ type matching
-    BOOST_CHECK_EQUAL(GetSerializeSize(char(0), 0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize((unsigned char)0, 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), 0), 2U);
