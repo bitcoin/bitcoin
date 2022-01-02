@@ -377,7 +377,43 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
 
     str_prefixed = LogTimestampStr(str_prefixed);
 
-    m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
+    // Whether or not logging to disk was/is ratelimited for this source location.
+    bool was_ratelimited{false};
+    bool is_ratelimited{false};
+
+    if (category == UNCONDITIONAL_RATE_LIMITED && m_ratelimit) {
+        was_ratelimited = m_supressed_locations.find(source_location) != m_supressed_locations.end();
+        is_ratelimited = !m_ratelimiters[source_location].Consume(str_prefixed.size());
+
+        if (!is_ratelimited && was_ratelimited) {
+            // Logging will restart for this source location.
+            m_supressed_locations.erase(source_location);
+
+            str_prefixed = LogTimestampStr(strprintf(
+                "Restarting logging from %s:%d (%s): "
+                "(%d MiB) were dropped during the last hour.\n%s",
+                source_location.m_file, source_location.m_line, logging_function,
+                m_ratelimiters[source_location].GetDroppedBytes() / (1024 * 1024), str_prefixed));
+        } else if (is_ratelimited && !was_ratelimited) {
+            // Logging from this source location will be supressed until the current window resets.
+            m_supressed_locations.insert(source_location);
+
+            str_prefixed = LogTimestampStr(strprintf(
+                "Excessive logging detected from %s:%d (%s): >%d MiB logged during the last hour."
+                "Suppressing logging to disk from this source location for up to one hour. "
+                "Console logging unaffected. Last log entry: %s",
+                source_location.m_file, source_location.m_line, logging_function,
+                LogRateLimiter::WINDOW_MAX_BYTES / (1024 * 1024), str_prefixed));
+        }
+    }
+
+    // To avoid confusion caused by dropped log messages when debugging an issue,
+    // we prefix log lines with "[*]" when there are any supressed source locations.
+    if (m_supressed_locations.size() > 0) {
+        str_prefixed.insert(0, "[*] ");
+    }
+
+    m_started_new_line = !str.empty() && str[str.size() - 1] == '\n';
 
     if (m_buffering) {
         // buffer if we haven't started logging yet
@@ -393,7 +429,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     for (const auto& cb : m_print_callbacks) {
         cb(str_prefixed);
     }
-    if (m_print_to_file) {
+    if (m_print_to_file && !(is_ratelimited && was_ratelimited)) {
         assert(m_fileout != nullptr);
 
         // reopen the log file, if requested

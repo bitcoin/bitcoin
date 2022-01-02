@@ -19,6 +19,8 @@
 #include <list>
 #include <mutex>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -150,6 +152,11 @@ namespace BCLog {
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
+
+        //! Fixed window rate limiters for each source location that has attempted to log something.
+        std::unordered_map<SourceLocation, LogRateLimiter, SourceLocationHasher> m_ratelimiters GUARDED_BY(m_cs);
+        //! Set of source file locations that were dropped on the last log attempt.
+        std::unordered_set<SourceLocation, SourceLocationHasher> m_supressed_locations GUARDED_BY(m_cs);
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
