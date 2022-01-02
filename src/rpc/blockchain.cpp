@@ -2576,13 +2576,9 @@ static RPCHelpMan dumptxoutset()
 {
     return RPCHelpMan{
         "dumptxoutset",
-        "\nWrite the serialized UTXO set to disk.\n",
+        "Write the serialized UTXO set to disk.",
         {
-            {"path",
-                RPCArg::Type::STR,
-                RPCArg::Optional::NO,
-                /* default_val */ "",
-                "path to the output file. If relative, will be prefixed by datadir."},
+            {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
