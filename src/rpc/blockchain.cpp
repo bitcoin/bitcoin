@@ -700,7 +700,8 @@ static RPCHelpMan getblock()
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
-    const int tx_ser_flags{RPCSerializationFlags()};
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
+    const int tx_ser_flags{RPCTxSerializationFlags(args)};
 
     int verbosity = 1;
     if (!request.params[1].isNull()) {

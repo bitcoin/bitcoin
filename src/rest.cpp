@@ -284,7 +284,7 @@ static bool rest_block(const std::any& context,
     std::string hashStr;
     const RESTResponseFormat rf = ParseDataFormat(hashStr, strURIPart);
 
-    const int tx_ser_flags{RPCSerializationFlags()};
+    const int tx_ser_flags{RPCTxSerializationFlags(::gArgs)};
 
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
@@ -632,7 +632,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     std::string hashStr;
     const RESTResponseFormat rf = ParseDataFormat(hashStr, strURIPart);
 
-    const int tx_ser_flags{RPCSerializationFlags()};
+    const int tx_ser_flags{RPCTxSerializationFlags(::gArgs)};
 
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))

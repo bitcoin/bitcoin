@@ -210,7 +210,8 @@ static RPCHelpMan getrawtransaction()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
-    const int tx_ser_flags{RPCSerializationFlags()};
+    ArgsManager& args{EnsureArgsman(node)};
+    const int tx_ser_flags{RPCTxSerializationFlags(args)};
 
     bool in_active_chain = true;
     uint256 hash = ParseHashV(request.params[0], "parameter 1");

@@ -18,6 +18,7 @@
 
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 
+class ArgsManager;
 class CRPCCommand;
 
 namespace RPCServer
@@ -174,7 +175,7 @@ void InterruptRPC();
 void StopRPC();
 std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
 
-// Retrieves any serialization flags requested in command line argument
-int RPCSerializationFlags();
+/** Retrieves any tx serialization flags requested in command line argument */
+int RPCTxSerializationFlags(const ArgsManager& args);
 
 #endif // BITCOIN_RPC_SERVER_H

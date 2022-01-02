@@ -728,7 +728,10 @@ public:
     {
         RPCRunLater(name, std::move(fn), seconds);
     }
-    int rpcSerializationFlags() override { return RPCSerializationFlags(); }
+    int rpcTxSerializationFlags() override
+    {
+        return RPCTxSerializationFlags(::gArgs);
+    }
     util::SettingsValue getSetting(const std::string& name) override
     {
         return gArgs.GetSetting(name);

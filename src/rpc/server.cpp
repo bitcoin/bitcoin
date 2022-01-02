@@ -535,11 +535,12 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
-int RPCSerializationFlags()
+int RPCTxSerializationFlags(const ArgsManager& args)
 {
     int flag = 0;
-    if (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
+    if (args.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0) {
         flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
+    }
     return flag;
 }
 
