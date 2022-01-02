@@ -62,8 +62,9 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator it = m_block_index.find(hash);
-    if (it != m_block_index.end())
+    if (it != m_block_index.end()) {
         return it->second;
+    }
 
     // Construct new block index object
     CBlockIndex* pindexNew = new CBlockIndex(block);
@@ -74,8 +75,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     BlockMap::iterator mi = m_block_index.insert(std::make_pair(hash, pindexNew)).first;
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
-    if (miPrev != m_block_index.end())
-    {
+    if (miPrev != m_block_index.end()) {
         pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
@@ -112,7 +112,7 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
             // m_blocks_unlinked or setBlockIndexCandidates.
             auto range = m_blocks_unlinked.equal_range(pindex->pprev);
             while (range.first != range.second) {
-                std::multimap<CBlockIndex *, CBlockIndex *>::iterator _it = range.first;
+                std::multimap<CBlockIndex*, CBlockIndex*>::iterator _it = range.first;
                 range.first++;
                 if (_it->second == pindex) {
                     m_blocks_unlinked.erase(_it);
@@ -207,17 +207,19 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
            nLastBlockWeCanPrune, count);
 }
 
-CBlockIndex * BlockManager::InsertBlockIndex(const uint256& hash)
+CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
 {
     AssertLockHeld(cs_main);
 
-    if (hash.IsNull())
+    if (hash.IsNull()) {
         return nullptr;
+    }
 
     // Return existing
     BlockMap::iterator mi = m_block_index.find(hash);
-    if (mi != m_block_index.end())
+    if (mi != m_block_index.end()) {
         return (*mi).second;
+    }
 
     // Create new
     CBlockIndex* pindexNew = new CBlockIndex();
@@ -236,10 +238,9 @@ bool BlockManager::LoadBlockIndex(
     }
 
     // Calculate nChainWork
-    std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
+    std::vector<std::pair<int, CBlockIndex*>> vSortedByHeight;
     vSortedByHeight.reserve(m_block_index.size());
-    for (const std::pair<const uint256, CBlockIndex*>& item : m_block_index)
-    {
+    for (const std::pair<const uint256, CBlockIndex*>& item : m_block_index) {
         CBlockIndex* pindex = item.second;
         vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
     }
@@ -265,8 +266,7 @@ bool BlockManager::LoadBlockIndex(
         }
     }
 
-    for (const std::pair<int, CBlockIndex*>& item : vSortedByHeight)
-    {
+    for (const std::pair<int, CBlockIndex*>& item : vSortedByHeight) {
         if (ShutdownRequested()) return false;
         CBlockIndex* pindex = item.second;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
@@ -329,8 +329,9 @@ bool BlockManager::LoadBlockIndex(
         if (pindex->nStatus & BLOCK_FAILED_MASK && (!chainman.m_best_invalid || pindex->nChainWork > chainman.m_best_invalid->nChainWork)) {
             chainman.m_best_invalid = pindex;
         }
-        if (pindex->pprev)
+        if (pindex->pprev) {
             pindex->BuildSkip();
+        }
         if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
             pindexBestHeader = pindex;
     }
@@ -338,7 +339,8 @@ bool BlockManager::LoadBlockIndex(
     return true;
 }
 
-void BlockManager::Unload() {
+void BlockManager::Unload()
+{
     m_blocks_unlinked.clear();
 
     for (const BlockMap::value_type& entry : m_block_index) {
@@ -380,8 +382,7 @@ bool BlockManager::LoadBlockIndexDB(ChainstateManager& chainman)
             setBlkDataFiles.insert(pindex->nFile);
         }
     }
-    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
-    {
+    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++) {
         FlatFilePos pos(*it, 0);
         if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
             return false;
@@ -390,13 +391,14 @@ bool BlockManager::LoadBlockIndexDB(ChainstateManager& chainman)
 
     // Check whether we have ever pruned block & undo files
     m_block_tree_db->ReadFlag("prunedblockfiles", fHavePruned);
-    if (fHavePruned)
+    if (fHavePruned) {
         LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
+    }
 
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     m_block_tree_db->ReadReindexing(fReindexing);
-    if(fReindexing) fReindex = true;
+    if (fReindexing) fReindex = true;
 
     return true;
 }
@@ -405,8 +407,7 @@ CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
 {
     const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
-    for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints))
-    {
+    for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints)) {
         const uint256& hash = i.second;
         CBlockIndex* pindex = LookupBlockIndex(hash);
         if (pindex) {

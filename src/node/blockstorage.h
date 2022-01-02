@@ -50,9 +50,8 @@ extern uint64_t nPruneTarget;
 
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 
-struct CBlockIndexWorkComparator
-{
-    bool operator()(const CBlockIndex *pa, const CBlockIndex *pb) const;
+struct CBlockIndexWorkComparator {
+    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
 };
 
 /**
@@ -124,7 +123,8 @@ public:
     //! Returns last CBlockIndex* that is a checkpoint
     CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    ~BlockManager() {
+    ~BlockManager()
+    {
         Unload();
     }
 };
