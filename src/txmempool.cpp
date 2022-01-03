@@ -150,12 +150,12 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
     int64_t modifyCount = 0;
     for (const CTxMemPoolEntry& descendant : descendants) {
         if (!setExclude.count(descendant.GetTx().GetHash())) {
-            modifySize += descendant.GetTxSize();
+            modifySize += int64_t(descendant.GetTxSize());
             modifyFee += descendant.GetModifiedFee();
             modifyCount++;
             cachedDescendants[updateIt].insert(mapTx.iterator_to(descendant));
             // Update ancestor state for each descendant
-            mapTx.modify(mapTx.iterator_to(descendant), update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
+            mapTx.modify(mapTx.iterator_to(descendant), update_ancestor_state{int64_t(updateIt->GetTxSize()), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()});
         }
     }
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
@@ -342,7 +342,7 @@ void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors
         UpdateChild(mapTx.iterator_to(parent), it, add);
     }
     const int64_t updateCount = (add ? 1 : -1);
-    const int64_t updateSize = updateCount * it->GetTxSize();
+    const int64_t updateSize{updateCount * int64_t(it->GetTxSize())};
     const CAmount updateFee = updateCount * it->GetModifiedFee();
     for (txiter ancestorIt : setAncestors) {
         mapTx.modify(ancestorIt, update_descendant_state(updateSize, updateFee, updateCount));
@@ -356,7 +356,7 @@ void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries &setAncesto
     CAmount updateFee = 0;
     int64_t updateSigOpsCost = 0;
     for (txiter ancestorIt : setAncestors) {
-        updateSize += ancestorIt->GetTxSize();
+        updateSize += int64_t(ancestorIt->GetTxSize());
         updateFee += ancestorIt->GetModifiedFee();
         updateSigOpsCost += ancestorIt->GetSigOpCost();
     }
@@ -433,19 +433,19 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
 
 void CTxMemPoolEntry::UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount)
 {
-    nSizeWithDescendants += modifySize;
+    nSizeWithDescendants += uint64_t(modifySize);
     assert(int64_t(nSizeWithDescendants) > 0);
     nModFeesWithDescendants += modifyFee;
-    nCountWithDescendants += modifyCount;
+    nCountWithDescendants += uint64_t(modifyCount);
     assert(int64_t(nCountWithDescendants) > 0);
 }
 
 void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps)
 {
-    nSizeWithAncestors += modifySize;
+    nSizeWithAncestors += uint64_t(modifySize);
     assert(int64_t(nSizeWithAncestors) > 0);
     nModFeesWithAncestors += modifyFee;
-    nCountWithAncestors += modifyCount;
+    nCountWithAncestors += uint64_t(modifyCount);
     assert(int64_t(nCountWithAncestors) > 0);
     nSigOpCostWithAncestors += modifySigOps;
     assert(int(nSigOpCostWithAncestors) >= 0);
