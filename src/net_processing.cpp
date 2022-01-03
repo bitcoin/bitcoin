@@ -324,6 +324,9 @@ struct Peer {
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
+    /** Whether a peer has sent us a disabletx message */
+    std::atomic<bool> m_disable_tx{false};
+
     explicit Peer(NodeId id, bool tx_relay)
         : m_id(id)
         , m_tx_relay(tx_relay ? std::make_unique<TxRelay>() : nullptr)
@@ -1943,6 +1946,11 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         } else if (inv.IsMsgWitnessBlk()) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
         } else if (inv.IsMsgFilteredBlk()) {
+            if (peer.m_disable_tx) {
+                LogPrint(BCLog::NET, "merkleblock (%s) getdata sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
+                pfrom.fDisconnect = true;
+                return;
+            }
             bool sendMerkleBlock = false;
             CMerkleBlock merkleBlock;
             if (peer.m_tx_relay != nullptr) {
@@ -2050,6 +2058,12 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         if (pfrom.fPauseSend) break;
 
         const CInv &inv = *it++;
+
+        if (peer.m_disable_tx) {
+            LogPrint(BCLog::NET, "transaction (%s) getdata sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
 
         if (peer.m_tx_relay == nullptr) {
             // Ignore GETDATA requests for transactions from blocks-only peers.
@@ -2937,15 +2951,29 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    // Feature negotiation of disabletx must happen between VERSION and VERACK.
     if (msg_type == NetMsgType::DISABLETX) {
         if (pfrom.fSuccessfullyConnected) {
             // Disconnect peers that send a disabletx after VERACK.
-            LogPrint(BCLog::NET, "disabletx received after verack from peer=%d; disconnecting\n", pfrom.GetId());
+            LogPrint(BCLog::NET, "disabletx received after verack; disconnecting peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
         }
-        // ignore this for now - later we can downgrade the resources allocated
-        // to this peer.
+        if (pfrom.IsFullOutboundConn()) {
+            // If we picked an outbound for transaction relay and it sends us a
+            // disabletx, we want to find another peer.
+            LogPrint(BCLog::NET, "disabletx received from peer selected as full-outbound; disconnecting peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        if (peer->m_tx_relay != nullptr && WITH_LOCK(peer->m_tx_relay->m_bloom_filter_mutex, return peer->m_tx_relay->m_relay_txs)) {
+            // Can't send a disabletx message if they didn't turn off
+            // transaction relay in the version message.
+            LogPrint(BCLog::NET, "disabletx received from peer without fRelay=0; disconnecting peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        peer->m_disable_tx = true;
         return;
     }
 
@@ -3060,8 +3088,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // Reject tx INVs when the -blocksonly setting is enabled, or this is a
-        // block-relay-only peer
-        bool reject_tx_invs{m_ignore_incoming_txs || (peer->m_tx_relay == nullptr)};
+        // block-relay-only/disabletx peer
+        bool reject_tx_invs{m_ignore_incoming_txs || (peer->m_tx_relay == nullptr) || peer->m_disable_tx};
 
         // Allow peers with relay permission to send data other than blocks in blocks only mode
         if (pfrom.HasPermission(NetPermissionFlags::Relay)) {
@@ -3337,8 +3365,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::TX) {
         // Stop processing the transaction early if
         // 1) We are in blocks only mode and peer has no relay permission
-        // 2) This peer is a block-relay-only peer
-        if ((m_ignore_incoming_txs && !pfrom.HasPermission(NetPermissionFlags::Relay)) || (peer->m_tx_relay == nullptr)) {
+        // 2) This peer is a block-relay-only/disabletx peer
+        if ((m_ignore_incoming_txs && !pfrom.HasPermission(NetPermissionFlags::Relay)) || (peer->m_tx_relay == nullptr) || peer->m_disable_tx) {
             LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -3950,6 +3978,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
+        if (peer->m_disable_tx) {
+            LogPrint(BCLog::NET, "mempool request after disabletx received; disconnect peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
         if (peer->m_tx_relay != nullptr) {
             LOCK(peer->m_tx_relay->m_tx_inventory_mutex);
             peer->m_tx_relay->m_send_mempool = true;
@@ -4033,7 +4067,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (msg_type == NetMsgType::FILTERLOAD) {
-        if (!(pfrom.GetLocalServices() & NODE_BLOOM)) {
+        if (!(pfrom.GetLocalServices() & NODE_BLOOM) || peer->m_disable_tx) {
             LogPrint(BCLog::NET, "filterload received despite not offering bloom services from peer=%d; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -4058,7 +4092,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (msg_type == NetMsgType::FILTERADD) {
-        if (!(pfrom.GetLocalServices() & NODE_BLOOM)) {
+        if (!(pfrom.GetLocalServices() & NODE_BLOOM) || peer->m_disable_tx) {
             LogPrint(BCLog::NET, "filteradd received despite not offering bloom services from peer=%d; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -4086,7 +4120,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (msg_type == NetMsgType::FILTERCLEAR) {
-        if (!(pfrom.GetLocalServices() & NODE_BLOOM)) {
+        if (!(pfrom.GetLocalServices() & NODE_BLOOM) || peer->m_disable_tx) {
             LogPrint(BCLog::NET, "filterclear received despite not offering bloom services from peer=%d; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -4103,6 +4137,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (msg_type == NetMsgType::FEEFILTER) {
+        if (peer->m_disable_tx) {
+            LogPrint(BCLog::NET, "feefilter received in violation of protocol, disconnecting peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
         CAmount newFeeFilter = 0;
         vRecv >> newFeeFilter;
         if (MoneyRange(newFeeFilter)) {
@@ -4136,6 +4175,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             LOCK(::cs_main);
             for (CInv &inv : vInv) {
                 if (inv.IsGenTxMsg()) {
+                    if (peer->m_disable_tx) {
+                        LogPrint(BCLog::NET, "transaction notfound received in violation of protocol, disconnecting peer=%d\n", pfrom.GetId());
+                        pfrom.fDisconnect = true;
+                        return;
+                    }
                     // If we receive a NOTFOUND message for a tx we requested, mark the announcement for it as
                     // completed in TxRequestTracker.
                     m_txrequest.ReceivedResponse(pfrom.GetId(), inv.hash);
