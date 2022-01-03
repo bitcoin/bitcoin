@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block-relay-only anchors functionality"""
@@ -8,16 +8,10 @@ import os
 
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import check_node_connections
 
 INBOUND_CONNECTIONS = 5
 BLOCK_RELAY_CONNECTIONS = 2
-
-
-def check_node_connections(*, node, num_in, num_out):
-    info = node.getnetworkinfo()
-    assert_equal(info["connections_in"], num_in)
-    assert_equal(info["connections_out"], num_out)
 
 
 class AnchorsTest(BitcoinTestFramework):

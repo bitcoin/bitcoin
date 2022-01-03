@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2012-2020 The Bitcoin Core developers
+# Copyright (c) 2012-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$
 
     # if latest commit is tagged and not dirty, then override using the tag name
     RAWDESC=$(git describe --abbrev=0 2>/dev/null)
-    if [ "$(git rev-parse HEAD)" = "$(git rev-list -1 $RAWDESC 2>/dev/null)" ]; then
+    if [ "$(git rev-parse HEAD)" = "$(git rev-list -1 "$RAWDESC" 2>/dev/null)" ]; then
         git diff-index --quiet HEAD -- && GIT_TAG=$RAWDESC
     fi
 

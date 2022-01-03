@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -115,7 +115,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
 }
 
 CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : m_name{path.stem().string()}
+    : m_name{fs::PathToString(path.stem())}
 {
     penv = nullptr;
     readoptions.verify_checksums = true;
@@ -129,21 +129,25 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         options.env = penv;
     } else {
         if (fWipe) {
-            LogPrintf("Wiping LevelDB in %s\n", path.string());
-            leveldb::Status result = leveldb::DestroyDB(path.string(), options);
+            LogPrintf("Wiping LevelDB in %s\n", fs::PathToString(path));
+            leveldb::Status result = leveldb::DestroyDB(fs::PathToString(path), options);
             dbwrapper_private::HandleError(result);
         }
         TryCreateDirectories(path);
-        LogPrintf("Opening LevelDB in %s\n", path.string());
+        LogPrintf("Opening LevelDB in %s\n", fs::PathToString(path));
     }
-    leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
+    // PathToString() return value is safe to pass to leveldb open function,
+    // because on POSIX leveldb passes the byte string directly to ::open(), and
+    // on Windows it converts from UTF-8 to UTF-16 before calling ::CreateFileW
+    // (see env_posix.cc and env_windows.cc).
+    leveldb::Status status = leveldb::DB::Open(options, fs::PathToString(path), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
 
     if (gArgs.GetBoolArg("-forcecompactdb", false)) {
-        LogPrintf("Starting database compaction of %s\n", path.string());
+        LogPrintf("Starting database compaction of %s\n", fs::PathToString(path));
         pdb->CompactRange(nullptr, nullptr);
-        LogPrintf("Finished database compaction of %s\n", path.string());
+        LogPrintf("Finished database compaction of %s\n", fs::PathToString(path));
     }
 
     // The base-case obfuscation key, which is a noop.
@@ -160,10 +164,10 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         Write(OBFUSCATE_KEY_KEY, new_key);
         obfuscate_key = new_key;
 
-        LogPrintf("Wrote new obfuscate key for %s: %s\n", path.string(), HexStr(obfuscate_key));
+        LogPrintf("Wrote new obfuscate key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
     }
 
-    LogPrintf("Using obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
+    LogPrintf("Using obfuscation key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
 }
 
 CDBWrapper::~CDBWrapper()
@@ -197,13 +201,15 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     return true;
 }
 
-size_t CDBWrapper::DynamicMemoryUsage() const {
+size_t CDBWrapper::DynamicMemoryUsage() const
+{
     std::string memory;
-    if (!pdb->GetProperty("leveldb.approximate-memory-usage", &memory)) {
+    std::optional<size_t> parsed;
+    if (!pdb->GetProperty("leveldb.approximate-memory-usage", &memory) || !(parsed = ToIntegral<size_t>(memory))) {
         LogPrint(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
         return 0;
     }
-    return stoul(memory);
+    return parsed.value();
 }
 
 // Prefixed with null character to avoid collisions with other keys

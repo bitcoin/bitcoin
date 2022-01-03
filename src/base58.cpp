@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Bitcoin Core developers
+// Copyright (c) 2014-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -149,7 +149,7 @@ std::string EncodeBase58Check(Span<const unsigned char> input)
         return false;
     }
     // re-calculate the checksum, ensure it matches the included 4-byte checksum
-    uint256 hash = Hash(MakeSpan(vchRet).first(vchRet.size() - 4));
+    uint256 hash = Hash(Span{vchRet}.first(vchRet.size() - 4));
     if (memcmp(&hash, &vchRet[vchRet.size() - 4], 4) != 0) {
         vchRet.clear();
         return false;

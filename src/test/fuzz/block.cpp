@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,8 +58,6 @@ FUZZ_TARGET_INIT(block, initialize_block)
     (void)block.ToString();
     (void)BlockMerkleRoot(block);
     if (!block.vtx.empty()) {
-        // TODO: Avoid array index out of bounds error in BlockWitnessMerkleRoot
-        //       when block.vtx.empty().
         (void)BlockWitnessMerkleRoot(block);
     }
     (void)GetBlockWeight(block);

@@ -1,10 +1,10 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
 #include <bench/bench.h>
-#include <bloom.h>
+#include <common/bloom.h>
 
 static void RollingBloom(benchmark::Bench& bench)
 {
@@ -13,16 +13,16 @@ static void RollingBloom(benchmark::Bench& bench)
     uint32_t count = 0;
     bench.run([&] {
         count++;
-        data[0] = count;
-        data[1] = count >> 8;
-        data[2] = count >> 16;
-        data[3] = count >> 24;
+        data[0] = count & 0xFF;
+        data[1] = (count >> 8) & 0xFF;
+        data[2] = (count >> 16) & 0xFF;
+        data[3] = (count >> 24) & 0xFF;
         filter.insert(data);
 
-        data[0] = count >> 24;
-        data[1] = count >> 16;
-        data[2] = count >> 8;
-        data[3] = count;
+        data[0] = (count >> 24) & 0xFF;
+        data[1] = (count >> 16) & 0xFF;
+        data[2] = (count >> 8) & 0xFF;
+        data[3] = count & 0xFF;
         filter.contains(data);
     });
 }

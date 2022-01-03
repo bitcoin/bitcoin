@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -110,9 +110,9 @@ static void MuHash(benchmark::Bench& bench)
 {
     MuHash3072 acc;
     unsigned char key[32] = {0};
-    int i = 0;
+    uint32_t i = 0;
     bench.run([&] {
-        key[0] = ++i;
+        key[0] = ++i & 0xFF;
         acc *= MuHash3072(key);
     });
 }
@@ -133,10 +133,6 @@ static void MuHashDiv(benchmark::Bench& bench)
     MuHash3072 acc;
     FastRandomContext rng(true);
     MuHash3072 muhash{rng.randbytes(32)};
-
-    for (size_t i = 0; i < bench.epochIterations(); ++i) {
-        acc *= muhash;
-    }
 
     bench.run([&] {
         acc /= muhash;

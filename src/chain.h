@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -59,37 +59,40 @@ public:
         READWRITE(VARINT(obj.nTimeLast));
     }
 
-     void SetNull() {
-         nBlocks = 0;
-         nSize = 0;
-         nUndoSize = 0;
-         nHeightFirst = 0;
-         nHeightLast = 0;
-         nTimeFirst = 0;
-         nTimeLast = 0;
-     }
+    void SetNull()
+    {
+        nBlocks = 0;
+        nSize = 0;
+        nUndoSize = 0;
+        nHeightFirst = 0;
+        nHeightLast = 0;
+        nTimeFirst = 0;
+        nTimeLast = 0;
+    }
 
-     CBlockFileInfo() {
-         SetNull();
-     }
+    CBlockFileInfo()
+    {
+        SetNull();
+    }
 
-     std::string ToString() const;
+    std::string ToString() const;
 
-     /** update statistics (does not update nSize) */
-     void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn) {
-         if (nBlocks==0 || nHeightFirst > nHeightIn)
-             nHeightFirst = nHeightIn;
-         if (nBlocks==0 || nTimeFirst > nTimeIn)
-             nTimeFirst = nTimeIn;
-         nBlocks++;
-         if (nHeightIn > nHeightLast)
-             nHeightLast = nHeightIn;
-         if (nTimeIn > nTimeLast)
-             nTimeLast = nTimeIn;
-     }
+    /** update statistics (does not update nSize) */
+    void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn)
+    {
+        if (nBlocks == 0 || nHeightFirst > nHeightIn)
+            nHeightFirst = nHeightIn;
+        if (nBlocks == 0 || nTimeFirst > nTimeIn)
+            nTimeFirst = nTimeIn;
+        nBlocks++;
+        if (nHeightIn > nHeightLast)
+            nHeightLast = nHeightIn;
+        if (nTimeIn > nTimeLast)
+            nTimeLast = nTimeIn;
+    }
 };
 
-enum BlockStatus: uint32_t {
+enum BlockStatus : uint32_t {
     //! Unused.
     BLOCK_VALID_UNKNOWN      =    0,
 
@@ -126,7 +129,15 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
-    BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
+    BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
+
+    /**
+     * If set, this indicates that the block index entry is assumed-valid.
+     * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
+     * It almost certainly means that the block's full validation is pending
+     * on a background chainstate. See `doc/assumeutxo.md`.
+     */
+    BLOCK_ASSUMED_VALID      =   256,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -170,7 +181,7 @@ public:
 
     //! (memory only) Number of transactions in the chain up to and including this block.
     //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
-    //! Change to 64-bit type when necessary; won't happen before 2030
+    //! Change to 64-bit type before 2024 (assuming worst case of 60 byte transactions).
     //!
     //! Note: this value is faked during use of a UTXO snapshot because we don't
     //! have the underlying block data available during snapshot load.
@@ -212,20 +223,22 @@ public:
     {
     }
 
-    FlatFilePos GetBlockPos() const {
+    FlatFilePos GetBlockPos() const
+    {
         FlatFilePos ret;
         if (nStatus & BLOCK_HAVE_DATA) {
             ret.nFile = nFile;
-            ret.nPos  = nDataPos;
+            ret.nPos = nDataPos;
         }
         return ret;
     }
 
-    FlatFilePos GetUndoPos() const {
+    FlatFilePos GetUndoPos() const
+    {
         FlatFilePos ret;
         if (nStatus & BLOCK_HAVE_UNDO) {
             ret.nFile = nFile;
-            ret.nPos  = nUndoPos;
+            ret.nPos = nUndoPos;
         }
         return ret;
     }
@@ -233,13 +246,13 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
+        block.nVersion = nVersion;
         if (pprev)
             block.hashPrevBlock = pprev->GetBlockHash();
         block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.nTime = nTime;
+        block.nBits = nBits;
+        block.nNonce = nNonce;
         return block;
     }
 
@@ -280,7 +293,7 @@ public:
             *(--pbegin) = pindex->GetBlockTime();
 
         std::sort(pbegin, pend);
-        return pbegin[(pend - pbegin)/2];
+        return pbegin[(pend - pbegin) / 2];
     }
 
     std::string ToString() const
@@ -300,14 +313,24 @@ public:
         return ((nStatus & BLOCK_VALID_MASK) >= nUpTo);
     }
 
+    //! @returns true if the block is assumed-valid; this means it is queued to be
+    //!   validated by a background chainstate.
+    bool IsAssumedValid() const { return nStatus & BLOCK_ASSUMED_VALID; }
+
     //! Raise the validity level of this block index entry.
     //! Returns true if the validity was changed.
     bool RaiseValidity(enum BlockStatus nUpTo)
     {
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
-        if (nStatus & BLOCK_FAILED_MASK)
-            return false;
+        if (nStatus & BLOCK_FAILED_MASK) return false;
+
         if ((nStatus & BLOCK_VALID_MASK) < nUpTo) {
+            // If this block had been marked assumed-valid and we're raising
+            // its validity to a certain point, there is no longer an assumption.
+            if (nStatus & BLOCK_ASSUMED_VALID && nUpTo >= BLOCK_VALID_SCRIPTS) {
+                nStatus &= ~BLOCK_ASSUMED_VALID;
+            }
+
             nStatus = (nStatus & ~BLOCK_VALID_MASK) | nUpTo;
             return true;
         }
@@ -335,11 +358,13 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     uint256 hashPrev;
 
-    CDiskBlockIndex() {
+    CDiskBlockIndex()
+    {
         hashPrev = uint256();
     }
 
-    explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+    explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex)
+    {
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
@@ -367,12 +392,12 @@ public:
     uint256 GetBlockHash() const
     {
         CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
+        block.nVersion = nVersion;
+        block.hashPrevBlock = hashPrev;
+        block.hashMerkleRoot = hashMerkleRoot;
+        block.nTime = nTime;
+        block.nBits = nBits;
+        block.nNonce = nNonce;
         return block.GetHash();
     }
 
@@ -389,35 +414,45 @@ public:
 };
 
 /** An in-memory indexed chain of blocks. */
-class CChain {
+class CChain
+{
 private:
     std::vector<CBlockIndex*> vChain;
 
 public:
+    CChain() = default;
+    CChain(const CChain&) = delete;
+    CChain& operator=(const CChain&) = delete;
+
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
-    CBlockIndex *Genesis() const {
+    CBlockIndex* Genesis() const
+    {
         return vChain.size() > 0 ? vChain[0] : nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
-    CBlockIndex *Tip() const {
+    CBlockIndex* Tip() const
+    {
         return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
-    CBlockIndex *operator[](int nHeight) const {
+    CBlockIndex* operator[](int nHeight) const
+    {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
             return nullptr;
         return vChain[nHeight];
     }
 
     /** Efficiently check whether a block is present in this chain. */
-    bool Contains(const CBlockIndex *pindex) const {
+    bool Contains(const CBlockIndex* pindex) const
+    {
         return (*this)[pindex->nHeight] == pindex;
     }
 
     /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
-    CBlockIndex *Next(const CBlockIndex *pindex) const {
+    CBlockIndex* Next(const CBlockIndex* pindex) const
+    {
         if (Contains(pindex))
             return (*this)[pindex->nHeight + 1];
         else
@@ -425,18 +460,19 @@ public:
     }
 
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
-    int Height() const {
+    int Height() const
+    {
         return vChain.size() - 1;
     }
 
     /** Set/initialize a chain with a given tip. */
-    void SetTip(CBlockIndex *pindex);
+    void SetTip(CBlockIndex* pindex);
 
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
-    CBlockLocator GetLocator(const CBlockIndex *pindex = nullptr) const;
+    CBlockLocator GetLocator(const CBlockIndex* pindex = nullptr) const;
 
     /** Find the last common block between this chain and a block index entry. */
-    const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
+    const CBlockIndex* FindFork(const CBlockIndex* pindex) const;
 
     /** Find the earliest block with timestamp equal or greater than the given time and height equal or greater than the given height. */
     CBlockIndex* FindEarliestAtLeast(int64_t nTime, int height) const;

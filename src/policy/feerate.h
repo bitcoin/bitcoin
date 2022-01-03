@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_POLICY_FEERATE_H
 #define BITCOIN_POLICY_FEERATE_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <serialize.h>
 
 #include <string>
@@ -48,6 +48,7 @@ public:
     CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes);
     /**
      * Return the fee in satoshis for the given size in bytes.
+     * If the calculated fee would have fractional satoshis, then the returned fee will always be rounded up to the nearest satoshi.
      */
     CAmount GetFee(uint32_t num_bytes) const;
     /**
@@ -66,4 +67,4 @@ public:
     SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
 };
 
-#endif //  BITCOIN_POLICY_FEERATE_H
+#endif // BITCOIN_POLICY_FEERATE_H

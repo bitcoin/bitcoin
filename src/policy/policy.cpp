@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +22,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     // so dust is a spendable txout less than
     // 182*dustRelayFee/1000 (in satoshis).
     // 546 satoshis at the default rate of 3000 sat/kvB.
-    // A typical spendable segwit txout is 31 bytes big, and will
+    // A typical spendable segwit P2WPKH txout is 31 bytes big, and will
     // need a CTxIn of at least 67 bytes to spend:
     // so dust is a spendable txout less than
     // 98*dustRelayFee/1000 (in satoshis).
@@ -34,6 +34,11 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
 
+    // Note this computation is for spending a Segwit v0 P2WPKH output (a 33 bytes
+    // public key + an ECDSA signature). For Segwit v1 Taproot outputs the minimum
+    // satisfaction is lower (a single BIP340 signature) but this computation was
+    // kept to not further reduce the dust level.
+    // See discussion in https://github.com/bitcoin/bitcoin/pull/22779 for details.
     if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
         // sum the sizes of the parts of a transaction input
         // with 75% segwit discount applied to the script size.
@@ -156,13 +161,13 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
  *
  * Note that only the non-witness portion of the transaction is checked here.
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase()) {
         return true; // Coinbases don't use vin normally
+    }
 
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
@@ -184,9 +189,6 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
                 return false;
             }
-        } else if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
-            // Don't allow Taproot spends unless Taproot is active.
-            if (!taproot_active) return false;
         }
     }
 
@@ -249,7 +251,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // - No annexes
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
-            auto stack = MakeSpan(tx.vin[i].scriptWitness.stack);
+            Span stack{tx.vin[i].scriptWitness.stack};
             if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
                 // Annexes are nonstandard as long as no semantics are defined for them.
                 return false;

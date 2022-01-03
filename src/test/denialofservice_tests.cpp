@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,12 +52,14 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
+    // Disable inactivity checks for this test to avoid interference
+    static_cast<ConnmanTestMsg*>(connman.get())->SetPeerConnectTimeout(99999s);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
                                        *m_node.chainman, *m_node.mempool, false);
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode1(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr1, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress(), /* pszDest */ "", ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
+    CNode dummyNode1(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr1, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, CAddress(), /*addrNameIn=*/"", ConnectionType::OUTBOUND_FULL_RELAY, /*inbound_onion=*/false);
     dummyNode1.SetCommonVersion(PROTOCOL_VERSION);
 
     peerLogic->InitializeNode(&dummyNode1);
@@ -103,10 +105,10 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerLogic->FinalizeNode(dummyNode1);
 }
 
-static void AddRandomOutboundPeer(std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman)
+static void AddRandomOutboundPeer(std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman, ConnectionType connType)
 {
     CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
-    vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress(), /* pszDest */ "", ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false));
+    vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK | NODE_WITNESS), INVALID_SOCKET, addr, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, CAddress(), /*addrNameIn=*/"", connType, /*inbound_onion=*/false));
     CNode &node = *vNodes.back();
     node.SetCommonVersion(PROTOCOL_VERSION);
 
@@ -129,12 +131,15 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     options.m_max_outbound_full_relay = max_outbound_full_relay;
     options.nMaxFeeler = MAX_FEELER_CONNECTIONS;
 
+    const auto time_init{GetTime<std::chrono::seconds>()};
+    SetMockTime(time_init);
+    const auto time_later{time_init + 3 * std::chrono::seconds{chainparams.GetConsensus().nPowTargetSpacing} + 1s};
     connman->Init(options);
     std::vector<CNode *> vNodes;
 
     // Mock some outbound peers
     for (int i = 0; i < max_outbound_full_relay; ++i) {
-        AddRandomOutboundPeer(vNodes, *peerLogic, *connman);
+        AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
     }
 
     peerLogic->CheckForStaleTipAndEvictPeers();
@@ -144,7 +149,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
         BOOST_CHECK(node->fDisconnect == false);
     }
 
-    SetMockTime(GetTime() + 3 * chainparams.GetConsensus().nPowTargetSpacing + 1);
+    SetMockTime(time_later);
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer
@@ -159,7 +164,9 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
-    AddRandomOutboundPeer(vNodes, *peerLogic, *connman);
+    SetMockTime(time_init);
+    AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+    SetMockTime(time_later);
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_full_relay; ++i) {
@@ -188,6 +195,68 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     connman->ClearTestNodes();
 }
 
+BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
+{
+    const CChainParams& chainparams = Params();
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+                                       *m_node.chainman, *m_node.mempool, false);
+
+    constexpr int max_outbound_block_relay{MAX_BLOCK_RELAY_ONLY_CONNECTIONS};
+    constexpr int64_t MINIMUM_CONNECT_TIME{30};
+    CConnman::Options options;
+    options.nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
+    options.m_max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
+    options.m_max_outbound_block_relay = max_outbound_block_relay;
+
+    connman->Init(options);
+    std::vector<CNode*> vNodes;
+
+    // Add block-relay-only peers up to the limit
+    for (int i = 0; i < max_outbound_block_relay; ++i) {
+        AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
+    }
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    for (int i = 0; i < max_outbound_block_relay; ++i) {
+        BOOST_CHECK(vNodes[i]->fDisconnect == false);
+    }
+
+    // Add an extra block-relay-only peer breaking the limit (mocks logic in ThreadOpenConnections)
+    AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    // The extra peer should only get marked for eviction after MINIMUM_CONNECT_TIME
+    for (int i = 0; i < max_outbound_block_relay; ++i) {
+        BOOST_CHECK(vNodes[i]->fDisconnect == false);
+    }
+    BOOST_CHECK(vNodes.back()->fDisconnect == false);
+
+    SetMockTime(GetTime() + MINIMUM_CONNECT_TIME + 1);
+    peerLogic->CheckForStaleTipAndEvictPeers();
+    for (int i = 0; i < max_outbound_block_relay; ++i) {
+        BOOST_CHECK(vNodes[i]->fDisconnect == false);
+    }
+    BOOST_CHECK(vNodes.back()->fDisconnect == true);
+
+    // Update the last block time for the extra peer,
+    // and check that the next youngest peer gets evicted.
+    vNodes.back()->fDisconnect = false;
+    vNodes.back()->m_last_block_time = GetTime<std::chrono::seconds>();
+
+    peerLogic->CheckForStaleTipAndEvictPeers();
+    for (int i = 0; i < max_outbound_block_relay - 1; ++i) {
+        BOOST_CHECK(vNodes[i]->fDisconnect == false);
+    }
+    BOOST_CHECK(vNodes[max_outbound_block_relay - 1]->fDisconnect == true);
+    BOOST_CHECK(vNodes.back()->fDisconnect == false);
+
+    for (const CNode* node : vNodes) {
+        peerLogic->FinalizeNode(*node);
+    }
+    connman->ClearTestNodes();
+}
+
 BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
     const CChainParams& chainparams = Params();
@@ -210,14 +279,14 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     std::array<CNode*, 3> nodes;
 
     banman->ClearBanned();
-    nodes[0] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[0], /* nKeyedNetGroupIn */ 0,
-                         /* nLocalHostNonceIn */ 0, CAddress(), /* pszDest */ "",
-                         ConnectionType::INBOUND, /* inbound_onion */ false};
+    nodes[0] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[0], /*nKeyedNetGroupIn=*/0,
+                         /*nLocalHostNonceIn=*/0, CAddress(), /*addrNameIn=*/"",
+                         ConnectionType::INBOUND, /*inbound_onion=*/false};
     nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[0]);
     nodes[0]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[0]);
-    peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
+    peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /*message=*/""); // Should be discouraged
     {
         LOCK(nodes[0]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
@@ -226,14 +295,14 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
-    nodes[1] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[1], /* nKeyedNetGroupIn */ 1,
-                         /* nLocalHostNonceIn */ 1, CAddress(), /* pszDest */ "",
-                         ConnectionType::INBOUND, /* inbound_onion */ false};
+    nodes[1] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[1], /*nKeyedNetGroupIn=*/1,
+                         /*nLocalHostNonceIn=*/1, CAddress(), /*addrNameIn=*/"",
+                         ConnectionType::INBOUND, /*inbound_onion=*/false};
     nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[1]);
     nodes[1]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[1]);
-    peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
+    peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /*message=*/"");
     {
         LOCK(nodes[1]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
@@ -244,7 +313,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // [1] is not discouraged/disconnected yet.
     BOOST_CHECK(!banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(!nodes[1]->fDisconnect);
-    peerLogic->Misbehaving(nodes[1]->GetId(), 1, /* message */ ""); // [1] reaches discouragement threshold
+    peerLogic->Misbehaving(nodes[1]->GetId(), 1, /*message=*/""); // [1] reaches discouragement threshold
     {
         LOCK(nodes[1]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
@@ -257,14 +326,14 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
     // Make sure non-IP peers are discouraged and disconnected properly.
 
-    nodes[2] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[2], /* nKeyedNetGroupIn */ 1,
-                         /* nLocalHostNonceIn */ 1, CAddress(), /* pszDest */ "",
-                         ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false};
+    nodes[2] = new CNode{id++, NODE_NETWORK, INVALID_SOCKET, addr[2], /*nKeyedNetGroupIn=*/1,
+                         /*nLocalHostNonceIn=*/1, CAddress(), /*addrNameIn=*/"",
+                         ConnectionType::OUTBOUND_FULL_RELAY, /*inbound_onion=*/false};
     nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[2]);
     nodes[2]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[2]);
-    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /*message=*/"");
     {
         LOCK(nodes[2]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
@@ -295,12 +364,12 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode(id++, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 4, /* nLocalHostNonceIn */ 4, CAddress(), /* pszDest */ "", ConnectionType::INBOUND, /* inbound_onion */ false);
+    CNode dummyNode(id++, NODE_NETWORK, INVALID_SOCKET, addr, /*nKeyedNetGroupIn=*/4, /*nLocalHostNonceIn=*/4, CAddress(), /*addrNameIn=*/"", ConnectionType::INBOUND, /*inbound_onion=*/false);
     dummyNode.SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(&dummyNode);
     dummyNode.fSuccessfullyConnected = true;
 
-    peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD, /*message=*/"");
     {
         LOCK(dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
@@ -332,7 +401,7 @@ static void MakeNewKeyWithFastRandomContext(CKey& key)
 {
     std::vector<unsigned char> keydata;
     keydata = g_insecure_rand_ctx.randbytes(32);
-    key.Set(keydata.data(), keydata.data() + keydata.size(), /*fCompressedIn*/ true);
+    key.Set(keydata.data(), keydata.data() + keydata.size(), /*fCompressedIn=*/true);
     assert(key.IsValid());
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -328,7 +328,7 @@ void Session::GenerateAndSavePrivateKey(const Sock& sock)
     if (!WriteBinaryFile(m_private_key_file,
                          std::string(m_private_key.begin(), m_private_key.end()))) {
         throw std::runtime_error(
-            strprintf("Cannot save I2P private key to %s", m_private_key_file));
+            strprintf("Cannot save I2P private key to %s", fs::quoted(fs::PathToString(m_private_key_file))));
     }
 }
 

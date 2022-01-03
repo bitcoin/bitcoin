@@ -34,7 +34,7 @@ check_tools cat mkdir make git guix
 #
 under_dir() {
     local path_residue
-    path_residue="${2##${1}}"
+    path_residue="${2##"${1}"}"
     if [ -z "$path_residue" ] || [ "$path_residue" = "$2" ]; then
         return 1
     else

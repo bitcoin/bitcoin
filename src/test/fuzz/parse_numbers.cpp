@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,9 +14,6 @@ FUZZ_TARGET(parse_numbers)
 
     (void)ParseMoney(random_string);
 
-    double d;
-    (void)ParseDouble(random_string, &d);
-
     uint8_t u8;
     (void)ParseUInt8(random_string, &u8);
 
@@ -25,13 +22,13 @@ FUZZ_TARGET(parse_numbers)
 
     int32_t i32;
     (void)ParseInt32(random_string, &i32);
-    (void)atoi(random_string);
+    (void)LocaleIndependentAtoi<int>(random_string);
 
     uint32_t u32;
     (void)ParseUInt32(random_string, &u32);
 
     int64_t i64;
-    (void)atoi64(random_string);
+    (void)LocaleIndependentAtoi<int64_t>(random_string);
     (void)ParseFixedPoint(random_string, 3, &i64);
     (void)ParseInt64(random_string, &i64);
 

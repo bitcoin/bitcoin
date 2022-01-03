@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,10 +34,10 @@ static void AssembleBlock(benchmark::Bench& bench)
             txs.at(b) = MakeTransactionRef(tx);
     }
     {
-        LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
+        LOCK(::cs_main);
 
         for (const auto& txr : txs) {
-            const MempoolAcceptResult res = ::AcceptToMemoryPool(test_setup->m_node.chainman->ActiveChainstate(), *test_setup->m_node.mempool, txr, false /* bypass_limits */);
+            const MempoolAcceptResult res = test_setup->m_node.chainman->ProcessTransaction(txr);
             assert(res.m_result_type == MempoolAcceptResult::ResultType::VALID);
         }
     }

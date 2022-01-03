@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test external signer.
@@ -25,8 +25,18 @@ class WalletSignerTest(BitcoinTestFramework):
         else:
             return path
 
+    def mock_invalid_signer_path(self):
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'invalid_signer.py')
+        if platform.system() == "Windows":
+            return "py " + path
+        else:
+            return path
+
     def set_test_params(self):
         self.num_nodes = 2
+        # The experimental syscall sandbox feature (-sandbox) is not compatible with -signer (which
+        # invokes execve).
+        self.disable_syscall_sandbox = True
 
         self.extra_args = [
             [],
@@ -45,6 +55,11 @@ class WalletSignerTest(BitcoinTestFramework):
         os.remove(os.path.join(node.cwd, "mock_result"))
 
     def run_test(self):
+        self.test_valid_signer()
+        self.restart_node(1, [f"-signer={self.mock_invalid_signer_path()}", "-keypool=10"])
+        self.test_invalid_signer()
+
+    def test_valid_signer(self):
         self.log.debug(f"-signer={self.mock_signer_path()}")
 
         # Create new wallets for an external signer.
@@ -109,7 +124,6 @@ class WalletSignerTest(BitcoinTestFramework):
         self.log.info('Prepare mock PSBT')
         self.nodes[0].sendtoaddress(address1, 1)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Load private key into wallet to generate a signed PSBT for the mock
         self.nodes[1].createwallet(wallet_name="mock", disable_private_keys=False, blank=True, descriptors=True)
@@ -184,6 +198,11 @@ class WalletSignerTest(BitcoinTestFramework):
         #     hww4.signerprocesspsbt, psbt_orig, "00000001"
         # )
         # self.clear_mock_result(self.nodes[4])
+
+    def test_invalid_signer(self):
+        self.log.debug(f"-signer={self.mock_invalid_signer_path()}")
+        self.log.info('Test invalid external signer')
+        assert_raises_rpc_error(-1, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, descriptors=True, external_signer=True)
 
 if __name__ == '__main__':
     WalletSignerTest().main()

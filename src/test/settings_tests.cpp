@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -80,19 +80,19 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
         "dupe": "dupe"
     })");
     BOOST_CHECK(!util::ReadSettings(path, values, errors));
-    std::vector<std::string> dup_keys = {strprintf("Found duplicate key dupe in settings file %s", path.string())};
+    std::vector<std::string> dup_keys = {strprintf("Found duplicate key dupe in settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), dup_keys.begin(), dup_keys.end());
 
     // Check non-kv json files not allowed
     WriteText(path, R"("non-kv")");
     BOOST_CHECK(!util::ReadSettings(path, values, errors));
-    std::vector<std::string> non_kv = {strprintf("Found non-object value \"non-kv\" in settings file %s", path.string())};
+    std::vector<std::string> non_kv = {strprintf("Found non-object value \"non-kv\" in settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), non_kv.begin(), non_kv.end());
 
     // Check invalid json not allowed
     WriteText(path, R"(invalid json)");
     BOOST_CHECK(!util::ReadSettings(path, values, errors));
-    std::vector<std::string> fail_parse = {strprintf("Unable to parse settings file %s", path.string())};
+    std::vector<std::string> fail_parse = {strprintf("Unable to parse settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), fail_parse.begin(), fail_parse.end());
 }
 

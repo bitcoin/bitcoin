@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Bitcoin Core developers
+// Copyright (c) 2014-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <netaddress.h>
 #include <node/ui_interface.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <warnings.h>
@@ -74,7 +75,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
         int64_t nMedian = vTimeOffsets.median();
         std::vector<int64_t> vSorted = vTimeOffsets.sorted();
         // Only let other nodes change our time by so much
-        int64_t max_adjustment = std::max<int64_t>(0, gArgs.GetArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT));
+        int64_t max_adjustment = std::max<int64_t>(0, gArgs.GetIntArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT));
         if (nMedian >= -max_adjustment && nMedian <= max_adjustment) {
             nTimeOffset = nMedian;
         } else {
@@ -98,11 +99,12 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
         }
 
         if (LogAcceptCategory(BCLog::NET)) {
+            std::string log_message{"time data samples: "};
             for (const int64_t n : vSorted) {
-                LogPrint(BCLog::NET, "%+d  ", n); /* Continued */
+                log_message += strprintf("%+d  ", n);
             }
-            LogPrint(BCLog::NET, "|  "); /* Continued */
-            LogPrint(BCLog::NET, "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset / 60);
+            log_message += strprintf("|  median offset = %+d  (%+d minutes)", nTimeOffset, nTimeOffset / 60);
+            LogPrint(BCLog::NET, "%s\n", log_message);
         }
     }
 }

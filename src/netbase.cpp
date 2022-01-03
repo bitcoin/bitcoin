@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,8 +23,6 @@
 
 #ifndef WIN32
 #include <fcntl.h>
-#else
-#include <codecvt>
 #endif
 
 #ifdef USE_POLL
@@ -98,6 +96,9 @@ enum Network ParseNetwork(const std::string& net_in) {
     if (net == "i2p") {
         return NET_I2P;
     }
+    if (net == "cjdns") {
+        return NET_CJDNS;
+    }
     return NET_UNROUTABLE;
 }
 
@@ -122,7 +123,7 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     std::vector<std::string> names;
     for (int n = 0; n < NET_MAX; ++n) {
         const enum Network network{static_cast<Network>(n)};
-        if (network == NET_UNROUTABLE || network == NET_CJDNS || network == NET_INTERNAL) continue;
+        if (network == NET_UNROUTABLE || network == NET_INTERNAL) continue;
         names.emplace_back(GetNetworkName(network));
     }
     if (append_unroutable) {
@@ -675,42 +676,36 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uin
     return true;
 }
 
-bool LookupSubNet(const std::string& strSubnet, CSubNet& ret, DNSLookupFn dns_lookup_function)
+bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 {
-    if (!ValidAsCString(strSubnet)) {
+    if (!ValidAsCString(subnet_str)) {
         return false;
     }
-    size_t slash = strSubnet.find_last_of('/');
-    std::vector<CNetAddr> vIP;
 
-    std::string strAddress = strSubnet.substr(0, slash);
-    // TODO: Use LookupHost(const std::string&, CNetAddr&, bool) instead to just get
-    //       one CNetAddr.
-    if (LookupHost(strAddress, vIP, 1, false, dns_lookup_function))
-    {
-        CNetAddr network = vIP[0];
-        if (slash != strSubnet.npos)
-        {
-            std::string strNetmask = strSubnet.substr(slash + 1);
-            uint8_t n;
-            if (ParseUInt8(strNetmask, &n)) {
-                // If valid number, assume CIDR variable-length subnet masking
-                ret = CSubNet(network, n);
-                return ret.IsValid();
-            }
-            else // If not a valid number, try full netmask syntax
-            {
-                // Never allow lookup for netmask
-                if (LookupHost(strNetmask, vIP, 1, false, dns_lookup_function)) {
-                    ret = CSubNet(network, vIP[0]);
-                    return ret.IsValid();
+    const size_t slash_pos{subnet_str.find_last_of('/')};
+    const std::string str_addr{subnet_str.substr(0, slash_pos)};
+    CNetAddr addr;
+
+    if (LookupHost(str_addr, addr, /*fAllowLookup=*/false)) {
+        if (slash_pos != subnet_str.npos) {
+            const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
+            uint8_t netmask;
+            if (ParseUInt8(netmask_str, &netmask)) {
+                // Valid number; assume CIDR variable-length subnet masking.
+                subnet_out = CSubNet{addr, netmask};
+                return subnet_out.IsValid();
+            } else {
+                // Invalid number; try full netmask syntax. Never allow lookup for netmask.
+                CNetAddr full_netmask;
+                if (LookupHost(netmask_str, full_netmask, /*fAllowLookup=*/false)) {
+                    subnet_out = CSubNet{addr, full_netmask};
+                    return subnet_out.IsValid();
                 }
             }
-        }
-        else
-        {
-            ret = CSubNet(network);
-            return ret.IsValid();
+        } else {
+            // Single IP subnet (<ipv4>/32 or <ipv6>/128).
+            subnet_out = CSubNet{addr};
+            return subnet_out.IsValid();
         }
     }
     return false;

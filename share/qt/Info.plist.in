@@ -3,7 +3,7 @@
 <plist version="0.9">
 <dict>
   <key>LSMinimumSystemVersion</key>
-  <string>10.14.0</string>
+  <string>10.15.0</string>
 
   <key>LSArchitecturePriority</key>
   <array>
@@ -15,6 +15,11 @@
 
   <key>CFBundlePackageType</key>
   <string>APPL</string>
+
+  <key>CFBundleSupportedPlatforms</key>
+  <array>
+	   <string>MacOSX</string>
+  </array>
 
   <key>NSHumanReadableCopyright</key>
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_BUILD@, Copyright © 2009-@COPYRIGHT_YEAR@ @COPYRIGHT_HOLDERS_FINAL@</string>

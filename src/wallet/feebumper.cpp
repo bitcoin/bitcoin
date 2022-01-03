@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -276,10 +276,6 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();
     if (!wallet.MarkReplaced(oldWtx.GetHash(), bumped_txid)) {
-        // TODO: see if JSON-RPC has a standard way of returning a response
-        // along with an exception. It would be good to return information about
-        // wtxBumped to the caller even if marking the original transaction
-        // replaced does not succeed for some reason.
         errors.push_back(Untranslated("Created new bumpfee transaction but could not mark the original transaction as replaced"));
     }
     return Result::OK;

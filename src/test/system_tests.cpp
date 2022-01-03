@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -28,28 +28,6 @@ BOOST_AUTO_TEST_CASE(dummy)
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 
-bool checkMessage(const std::runtime_error& ex)
-{
-    // On Linux & Mac: "No such file or directory"
-    // On Windows: "The system cannot find the file specified."
-    const std::string what(ex.what());
-    BOOST_CHECK(what.find("file") != std::string::npos);
-    return true;
-}
-
-bool checkMessageFalse(const std::runtime_error& ex)
-{
-    BOOST_CHECK_EQUAL(ex.what(), std::string("RunCommandParseJSON error: process(false) returned 1: \n"));
-    return true;
-}
-
-bool checkMessageStdErr(const std::runtime_error& ex)
-{
-    const std::string what(ex.what());
-    BOOST_CHECK(what.find("RunCommandParseJSON error:") != std::string::npos);
-    return checkMessage(ex);
-}
-
 BOOST_AUTO_TEST_CASE(run_command)
 {
     {
@@ -58,10 +36,8 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
 #ifdef WIN32
-        // Windows requires single quotes to prevent escaping double quotes from the JSON...
-        const UniValue result = RunCommandParseJSON("echo '{\"success\": true}'");
+        const UniValue result = RunCommandParseJSON("cmd.exe /c echo {\"success\": true}");
 #else
-        // ... but Linux and macOS echo a single quote if it's used
         const UniValue result = RunCommandParseJSON("echo \"{\"success\": true}\"");
 #endif
         BOOST_CHECK(result.isObject());
@@ -71,15 +47,45 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // An invalid command is handled by Boost
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), boost::process::process_error, checkMessage); // Command failed
+#ifdef WIN32
+        const std::string expected{"The system cannot find the file specified."};
+#else
+        const std::string expected{"No such file or directory"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), boost::process::process_error, [&](const boost::process::process_error& e) {
+            const std::string what(e.what());
+            BOOST_CHECK(what.find("RunCommandParseJSON error:") == std::string::npos);
+            BOOST_CHECK(what.find(expected) != std::string::npos);
+            return true;
+        });
     }
     {
         // Return non-zero exit code, no output to stderr
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("false"), std::runtime_error, checkMessageFalse);
+#ifdef WIN32
+        const std::string command{"cmd.exe /c call"};
+#else
+        const std::string command{"false"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
+            BOOST_CHECK(std::string(e.what()).find(strprintf("RunCommandParseJSON error: process(%s) returned 1: \n", command)) != std::string::npos);
+            return true;
+        });
     }
     {
         // Return non-zero exit code, with error message for stderr
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("ls nosuchfile"), std::runtime_error, checkMessageStdErr);
+#ifdef WIN32
+        const std::string command{"cmd.exe /c dir nosuchfile"};
+        const std::string expected{"File Not Found"};
+#else
+        const std::string command{"ls nosuchfile"};
+        const std::string expected{"No such file or directory"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
+            const std::string what(e.what());
+            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned", command)) != std::string::npos);
+            BOOST_CHECK(what.find(expected) != std::string::npos);
+            return true;
+        });
     }
     {
         BOOST_REQUIRE_THROW(RunCommandParseJSON("echo \"{\""), std::runtime_error); // Unable to parse JSON

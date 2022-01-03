@@ -3,12 +3,12 @@ dnl Distributed under the MIT software license, see the accompanying
 dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 AC_DEFUN([BITCOIN_FIND_BDB48],[
-  AC_ARG_VAR(BDB_CFLAGS, [C compiler flags for BerkeleyDB, bypasses autodetection])
-  AC_ARG_VAR(BDB_LIBS, [Linker flags for BerkeleyDB, bypasses autodetection])
+  AC_ARG_VAR([BDB_CFLAGS], [C compiler flags for BerkeleyDB, bypasses autodetection])
+  AC_ARG_VAR([BDB_LIBS], [Linker flags for BerkeleyDB, bypasses autodetection])
 
-  if test "x$use_bdb" = "xno"; then
+  if test "$use_bdb" = "no"; then
     use_bdb=no
-  elif test "x$BDB_CFLAGS" = "x"; then
+  elif test "$BDB_CFLAGS" = ""; then
     AC_MSG_CHECKING([for Berkeley DB C++ headers])
     BDB_CPPFLAGS=
     bdbpath=X
@@ -28,7 +28,7 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
           #error "failed to find bdb 4.8+"
         #endif
       ]])],[
-        if test "x$bdbpath" = "xX"; then
+        if test "$bdbpath" = "X"; then
           bdbpath="${searchpath}"
         fi
       ],[
@@ -45,18 +45,25 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
         break
       ],[])
     done
-    if test "x$bdbpath" = "xX"; then
+    if test "$bdbpath" = "X"; then
       use_bdb=no
       AC_MSG_RESULT([no])
-      AC_MSG_ERROR([libdb_cxx headers missing, ]AC_PACKAGE_NAME[ requires this library for BDB wallet support (--without-bdb to disable BDB wallet support)])
-    elif test "x$bdb48path" = "xX"; then
+      AC_MSG_WARN([libdb_cxx headers missing])
+      AC_MSG_WARN(AC_PACKAGE_NAME[ requires this library for BDB (legacy) wallet support])
+      AC_MSG_WARN([Passing --without-bdb will suppress this warning])
+    elif test "$bdb48path" = "X"; then
       BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdbpath}],db_cxx)
       AC_ARG_WITH([incompatible-bdb],[AS_HELP_STRING([--with-incompatible-bdb], [allow using a bdb version other than 4.8])],[
-        AC_MSG_WARN([Found Berkeley DB other than 4.8; BDB wallets opened by this build will not be portable!])
+        AC_MSG_WARN([Found Berkeley DB other than 4.8])
+        AC_MSG_WARN([BDB (legacy) wallets opened by this build will not be portable!])
+        use_bdb=yes
       ],[
-        AC_MSG_ERROR([Found Berkeley DB other than 4.8, required for portable BDB wallets (--with-incompatible-bdb to ignore or --without-bdb to disable BDB wallet support)])
+        AC_MSG_WARN([Found Berkeley DB other than 4.8])
+        AC_MSG_WARN([BDB (legacy) wallets opened by this build would not be portable!])
+        AC_MSG_WARN([If this is intended, pass --with-incompatible-bdb])
+        AC_MSG_WARN([Passing --without-bdb will suppress this warning])
+        use_bdb=no
       ])
-      use_bdb=yes
     else
       BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb48path}],db_cxx)
       bdbpath="${bdb48path}"
@@ -67,9 +74,9 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
   fi
   AC_SUBST(BDB_CPPFLAGS)
 
-  if test "x$use_bdb" = "xno"; then
+  if test "$use_bdb" = "no"; then
     use_bdb=no
-  elif test "x$BDB_LIBS" = "x"; then
+  elif test "$BDB_LIBS" = ""; then
     # TODO: Ideally this could find the library version and make sure it matches the headers being used
     for searchlib in db_cxx-4.8 db_cxx db4_cxx; do
       AC_CHECK_LIB([$searchlib],[main],[
@@ -77,12 +84,13 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
         break
       ])
     done
-    if test "x$BDB_LIBS" = "x"; then
-        AC_MSG_ERROR([libdb_cxx missing, ]AC_PACKAGE_NAME[ requires this library for BDB wallet support (--without-bdb to disable BDB wallet support)])
+    if test "$BDB_LIBS" = ""; then
+        AC_MSG_WARN([libdb_cxx headers missing])
+        AC_MSG_WARN(AC_PACKAGE_NAME[ requires this library for BDB (legacy) wallet support])
+        AC_MSG_WARN([Passing --without-bdb will suppress this warning])
     fi
   fi
-  if test "x$use_bdb" != "xno"; then
-    AC_SUBST(BDB_LIBS)
+  if test "$use_bdb" != "no"; then
     AC_DEFINE([USE_BDB], [1], [Define if BDB support should be compiled in])
     use_bdb=yes
   fi

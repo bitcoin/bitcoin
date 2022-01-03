@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 
 class ArgsManager;
 class BanMan;
-class CAddrMan;
+class AddrMan;
 class CBlockPolicyEstimator;
 class CConnman;
 class CScheduler;
@@ -23,7 +23,7 @@ namespace interfaces {
 class Chain;
 class ChainClient;
 class Init;
-class WalletClient;
+class WalletLoader;
 } // namespace interfaces
 
 //! NodeContext struct containing references to chain state and connection
@@ -39,7 +39,7 @@ class WalletClient;
 struct NodeContext {
     //! Init interface for initializing current process and connecting to other processes.
     interfaces::Init* init{nullptr};
-    std::unique_ptr<CAddrMan> addrman;
+    std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator;
@@ -52,7 +52,7 @@ struct NodeContext {
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     //! Reference to chain client that should used to load or create wallets
     //! opened by the gui.
-    interfaces::WalletClient* wallet_client{nullptr};
+    interfaces::WalletLoader* wallet_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
 

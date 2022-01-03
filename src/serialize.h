@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -524,6 +524,19 @@ struct CompactSizeFormatter
         static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max(), "CompactSize only supports 64-bit integers and below");
 
         WriteCompactSize<Stream>(s, v);
+    }
+};
+
+class CompactSizeWriter
+{
+protected:
+    uint64_t n;
+public:
+    explicit CompactSizeWriter(uint64_t n_in) : n(n_in) { }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        WriteCompactSize<Stream>(s, n);
     }
 };
 

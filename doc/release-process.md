@@ -19,8 +19,7 @@ Release Process
 
 * On both the master branch and the new release branch:
   - update `CLIENT_VERSION_MAJOR` in [`configure.ac`](../configure.ac)
-  - update `CLIENT_VERSION_MAJOR`, `PACKAGE_VERSION`, and `PACKAGE_STRING` in [`build_msvc/bitcoin_config.h`](/build_msvc/bitcoin_config.h)
-* On the new release branch in [`configure.ac`](../configure.ac) and [`build_msvc/bitcoin_config.h`](/build_msvc/bitcoin_config.h) (see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd)):
+* On the new release branch in [`configure.ac`](../configure.ac)(see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd)):
   - set `CLIENT_VERSION_MINOR` to `0`
   - set `CLIENT_VERSION_BUILD` to `0`
   - set `CLIENT_VERSION_IS_RELEASE` to `true`
@@ -60,7 +59,7 @@ Release Process
 
 To tag the version (or release candidate) in git, use the `make-tag.py` script from [bitcoin-maintainer-tools](https://github.com/bitcoin-core/bitcoin-maintainer-tools). From the root of the repository run:
 
-    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 0.20.0)
+    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 23.0)
 
 This will perform a few last-minute consistency checks in the build system files, and if they pass, create a signed tag.
 
@@ -253,6 +252,10 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
   - bitcoincore.org maintained versions update:
     [table](https://github.com/bitcoin-core/bitcoincore.org/commits/master/_includes/posts/maintenance-table.md)
 
+  - Delete post-EOL [release branches](https://github.com/bitcoin/bitcoin/branches/all) and create a tag `v${branch_name}-final`.
+
+  - Delete ["Needs backport" labels](https://github.com/bitcoin/bitcoin/labels?q=backport) for non-existing branches.
+
   - bitcoincore.org RPC documentation update
 
       - Install [golang](https://golang.org/doc/install)
@@ -271,26 +274,7 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 
       - Push the flatpak to flathub, e.g. https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2
 
-      - Push the latest version to master (if applicable), e.g. https://github.com/bitcoin-core/packaging/pull/32
-
-      - Create a new branch for the major release "0.xx" from master (used to build the snap package) and request the
-        track (if applicable), e.g. https://forum.snapcraft.io/t/track-request-for-bitcoin-core-snap/10112/7
-
-      - Notify MarcoFalke so that he can start building the snap package
-
-        - https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging (Click "Import Now" to fetch the branch)
-        - https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging/+ref/0.xx (Click "Create snap package")
-        - Name it "bitcoin-core-snap-0.xx"
-        - Leave owner and series as-is
-        - Select architectures that are compiled via guix
-        - Leave "automatically build when branch changes" unticked
-        - Tick "automatically upload to store"
-        - Put "bitcoin-core" in the registered store package name field
-        - Tick the "edge" box
-        - Put "0.xx" in the track field
-        - Click "create snap package"
-        - Click "Request builds" for every new release on this branch (after updating the snapcraft.yml in the branch to reflect the latest guix results)
-        - Promote release on https://snapcraft.io/bitcoin-core/releases if it passes sanity checks
+      - Push the snap, see https://github.com/bitcoin-core/packaging/blob/master/snap/build.md
 
   - This repo
 

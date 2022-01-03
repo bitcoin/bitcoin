@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -205,11 +205,10 @@ void WalletView::showOutOfSyncWarning(bool fShow)
 
 void WalletView::encryptWallet()
 {
-    AskPassphraseDialog dlg(AskPassphraseDialog::Encrypt, this);
-    dlg.setModel(walletModel);
-    dlg.exec();
-
-    Q_EMIT encryptionStatusChanged();
+    auto dlg = new AskPassphraseDialog(AskPassphraseDialog::Encrypt, this);
+    dlg->setModel(walletModel);
+    connect(dlg, &QDialog::finished, this, &WalletView::encryptionStatusChanged);
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void WalletView::backupWallet()
@@ -234,19 +233,18 @@ void WalletView::backupWallet()
 
 void WalletView::changePassphrase()
 {
-    AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);
-    dlg.setModel(walletModel);
-    dlg.exec();
+    auto dlg = new AskPassphraseDialog(AskPassphraseDialog::ChangePass, this);
+    dlg->setModel(walletModel);
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void WalletView::unlockWallet()
 {
     // Unlock wallet when requested by wallet model
-    if (walletModel->getEncryptionStatus() == WalletModel::Locked)
-    {
-        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
-        dlg.setModel(walletModel);
-        dlg.exec();
+    if (walletModel->getEncryptionStatus() == WalletModel::Locked) {
+        auto dlg = new AskPassphraseDialog(AskPassphraseDialog::Unlock, this);
+        dlg->setModel(walletModel);
+        GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
     }
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -221,10 +221,9 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
         return;
     }
 
-    PSBTOperationsDialog* dlg = new PSBTOperationsDialog(this, currentWalletModel(), clientModel);
+    auto dlg = new PSBTOperationsDialog(this, currentWalletModel(), clientModel);
     dlg->openWithPSBT(psbtx);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-    dlg->exec();
+    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
 }
 
 void WalletFrame::encryptWallet()

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,7 @@
 #include <shutdown.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/tokenpipe.h>
@@ -238,6 +239,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         daemon_ep.Close();
     }
 #endif
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::SHUTOFF);
     if (fRet) {
         WaitForShutdown();
     }

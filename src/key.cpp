@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -229,6 +229,12 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
     assert(ret);
     secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);
     vchSig.resize(nSigLen);
+    // Additional verification step to prevent using a potentially corrupted signature
+    secp256k1_pubkey pk;
+    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
+    assert(ret);
+    ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
+    assert(ret);
     return true;
 }
 
@@ -251,17 +257,25 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
         return false;
     vchSig.resize(CPubKey::COMPACT_SIGNATURE_SIZE);
     int rec = -1;
-    secp256k1_ecdsa_recoverable_signature sig;
-    int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, nullptr);
+    secp256k1_ecdsa_recoverable_signature rsig;
+    int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &rsig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, nullptr);
     assert(ret);
-    ret = secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_sign, &vchSig[1], &rec, &sig);
+    ret = secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_sign, &vchSig[1], &rec, &rsig);
     assert(ret);
     assert(rec != -1);
     vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
+    // Additional verification step to prevent using a potentially corrupted signature
+    secp256k1_pubkey epk, rpk;
+    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &epk, begin());
+    assert(ret);
+    ret = secp256k1_ecdsa_recover(GetVerifyContext(), &rpk, &rsig, hash.begin());
+    assert(ret);
+    ret = secp256k1_ec_pubkey_cmp(GetVerifyContext(), &epk, &rpk);
+    assert(ret == 0);
     return true;
 }
 
-bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256* aux) const
+bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const
 {
     assert(sig.size() == 64);
     secp256k1_keypair keypair;
@@ -274,7 +288,14 @@ bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint2
         uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
         if (!secp256k1_keypair_xonly_tweak_add(GetVerifyContext(), &keypair, tweak.data())) return false;
     }
-    bool ret = secp256k1_schnorrsig_sign(secp256k1_context_sign, sig.data(), hash.data(), &keypair, aux ? (unsigned char*)aux->data() : nullptr);
+    bool ret = secp256k1_schnorrsig_sign(secp256k1_context_sign, sig.data(), hash.data(), &keypair, aux.data());
+    if (ret) {
+        // Additional verification step to prevent using a potentially corrupted signature
+        secp256k1_xonly_pubkey pubkey_verify;
+        ret = secp256k1_keypair_xonly_pub(GetVerifyContext(), &pubkey_verify, nullptr, &keypair);
+        ret &= secp256k1_schnorrsig_verify(GetVerifyContext(), sig.data(), hash.begin(), 32, &pubkey_verify);
+    }
+    if (!ret) memory_cleanse(sig.data(), sig.size());
     memory_cleanse(&keypair, sizeof(keypair));
     return ret;
 }
@@ -319,10 +340,11 @@ bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
 
-void CExtKey::SetSeed(const unsigned char *seed, unsigned int nSeedLen) {
+void CExtKey::SetSeed(Span<const uint8_t> seed)
+{
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
-    CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(vout.data());
+    CHMAC_SHA512{hashkey, sizeof(hashkey)}.Write(seed.data(), seed.size()).Finalize(vout.data());
     key.Set(vout.data(), vout.data() + 32, true);
     memcpy(chaincode.begin(), vout.data() + 32, 32);
     nDepth = 0;
@@ -343,8 +365,7 @@ CExtPubKey CExtKey::Neuter() const {
 void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
     memcpy(code+1, vchFingerprint, 4);
-    code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
-    code[7] = (nChild >>  8) & 0xFF; code[8] = (nChild >>  0) & 0xFF;
+    WriteBE32(code+5, nChild);
     memcpy(code+9, chaincode.begin(), 32);
     code[41] = 0;
     assert(key.size() == 32);
@@ -354,7 +375,7 @@ void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
 void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
     memcpy(vchFingerprint, code+1, 4);
-    nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
+    nChild = ReadBE32(code+5);
     memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
     if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || code[41] != 0) key = CKey();

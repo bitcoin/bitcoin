@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,6 +49,7 @@ static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 static constexpr int8_t UNKNOWN_NETWORK{-1};
+static constexpr std::array NETWORKS{"ipv4", "ipv6", "onion", "i2p", "cjdns"};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -74,7 +75,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     SetupChainParamsBaseOptions(argsman);
-    argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_STRING, OptionsCategory::OPTIONS);
+    argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -83,7 +84,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u, testnet: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcwaittimeout=<n>", strprintf("Timeout in seconds to wait for the RPC server to start, or 0 for no timeout. (default: %d)", DEFAULT_WAIT_CLIENT_TIMEOUT), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcwaittimeout=<n>", strprintf("Timeout in seconds to wait for the RPC server to start, or 0 for no timeout. (default: %d)", DEFAULT_WAIT_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -242,11 +243,10 @@ public:
 class AddrinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr std::array m_networks{"ipv4", "ipv6", "torv2", "torv3", "i2p"};
     int8_t NetworkStringToId(const std::string& str) const
     {
-        for (size_t i = 0; i < m_networks.size(); ++i) {
-            if (str == m_networks.at(i)) return i;
+        for (size_t i = 0; i < NETWORKS.size(); ++i) {
+            if (str == NETWORKS[i]) return i;
         }
         return UNKNOWN_NETWORK;
     }
@@ -268,13 +268,10 @@ public:
         if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
             throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
         }
-        // Count the number of peers we know by network, including torv2 versus torv3.
-        std::array<uint64_t, m_networks.size()> counts{{}};
+        // Count the number of peers known to our node, by network.
+        std::array<uint64_t, NETWORKS.size()> counts{{}};
         for (const UniValue& node : nodes) {
             std::string network_name{node["network"].get_str()};
-            if (network_name == "onion") {
-                network_name = node["address"].get_str().size() > 22 ? "torv3" : "torv2";
-            }
             const int8_t network_id{NetworkStringToId(network_name)};
             if (network_id == UNKNOWN_NETWORK) continue;
             ++counts.at(network_id);
@@ -282,8 +279,8 @@ public:
         // Prepare result to return to user.
         UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
         uint64_t total{0}; // Total address count
-        for (size_t i = 0; i < m_networks.size(); ++i) {
-            addresses.pushKV(m_networks.at(i), counts.at(i));
+        for (size_t i = 0; i < NETWORKS.size(); ++i) {
+            addresses.pushKV(NETWORKS[i], counts.at(i));
             total += counts.at(i);
         }
         addresses.pushKV("total", total);
@@ -340,7 +337,7 @@ public:
         connections.pushKV("total", batch[ID_NETWORKINFO]["result"]["connections"]);
         result.pushKV("connections", connections);
 
-        result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
+        result.pushKV("networks", batch[ID_NETWORKINFO]["result"]["networks"]);
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
         if (!batch[ID_WALLETINFO]["result"].isNull()) {
@@ -366,14 +363,13 @@ class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
     static constexpr uint8_t MAX_DETAIL_LEVEL{4};
-    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
-    std::array<std::array<uint16_t, m_networks.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
+    std::array<std::array<uint16_t, NETWORKS.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
     uint8_t m_block_relay_peers_count{0};
     uint8_t m_manual_peers_count{0};
     int8_t NetworkStringToId(const std::string& str) const
     {
-        for (size_t i = 0; i < m_networks.size(); ++i) {
-            if (str == m_networks.at(i)) return i;
+        for (size_t i = 0; i < NETWORKS.size(); ++i) {
+            if (str == NETWORKS[i]) return i;
         }
         return UNKNOWN_NETWORK;
     }
@@ -474,10 +470,10 @@ public:
             const bool is_outbound{!peer["inbound"].get_bool()};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
             const std::string conn_type{peer["connection_type"].get_str()};
-            ++m_counts.at(is_outbound).at(network_id);        // in/out by network
-            ++m_counts.at(is_outbound).at(m_networks.size()); // in/out overall
-            ++m_counts.at(2).at(network_id);                  // total by network
-            ++m_counts.at(2).at(m_networks.size());           // total overall
+            ++m_counts.at(is_outbound).at(network_id);      // in/out by network
+            ++m_counts.at(is_outbound).at(NETWORKS.size()); // in/out overall
+            ++m_counts.at(2).at(network_id);                // total by network
+            ++m_counts.at(2).at(NETWORKS.size());           // total overall
             if (conn_type == "block-relay-only") ++m_block_relay_peers_count;
             if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
@@ -554,16 +550,27 @@ public:
         }
 
         // Report peer connection totals by type.
-        result += "        ipv4    ipv6   onion";
-        const bool any_i2p_peers = m_counts.at(2).at(3); // false if total i2p peers count is 0, otherwise true
-        if (any_i2p_peers) result += "     i2p";
+        result += "     ";
+        std::vector<int8_t> reachable_networks;
+        for (const UniValue& network : networkinfo["networks"].getValues()) {
+            if (network["reachable"].get_bool()) {
+                const std::string& network_name{network["name"].get_str()};
+                const int8_t network_id{NetworkStringToId(network_name)};
+                if (network_id == UNKNOWN_NETWORK) continue;
+                result += strprintf("%8s", network_name); // column header
+                reachable_networks.push_back(network_id);
+            }
+        };
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
+
         const std::array rows{"in", "out", "total"};
-        for (uint8_t i = 0; i < 3; ++i) {
-            result += strprintf("\n%-5s  %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2)); // ipv4/ipv6/onion peers counts
-            if (any_i2p_peers) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
-            result += strprintf("   %5i", m_counts.at(i).at(m_networks.size())); // total peers count
+        for (size_t i = 0; i < rows.size(); ++i) {
+            result += strprintf("\n%-5s", rows[i]); // row header
+            for (int8_t n : reachable_networks) {
+                result += strprintf("%8i", m_counts.at(i).at(n)); // network peers count
+            }
+            result += strprintf("   %5i", m_counts.at(i).at(NETWORKS.size())); // total peers count
             if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
                 result += strprintf("   %5i", m_block_relay_peers_count);
                 if (m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
@@ -705,7 +712,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     //     3. default port for chain
     uint16_t port{BaseParams().RPCPort()};
     SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
-    port = static_cast<uint16_t>(gArgs.GetArg("-rpcport", port));
+    port = static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", port));
 
     // Obtain event base
     raii_event_base base = obtain_event_base();
@@ -715,7 +722,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
     // Set connection timeout
     {
-        const int timeout = gArgs.GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
+        const int timeout = gArgs.GetIntArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
         if (timeout > 0) {
             evhttp_connection_set_timeout(evcon.get(), timeout);
         } else {
@@ -789,7 +796,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         if (failedToGetAuthCookie) {
             throw std::runtime_error(strprintf(
                 "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)",
-                GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string()));
+                fs::PathToString(GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)))));
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
         }
@@ -825,7 +832,7 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
     const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
-    const int timeout = gArgs.GetArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
+    const int timeout = gArgs.GetIntArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
     const auto deadline{GetTime<std::chrono::microseconds>() + 1s * timeout};
 
     do {
@@ -989,8 +996,26 @@ static void ParseGetInfoResult(UniValue& result)
         RESET);
     result_string += strprintf("Version: %s\n", result["version"].getValStr());
     result_string += strprintf("Time offset (s): %s\n", result["timeoffset"].getValStr());
-    const std::string proxy = result["proxy"].getValStr();
-    result_string += strprintf("Proxy: %s\n", proxy.empty() ? "N/A" : proxy);
+
+    // proxies
+    std::map<std::string, std::vector<std::string>> proxy_networks;
+    std::vector<std::string> ordered_proxies;
+
+    for (const UniValue& network : result["networks"].getValues()) {
+        const std::string proxy = network["proxy"].getValStr();
+        if (proxy.empty()) continue;
+        // Add proxy to ordered_proxy if has not been processed
+        if (proxy_networks.find(proxy) == proxy_networks.end()) ordered_proxies.push_back(proxy);
+
+        proxy_networks[proxy].push_back(network["name"].getValStr());
+    }
+
+    std::vector<std::string> formatted_proxies;
+    for (const std::string& proxy : ordered_proxies) {
+        formatted_proxies.emplace_back(strprintf("%s (%s)", proxy, Join(proxy_networks.find(proxy)->second, ", ")));
+    }
+    result_string += strprintf("Proxies: %s\n", formatted_proxies.empty() ? "n/a" : Join(formatted_proxies, ", "));
+
     result_string += strprintf("Min tx relay fee rate (%s/kvB): %s\n\n", CURRENCY_UNIT, result["relayfee"].getValStr());
 
     if (!result["has_wallet"].isNull()) {

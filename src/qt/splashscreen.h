@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -66,6 +66,7 @@ private:
     bool m_shutdown = false;
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr<interfaces::Handler> m_handler_init_wallet;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
     std::list<std::unique_ptr<interfaces::Wallet>> m_connected_wallets;
     std::list<std::unique_ptr<interfaces::Handler>> m_connected_wallet_handlers;

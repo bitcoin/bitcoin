@@ -1,10 +1,11 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <scheduler.h>
 
 #include <random.h>
+#include <util/syscall_sandbox.h>
 #include <util/time.h>
 
 #include <assert.h>
@@ -24,6 +25,7 @@ CScheduler::~CScheduler()
 
 void CScheduler::serviceQueue()
 {
+    SetSyscallSandboxPolicy(SyscallSandboxPolicy::SCHEDULER);
     WAIT_LOCK(newTaskMutex, lock);
     ++nThreadsServicingQueue;
 

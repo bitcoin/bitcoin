@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,12 @@
 
 #include <QDialog>
 
+#include <memory>
+
+namespace interfaces {
 class ExternalSigner;
+} // namespace interfaces
+
 class WalletModel;
 
 namespace Ui {
@@ -24,7 +29,7 @@ public:
     explicit CreateWalletDialog(QWidget* parent);
     virtual ~CreateWalletDialog();
 
-    void setSigners(const std::vector<ExternalSigner>& signers);
+    void setSigners(const std::vector<std::unique_ptr<interfaces::ExternalSigner>>& signers);
 
     QString walletName() const;
     bool isEncryptWalletChecked() const;

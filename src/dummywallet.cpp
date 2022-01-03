@@ -1,16 +1,18 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/system.h>
 #include <walletinitinterface.h>
 
+class ArgsManager;
 class CWallet;
 
 namespace interfaces {
 class Chain;
 class Handler;
 class Wallet;
+class WalletLoader;
 }
 
 class DummyWalletInit : public WalletInitInterface {
@@ -37,8 +39,6 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-maxtxfee=<amt>",
         "-mintxfee=<amt>",
         "-paytxfee=<amt>",
-        "-rescan",
-        "-salvagewallet",
         "-signer=<cmd>",
         "-spendzeroconfchange",
         "-txconfirmtarget=<n>",
@@ -60,6 +60,11 @@ const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 namespace interfaces {
 
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }

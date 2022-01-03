@@ -30,8 +30,8 @@ public:
         return mp::SpawnProcess(pid, [&](int fd) {
             fs::path path = argv0_path;
             path.remove_filename();
-            path.append(new_exe_name);
-            return std::vector<std::string>{path.string(), "-ipcfd", strprintf("%i", fd)};
+            path /= fs::PathFromString(new_exe_name);
+            return std::vector<std::string>{fs::PathToString(path), "-ipcfd", strprintf("%i", fd)};
         });
     }
     int waitSpawned(int pid) override { return mp::WaitProcess(pid); }

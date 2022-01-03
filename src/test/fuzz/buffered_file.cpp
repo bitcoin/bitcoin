@@ -29,7 +29,7 @@ FUZZ_TARGET(buffered_file)
     }
     if (opt_buffered_file && fuzzed_file != nullptr) {
         bool setpos_fail = false;
-        while (fuzzed_data_provider.ConsumeBool()) {
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {

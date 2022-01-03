@@ -1,10 +1,11 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <key.h>
+#include <psbt.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <script/sign.h>
@@ -43,12 +44,12 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
         } catch (const std::ios_base::failure&) {
         }
         CDataStream serialized{SER_NETWORK, PROTOCOL_VERSION};
-        SerializeHDKeypaths(serialized, hd_keypaths, fuzzed_data_provider.ConsumeIntegral<uint8_t>());
+        SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
     }
 
     {
         std::map<CPubKey, KeyOriginInfo> hd_keypaths;
-        while (fuzzed_data_provider.ConsumeBool()) {
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
             const std::optional<CPubKey> pub_key = ConsumeDeserializable<CPubKey>(fuzzed_data_provider);
             if (!pub_key) {
                 break;
@@ -61,7 +62,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
         }
         CDataStream serialized{SER_NETWORK, PROTOCOL_VERSION};
         try {
-            SerializeHDKeypaths(serialized, hd_keypaths, fuzzed_data_provider.ConsumeIntegral<uint8_t>());
+            SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
         } catch (const std::ios_base::failure&) {
         }
         std::map<CPubKey, KeyOriginInfo> deserialized_hd_keypaths;
@@ -125,7 +126,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
                 (void)signature_creator.CreateSig(provider, vch_sig, address, ConsumeScript(fuzzed_data_provider), fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0}));
             }
             std::map<COutPoint, Coin> coins;
-            while (fuzzed_data_provider.ConsumeBool()) {
+            LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                 const std::optional<COutPoint> outpoint = ConsumeDeserializable<COutPoint>(fuzzed_data_provider);
                 if (!outpoint) {
                     break;

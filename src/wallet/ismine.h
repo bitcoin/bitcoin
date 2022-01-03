@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,9 @@
 
 #include <script/standard.h>
 
-#include <stdint.h>
 #include <bitset>
+#include <cstdint>
+#include <type_traits>
 
 class CWallet;
 class CScript;
@@ -35,8 +36,7 @@ class CScript;
  * ISMINE_USED: the scriptPubKey corresponds to a used address owned by the wallet user.
  *
  */
-enum isminetype : unsigned int
-{
+enum isminetype : unsigned int {
     ISMINE_NO         = 0,
     ISMINE_WATCH_ONLY = 1 << 0,
     ISMINE_SPENDABLE  = 1 << 1,
@@ -46,7 +46,7 @@ enum isminetype : unsigned int
     ISMINE_ENUM_ELEMENTS,
 };
 /** used for bitflags of isminetype */
-typedef uint8_t isminefilter;
+using isminefilter = std::underlying_type<isminetype>::type;
 
 /**
  * Cachable amount subdivided into watchonly and spendable parts.

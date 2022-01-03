@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/amount.h>
 #include <key_io.h>
 #include <outputtype.h>
 #include <rpc/util.h>
@@ -209,7 +210,7 @@ CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string&
     }
     CKeyID key = GetKeyForDestination(keystore, dest);
     if (key.IsNull()) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("%s does not refer to a key", addr_in));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' does not refer to a key", addr_in));
     }
     CPubKey vchPubKey;
     if (!keystore.GetPubKey(key, vchPubKey)) {
@@ -316,7 +317,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", (int)id.version);
-        obj.pushKV("witness_program", HexStr(Span<const unsigned char>(id.program, id.length)));
+        obj.pushKV("witness_program", HexStr({id.program, id.length}));
         return obj;
     }
 };
@@ -619,10 +620,9 @@ std::string RPCHelpMan::ToString() const
         ret += arg.ToString(/* oneline */ true);
     }
     if (was_optional) ret += " )";
-    ret += "\n";
 
     // Description
-    ret += m_description;
+    ret += "\n\n" + TrimString(m_description) + "\n";
 
     // Arguments
     Sections sections;

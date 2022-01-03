@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test compact blocks (BIP 152).
@@ -65,6 +65,8 @@ from test_framework.util import (
     assert_equal,
     softfork_active,
 )
+from test_framework.wallet import MiniWallet
+
 
 # TestP2PConn: A peer we use to send messages to bitcoind, and store responses.
 class TestP2PConn(P2PInterface):
@@ -150,9 +152,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         ]]
         self.utxos = []
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def build_block_on_tip(self, node, segwit=False):
         block = create_block(tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         if segwit:
@@ -165,7 +164,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_on_tip(self.nodes[0])
         self.segwit_node.send_and_ping(msg_no_witness_block(block))
         assert int(self.nodes[0].getbestblockhash(), 16) == block.sha256
-        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY, self.nodes[0].getnewaddress(address_type="bech32"))
+        self.generate(self.wallet, COINBASE_MATURITY)
 
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
@@ -296,12 +295,10 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Generate a bunch of transactions.
         self.generate(node, COINBASE_MATURITY + 1)
         num_transactions = 25
-        address = node.getnewaddress()
 
         segwit_tx_generated = False
         for _ in range(num_transactions):
-            txid = node.sendtoaddress(address, 0.1)
-            hex_tx = node.gettransaction(txid)["hex"]
+            hex_tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['hex']
             tx = tx_from_hex(hex_tx)
             if not tx.wit.is_null():
                 segwit_tx_generated = True
@@ -843,8 +840,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=False)
 
     def run_test(self):
-        # Get the nodes out of IBD
-        self.generate(self.nodes[0], 1)
+        self.wallet = MiniWallet(self.nodes[0])
 
         # Setup the p2p connections
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
