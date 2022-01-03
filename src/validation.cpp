@@ -375,6 +375,8 @@ void CChainState::MaybeUpdateMempoolForReorg(
                 }
             }
         }
+        // CheckSequenceLocks updates lp. Update the mempool entry LockPoints.
+        if (!validLP) m_mempool->mapTx.modify(it, update_lock_points(lp));
         return should_remove;
     };
 
