@@ -205,7 +205,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: '[TSan, depends, no gui] [jammy]'
+  name: '[TSan, depends, gui] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
