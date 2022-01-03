@@ -28,7 +28,6 @@
 #include <index/txindex.h>
 #include <txmempool.h>
 #include <util/system.h>
-#include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 

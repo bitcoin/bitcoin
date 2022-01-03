@@ -8,7 +8,6 @@
 #include <httpserver.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
-#include <random.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <ui_interface.h>

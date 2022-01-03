@@ -7,7 +7,6 @@
 
 #include <pubkey.h>
 #include <script/script.h>
-#include <util/strencodings.h>
 
 
 typedef std::vector<unsigned char> valtype;

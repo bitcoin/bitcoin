@@ -9,11 +9,8 @@
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
-#include <net.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
-#include <rpc/server.h>
-#include <scheduler.h>
 #include <script/ismine.h>
 #include <script/standard.h>
 #include <support/allocators/secure.h>

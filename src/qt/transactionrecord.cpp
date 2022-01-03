@@ -6,11 +6,8 @@
 #include <qt/transactionrecord.h>
 
 #include <chain.h>
-#include <consensus/consensus.h>
 #include <interfaces/wallet.h>
 #include <interfaces/node.h>
-#include <timedata.h>
-#include <validation.h>
 
 #include <stdint.h>
 

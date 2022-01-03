@@ -18,7 +18,6 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
-#include <timedata.h>
 #include <util/fees.h>
 #include <util/system.h>
 #include <util/moneystr.h>

@@ -8,7 +8,6 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
-#include <consensus/consensus.h>
 #include <logging.h>
 #include <util/system.h>
 #include <util/strencodings.h>

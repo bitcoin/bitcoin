@@ -6,7 +6,6 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <net.h>
-#include <scheduler.h>
 #include <util/error.h>
 #include <util/system.h>
 #include <util/moneystr.h>

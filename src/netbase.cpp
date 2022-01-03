@@ -6,7 +6,6 @@
 #include <netbase.h>
 
 #include <sync.h>
-#include <uint256.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>

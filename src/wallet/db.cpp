@@ -5,10 +5,7 @@
 
 #include <wallet/db.h>
 
-#include <hash.h>
-#include <protocol.h>
 #include <util/strencodings.h>
-#include <wallet/walletutil.h>
 
 #include <stdint.h>
 

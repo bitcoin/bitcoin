@@ -5,7 +5,6 @@
 #include <qt/test/apptests.h>
 
 #include <chainparams.h>
-#include <init.h>
 #include <key.h>
 #include <qt/dash.h>
 #include <qt/bitcoingui.h>
@@ -18,9 +17,6 @@
 
 #if defined(HAVE_CONFIG_H)
 #include <config/dash-config.h>
-#endif
-#ifdef ENABLE_WALLET
-#include <wallet/db.h>
 #endif
 
 #include <QAction>

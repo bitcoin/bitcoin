@@ -7,7 +7,6 @@
 
 #include <hash.h>
 #include <consensus/consensus.h>
-#include <util/strencodings.h>
 
 
 std::vector<unsigned char> BitsToBytes(const std::vector<bool>& bits)

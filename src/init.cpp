@@ -70,7 +70,6 @@
 #include <messagesigner.h>
 #include <netfulfilledman.h>
 #include <spork.h>
-#include <warnings.h>
 #include <walletinitinterface.h>
 
 #include <evo/deterministicmns.h>

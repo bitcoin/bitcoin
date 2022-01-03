@@ -17,7 +17,6 @@
 #include <key.h>
 #include <key_io.h>
 #include <keystore.h>
-#include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -25,8 +24,6 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/sign.h>
-#include <shutdown.h>
-#include <timedata.h>
 #include <txmempool.h>
 #include <util/error.h>
 #include <util/fees.h>

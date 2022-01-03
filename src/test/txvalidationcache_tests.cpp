@@ -8,7 +8,6 @@
 #include <script/standard.h>
 #include <script/sign.h>
 #include <test/setup_common.h>
-#include <core_io.h>
 #include <keystore.h>
 
 #include <boost/test/unit_test.hpp>

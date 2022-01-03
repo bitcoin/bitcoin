@@ -5,7 +5,6 @@
 #include <key_io.h>
 #include <util/strencodings.h>
 #include <wallet/psbtwallet.h>
-#include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
 #include <boost/test/unit_test.hpp>

@@ -7,7 +7,6 @@
 #include <rpc/server.h>
 
 #include <chainparams.h>
-#include <random.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>

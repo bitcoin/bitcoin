@@ -12,7 +12,6 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
-#include <util/moneystr.h>
 #include <util/strencodings.h>
 
 #include <spentindex.h>

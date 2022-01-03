@@ -20,7 +20,6 @@
 #include <rpc/server.h>
 #include <script/sigcache.h>
 #include <streams.h>
-#include <ui_interface.h>
 #include <txdb.h>
 #include <util/memory.h>
 #include <util/strencodings.h>

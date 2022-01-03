@@ -13,15 +13,11 @@
 #include <compat.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <rpc/server.h>
 #include <noui.h>
 #include <shutdown.h>
 #include <util/system.h>
-#include <httpserver.h>
-#include <httprpc.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
-#include <walletinitinterface.h>
 #include <stacktraces.h>
 
 #include <stdio.h>

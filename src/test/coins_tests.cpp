@@ -4,7 +4,6 @@
 
 #include <clientversion.h>
 #include <coins.h>
-#include <consensus/validation.h>
 #include <script/standard.h>
 #include <streams.h>
 #include <test/setup_common.h>

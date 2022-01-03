@@ -5,7 +5,6 @@
 
 #include <qt/bitcoinunits.h>
 #include <chainparams.h>
-#include <primitives/transaction.h>
 
 #include <QSettings>
 #include <QStringList>

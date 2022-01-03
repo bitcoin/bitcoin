@@ -8,9 +8,6 @@
 #include <util/system.h>
 #include <wallet/test/init_test_fixture.h>
 
-#include <wallet/wallet.h>
-
-
 BOOST_FIXTURE_TEST_SUITE(init_tests, InitWalletDirTestingSetup)
 
 BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_default)
