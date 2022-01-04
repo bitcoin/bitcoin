@@ -97,7 +97,7 @@ Updated RPCs
   `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`,
   `/rest/block` no longer return the `addresses` and `reqSigs` fields, which
   were previously deprecated in 22.0. (#22650)
-- The `getblock` RPC command now supports verbose level 3 containing transaction inputs
+- The `getblock` RPC command now supports verbosity level 3 containing transaction inputs'
   `prevout` information.  The existing `/rest/block/` REST endpoint is modified to contain
   this information too. Every `vin` field will contain an additional `prevout` subfield
   describing the spent output. `prevout` contains the following keys:
