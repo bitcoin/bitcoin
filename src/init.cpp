@@ -941,9 +941,9 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
         LOCK(cs_main);
         int64_t nStart = GetTimeMillis();
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(false, [&](auto& dmn) {
             Coin coin;
-            GetUTXOCoin(dmn->collateralOutpoint, coin);
+            GetUTXOCoin(dmn.collateralOutpoint, coin);
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
     }

@@ -73,8 +73,8 @@ CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
     mnList.resize(dmnList.GetAllMNsCount());
 
     size_t i = 0;
-    dmnList.ForEachMN(false, [this, &i](const CDeterministicMNCPtr& dmn) {
-        mnList[i++] = std::make_unique<CSimplifiedMNListEntry>(*dmn);
+    dmnList.ForEachMN(false, [this, &i](auto& dmn) {
+        mnList[i++] = std::make_unique<CSimplifiedMNListEntry>(dmn);
     });
 
     std::sort(mnList.begin(), mnList.end(), [&](const std::unique_ptr<CSimplifiedMNListEntry>& a, const std::unique_ptr<CSimplifiedMNListEntry>& b) {

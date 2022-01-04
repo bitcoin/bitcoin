@@ -957,28 +957,28 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 }
 #endif
 
-static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
+static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, bool detailed)
 {
     if (!detailed) {
-        return dmn->proTxHash.ToString();
+        return dmn.proTxHash.ToString();
     }
 
     UniValue o(UniValue::VOBJ);
 
-    dmn->ToJson(o);
+    dmn.ToJson(o);
 
-    int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
+    int confirmations = GetUTXOConfirmations(dmn.collateralOutpoint);
     o.pushKV("confirmations", confirmations);
 
 #ifdef ENABLE_WALLET
-    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
-    bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
+    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn.pdmnState->keyIDOwner);
+    bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn.pdmnState->keyIDVoting);
 
     bool ownsCollateral = false;
     CTransactionRef collateralTx;
     uint256 tmpHashBlock;
-    if (GetTransaction(dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
-        ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
+    if (GetTransaction(dmn.collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
+        ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn.collateralOutpoint.n].scriptPubKey);
     }
 
     if (pwallet) {
@@ -987,13 +987,13 @@ static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& 
         walletObj.pushKV("hasOperatorKey", false);
         walletObj.pushKV("hasVotingKey", hasVotingKey);
         walletObj.pushKV("ownsCollateral", ownsCollateral);
-        walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));
-        walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout));
+        walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn.pdmnState->scriptPayout));
+        walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn.pdmnState->scriptOperatorPayout));
         o.pushKV("wallet", walletObj);
     }
 #endif
 
-    auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
+    auto metaInfo = mmetaman.GetMetaInfo(dmn.proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());
 
     return o;
@@ -1049,12 +1049,12 @@ static UniValue protx_list(const JSONRPCRequest& request)
         }
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
-        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
-            if (setOutpts.count(dmn->collateralOutpoint) ||
-                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
-                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting) ||
-                CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout) ||
-                CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)) {
+        mnList.ForEachMN(false, [&](const auto& dmn) {
+            if (setOutpts.count(dmn.collateralOutpoint) ||
+                CheckWalletOwnsKey(pwallet, dmn.pdmnState->keyIDOwner) ||
+                CheckWalletOwnsKey(pwallet, dmn.pdmnState->keyIDVoting) ||
+                CheckWalletOwnsScript(pwallet, dmn.pdmnState->scriptPayout) ||
+                CheckWalletOwnsScript(pwallet, dmn.pdmnState->scriptOperatorPayout)) {
                 ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
             }
         });
@@ -1075,7 +1075,7 @@ static UniValue protx_list(const JSONRPCRequest& request)
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         bool onlyValid = type == "valid";
-        mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(onlyValid, [&](const auto& dmn) {
             ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
         });
     } else {
@@ -1126,7 +1126,7 @@ static UniValue protx_info(const JSONRPCRequest& request)
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    return BuildDMNListEntry(pwallet, dmn, true);
+    return BuildDMNListEntry(pwallet, *dmn, true);
 }
 
 static void protx_diff_help()
