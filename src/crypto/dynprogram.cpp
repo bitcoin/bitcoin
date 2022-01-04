@@ -113,6 +113,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
                     memcpy(arg1, iResult, 32);
                 } else {
                     parseHex(tokens[1], (unsigned char*)arg1);
+                }
 
                 for (int i = 0; i < memory_size; i++) {
                     for (int j = 0; j < 8; j++)
@@ -203,7 +204,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
 
         else if (tokens[0] == "STORETEMP") {
             for (int i = 0; i < 8; i++)
-                temp = iResult[i];
+                temp[i] = iResult[i];
         }
 
         else if (tokens[0] == "EXECOP") {
