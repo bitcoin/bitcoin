@@ -908,6 +908,10 @@ RPCConsole QTableView {
     color: #c7c7c7;
 }
 
+RPCConsole QWidget#detailWidget {
+    background-color: #323233;
+}
+
 #rpcAutoCompleter {
     background-color: #39393b;
     border-color: #4a4a4b;
