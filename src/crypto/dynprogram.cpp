@@ -18,6 +18,12 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
     unsigned int memory_size = 0;    //size of current memory pool
     uint32_t* memPool = NULL;     //memory pool
 
+    int loop_line_ptr = 0;      //to mark return OPCODE for LOOP command
+    int loop_opcode_count = 0;  //number of times to run the LOOP
+
+    uint32_t temp[8];
+
+
     while (line_ptr < program.size()) {
         std::istringstream iss(program[line_ptr]);
         std::vector<std::string> tokens{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};     //split line into tokens
@@ -85,7 +91,12 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         else if (tokens[0] == "MEMADD") {
             if (memPool != NULL) {
                 uint32_t arg1[8];
-                parseHex(tokens[1], (unsigned char*)arg1);
+                if (tokens[1] == "HASH") {
+                    memcpy(arg1, iResult, 32);
+                }
+                else {
+                    parseHex(tokens[1], (unsigned char*)arg1);
+                }
 
                 for (int i = 0; i < memory_size; i++) {
                     for (int j = 0; j < 8; j++)
@@ -98,7 +109,10 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         else if (tokens[0] == "MEMXOR") {
             if (memPool != NULL) {
                 uint32_t arg1[8];
-                parseHex(tokens[1], (unsigned char*)arg1);
+                if (tokens[1] == "HASH") {
+                    memcpy(arg1, iResult, 32);
+                } else {
+                    parseHex(tokens[1], (unsigned char*)arg1);
 
                 for (int i = 0; i < memory_size; i++) {
                     for (int j = 0; j < 8; j++)
@@ -128,78 +142,95 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             }
         }
 
-        else if (tokens[0] == "RUNDYN2") {
+        else if (tokens[0] == "READMEM2") {
+            if (memPool != NULL) {
+                unsigned int index = 0;
 
-            uint32_t nonce;
-            memcpy(&nonce, blockHeader + 76, 4);
-            unsigned char nonce0 = blockHeader[76];
+                if (tokens[1] == "XOR") {
+                    if (tokens[2] == "HASHPREV") {
+                        uint32_t arg1[8];
+                        parseHex(prevBlockHash, (unsigned char*)arg1);
+                        for (int i = 0; i < 8; i++)
+                            iResult[i] ^= arg1[i];
 
-            const uint32_t programSize = 64 + iResult[0] % 64;
+                        for (int i = 0; i < 8; i++)
+                            index += iResult[i];
 
-            std::string metaProgram;
+                        index = index % memory_size;
+                        memcpy(iResult, memPool + index * 8, 32);
+                    }
+                }
 
-            for (int i = 0; i < programSize; i++) {
+                else if (tokens[1] == "AND") {
+                    if (tokens[2] == "HASHPREV") {
+                        uint32_t arg1[8];
+                        parseHex(prevBlockHash, (unsigned char*)arg1);
+                        for (int i = 0; i < 8; i++)
+                            iResult[i] &= arg1[i];
+
+                        for (int i = 0; i < 8; i++)
+                            index += iResult[i];
+
+                        index = index % memory_size;
+                        memcpy(iResult, memPool + index * 8, 32);
+                    }
+                }
+            }
+        }
+
+
+        else if (tokens[0] == "LOOP") {
+            loop_line_ptr = line_ptr;
+            loop_opcode_count = 0;
+            for (int i = 0; i < 8; i++)
+                loop_opcode_count += iResult[i];
+            loop_opcode_count = loop_opcode_count % atoi(tokens[1].c_str());
+        }
+
+        else if (tokens[0] == "ENDLOOP") {
+            loop_opcode_count--;
+            if (loop_opcode_count > 0)
+                line_ptr = loop_line_ptr;
+        }
+
+        else if (tokens[0] == "IF") {
+            uint32_t sum = 0;
+            for (int i = 0; i < 8; i++)
+                sum += iResult[i];
+            if ((sum % atoi(tokens[1].c_str())) == 0)
+                line_ptr++;
+        }
+
+        else if (tokens[0] == "STORETEMP") {
+            for (int i = 0; i < 8; i++)
+                temp = iResult[i];
+        }
+
+        else if (tokens[0] == "EXECOP") {
+            uint32_t sum = 0;
+            for (int i = 0; i < 8; i++)
+                sum += iResult[i];
+
+
+            if (sum % 3 == 0) {
+                for (int i = 0; i < 8; i++)
+                    iResult[i] += temp[i];
+            }
+            else if (sum % 3 == 1) {
+                for (int i = 0; i < 8; i++)
+                    iResult[i] ^= temp[i];
+            }
+            else if (sum % 3 == 2) {
                 unsigned char output[32];
                 ctx.Reset();
                 ctx.Write((unsigned char*)iResult, 32);
                 ctx.Finalize(output);
                 memcpy(iResult, output, 32);
-
-                unsigned char opcode = output[0] % 8;
-                if (opcode == 0) {
-                    char addConst[32];
-                    for (int j = 0; j < 32; j++)
-                        addConst[j] = output[j] ^ nonce0;
-                    metaProgram += "ADD " + makeHex(output, 32) + "\n";
-                }
-
-                else if (opcode == 1) {
-                    char addConst[32];
-                    for (int j = 0; j < 32; j++)
-                        addConst[j] = output[j] ^ nonce0;
-                    metaProgram += "XOR " + makeHex(output, 32) + "\n";
-                }
-
-                else if (opcode == 2) {
-                    int num = output[1] % 32;
-                    metaProgram += "SHA2 " + std::to_string(num) + "\n";
-                }
-
-                else if (opcode == 3) {
-                    int num = 16384 + output[1] * 64;
-                    metaProgram += "MEMGEN2 " + std::to_string(num) + "\n";
-                }
-
-                else if (opcode == 4) {
-                    char addConst[32];
-                    for (int j = 0; j < 32; j++)
-                        addConst[j] = output[j] ^ nonce0;
-                    metaProgram += "MEMADD " + makeHex(output, 32) + "\n";
-                }
-
-                else if (opcode == 5) {
-                    char addConst[32];
-                    for (int j = 0; j < 32; j++)
-                        addConst[j] = output[j] ^ nonce0;
-                    metaProgram += "MEMXOR " + makeHex(output, 32) + "\n";
-                }
-
-                else if (opcode == 6) {
-                    metaProgram + "READMEM2 XOR\n";
-                }
-
-                else if (opcode == 7) {
-                    metaProgram + "READMEM2 ADD\n";
-                }
             }
-
-
         }
 
 
         line_ptr++;
-
-
     }
 
 
