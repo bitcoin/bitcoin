@@ -138,32 +138,38 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     fi
 
     AC_DEFINE([QT_STATICPLUGIN], [1], [Define this symbol if qt plugins are static])
-    if test "$TARGET_OS" != "android"; then
+
+    AS_CASE([$host_os], [*android*], [], [
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMinimalIntegrationPlugin], [-lqminimal])
       AC_DEFINE([QT_QPA_PLATFORM_MINIMAL], [1], [Define this symbol if the minimal qt platform exists])
-    fi
-    if test "$TARGET_OS" = "windows"; then
-      dnl Linking against wtsapi32 is required. See #17749 and
-      dnl https://bugreports.qt.io/browse/QTBUG-27097.
-      AX_CHECK_LINK_FLAG([-lwtsapi32], [QT_LIBS="$QT_LIBS -lwtsapi32"], [AC_MSG_ERROR([could not link against -lwtsapi32])])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsIntegrationPlugin], [-lqwindows])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsVistaStylePlugin], [-lqwindowsvistastyle])
-      AC_DEFINE([QT_QPA_PLATFORM_WINDOWS], [1], [Define this symbol if the qt platform is windows])
-    elif test "$TARGET_OS" = "linux"; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb])
-      AC_DEFINE([QT_QPA_PLATFORM_XCB], [1], [Define this symbol if the qt platform is xcb])
-    elif test "$TARGET_OS" = "darwin"; then
-      AX_CHECK_LINK_FLAG([-framework Carbon], [QT_LIBS="$QT_LIBS -framework Carbon"], [AC_MSG_ERROR(could not link against Carbon framework)])
-      AX_CHECK_LINK_FLAG([-framework IOSurface], [QT_LIBS="$QT_LIBS -framework IOSurface"], [AC_MSG_ERROR(could not link against IOSurface framework)])
-      AX_CHECK_LINK_FLAG([-framework Metal], [QT_LIBS="$QT_LIBS -framework Metal"], [AC_MSG_ERROR(could not link against Metal framework)])
-      AX_CHECK_LINK_FLAG([-framework QuartzCore], [QT_LIBS="$QT_LIBS -framework QuartzCore"], [AC_MSG_ERROR(could not link against QuartzCore framework)])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QCocoaIntegrationPlugin], [-lqcocoa])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMacStylePlugin], [-lqmacstyle])
-      AC_DEFINE([QT_QPA_PLATFORM_COCOA], [1], [Define this symbol if the qt platform is cocoa])
-    elif test "$TARGET_OS" = "android"; then
-      QT_LIBS="-Wl,--export-dynamic,--undefined=JNI_OnLoad -lplugins_platforms_qtforandroid${qt_lib_suffix} -ljnigraphics -landroid -lqtfreetype${qt_lib_suffix} $QT_LIBS"
-      AC_DEFINE([QT_QPA_PLATFORM_ANDROID], [1], [Define this symbol if the qt platform is android])
-    fi
+    ])
+
+    case $host in
+      *mingw*)
+        dnl Linking against wtsapi32 is required. See #17749 and
+        dnl https://bugreports.qt.io/browse/QTBUG-27097.
+        AX_CHECK_LINK_FLAG([-lwtsapi32], [QT_LIBS="$QT_LIBS -lwtsapi32"], [AC_MSG_ERROR([could not link against -lwtsapi32])])
+        _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsIntegrationPlugin], [-lqwindows])
+        _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsVistaStylePlugin], [-lqwindowsvistastyle])
+      ;;
+      *darwin*)
+        AX_CHECK_LINK_FLAG([-framework Carbon], [QT_LIBS="$QT_LIBS -framework Carbon"], [AC_MSG_ERROR(could not link against Carbon framework)])
+        AX_CHECK_LINK_FLAG([-framework IOSurface], [QT_LIBS="$QT_LIBS -framework IOSurface"], [AC_MSG_ERROR(could not link against IOSurface framework)])
+        AX_CHECK_LINK_FLAG([-framework Metal], [QT_LIBS="$QT_LIBS -framework Metal"], [AC_MSG_ERROR(could not link against Metal framework)])
+        AX_CHECK_LINK_FLAG([-framework QuartzCore], [QT_LIBS="$QT_LIBS -framework QuartzCore"], [AC_MSG_ERROR(could not link against QuartzCore framework)])
+        _BITCOIN_QT_CHECK_STATIC_PLUGIN([QCocoaIntegrationPlugin], [-lqcocoa])
+        _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMacStylePlugin], [-lqmacstyle])
+        AC_DEFINE([QT_QPA_PLATFORM_COCOA], [1], [Define this symbol if the qt platform is cocoa])
+      ;;
+      *android*)
+        QT_LIBS="-Wl,--export-dynamic,--undefined=JNI_OnLoad -lplugins_platforms_qtforandroid${qt_lib_suffix} -ljnigraphics -landroid -lqtfreetype${qt_lib_suffix} $QT_LIBS"
+        AC_DEFINE([QT_QPA_PLATFORM_ANDROID], [1], [Define this symbol if the qt platform is android])
+      ;;
+      *linux*)
+        _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb])
+        AC_DEFINE([QT_QPA_PLATFORM_XCB], [1], [Define this symbol if the qt platform is xcb])
+      ;;
+    esac
   fi
   CPPFLAGS=$TEMP_CPPFLAGS
   CXXFLAGS=$TEMP_CXXFLAGS
@@ -346,21 +352,27 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
   PKG_CHECK_MODULES([QT_FB], [${qt_lib_prefix}FbSupport${qt_lib_suffix}], [QT_LIBS="$QT_FB_LIBS $QT_LIBS"])
   PKG_CHECK_MODULES([QT_FONTDATABASE], [${qt_lib_prefix}FontDatabaseSupport${qt_lib_suffix}], [QT_LIBS="$QT_FONTDATABASE_LIBS $QT_LIBS"])
   PKG_CHECK_MODULES([QT_THEME], [${qt_lib_prefix}ThemeSupport${qt_lib_suffix}], [QT_LIBS="$QT_THEME_LIBS $QT_LIBS"])
-  if test "$TARGET_OS" = "linux"; then
-    PKG_CHECK_MODULES([QT_INPUT], [${qt_lib_prefix}InputSupport], [QT_LIBS="$QT_INPUT_LIBS $QT_LIBS"])
-    PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
-    PKG_CHECK_MODULES([QT_XCBQPA], [${qt_lib_prefix}XcbQpa], [QT_LIBS="$QT_XCBQPA_LIBS $QT_LIBS"])
-    PKG_CHECK_MODULES([QT_XKBCOMMON], [${qt_lib_prefix}XkbCommonSupport], [QT_LIBS="$QT_XKBCOMMON_LIBS $QT_LIBS"])
-  elif test "$TARGET_OS" = "darwin"; then
-    PKG_CHECK_MODULES([QT_CLIPBOARD], [${qt_lib_prefix}ClipboardSupport${qt_lib_suffix}], [QT_LIBS="$QT_CLIPBOARD_LIBS $QT_LIBS"])
-    PKG_CHECK_MODULES([QT_GRAPHICS], [${qt_lib_prefix}GraphicsSupport${qt_lib_suffix}], [QT_LIBS="$QT_GRAPHICS_LIBS $QT_LIBS"])
-    PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport${qt_lib_suffix}], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
-  elif test "$TARGET_OS" = "windows"; then
-    PKG_CHECK_MODULES([QT_WINDOWSUIAUTOMATION], [${qt_lib_prefix}WindowsUIAutomationSupport${qt_lib_suffix}], [QT_LIBS="$QT_WINDOWSUIAUTOMATION_LIBS $QT_LIBS"])
-  elif test "$TARGET_OS" = "android"; then
-    PKG_CHECK_MODULES([QT_EGL], [${qt_lib_prefix}EglSupport${qt_lib_suffix}], [QT_LIBS="$QT_EGL_LIBS $QT_LIBS"])
-    PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport${qt_lib_suffix}], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
-  fi
+
+  case $host in
+    *android*)
+      PKG_CHECK_MODULES([QT_EGL], [${qt_lib_prefix}EglSupport${qt_lib_suffix}], [QT_LIBS="$QT_EGL_LIBS $QT_LIBS"])
+      PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport${qt_lib_suffix}], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
+    ;;
+    *linux*)
+      PKG_CHECK_MODULES([QT_INPUT], [${qt_lib_prefix}InputSupport], [QT_LIBS="$QT_INPUT_LIBS $QT_LIBS"])
+      PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
+      PKG_CHECK_MODULES([QT_XCBQPA], [${qt_lib_prefix}XcbQpa], [QT_LIBS="$QT_XCBQPA_LIBS $QT_LIBS"])
+      PKG_CHECK_MODULES([QT_XKBCOMMON], [${qt_lib_prefix}XkbCommonSupport], [QT_LIBS="$QT_XKBCOMMON_LIBS $QT_LIBS"])
+    ;;
+    *darwin*)
+      PKG_CHECK_MODULES([QT_CLIPBOARD], [${qt_lib_prefix}ClipboardSupport${qt_lib_suffix}], [QT_LIBS="$QT_CLIPBOARD_LIBS $QT_LIBS"])
+      PKG_CHECK_MODULES([QT_GRAPHICS], [${qt_lib_prefix}GraphicsSupport${qt_lib_suffix}], [QT_LIBS="$QT_GRAPHICS_LIBS $QT_LIBS"])
+      PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport${qt_lib_suffix}], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
+    ;;
+    *mingw*)
+      PKG_CHECK_MODULES([QT_WINDOWSUIAUTOMATION], [${qt_lib_prefix}WindowsUIAutomationSupport${qt_lib_suffix}], [QT_LIBS="$QT_WINDOWSUIAUTOMATION_LIBS $QT_LIBS"])
+    ;;
+  esac
 ])
 
 dnl Internal. Find Qt libraries using pkg-config.

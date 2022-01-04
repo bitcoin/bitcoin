@@ -671,7 +671,6 @@ AC_ARG_WITH([daemon],
 
 case $host in
   *mingw*)
-     TARGET_OS=windows
      AC_CHECK_LIB([kernel32], [GetModuleFileNameA],      [], [AC_MSG_ERROR([libkernel32 missing])])
      AC_CHECK_LIB([user32],   [main],                    [], [AC_MSG_ERROR([libuser32 missing])])
      AC_CHECK_LIB([gdi32],    [main],                    [], [AC_MSG_ERROR([libgdi32 missing])])
@@ -715,9 +714,7 @@ case $host in
      AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [$LDFLAG_WERROR])
      ;;
   *darwin*)
-     TARGET_OS=darwin
      if  test $cross_compiling != "yes"; then
-       BUILD_OS=darwin
        AC_CHECK_PROG([BREW], [brew], [brew])
        if test "$BREW" = "brew"; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
@@ -770,10 +767,7 @@ case $host in
        fi
      else
        case $build_os in
-         *darwin*)
-           BUILD_OS=darwin
-           ;;
-         *)
+         *linux*)
            AC_PATH_TOOL([DSYMUTIL], [dsymutil], [dsymutil])
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], [install_name_tool])
            AC_PATH_TOOL([OTOOL], [otool], [otool])
@@ -795,7 +789,6 @@ case $host in
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
-     TARGET_OS=android
      case $host in
        *x86_64*)
           ANDROID_ARCH=x86_64
@@ -808,9 +801,6 @@ case $host in
           ;;
         *) AC_MSG_ERROR([Could not determine Android arch, or it is unsupported]) ;;
       esac
-     ;;
-   *linux*)
-     TARGET_OS=linux
      ;;
 esac
 
@@ -914,10 +904,8 @@ if test "$enable_gprof" = "yes"; then
         [AC_MSG_ERROR([gprof profiling requested but not available])], [$GPROF_LDFLAGS])
 fi
 
-if test "$TARGET_OS" != "windows"; then
-  dnl All windows code is PIC, forcing it on just adds useless compile warnings
-  AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])
-fi
+dnl All windows code is PIC, forcing it on just adds useless compile warnings
+AS_CASE([$host_os], [*mingw*], [], [AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])])
 
 dnl All versions of gcc that we commonly use for building are subject to bug
 dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348. To work around that, set
@@ -975,11 +963,11 @@ fi
 dnl These flags are specific to ld64, and may cause issues with other linkers.
 dnl For example: GNU ld will interpret -dead_strip as -de and then try and use
 dnl "ad_strip" as the symbol for the entry point.
-if test "$TARGET_OS" = "darwin"; then
+AS_CASE([$host], [*darwin*], [
   AX_CHECK_LINK_FLAG([-Wl,-dead_strip], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip_dylibs"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-bind_at_load], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"], [], [$LDFLAG_WERROR])
-fi
+])
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h sys/sysctl.h vm/vm_param.h sys/vmmeter.h sys/resources.h])
 
@@ -1540,9 +1528,9 @@ dnl libevent check
 
 if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" != "nonononono"; then
   PKG_CHECK_MODULES([EVENT], [libevent >= 2.1.8], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.1.8 or greater not found.])])
-  if test "$TARGET_OS" != "windows"; then
+  AS_CASE([$host_os], [*mingw*], [], [
     PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.1.8], [], [AC_MSG_ERROR([libevent_pthreads version 2.1.8 or greater not found.])])
-  fi
+  ])
 
   if test "$suppress_external_warnings" != "no"; then
     EVENT_CFLAGS=SUPPRESS_WARNINGS($EVENT_CFLAGS)
@@ -1721,9 +1709,7 @@ else
     fi
     AC_MSG_RESULT([$use_upnp_default])
     AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
-    if test "$TARGET_OS" = "windows"; then
-      MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"
-    fi
+    AS_CASE([$host_os], [*mingw*], [MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"])
   else
     AC_MSG_RESULT([no])
   fi
@@ -1749,9 +1735,7 @@ else
     fi
     AC_MSG_RESULT($use_natpmp_default)
     AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determines default state])
-    if test "$TARGET_OS" = "windows"; then
-      NATPMP_CPPFLAGS="-DSTATICLIB -DNATPMP_STATICLIB"
-    fi
+    AS_CASE([$host_os], [*mingw*], [NATPMP_CPPFLAGS="-DSTATICLIB -DNATPMP_STATICLIB"])
   else
     AC_MSG_RESULT([no])
   fi
@@ -1821,10 +1805,10 @@ if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
-AM_CONDITIONAL([TARGET_DARWIN], [test "$TARGET_OS" = "darwin"])
-AM_CONDITIONAL([BUILD_DARWIN], [test "$BUILD_OS" = "darwin"])
-AM_CONDITIONAL([TARGET_LINUX], [test "$TARGET_OS" = "linux"])
-AM_CONDITIONAL([TARGET_WINDOWS], [test "$TARGET_OS" = "windows"])
+AM_CONDITIONAL([TARGET_DARWIN], [AS_CASE([$host_os], [*darwin*], [true], [false])])
+AM_CONDITIONAL([BUILD_DARWIN], [AS_CASE([$build_os], [*darwin*], [true], [false])])
+AM_CONDITIONAL([TARGET_LINUX], [AS_CASE([$host_os], [*linux*], [true], [false])])
+AM_CONDITIONAL([TARGET_WINDOWS], [AS_CASE([$host_os], [*mingw*], [true], [false])])
 AM_CONDITIONAL([ENABLE_WALLET], [test "$enable_wallet" = "yes"])
 AM_CONDITIONAL([USE_SQLITE], [test "$use_sqlite" = "yes"])
 AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
