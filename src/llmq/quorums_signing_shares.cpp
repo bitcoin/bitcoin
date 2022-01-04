@@ -186,7 +186,6 @@ CSigSharesManager::CSigSharesManager(CConnman& _connman, BanMan& _banman, PeerMa
     workInterrupt.reset();
 }
 
-CSigSharesManager::~CSigSharesManager() = default;
 
 void CSigSharesManager::StartWorkerThread()
 {

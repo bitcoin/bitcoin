@@ -35,8 +35,6 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& blsWorker, CConnman &_connman
     }
 }
 
-CDKGSessionManager::~CDKGSessionManager() = default;
-
 void CDKGSessionManager::MigrateDKG()
 {
     if (!db->IsEmpty()) return;

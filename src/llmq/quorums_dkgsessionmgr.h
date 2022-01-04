@@ -48,7 +48,7 @@ public:
     CConnman& connman;
     PeerManager& peerman;
     CDKGSessionManager(CBLSWorker& _blsWorker, CConnman &connman, PeerManager& peerman, ChainstateManager& chainman, bool unitTests, bool fWipe);
-    ~CDKGSessionManager();
+   ~CDKGSessionManager() = default;
 
     void StartThreads();
     void StopThreads();

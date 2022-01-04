@@ -59,28 +59,6 @@ static bool ShouldSimulateError(const std::string& type)
     double rate = GetSimulatedErrorRate(type);
     return GetRandBool(rate);
 }
-
-CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func) :
-    CDKGLogger(_quorumDkg.params.name, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func)
-{
-}
-
-CDKGLogger::CDKGLogger(const std::string& _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func) :
-    CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, height=%d, member=%d, func=%s)", _llmqTypeName, _height, _areWeMember, _func))
-{
-}
-
-
-CDKGComplaint::CDKGComplaint(const Consensus::LLMQParams& params) :
-    badMembers((size_t)params.size), complainForMembers((size_t)params.size)
-{
-}
-
-CDKGPrematureCommitment::CDKGPrematureCommitment(const Consensus::LLMQParams& params) :
-    validMembers((size_t)params.size)
-{
-}
-
 CDKGMember::CDKGMember(const CDeterministicMNCPtr& _dmn, size_t _idx) :
     dmn(_dmn),
     idx(_idx),

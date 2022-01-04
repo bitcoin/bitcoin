@@ -390,7 +390,7 @@ private:
     PeerManager& peerman;
 public:
     CSigSharesManager(CConnman& connman, BanMan& banman, PeerManager& peerman);
-    ~CSigSharesManager() override;
+    ~CSigSharesManager() override = default;
 
     void StartWorkerThread();
     void StopWorkerThread();

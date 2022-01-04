@@ -71,7 +71,7 @@ private:
 
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
-    ~CQuorum();
+    ~CQuorum() = default;
     void Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool HasVerificationVector() const;
@@ -109,7 +109,7 @@ private:
 
 public:
     CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman);
-    ~CQuorumManager();
+    ~CQuorumManager() { Stop(); };
 
     void Start();
     void Stop();

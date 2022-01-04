@@ -51,7 +51,7 @@ private:
 
 public:
     PeerManager& peerman;
-    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, PeerManager& peerman);
+    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, PeerManager& _peerman): maxMessagesPerNode(_maxMessagesPerNode), peerman(_peerman) {};
 
     void PushPendingMessage(CNode* from, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
@@ -126,7 +126,7 @@ private:
     PeerManager& peerman;
 public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, PeerManager& peerman, ChainstateManager& _chainman);
-    ~CDKGSessionHandler();
+    ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
