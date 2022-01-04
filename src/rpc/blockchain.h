@@ -21,6 +21,8 @@ class CBlockIndex;
 class CChainState;
 class CTxMemPool;
 class UniValue;
+// SYSCOIN
+class ChainstateManager;
 struct NodeContext;
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;

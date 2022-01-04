@@ -12,7 +12,8 @@
 #include <atomic>
 #include <cstdint>
 #include <vector>
-
+// SYSCOIN
+#include <chain.h>
 class ArgsManager;
 class BlockValidationState;
 class CBlock;
