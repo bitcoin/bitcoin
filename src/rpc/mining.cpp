@@ -938,12 +938,24 @@ static RPCHelpMan gethashfunction()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
 
+            time_t now;
+            time(&now);
+
+            bool found = false;
+
             UniValue result(UniValue::VARR);
-            for (int i = 0; i < g_hashFunction->programs.size(); i++) {
-                UniValue programResult(UniValue::VOBJ);
-                programResult.pushKV("start_time", g_hashFunction->programs[i]->startingTime);
-                programResult.pushKV("program", g_hashFunction->programs[i]->getProgramString());
-                result.push_back(programResult);
+
+            int i = g_hashFunction->programs.size() - 1;
+            while ((i > 0) && (!found)) {
+                if (g_hashFunction->programs[i]->startingTime <= now) {
+                    UniValue programResult(UniValue::VOBJ);
+                    programResult.pushKV("start_time", g_hashFunction->programs[i]->startingTime);
+                    programResult.pushKV("program", g_hashFunction->programs[i]->getProgramString());
+                    result.push_back(programResult);
+                    found = true;
+                }
+                else
+                    i--;
             }
 
 
