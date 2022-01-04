@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
 
 
     // Add three addresses to new table.
-    CService addr2 = ResolveService("250.3.1.1", 8369);
+    CService addr2 = ResolveService("250.3.1.1", 8333);
     CService addr3 = ResolveService("250.3.2.2", 9999);
     CService addr4 = ResolveService("250.3.3.3", 9999);
 
@@ -167,9 +167,9 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     BOOST_CHECK(addrman->Add({CAddress(addr4, NODE_NONE)}, ResolveService("250.4.1.1", 8333)));
 
     // Add three addresses to tried table.
-    CService addr5 = ResolveService("250.4.4.4", 8369);
+    CService addr5 = ResolveService("250.4.4.4", 8333);
     CService addr6 = ResolveService("250.4.5.5", 7777);
-    CService addr7 = ResolveService("250.4.6.6", 8369);
+    CService addr7 = ResolveService("250.4.6.6", 8333);
 
     BOOST_CHECK(addrman->Add({CAddress(addr5, NODE_NONE)}, ResolveService("250.3.1.1", 8333)));
     BOOST_CHECK(addrman->Good(CAddress(addr5, NODE_NONE)));
@@ -291,15 +291,15 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     std::vector<CAddress> vAddr1 = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt);
     BOOST_CHECK_EQUAL(vAddr1.size(), 0U);
 
-    CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8369), NODE_NONE);
+    CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
     addr1.nTime = GetAdjustedTime(); // Set time so isTerrible = false
     CAddress addr2 = CAddress(ResolveService("250.251.2.2", 9999), NODE_NONE);
     addr2.nTime = GetAdjustedTime();
-    CAddress addr3 = CAddress(ResolveService("251.252.2.3", 8369), NODE_NONE);
+    CAddress addr3 = CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE);
     addr3.nTime = GetAdjustedTime();
-    CAddress addr4 = CAddress(ResolveService("252.253.3.4", 8369), NODE_NONE);
+    CAddress addr4 = CAddress(ResolveService("252.253.3.4", 8333), NODE_NONE);
     addr4.nTime = GetAdjustedTime();
-    CAddress addr5 = CAddress(ResolveService("252.254.4.5", 8369), NODE_NONE);
+    CAddress addr5 = CAddress(ResolveService("252.254.4.5", 8333), NODE_NONE);
     addr5.nTime = GetAdjustedTime();
     CNetAddr source1 = ResolveIP("250.1.2.1");
     CNetAddr source2 = ResolveIP("250.2.3.3");
@@ -355,8 +355,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
     std::vector<bool> asmap; // use /16
-    // SYSCOIN
-    //BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, asmap), 40);
+
+    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, asmap), 40);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
@@ -367,8 +367,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
     AddrInfo info2 = AddrInfo(addr2, source1);
 
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
-    // SYSCOIN
-    //BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info2.GetTriedBucket(nKey1, asmap));
+    BOOST_CHECK(info1.GetTriedBucket(nKey1, asmap) != info2.GetTriedBucket(nKey1, asmap));
 
     std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
@@ -678,7 +677,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     addrman->Add({new1, tried1, new2, tried2}, CNetAddr{});
     addrman->Good(tried1);
     addrman->Good(tried2);
-    BOOST_REQUIRE_EQUAL(addrman->size(), 4U);
+    BOOST_REQUIRE_EQUAL(addrman->size(), 4);
 
     stream << *addrman;
 
@@ -701,7 +700,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
 
     addrman = TestAddrMan();
     stream >> *addrman;
-    BOOST_CHECK_EQUAL(addrman->size(), 2U);
+    BOOST_CHECK_EQUAL(addrman->size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
@@ -881,7 +880,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrman);
     bool exceptionThrown = false;
-    AddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman1(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/100);
 
     BOOST_CHECK(addrman1.size() == 0);
     try {
@@ -898,7 +897,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     // Test that ReadFromStream creates an addrman with the correct number of addrs.
     CDataStream ssPeers2 = AddrmanToStream(addrman);
 
-    AddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman2(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/100);
     BOOST_CHECK(addrman2.size() == 0);
     ReadFromStream(addrman2, ssPeers2);
     BOOST_CHECK(addrman2.size() == 3);
@@ -913,7 +912,6 @@ static CDataStream MakeCorruptPeersDat()
     unsigned char nVersion = 1;
     s << nVersion;
     s << ((unsigned char)32);
-    // SYSCOIN
     s << uint256::ONEV;
     s << 10; // nNew
     s << 10; // nTried
@@ -937,7 +935,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     // Test that the de-serialization of corrupted peers.dat throws an exception.
     CDataStream ssPeers1 = MakeCorruptPeersDat();
     bool exceptionThrown = false;
-    AddrMan addrman1(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman1(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/100);
     BOOST_CHECK(addrman1.size() == 0);
     try {
         unsigned char pchMsgTmp[4];
@@ -953,7 +951,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     // Test that ReadFromStream fails if peers.dat is corrupt
     CDataStream ssPeers2 = MakeCorruptPeersDat();
 
-    AddrMan addrman2(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 100);
+    AddrMan addrman2(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/100);
     BOOST_CHECK(addrman2.size() == 0);
     BOOST_CHECK_THROW(ReadFromStream(addrman2, ssPeers2), std::ios_base::failure);
 }
