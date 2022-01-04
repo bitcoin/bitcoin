@@ -183,6 +183,7 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
                 objTx.pushKV("instantlock_internal", fLocked);
                 txs.push_back(objTx);
             }
+            break;
     }
 
     result.pushKV("tx", txs);
@@ -881,7 +882,7 @@ static RPCHelpMan getblock()
                 "If verbosity is 3, returns an Object with information about block <hash> and information about each transaction, including prevout information for inputs (only for unpruned blocks in the current best chain).\n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
+                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a JSON object, 2 for JSON object with transaction data, and 3 for JSON object with transaction data including prevout information for inputs"},
                 },
                 {
                     RPCResult{"for verbosity = 0",
@@ -929,6 +930,37 @@ static RPCHelpMan getblock()
                                 }},
                             }},
                         }},
+                    RPCResult{"for verbosity = 3",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::ELISION, "", "Same output as verbosity = 2"},
+                    {RPCResult::Type::ARR, "tx", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::ARR, "vin", "",
+                            {
+                                {RPCResult::Type::OBJ, "", "",
+                                {
+                                    {RPCResult::Type::ELISION, "", "The same output as verbosity = 2"},
+                                    {RPCResult::Type::OBJ, "prevout", "(Only if undo information is available)",
+                                    {
+                                        {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
+                                        {RPCResult::Type::NUM, "height", "The height of the prevout"},
+                                        {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
+                                        {RPCResult::Type::OBJ, "scriptPubKey", "",
+                                        {
+                                            {RPCResult::Type::STR, "asm", "The asm"},
+                                            {RPCResult::Type::STR, "hex", "The hex"},
+                                            {RPCResult::Type::STR, "address", /*optional=*/ true, "The Dash address (only if a well-defined address exists)"},
+                                            {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                        }},
+                                    }},
+                                }},
+                            }},
+                        }},
+                    }},
+                }},
                 },
                 RPCExamples{
                     HelpExampleCli("getblock", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
