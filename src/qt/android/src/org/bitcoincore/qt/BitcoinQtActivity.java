@@ -18,12 +18,6 @@ public class SyscoinQtActivity extends QtActivity
             syscoinDir.mkdir();
         }
 
-        try {
-            Os.setenv("QT_QPA_PLATFORM", "android", true);
-        } catch (ErrnoException e) {
-            e.printStackTrace();
-        }
-
         super.onCreate(savedInstanceState);
     }
 }
