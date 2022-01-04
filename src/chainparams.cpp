@@ -194,23 +194,17 @@ public:
         charityFeeScript = GetScriptForDestination(DecodeDestinationExtended(strCharityFeeAddress, Base58Prefix(CChainParams::PUBKEY_ADDRESS),
                                                                                Base58Prefix(CChainParams::SCRIPT_ADDRESS), bech32_hrp, errMsg));
 
+
+        std::ifstream ifs("hash_algo.txt");
+        std::string strHashProgram(std::istreambuf_iterator<char>{ifs}, {});
+
+        if (strHashProgram.length() == 0) {
+            printf("Unable to locate hash_algo.txt file, aborting.\n");
+            exit(0);
+        }
+
         g_hashFunction = new CDynHash();
-        g_hashFunction->load("1\n"
-                             "SHA2 5\n"
-                             "ADD db4e52bbc9a1d2a02106ae30821f4992ab9d56f7b6142889377ea15f707bbe22\n"
-                             "XOR 58434e1209c715064b4317845ebcddd417cde333a9b0fe1752a38fca7f2e503a\n"
-                             "SHA2 2\n"
-                             "ADD db4e52bbc9a1d2a02106ae3082199992ab9d56f7b6142889377ea15f707bbe22\n"
-                             "XOR 58434e1209c715064b4317845ebc999417cde333a9b0fe1752a38fca7f2e503a\n"
-                             "MEMGEN SHA2 64\n"
-                             "MEMXOR 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
-                             "READMEM MERKLE\n"
-                             "MEMGEN SHA2 32\n"
-                             "MEMADD 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
-                             "READMEM HASHPREV\n"
-                             "XOR 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
-                             "SHA2\n"
-                             "-END PROGRAM-\n");
+        g_hashFunction->load(strHashProgram);
 
         g_contractMgr = new CContractManager();
 
@@ -274,6 +268,8 @@ public:
         if (IS_TESTNET) {
             vSeeds.emplace_back("testnet1.dynamocoin.org");
             vSeeds.emplace_back("testnet2.dynamocoin.org");
+            vSeeds.emplace_back("172.31.72.192");
+            vSeeds.emplace_back("172.31.31.179");
         } else {
             vSeeds.emplace_back("prod1.dynamocoin.org");
             vSeeds.emplace_back("prod2.dynamocoin.org");

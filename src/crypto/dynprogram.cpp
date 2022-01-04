@@ -128,6 +128,75 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             }
         }
 
+        else if (tokens[0] == "RUNDYN2") {
+
+            uint32_t nonce;
+            memcpy(&nonce, blockHeader + 76, 4);
+            unsigned char nonce0 = blockHeader[76];
+
+            const uint32_t programSize = 64 + iResult[0] % 64;
+
+            std::string metaProgram;
+
+            for (int i = 0; i < programSize; i++) {
+                unsigned char output[32];
+                ctx.Reset();
+                ctx.Write((unsigned char*)iResult, 32);
+                ctx.Finalize(output);
+                memcpy(iResult, output, 32);
+
+                unsigned char opcode = output[0] % 8;
+                if (opcode == 0) {
+                    char addConst[32];
+                    for (int j = 0; j < 32; j++)
+                        addConst[j] = output[j] ^ nonce0;
+                    metaProgram += "ADD " + makeHex(output, 32) + "\n";
+                }
+
+                else if (opcode == 1) {
+                    char addConst[32];
+                    for (int j = 0; j < 32; j++)
+                        addConst[j] = output[j] ^ nonce0;
+                    metaProgram += "XOR " + makeHex(output, 32) + "\n";
+                }
+
+                else if (opcode == 2) {
+                    int num = output[1] % 32;
+                    metaProgram += "SHA2 " + std::to_string(num) + "\n";
+                }
+
+                else if (opcode == 3) {
+                    int num = 16384 + output[1] * 64;
+                    metaProgram += "MEMGEN2 " + std::to_string(num) + "\n";
+                }
+
+                else if (opcode == 4) {
+                    char addConst[32];
+                    for (int j = 0; j < 32; j++)
+                        addConst[j] = output[j] ^ nonce0;
+                    metaProgram += "MEMADD " + makeHex(output, 32) + "\n";
+                }
+
+                else if (opcode == 5) {
+                    char addConst[32];
+                    for (int j = 0; j < 32; j++)
+                        addConst[j] = output[j] ^ nonce0;
+                    metaProgram += "MEMXOR " + makeHex(output, 32) + "\n";
+                }
+
+                else if (opcode == 6) {
+                    metaProgram + "READMEM2 XOR\n";
+                }
+
+                else if (opcode == 7) {
+                    metaProgram + "READMEM2 ADD\n";
+                }
+            }
+
+
+        }
+
+
         line_ptr++;
 
 
