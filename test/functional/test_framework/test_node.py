@@ -616,7 +616,7 @@ class TestNode():
 
         return p2p_conn
 
-    def add_outbound_p2p_connection(self, p2p_conn, *, p2p_idx, connection_type="outbound-full-relay", **kwargs):
+    def add_outbound_p2p_connection(self, p2p_conn, *, p2p_idx, connection_type="outbound-full-relay", expect_disconnect=False, **kwargs):
         """Add an outbound p2p connection from node. Must be an
         "outbound-full-relay", "block-relay-only", "addr-fetch" or "feeler" connection.
 
@@ -630,7 +630,12 @@ class TestNode():
 
         p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, **kwargs)()
 
-        if connection_type == "feeler":
+        if expect_disconnect:
+            # If a test is expecting a disconnection, just return as soon as we
+            # receive the version message (we can't assume anything about when the disconnect
+            # might happen)
+            p2p_conn.wait_until(lambda: p2p_conn.message_count["version"] == 1, check_connected=False)
+        elif connection_type == "feeler":
             # feeler connections are closed as soon as the node receives a `version` message
             p2p_conn.wait_until(lambda: p2p_conn.message_count["version"] == 1, check_connected=False)
             p2p_conn.wait_until(lambda: not p2p_conn.is_connected, check_connected=False)
