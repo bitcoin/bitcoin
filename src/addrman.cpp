@@ -930,6 +930,29 @@ std::pair<CAddress, int64_t> AddrManImpl::SelectTriedCollision_()
     return {info_old, info_old.nLastTry};
 }
 
+std::optional<AddressPosition> AddrManImpl::FindAddressEntry_(const CAddress& addr)
+{
+    AssertLockHeld(cs);
+
+    AddrInfo* addr_info = Find(addr);
+
+    if (!addr_info) return std::nullopt;
+
+    if(addr_info->fInTried) {
+        int bucket{addr_info->GetTriedBucket(nKey, m_asmap)};
+        return AddressPosition(/*tried=*/true,
+                               /*multiplicity=*/1,
+                               /*bucket=*/bucket,
+                               /*position=*/addr_info->GetBucketPosition(nKey, false, bucket));
+    } else {
+        int bucket{addr_info->GetNewBucket(nKey, m_asmap)};
+        return AddressPosition(/*tried=*/false,
+                               /*multiplicity=*/addr_info->nRefCount,
+                               /*bucket=*/bucket,
+                               /*position=*/addr_info->GetBucketPosition(nKey, true, bucket));
+    }
+}
+
 void AddrManImpl::Check() const
 {
     AssertLockHeld(cs);
@@ -1116,6 +1139,15 @@ void AddrManImpl::SetServices(const CService& addr, ServiceFlags nServices)
     Check();
 }
 
+std::optional<AddressPosition> AddrManImpl::FindAddressEntry(const CAddress& addr)
+{
+    LOCK(cs);
+    Check();
+    auto entry = FindAddressEntry_(addr);
+    Check();
+    return entry;
+}
+
 const std::vector<bool>& AddrManImpl::GetAsmap() const
 {
     return m_asmap;
@@ -1200,4 +1232,9 @@ void AddrMan::SetServices(const CService& addr, ServiceFlags nServices)
 const std::vector<bool>& AddrMan::GetAsmap() const
 {
     return m_impl->GetAsmap();
+}
+
+std::optional<AddressPosition> AddrMan::FindAddressEntry(const CAddress& addr)
+{
+    return m_impl->FindAddressEntry(addr);
 }
