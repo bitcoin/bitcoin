@@ -23,6 +23,13 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
 
     uint32_t temp[8];
 
+    uint32_t prevHashSHA[8];
+    uint32_t iPrevHash[8];
+    parseHex(prevBlockHash, (unsigned char*)iPrevHash);
+    ctx.Reset();
+    ctx.Write((unsigned char*)iPrevHash, 32);
+    ctx.Finalize((unsigned char*)prevHashSHA);
+
 
     while (line_ptr < program.size()) {
         std::istringstream iss(program[line_ptr]);
@@ -148,7 +155,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
                 unsigned int index = 0;
 
                 if (tokens[1] == "XOR") {
-                    if (tokens[2] == "HASHPREV") {
+                    if (tokens[2] == "HASHPREVSHA2") {
                         uint32_t arg1[8];
                         parseHex(prevBlockHash, (unsigned char*)arg1);
                         for (int i = 0; i < 8; i++)
@@ -162,12 +169,12 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
                     }
                 }
 
-                else if (tokens[1] == "AND") {
-                    if (tokens[2] == "HASHPREV") {
+                else if (tokens[1] == "ADD") {
+                    if (tokens[2] == "HASHPREVSHA2") {
                         uint32_t arg1[8];
                         parseHex(prevBlockHash, (unsigned char*)arg1);
                         for (int i = 0; i < 8; i++)
-                            iResult[i] &= arg1[i];
+                            iResult[i] += arg1[i];
 
                         for (int i = 0; i < 8; i++)
                             index += iResult[i];
