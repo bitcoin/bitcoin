@@ -104,7 +104,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: '[TSan, depends, no gui] [lunar]'
+  name: '[TSan, depends, gui] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:lunar
