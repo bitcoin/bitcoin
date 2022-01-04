@@ -293,6 +293,7 @@ BASE_SCRIPTS = [
     'p2p_unrequested_blocks.py',
     'p2p_blockfilters.py',
     'p2p_message_capture.py',
+    'p2p_disabletx.py',
     'feature_includeconf.py',
     'feature_addrman.py',
     'feature_asmap.py',
