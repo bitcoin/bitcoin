@@ -946,7 +946,7 @@ static RPCHelpMan gethashfunction()
             UniValue result(UniValue::VARR);
 
             int i = g_hashFunction->programs.size() - 1;
-            while ((i > 0) && (!found)) {
+            while ((i >= 0) && (!found)) {
                 if (g_hashFunction->programs[i]->startingTime <= now) {
                     UniValue programResult(UniValue::VOBJ);
                     programResult.pushKV("start_time", g_hashFunction->programs[i]->startingTime);
