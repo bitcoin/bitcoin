@@ -105,6 +105,5 @@ implicit-unsigned-integer-truncation:crypto/
 shift-base:arith_uint256.cpp
 shift-base:crypto/
 shift-base:hash.cpp
-shift-base:net_processing.cpp
 shift-base:streams.h
 shift-base:util/bip32.cpp
