@@ -277,15 +277,15 @@ static RPCHelpMan gobject_vote_many()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+    mnList.ForEachMN(true, [&](const auto& dmn) {
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
         LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
         EnsureWalletIsUnlocked(*pwallet);
 
         CKey key;
-        if (spk_man.GetKey(dmn->pdmnState->keyIDVoting, key)) {
-            votingKeys.emplace(dmn->proTxHash, key);
+        if (spk_man.GetKey(dmn.pdmnState->keyIDVoting, key)) {
+            votingKeys.emplace(dmn.proTxHash, key);
         }
     });
 

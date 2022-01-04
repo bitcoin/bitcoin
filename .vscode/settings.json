@@ -88,6 +88,7 @@
         "variant": "cpp",
         "vector": "cpp",
         "hash_map": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "__functional_03": "cpp"
     }
 }

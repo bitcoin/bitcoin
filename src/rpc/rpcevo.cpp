@@ -20,24 +20,24 @@
 #include <node/context.h>
 #include <rpc/server_util.h>
 
-UniValue BuildDMNListEntry(const node::NodeContext& node, const CDeterministicMNCPtr& dmn, bool detailed)
+UniValue BuildDMNListEntry(const node::NodeContext& node, const CDeterministicMN& dmn, bool detailed)
 {
     if (!detailed) {
-        return dmn->proTxHash.ToString();
+        return dmn.proTxHash.ToString();
     }
     UniValue o(UniValue::VOBJ);
 
-    dmn->ToJson(*node.chain, o);
+    dmn.ToJson(*node.chain, o);
     std::map<COutPoint, Coin> coins;
-    coins[dmn->collateralOutpoint]; 
+    coins[dmn.collateralOutpoint]; 
     node.chain->findCoins(coins);
     int confirmations = 0;
-    const Coin &coin = coins.at(dmn->collateralOutpoint);
+    const Coin &coin = coins.at(dmn.collateralOutpoint);
     if (!coin.IsSpent()) {
         confirmations = *node.chain->getHeight() - coin.nHeight;
     }
     o.pushKV("confirmations", confirmations);
-    auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
+    auto metaInfo = mmetaman.GetMetaInfo(dmn.proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());
 
     return o;
@@ -85,7 +85,7 @@ static RPCHelpMan protx_list()
             mnList = deterministicMNManager->GetListForBlock(node.chainman->ActiveChain()[height]);
         }
         bool onlyValid = type == "valid";
-        mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(onlyValid, [&](const auto& dmn) {
             ret.push_back(BuildDMNListEntry(node, dmn, detailed));
         });
 
@@ -121,7 +121,7 @@ static RPCHelpMan protx_info()
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
    
-    return BuildDMNListEntry(node, dmn, true);
+    return BuildDMNListEntry(node, *dmn, true);
 },
     };
 } 

@@ -183,15 +183,11 @@ void MasternodeList::updateDIP3List()
     {
         // Get all UTXOs for each MN collateral in one go so that we can reduce locking overhead for cs_main
         // We also do this outside of the below Qt list update loop to reduce cs_main locking time to a minimum
-        LOCK(cs_main);
-        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(false, [&](auto& dmn) {
             CTxDestination collateralDest;
-            std::map<COutPoint, Coin> coins;
-            coins[dmn->collateralOutpoint]; 
-            clientModel->node().context()->chain->findCoins(coins);
-            const Coin &coin = coins.at(dmn->collateralOutpoint);
-            if (!coin.IsSpent() && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
-                mapCollateralDests.emplace(dmn->proTxHash, collateralDest);
+            Coin coin;
+            if (clientModel->node().getUnspentOutput(dmn.collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+                mapCollateralDests.emplace(dmn.proTxHash, collateralDest);
             }
         });
     }
@@ -221,38 +217,39 @@ void MasternodeList::updateDIP3List()
         }
     }
 
-    mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+    mnList.ForEachMN(false, [&](auto& dmn) {
         if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
-            bool fMyMasternode = setOutpts.count(dmn->collateralOutpoint) ||
-                walletModel->wallet().isSpendable(CTxDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner))) ||
-                walletModel->wallet().isSpendable(CTxDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting))) ||
-                walletModel->wallet().isSpendable(dmn->pdmnState->scriptPayout) ||
-                walletModel->wallet().isSpendable(dmn->pdmnState->scriptOperatorPayout);
+            bool fMyMasternode = setOutpts.count(dmn.collateralOutpoint) ||
+                walletModel->wallet().isSpendable(CTxDestination(WitnessV0KeyHash(dmn.pdmnState->keyIDOwner)) ||
+                walletModel->wallet().isSpendable(CTxDestination(WitnessV0KeyHash(dmn.pdmnState->keyIDVoting)) ||
+                walletModel->wallet().isSpendable(dmn.pdmnState->scriptPayout) ||
+                walletModel->wallet().isSpendable(dmn.pdmnState->scriptOperatorPayout);
             if (!fMyMasternode) return;
         }
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
-        QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn->pdmnState->addr.ToString()));
+        QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn.pdmnState->addr.ToString()));
         QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));
-        QTableWidgetItem* PoSeScoreItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nPoSePenalty));
-        QTableWidgetItem* registeredItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nRegisteredHeight));
-        QTableWidgetItem* lastPaidItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nLastPaidHeight));
-        QTableWidgetItem* nextPaymentItem = new QTableWidgetItem(nextPayments.count(dmn->proTxHash) ? QString::number(nextPayments[dmn->proTxHash]) : tr("UNKNOWN"));
+        QTableWidgetItem* PoSeScoreItem = new QTableWidgetItem(QString::number(dmn.pdmnState->nPoSePenalty));
+        QTableWidgetItem* registeredItem = new QTableWidgetItem(QString::number(dmn.pdmnState->nRegisteredHeight));
+        QTableWidgetItem* lastPaidItem = new QTableWidgetItem(QString::number(dmn.pdmnState->nLastPaidHeight));
+        
+        QTableWidgetItem* nextPaymentItem = new QTableWidgetItem(nextPayments.count(dmn.proTxHash) ? QString::number(nextPayments[dmn.proTxHash]) : tr("UNKNOWN"));
 
         CTxDestination payeeDest;
         QString payeeStr = tr("UNKNOWN");
-        if (ExtractDestination(dmn->pdmnState->scriptPayout, payeeDest)) {
+        if (ExtractDestination(dmn.pdmnState->scriptPayout, payeeDest)) {
             payeeStr = QString::fromStdString(EncodeDestination(payeeDest));
         }
         QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
 
         QString operatorRewardStr = tr("NONE");
-        if (dmn->nOperatorReward) {
-            operatorRewardStr = QString::number(dmn->nOperatorReward / 100.0, 'f', 2) + "% ";
+        if (dmn.nOperatorReward) {
+            operatorRewardStr = QString::number(dmn.nOperatorReward / 100.0, 'f', 2) + "% ";
 
-            if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
+            if (dmn.pdmnState->scriptOperatorPayout != CScript()) {
                 CTxDestination operatorDest;
-                if (ExtractDestination(dmn->pdmnState->scriptOperatorPayout, operatorDest)) {
+                if (ExtractDestination(dmn.pdmnState->scriptOperatorPayout, operatorDest)) {
                     operatorRewardStr += tr("to %1").arg(QString::fromStdString(EncodeDestination(operatorDest)));
                 } else {
                     operatorRewardStr += tr("to UNKNOWN");
@@ -264,19 +261,19 @@ void MasternodeList::updateDIP3List()
         QTableWidgetItem* operatorRewardItem = new QTableWidgetItem(operatorRewardStr);
 
         QString collateralStr = tr("UNKNOWN");
-        auto collateralDestIt = mapCollateralDests.find(dmn->proTxHash);
+        auto collateralDestIt = mapCollateralDests.find(dmn.proTxHash);
         if (collateralDestIt != mapCollateralDests.end()) {
             collateralStr = QString::fromStdString(EncodeDestination(collateralDestIt->second));
         }
         QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
 
-        QString ownerStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner)));
+        QString ownerStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn.pdmnState->keyIDOwner)));
         QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
 
-        QString votingStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting)));
+        QString votingStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn.pdmnState->keyIDVoting)));
         QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
 
-        QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn->proTxHash.ToString()));
+        QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn.proTxHash.ToString()));
 
         if (strCurrentFilterDIP3 != "") {
             strToFilter = addressItem->text() + " " +

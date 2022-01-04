@@ -965,9 +965,9 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
         int64_t nStart = GetTimeMillis();
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(false, [&](const auto& dmn) {
             std::map<COutPoint, Coin> coins;
-            coins[dmn->collateralOutpoint]; 
+            coins[dmn.collateralOutpoint]; 
             node.chain->findCoins(coins);
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
