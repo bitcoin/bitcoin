@@ -1684,6 +1684,7 @@ RPCHelpMan getblockchaininfo()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
     CChainState& active_chainstate = chainman.ActiveChainstate();
@@ -1714,7 +1715,7 @@ RPCHelpMan getblockchaininfo()
         obj.pushKV("pruneheight",        block->nHeight);
 
         // if 0, execution bypasses the whole if block.
-        bool automatic_pruning = (gArgs.GetIntArg("-prune", 0) != 1);
+        bool automatic_pruning{args.GetIntArg("-prune", 0) != 1};
         obj.pushKV("automatic_pruning",  automatic_pruning);
         if (automatic_pruning) {
             obj.pushKV("prune_target_size",  nPruneTarget);
@@ -2418,9 +2419,8 @@ static RPCHelpMan savemempool()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     if (!mempool.IsLoaded()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
@@ -2431,7 +2431,7 @@ static RPCHelpMan savemempool()
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("filename", fs::path((node.args->GetDataDirNet() / "mempool.dat")).u8string());
+    ret.pushKV("filename", fs::path((args.GetDataDirNet() / "mempool.dat")).u8string());
 
     return ret;
 },
@@ -2781,14 +2781,15 @@ static RPCHelpMan dumptxoutset()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const fs::path path = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
+    const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
     // SYSCOIN
-    const fs::path pathjson = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str()+".json"));
+    const fs::path pathjson = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str()+".json"));
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
-    const fs::path temppath = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
+    const fs::path temppath = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
     // SYSCOIN
-    const fs::path temppathjson = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete.json"));
+    const fs::path temppathjson = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete.json"));
 
     if (fs::exists(path)) {
         throw JSONRPCError(

@@ -7,16 +7,19 @@
 
 #include <any>
 
+class ArgsManager;
 class CBlockPolicyEstimator;
 class CConnman;
-class ChainstateManager;
 class CTxMemPool;
-struct NodeContext;
+class ChainstateManager;
 class PeerManager;
+struct NodeContext;
 
 NodeContext& EnsureAnyNodeContext(const std::any& context);
 CTxMemPool& EnsureMemPool(const NodeContext& node);
 CTxMemPool& EnsureAnyMemPool(const std::any& context);
+ArgsManager& EnsureArgsman(const NodeContext& node);
+ArgsManager& EnsureAnyArgsman(const std::any& context);
 ChainstateManager& EnsureChainman(const NodeContext& node);
 ChainstateManager& EnsureAnyChainman(const std::any& context);
 CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);
