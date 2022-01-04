@@ -101,18 +101,9 @@ public:
     void SetError(Errors nErrorIn) { nError = nErrorIn; }
     Errors GetError() const { return nError; }
 
-    bool IsExpired() const
-    {
-        return (GetTime() - nTime) >= EXPIRATION_TIMEOUT;
-    }
-    bool IsProcessed() const
-    {
-        return fProcessed;
-    }
-    void SetProcessed()
-    {
-        fProcessed = true;
-    }
+    bool IsExpired() const { return (GetTime() - nTime) >= EXPIRATION_TIMEOUT; }
+    bool IsProcessed() const { return fProcessed; }
+    void SetProcessed() { fProcessed = true; }
 
     bool operator==(const CQuorumDataRequest& other) const
     {
@@ -168,7 +159,7 @@ private:
 
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
-    ~CQuorum();
+    ~CQuorum() = default;
     void Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool SetVerificationVector(const BLSVerificationVector& quorumVecIn);
@@ -209,7 +200,7 @@ private:
 
 public:
     CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
-    ~CQuorumManager();
+    ~CQuorumManager() { Stop(); };
 
     void Start();
     void Stop();

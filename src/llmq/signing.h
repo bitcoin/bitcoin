@@ -84,7 +84,11 @@ private:
     mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
 
 public:
-    explicit CRecoveredSigsDb(bool fMemory, bool fWipe);
+    explicit CRecoveredSigsDb(bool fMemory, bool fWipe) :
+            db(std::make_unique<CDBWrapper>(fMemory ? "" : (GetDataDir() / "llmq/recsigdb"), 8 << 20, fMemory, fWipe))
+    {
+        MigrateRecoveredSigs();
+    }
 
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id) const;

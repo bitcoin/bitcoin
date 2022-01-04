@@ -54,9 +54,6 @@ uint256 CInstantSendLock::GetRequestId() const
 
 ////////////////
 
-CInstantSendDb::CInstantSendDb(bool unitTests, bool fWipe) :
-        db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
-{}
 
 void CInstantSendDb::Upgrade()
 {
@@ -454,14 +451,6 @@ void CInstantSendDb::RemoveAndArchiveInstantSendLock(const CInstantSendLockPtr& 
 
 ////////////////
 
-CInstantSendManager::CInstantSendManager(bool unitTests, bool fWipe) :
-    db(unitTests, fWipe)
-{
-    workInterrupt.reset();
-}
-
-CInstantSendManager::~CInstantSendManager() = default;
-
 void CInstantSendManager::Start()
 {
     // can't start new thread if we have one running already
@@ -486,11 +475,6 @@ void CInstantSendManager::Stop()
     if (workThread.joinable()) {
         workThread.join();
     }
-}
-
-void CInstantSendManager::InterruptWorkerThread()
-{
-    workInterrupt();
 }
 
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
@@ -1662,11 +1646,6 @@ bool CInstantSendManager::IsLocked(const uint256& txHash) const
     }
 
     return db.KnownInstantSendLock(db.GetInstantSendLockHashByTxid(txHash));
-}
-
-bool CInstantSendManager::IsConflicted(const CTransaction& tx) const
-{
-    return GetConflictingLock(tx) != nullptr;
 }
 
 bool CInstantSendManager::IsWaitingForTx(const uint256& txHash) const

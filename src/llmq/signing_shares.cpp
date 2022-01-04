@@ -182,13 +182,6 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 
 //////////////////////
 
-CSigSharesManager::CSigSharesManager()
-{
-    workInterrupt.reset();
-}
-
-CSigSharesManager::~CSigSharesManager() = default;
-
 void CSigSharesManager::StartWorkerThread()
 {
     // can't start new thread if we have one running already

@@ -96,7 +96,9 @@ private:
     std::vector<uint256> GetInstantSendLocksByParent(const uint256& parent) const EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
 public:
-    explicit CInstantSendDb(bool unitTests, bool fWipe);
+    explicit CInstantSendDb(bool unitTests, bool fWipe) :
+            db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
+    {}
 
     void Upgrade();
 
@@ -212,18 +214,18 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs);
 
 public:
-    explicit CInstantSendManager(bool unitTests, bool fWipe);
-    ~CInstantSendManager();
+    explicit CInstantSendManager(bool unitTests, bool fWipe) : db(unitTests, fWipe) { workInterrupt.reset(); }
+    ~CInstantSendManager() = default;
 
     void Start();
     void Stop();
-    void InterruptWorkerThread();
+    void InterruptWorkerThread() { workInterrupt(); };
 
 private:
     void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params) LOCKS_EXCLUDED(cs);
     bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
     bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, const Consensus::Params& params) const LOCKS_EXCLUDED(cs);
-    bool IsConflicted(const CTransaction& tx) const;
+    bool IsConflicted(const CTransaction& tx) const { return GetConflictingLock(tx) != nullptr; };
 
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
     void HandleNewInstantSendLockRecoveredSig(const CRecoveredSig& recoveredSig);

@@ -25,13 +25,6 @@ class CDKGSession;
 class CDKGSessionManager;
 class CDKGPendingMessages;
 
-class CDKGLogger : public CBatchedLogger
-{
-public:
-    CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func);
-    CDKGLogger(std::string_view _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func);
-};
-
 class CDKGContribution
 {
 public:
@@ -96,7 +89,8 @@ public:
 
 public:
     CDKGComplaint() = default;
-    explicit CDKGComplaint(const Consensus::LLMQParams& params);
+    explicit CDKGComplaint(const Consensus::LLMQParams& params) :
+            badMembers((size_t)params.size), complainForMembers((size_t)params.size) {};
 
     SERIALIZE_METHODS(CDKGComplaint, obj)
     {
@@ -162,7 +156,8 @@ public:
 
 public:
     CDKGPrematureCommitment() = default;
-    explicit CDKGPrematureCommitment(const Consensus::LLMQParams& params);
+    explicit CDKGPrematureCommitment(const Consensus::LLMQParams& params) :
+            validMembers((size_t)params.size) {};
 
     int CountValidMembers() const
     {
@@ -336,6 +331,15 @@ public:
 
 private:
     bool ShouldSimulateError(const std::string& type) const;
+};
+
+class CDKGLogger : public CBatchedLogger
+{
+public:
+    CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func) :
+            CDKGLogger(_quorumDkg.params.name, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func) {};
+    CDKGLogger(std::string_view _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func) :
+            CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, height=%d, member=%d, func=%s)", _llmqTypeName, _height, _areWeMember, _func)) {};
 };
 
 void SetSimulatedDKGErrorRate(const std::string& type, double rate);

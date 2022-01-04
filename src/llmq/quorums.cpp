@@ -49,8 +49,6 @@ CQuorum::CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) :
 {
 }
 
-CQuorum::~CQuorum() = default;
-
 void CQuorum::Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members)
 {
     qc = std::move(_qc);
@@ -168,11 +166,6 @@ CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessi
     CLLMQUtils::InitQuorumsCache(mapQuorumsCache);
     CLLMQUtils::InitQuorumsCache(scanQuorumsCache);
     quorumThreadInterrupt.reset();
-}
-
-CQuorumManager::~CQuorumManager()
-{
-    Stop();
 }
 
 void CQuorumManager::Start()

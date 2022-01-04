@@ -47,7 +47,7 @@ private:
 
 public:
     CDKGSessionManager(CBLSWorker& _blsWorker, bool unitTests, bool fWipe);
-    ~CDKGSessionManager();
+    ~CDKGSessionManager() = default;
 
     void StartThreads();
     void StopThreads();

@@ -378,8 +378,11 @@ private:
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    CSigSharesManager();
-    ~CSigSharesManager() override;
+    CSigSharesManager()
+    {
+        workInterrupt.reset();
+    };
+    ~CSigSharesManager() override = default;
 
     void StartWorkerThread();
     void StopWorkerThread();
