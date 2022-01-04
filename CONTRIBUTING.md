@@ -345,6 +345,77 @@ https://github.com/bitcoin/bitcoin/pull/16189).
 Also see the [backport.py script](
 https://github.com/bitcoin-core/bitcoin-maintainer-tools#backport).
 
+Bitcoin Backports are an incredibly valuable part of Dash's development. Backporting allows us to easily implement new
+features, improvements and fixes as bitcoin implements them.
+
+To see detailed statistics & progress see Google Sheet tracker: [Bitcoin backports for Dash](https://docs.google.com/spreadsheets/d/1DnKxat0S0H62CJOzXpKGPXTa8hgoVOjGYZzoClmGSB8/edit?usp=sharing).
+You should use this sheet to find what PRs to backport and its commit.
+
+Updating the Spreadsheet
+-------------------
+To keep the spreadsheet up to date we need to pull merges made to Bitcoin for each version.
+
+### Adding Bitcoin Remote
+
+If you have not already, add the bitcoin repo as a remote:
+
+```
+git remote add bitcoin git@github.com:bitcoin/bitcoin.git
+```
+
+This allows you to easily cherry-pick merges and look into logs of bitcoin without switching directories.
+
+### Pulling Merges
+
+To pull the most up-to-date merges first make sure bitcoin is up-to-date:
+
+```
+git fetch bitcoin
+```
+
+To create a text file with all the merges between two versions, use:
+
+```
+git log --first-parent --oneline bitcoin/<version_start>..bitcoin/<version_end> >> <filename>.txt
+```
+
+This will pull all the backports for `<version_start>` up until `<version_end>`.
+`<filename>` will be the name of the file the where all the merges are written to.
+
+#### For example
+
+The command
+
+```
+git log --first-parent --oneline bitcoin/0.14..bitcoin/0.15 >> backports_0.14-0.15.txt
+```
+
+will pull all merges made to Bitcoin version 0.14 until the start of version 15 and write to `backports_0.14-0.15.txt`.
+
+#### NOTE:
+
+In order to pull the most recent merges, that is, for a version that is not yet released, run:
+
+```
+git log --first-parent --oneline bitcoin/<cur_ver>..bitcoin/master >> <filename>.txt
+```
+
+this will pull all the merges made to Bitcoin since the release of the current version.
+
+### Adding the Merges to Spreadsheet
+
+Opening the text file, you will notice that the merges are in ascending order with the most recent at the top. We need
+to reverse this order to allow us to merge them in order. Simply run:
+
+```
+tail -r <filename>.txt >> <filename>_rev.text
+```
+
+This will create a text file with all the original file's lines in descending order. We can now copy this file and paste
+the contents onto the [Tracker](https://docs.google.com/spreadsheets/d/1DnKxat0S0H62CJOzXpKGPXTa8hgoVOjGYZzoClmGSB8/edit?usp=sharing).
+
+When pasting the contents, make sure to split the values into the cells so every line is not present under commit hash.
+
 Release Policy
 --------------
 
