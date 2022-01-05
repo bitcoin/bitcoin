@@ -30,6 +30,9 @@ void CDynHash::load(std::string program) {
 std::string CDynHash::calcBlockHeaderHash(uint32_t blockTime, unsigned char* blockHeader, std::string prevBlockHash, std::string merkleRoot, int forceProgram)
 {
 
+    if (forceProgram != -1)
+        return programs[forceProgram]->execute(blockHeader, prevBlockHash, merkleRoot);
+
     bool found = false;
     int i = programs.size() - 1;
     while ((i >= 0) && (!found)) {
