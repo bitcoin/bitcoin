@@ -26,7 +26,7 @@ class StartupNotifyTest(BitcoinTestFramework):
 
         self.log.info("Test -startupnotify command is run when node starts")
         self.restart_node(0, extra_args=[f"-startupnotify=echo '{FILE_NAME}' >> {NODE_DIR}/{FILE_NAME}"])
-        assert os.path.exists(tmpdir_file)
+        self.wait_until(lambda: os.path.exists(tmpdir_file))
 
         self.log.info("Test -startupnotify is executed once")
         with open(tmpdir_file, "r", encoding="utf8") as f:
