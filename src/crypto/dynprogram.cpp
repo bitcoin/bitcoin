@@ -9,6 +9,12 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
 
     uint32_t iResult[8];
 
+
+
+    ////////////memset(blockHeader, 0, 80);
+
+
+
     ctx.Write(blockHeader, 80);
     ctx.Finalize((unsigned char*) iResult);
 
@@ -19,21 +25,31 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
     uint32_t* memPool = NULL;     //memory pool
 
     int loop_line_ptr = 0;      //to mark return OPCODE for LOOP command
-    int loop_opcode_count = 0;  //number of times to run the LOOP
+    unsigned int loop_opcode_count = 0;  //number of times to run the LOOP
 
     uint32_t temp[8];
 
     uint32_t prevHashSHA[8];
     uint32_t iPrevHash[8];
     parseHex(prevBlockHash, (unsigned char*)iPrevHash);
+
+
+    ///////////////memset(iPrevHash, 0, 32);
+
+
     ctx.Reset();
     ctx.Write((unsigned char*)iPrevHash, 32);
     ctx.Finalize((unsigned char*)prevHashSHA);
 
-
+    ////////int c = 0;
     while (line_ptr < program.size()) {
         std::istringstream iss(program[line_ptr]);
         std::vector<std::string> tokens{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};     //split line into tokens
+
+        /////////printf("%s\n", program[line_ptr].c_str());
+
+        ////////////printf("start %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7]);
+
 
         //simple ADD and XOR functions with one constant argument
         if (tokens[0] == "ADD") {
@@ -113,7 +129,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
                 for (int i = 0; i < memory_size; i++) {
                     for (int j = 0; j < 8; j++) {
                         memPool[i * 8 + j] += iResult[j];
-                        memPool[i * 8 + j] += iPrevHash[j];
+                        memPool[i * 8 + j] += prevHashSHA[j];
                     }
                 }
             }
@@ -140,7 +156,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
                 for (int i = 0; i < memory_size; i++) {
                     for (int j = 0; j < 8; j++) {
                         memPool[i * 8 + j] += iResult[j];
-                        memPool[i * 8 + j] ^= iPrevHash[j];
+                        memPool[i * 8 + j] ^= prevHashSHA[j];
                     }
                 }
             }
@@ -173,10 +189,8 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
 
                 if (tokens[1] == "XOR") {
                     if (tokens[2] == "HASHPREVSHA2") {
-                        uint32_t arg1[8];
-                        parseHex(prevBlockHash, (unsigned char*)arg1);
                         for (int i = 0; i < 8; i++)
-                            iResult[i] ^= arg1[i];
+                            iResult[i] ^= prevHashSHA[i];
 
                         for (int i = 0; i < 8; i++)
                             index += iResult[i];
@@ -188,10 +202,8 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
 
                 else if (tokens[1] == "ADD") {
                     if (tokens[2] == "HASHPREVSHA2") {
-                        uint32_t arg1[8];
-                        parseHex(prevBlockHash, (unsigned char*)arg1);
                         for (int i = 0; i < 8; i++)
-                            iResult[i] += arg1[i];
+                            iResult[i] += prevHashSHA[i];
 
                         for (int i = 0; i < 8; i++)
                             index += iResult[i];
@@ -209,7 +221,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             loop_opcode_count = 0;
             for (int i = 0; i < 8; i++)
                 loop_opcode_count += iResult[i];
-            loop_opcode_count = loop_opcode_count % atoi(tokens[1].c_str());
+            loop_opcode_count = loop_opcode_count % atoi(tokens[1].c_str()) + 1;
         }
 
         else if (tokens[0] == "ENDLOOP") {
@@ -254,8 +266,13 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             }
         }
 
-
         line_ptr++;
+
+
+        ///////////printf("end    %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7] );
+
+        /////////////c++;
+
     }
 
 
