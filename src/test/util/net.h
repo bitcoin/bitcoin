@@ -13,6 +13,7 @@
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <memory>
 #include <string>
 
 struct ConnmanTestMsg : public CConnman {
@@ -125,6 +126,23 @@ public:
     }
 
     int Connect(const sockaddr*, socklen_t) const override { return 0; }
+
+    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override
+    {
+        if (addr != nullptr) {
+            // Pretend all connections come from 5.5.5.5:6789
+            memset(addr, 0x00, *addr_len);
+            const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in));
+            if (*addr_len >= write_len) {
+                *addr_len = write_len;
+                sockaddr_in* addr_in = reinterpret_cast<sockaddr_in*>(addr);
+                addr_in->sin_family = AF_INET;
+                memset(&addr_in->sin_addr, 0x05, sizeof(addr_in->sin_addr));
+                addr_in->sin_port = htons(6789);
+            }
+        }
+        return std::make_unique<StaticContentsSock>("");
+    };
 
     int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override
     {
