@@ -17,7 +17,6 @@
              (gnu packages gcc)
              (gnu packages gnome)
              (gnu packages image)
-             (gnu packages imagemagick)
              (gnu packages installers)
              (gnu packages linux)
              (gnu packages llvm)
@@ -201,25 +200,6 @@ chain for " target " development."))
 (define (make-nsis-with-sde-support base-nsis)
   (package-with-extra-patches base-nsis
     (search-our-patches "nsis-SConstruct-sde-support.patch")))
-
-(define-public font-tuffy
-  (package
-    (name "font-tuffy")
-    (version "20120614")
-    (source
-     (origin
-       (method url-fetch)
-       (uri (string-append "http://tulrich.com/fonts/tuffy-" version ".tar.gz"))
-       (file-name (string-append name "-" version ".tar.gz"))
-       (sha256
-        (base32
-         "02vf72bgrp30vrbfhxjw82s115z27dwfgnmmzfb0n9wfhxxfpyf6"))))
-    (build-system font-build-system)
-    (home-page "http://tulrich.com/fonts/")
-    (synopsis "The Tuffy Truetype Font Family")
-    (description
-     "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
-    (license license:public-domain)))
 
 (define-public lief
   (package
@@ -653,5 +633,5 @@ inspecting signatures in Mach-O binaries.")
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
+           (list clang-toolchain-10 binutils cmake xorriso python-signapple))
           (else '())))))

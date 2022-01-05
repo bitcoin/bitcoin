@@ -684,7 +684,6 @@ case $host in
      TARGET_OS=darwin
      if  test $cross_compiling != "yes"; then
        BUILD_OS=darwin
-       AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
        AC_CHECK_PROG([BREW], [brew], [brew])
        if test "$BREW" = "brew"; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
@@ -746,9 +745,6 @@ case $host in
            AC_PATH_TOOL([OTOOL], [otool], [otool])
            AC_PATH_PROGS([XORRISOFS], [xorrisofs], [xorrisofs])
            AC_PATH_PROGS([DMG], [dmg], [dmg])
-           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
-           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert], [convert])
-           AC_PATH_PROGS([TIFFCP], [tiffcp], [tiffcp])
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
@@ -1865,6 +1861,7 @@ AC_CONFIG_LINKS([contrib/devtools/symbol-check.py:contrib/devtools/symbol-check.
 AC_CONFIG_LINKS([contrib/devtools/test-security-check.py:contrib/devtools/test-security-check.py])
 AC_CONFIG_LINKS([contrib/devtools/test-symbol-check.py:contrib/devtools/test-symbol-check.py])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
+AC_CONFIG_LINKS([contrib/macdeploy/background.tiff:contrib/macdeploy/background.tiff])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/test_runner.py:test/util/test_runner.py])
