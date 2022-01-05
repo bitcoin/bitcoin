@@ -81,7 +81,7 @@ private:
      * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
      * (which in this case means the blockchain must be re-downloaded.)
      *
-     * Pruning functions are called from FlushStateToDisk when the fCheckForPruning flag has been set.
+     * Pruning functions are called from FlushStateToDisk when the m_check_for_pruning flag has been set.
      * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
      * Pruning cannot take place until the longest chain is at least a certain length (CChainParams::nPruneAfterHeight).
      * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
@@ -93,19 +93,19 @@ private:
     void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd);
 
     RecursiveMutex cs_LastBlockFile;
-    std::vector<CBlockFileInfo> vinfoBlockFile;
-    int nLastBlockFile = 0;
+    std::vector<CBlockFileInfo> m_blockfile_info;
+    int m_last_blockfile = 0;
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
      *  or if we allocate more file space when we're in prune mode
      */
-    bool fCheckForPruning = false;
+    bool m_check_for_pruning = false;
 
     /** Dirty block index entries. */
-    std::set<CBlockIndex*> setDirtyBlockIndex;
+    std::set<CBlockIndex*> m_dirty_blockindex;
 
     /** Dirty block file entries. */
-    std::set<int> setDirtyFileInfo;
+    std::set<int> m_dirty_fileinfo;
 
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
@@ -124,7 +124,7 @@ public:
     /**
      * Load the blocktree off disk and into memory. Populate certain metadata
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
-     * collections like setDirtyBlockIndex.
+     * collections like m_dirty_blockindex.
      */
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
