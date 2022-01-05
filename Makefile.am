@@ -323,6 +323,7 @@ EXTRA_DIST += \
     test/util/data/txcreatescript4.json \
     test/util/data/txcreatescript5.hex \
     test/util/data/txcreatescript6.hex \
+    test/util/data/txcreatesignsegwit1.hex \
     test/util/data/txcreatesignv1.hex \
     test/util/data/txcreatesignv1.json \
     test/util/data/txcreatesignv2.hex \
