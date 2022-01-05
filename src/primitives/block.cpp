@@ -13,7 +13,7 @@
 #include <chainparams.h>
 #include "global.h"
 
-uint256 CBlockHeader::GetHash() const
+uint256 CBlockHeader::GetHash(int forceProgram) const
 {
 
     CSHA256 ctx;
@@ -35,7 +35,7 @@ uint256 CBlockHeader::GetHash() const
     memcpy(headerData + 72, &nBits, 4);
     memcpy(headerData + 76, &nNonce, 4);
 
-    std::string strResult = g_hashFunction->calcBlockHeaderHash(nTime, headerData, hashPrevBlock.GetHex(), hashMerkleRoot.GetHex());
+    std::string strResult = g_hashFunction->calcBlockHeaderHash(nTime, headerData, hashPrevBlock.GetHex(), hashMerkleRoot.GetHex(), forceProgram);
     free(headerData);
 
 

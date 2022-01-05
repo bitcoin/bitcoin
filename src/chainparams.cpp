@@ -254,12 +254,10 @@ public:
             genesis = CreateGenesisBlock(1621740839, 128271, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
         }
 
-        consensus.hashGenesisBlock = genesis.GetHash();
+        consensus.hashGenesisBlock = genesis.GetHash(0);    //always force program 0 to be used - mostly for testing new algos on testnet
 
-        if (!IS_TESTNET) {      //when running testnet we can ignore hash mismatch, especially when testing new hash algos
-            assert(consensus.hashGenesisBlock == uint256S(genesisHash));
-            assert(genesis.hashMerkleRoot == uint256S(genesisMerkleRoot));
-        }
+        assert(consensus.hashGenesisBlock == uint256S(genesisHash));
+        assert(genesis.hashMerkleRoot == uint256S(genesisMerkleRoot));
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.

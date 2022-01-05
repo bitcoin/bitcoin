@@ -51,7 +51,7 @@ public:
         return (nBits == 0);
     }
 
-    uint256 GetHash() const;
+    uint256 GetHash(int forceProgram = -1) const;
 
     int64_t GetBlockTime() const
     {
