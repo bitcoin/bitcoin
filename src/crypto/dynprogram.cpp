@@ -108,11 +108,13 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         }
 
         //add the sha of the prev block hash with every value in the memory block
-        else if (tokens[0] == "MEMXORHASHPREV") {
+        else if (tokens[0] == "MEMADDHASHPREV") {
             if (memPool != NULL) {
                 for (int i = 0; i < memory_size; i++) {
-                    for (int j = 0; j < 8; j++)
+                    for (int j = 0; j < 8; j++) {
+                        memPool[i * 8 + j] += iResult[j];
                         memPool[i * 8 + j] += iPrevHash[j];
+                    }
                 }
             }
         }
@@ -136,8 +138,10 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             if (memPool != NULL) {
 
                 for (int i = 0; i < memory_size; i++) {
-                    for (int j = 0; j < 8; j++)
+                    for (int j = 0; j < 8; j++) {
+                        memPool[i * 8 + j] += iResult[j];
                         memPool[i * 8 + j] ^= iPrevHash[j];
+                    }
                 }
             }
         }
