@@ -271,8 +271,6 @@ public:
         if (IS_TESTNET) {
             vSeeds.emplace_back("testnet1.dynamocoin.org");
             vSeeds.emplace_back("testnet2.dynamocoin.org");
-            vSeeds.emplace_back("172.31.72.192");
-            vSeeds.emplace_back("172.31.31.179");
         } else {
             vSeeds.emplace_back("prod1.dynamocoin.org");
             vSeeds.emplace_back("prod2.dynamocoin.org");

@@ -29,6 +29,20 @@ void CDynHash::load(std::string program) {
 
 std::string CDynHash::calcBlockHeaderHash(uint32_t blockTime, unsigned char* blockHeader, std::string prevBlockHash, std::string merkleRoot, int forceProgram)
 {
+
+    bool found = false;
+    int i = programs.size() - 1;
+    while ((i >= 0) && (!found)) {
+        if (programs[i]->startingTime <= blockTime) {
+            found = true;
+        } else
+            i--;
+    }
+
+    if (found)
+        return programs[i]->execute(blockHeader, prevBlockHash, merkleRoot);
+
+    /*
     bool found = false;
     int i = 0;
     while ((!found) && (i < programs.size()))
@@ -38,5 +52,5 @@ std::string CDynHash::calcBlockHeaderHash(uint32_t blockTime, unsigned char* blo
             found = true;
     if (found)
         return programs[i]->execute(blockHeader, prevBlockHash, merkleRoot);
-
+        */
 }
