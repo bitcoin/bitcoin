@@ -98,12 +98,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         else if (tokens[0] == "MEMADD") {
             if (memPool != NULL) {
                 uint32_t arg1[8];
-                if (tokens[1] == "HASHPREV") {
-                    memcpy(arg1, iResult, 32);
-                }
-                else {
-                    parseHex(tokens[1], (unsigned char*)arg1);
-                }
+                parseHex(tokens[1], (unsigned char*)arg1);
 
                 for (int i = 0; i < memory_size; i++) {
                     for (int j = 0; j < 8; j++)
@@ -112,19 +107,37 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             }
         }
 
+        //add the sha of the prev block hash with every value in the memory block
+        else if (tokens[0] == "MEMXORHASHPREV") {
+            if (memPool != NULL) {
+                for (int i = 0; i < memory_size; i++) {
+                    for (int j = 0; j < 8; j++)
+                        memPool[i * 8 + j] += iPrevHash[j];
+                }
+            }
+        }
+
+
         //xor a constant with every value in the memory block
         else if (tokens[0] == "MEMXOR") {
             if (memPool != NULL) {
                 uint32_t arg1[8];
-                if (tokens[1] == "HASHPREV") {
-                    memcpy(arg1, iResult, 32);
-                } else {
-                    parseHex(tokens[1], (unsigned char*)arg1);
-                }
+                parseHex(tokens[1], (unsigned char*)arg1);
 
                 for (int i = 0; i < memory_size; i++) {
                     for (int j = 0; j < 8; j++)
                         memPool[i * 8 + j] ^= arg1[j];
+                }
+            }
+        }
+
+        //xor the sha of the prev block hash with every value in the memory block
+        else if (tokens[0] == "MEMXORHASHPREV") {
+            if (memPool != NULL) {
+
+                for (int i = 0; i < memory_size; i++) {
+                    for (int j = 0; j < 8; j++)
+                        memPool[i * 8 + j] ^= iPrevHash[j];
                 }
             }
         }
