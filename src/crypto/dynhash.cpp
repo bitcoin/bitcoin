@@ -27,11 +27,12 @@ void CDynHash::load(std::string program) {
 }
 
 
-std::string CDynHash::calcBlockHeaderHash(uint32_t blockTime, unsigned char* blockHeader, std::string prevBlockHash, std::string merkleRoot, int forceProgram)
+std::string CDynHash::calcBlockHeaderHash(uint32_t blockTime, unsigned char* blockHeader, std::string prevBlockHash, std::string merkleRoot)
 {
 
-    if (forceProgram != -1)
-        return programs[forceProgram]->execute(blockHeader, prevBlockHash, merkleRoot);
+    if (IS_TESTNET)
+        if (blockTime == 1622653676)
+            return programs[0]->execute(blockHeader, prevBlockHash, merkleRoot);
 
     bool found = false;
     int i = programs.size() - 1;

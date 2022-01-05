@@ -254,7 +254,7 @@ public:
             genesis = CreateGenesisBlock(1621740839, 128271, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
         }
 
-        consensus.hashGenesisBlock = genesis.GetHash(0);    //always force program 0 to be used - mostly for testing new algos on testnet
+        consensus.hashGenesisBlock = genesis.GetHash();    
 
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));
         assert(genesis.hashMerkleRoot == uint256S(genesisMerkleRoot));

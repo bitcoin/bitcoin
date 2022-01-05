@@ -266,7 +266,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 if (diskindex.nHeight == 0)
                     forceProgram = 0;
 
-                CBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash(forceProgram));
+                CBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash());
                 pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
