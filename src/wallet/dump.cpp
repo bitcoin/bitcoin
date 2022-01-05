@@ -214,6 +214,11 @@ bool CreateFromDump(const std::string& name, const fs::path& wallet_path, biling
 
             if (key == "checksum") {
                 std::vector<unsigned char> parsed_checksum = ParseHex(value);
+                if (parsed_checksum.size() != checksum.size()) {
+                    error = Untranslated("Error: Checksum is not the correct size");
+                    ret = false;
+                    break;
+                }
                 std::copy(parsed_checksum.begin(), parsed_checksum.end(), checksum.begin());
                 break;
             }
