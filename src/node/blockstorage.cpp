@@ -315,7 +315,7 @@ bool BlockManager::LoadBlockIndex(
             // because they will still be attached to the active chainstate if they
             // actually contain more work.
             //
-            // Instad of this height-based approach, an earlier attempt was made at
+            // Instead of this height-based approach, an earlier attempt was made at
             // detecting "holistically" whether the block index under consideration
             // relied on an assumed-valid ancestor, but this proved to be too slow to
             // be practical.
