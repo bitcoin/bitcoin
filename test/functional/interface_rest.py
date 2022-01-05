@@ -206,12 +206,12 @@ class RESTTest (BitcoinTestFramework):
         bb_hash = self.nodes[0].getbestblockhash()
 
         # Check result if block does not exists
-        assert_equal(self.test_rest_request('/headers/1/0000000000000000000000000000000000000000000000000000000000000000'), [])
+        assert_equal(self.test_rest_request('/headers/0000000000000000000000000000000000000000000000000000000000000000?count=1'), [])
         self.test_rest_request('/block/0000000000000000000000000000000000000000000000000000000000000000', status=404, ret_type=RetType.OBJ)
 
         # Check result if block is not in the active chain
         self.nodes[0].invalidateblock(bb_hash)
-        assert_equal(self.test_rest_request(f'/headers/1/{bb_hash}'), [])
+        assert_equal(self.test_rest_request(f'/headers/{bb_hash}?count=1'), [])
         self.test_rest_request(f'/block/{bb_hash}')
         self.nodes[0].reconsiderblock(bb_hash)
 
@@ -221,7 +221,7 @@ class RESTTest (BitcoinTestFramework):
         response_bytes = response.read()
 
         # Compare with block header
-        response_header = self.test_rest_request(f"/headers/1/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
+        response_header = self.test_rest_request(f"/headers/{bb_hash}?count=1", req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_equal(int(response_header.getheader('content-length')), BLOCK_HEADER_SIZE)
         response_header_bytes = response_header.read()
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE], response_header_bytes)
@@ -233,7 +233,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(response_bytes.hex().encode(), response_hex_bytes)
 
         # Compare with hex block header
-        response_header_hex = self.test_rest_request(f"/headers/1/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        response_header_hex = self.test_rest_request(f"/headers/{bb_hash}?count=1", req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_header_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_header_hex_bytes = response_header_hex.read(BLOCK_HEADER_SIZE*2)
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE].hex().encode(), response_header_hex_bytes)
@@ -260,7 +260,7 @@ class RESTTest (BitcoinTestFramework):
         self.test_rest_request("/blockhashbyheight/", ret_type=RetType.OBJ, status=400)
 
         # Compare with json block header
-        json_obj = self.test_rest_request(f"/headers/1/{bb_hash}")
+        json_obj = self.test_rest_request(f"/headers/{bb_hash}?count=1")
         assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
 
@@ -271,9 +271,9 @@ class RESTTest (BitcoinTestFramework):
 
         # See if we can get 5 headers in one response
         self.generate(self.nodes[1], 5)
-        json_obj = self.test_rest_request(f"/headers/5/{bb_hash}")
+        json_obj = self.test_rest_request(f"/headers/{bb_hash}?count=5")
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
-        json_obj = self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}")
+        json_obj = self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}?count=5")
         first_filter_header = json_obj[0]
         assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
         json_obj = self.test_rest_request(f"/blockfilter/basic/{bb_hash}")
@@ -287,7 +287,7 @@ class RESTTest (BitcoinTestFramework):
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
             assert_equal(
                 bytes(f'Header count is invalid or out of acceptable range (1-2000): {num}\r\n', 'ascii'),
-                self.test_rest_request(f"/headers/{num}/{bb_hash}", ret_type=RetType.BYTES, status=400),
+                self.test_rest_request(f"/headers/{bb_hash}?count={num}", ret_type=RetType.BYTES, status=400),
             )
 
         self.log.info("Test tx inclusion in the /mempool and /block URIs")
@@ -341,6 +341,12 @@ class RESTTest (BitcoinTestFramework):
 
         json_obj = self.test_rest_request("/chaininfo")
         assert_equal(json_obj['bestblockhash'], bb_hash)
+
+        # Test compatibility of deprecated and newer endpoints
+        self.log.info("Test compatibility of deprecated and newer endpoints")
+        assert_equal(self.test_rest_request(f"/headers/{bb_hash}?count=1"), self.test_rest_request(f"/headers/1/{bb_hash}"))
+        assert_equal(self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}?count=5"), self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}"))
+
 
 if __name__ == '__main__':
     RESTTest().main()
