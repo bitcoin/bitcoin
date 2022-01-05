@@ -364,7 +364,7 @@ public:
         READWRITE(obj.nNonce);
     }
 
-    uint256 GetBlockHash() const
+    uint256 GetBlockHash(int forceProgram = -1) const
     {
         CBlockHeader block;
         block.nVersion        = nVersion;
@@ -373,7 +373,7 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
-        return block.GetHash();
+        return block.GetHash(forceProgram);
     }
 
 
