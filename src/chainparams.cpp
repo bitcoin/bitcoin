@@ -255,8 +255,11 @@ public:
         }
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S(genesisHash));
-        assert(genesis.hashMerkleRoot == uint256S(genesisMerkleRoot));
+
+        if (!IS_TESTNET) {      //when running testnet we can ignore hash mismatch, especially when testing new hash algos
+            assert(consensus.hashGenesisBlock == uint256S(genesisHash));
+            assert(genesis.hashMerkleRoot == uint256S(genesisMerkleRoot));
+        }
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
