@@ -348,6 +348,11 @@ void BlockManager::Unload()
     }
 
     m_block_index.clear();
+
+    vinfoBlockFile.clear();
+    nLastBlockFile = 0;
+    setDirtyBlockIndex.clear();
+    setDirtyFileInfo.clear();
 }
 
 bool BlockManager::WriteBlockIndexDB()

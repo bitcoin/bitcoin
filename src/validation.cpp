@@ -3980,10 +3980,6 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
     chainman.Unload();
     pindexBestHeader = nullptr;
     if (mempool) mempool->clear();
-    vinfoBlockFile.clear();
-    nLastBlockFile = 0;
-    setDirtyBlockIndex.clear();
-    setDirtyFileInfo.clear();
     g_versionbitscache.Clear();
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
         warningcache[b].clear();
