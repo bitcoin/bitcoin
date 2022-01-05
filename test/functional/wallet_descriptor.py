@@ -14,7 +14,6 @@ from test_framework.util import (
 
 class WalletDescriptorTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [['-keypool=100']]
         self.wallet_names = []
