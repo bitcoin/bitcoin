@@ -1196,16 +1196,9 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
-    //force genesis block to use program 0
-    unsigned char nullHash[32];
-    memset(nullHash, 0, 32);
-    bool isGenesis = memcmp(&(block.hashPrevBlock), nullHash, 32) == 0;
-    int forceProgram = -1;
-    if (isGenesis)
-        forceProgram = 0;
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(forceProgram), block.nBits, consensusParams))
+    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     // Signet only: check block solution
@@ -1227,15 +1220,7 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     if (!ReadBlockFromDisk(block, blockPos, consensusParams))
         return false;
 
-    char nullHash[32];
-    memset(nullHash, 0, 32);
-    unsigned char* prevHash = block.hashPrevBlock.data();
-    bool isGenesis = (memcmp(nullHash, prevHash, 32) == 0);
-    int forceProgram = -1;
-    if (isGenesis)
-        forceProgram = 0;
-
-    if (block.GetHash(forceProgram) != pindex->GetBlockHash())
+    if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
     return true;
@@ -1964,14 +1949,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     AssertLockHeld(cs_main);
     assert(pindex);
 
-    char nullHash[32];
-    memset(nullHash, 0, 32);
-    bool isGenesis = (memcmp(block.hashPrevBlock.data(), nullHash, 32) == 0);
-    int forceProgram = -1;
-    if (isGenesis)
-        forceProgram = 0;
 
-    assert(*pindex->phashBlock == block.GetHash(forceProgram));
+    assert(*pindex->phashBlock == block.GetHash());
     int64_t nTimeStart = GetTimeMicros();
 
     // Check it again in case a previous version let a bad block in
@@ -4972,7 +4951,7 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
     // m_blockman.m_block_index. Note that we can't use m_chain here, since it is
     // set based on the coins db, not the block index db, which is the only
     // thing loaded at this point.
-    if (m_blockman.m_block_index.count(chainparams.GenesisBlock().GetHash(0)))      //force genesis block to use program 0
+    if (m_blockman.m_block_index.count(chainparams.GenesisBlock().GetHash()))      
         return true;
 
     assert(std::addressof(::ChainActive()) == std::addressof(m_chain));
