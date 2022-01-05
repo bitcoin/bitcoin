@@ -8,7 +8,7 @@ $(package)_dependencies=xcb_proto libXau
 define $(package)_set_vars
 $(package)_config_opts=--disable-static --disable-devel-docs --without-doxygen --without-launchd
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
-# Disable uneeded extensions.
+# Disable unneeded extensions.
 # More info is available from: https://doc.qt.io/qt-5.15/linux-requirements.html
 $(package)_config_opts += --disable-composite --disable-damage --disable-dpms
 $(package)_config_opts += --disable-dri2 --disable-dri3 --disable-glx
