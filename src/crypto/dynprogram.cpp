@@ -98,7 +98,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         else if (tokens[0] == "MEMADD") {
             if (memPool != NULL) {
                 uint32_t arg1[8];
-                if (tokens[1] == "HASH") {
+                if (tokens[1] == "HASHPREV") {
                     memcpy(arg1, iResult, 32);
                 }
                 else {
@@ -116,7 +116,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         else if (tokens[0] == "MEMXOR") {
             if (memPool != NULL) {
                 uint32_t arg1[8];
-                if (tokens[1] == "HASH") {
+                if (tokens[1] == "HASHPREV") {
                     memcpy(arg1, iResult, 32);
                 } else {
                     parseHex(tokens[1], (unsigned char*)arg1);
