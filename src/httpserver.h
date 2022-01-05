@@ -83,6 +83,19 @@ public:
      */
     RequestMethod GetRequestMethod() const;
 
+    /** Get the query parameter value from request uri for a specified key.
+     * Throws std::runtime_error if key does not exist and no default_val is specified.
+     *
+     * If the query string contains duplicate keys, the first value is returned. Many web frameworks
+     * would instead parse this as an array of values, but this is not (yet) implemented as it is
+     * currently not needed in any of the endpoints.
+     *
+     * @param[in] key represents the query parameter of which the value is returned
+     * @param[in] default_val (optional) is returned if key is not in query string
+     * @throws std::runtime_error if key is not in query string and no default_val was provided
+     */
+    std::string GetQueryParameter(const std::string& key, const std::string& default_val = "") const;
+
     /**
      * Get the request header specified by hdr, or an empty string.
      * Return a pair (isPresent,string).
@@ -114,6 +127,22 @@ public:
      */
     void WriteReply(int nStatus, const std::string& strReply = "");
 };
+
+/** Get the query parameter value from request uri for a specified key.
+     * Throws std::runtime_error if key does not exist and no default_val is specified.
+     *
+     * If the query string contains duplicate keys, the first value is returned. Many web frameworks
+     * would instead parse this as an array of values, but this is not (yet) implemented as it is
+     * currently not needed in any of the endpoints.
+     *
+     * Helper function for HTTPRequest::GetQueryParamater.
+     *
+     * @param[in] uri is the entire request uri
+     * @param[in] key represents the query parameter of which the value is returned
+     * @param[in] default_val (optional) is returned if key is not in query string
+     * @throws std::runtime_error if key is not in query string and no default_val was provided
+     */
+std::string GetQueryParameterFromUri(const std::string& uri, const std::string& key, const std::string& default_val = "");
 
 /** Event handler closure.
  */

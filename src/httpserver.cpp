@@ -23,6 +23,7 @@
 
 #include <deque>
 #include <memory>
+#include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -637,6 +638,40 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
         return UNKNOWN;
         break;
     }
+}
+
+std::string HTTPRequest::GetQueryParameter(const std::string& key, const std::string& default_val) const
+{
+    std::string uri = evhttp_request_get_uri(req);
+    auto result = GetQueryParameterFromUri(uri, key, default_val);
+
+    return result;
+}
+
+std::string GetQueryParameterFromUri(const std::string& uri, const std::string& key, const std::string& default_val)
+{
+    auto query_start = uri.find('?');
+    if (query_start != std::string::npos) {
+        auto query_string = uri.substr(query_start + 1, uri.size() - (query_start + 1));
+
+        struct evkeyvalq params_q;
+        evhttp_parse_query_str(query_string.c_str(), &params_q);
+
+        struct evkeyval* param;
+        for (param = params_q.tqh_first; param; param = param->next.tqe_next) {
+            if (param->key == key) {
+                std::string result = param->value;
+                evhttp_clear_headers(&params_q);
+                return result;
+            }
+        }
+        evhttp_clear_headers(&params_q);
+    }
+
+    if (default_val != "")
+        return default_val;
+
+    throw std::runtime_error(strprintf("No query parameter \"%s\" was found and no default was specified", key));
 }
 
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
