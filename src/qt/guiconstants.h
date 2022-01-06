@@ -5,10 +5,13 @@
 #ifndef BITCOIN_QT_GUICONSTANTS_H
 #define BITCOIN_QT_GUICONSTANTS_H
 
+#include <chrono>
 #include <cstdint>
 
-/* Milliseconds between model updates */
-static const int MODEL_UPDATE_DELAY = 250;
+using namespace std::chrono_literals;
+
+/* A delay between model updates */
+static constexpr auto MODEL_UPDATE_DELAY{250ms};
 
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
