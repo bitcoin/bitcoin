@@ -50,7 +50,7 @@ enum class ChainstateLoadingError {
  *        this sequence, when we explicitly checked shutdown_requested() at
  *        arbitrary points, one of those calls returned true". Therefore, a
  *        return value other than SHUTDOWN_PROBED does not guarantee that
- *        shutdown_requested() hasn't been called indirectly.
+ *        shutdown hasn't been called indirectly.
  *  - else
  *      - Success!
  */
