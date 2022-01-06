@@ -10,10 +10,11 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
     uint32_t iResult[8];
 
 
-
-    ////////////memset(blockHeader, 0, 80);
-
-
+    /*
+    memset(blockHeader, 0, 80);
+    prevBlockHash = "0000000000000000000000000000000000000000000000000000000000000000";
+    merkleRoot = "0000000000000000000000000000000000000000000000000000000000000000";
+    */
 
     ctx.Write(blockHeader, 80);
     ctx.Finalize((unsigned char*) iResult);
@@ -41,15 +42,17 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
     ctx.Write((unsigned char*)iPrevHash, 32);
     ctx.Finalize((unsigned char*)prevHashSHA);
 
-    ////////int c = 0;
+    ////////////int c = 0;
+
     while (line_ptr < program.size()) {
         std::istringstream iss(program[line_ptr]);
         std::vector<std::string> tokens{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};     //split line into tokens
 
-        /////////printf("%s\n", program[line_ptr].c_str());
 
-        ////////////printf("start %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7]);
-
+        /*
+        printf("%s\n", program[line_ptr].c_str());
+        printf("start %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7]);
+        */
 
         //simple ADD and XOR functions with one constant argument
         if (tokens[0] == "ADD") {
@@ -269,9 +272,10 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         line_ptr++;
 
 
-        ///////////printf("end    %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7] );
-
-        /////////////c++;
+        /*
+        printf("end    %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7] );
+        c++;
+        */
 
     }
 
