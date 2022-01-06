@@ -1244,7 +1244,6 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     if(!fRegTest && !fSigNet) {
         if(fMasternodeMode && !masternodeSync.IsSynced()) {
             LogPrintf("AcceptConnection -- masternode is not synced yet, skipping inbound connection attempt\n");
-            CloseSocket(hSocket);
             return;
         }
     }
