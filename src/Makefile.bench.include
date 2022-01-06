@@ -53,7 +53,7 @@ nodist_bench_bench_syscoin_SOURCES = $(GENERATED_BENCH_FILES)
 bench_bench_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_syscoin_LDADD = \
-  $(LIBSYSCOIN_SERVER) \
+  $(LIBSYSCOIN_NODE) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_BLS) \

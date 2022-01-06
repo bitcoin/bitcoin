@@ -20,7 +20,6 @@ SYSCOIN_INCLUDES += $(LIBCHIABLS_CFLAGS)
 SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
-
 if EMBEDDED_CHIABLS
 LIBCHIA = bls-dash/build/libbls-dash.a
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) $(GMP_LIBS)
@@ -30,7 +29,7 @@ else
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIABLS_LIBS) $(GMP_LIBS)
 endif
 
-LIBSYSCOIN_SERVER=libsyscoin_server.a
+LIBSYSCOIN_NODE=libsyscoin_node.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
 LIBSYSCOIN_CLI=libsyscoin_cli.a
@@ -75,7 +74,7 @@ EXTRA_LIBRARIES += \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_CONSENSUS) \
-  $(LIBSYSCOIN_SERVER) \
+  $(LIBSYSCOIN_NODE) \
   $(LIBSYSCOIN_CLI) \
   $(LIBSYSCOIN_IPC) \
   $(LIBSYSCOIN_WALLET) \
@@ -444,9 +443,9 @@ ipc/capnp/libsyscoin_ipc_a-ipc.$(OBJEXT): $(libsyscoin_ipc_mpgen_input:=.h)
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
 # libsyscoin_common or libsyscoin_util libraries, instead.
-libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libsyscoin_server_a_SOURCES = \
+libsyscoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libsyscoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libsyscoin_node_a_SOURCES = \
   services/asset.cpp \
   services/assetconsensus.cpp \
   services/rpc/assetrpc.cpp \
@@ -554,10 +553,10 @@ libsyscoin_server_a_SOURCES = \
   $(SYSCOIN_CORE_H)
 
 if ENABLE_WALLET
-libsyscoin_server_a_SOURCES += wallet/init.cpp
+libsyscoin_node_a_SOURCES += wallet/init.cpp
 endif
 if !ENABLE_WALLET
-libsyscoin_server_a_SOURCES += dummywallet.cpp
+libsyscoin_node_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
@@ -862,13 +861,13 @@ syscoind_SOURCES = $(syscoin_daemon_sources) init/syscoind.cpp
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoind_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoind_LDFLAGS = $(syscoin_bin_ldflags)
-syscoind_LDADD = $(LIBSYSCOIN_SERVER) $(syscoin_bin_ldadd)
+syscoind_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
 
 syscoin_node_SOURCES = $(syscoin_daemon_sources) init/syscoin-node.cpp
 syscoin_node_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_node_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_node_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_node_LDADD = $(LIBSYSCOIN_SERVER) $(syscoin_bin_ldadd) $(LIBSYSCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
+syscoin_node_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd) $(LIBSYSCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp

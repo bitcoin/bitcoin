@@ -12,7 +12,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsyscoin_common", "libsys
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsyscoin_crypto", "libsyscoin_crypto\libsyscoin_crypto.vcxproj", "{6190199C-6CF4-4DAD-BFBD-93FA72A760C1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsyscoin_server", "libsyscoin_server\libsyscoin_server.vcxproj", "{460FEE33-1FE1-483F-B3BF-931FF8E969A5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsyscoin_node", "libsyscoin_node\libsyscoin_node.vcxproj", "{460FEE33-1FE1-483F-B3BF-931FF8E969A5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libunivalue", "libunivalue\libunivalue.vcxproj", "{5724BA7D-A09A-4BA8-800B-C4C1561B3D69}"
 EndProject

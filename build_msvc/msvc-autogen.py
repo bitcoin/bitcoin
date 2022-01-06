@@ -15,7 +15,7 @@ libs = [
     'libsyscoin_cli',
     'libsyscoin_common',
     'libsyscoin_crypto',
-    'libsyscoin_server',
+    'libsyscoin_node',
     'libsyscoin_util',
     'libsyscoin_wallet_tool',
     'libsyscoin_wallet',

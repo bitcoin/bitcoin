@@ -28,7 +28,7 @@
     <ProjectReference Include="..\libsyscoin_qt\libsyscoin_qt.vcxproj">
       <Project>{2b4abff8-d1fd-4845-88c9-1f3c0a6512bf}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libsyscoin_server\libsyscoin_server.vcxproj">
+    <ProjectReference Include="..\libsyscoin_node\libsyscoin_node.vcxproj">
       <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libsyscoin_util\libsyscoin_util.vcxproj">
