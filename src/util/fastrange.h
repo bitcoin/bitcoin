@@ -7,11 +7,21 @@
 
 #include <cstdint>
 
-// Map a value x that is uniformly distributed in the range [0, 2^64) to a
-// value uniformly distributed in [0, n) by returning the upper 64 bits of
-// x * n.
-//
-// See: https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
+/* This file offers implementations of the fast range reduction technique described
+ * in https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
+ *
+ * In short, they take an integer x and a range n, and return the upper bits of
+ * (x * n). If x is uniformly distributed over its domain, the result is as close to
+ * uniformly distributed over [0, n) as (x mod n) would be, but significantly faster.
+ */
+
+/** Fast range reduction with 32-bit input and 32-bit range. */
+static inline uint32_t FastRange32(uint32_t x, uint32_t n)
+{
+    return (uint64_t{x} * n) >> 32;
+}
+
+/** Fast range reduction with 64-bit input and 64-bit range. */
 static inline uint64_t FastRange64(uint64_t x, uint64_t n)
 {
 #ifdef __SIZEOF_INT128__
