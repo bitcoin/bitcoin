@@ -43,6 +43,8 @@ static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 
+bool IS_TESTNET;
+
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
 
@@ -968,6 +970,9 @@ __declspec(dllexport) int main(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
 #endif
+
+    IS_TESTNET = false;
+
     SetupEnvironment();
     if (!SetupNetworking()) {
         tfm::format(std::cerr, "Error: Initializing networking failed\n");
