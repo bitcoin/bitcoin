@@ -310,6 +310,7 @@ BITCOIN_CORE_H = \
   util/check.h \
   util/enumerate.h \
   util/error.h \
+  util/fastrange.h \
   util/fees.h \
   util/golombrice.h \
   util/hash_type.h \
