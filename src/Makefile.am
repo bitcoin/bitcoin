@@ -840,7 +840,7 @@ endif
 # SYSCOIN need getauxwork and mempool stuff inside of wallet so server needs linking here for now but order has to be after wallet
 syscoin_bin_ldadd = \
   $(LIBSYSCOIN_WALLET) \
-  $(LIBSYSCOIN_SERVER) \
+  $(LIBSYSCOIN_NODE) \
   $(LIBSYSCOIN_BLS) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
