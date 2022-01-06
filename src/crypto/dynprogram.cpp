@@ -51,8 +51,9 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
 
         /*
         printf("%s\n", program[line_ptr].c_str());
-        printf("start %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7]);
+        printf("start %08X%08X%08X%08X%08X%08X%08X%08X\n",  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7]);
         */
+        
 
         //simple ADD and XOR functions with one constant argument
         if (tokens[0] == "ADD") {
@@ -272,10 +273,10 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
         line_ptr++;
 
 
-        /*
-        printf("end    %d %08X%08X%08X%08X%08X%08X%08X%08X\n", c,  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7] );
-        c++;
-        */
+        
+        ///printf("end   %08X%08X%08X%08X%08X%08X%08X%08X\n",  iResult[0], iResult[1], iResult[2], iResult[3], iResult[4], iResult[5], iResult[6], iResult[7] );
+
+        
 
     }
 
