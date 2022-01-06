@@ -5700,10 +5700,6 @@ void ChainstateManager::Reset()
     m_snapshot_validated = false;
 }
 // SYSCOIN
-CBlockIndexDB::CBlockIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "dbblockindex", nCacheSize, fMemory, fWipe) {
-    if(!ReadLastKnownHeight(nLastKnownHeightOnStart))
-        nLastKnownHeightOnStart = 0;
-}
 bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, bool bDisconnect) {	
     if(vecTXIDPairs.empty())	
         return true;
