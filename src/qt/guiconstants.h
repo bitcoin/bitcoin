@@ -13,6 +13,9 @@ using namespace std::chrono_literals;
 /* A delay between model updates */
 static constexpr auto MODEL_UPDATE_DELAY{250ms};
 
+/* A delay between shutdown pollings */
+static constexpr auto SHUTDOWN_POLLING_DELAY{200ms};
+
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
 
