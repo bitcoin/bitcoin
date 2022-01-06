@@ -212,34 +212,34 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                        m_node.banman.get(), *m_node.chainman,
                                        *m_node.mempool, false);
     fRegTest = chainName == CBaseChainParams::REGTEST;
-    auto rv = LoadChainstate(fReindex.load(),
-                             *Assert(m_node.chainman.get()),
-                             *Assert(m_node.connman.get()),
-                             *Assert(m_node.banman.get()),
-                             *Assert(m_node.peerman.get()),
-                             Assert(m_node.mempool.get()),
-                             fPruneMode,
-                             chainparams.GetConsensus(),
-                             m_args.GetBoolArg("-reindex-chainstate", false),
-                             m_cache_sizes.block_tree_db,
-                             m_cache_sizes.coins_db,
-                             m_cache_sizes.coins,
-                             true,
-                             true,
-                             false,
-                             false,
-                             m_cache_sizes.evo_db);
-    assert(!rv.has_value());
+    auto maybe_load_error = LoadChainstate(fReindex.load(),
+                                            *Assert(m_node.chainman.get()),
+                                            *Assert(m_node.connman.get()),
+                                            *Assert(m_node.banman.get()),
+                                            *Assert(m_node.peerman.get()),
+                                            Assert(m_node.mempool.get()),
+                                           fPruneMode,
+                                           chainparams.GetConsensus(),
+                                           m_args.GetBoolArg("-reindex-chainstate", false),
+                                           m_cache_sizes.block_tree_db,
+                                           m_cache_sizes.coins_db,
+                                           m_cache_sizes.coins,
+                                           /*block_tree_db_in_memory=*/true,
+                                           /*coins_db_in_memory=*/true,                             
+                                           false,
+                                            false,
+                                            m_cache_sizes.evo_db);
+    assert(!maybe_load_error.has_value());
 
-    auto maybe_verify_failure = VerifyLoadedChainstate(
+    auto maybe_verify_error = VerifyLoadedChainstate(
         *Assert(m_node.chainman),
         fReindex.load(),
         m_args.GetBoolArg("-reindex-chainstate", false),
         chainparams.GetConsensus(),
         m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
         m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
-        static_cast<int64_t(*)()>(GetTime));
-    assert(!maybe_verify_failure.has_value());
+        /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime));
+    assert(!maybe_verify_error.has_value());
 
     BlockValidationState state;
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {
