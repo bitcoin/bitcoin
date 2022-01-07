@@ -27,23 +27,6 @@ bool fHavePruned = false;
 bool fPruneMode = false;
 uint64_t nPruneTarget = 0;
 
-// TODO make namespace {
-RecursiveMutex cs_LastBlockFile;
-std::vector<CBlockFileInfo> vinfoBlockFile;
-int nLastBlockFile = 0;
-/** Global flag to indicate we should check to see if there are
-*  block/undo files that should be deleted.  Set on startup
-*  or if we allocate more file space when we're in prune mode
-*/
-bool fCheckForPruning = false;
-
-/** Dirty block index entries. */
-std::set<CBlockIndex*> setDirtyBlockIndex;
-
-/** Dirty block file entries. */
-std::set<int> setDirtyFileInfo;
-// } // namespace
-
 static FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
@@ -86,7 +69,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
 
-    setDirtyBlockIndex.insert(pindexNew);
+    m_dirty_blockindex.insert(pindexNew);
 
     return pindexNew;
 }
@@ -104,7 +87,7 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
             pindex->nFile = 0;
             pindex->nDataPos = 0;
             pindex->nUndoPos = 0;
-            setDirtyBlockIndex.insert(pindex);
+            m_dirty_blockindex.insert(pindex);
 
             // Prune from m_blocks_unlinked -- any block we prune would have
             // to be downloaded again in order to consider its chain, at which
@@ -121,8 +104,8 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
         }
     }
 
-    vinfoBlockFile[fileNumber].SetNull();
-    setDirtyFileInfo.insert(fileNumber);
+    m_blockfile_info[fileNumber].SetNull();
+    m_dirty_fileinfo.insert(fileNumber);
 }
 
 void BlockManager::FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height)
@@ -137,8 +120,8 @@ void BlockManager::FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nM
     // last block to prune is the lesser of (user-specified height, MIN_BLOCKS_TO_KEEP from the tip)
     unsigned int nLastBlockWeCanPrune = std::min((unsigned)nManualPruneHeight, chain_tip_height - MIN_BLOCKS_TO_KEEP);
     int count = 0;
-    for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
-        if (vinfoBlockFile[fileNumber].nSize == 0 || vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
+    for (int fileNumber = 0; fileNumber < m_last_blockfile; fileNumber++) {
+        if (m_blockfile_info[fileNumber].nSize == 0 || m_blockfile_info[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
             continue;
         }
         PruneOneBlockFile(fileNumber);
@@ -177,10 +160,10 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
             nBuffer += nPruneTarget / 10;
         }
 
-        for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
-            nBytesToPrune = vinfoBlockFile[fileNumber].nSize + vinfoBlockFile[fileNumber].nUndoSize;
+        for (int fileNumber = 0; fileNumber < m_last_blockfile; fileNumber++) {
+            nBytesToPrune = m_blockfile_info[fileNumber].nSize + m_blockfile_info[fileNumber].nUndoSize;
 
-            if (vinfoBlockFile[fileNumber].nSize == 0) {
+            if (m_blockfile_info[fileNumber].nSize == 0) {
                 continue;
             }
 
@@ -189,7 +172,7 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
             }
 
             // don't prune files that could have a block within MIN_BLOCKS_TO_KEEP of the main chain's tip but keep scanning
-            if (vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
+            if (m_blockfile_info[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
                 continue;
             }
 
@@ -290,7 +273,7 @@ bool BlockManager::LoadBlockIndex(
         }
         if (!(pindex->nStatus & BLOCK_FAILED_MASK) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_MASK)) {
             pindex->nStatus |= BLOCK_FAILED_CHILD;
-            setDirtyBlockIndex.insert(pindex);
+            m_dirty_blockindex.insert(pindex);
         }
         if (pindex->IsAssumedValid() ||
                 (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
@@ -348,6 +331,31 @@ void BlockManager::Unload()
     }
 
     m_block_index.clear();
+
+    m_blockfile_info.clear();
+    m_last_blockfile = 0;
+    m_dirty_blockindex.clear();
+    m_dirty_fileinfo.clear();
+}
+
+bool BlockManager::WriteBlockIndexDB()
+{
+    std::vector<std::pair<int, const CBlockFileInfo*>> vFiles;
+    vFiles.reserve(m_dirty_fileinfo.size());
+    for (std::set<int>::iterator it = m_dirty_fileinfo.begin(); it != m_dirty_fileinfo.end();) {
+        vFiles.push_back(std::make_pair(*it, &m_blockfile_info[*it]));
+        m_dirty_fileinfo.erase(it++);
+    }
+    std::vector<const CBlockIndex*> vBlocks;
+    vBlocks.reserve(m_dirty_blockindex.size());
+    for (std::set<CBlockIndex*>::iterator it = m_dirty_blockindex.begin(); it != m_dirty_blockindex.end();) {
+        vBlocks.push_back(*it);
+        m_dirty_blockindex.erase(it++);
+    }
+    if (!m_block_tree_db->WriteBatchSync(vFiles, m_last_blockfile, vBlocks)) {
+        return false;
+    }
+    return true;
 }
 
 bool BlockManager::LoadBlockIndexDB(ChainstateManager& chainman)
@@ -357,17 +365,17 @@ bool BlockManager::LoadBlockIndexDB(ChainstateManager& chainman)
     }
 
     // Load block file info
-    m_block_tree_db->ReadLastBlockFile(nLastBlockFile);
-    vinfoBlockFile.resize(nLastBlockFile + 1);
-    LogPrintf("%s: last block file = %i\n", __func__, nLastBlockFile);
-    for (int nFile = 0; nFile <= nLastBlockFile; nFile++) {
-        m_block_tree_db->ReadBlockFileInfo(nFile, vinfoBlockFile[nFile]);
+    m_block_tree_db->ReadLastBlockFile(m_last_blockfile);
+    m_blockfile_info.resize(m_last_blockfile + 1);
+    LogPrintf("%s: last block file = %i\n", __func__, m_last_blockfile);
+    for (int nFile = 0; nFile <= m_last_blockfile; nFile++) {
+        m_block_tree_db->ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
     }
-    LogPrintf("%s: last block file info: %s\n", __func__, vinfoBlockFile[nLastBlockFile].ToString());
-    for (int nFile = nLastBlockFile + 1; true; nFile++) {
+    LogPrintf("%s: last block file info: %s\n", __func__, m_blockfile_info[m_last_blockfile].ToString());
+    for (int nFile = m_last_blockfile + 1; true; nFile++) {
         CBlockFileInfo info;
         if (m_block_tree_db->ReadBlockFileInfo(nFile, info)) {
-            vinfoBlockFile.push_back(info);
+            m_blockfile_info.push_back(info);
         } else {
             break;
         }
@@ -425,7 +433,7 @@ bool IsBlockPruned(const CBlockIndex* pblockindex)
 // If we're using -prune with -reindex, then delete block files that will be ignored by the
 // reindex.  Since reindexing works by starting at block file 0 and looping until a blockfile
 // is missing, do the same here to delete any later block files after a gap.  Also delete all
-// rev files since they'll be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
+// rev files since they'll be rewritten by the reindex anyway.  This ensures that m_blockfile_info
 // is in sync with what's actually on disk by the time we start downloading, so that pruning
 // works correctly.
 void CleanupBlockRevFiles()
@@ -470,11 +478,11 @@ std::string CBlockFileInfo::ToString() const
     return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
 }
 
-CBlockFileInfo* GetBlockFileInfo(size_t n)
+CBlockFileInfo* BlockManager::GetBlockFileInfo(size_t n)
 {
     LOCK(cs_LastBlockFile);
 
-    return &vinfoBlockFile.at(n);
+    return &m_blockfile_info.at(n);
 }
 
 static bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock, const CMessageHeader::MessageStartChars& messageStart)
@@ -538,32 +546,32 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
     return true;
 }
 
-static void FlushUndoFile(int block_file, bool finalize = false)
+void BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
-    FlatFilePos undo_pos_old(block_file, vinfoBlockFile[block_file].nUndoSize);
+    FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
     if (!UndoFileSeq().Flush(undo_pos_old, finalize)) {
         AbortNode("Flushing undo file to disk failed. This is likely the result of an I/O error.");
     }
 }
 
-void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false)
+void BlockManager::FlushBlockFile(bool fFinalize, bool finalize_undo)
 {
     LOCK(cs_LastBlockFile);
-    FlatFilePos block_pos_old(nLastBlockFile, vinfoBlockFile[nLastBlockFile].nSize);
+    FlatFilePos block_pos_old(m_last_blockfile, m_blockfile_info[m_last_blockfile].nSize);
     if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
         AbortNode("Flushing block file to disk failed. This is likely the result of an I/O error.");
     }
     // we do not always flush the undo file, as the chain tip may be lagging behind the incoming blocks,
     // e.g. during IBD or a sync after a node going offline
-    if (!fFinalize || finalize_undo) FlushUndoFile(nLastBlockFile, finalize_undo);
+    if (!fFinalize || finalize_undo) FlushUndoFile(m_last_blockfile, finalize_undo);
 }
 
-uint64_t CalculateCurrentUsage()
+uint64_t BlockManager::CalculateCurrentUsage()
 {
     LOCK(cs_LastBlockFile);
 
     uint64_t retval = 0;
-    for (const CBlockFileInfo& file : vinfoBlockFile) {
+    for (const CBlockFileInfo& file : m_blockfile_info) {
         retval += file.nSize + file.nUndoSize;
     }
     return retval;
@@ -605,44 +613,44 @@ fs::path GetBlockPosFilename(const FlatFilePos& pos)
     return BlockFileSeq().FileName(pos);
 }
 
-bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown = false)
+bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown)
 {
     LOCK(cs_LastBlockFile);
 
-    unsigned int nFile = fKnown ? pos.nFile : nLastBlockFile;
-    if (vinfoBlockFile.size() <= nFile) {
-        vinfoBlockFile.resize(nFile + 1);
+    unsigned int nFile = fKnown ? pos.nFile : m_last_blockfile;
+    if (m_blockfile_info.size() <= nFile) {
+        m_blockfile_info.resize(nFile + 1);
     }
 
     bool finalize_undo = false;
     if (!fKnown) {
-        while (vinfoBlockFile[nFile].nSize + nAddSize >= (gArgs.GetBoolArg("-fastprune", false) ? 0x10000 /* 64kb */ : MAX_BLOCKFILE_SIZE)) {
+        while (m_blockfile_info[nFile].nSize + nAddSize >= (gArgs.GetBoolArg("-fastprune", false) ? 0x10000 /* 64kb */ : MAX_BLOCKFILE_SIZE)) {
             // when the undo file is keeping up with the block file, we want to flush it explicitly
             // when it is lagging behind (more blocks arrive than are being connected), we let the
             // undo block write case handle it
-            finalize_undo = (vinfoBlockFile[nFile].nHeightLast == (unsigned int)active_chain.Tip()->nHeight);
+            finalize_undo = (m_blockfile_info[nFile].nHeightLast == (unsigned int)active_chain.Tip()->nHeight);
             nFile++;
-            if (vinfoBlockFile.size() <= nFile) {
-                vinfoBlockFile.resize(nFile + 1);
+            if (m_blockfile_info.size() <= nFile) {
+                m_blockfile_info.resize(nFile + 1);
             }
         }
         pos.nFile = nFile;
-        pos.nPos = vinfoBlockFile[nFile].nSize;
+        pos.nPos = m_blockfile_info[nFile].nSize;
     }
 
-    if ((int)nFile != nLastBlockFile) {
+    if ((int)nFile != m_last_blockfile) {
         if (!fKnown) {
-            LogPrint(BCLog::BLOCKSTORE, "Leaving block file %i: %s\n", nLastBlockFile, vinfoBlockFile[nLastBlockFile].ToString());
+            LogPrint(BCLog::BLOCKSTORE, "Leaving block file %i: %s\n", m_last_blockfile, m_blockfile_info[m_last_blockfile].ToString());
         }
         FlushBlockFile(!fKnown, finalize_undo);
-        nLastBlockFile = nFile;
+        m_last_blockfile = nFile;
     }
 
-    vinfoBlockFile[nFile].AddBlock(nHeight, nTime);
+    m_blockfile_info[nFile].AddBlock(nHeight, nTime);
     if (fKnown) {
-        vinfoBlockFile[nFile].nSize = std::max(pos.nPos + nAddSize, vinfoBlockFile[nFile].nSize);
+        m_blockfile_info[nFile].nSize = std::max(pos.nPos + nAddSize, m_blockfile_info[nFile].nSize);
     } else {
-        vinfoBlockFile[nFile].nSize += nAddSize;
+        m_blockfile_info[nFile].nSize += nAddSize;
     }
 
     if (!fKnown) {
@@ -652,23 +660,23 @@ bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight,
             return AbortNode("Disk space is too low!", _("Disk space is too low!"));
         }
         if (bytes_allocated != 0 && fPruneMode) {
-            fCheckForPruning = true;
+            m_check_for_pruning = true;
         }
     }
 
-    setDirtyFileInfo.insert(nFile);
+    m_dirty_fileinfo.insert(nFile);
     return true;
 }
 
-static bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
+bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
 {
     pos.nFile = nFile;
 
     LOCK(cs_LastBlockFile);
 
-    pos.nPos = vinfoBlockFile[nFile].nUndoSize;
-    vinfoBlockFile[nFile].nUndoSize += nAddSize;
-    setDirtyFileInfo.insert(nFile);
+    pos.nPos = m_blockfile_info[nFile].nUndoSize;
+    m_blockfile_info[nFile].nUndoSize += nAddSize;
+    m_dirty_fileinfo.insert(nFile);
 
     bool out_of_space;
     size_t bytes_allocated = UndoFileSeq().Allocate(pos, nAddSize, out_of_space);
@@ -676,7 +684,7 @@ static bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos
         return AbortNode(state, "Disk space is too low!", _("Disk space is too low!"));
     }
     if (bytes_allocated != 0 && fPruneMode) {
-        fCheckForPruning = true;
+        m_check_for_pruning = true;
     }
 
     return true;
@@ -705,7 +713,7 @@ static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessa
     return true;
 }
 
-bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams)
+bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams)
 {
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull()) {
@@ -721,14 +729,14 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
         // in the block file info as below; note that this does not catch the case where the undo writes are keeping up
         // with the block writes (usually when a synced up node is getting newly mined blocks) -- this case is caught in
         // the FindBlockPos function
-        if (_pos.nFile < nLastBlockFile && static_cast<uint32_t>(pindex->nHeight) == vinfoBlockFile[_pos.nFile].nHeightLast) {
+        if (_pos.nFile < m_last_blockfile && static_cast<uint32_t>(pindex->nHeight) == m_blockfile_info[_pos.nFile].nHeightLast) {
             FlushUndoFile(_pos.nFile, true);
         }
 
         // update nUndoPos in block index
         pindex->nUndoPos = _pos.nPos;
         pindex->nStatus |= BLOCK_HAVE_UNDO;
-        setDirtyBlockIndex.insert(pindex);
+        m_dirty_blockindex.insert(pindex);
     }
 
     return true;
@@ -825,7 +833,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp)
+FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp)
 {
     unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION);
     FlatFilePos blockPos;
