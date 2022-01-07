@@ -5008,3 +5008,13 @@ std::optional<int> ChainstateManager::getSnapshotHeight()
     CBlockIndex* base = getSnapshotBaseBlock();
     return base ? std::make_optional(base->nHeight) : std::nullopt;
 }
+
+CChainState& ChainstateManager::getChainstateForIndexing()
+{
+    return getSnapshotBaseBlock() ? *m_ibd_chainstate : *m_active_chainstate;
+}
+
+bool ChainstateManager::hasBgChainstateInUse()
+{
+    return this->SnapshotBlockhash() && !m_snapshot_validated;
+}

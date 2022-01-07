@@ -968,6 +968,20 @@ public:
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! @returns the chainstate that indexers should consult when ensuring that an
+    //!   index is synced with a chain where we can expect block index entries to have
+    //!   BLOCK_HAVE_DATA beneath the tip.
+    //!
+    //!   In other words, give us the chainstate for which we can reasonably expect
+    //!   that all blocks beneath the tip have been indexed. In practice this means
+    //!   when using an assumed-valid chainstate based upon a snapshot, return only the
+    //!   fully validated chain.
+    CChainState& getChainstateForIndexing() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! @returns true if we have more than one chainstate in use. This means that a
+    //! background validation chainstate is running.
+    bool hasBgChainstateInUse();
+
     ~ChainstateManager() {
         LOCK(::cs_main);
         UnloadBlockIndex(/* mempool */ nullptr, *this);
