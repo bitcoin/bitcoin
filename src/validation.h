@@ -1016,6 +1016,12 @@ public:
     //! Get all chainstates currently being used.
     std::vector<Chainstate*> GetAll();
 
+    //! Return all chainstates to be checked for next blocks to download.
+    //!
+    //! This specifically orders the snapshot chain first (if it exists) to
+    //! expedite syncing to network tip.
+    std::vector<Chainstate*> GetAllForBlockDownload() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     //! Construct and activate a Chainstate on the basis of UTXO snapshot data.
     //!
     //! Steps:

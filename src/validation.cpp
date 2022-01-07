@@ -5010,6 +5010,22 @@ std::vector<Chainstate*> ChainstateManager::GetAll()
     return out;
 }
 
+std::vector<Chainstate*> ChainstateManager::GetAllForBlockDownload() const
+{
+    AssertLockHeld(::cs_main);
+    std::vector<Chainstate*> out;
+
+    if (IsUsable(m_snapshot_chainstate.get())) {
+        out.push_back(m_snapshot_chainstate.get());
+    }
+    if (!IsSnapshotValidated() && m_ibd_chainstate) {
+        out.push_back(m_ibd_chainstate.get());
+    }
+
+    assert(out.size() > 0);
+    return out;
+}
+
 Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
 {
     AssertLockHeld(::cs_main);
