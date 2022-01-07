@@ -41,7 +41,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
     std::promise<void> promise;
     uint256 txid = tx->GetHash();
-    uint256 wtxid = tx->GetWitnessHash();
     bool callback_set = false;
 
     {
@@ -56,18 +55,10 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             // So if the output does exist, then this transaction exists in the chain.
             if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
         }
-
-        if (auto mempool_tx = node.mempool->get(txid); mempool_tx) {
-            // There's already a transaction in the mempool with this txid. Don't
-            // try to submit this transaction to the mempool (since it'll be
-            // rejected as a TX_CONFLICT), but do attempt to reannounce the mempool
-            // transaction if relay=true.
-            //
-            // The mempool transaction may have the same or different witness (and
-            // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
-            wtxid = mempool_tx->GetWitnessHash();
-        } else {
-            // Transaction is not already in the mempool.
+        // If the exact transaction (including witness) exists, only rebroadcast it.
+        if (!node.mempool->exists(GenTxid::Wtxid(tx->GetWitnessHash()))) {
+            // This exact transaction is not already in the mempool, but the same transaction with
+            // a different witness may be in the mempool. If so, treat that case similar to RBF.
             if (max_tx_fee > 0) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
@@ -116,7 +107,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
-        node.peerman->RelayTransaction(txid, wtxid);
+        node.peerman->RelayTransaction(txid, node.mempool->get(txid)->GetWitnessHash());
     }
 
     return TransactionError::OK;

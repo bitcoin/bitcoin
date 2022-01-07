@@ -452,6 +452,9 @@ public:
          */
         const bool m_package_feerates;
 
+        /** Whether we allow replacements of same-txid-different-witness transactions. */
+        const bool m_allow_witness_replace;
+
         /** Parameters for single transaction mempool validation. */
         static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
                                      bool bypass_limits, std::vector<COutPoint>& coins_to_uncache,
@@ -464,6 +467,7 @@ public:
                             /* m_allow_replacement */ true,
                             /* m_package_submission */ false,
                             /* m_package_feerates */ false,
+                            /*allow_witness_replace=*/ true,
             };
         }
 
@@ -478,6 +482,7 @@ public:
                             /* m_allow_replacement */ false,
                             /* m_package_submission */ false, // not submitting to mempool
                             /* m_package_feerates */ false,
+                            /*allow_witness_replace=*/ false,
             };
         }
 
@@ -492,6 +497,7 @@ public:
                             /* m_allow_replacement */ false,
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
+                            /*allow_witness_replace=*/ false,
             };
         }
 
@@ -505,6 +511,7 @@ public:
                             /* m_allow_replacement */ true,
                             /* m_package_submission */ false,
                             /* m_package_feerates */ false, // only 1 transaction
+                            /*allow_witness_replace=*/ false,
             };
         }
 
@@ -518,7 +525,8 @@ public:
                  bool test_accept,
                  bool allow_replacement,
                  bool package_submission,
-                 bool package_feerates)
+                 bool package_feerates,
+                 bool allow_witness_replace)
             : m_chainparams{chainparams},
               m_accept_time{accept_time},
               m_bypass_limits{bypass_limits},
@@ -526,7 +534,8 @@ public:
               m_test_accept{test_accept},
               m_allow_replacement{allow_replacement},
               m_package_submission{package_submission},
-              m_package_feerates{package_feerates}
+              m_package_feerates{package_feerates},
+              m_allow_witness_replace{allow_witness_replace}
         {
         }
     };
@@ -574,6 +583,8 @@ private:
         int64_t m_vsize;
         /** Fees paid by this transaction: total input amounts subtracted by total output amounts. */
         CAmount m_base_fees;
+        /** A transaction exists in the mempool with the same txid but different wtxid. */
+        bool m_witness_replace{false};
         /** Base fees + any fee delta set by the user with prioritisetransaction. */
         CAmount m_modified_fees;
         /** Total modified fees of all transactions being replaced. */
@@ -709,7 +720,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     } else if (m_pool.exists(GenTxid::Txid(tx.GetHash()))) {
         // Transaction with the same non-witness data but different witness (same txid, different
         // wtxid) already exists in the mempool.
-        return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
+        if (!args.m_allow_witness_replace) {
+            return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
+        }
+        ws.m_witness_replace = true;
     }
 
     // Check for conflicts with in-memory transactions
@@ -741,6 +755,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             }
         }
     }
+    // The only conflict should be with outselves.
+    if (ws.m_witness_replace) Assume(ws.m_conflicts.size() == 1);
 
     LockPoints lp;
     m_view.SetBackend(m_viewmempool);
@@ -922,6 +938,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
 
+    if (ws.m_witness_replace) Assume(ws.m_iters_conflicting.size() == 1);
     CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
     // Enforce Rule #6. The replacement transaction must have a higher feerate than its direct conflicts.
     // - The motivation for this check is to ensure that the replacement transaction is preferable for
@@ -948,13 +965,25 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     }
     // Check if it's economically rational to mine this transaction rather than the ones it
     // replaces and pays for its own relay fees. Enforce Rules #3 and #4.
-    for (CTxMemPool::txiter it : ws.m_all_conflicting) {
-        ws.m_conflicting_fees += it->GetModifiedFee();
-        ws.m_conflicting_size += it->GetTxSize();
-    }
-    if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
-                                         m_pool.m_incremental_relay_feerate, hash)}) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+    if (ws.m_witness_replace) {
+        for (CTxMemPool::txiter it : ws.m_iters_conflicting) {
+            ws.m_conflicting_fees += it->GetModifiedFee();
+            ws.m_conflicting_size += it->GetTxSize();
+        }
+        // As a DoS protection, require the replacement tx to be smaller than the existing
+        // tx by at least 5%.
+        if (static_cast<size_t>(ws.m_vsize) * 100 >= ws.m_conflicting_size * 95) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fees");
+        }
+    } else {
+        for (CTxMemPool::txiter it : ws.m_all_conflicting) {
+            ws.m_conflicting_fees += it->GetModifiedFee();
+            ws.m_conflicting_size += it->GetTxSize();
+        }
+        if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
+                                             m_pool.m_incremental_relay_feerate, hash)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+        }
     }
     return true;
 }
@@ -1050,6 +1079,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
+    assert(ws.m_replaced_transactions.empty());
     for (CTxMemPool::txiter it : ws.m_all_conflicting)
     {
         LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s additional fees, %d delta bytes\n",
@@ -1059,18 +1089,33 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
                 (int)entry->GetTxSize() - (int)ws.m_conflicting_size);
         ws.m_replaced_transactions.push_back(it->GetSharedTx());
     }
-    m_pool.RemoveStaged(ws.m_all_conflicting, false, MemPoolRemovalReason::REPLACED);
+    if (ws.m_witness_replace) {
+        // Only remove the direct conflict; preserve and update the descendants.
+        m_pool.RemoveStaged(ws.m_iters_conflicting, /* updateDescendants */ true, MemPoolRemovalReason::REPLACED);
+    } else {
+        m_pool.RemoveStaged(ws.m_all_conflicting, /* updateDescendants */ false, MemPoolRemovalReason::REPLACED);
+    }
 
     // This transaction should only count for fee estimation if:
     // - it's not being re-added during a reorg which bypasses typical mempool fee limits
     // - the node is not behind
     // - the transaction is not dependent on any other transactions in the mempool
     // - it's not part of a package. Since package relay is not currently supported, this
-    // transaction has not necessarily been accepted to miners' mempools.
-    bool validForFeeEstimation = !bypass_limits && !args.m_package_submission && IsCurrentForFeeEstimation(m_active_chainstate) && m_pool.HasNoInputsOf(tx);
+    //   transaction has not necessarily been accepted to miners' mempools
+    // - this is not a witness replacement. Miners may not have witness replacement implemented
+    //   (yet). TODO: re-include witness replacements in v25.0
+    bool validForFeeEstimation = !bypass_limits &&
+                                 !args.m_package_submission &&
+                                 !ws.m_witness_replace &&
+                                 IsCurrentForFeeEstimation(m_active_chainstate) &&
+                                 m_pool.HasNoInputsOf(tx);
 
     // Store transaction in memory
     m_pool.addUnchecked(*entry, ws.m_ancestors, validForFeeEstimation);
+    if (ws.m_witness_replace) {
+        // Update the descendants, which were not removed with the original tx.
+        m_pool.UpdateTransactionsFromBlock({hash});
+    }
 
     // trim mempool and check if tx was trimmed
     // If we are validating a package, don't trim here because we could evict a previous transaction
