@@ -1014,7 +1014,9 @@ public:
     Chainstate& InitializeChainstate(CTxMemPool* mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get all chainstates currently being used.
-    std::vector<Chainstate*> GetAll();
+    //!
+    //! @param assumed_first  If true, return any assumedvalid chainstates first.
+    std::vector<Chainstate*> GetAll(bool assumed_first = false);
 
     //! Construct and activate a Chainstate on the basis of UTXO snapshot data.
     //!

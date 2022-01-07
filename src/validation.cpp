@@ -4998,12 +4998,15 @@ std::optional<uint256> ChainstateManager::SnapshotBlockhash() const
     return std::nullopt;
 }
 
-std::vector<Chainstate*> ChainstateManager::GetAll()
+std::vector<Chainstate*> ChainstateManager::GetAll(bool assumed_first)
 {
     LOCK(::cs_main);
     std::vector<Chainstate*> out;
+    const auto chainstates = assumed_first ?
+        std::vector{m_snapshot_chainstate.get(), m_ibd_chainstate.get()} :
+        std::vector{m_ibd_chainstate.get(), m_snapshot_chainstate.get()};
 
-    for (Chainstate* cs : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
+    for (Chainstate* cs : chainstates) {
         if (this->IsUsable(cs)) out.push_back(cs);
     }
 
