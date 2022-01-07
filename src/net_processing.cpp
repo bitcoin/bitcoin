@@ -951,6 +951,11 @@ private:
     void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Update tracking information about which blocks a peer is assumed to have. */
     void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Allow the direct fetch of block data if our tip is recent within the past
+     * 200 minutes.
+     */
     bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
