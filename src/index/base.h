@@ -11,7 +11,7 @@
 
 class CBlock;
 class CBlockIndex;
-class CChainState;
+class ChainstateManager;
 
 struct IndexSummary {
     std::string name;
@@ -21,8 +21,11 @@ struct IndexSummary {
 
 /**
  * Base class for indices of blockchain data. This implements
- * CValidationInterface and ensures blocks are indexed sequentially according
- * to their position in the active chain.
+ * CValidationInterface and ensures blocks are indexed. Indexing is
+ * not necessarily sequentially ordered (based on to position in the
+ * active chain) because background chainstates may be running
+ * and creating BlockConnected events simultaneously with the active
+ * chainstate.
  */
 class BaseIndex : public CValidationInterface
 {
@@ -75,10 +78,21 @@ private:
     /// to a chain reorganization), the index must halt until Commit succeeds or else it could end up
     /// getting corrupted.
     bool Commit();
+
+    /// Internal method used to consolidate BlockConnected behavior, but allow distinguishing
+    /// whether the connected block came from a background chainstate.
+    void blockConnectedInternal(
+        const std::shared_ptr<const CBlock>& block,
+        const CBlockIndex* pindex,
+        bool from_background);
 protected:
-    CChainState* m_chainstate{nullptr};
+    ChainstateManager* m_chainman{nullptr};
 
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
+
+    void BackgroundBlockConnected(
+        const std::shared_ptr<const CBlock>& block,
+        const CBlockIndex* pindex) override;
 
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
@@ -118,7 +132,7 @@ public:
 
     /// Start initializes the sync state and registers the instance as a
     /// ValidationInterface so that it stays in sync with blockchain updates.
-    [[nodiscard]] bool Start(CChainState& active_chainstate);
+    [[nodiscard]] bool Start(ChainstateManager& chainman);
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();

@@ -226,6 +226,18 @@ void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, c
                           pindex->nHeight);
 }
 
+void CMainSignals::BackgroundBlockConnected(
+    const std::shared_ptr<const CBlock> &pblock,
+    const CBlockIndex *pindex)
+{
+    auto event = [pblock, pindex, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BackgroundBlockConnected(pblock, pindex); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
+                          pblock->GetHash().ToString(),
+                          pindex->nHeight);
+}
+
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     auto event = [pblock, pindex, this] {
