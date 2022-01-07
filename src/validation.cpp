@@ -195,7 +195,6 @@ CBlockIndex* CChainState::FindForkInGlobalIndex(const CBlockLocator& locator) co
     return m_chain.Genesis();
 }
 
-std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
