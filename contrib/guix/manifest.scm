@@ -16,7 +16,6 @@
              (gnu packages gawk)
              (gnu packages gcc)
              (gnu packages gnome)
-             (gnu packages image)
              (gnu packages installers)
              (gnu packages linux)
              (gnu packages llvm)
@@ -25,11 +24,11 @@
              (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
+             (gnu packages python-crypto)
              (gnu packages python-web)
              (gnu packages shells)
              (gnu packages tls)
              (gnu packages version-control)
-             (guix build-system font)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
@@ -78,10 +77,6 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
                                               "^gnu-user.*\\.h$"))
                  (("-rpath=") "-rpath-link="))
                #t))))))))
-
-(define (make-binutils-with-mingw-w64-disable-flags xbinutils)
-  (package-with-extra-patches xbinutils
-    (search-our-patches "binutils-mingw-w64-disable-flags.patch")))
 
 (define (make-cross-toolchain target
                               base-gcc-for-libc
@@ -134,9 +129,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc
-  (package-with-extra-patches gcc-8
-    (search-our-patches "gcc-8-sort-libtool-find-output.patch")))
+(define base-gcc gcc-10)
 
 ;; Building glibc with stack smashing protector first landed in glibc 2.25, use
 ;; this function to disable for older glibcs
@@ -171,7 +164,7 @@ desirable for building Bitcoin Core release binaries."
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (make-binutils-with-mingw-w64-disable-flags (cross-binutils target)))
+  (let* ((xbinutils (cross-binutils target))
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target
@@ -197,9 +190,9 @@ chain for " target " development."))
       (home-page (package-home-page pthreads-xgcc))
       (license (package-license pthreads-xgcc)))))
 
-(define (make-nsis-with-sde-support base-nsis)
+(define (make-nsis-for-gcc-10 base-nsis)
   (package-with-extra-patches base-nsis
-    (search-our-patches "nsis-SConstruct-sde-support.patch")))
+    (search-our-patches "nsis-gcc-10-memmove.patch")))
 
 (define-public lief
   (package
@@ -256,34 +249,6 @@ signing and timestamping. But osslsigncode is based on OpenSSL and cURL, and
 thus should be able to compile on most platforms where these exist.")
     (license license:gpl3+))) ; license is with openssl exception
 
-(define-public python-asn1crypto
-  (package
-    (name "python-asn1crypto")
-    (version "1.4.0")
-    (source
-     (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://github.com/wbond/asn1crypto")
-             (commit version)))
-       (file-name (git-file-name name version))
-       (sha256
-        (base32
-         "19abibn6jw20mzi1ln4n9jjvpdka8ygm4m439hplyrdfqbvgm01r"))))
-    (build-system python-build-system)
-    (arguments
-     '(#:phases
-       (modify-phases %standard-phases
-         (replace 'check
-           (lambda _
-             (invoke "python" "run.py" "tests"))))))
-    (home-page "https://github.com/wbond/asn1crypto")
-    (synopsis "ASN.1 parser and serializer in Python")
-    (description "asn1crypto is an ASN.1 parser and serializer with definitions
-for private keys, public keys, certificates, CRL, OCSP, CMS, PKCS#3, PKCS#7,
-PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
-    (license license:expat)))
-
 (define-public python-elfesteem
   (let ((commit "87bbd79ab7e361004c98cc8601d4e5f029fd8bd5"))
     (package
@@ -298,7 +263,8 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))))
+           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))
+      (patches (search-our-patches "elfsteem-value-error-python-39.patch"))))
       (build-system python-build-system)
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
@@ -370,6 +336,8 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
 (define-public python-oscryptotests
   (package (inherit python-oscrypto)
     (name "python-oscryptotests")
+    (propagated-inputs
+      `(("python-oscrypto" ,python-oscrypto)))
     (arguments
      `(#:tests? #f
        #:phases
@@ -440,16 +408,6 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
 certificates or paths. Supports various options, including: validation at a
 specific moment in time, whitelisting and revocation checks.")
       (license license:expat))))
-
-(define-public python-requests-2.25.1
-  (package (inherit python-requests)
-    (version "2.25.1")
-    (source (origin
-              (method url-fetch)
-              (uri (pypi-uri "requests" version))
-              (sha256
-               (base32
-                "015qflyqsgsz09gnar69s6ga74ivq5kch69s4qxz3904m7a3v5r7"))))))
 
 (define-public python-altgraph
   (package
@@ -543,7 +501,7 @@ and endian independent.")
          ("python-oscrypto" ,python-oscrypto)
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
-         ("python-requests" ,python-requests-2.25.1)
+         ("python-requests" ,python-requests)
          ("python-macholib" ,python-macholib)
          ("libcrypto" ,openssl)))
       ;; There are no tests, but attempting to run python setup.py test leads to
@@ -557,7 +515,7 @@ inspecting signatures in Mach-O binaries.")
 
 (define-public glibc-2.24
   (package
-    (inherit glibc)
+    (inherit glibc-2.31)
     (version "2.24")
     (source (origin
               (method git-fetch)
@@ -573,9 +531,21 @@ inspecting signatures in Mach-O binaries.")
                                            "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
                                            "glibc-2.24-no-build-time-cxx-header-run.patch"))))))
 
-(define glibc-2.27/bitcoin-patched
-  (package-with-extra-patches glibc-2.27
-    (search-our-patches "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch")))
+(define-public glibc-2.27/bitcoin-patched
+  (package
+    (inherit glibc-2.31)
+    (version "2.27")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit "23158b08a0908f381459f273a984c6fd328363cb")))
+              (file-name (git-file-name "glibc" "23158b08a0908f381459f273a984c6fd328363cb"))
+              (sha256
+               (base32
+                "1b2n1gxv9f4fd5yy68qjbnarhf8mf4vmlxk10i3328c1w5pmp0ca"))
+              (patches (search-our-patches "glibc-ldd-x86_64.patch"
+                                           "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch"))))))
 
 (packages->manifest
  (append
@@ -623,7 +593,7 @@ inspecting signatures in Mach-O binaries.")
            ;; Windows
            (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 (make-nsis-with-sde-support nsis-x86_64)
+                 (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
            (list (cond ((string-contains target "riscv64-")
