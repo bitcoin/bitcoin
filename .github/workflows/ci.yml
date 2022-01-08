@@ -341,6 +341,9 @@ jobs:
         with:
           python-version: '3.9' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      - name: install dependencies
+        run: |
+          brew install ccache automake berkeley-db boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -351,10 +354,14 @@ jobs:
         run: |
           current_date=`date +%Y%m%d_%H%M%SZ`
           echo "::set-output name=timestamp::${current_date}"
+          ccache_dir=$(ccache -k cache_dir)
+          echo "::set-output name=ccache_dir::${ccache_dir}"
       - name: ccache cache files
-        uses: actions/cache@v1.1.0
+        uses: actions/cache@v2
         with:
-          path: ~/.ccache
+          path: |
+            ~/.ccache
+            ${{ steps.cache_timestamp.outputs.ccache_dir }}
           key: macos-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
           restore-keys: |
             macos-ccache-
@@ -362,9 +369,6 @@ jobs:
         run: echo "VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)" >> $GITHUB_ENV
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version ${VERIBLOCK_POP_CPP_VERSION}
-      - name: install dependencies
-        run: |
-          brew install automake berkeley-db boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
       - name: install veriblock-pop-cpp
         env:
           BUILD_TYPE: Release
@@ -509,3 +513,20 @@ jobs:
         env:
           BTCSQD_PATH: './src/btcsqd'
         run: python3 test/integration/test_runner.py
+
+      - name: Create ASAN artifacts
+        if: success()
+        run: |
+          REL=btcsq-linux-asan-x64
+          mkdir -p $REL
+          cp ./src/btcsq{d,-cli,-tx,-wallet} $REL
+          echo "ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1" >> $REL/env
+          echo "LSAN_OPTIONS=suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan" >> $REL/env
+          echo "TSAN_OPTIONS=suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan" >> $REL/env
+          echo "UBSAN_OPTIONS=suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1" >> $REL/env
+      - name: Archive artifacts on GH
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: btcsq-linux-asan-x64
+          path: btcsq-linux-asan-x64

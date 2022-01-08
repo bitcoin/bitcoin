@@ -159,3 +159,6 @@ configure.lineno
 btcsq*
 !test/integration/btcsqd_node.py
 configure~
+confdefs.h
+conftest
+conftest.*
