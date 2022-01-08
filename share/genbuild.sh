@@ -37,6 +37,10 @@ if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$
     # otherwise generate suffix from git, i.e. string like "59887e8-dirty"
     SUFFIX=$(git rev-parse --short HEAD)
     git diff-index --quiet HEAD -- || SUFFIX="$SUFFIX-dirty"
+
+    # add date to compare versions between each other
+    _DATE=$(git show -s --date=format:'%Y%m%d-%H%M' --format=%cd HEAD)
+    SUFFIX="$SUFFIX-$_DATE"
 fi
 
 if [ -n "$DESC" ]; then
