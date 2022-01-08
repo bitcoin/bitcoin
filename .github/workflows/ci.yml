@@ -107,6 +107,12 @@ jobs:
           key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
           source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
           target: "artifacts/btcsq"
+      - name: Archive artifacts on GH
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: btcsq-linux-x64
+          path: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
       - name: make check
         timeout-minutes: 60
         run: make check
@@ -218,6 +224,12 @@ jobs:
           key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
           source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
           target: "artifacts/btcsq"
+      - name: Archive artifacts on GH
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: btcsq-windows-x64
+          path: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
 
 
   x86_64-apple-darwin16:
@@ -312,6 +324,12 @@ jobs:
           key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
           source: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
           target: "artifacts/btcsq"
+      - name: Archive artifacts on GH
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: btcsq-macos-x64
+          path: BTCSQ-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
 
 
   macos-native:
