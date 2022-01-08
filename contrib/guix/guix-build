@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+start_time=$(date +%s%N)
+
 export LC_ALL=C
 set -e -o pipefail
 
@@ -475,3 +478,7 @@ EOF
     )
 
 done
+
+end_time=$(date +%s%N)
+
+echo "Elapsed time: $(($(($end_time-$start_time))/1000000)) milliseconds (~$(($(($end_time-$start_time))/60000000000)) minutes)"
