@@ -70,5 +70,15 @@ class SpendGenesisCoinbase(BitcoinTestFramework):
         self.nodes[1].generate(nblocks=confirmations)
         assert_approx(float(self.nodes[0].getbalance()), float((balance - remaining) + remaining), vspan=0.001)
 
+        self.log.info("Trying to getrawtransaction on coinbase in genesis block")
+        genesishash = self.nodes[0].getblockhash(0)
+        genesis = self.nodes[0].getblock(genesishash)
+        try:
+            coinbase = self.nodes[0].getrawtransaction(genesis['tx'][0])
+            self.log.info("Successfully fetched genesis coinbase tx with getrawtransaction")
+        except Exception as e:
+            self.log.error('Can not fetch genesis coinbase tx with getrawtransaction: {}'.format(e))
+            raise
+
 if __name__ == '__main__':
     SpendGenesisCoinbase().main()
