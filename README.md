@@ -5,7 +5,7 @@ Dynamo is built upon the effort of many individuals who, for over a decade, have
 
 All things Dynamo can be found at https://www.dynamocoin.org
 
-Please pull v1.0 production tag code.  The master branch contains work in progress virtual machine development for v2.0 and is unstable/incompatible with current production.
+Please pull v1.1 production tag code.  The master branch contains work in progress virtual machine development for v2.0 and is unstable/incompatible with current production.
 
 ## Building for windows
 
@@ -34,6 +34,7 @@ sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-file
 # clone the repo
 git clone https://github.com/dynamofoundation/dynamo-core.git
 cd dynamo-core
+git checkout v1.1
 
 # Build the two necessary binaries
 ./autogen.sh
