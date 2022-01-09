@@ -13,9 +13,7 @@ Downloading Bitcoin Core from untrusted sources can result in using a [malware](
 
 ### P2P
 
-Using non-default ports and non-listening nodes can improve security.
-
-DNS seeds are used for bootstrapping the P2P network. If one of the domains used for default DNS seeds is hacked, this can impact nodes. A node checks 3 seeds at a time, so it would require coordination for a malicious seed to affect the network. You can use own DNS seed for bootstrapping.
+DNS seeds are used for bootstrapping the P2P network. If one of the domains used for default DNS seeds is hacked, this can impact nodes. A node checks 3 seeds at a time, so it would require coordination for a malicious seed to affect the network. If you don't believe the DNS seeds hardcoded in Bitcoin Core, you should manually make connections to nodes you do trust (using `-seednode` / `-addnode`). You can also disable the DNS seeds (`-dnsseed=0`) in that case.
 
 Difference in DNS seed and Seed node: https://bitcoin.stackexchange.com/a/17410/
 
@@ -35,7 +33,9 @@ If you have a need to access it over an untrusted network like the internet, tun
 
 [Executable, network access, authentication and string handling](/doc/json-rpc-interface.md#security)
 
-[Multi user systems](https://medium.com/@lukedashjr/cve-2018-20587-advisory-and-full-disclosure-a3105551e78b)
+CVE-2018–20587 is an Incorrect Access Control vulnerability that affects all currently released versions of Bitcoin Core, you may be affected by this issue if you have the RPC service enabled (default, with the headless bitcoind), and other users have access to run their own services on the same computer (either local or remote access). If you are the only user of the computer running your node, you are not affected. If you use the GUI but have not enabled the RPC service, you are not affected.
+
+You can read more about the vulnerability here: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-20587
 
 [#12763](https://github.com/bitcoin/bitcoin/pull/12763) added the RPC whitelisting feature that helps enforce application policies for services being built on top of Bitcoin Core. It suggested to not connect your Bitcoin node to arbitrary services, reduce risk and prevent unintended access.
 
@@ -45,13 +45,17 @@ If you have a need to access it over an untrusted network like the internet, tun
 
 [Backing Up the Wallet](/doc/managing-wallets.md#backing-up-the-wallet)
 
-Do not buy _wallet.dat_ files from anywhere. There are several websites that sell such files to newbies. You can read more about the issue here: https://github.com/bitcoin-core/gui/issues/77#issuecomment-721927922
+Do not buy _wallet.dat_ files from anywhere. There are several websites that sell such files to newbies. Scammers modify _wallet.dat_ file to include a bogus ckey record.
 
 Understanding the difference between legacy and descriptor wallets:
 
-There is no XPUB in legacy wallets, `dumpwallet` will return private keys. `listdescriptors` can be used to get XPUB and XPRV for descriptor wallets.
+Be careful with RPC commands like `dumpwallet`, `dumpprivkey`, and `listdescriptors` with the "private" argument set to true. These commands reveal private keys, which should never be shared with third parties.
+
+Be careful with commands like `importdescriptor` if suggested by third parties, which can control future addresses created for incoming payments
 
 
 ### Other
 
-_*notify_ config and commandline options accept shell commands to be based on different events in Bitcoin Core. Be careful while using these options and ensure that the commands are safe either by manual inspection or restrictions/alerts in the system used.
+Be careful about accepting configuration changes and commands from third parties. Here is a non-exhaustive list of things that may go wrong:
+
+_*notify_ config and commandline options accept shell commands to be based on different events in Bitcoin Core. Ensure that the commands are safe either by manual inspection or restrictions/alerts in the system used.
