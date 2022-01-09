@@ -42,8 +42,6 @@ using wallet::DEFAULT_PAY_TX_FEE;
 #include <QSettings>
 #include <QTextDocument>
 
-#define SEND_CONFIRM_DELAY   3
-
 static constexpr std::array confTargets{2, 4, 6, 12, 24, 48, 144, 504, 1008};
 int getConfTargetForIndex(int index) {
     if (index+1 > static_cast<int>(confTargets.size())) {
@@ -366,15 +364,26 @@ bool SendCoinsDialog::send(const QList<SendCoinsRecipient>& recipients, QString&
         formatted_short.erase(formatted_short.begin() + MAX_SEND_POPUP_ENTRIES, formatted_short.end());
     }
 
-    if (model->wallet().privateKeysDisabled()) {
-        question_string.append(tr("Do you want to draft this transaction?"));
+    /*: Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify
+        that the displayed transaction details represent the transaction the user intends to create. */
+    question_string.append(tr("Do you want to create this transaction?"));
+    question_string.append("<br /><span style='font-size:10pt;'>");
+    // TODO: re-enable it when external signer will be backported
+    // if (model->wallet().privateKeysDisabled() && !model->wallet().hasExternalSigner()) {
+    const bool external_signer_available{false};
+    if (external_signer_available) {
+        /*: Text to inform a user attempting to create a transaction of their current options. At this stage,
+            a user can only create a PSBT. This string is displayed when private keys are disabled and an external
+            signer is not available. */
+        question_string.append(tr("Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
+    } else if (model->getOptionsModel()->getEnablePSBTControls()) {
+        /*: Text to inform a user attempting to create a transaction of their current options. At this stage,
+            a user can send their transaction or create a PSBT. This string is displayed when both private keys
+            and PSBT controls are enabled. */
+        question_string.append(tr("Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
     } else {
-        question_string.append(tr("Are you sure you want to send?"));
-    }
-    if (model->wallet().privateKeysDisabled()) {
-        question_string.append("<br /><span style='font-size:10pt;'>");
-        question_string.append(tr("This will produce a Partially Signed Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
-        question_string.append("</span>");
+        /*: Text to prompt a user to review the details of the transaction they are attempting to send. */
+        question_string.append(tr("Please, review your transaction."));
     }
     question_string.append("<br /><br />");
     question_string.append(formatted_short.join("<br />"));
@@ -472,21 +481,20 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     if (!PrepareSendText(question_string, informative_text, detailed_text)) return;
     assert(m_current_transaction);
 
-    const QString confirmation = model->wallet().privateKeysDisabled() ? tr("Confirm transaction proposal") : tr("Confirm send coins");
-    const QString confirmButtonText = model->wallet().privateKeysDisabled() ? tr("Create Unsigned") : tr("Send");
-    auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, confirmButtonText, this);
+    const QString confirmation = tr("Confirm send coins");
+    auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, !model->wallet().privateKeysDisabled(), model->getOptionsModel()->getEnablePSBTControls(), this);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
 
-    if(retval != QMessageBox::Yes)
+    if(retval != QMessageBox::Yes && retval != QMessageBox::Save)
     {
         fNewRecipientAllowed = true;
         return;
     }
 
     bool send_failure = false;
-    if (model->wallet().privateKeysDisabled()) {
+    if (retval == QMessageBox::Save) {
         CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
@@ -536,6 +544,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             assert(false);
         }
     } else {
+        assert(!model->wallet().privateKeysDisabled());
         // now send the prepared transaction
         model->sendCoins(*m_current_transaction, m_coin_control->IsUsingCoinJoin());
         Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
@@ -1050,8 +1059,8 @@ void SendCoinsDialog::keepChangeAddressChanged(bool checked)
     fKeepChangeAddress = checked;
 }
 
-SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, const QString& _confirmButtonText, QWidget* parent)
-    : QMessageBox(parent), secDelay(_secDelay), confirmButtonText(_confirmButtonText)
+SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, bool enable_send, bool always_show_unsigned, QWidget* parent)
+    : QMessageBox(parent), secDelay(_secDelay), m_enable_send(enable_send)
 {
     GUIUtil::updateFonts();
     setIcon(QMessageBox::Question);
@@ -1060,18 +1069,20 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
     setInformativeText(informative_text);
     setDetailedText(detailed_text);
     setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+    if (always_show_unsigned || !enable_send) addButton(QMessageBox::Save);
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
     if (confirmButtonText.isEmpty()) {
         confirmButtonText = yesButton->text();
     }
-    updateYesButton();
+    m_psbt_button = button(QMessageBox::Save);
+    updateButtons();
     connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
 }
 
 int SendConfirmationDialog::exec()
 {
-    updateYesButton();
+    updateButtons();
     countDownTimer.start(1s);
     return QMessageBox::exec();
 }
@@ -1079,7 +1090,7 @@ int SendConfirmationDialog::exec()
 void SendConfirmationDialog::countDown()
 {
     secDelay--;
-    updateYesButton();
+    updateButtons();
 
     if(secDelay <= 0)
     {
@@ -1087,16 +1098,24 @@ void SendConfirmationDialog::countDown()
     }
 }
 
-void SendConfirmationDialog::updateYesButton()
+void SendConfirmationDialog::updateButtons()
 {
     if(secDelay > 0)
     {
         yesButton->setEnabled(false);
-        yesButton->setText(confirmButtonText + " (" + QString::number(secDelay) + ")");
+        yesButton->setText(confirmButtonText + (m_enable_send ? (" (" + QString::number(secDelay) + ")") : QString("")));
+        if (m_psbt_button) {
+            m_psbt_button->setEnabled(false);
+            m_psbt_button->setText(m_psbt_button_text + " (" + QString::number(secDelay) + ")");
+        }
     }
     else
     {
-        yesButton->setEnabled(true);
+        yesButton->setEnabled(m_enable_send);
         yesButton->setText(confirmButtonText);
+        if (m_psbt_button) {
+            m_psbt_button->setEnabled(true);
+            m_psbt_button->setText(m_psbt_button_text);
+        }
     }
 }

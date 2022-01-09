@@ -329,6 +329,7 @@ void OptionsDialog::setMapper()
     /* Wallet */
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->subFeeFromAmount, OptionsModel::SubFeeFromAmount);
+    mapper->addMapping(ui->m_enable_psbt_controls, OptionsModel::EnablePSBTControls);
     mapper->addMapping(ui->keepChangeAddress, OptionsModel::KeepChangeAddress);
     mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
     mapper->addMapping(ui->showGovernanceTab, OptionsModel::ShowGovernanceTab);
