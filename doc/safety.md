@@ -21,7 +21,7 @@ Difference in DNS seed and Seed node: https://bitcoin.stackexchange.com/a/17410/
 
 Having multiple connections to the network is fundamental to safety against eclipse attacks. If a user configured the node to only have outbound block-relay-only connections, they wouldn't be participating in addr relay, so wouldn't have a diverse addrman to identify candidates to connect to. It is suggested to have at least 10 outbound connections.
 
-`assumevalid=1` skips validation for scripts. All scripts in transactions included in blocks that are ancestors of the _assumevalid_ block are assumed to be valid. While this does introduce a little bit of trust, people can independently check that block is part of the main chain.
+`assumevalid=<hex>` skips validation for scripts. All scripts in transactions included in blocks that are ancestors of the _assumevalid_ block are assumed to be valid. While this does introduce a little bit of trust, people can independently check that block is part of the main chain.
 
 Known incidents when BGP hijacking was used to exploit Bitcoin users: https://www.wired.com/2014/08/isp-bitcoin-theft/
 
