@@ -45,7 +45,7 @@ static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
 static const char *MSG_RAWGVOTE      = "rawgovernancevote";
 static const char *MSG_RAWGOBJ       = "rawgovernanceobject";
 static const char *MSG_SEQUENCE  = "sequence";
-
+RecursiveMutex cs_nevm;
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
 {
@@ -296,6 +296,7 @@ bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& pa
 }
 bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessage, bool &bResponse)
 {
+    LOCK(cs_nevm);
     if(psocketsub) {
         int timeout = 5000;
         int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
@@ -337,6 +338,7 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
 }
 bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nSYSBlockHash)
 {
+    LOCK(cs_nevm);
     // clear state so subsequent calls can rely on new state being set if error
     state = BlockValidationState();
     if(bFirstTime) {
@@ -395,6 +397,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
 }
 bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nSYSBlockHash)
 {
+    LOCK(cs_nevm);
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
@@ -436,6 +439,7 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockVali
 }
 bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state)
 {
+    LOCK(cs_nevm);
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
