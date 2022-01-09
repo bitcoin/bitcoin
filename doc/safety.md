@@ -2,7 +2,6 @@
 
 This document describes the security recommendations and issues that can be helpful for users of Bitcoin Core.
 
-ℹ️ There is no patch for human stupidity.
 
 Download Bitcoin Core only from below links, verify the integrity of the download before using:
 
