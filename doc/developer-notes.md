@@ -913,6 +913,32 @@ Security
 
 ### Secure Programming Practices in C++
 
+Integer wraps are more likely to expose your system to security vulnerabilities if the values are used in:
+
+  - Integer operands used in pointer arithmetic and array indexing
+  - Postfix expressions just before square brackets [ ]
+  - Functional arguments to a memory allocation function
+  - Assignment expressions used to declare a variable-length array
+  - Code that is critical to security
+
+An integer wrap can occur when multiplying two operands resulting in insufficient memory size allocation, as shown in the code snippet below. Here, the signed int value is converted to size t before the multiplication operation. This means multiplication will occur between two unsigned size t integers
+
+```
+pen->num_vertices = _cairo_pen_vertices_needed(
+  gstate->tolerance, radius, &gstate->ctm
+);
+pen->vertices = malloc(
+  pen->num_vertices * sizeof(cairo_pen_vertex_t)
+);
+```
+
+```
+void func(unsigned int ui_a, unsigned int ui_b) {
+  unsigned int usum = ui_a + ui_b;
+  /* ... */
+}
+```
+
 **Undefined Behavior (UB)**: there are no restrictions on the behavior of the program if certain rules of the language are violated. Examples of undefined behavior are uninitialized scalars, memory access outside of array bounds, signed integer overflow, null pointer dereference, access to an object through a pointer of a different type, etc. Compilers are not required to handle undefined behavior (although many simple situations are diagnosed), and the compiled program is not required to do anything meaningful.
 
 **Uninitialized variables** are Undefined Behavior, a typical outcome of which is reading stale stack or register values. In the best case, it generates a pseudorandom result which in edge cases might be the expected result or fixed by the compiler. In the worst case, an exploit may be created that leaks secrets by allowing use of an attacker-controlled value.
@@ -927,7 +953,7 @@ Security
 
 2. Test manually based on things that may go wrong and not tried in functional tests.
 
-3. [Fuzzing](/fuzzing.md) is a good way to find bugs.
+3. [Fuzzing](/fuzzing.md) helps to find bugs in the code and doucmented in detail. You can also try fuzzing using third party software like burpsuite that is used by lot of penetration testers. It will work for RPC and you could write your scripts as well for fuzzing in any language if testing RPC using POST requests.
 
 Source code organization
 --------------------------
