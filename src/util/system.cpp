@@ -596,7 +596,22 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 int64_t ArgsManager::GetIntArg(const std::string& strArg, int64_t nDefault) const
 {
     const util::SettingsValue value = GetSetting(strArg);
-    return value.isNull() ? nDefault : value.isFalse() ? 0 : value.isTrue() ? 1 : value.isNum() ? value.get_int64() : LocaleIndependentAtoi64(value.get_str());
+
+    if (value.isNull())
+        return nDefault;
+    if (value.isBool())
+        return value.isFalse() ? 0 : 1;
+    if (value.isNum())
+        return value.get_int64();
+
+    auto fromStr = LocaleIndependentAtoi64(value.get_str());
+    if (fromStr == std::numeric_limits<int64_t>::min() ||
+        fromStr == std::numeric_limits<int64_t>::max()) {
+        // TODO(vincenzopalazzo): adding deprecated method
+        // to return the same for the deprecated period
+        throw std::runtime_error(strprintf("argument \"%s\" with out of bound value.", strArg));
+    }
+    return fromStr;
 }
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
