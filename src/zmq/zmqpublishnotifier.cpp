@@ -297,6 +297,7 @@ bool CZMQAbstractPublishNotifier::ReceiveZmqMessage(std::vector<std::string>& pa
 bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessage, bool &bResponse)
 {
     LOCK(cs_nevm);
+    bResponse = false;
     if(psocketsub) {
         int timeout = 5000;
         int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
@@ -333,6 +334,8 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
             LogPrintf("NotifyNEVMComms: nevm-response-not-found: %s\n", commMessage);
             return false;
         }
+    } else {
+        bResponse = true;
     }
     return true;
 }

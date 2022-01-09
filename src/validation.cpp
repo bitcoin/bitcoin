@@ -1623,7 +1623,7 @@ bool CChainState::IsInitialBlockDownload() const
         return true;
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     if(fNEVMConnection && !fRegTest) {
-        bool bResponse;
+        bool bResponse = false;
         GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
     }
     m_cached_finished_ibd.store(true, std::memory_order_relaxed);
@@ -1937,7 +1937,7 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
         LogPrintf("ConnectNEVMCommitment: skipping validation result...\n");
     // try to bring connection back alive if its not connected for some reason
     if(!res && state.GetRejectReason() == "nevm-connect-not-sent") {
-        bool bResponse;
+        bool bResponse = false;
         GetMainSignals().NotifyNEVMComms("status", bResponse);
         if(!bResponse) {
             if(RestartGethNode()) {
@@ -6039,7 +6039,7 @@ bool CChainState::RestartGethNode() {
         LogPrintf("RestartGethNode: Could not reset last invalid block\n");
         return false;
     }
-    bool bResponse;
+    bool bResponse = false;
     GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
     if(!bResponse) {
         LogPrintf("RestartGethNode: Could not start network\n");
@@ -6139,7 +6139,7 @@ bool StopGethNode(bool bOnStart)
         return false;
     }
     if(!bOnStart) {
-        bool bResponse;
+        bool bResponse = false;
         GetMainSignals().NotifyNEVMComms("disconnect", bResponse);
         if(bResponse) {
             return true;
