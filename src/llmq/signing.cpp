@@ -827,7 +827,7 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
 
     if (fMasternodeMode) {
         CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash());
-        g_connman->ForEachNode([&](CNode* pnode) {
+        connman.ForEachNode([&](CNode* pnode) {
             if (pnode->fSendRecSigs) {
                 pnode->PushInventory(inv);
             }
