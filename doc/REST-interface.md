@@ -1,19 +1,16 @@
-Unauthenticated REST Interface
-==============================
+# Unauthenticated REST Interface
 
 The REST API can be enabled with the `-rest` option.
 
 The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet, port 18332 for testnet,
 port 38332 for signet, and port 18443 for regtest.
 
-REST Interface consistency guarantees
--------------------------------------
+## REST Interface consistency guarantees
 
 The [same guarantees as for the RPC Interface](/doc/JSON-RPC-interface.md#rpc-consistency-guarantees)
 apply.
 
-Limitations
------------
+## Limitations
 
 There is a known issue in the REST interface that can cause a node to crash if
 too many http connections are being opened at the same time because the system runs
@@ -24,10 +21,10 @@ same time if this is under your control. It is hard to give general advice
 since this depends on your system but if you make several hundred requests at
 once you are definitely at risk of encountering this issue.
 
-Supported API
--------------
+## Supported API
 
-#### Transactions
+### Transactions
+
 `GET /rest/tx/<TX-HASH>.<bin|hex|json>`
 
 Given a transaction hash: returns a transaction in binary, hex-encoded binary, or JSON formats.
@@ -35,7 +32,8 @@ Given a transaction hash: returns a transaction in binary, hex-encoded binary, o
 By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.
 
-#### Blocks
+### Blocks
+
 `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
 `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
 
@@ -46,36 +44,42 @@ The HTTP request and response are both handled entirely in-memory.
 
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
-#### Blockheaders
+### Blockheaders
+
 `GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
-#### Blockfilter Headers
+### Blockfilter Headers
+
 `GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns <COUNT> amount of blockfilter headers in upward
 direction for the filter type <FILTERTYPE>.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
-#### Blockfilters
+### Blockfilters
+
 `GET /rest/blockfilter/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns the block filter of the given block of type
 <FILTERTYPE>.
 Responds with 404 if the block doesn't exist.
 
-#### Blockhash by height
+### Blockhash by height
+
 `GET /rest/blockhashbyheight/<HEIGHT>.<bin|hex|json>`
 
 Given a height: returns hash of block in best-block-chain at height provided.
 
-#### Chaininfos
+### Chaininfos
+
 `GET /rest/chaininfo.json`
 
 Returns various state info regarding block chain processing.
 Only supports JSON as output format.
+
 * chain : (string) current network name (main, test, signet, regtest)
 * blocks : (numeric) the current number of blocks processed in the server
 * headers : (numeric) the current number of headers we have validated
@@ -88,14 +92,16 @@ Only supports JSON as output format.
 * pruneheight : (numeric) highest block available
 * softforks : (array) status of softforks in progress
 
-#### Query UTXO set
+### Query UTXO set
+
 `GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
 
 The getutxo command allows querying of the UTXO set given a set of outpoints.
 See BIP64 for input and output serialisation:
-https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki
+<https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki>
 
 Example:
+
 ```
 $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
 {
@@ -117,7 +123,8 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 }
 ```
 
-#### Memory pool
+### Memory pool
+
 `GET /rest/mempool/info.json`
 
 Returns various information about the TX mempool.
@@ -129,6 +136,6 @@ Refer to the `getmempoolinfo` RPC for documentation of the fields.
 Returns transactions in the TX mempool.
 Only supports JSON as output format.
 
-Risks
--------------
+## Risks
+
 Running a web browser on the same node with a REST enabled bitcoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.

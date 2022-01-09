@@ -70,7 +70,7 @@ While several package managers are available for macOS, this guide will focus on
 Since the examples in this guide which walk through the installation of a package will use Homebrew, it is recommended that you install it to follow along.
 Otherwise, you can adapt the commands to your package manager of choice.
 
-To install the Homebrew package manager, see: https://brew.sh
+To install the Homebrew package manager, see: <https://brew.sh>
 
 Note: If you run into issues while installing Homebrew or pulling packages, refer to [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
 
@@ -96,14 +96,14 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 ### 5. Install Optional Dependencies
 
-#### Wallet Dependencies
+### Wallet Dependencies
 
 It is not necessary to build wallet functionality to run `bitcoind` or  `bitcoin-qt`.
 To enable legacy wallets, you must install `berkeley-db@4`.
 To enable [descriptor wallets](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md), `sqlite` is required.
 Skip `berkeley-db@4` if you intend to *exclusively* use descriptor wallets.
 
-###### Legacy Wallet Support
+#### **Legacy Wallet Support**
 
 `berkeley-db@4` is required to enable support for legacy wallets.
 Skip if you don't intend to use legacy wallets.
@@ -112,7 +112,7 @@ Skip if you don't intend to use legacy wallets.
 brew install berkeley-db@4
 ```
 
-###### Descriptor Wallet Support
+#### **Descriptor Wallet Support**
 
 Note: Apple has included a useable `sqlite` package since macOS 10.14.
 You may not need to install this package.
@@ -123,11 +123,12 @@ Skip if you don't intend to use descriptor wallets.
 ``` bash
 brew install sqlite
 ```
+
 ---
 
-#### GUI Dependencies
+### GUI Dependencies
 
-###### Qt
+#### **Qt**
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework.
 To compile the GUI, we need to install `qt@5`.
@@ -148,7 +149,7 @@ brew uninstall qt
 Note: Building with Qt binaries downloaded from the Qt website is not officially supported.
 See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).
 
-###### qrencode
+#### **qrencode**
 
 The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install `qrencode`.
 Skip if not using the GUI or don't want QR code functionality.
@@ -156,11 +157,12 @@ Skip if not using the GUI or don't want QR code functionality.
 ``` bash
 brew install qrencode
 ```
+
 ---
 
 #### Port Mapping Dependencies
 
-###### miniupnpc
+#### **miniupnpc**
 
 miniupnpc may be used for UPnP port mapping.
 Skip if you do not need this functionality.
@@ -169,7 +171,7 @@ Skip if you do not need this functionality.
 brew install miniupnpc
 ```
 
-###### libnatpmp
+#### **libnatpmp**
 
 libnatpmp may be used for NAT-PMP port mapping.
 Skip if you do not need this functionality.
@@ -183,7 +185,7 @@ Check out the [further configuration](#further-configuration) section for more i
 
 ---
 
-#### ZMQ Dependencies
+### ZMQ Dependencies
 
 Support for ZMQ notifications requires the following dependency.
 Skip if you do not need ZMQ functionality.
@@ -199,7 +201,7 @@ For more information on ZMQ, see: [zmq.md](zmq.md)
 
 ---
 
-#### Test Suite Dependencies
+#### **Test Suite Dependencies**
 
 There is an included test suite that is useful for testing code changes when developing.
 To run the test suite (recommended), you will need to have Python 3 installed:
@@ -210,7 +212,7 @@ brew install python
 
 ---
 
-#### Deploy Dependencies
+#### **Deploy Dependencies**
 
 You can deploy a `.dmg` containing the Bitcoin Core application using `make deploy`.
 This command depends on a couple of python packages, so it is required that you have `python` installed.
@@ -227,7 +229,7 @@ pip3 install ds_store mac_alias
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
-##### Wallet (BDB + SQlite) Support, No GUI:
+#### **Wallet (BDB + SQlite) Support, No GUI**
 
 If `berkeley-db@4` is installed, then legacy wallet support will be built.
 If `berkeley-db@4` is not installed, then this will throw an error.
@@ -239,7 +241,7 @@ Additionally, this explicitly disables the GUI.
 ./configure --with-gui=no
 ```
 
-##### Wallet (only SQlite) and GUI Support:
+#### **Wallet (only SQlite) and GUI Support**
 
 This explicitly enables the GUI and disables legacy wallet support.
 If `qt` is not installed, this will throw an error.
@@ -251,14 +253,14 @@ If `sqlite` is not installed, then wallet functionality will be disabled.
 ./configure --without-bdb --with-gui=yes
 ```
 
-##### No Wallet or GUI
+#### **No Wallet or GUI**
 
 ``` bash
 ./autogen.sh
 ./configure --without-wallet --with-gui=no
 ```
 
-##### Further Configuration
+#### **Further Configuration**
 
 You may want to dig deeper into the configuration options to achieve your desired behavior.
 Examine the output of the following command for a full list of configuration options:
@@ -315,7 +317,7 @@ You can monitor the download process by looking at the debug.log file:
 tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
 ```
 
-## Other commands:
+## Other commands
 
 ```shell
 ./src/bitcoind -daemon      # Starts the bitcoin daemon.

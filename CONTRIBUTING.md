@@ -1,5 +1,4 @@
-Contributing to Bitcoin Core
-============================
+# Contributing to Bitcoin Core
 
 The Bitcoin Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
@@ -15,8 +14,7 @@ merging pull requests, as well as a "lead maintainer" who is responsible for the
 release cycle as well as overall merging, moderation and appointment of
 maintainers.
 
-Getting Started
----------------
+## Getting Started
 
 New contributors are very welcome and needed.
 
@@ -53,8 +51,7 @@ you are encouraged to leave a comment if you are planning to work on it. This
 will help other contributors monitor which issues are actively being addressed
 and is also an effective way to request assistance if and when you need it.
 
-Communication Channels
-----------------------
+## Communication Channels
 
 Most communication about Bitcoin Core development happens on IRC, in the
 `#bitcoin-core-dev` channel on Libera Chat. The easiest way to participate on IRC is
@@ -71,9 +68,7 @@ The developer
 should be used to discuss complicated or controversial consensus or P2P protocol changes before working on
 a patch set.
 
-
-Contributor Workflow
---------------------
+## Contributor Workflow
 
 The codebase is maintained using the "contributor workflow" where everyone
 without exception contributes patch proposals using "pull requests" (PRs). This
@@ -85,19 +80,19 @@ To contribute a patch, the workflow is as follows:
   1. Create topic branch
   1. Commit patches
 
-For GUI-related issues or pull requests, the https://github.com/bitcoin-core/gui repository should be used.
-For all other issues and pull requests, the https://github.com/bitcoin/bitcoin node repository should be used.
+For GUI-related issues or pull requests, the <https://github.com/bitcoin-core/gui> repository should be used.
+For all other issues and pull requests, the <https://github.com/bitcoin/bitcoin> node repository should be used.
 
 The master branch for all monotree repositories is identical.
 
 As a rule of thumb, everything that only modifies `src/qt` is a GUI-only pull
 request. However:
 
-* For global refactoring or other transversal changes the node repository
+- For global refactoring or other transversal changes the node repository
   should be used.
-* For GUI-related build system changes, the node repository should be used
+- For GUI-related build system changes, the node repository should be used
   because the change needs review by the build systems reviewers.
-* Changes in `src/interfaces` need to go to the node repository because they
+- Changes in `src/interfaces` need to go to the node repository because they
   might affect other components like the wallet.
 
 For large GUI changes that include build system and interface changes, it is
@@ -133,27 +128,27 @@ Commit messages should never contain any `@` mentions (usernames prefixed with "
 Please refer to the [Git manual](https://git-scm.com/doc) for more information
 about Git.
 
-  - Push changes to your fork
-  - Create pull request
+- Push changes to your fork
+- Create pull request
 
 ### Creating the Pull Request
 
 The title of the pull request should be prefixed by the component or area that
 the pull request affects. Valid areas as:
 
-  - `consensus` for changes to consensus critical code
-  - `doc` for changes to the documentation
-  - `qt` or `gui` for changes to bitcoin-qt
-  - `log` for changes to log messages
-  - `mining` for changes to the mining code
-  - `net` or `p2p` for changes to the peer-to-peer network code
-  - `refactor` for structural changes that do not change behavior
-  - `rpc`, `rest` or `zmq` for changes to the RPC, REST or ZMQ APIs
-  - `script` for changes to the scripts and tools
-  - `test`, `qa` or `ci` for changes to the unit tests, QA tests or CI code
-  - `util` or `lib` for changes to the utils or libraries
-  - `wallet` for changes to the wallet code
-  - `build` for changes to the GNU Autotools or reproducible builds
+- `consensus` for changes to consensus critical code
+- `doc` for changes to the documentation
+- `qt` or `gui` for changes to bitcoin-qt
+- `log` for changes to log messages
+- `mining` for changes to the mining code
+- `net` or `p2p` for changes to the peer-to-peer network code
+- `refactor` for structural changes that do not change behavior
+- `rpc`, `rest` or `zmq` for changes to the RPC, REST or ZMQ APIs
+- `script` for changes to the scripts and tools
+- `test`, `qa` or `ci` for changes to the unit tests, QA tests or CI code
+- `util` or `lib` for changes to the utils or libraries
+- `wallet` for changes to the wallet code
+- `build` for changes to the GNU Autotools or reproducible builds
 
 Examples:
 
@@ -238,14 +233,12 @@ the `git range-diff` tool explained in the [productivity
 notes](/doc/productivity.md#diff-the-diffs-with-git-range-diff). To avoid needless review churn, maintainers will
 generally merge pull requests that received the most review attention first.
 
-Pull Request Philosophy
------------------------
+## Pull Request Philosophy
 
 Patchsets should always be focused. For example, a pull request could add a
 feature, fix a bug, or refactor code; but not a mixture. Please also avoid super
 pull requests which attempt to do too much, are overly large, or overly complex
 as this makes review difficult.
-
 
 ### Features
 
@@ -254,7 +247,6 @@ and maintenance that feature may require after inclusion. Before proposing a new
 feature that will require maintenance, please consider if you are willing to
 maintain it (including bug fixing). If features get orphaned with no maintainer
 in the future, they may be removed by the Repository Maintainer.
-
 
 ### Refactoring
 
@@ -278,9 +270,7 @@ Trivial pull requests or pull requests that refactor the code with no clear
 benefits may be immediately closed by the maintainers to reduce unnecessary
 workload on reviewing.
 
-
-"Decision Making" Process
--------------------------
+## "Decision Making" Process
 
 The following applies to code changes to the Bitcoin Core project (and related
 projects such as libsecp256k1), and is not to be confused with overall Bitcoin
@@ -295,15 +285,15 @@ judge the general consensus of contributors.
 
 In general, all pull requests must:
 
-  - Have a clear use case, fix a demonstrable bug or serve the greater good of
+- Have a clear use case, fix a demonstrable bug or serve the greater good of
     the project (for example refactoring for modularisation);
-  - Be well peer-reviewed;
-  - Have unit tests, functional tests, and fuzz tests, where appropriate;
-  - Follow code style guidelines ([C++](doc/developer-notes.md), [functional tests](test/functional/README.md));
-  - Not break the existing test suite;
-  - Where bugs are fixed, where possible, there should be unit tests
+- Be well peer-reviewed;
+- Have unit tests, functional tests, and fuzz tests, where appropriate;
+- Follow code style guidelines ([C++](doc/developer-notes.md), [functional tests](test/functional/README.md));
+- Not break the existing test suite;
+- Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
-  - Change relevant comments and documentation when behaviour of code changes.
+- Change relevant comments and documentation when behaviour of code changes.
 
 Patches that change Bitcoin consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
@@ -311,7 +301,6 @@ extensive mailing list discussions and have a numbered BIP. While each case will
 be different, one should be prepared to expend more time and effort than for
 other kinds of patches because of increased peer review and consensus building
 requirements.
-
 
 ### Peer Review
 
@@ -325,9 +314,10 @@ spread out over GitHub, mailing list and IRC discussions).
 #### Conceptual Review
 
 A review can be a conceptual review, where the reviewer leaves a comment
- * `Concept (N)ACK`, meaning "I do (not) agree with the general goal of this pull
+
+- `Concept (N)ACK`, meaning "I do (not) agree with the general goal of this pull
    request",
- * `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
+- `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
    approach of this change".
 
 A `NACK` needs to include a rationale why the change is not worthwhile.
@@ -340,12 +330,12 @@ begins with `ACK BRANCH_COMMIT`, where `BRANCH_COMMIT` is the top of the PR
 branch, followed by a description of how the reviewer did the review. The
 following language is used within pull request comments:
 
-  - "I have tested the code", involving change-specific manual testing in
+- "I have tested the code", involving change-specific manual testing in
     addition to running the unit, functional, or fuzz tests, and in case it is
     not obvious how the manual testing was done, it should be described;
-  - "I have not tested the code, but I have reviewed it and it looks
+- "I have not tested the code, but I have reviewed it and it looks
     OK, I agree it can be merged";
-  - A "nit" refers to a trivial, often non-blocking issue.
+- A "nit" refers to a trivial, often non-blocking issue.
 
 Project maintainers reserve the right to weigh the opinions of peer reviewers
 using common sense judgement and may also weigh based on merit. Reviewers that
@@ -371,10 +361,10 @@ that you've been waiting for a pull request to be given attention for several
 months, there may be a number of reasons for this, some of which you can do something
 about:
 
-  - It may be because of a feature freeze due to an upcoming release. During this time,
+- It may be because of a feature freeze due to an upcoming release. During this time,
     only bug fixes are taken into consideration. If your pull request is a new feature,
     it will not be prioritized until after the release. Wait for the release.
-  - It may be because the changes you are suggesting do not appeal to people. Rather than
+- It may be because the changes you are suggesting do not appeal to people. Rather than
     nits and critique, which require effort and means they care enough to spend time on your
     contribution, thundering silence is a good sign of widespread (mild) dislike of a given change
     (because people don't assume *others* won't actually like the proposal). Don't take
@@ -383,22 +373,20 @@ about:
     [developer notes](doc/developer-notes.md), is dangerous or insecure, is messily written, etc.
     Identify and address any of the issues you find. Then ask e.g. on IRC if someone could give
     their opinion on the concept itself.
-  - It may be because your code is too complex for all but a few people, and those people
+- It may be because your code is too complex for all but a few people, and those people
     may not have realized your pull request even exists. A great way to find people who
     are qualified and care about the code you are touching is the
     [Git Blame feature](https://docs.github.com/en/github/managing-files-in-a-repository/managing-files-on-github/tracking-changes-in-a-file). Simply
     look up who last modified the code you are changing and see if you can find
     them and give them a nudge. Don't be incessant about the nudging, though.
-  - Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
+- Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
     a look. If you think you've been waiting for an unreasonably long time (say,
     more than a month) for no particular reason (a few lines changed, etc.),
     this is totally fine. Try to return the favor when someone else is asking
     for feedback on their code, and the universe balances out.
   - Remember that the best thing you can do while waiting is give review to others!
 
-
-Backporting
------------
+## Backporting
 
 Security and bug fixes can be backported from `master` to release
 branches.
@@ -422,13 +410,11 @@ https://github.com/bitcoin/bitcoin/pull/16189).
 Also see the [backport.py script](
 https://github.com/bitcoin-core/bitcoin-maintainer-tools#backport).
 
-Release Policy
---------------
+## Release Policy
 
 The project leader is the release manager for each Bitcoin Core release.
 
-Copyright
----------
+## Copyright
 
 By contributing to this repository, you agree to license your work under the
 MIT license unless specified otherwise in `contrib/debian/copyright` or at

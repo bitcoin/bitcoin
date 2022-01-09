@@ -19,7 +19,6 @@ The following dependencies are **required**:
  [boost-libs](https://svnweb.freebsd.org/ports/head/devel/boost-libs/) | Utility    | Library for threading, data structures, etc
  [libevent](https://svnweb.freebsd.org/ports/head/devel/libevent/)     | Networking | OS independent asynchronous networking
 
-
 The following dependencies are **optional**:
 
   Library                                                                    | Purpose          | Description
@@ -36,6 +35,7 @@ The following dependencies are **optional**:
 ## Preparation
 
 ### 1. Install Required Dependencies
+
 Install the required dependencies the usual way you [install software on FreeBSD](https://www.freebsd.org/doc/en/books/handbook/ports.html) - either with `pkg` or via the Ports collection. The example commands below use `pkg` which is usually run as `root` or via `sudo`. If you want to use `sudo`, and you haven't set it up: [use this guide](http://www.freebsdwiki.net/index.php/Sudo%2C_configuring) to setup `sudo` access on FreeBSD.
 
 ```bash
@@ -44,62 +44,76 @@ pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
 ```
 
 ### 2. Clone Bitcoin Repo
+
 Now that `git` and all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory. All build scripts and commands will run from this directory.
+
 ``` bash
 git clone https://github.com/bitcoin/bitcoin.git
 ```
 
 ### 3. Install Optional Dependencies
 
-#### Wallet Dependencies
+### Wallet Dependencies
+
 It is not necessary to build wallet functionality to run bitcoind or the GUI. To enable legacy wallets, you must install `db5`. To enable [descriptor wallets](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md), `sqlite3` is required. Skip `db5` if you intend to *exclusively* use descriptor wallets
 
-###### Legacy Wallet Support
+---
+
+#### **Legacy Wallet Support**
+
 `db5` is required to enable support for legacy wallets. Skip if you don't intend to use legacy wallets
 
 ```bash
 pkg install db5
 ```
 
-###### Descriptor Wallet Support
+---
+
+#### **Descriptor Wallet Support**
 
 `sqlite3` is required to enable support for descriptor wallets. Skip if you don't intend to use descriptor wallets.
+
 ``` bash
 pkg install sqlite3
 ```
----
 
-#### GUI Dependencies
-###### Qt5
+### GUI Dependencies
+
+#### **Qt5**
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install `qt5`. Skip if you don't intend to use the GUI.
+
 ```bash
 pkg install qt5
 ```
-###### libqrencode
+
+#### **libqrencode**
 
 The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install `libqrencode`. Skip if not using the GUI or don't want QR code functionality.
+
 ```bash
 pkg install libqrencode
 ```
----
 
-#### Test Suite Dependencies
+#### **Test Suite Dependencies**
+
 There is an included test suite that is useful for testing code changes when developing.
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
 pkg install python3
 ```
----
 
 ## Building Bitcoin Core
 
 ### 1. Configuration
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
-##### Wallet (BDB + SQlite) Support, No GUI:
+
+#### **Wallet (BDB + SQlite) Support, No GUI**
+
 This explicitly enables legacy wallet support and disables the GUI. If `sqlite3` is installed, then descriptor wallet support will be built.
+
 ```bash
 ./autogen.sh
 ./configure --with-gui=no --with-incompatible-bdb \
@@ -108,19 +122,24 @@ This explicitly enables legacy wallet support and disables the GUI. If `sqlite3`
     MAKE=gmake
 ```
 
-##### Wallet (only SQlite) and GUI Support:
+#### **Wallet (only SQlite) and GUI Support**
+
 This explicitly enables the GUI and disables legacy wallet support. If `qt5` is not installed, this will throw an error. If `sqlite3` is installed then descriptor wallet functionality will be built. If `sqlite3` is not installed, then wallet functionality will be disabled.
+
 ```bash
 ./autogen.sh
 ./configure --without-bdb --with-gui=yes MAKE=gmake
 ```
-##### No Wallet or GUI
+
+#### **No Wallet or GUI**
+
 ``` bash
 ./autogen.sh
 ./configure --without-wallet --with-gui=no MAKE=gmake
 ```
 
 ### 2. Compile
+
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 ```bash

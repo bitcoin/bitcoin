@@ -1,13 +1,12 @@
-NetBSD build guide
-======================
+# NetBSD build guide
+
 (updated for NetBSD 8.0)
 
 This guide describes how to build bitcoind and command-line utilities on NetBSD.
 
 This guide does not contain instructions for building the GUI.
 
-Preparation
--------------
+## Preparation
 
 You will need the following modules, which can be installed via pkgsrc or pkgin:
 
@@ -27,7 +26,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-### Building BerkeleyDB
+## Building BerkeleyDB
 
 BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 `--disable-wallet` to `./configure` and skip to the next section.
@@ -47,11 +46,12 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building Bitcoin Core
+## Building Bitcoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 With wallet:
+
 ```bash
 ./autogen.sh
 ./configure --with-gui=no CPPFLAGS="-I/usr/pkg/include" \
@@ -64,6 +64,7 @@ With wallet:
 ```
 
 Without wallet:
+
 ```bash
 ./autogen.sh
 ./configure --with-gui=no --disable-wallet \
@@ -75,6 +76,7 @@ Without wallet:
 ```
 
 Build and run the tests:
+
 ```bash
 gmake # use "-j N" here for N parallel jobs
 gmake check

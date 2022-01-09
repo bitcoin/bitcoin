@@ -1,6 +1,6 @@
 # Bitcoin Core file system
 
-**Contents**
+## Contents
 
 - [Data directory location](#data-directory-location)
 
@@ -85,7 +85,6 @@ Wallets are Berkeley DB (BDB) or SQLite databases.
 
 5. Any copy or backup of the wallet should be done through a `backupwallet` call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.
 
-
 ### Berkeley DB database based wallets
 
 Subdirectory | File(s)           | Description
@@ -101,7 +100,6 @@ Subdirectory | File                 | Description
 -------------|----------------------|-------------
 `./`         | `wallet.dat`         | Personal wallet (a SQLite database) with keys and transactions
 `./`         | `wallet.dat-journal` | SQLite Rollback Journal file for `wallet.dat`. Usually created at start and deleted on shutdown. A user *must keep it as safe* as the `wallet.dat` file.
-
 
 ## GUI settings
 

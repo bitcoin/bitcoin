@@ -1,8 +1,6 @@
-Notable changes
-===============
+# Notable changes
 
-Updated RPCs
-------------
+## Updated RPCs
 
 - Both `createmultisig` and `addmultisigaddress` now include a `warnings`
 field, which will show a warning if a non-legacy address type is requested

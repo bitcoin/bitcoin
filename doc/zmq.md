@@ -50,7 +50,7 @@ By default, the ZeroMQ feature is automatically compiled in if the
 necessary prerequisites are found.  To disable, use --disable-zmq
 during the *configure* step of building bitcoind:
 
-    $ ./configure --disable-zmq (other options)
+    ./configure --disable-zmq (other options)
 
 To actually enable operation, one must set the appropriate options on
 the command line or in the configuration file.
@@ -111,7 +111,6 @@ Where the 8-byte uints correspond to the mempool sequence number.
 `hashtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`hashtx`), the second part is the 32-byte transaction hash, and the last part is a sequence number (representing the message count to detect lost messages).
 
     | hashtx | <32-byte transaction hash in Little Endian> | <uint32 sequence number in Little Endian>
-
 
 `rawblock`: Notifies when the chain tip is updated. Messages are ZMQ multipart messages with three parts. The first part is the topic (`rawblock`), the second part is the serialized block, and the last part is a sequence number (representing the message count to detect lost messages).
 

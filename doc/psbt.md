@@ -87,7 +87,6 @@ hardware implementations will typically implement multiple roles simultaneously.
   possible, computes the fee of the resulting transaction and estimates the
   final weight and feerate.
 
-
 ### Workflows
 
 #### Multisig with multiple Bitcoin Core instances
@@ -102,6 +101,7 @@ multiwallet feature - possibly resulting in a need to add `-rpcwallet=name` to
 the command line in case `bitcoin-cli` is used.
 
 Setup:
+
 - All three call `getnewaddress` to create a new address; call these addresses
   *Aalice*, *Abob*, and *Acarol*.
 - All three call `getaddressinfo "X"`, with *X* their respective address, and
@@ -124,6 +124,7 @@ Setup:
 Later, when *V* BTC has been received on *Amulti*, and Bob and Carol want to
 move the coins in their entirety to address *Asend*, with no change. Alice
 does not need to be involved.
+
 - One of them - let's assume Carol here - initiates the creation. She runs
   `walletcreatefundedpsbt [] {"Asend":V} 0 {"subtractFeeFromOutputs":[0], "includeWatching":true}`.
   We call the resulting PSBT *P*. *P* does not contain any signatures.

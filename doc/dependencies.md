@@ -1,5 +1,4 @@
-Dependencies
-============
+# Dependencies
 
 These are the dependencies currently used by Bitcoin Core. You can find instructions for installing them in the `build-*.md` file for your platform.
 
@@ -7,7 +6,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | --- | --- | --- | --- | --- | --- |
 | Berkeley DB | [4.8.30](https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) | 4.8.x | No |  |  |
 | Boost | [1.71.0](https://www.boost.org/users/download/) | [1.64.0](https://github.com/bitcoin/bitcoin/pull/22320) | No |  |  |
-| Clang<sup>[ \* ](#note1)</sup> |  | [7.0](https://releases.llvm.org/download.html) (C++17 & std::filesystem support) |  |  |  |
+| Clang<sup>[*](#note1)</sup> |  | [7.0](https://releases.llvm.org/download.html) (C++17 & std::filesystem support) |  |  |  |
 | Fontconfig | [2.12.6](https://www.freedesktop.org/software/fontconfig/release/) |  | No | Yes |  |
 | FreeType | [2.11.0](https://download.savannah.gnu.org/releases/freetype) |  | No |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) (Android only) |
 | GCC |  | [8.1](https://gcc.gnu.org/) (C++17 & std::filesystem support) |  |  |  |
@@ -28,13 +27,14 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | ZeroMQ | [4.3.1](https://github.com/zeromq/libzmq/releases) | 4.0.0 | No |  |  |
 | zlib |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) |
 
-<a name="note1">Note \*</a> : When compiling with `-stdlib=libc++`, the minimum supported libc++ version is 7.0.
+<a name="note1">Note<sup>*</sup></a> : When compiling with `-stdlib=libc++`, the minimum supported libc++ version is 7.0.
 
-Controlling dependencies
-------------------------
+## Controlling dependencies
+
 Some dependencies are not needed in all configurations. The following are some factors that affect the dependency list.
 
-#### Options passed to `./configure`
+Options passed to `./configure`
+
 * MiniUPnPc is not needed with `--without-miniupnpc`.
 * libnatpmp is not needed with `--without-natpmp`.
 * Berkeley DB is not needed with `--disable-wallet` or `--without-bdb`.
@@ -44,5 +44,6 @@ Some dependencies are not needed in all configurations. The following are some f
 * If the systemtap dependency is absent, USDT support won't compiled in.
 * ZeroMQ is needed only with the `--with-zmq` option.
 
-#### Other
+## Other
+
 * Not-Qt-bundled zlib is required to build the [DMG tool](../contrib/macdeploy/README.md#deterministic-macos-dmg-notes) from the libdmg-hfsplus project.

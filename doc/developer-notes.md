@@ -1,55 +1,53 @@
-Developer Notes
-===============
+# Developer Notes
 
 <!-- markdown-toc start -->
-**Table of Contents**
+## Table of Contents
 
 - [Developer Notes](#developer-notes)
-    - [Coding Style (General)](#coding-style-general)
-    - [Coding Style (C++)](#coding-style-c)
-    - [Coding Style (Python)](#coding-style-python)
-    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
-      - [Generating Documentation](#generating-documentation)
-    - [Development tips and tricks](#development-tips-and-tricks)
-        - [Compiling for debugging](#compiling-for-debugging)
-        - [Show sources in debugging](#show-sources-in-debugging)
-        - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
-        - [`debug.log`](#debuglog)
-        - [Signet, testnet, and regtest modes](#signet-testnet-and-regtest-modes)
-        - [DEBUG_LOCKORDER](#debug_lockorder)
-        - [Valgrind suppressions file](#valgrind-suppressions-file)
-        - [Compiling for test coverage](#compiling-for-test-coverage)
-        - [Performance profiling with perf](#performance-profiling-with-perf)
-        - [Sanitizers](#sanitizers)
-    - [Locking/mutex usage notes](#lockingmutex-usage-notes)
-    - [Threads](#threads)
-    - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
+  - [Coding Style (General)](#coding-style-general)
+  - [Coding Style (C++)](#coding-style-c)
+  - [Coding Style (Python)](#coding-style-python)
+  - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
+    - [Generating Documentation](#generating-documentation)
+  - [Development tips and tricks](#development-tips-and-tricks)
+    - [Compiling for debugging](#compiling-for-debugging)
+    - [Show sources in debugging](#show-sources-in-debugging)
+    - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
+    - [`debug.log`](#debuglog)
+    - [Signet, testnet, and regtest modes](#signet-testnet-and-regtest-modes)
+    - [DEBUG_LOCKORDER](#debug_lockorder)
+    - [Valgrind suppressions file](#valgrind-suppressions-file)
+    - [Compiling for test coverage](#compiling-for-test-coverage)
+    - [Performance profiling with perf](#performance-profiling-with-perf)
+    - [Sanitizers](#sanitizers)
+  - [Locking/mutex usage notes](#lockingmutex-usage-notes)
+  - [Threads](#threads)
+  - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
 - [Development guidelines](#development-guidelines)
-    - [General Bitcoin Core](#general-bitcoin-core)
-    - [Wallet](#wallet)
-    - [General C++](#general-c)
-    - [C++ data structures](#c-data-structures)
-    - [Strings and formatting](#strings-and-formatting)
-    - [Shadowing](#shadowing)
-    - [Threads and synchronization](#threads-and-synchronization)
-    - [Scripts](#scripts)
-        - [Shebang](#shebang)
-    - [Source code organization](#source-code-organization)
-    - [GUI](#gui)
-    - [Subtrees](#subtrees)
-    - [Upgrading LevelDB](#upgrading-leveldb)
-      - [File Descriptor Counts](#file-descriptor-counts)
-      - [Consensus Compatibility](#consensus-compatibility)
-    - [Scripted diffs](#scripted-diffs)
-        - [Suggestions and examples](#suggestions-and-examples)
-    - [Release notes](#release-notes)
-    - [RPC interface guidelines](#rpc-interface-guidelines)
-    - [Internal interface guidelines](#internal-interface-guidelines)
+  - [General Bitcoin Core](#general-bitcoin-core)
+  - [Wallet](#wallet)
+  - [General C++](#general-c)
+  - [C++ data structures](#c-data-structures)
+  - [Strings and formatting](#strings-and-formatting)
+  - [Shadowing](#shadowing)
+  - [Threads and synchronization](#threads-and-synchronization)
+  - [Scripts](#scripts)
+    - [Shebang](#shebang)
+  - [Source code organization](#source-code-organization)
+  - [GUI](#gui)
+  - [Subtrees](#subtrees)
+  - [Upgrading LevelDB](#upgrading-leveldb)
+    - [File Descriptor Counts](#file-descriptor-counts)
+    - [Consensus Compatibility](#consensus-compatibility)
+  - [Scripted diffs](#scripted-diffs)
+    - [Suggestions and examples](#suggestions-and-examples)
+  - [Release notes](#release-notes)
+  - [RPC interface guidelines](#rpc-interface-guidelines)
+  - [Internal interface guidelines](#internal-interface-guidelines)
 
 <!-- markdown-toc end -->
 
-Coding Style (General)
-----------------------
+## Coding Style (General)
 
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
@@ -59,8 +57,7 @@ commits.
 
 Do not submit patches solely to modify the style of existing code.
 
-Coding Style (C++)
-------------------
+## Coding Style (C++)
 
 - **Indentation and whitespace rules** as specified in
 [src/.clang-format](/src/.clang-format). You can use the provided
@@ -106,6 +103,7 @@ code.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
 
 Block style example:
+
 ```c++
 int g_count = 0;
 
@@ -137,13 +135,11 @@ public:
 } // namespace foo
 ```
 
-Coding Style (Python)
----------------------
+## Coding Style (Python)
 
 Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
 
-Coding Style (Doxygen-compatible comments)
-------------------------------------------
+## Coding Style (Doxygen-compatible comments)
 
 Bitcoin Core uses [Doxygen](https://www.doxygen.nl/) to generate its official documentation.
 
@@ -166,11 +162,12 @@ For example, to describe a function use:
 bool function(int arg1, const char *arg2, std::string& arg3)
 ```
 
-A complete list of `@xxx` commands can be found at https://www.doxygen.nl/manual/commands.html.
+A complete list of `@xxx` commands can be found at <https://www.doxygen.nl/manual/commands.html>.
 As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
 *need* to provide any commands for a comment to be valid; just a description text is fine.
 
 To describe a class, use the same construct above the class definition:
+
 ```c++
 /**
  * Alerts are for notifying old versions if they become too obsolete and
@@ -181,17 +178,20 @@ class CAlert
 ```
 
 To describe a member or variable use:
+
 ```c++
 //! Description before the member
 int var;
 ```
 
 or
+
 ```c++
 int var; //!< Description after the member
 ```
 
 Also OK:
+
 ```c++
 ///
 /// ... Description ...
@@ -200,6 +200,7 @@ bool function2(int arg1, const char *arg2)
 ```
 
 Not picked up by Doxygen:
+
 ```c++
 //
 // ... Description ...
@@ -207,13 +208,14 @@ Not picked up by Doxygen:
 ```
 
 Also not picked up by Doxygen:
+
 ```c++
 /*
  * ... Description ...
  */
 ```
 
-A full list of comment syntaxes picked up by Doxygen can be found at https://www.doxygen.nl/manual/docblocks.html,
+A full list of comment syntaxes picked up by Doxygen can be found at <https://www.doxygen.nl/manual/docblocks.html>,
 but the above styles are favored.
 
 Recommendations:
@@ -226,7 +228,7 @@ Recommendations:
 
 - Backticks aren't required when referring to functions Doxygen already knows
   about; it will build hyperlinks for these automatically. See
-  https://www.doxygen.nl/manual/autolink.html for complete info.
+  <https://www.doxygen.nl/manual/autolink.html> for complete info.
 
 - Avoid linking to external documentation; links can break.
 
@@ -246,8 +248,7 @@ Linux: `sudo apt install doxygen graphviz`
 
 MacOS: `brew install doxygen graphviz`
 
-Development tips and tricks
----------------------------
+## Development tips and tricks
 
 ### Compiling for debugging
 
@@ -267,16 +268,19 @@ There are a few possible fixes:
 1. Configure source file mapping.
 
 For `gdb` create or append to `.gdbinit` file:
+
 ```
 set substitute-path ./src /path/to/project/root/src
 ```
 
 For `lldb` create or append to `.lldbinit` file:
+
 ```
 settings set target.source-map ./src /path/to/project/root/src
 ```
 
 2. Add a symlink to the `./src` directory:
+
 ```
 ln -s /path/to/project/root/src src
 ```
@@ -322,23 +326,23 @@ The util file `src/util/check.h` offers helpers to protect against coding and
 internal logic bugs. They must never be used to validate user, network or any
 other input.
 
-* `assert` or `Assert` should be used to document assumptions when any
+- `assert` or `Assert` should be used to document assumptions when any
   violation would mean that it is not safe to continue program execution. The
   code is always compiled with assertions enabled.
-   - For example, a nullptr dereference or any other logic bug in validation
+  - For example, a nullptr dereference or any other logic bug in validation
      code means the program code is faulty and must terminate immediately.
-* `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
+- `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
   failure, it will throw an exception, which can be caught to recover from the
   error.
-   - For example, a nullptr dereference or any other logic bug in RPC code
+  - For example, a nullptr dereference or any other logic bug in RPC code
      means that the RPC code is faulty and can not be executed. However, the
      logic bug can be shown to the user and the program can continue to run.
-* `Assume` should be used to document assumptions when program execution can
+- `Assume` should be used to document assumptions when program execution can
   safely continue even if the assumption is violated. In debug builds it
   behaves like `Assert`/`assert` to notify developers and testers about
   nonfatal errors. In production it doesn't warn or log anything, though the
   expression is always evaluated.
-   - For example it can be assumed that a variable is only initialized once,
+  - For example it can be assumed that a variable is only initialized once,
      but a failed assumption does not result in a fatal bug. A failed
      assumption may or may not result in a slightly degraded user experience,
      but it is safe to continue program execution.
@@ -391,8 +395,8 @@ Certain kernel parameters may need to be set for perf to be able to inspect the
 running process's stack.
 
 ```sh
-$ sudo sysctl -w kernel.perf_event_paranoid=-1
-$ sudo sysctl -w kernel.kptr_restrict=0
+sudo sysctl -w kernel.perf_event_paranoid=-1
+sudo sysctl -w kernel.kptr_restrict=0
 ```
 
 Make sure you [understand the security
@@ -403,9 +407,9 @@ To profile a running bitcoind process for 60 seconds, you could use an
 invocation of `perf record` like this:
 
 ```sh
-$ perf record \
-    -g --call-graph dwarf --per-thread -F 140 \
-    -p `pgrep bitcoind` -- sleep 60
+perf record \
+  -g --call-graph dwarf --per-thread -F 140 \
+  -p `pgrep bitcoind` -- sleep 60
 ```
 
 You could then analyze the results by running:
@@ -417,7 +421,6 @@ perf report --stdio | c++filt | less
 or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 
 See the functional test documentation for how to invoke perf within tests.
-
 
 ### Sanitizers
 
@@ -461,17 +464,16 @@ compiler.
 
 Additional resources:
 
- * [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
- * [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
- * [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
- * [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
- * [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
- * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
- * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
- * [Issue #12691: Enable -fsanitize flags in Travis](https://github.com/bitcoin/bitcoin/issues/12691)
+- [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
+- [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
+- [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
+- [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
+- [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
+- [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
+- [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
+- [Issue #12691: Enable -fsanitize flags in Travis](https://github.com/bitcoin/bitcoin/issues/12691)
 
-Locking/mutex usage notes
--------------------------
+## Locking/mutex usage notes
 
 The code is multi-threaded and uses mutexes and the
 `LOCK` and `TRY_LOCK` macros to protect data structures.
@@ -487,8 +489,7 @@ between the various components is a goal, with any necessary locking
 done by the components (e.g. see the self-contained `FillableSigningProvider` class
 and its `cs_KeyStore` lock for example).
 
-Threads
--------
+## Threads
 
 - [Main thread (`bitcoind`)](https://doxygen.bitcoincore.org/bitcoind_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97)
   : Started from `main()` in `bitcoind.cpp`. Responsible for starting up and
@@ -537,8 +538,7 @@ Threads
   - [ThreadOpenConnections (`b-opencon`)](https://doxygen.bitcoincore.org/class_c_connman.html#a55e9feafc3bab78e5c9d408c207faa45)
     : Initiates new connections to peers.
 
-Ignoring IDE/editor files
---------------------------
+## Ignoring IDE/editor files
 
 In closed-source environments in which everyone uses the same IDE, it is common
 to add temporary files it produces to the project-wide `.gitignore` file.
@@ -569,14 +569,12 @@ If a set of tools is used by the build system or scripts the repository (for
 example, lcov) it is perfectly acceptable to add its files to `.gitignore`
 and commit them.
 
-Development guidelines
-============================
+## Development guidelines
 
 A few non-style-related recommendations for developers, as well as points to
 pay attention to for reviewers of Bitcoin Core code.
 
-General Bitcoin Core
-----------------------
+### General Bitcoin Core
 
 - New features should be exposed on RPC first, then can be made available in the GUI.
 
@@ -592,8 +590,7 @@ General Bitcoin Core
   - *Explanation*: If the test suite is to be updated for a change, this has to
     be done first.
 
-Wallet
--------
+### Wallet
 
 - Make sure that no crashes happen with run-time option `-disablewallet`.
 
@@ -601,8 +598,7 @@ Wallet
 
   - *Rationale*: Otherwise compilation of the disable-wallet build will fail in environments without BerkeleyDB.
 
-General C++
--------------
+### General C++
 
 For general C++ guidelines, you may refer to the [C++ Core
 Guidelines](https://isocpp.github.io/CppCoreGuidelines/).
@@ -629,8 +625,7 @@ Common misconceptions are clarified in those sections:
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety.
 
-C++ data structures
---------------------
+### C++ data structures
 
 - Never use the `std::map []` syntax when reading from a map, but instead use `.find()`.
 
@@ -723,8 +718,7 @@ int GetInt(Tabs tab)
 
 *Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
 
-Strings and formatting
-------------------------
+### Strings and formatting
 
 - Be careful of `LogPrint` versus `LogPrintf`. `LogPrint` takes a `category` argument, `LogPrintf` does not.
 
@@ -795,8 +789,7 @@ Strings and formatting
     checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first
     and reject it if there are any (see `ParsePrechecks` in `strencodings.cpp` for an example).
 
-Shadowing
---------------
+### Shadowing
 
 Although the shadowing warning (`-Wshadow`) is not enabled by default (it prevents issues arising
 from using a different variable with the same name),
@@ -805,8 +798,7 @@ please name variables so that their names do not shadow variables defined in the
 When using nested cycles, do not name the inner cycle variable the same as in
 the upper cycle, etc.
 
-Threads and synchronization
-----------------------------
+### Threads and synchronization
 
 - Prefer `Mutex` type to `RecursiveMutex` one
 
@@ -869,6 +861,7 @@ bool ChainstateManager::ProcessNewBlock(...)
   with braces.
 
   OK:
+
 ```c++
 {
     TRY_LOCK(cs_vNodes, lockNodes);
@@ -877,6 +870,7 @@ bool ChainstateManager::ProcessNewBlock(...)
 ```
 
   Wrong:
+
 ```c++
 TRY_LOCK(cs_vNodes, lockNodes);
 {
@@ -884,10 +878,9 @@ TRY_LOCK(cs_vNodes, lockNodes);
 }
 ```
 
-Scripts
---------------------------
+### Scripts
 
-### Shebang
+#### Shebang
 
 - Use `#!/usr/bin/env bash` instead of obsolete `#!/bin/bash`.
 
@@ -898,17 +891,18 @@ Scripts
     `#!/usr/bin/env bash` searches the user's PATH to find the bash binary.
 
   OK:
+
 ```bash
 #!/usr/bin/env bash
 ```
 
   Wrong:
+
 ```bash
 #!/bin/bash
 ```
 
-Source code organization
---------------------------
+## Source code organization
 
 - Implementation code should go into the `.cpp` file and not the `.h`, unless necessary due to template usage or
   when performance due to inlining is critical.
@@ -946,7 +940,7 @@ namespace {
 } // namespace
 ```
 
-  - *Rationale*: Avoids confusion about the namespace context.
+- *Rationale*: Avoids confusion about the namespace context.
 
 - Use `#include <primitives/transaction.h>` bracket syntax instead of
   `#include "primitives/transactions.h"` quote syntax.
@@ -966,8 +960,7 @@ namespace {
 #endif // BITCOIN_FOO_BAR_H
 ```
 
-GUI
------
+## GUI
 
 - Do not display or manipulate dialogs in model code (classes `*Model`).
 
@@ -988,8 +981,7 @@ GUI
   - *Rationale*: Blocking the GUI thread can increase latency, and lead to
     hangs and deadlocks.
 
-Subtrees
-----------
+## Subtrees
 
 Several parts of the repository are subtrees of software maintained elsewhere.
 
@@ -1008,32 +1000,31 @@ to check a subtree directory for consistency with its upstream repository.
 Current subtrees include:
 
 - src/leveldb
-  - Subtree at https://github.com/bitcoin-core/leveldb-subtree ; maintained by Core contributors.
-  - Upstream at https://github.com/google/leveldb ; maintained by Google. Open
+  - Subtree at <https://github.com/bitcoin-core/leveldb-subtree> ; maintained by Core contributors.
+  - Upstream at <https://github.com/google/leveldb> ; maintained by Google. Open
     important PRs to the subtree to avoid delay.
   - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
     merging upstream changes to the LevelDB subtree.
 
 - src/crc32c
   - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
-  - Subtree at https://github.com/bitcoin-core/crc32c-subtree ; maintained by Core contributors.
-  - Upstream at https://github.com/google/crc32c ; maintained by Google.
+  - Subtree at <https://github.com/bitcoin-core/crc32c-subtree> ; maintained by Core contributors.
+  - Upstream at <https://github.com/google/crc32c> ; maintained by Google.
 
 - src/secp256k1
-  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; maintained by Core contributors.
+  - Upstream at <https://github.com/bitcoin-core/secp256k1/> ; maintained by Core contributors.
 
 - src/crypto/ctaes
-  - Upstream at https://github.com/bitcoin-core/ctaes ; maintained by Core contributors.
+  - Upstream at <https://github.com/bitcoin-core/ctaes> ; maintained by Core contributors.
 
 - src/univalue
-  - Subtree at https://github.com/bitcoin-core/univalue-subtree ; maintained by Core contributors.
-  - Deviates from upstream https://github.com/jgarzik/univalue.
+  - Subtree at <https://github.com/bitcoin-core/univalue-subtree> ; maintained by Core contributors.
+  - Deviates from upstream <https://github.com/jgarzik/univalue>.
 
 - src/minisketch
-  - Upstream at https://github.com/sipa/minisketch ; maintained by Core contributors.
+  - Upstream at <https://github.com/sipa/minisketch> ; maintained by Core contributors.
 
-Upgrading LevelDB
----------------------
+## Upgrading LevelDB
 
 Extra care must be taken when upgrading LevelDB. This section explains issues
 you must be aware of.
@@ -1079,8 +1070,7 @@ would be to revert the upstream fix before applying the updates to Bitcoin's
 copy of LevelDB. In general, you should be wary of any upstream changes affecting
 what data is returned from LevelDB queries.
 
-Scripted diffs
---------------
+## Scripted diffs
 
 For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use
 scripted-diff commits. The bash script is included in the commit message and our CI job checks that
@@ -1092,8 +1082,8 @@ To create a scripted-diff:
 
 - start the commit message with `scripted-diff:` (and then a description of the diff on the same line)
 - in the commit message include the bash script between lines containing just the following text:
-    - `-BEGIN VERIFY SCRIPT-`
-    - `-END VERIFY SCRIPT-`
+  - `-BEGIN VERIFY SCRIPT-`
+  - `-END VERIFY SCRIPT-`
 
 The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`. The tool's default behavior, when supplied
 with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes
@@ -1136,8 +1126,7 @@ To find all previous uses of scripted diffs in the repository, do:
 git log --grep="-BEGIN VERIFY SCRIPT-"
 ```
 
-Release notes
--------------
+## Release notes
 
 Release notes should be written for any PR that:
 
@@ -1151,8 +1140,7 @@ Release notes should be added to a PR-specific release note file at
 All `release-notes*` files are merged into a single
 [/doc/release-notes.md](/doc/release-notes.md) file prior to the release.
 
-RPC interface guidelines
---------------------------
+## RPC interface guidelines
 
 A few guidelines for introducing and reviewing new RPC interfaces:
 
@@ -1260,8 +1248,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   - *Rationale*: JSON strings are Unicode strings, not byte strings, and
     RFC8259 requires JSON to be encoded as UTF-8.
 
-Internal interface guidelines
------------------------------
+## Internal interface guidelines
 
 Internal interfaces between parts of the codebase that are meant to be
 independent (node, wallet, GUI), are defined in

@@ -61,6 +61,7 @@ Is called when a message is received from a peer over the P2P network. Passes
 information about our peer, the connection and the message as arguments.
 
 Arguments passed:
+
 1. Peer ID as `int64`
 2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
 3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
@@ -101,6 +102,7 @@ Is called *after* a block is connected to the chain. Can, for example, be used
 to benchmark block connections together with `-reindex`.
 
 Arguments passed:
+
 1. Block Header Hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 2. Block Height as `int32`
 3. Transactions in the Block as `uint64`
@@ -129,6 +131,7 @@ Arguments passed:
 It is called when a new coin is added to the UTXO cache.
 
 Arguments passed:
+
 1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 2. Output index as `uint32`
 3. Block height the coin was added to the UTXO-set as  `uint32`
@@ -140,6 +143,7 @@ Arguments passed:
 It is called when a coin is spent from the UTXO cache.
 
 Arguments passed:
+
 1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 2. Output index as `uint32`
 3. Block height the coin was spent, as `uint32`
@@ -151,6 +155,7 @@ Arguments passed:
 It is called when the UTXO with the given outpoint is removed from the cache.
 
 Arguments passed:
+
 1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 2. Output index as `uint32`
 3. Block height the coin was uncached, as `uint32`
@@ -200,11 +205,13 @@ TRACE6(net, inbound_message,
 ### Guidelines and best practices
 
 #### Clear motivation and use-case
+
 Tracepoints need a clear motivation and use-case. The motivation should
 outweigh the impact on, for example, code readability. There is no point in
 adding tracepoints that don't end up being used.
 
 #### Provide an example
+
 When adding a new tracepoint, provide an example. Examples can show the use case
 and help reviewers testing that the tracepoint works as intended. The examples
 can be kept simple but should give others a starting point when working with
@@ -213,12 +220,14 @@ the tracepoint. See existing examples in [contrib/tracing/].
 [contrib/tracing/]: ../contrib/tracing/
 
 #### No expensive computations for tracepoints
+
 Data passed to the tracepoint should be inexpensive to compute. Although the
 tracepoint itself only has overhead when enabled, the code to compute arguments
 is always run - even if the tracepoint is not used. For example, avoid
 serialization and parsing.
 
 #### Semi-stable API
+
 Tracepoints should have a semi-stable API. Users should be able to rely on the
 tracepoints for scripting. This means tracepoints need to be documented, and the
 argument order ideally should not change. If there is an important reason to
@@ -226,12 +235,14 @@ change argument order, make sure to document the change and update the examples
 using the tracepoint.
 
 #### eBPF Virtual Machine limits
+
 Keep the eBPF Virtual Machine limits in mind. eBPF programs receiving data from
 the tracepoints run in a sandboxed Linux kernel VM. This VM has a limited stack
 size of 512 bytes. Check if it makes sense to pass larger amounts of data, for
 example, with a tracing script that can handle the passed data.
 
 #### `bpftrace` argument limit
+
 While tracepoints can have up to 12 arguments, bpftrace scripts currently only
 support reading from the first six arguments (`arg0` till `arg5`) on `x86_64`.
 bpftrace currently lacks real support for handling and printing binary data,
@@ -241,14 +252,13 @@ first six argument fields. Binary data can be placed in later arguments. The BCC
 supports reading from all 12 arguments.
 
 #### Strings as C-style String
+
 Generally, strings should be passed into the `TRACEx` macros as pointers to
 C-style strings (a null-terminated sequence of characters). For C++
 `std::strings`, [`c_str()`]  can be used. It's recommended to document the
 maximum expected string size if known.
 
-
 [`c_str()`]: https://www.cplusplus.com/reference/string/string/c_str/
-
 
 ## Listing available tracepoints
 
@@ -278,8 +288,8 @@ Look for the notes with the description `NT_STAPSDT`.
 ```
 $ readelf -n ./src/bitcoind | grep NT_STAPSDT -A 4 -B 2
 Displaying notes found in: .note.stapsdt
-  Owner                 Data size	Description
-  stapsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
+  Owner                 Data size   Description
+  stapsdt              0x0000005d   NT_STAPSDT (SystemTap probe descriptors)
     Provider: net
     Name: outbound_message
     Location: 0x0000000000107c05, Base: 0x0000000000579c90, Semaphore: 0x0000000000000000

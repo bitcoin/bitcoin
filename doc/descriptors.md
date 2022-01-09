@@ -3,6 +3,7 @@
 Since Bitcoin Core v0.17, there is support for Output Descriptors. This is a
 simple language which can be used to describe collections of output scripts.
 Supporting RPCs are:
+
 - `scantxoutset` takes as input descriptors to scan for, and also reports
   specialized descriptors for the matching UTXOs.
 - `getdescriptorinfo` analyzes a descriptor, and reports a canonicalized version
@@ -25,6 +26,7 @@ documentation for the functions mentioned above.
 ## Features
 
 Output descriptors currently support:
+
 - Pay-to-pubkey scripts (P2PK), through the `pk` function.
 - Pay-to-pubkey-hash scripts (P2PKH), through the `pkh` function.
 - Pay-to-witness-pubkey-hash scripts (P2WPKH), through the `wpkh` function.
@@ -62,6 +64,7 @@ Output descriptors currently support:
 Descriptors consist of several types of expressions. The top level expression is either a `SCRIPT`, or `SCRIPT#CHECKSUM` where `CHECKSUM` is an 8-character alphanumeric descriptor checksum.
 
 `SCRIPT` expressions:
+
 - `sh(SCRIPT)` (top level only): P2SH embed the argument.
 - `wsh(SCRIPT)` (top level or inside `sh` only): P2WSH embed the argument.
 - `pk(KEY)` (anywhere): P2PK output for the given public key.
@@ -75,6 +78,7 @@ Descriptors consist of several types of expressions. The top level expression is
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX.
 
 `KEY` expressions:
+
 - Optionally, key origin information, consisting of:
   - An open bracket `[`
   - Exactly 8 hex characters for the fingerprint of the key where the derivation starts (see BIP32 for details)
@@ -91,12 +95,14 @@ Descriptors consist of several types of expressions. The top level expression is
     - The usage of hardened derivation steps requires providing the private key.
 
 `TREE` expressions:
+
 - any `SCRIPT` expression
 - An open brace `{`, a `TREE` expression, a comma `,`, a `TREE` expression, and a closing brace `}`
 
 (Anywhere a `'` suffix is permitted to denote hardened derivation, the suffix `h` can be used instead.)
 
 `ADDR` expressions are any type of supported address:
+
 - P2PKH addresses (base58, of the form `1...` for mainnet or `[nm]...` for testnet). Note that P2PKH addresses in descriptors cannot be used for P2PK outputs (use the `pk` function instead).
 - P2SH addresses (base58, of the form `3...` for mainnet or `2...` for testnet, defined in [BIP 13](https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki)).
 - Segwit addresses (bech32 and bech32m, of the form `bc1...` for mainnet or `tb1...` for testnet, defined in [BIP 173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki) and [BIP 350](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki)).

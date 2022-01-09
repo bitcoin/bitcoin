@@ -5,14 +5,14 @@
 To quickly get started fuzzing Bitcoin Core using [libFuzzer](https://llvm.org/docs/LibFuzzer.html):
 
 ```sh
-$ git clone https://github.com/bitcoin/bitcoin
-$ cd bitcoin/
-$ ./autogen.sh
-$ CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
+git clone https://github.com/bitcoin/bitcoin
+cd bitcoin/
+./autogen.sh
+CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
 # libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
-$ make
-$ FUZZ=process_message src/test/fuzz/fuzz
+make
+FUZZ=process_message src/test/fuzz/fuzz
 # abort fuzzing using ctrl-c
 ```
 
@@ -92,7 +92,7 @@ INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 
 ## Run without sanitizers for increased throughput
 
-Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` is good for finding bugs. However, the very slow execution even under libFuzzer will limit the ability to find new coverage. A good approach is to perform occasional long runs without the additional bug-detectors (configure `--with-sanitizers=fuzzer`) and then merge new inputs into a corpus as described in the qa-assets repo (https://github.com/bitcoin-core/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md).  Patience is useful; even with improved throughput, libFuzzer may need days and 10s of millions of executions to reach deep/hard targets.
+Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` is good for finding bugs. However, the very slow execution even under libFuzzer will limit the ability to find new coverage. A good approach is to perform occasional long runs without the additional bug-detectors (configure `--with-sanitizers=fuzzer`) and then merge new inputs into a corpus as described in the qa-assets repo (<https://github.com/bitcoin-core/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md>).  Patience is useful; even with improved throughput, libFuzzer may need days and 10s of millions of executions to reach deep/hard targets.
 
 ## Reproduce a fuzzer crash reported by the CI
 
@@ -135,9 +135,9 @@ Full configure that was tested on macOS Catalina with `brew` installed `llvm`:
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
 
-# Fuzzing Bitcoin Core using afl++
+## Fuzzing Bitcoin Core using afl++
 
-## Quickstart guide
+### Quickstart guide
 
 To quickly get started fuzzing Bitcoin Core using [afl++](https://github.com/AFLplusplus/AFLplusplus):
 
@@ -162,9 +162,9 @@ $ FUZZ=bech32 AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
 
 Read the [afl++ documentation](https://github.com/AFLplusplus/AFLplusplus) for more information.
 
-# Fuzzing Bitcoin Core using Honggfuzz
+## Fuzzing Bitcoin Core using Honggfuzz
 
-## Quickstart guide
+### Quickstart guide
 
 To quickly get started fuzzing Bitcoin Core using [Honggfuzz](https://github.com/google/honggfuzz):
 
@@ -258,19 +258,19 @@ $ honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
                        -debug
 ```
 
-# Fuzzing Bitcoin Core using Eclipser (v1.x)
+## Fuzzing Bitcoin Core using Eclipser (v1.x)
 
-## Quickstart guide
+### Quickstart guide
 
 To quickly get started fuzzing Bitcoin Core using [Eclipser v1.x](https://github.com/SoftSec-KAIST/Eclipser/tree/v1.x):
 
 ```sh
-$ git clone https://github.com/bitcoin/bitcoin
-$ cd bitcoin/
-$ sudo vim /etc/apt/sources.list # Uncomment the lines starting with 'deb-src'.
-$ sudo apt-get update
-$ sudo apt-get build-dep qemu
-$ sudo apt-get install libtool libtool-bin wget automake autoconf bison gdb
+git clone https://github.com/bitcoin/bitcoin
+cd bitcoin/
+sudo vim /etc/apt/sources.list # Uncomment the lines starting with 'deb-src'.
+sudo apt-get update
+sudo apt-get build-dep qemu
+sudo apt-get install libtool libtool-bin wget automake autoconf bison gdb
 ```
 
 At this point, you must install the .NET core.  The process differs, depending on your Linux distribution.
@@ -278,26 +278,26 @@ See [this link](https://docs.microsoft.com/en-us/dotnet/core/install/linux) for 
 On ubuntu 20.04, the following should work:
 
 ```sh
-$ wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-$ sudo dpkg -i packages-microsoft-prod.deb
-$ rm packages-microsoft-prod.deb
-$ sudo apt-get update
-$ sudo apt-get install -y dotnet-sdk-2.1
+wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-2.1
 ```
 
 You will also want to make sure Python is installed as `python` for the Eclipser install to succeed.
 
 ```sh
-$ git clone https://github.com/SoftSec-KAIST/Eclipser.git
-$ cd Eclipser
-$ git checkout v1.x
-$ make
-$ cd ..
-$ ./autogen.sh
-$ ./configure --enable-fuzz
-$ make
-$ mkdir -p outputs/
-$ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -o outputs --src stdin
+git clone https://github.com/SoftSec-KAIST/Eclipser.git
+cd Eclipser
+git checkout v1.x
+make
+cd ..
+./autogen.sh
+./configure --enable-fuzz
+make
+mkdir -p outputs/
+FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -o outputs --src stdin
 ```
 
 This will perform 10 hours of fuzzing.
@@ -306,16 +306,17 @@ To make further use of the inputs generated by Eclipser, you
 must first decode them:
 
 ```sh
-$ dotnet Eclipser/build/Eclipser.dll decode -i outputs/testcase -o decoded_outputs
+dotnet Eclipser/build/Eclipser.dll decode -i outputs/testcase -o decoded_outputs
 ```
+
 This will place raw inputs in the directory `decoded_outputs/decoded_stdins`.  Crashes are in the `outputs/crashes` directory, and must
 be decoded in the same way.
 
 Fuzzing with Eclipser will likely be much more effective if using an existing corpus:
 
 ```sh
-$ git clone https://github.com/bitcoin-core/qa-assets
-$ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -i qa-assets/fuzz_seed_corpus/bech32 outputs --src stdin
+git clone https://github.com/bitcoin-core/qa-assets
+FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -i qa-assets/fuzz_seed_corpus/bech32 outputs --src stdin
 ```
 
 Note that fuzzing with Eclipser on certain targets (those that create 'full nodes', e.g. `process_message*`) will,
@@ -324,8 +325,7 @@ See [this proposed patch](https://github.com/bitcoin/bitcoin/pull/22472) for mor
 
 Read the [Eclipser documentation for v1.x](https://github.com/SoftSec-KAIST/Eclipser/tree/v1.x) for more details on using Eclipser.
 
-
-# OSS-Fuzz
+## OSS-Fuzz
 
 Bitcoin Core participates in Google's [OSS-Fuzz](https://github.com/google/oss-fuzz/tree/master/projects/bitcoin-core)
 program, which includes a dashboard of [publicly disclosed vulnerabilities](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=bitcoin-core).

@@ -1,11 +1,11 @@
-UNIX BUILD NOTES
-====================
+# UNIX BUILD NOTES
+
 Some notes on how to build Bitcoin Core in Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
-Note
----------------------
+## Note
+
 Always use absolute paths to configure and compile Bitcoin Core and the dependencies.
 For example, when specifying the path of the dependency:
 
@@ -14,8 +14,7 @@ For example, when specifying the path of the dependency:
 Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
 
-To Build
----------------------
+## To Build
 
 ```bash
 ./autogen.sh
@@ -26,8 +25,7 @@ make install # optional
 
 This will build bitcoin-qt as well, if the dependencies are met.
 
-Dependencies
----------------------
+## Dependencies
 
 These dependencies are required:
 
@@ -51,13 +49,11 @@ Optional dependencies:
 
 For the versions used, see [dependencies.md](dependencies.md)
 
-Memory Requirements
---------------------
+## Memory Requirements
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
 memory available when compiling Bitcoin Core. On systems with less, gcc can be
 tuned to conserve memory with additional CXXFLAGS:
-
 
     ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
 
@@ -128,10 +124,9 @@ libqrencode (optional) can be installed with:
 Once these are installed, they will be found by configure and a bitcoin-qt executable will be
 built by default.
 
+## Fedora
 
-### Fedora
-
-#### Dependency Build Instructions
+### Dependency Build Instructions
 
 Build requirements:
 
@@ -189,13 +184,12 @@ libqrencode (optional) can be installed with:
 Once these are installed, they will be found by configure and a bitcoin-qt executable will be
 built by default.
 
-Notes
------
+## Notes
+
 The release is built with GCC and then "strip bitcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
-miniupnpc
----------
+## miniupnpc
 
 [miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
 https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
@@ -205,8 +199,7 @@ turned off by default.  See the configure options for UPnP behavior desired:
     --disable-upnp-default   (the default) UPnP support turned off by default at runtime
     --enable-upnp-default    UPnP support turned on by default at runtime
 
-libnatpmp
----------
+## libnatpmp
 
 [libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
 from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
@@ -216,8 +209,7 @@ turned off by default. See the configure options for NAT-PMP behavior desired:
     --disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
     --enable-natpmp-default   NAT-PMP support turned on by default at runtime
 
-Berkeley DB
------------
+## Berkeley DB
 
 The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
 recommended to use Berkeley DB 4.8. If you have to build it yourself, you can
@@ -234,8 +226,8 @@ Otherwise, you can build Bitcoin Core from self-compiled [depends](/depends/READ
 
 **Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
 
-Security
---------
+## Security
+
 To help make your Bitcoin Core installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
@@ -245,8 +237,8 @@ Hardening Flags:
     ./configure --enable-hardening
     ./configure --disable-hardening
 
-
 Hardening enables the following features:
+
 * _Position Independent Executable_: Build position independent code to take advantage of Address Space Layout Randomization
     offered by some kernels. Attackers who can cause execution of code at an arbitrary memory
     location are thwarted if they don't know where anything useful is located.
@@ -280,8 +272,8 @@ Hardening enables the following features:
 
     The STK RW- means that the stack is readable and writeable but not executable.
 
-Disable-wallet mode
---------------------
+## Disable-wallet mode
+
 When the intention is to run only a P2P node without a wallet, Bitcoin Core may be compiled in
 disable-wallet mode with:
 
@@ -291,15 +283,14 @@ In this case there is no dependency on Berkeley DB 4.8 and SQLite.
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 
-Additional Configure Flags
---------------------------
+## Additional Configure Flags
+
 A list of additional configure flags can be displayed with:
 
     ./configure --help
 
+## Setup and Build Example: Arch Linux
 
-Setup and Build Example: Arch Linux
------------------------------------
 This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
 
     pacman -S git base-devel boost libevent python
@@ -316,9 +307,8 @@ or building and depending on a local version of Berkeley DB 4.8. The readily ava
 As mentioned above, when maintaining portability of the wallet between the standard Bitcoin Core distributions and independently built
 node software is desired, Berkeley DB 4.8 must be used.
 
+## ARM Cross-compilation
 
-ARM Cross-compilation
--------------------
 These steps can be performed on, for example, an Ubuntu VM. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
@@ -336,6 +326,5 @@ To build executables for ARM:
     ./autogen.sh
     CONFIG_SITE=$PWD/depends/arm-linux-gnueabihf/share/config.site ./configure --enable-reduce-exports LDFLAGS=-static-libstdc++
     make
-
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.

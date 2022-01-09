@@ -11,6 +11,7 @@ Changes to the configuration file while `bitcoind` or `bitcoin-qt` is running on
 The configuration file is a plain text file and consists of `option=value` entries, one per line. Leading and trailing whitespaces are removed.
 
 In contrast to the command-line usage:
+
 - an option must be specified without leading `-`;
 - a value of the given option is mandatory; e.g., `testnet=1` (for chain selection options), `noconnect=1` (for negated options).
 
@@ -23,12 +24,14 @@ Blank lines are allowed and ignored by the parser.
 A comment starts with a number sign (`#`) and extends to the end of the line. All comments are ignored by the parser.
 
 Comments may appear in two ways:
+
 - on their own on an otherwise empty line (_preferable_);
 - after an `option=value` entry.
 
 ### Network specific options
 
 Network specific options can be:
+
 - placed into sections with headers `[main]` (not `[mainnet]`), `[test]` (not `[testnet]`), `[signet]` or `[regtest]`;
 - prefixed with a chain name; e.g., `regtest.maxmempool=100`.
 

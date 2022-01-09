@@ -90,6 +90,7 @@ of the networks has issues.
 ## I2P-related information in Bitcoin Core
 
 There are several ways to see your I2P address in Bitcoin Core:
+
 - in the debug log (grep for `AddLocal`, the I2P address ends in `.b32.i2p`)
 - in the output of the `getnetworkinfo` RPC in the "localaddresses" section
 - in the output of `bitcoin-cli -netinfo` peer connections dashboard

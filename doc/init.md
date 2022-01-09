@@ -1,5 +1,4 @@
-Sample init scripts and service configuration for bitcoind
-==========================================================
+# Sample init scripts and service configuration for bitcoind
 
 Sample scripts and configuration files for systemd, Upstart and OpenRC
 can be found in the contrib/init folder.
@@ -10,15 +9,13 @@ can be found in the contrib/init folder.
     contrib/init/bitcoind.conf:       Upstart service configuration file
     contrib/init/bitcoind.init:       CentOS compatible SysV style init script
 
-Service User
----------------------------------
+## Service User
 
 All three Linux startup configurations assume the existence of a "bitcoin" user
 and group.  They must be created before attempting to use these scripts.
 The macOS configuration assumes bitcoind will be set up for the current user.
 
-Configuration
----------------------------------
+## Configuration
 
 Running bitcoind as a daemon does not require any manual configuration. You may
 set the `rpcauth` setting in the `bitcoin.conf` configuration file to override
@@ -46,8 +43,7 @@ relative to the data directory. `wallet` *only* supports relative paths.
 For an example configuration file that describes the configuration settings,
 see `share/examples/bitcoin.conf`.
 
-Paths
----------------------------------
+## Paths
 
 ### Linux
 
@@ -89,8 +85,7 @@ OpenRC).
     Data directory:      ~/Library/Application Support/Bitcoin
     Lock file:           ~/Library/Application Support/Bitcoin/.lock
 
-Installing Service Configuration
------------------------------------
+## Installing Service Configuration
 
 ### systemd
 
@@ -139,8 +134,7 @@ NOTE: This approach is intended for those wanting to run bitcoind as the current
 You will need to modify org.bitcoin.bitcoind.plist if you intend to use it as a
 Launch Daemon with a dedicated bitcoin user.
 
-Auto-respawn
------------------------------------
+## Auto-respawn
 
 Auto respawning is currently only configured for Upstart and systemd.
 Reasonable defaults have been chosen but YMMV.

@@ -1,5 +1,4 @@
-Shared Libraries
-================
+# Shared Libraries
 
 ## bitcoinconsensus
 
@@ -18,6 +17,7 @@ The interface is defined in the C header `bitcoinconsensus.h` located in `src/sc
 `bitcoinconsensus_verify_script` returns an `int` with the status of the verification. It will be `1` if the input script correctly spends the previous output `scriptPubKey`.
 
 ##### Parameters
+
 - `const unsigned char *scriptPubKey` - The previous output script that encumbers spending.
 - `unsigned int scriptPubKeyLen` - The number of bytes for the `scriptPubKey`.
 - `const unsigned char *txTo` - The transaction with the input that is spending the previous output.
@@ -27,6 +27,7 @@ The interface is defined in the C header `bitcoinconsensus.h` located in `src/sc
 - `bitcoinconsensus_error* err` - Will have the error/success code for the operation *(see below)*.
 
 ##### Script Flags
+
 - `bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE`
 - `bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH` - Evaluate P2SH ([BIP16](https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki)) subscripts
 - `bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG` - Enforce strict DER ([BIP66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki)) compliance
@@ -36,6 +37,7 @@ The interface is defined in the C header `bitcoinconsensus.h` located in `src/sc
 - `bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS` - Enable WITNESS ([BIP141](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki))
 
 ##### Errors
+
 - `bitcoinconsensus_ERR_OK` - No errors with input parameters *(see the return value of `bitcoinconsensus_verify_script` for the verification status)*
 - `bitcoinconsensus_ERR_TX_INDEX` - An invalid index for `txTo`
 - `bitcoinconsensus_ERR_TX_SIZE_MISMATCH` - `txToLen` did not match with the size of `txTo`
@@ -44,6 +46,7 @@ The interface is defined in the C header `bitcoinconsensus.h` located in `src/sc
 - `bitcoinconsensus_ERR_INVALID_FLAGS` - Script verification `flags` are invalid (i.e. not part of the libconsensus interface)
 
 ### Example Implementations
+
 - [NBitcoin](https://github.com/MetacoSA/NBitcoin/blob/5e1055cd7c4186dee4227c344af8892aea54faec/NBitcoin/Script.cs#L979-#L1031) (.NET Bindings)
 - [node-libbitcoinconsensus](https://github.com/bitpay/node-libbitcoinconsensus) (Node.js Bindings)
 - [java-libbitcoinconsensus](https://github.com/dexX7/java-libbitcoinconsensus) (Java Bindings)

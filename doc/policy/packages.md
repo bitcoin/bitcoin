@@ -18,42 +18,33 @@ tip or some preceding transaction in the package.
 
 The following rules are enforced for all packages:
 
-* Packages cannot exceed `MAX_PACKAGE_COUNT=25` count and `MAX_PACKAGE_SIZE=101KvB` total size
+- Packages cannot exceed `MAX_PACKAGE_COUNT=25` count and `MAX_PACKAGE_SIZE=101KvB` total size
    (#20833)
-
-   - *Rationale*: This is already enforced as mempool ancestor/descendant limits. If
+  - *Rationale*: This is already enforced as mempool ancestor/descendant limits. If
      transactions in a package are all related, exceeding this limit would mean that the package
      can either be split up or it wouldn't pass individual mempool policy.
-
-   - Note that, if these mempool limits change, package limits should be reconsidered. Users may
+  - Note that, if these mempool limits change, package limits should be reconsidered. Users may
      also configure their mempool limits differently.
-
-* Packages must be topologically sorted. (#20833)
-
-* Packages cannot have conflicting transactions, i.e. no two transactions in a package can spend
+- Packages must be topologically sorted. (#20833)
+- Packages cannot have conflicting transactions, i.e. no two transactions in a package can spend
    the same inputs. Packages cannot have duplicate transactions. (#20833)
-
-* No transaction in a package can conflict with a mempool transaction. BIP125 Replace By Fee is
+- No transaction in a package can conflict with a mempool transaction. BIP125 Replace By Fee is
   currently disabled for packages. (#20833)
+  - Package RBF may be enabled in the future.
 
-   - Package RBF may be enabled in the future.
-
-* When packages are evaluated against ancestor/descendant limits, the union of all transactions'
+- When packages are evaluated against ancestor/descendant limits, the union of all transactions'
   descendants and ancestors is considered. (#21800)
-
-   - *Rationale*: This is essentially a "worst case" heuristic intended for packages that are
+  - *Rationale*: This is essentially a "worst case" heuristic intended for packages that are
      heavily connected, i.e. some transaction in the package is the ancestor or descendant of all
      the other transactions.
 
 The following rules are only enforced for packages to be submitted to the mempool (not enforced for
 test accepts):
 
-* Packages must be child-with-unconfirmed-parents packages. This also means packages must contain at
+- Packages must be child-with-unconfirmed-parents packages. This also means packages must contain at
   least 2 transactions. (#22674)
-
-   - *Rationale*: This allows for fee-bumping by CPFP. Allowing multiple parents makes it possible
+  - *Rationale*: This allows for fee-bumping by CPFP. Allowing multiple parents makes it possible
      to fee-bump a batch of transactions. Restricting packages to a defined topology is easier to
      reason about and simplifies the validation logic greatly.
-
-   - Warning: Batched fee-bumping may be unsafe for some use cases. Users and application developers
+  - Warning: Batched fee-bumping may be unsafe for some use cases. Users and application developers
      should take caution if utilizing multi-parent packages.

@@ -1,5 +1,4 @@
-Wallet `receivedby` RPCs now include coinbase transactions
--------------
+# Wallet `receivedby` RPCs now include coinbase transactions
 
 Previously, the following wallet RPCs excluded coinbase transactions:
 

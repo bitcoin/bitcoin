@@ -36,7 +36,6 @@ be of use.
   Logic outside ChainstateManager should try not to know about snapshots, instead
   preferring to work in terms of more general states like assumed-valid.
 
-
 ## Chainstate phases
 
 Chainstate within the system goes through a number of phases when UTXO snapshots are

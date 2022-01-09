@@ -1,11 +1,10 @@
-OpenBSD build guide
-======================
+# OpenBSD build guide
+
 (updated for OpenBSD 6.9)
 
 This guide describes how to build bitcoind, bitcoin-qt, and command-line utilities on OpenBSD.
 
-Preparation
--------------
+## Preparation
 
 Run the following as root to install the base dependencies for building:
 
@@ -53,8 +52,8 @@ export BDB_PREFIX="$PWD/db4"
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 Preparation:
-```bash
 
+```bash
 # Replace this with the autoconf version that you installed. Include only
 # the major and minor parts of the version: use "2.69" for "autoconf-2.69p2".
 export AUTOCONF_VERSION=2.69
@@ -65,6 +64,7 @@ export AUTOMAKE_VERSION=1.16
 
 ./autogen.sh
 ```
+
 Make sure `BDB_PREFIX` is set to the appropriate path from the above steps.
 
 Note that building with external signer support currently fails on OpenBSD,
@@ -75,6 +75,7 @@ is available on OpenBSD 6.9 via Boost 1.72.0, but contains certain system calls
 and preprocessor defines like `waitid()` and `WEXITED` that are not available.)
 
 To configure with wallet:
+
 ```bash
 ./configure --with-gui=no --disable-external-signer CC=cc CXX=c++ \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
@@ -83,11 +84,13 @@ To configure with wallet:
 ```
 
 To configure without wallet:
+
 ```bash
 ./configure --disable-wallet --with-gui=no --disable-external-signer CC=cc CXX=c++ MAKE=gmake
 ```
 
 To configure with GUI:
+
 ```bash
 ./configure --with-gui=yes --disable-external-signer CC=cc CXX=c++ \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
@@ -96,13 +99,13 @@ To configure with GUI:
 ```
 
 Build and run the tests:
+
 ```bash
 gmake # use "-j N" here for N parallel jobs
 gmake check
 ```
 
-Resource limits
--------------------
+## Resource limits
 
 If the build runs into out-of-memory errors, the instructions in this section
 might help.
@@ -120,4 +123,3 @@ If your user is in the `staff` group the limit can be raised with:
 The change will only affect the current shell and processes spawned by it. To
 make the change system-wide, change `datasize-cur` and `datasize-max` in
 `/etc/login.conf`, and reboot.
-

@@ -1,5 +1,4 @@
-WINDOWS BUILD NOTES
-====================
+# WINDOWS BUILD NOTES
 
 Below are some notes on how to build Bitcoin Core for Windows.
 
@@ -13,13 +12,11 @@ Other options which may work, but which have not been extensively tested are (pl
 
 * On Windows, using a POSIX compatibility layer application such as [cygwin](https://www.cygwin.com/) or [msys2](https://www.msys2.org/).
 
-Installing Windows Subsystem for Linux
----------------------------------------
+## Installing Windows Subsystem for Linux
 
 Follow the upstream installation instructions, available [here](https://docs.microsoft.com/windows/wsl/install-win10).
 
-Cross-compilation for Ubuntu and Windows Subsystem for Linux
-------------------------------------------------------------
+## Cross-compilation for Ubuntu and Windows Subsystem for Linux
 
 The steps below can be performed on Ubuntu or WSL. The depends system
 will also work on other Linux distributions, however the commands for
@@ -78,8 +75,7 @@ Build using:
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
-Installation
--------------
+## Installation
 
 After building using the Windows subsystem it can be useful to copy the compiled
 executables to a directory on the Windows drive in the same directory structure

@@ -16,6 +16,7 @@ configure Tor.
 ## How to see information about your Tor configuration via Bitcoin Core
 
 There are several ways to see your local onion address in Bitcoin Core:
+
 - in the debug log (grep for "tor:" or "AddLocal")
 - in the output of RPC `getnetworkinfo` in the "localaddresses" section
 - in the output of the CLI `-netinfo` peer connections dashboard
@@ -156,7 +157,6 @@ The hashed password can be obtained with the command `tor --hash-password
 password` (refer to the [Tor Dev
 Manual](https://2019.www.torproject.org/docs/tor-manual.html.en) for more
 details).
-
 
 ## 3. Manually create a Bitcoin Core onion service
 

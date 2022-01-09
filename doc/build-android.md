@@ -1,8 +1,6 @@
-ANDROID BUILD NOTES
-======================
+# ANDROID BUILD NOTES
 
 This guide describes how to build and package the `bitcoin-qt` GUI for Android on Linux and macOS.
-
 
 ## Dependencies
 
@@ -18,7 +16,6 @@ If the build includes Qt, environment variables `ANDROID_SDK` and `ANDROID_NDK` 
 This is an example command for a default build with no disabled dependencies:
 
     ANDROID_SDK=/home/user/Android/Sdk ANDROID_NDK=/home/user/Android/Sdk/ndk-bundle make HOST=aarch64-linux-android ANDROID_API_LEVEL=28 ANDROID_TOOLCHAIN_BIN=/home/user/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin
-
 
 ## Building and packaging
 

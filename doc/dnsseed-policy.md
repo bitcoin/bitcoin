@@ -1,5 +1,4 @@
-Expectations for DNS Seed operators
-====================================
+# Expectations for DNS Seed operators
 
 Bitcoin Core attempts to minimize the level of trust in DNS seeds,
 but DNS seeds still pose a small amount of risk for the network.
@@ -49,6 +48,6 @@ Core development team as well as posting on
 Behavior outside of these expectations may be reasonable in some
 situations but should be discussed in public in advance.
 
-See also
-----------
+## See also
+
 - [bitcoin-seeder](https://github.com/sipa/bitcoin-seeder) is a reference implementation of a DNS seed.
