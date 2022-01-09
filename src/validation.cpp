@@ -6141,21 +6141,24 @@ bool StopGethNode(bool bOnStart)
     if(!bOnStart) {
         bool bResponse;
         GetMainSignals().NotifyNEVMComms("disconnect", bResponse);
+        if(bResponse) {
+            return true;
+        }
     }
-    else {
-        #ifndef USE_SYSCALL_SANDBOX
-        #if HAVE_SYSTEM
-        LogPrintf("Killing any sysgeth processes that may be already running...\n");
-        std::string cmd = "pkill -9 -f sysgeth";
-        #ifdef WIN32
-            cmd = "taskkill /F /T /IM sysgeth.exe >nul 2>&1";
-        #endif
-        std::thread t(runCommand, cmd);
-        if (t.joinable())
-            t.join();
-        #endif
-        #endif
-    }
+    
+    #ifndef USE_SYSCALL_SANDBOX
+    #if HAVE_SYSTEM
+    LogPrintf("Killing any sysgeth processes that may be already running...\n");
+    std::string cmd = "pkill -9 -f sysgeth";
+    #ifdef WIN32
+        cmd = "taskkill /F /T /IM sysgeth.exe >nul 2>&1";
+    #endif
+    std::thread t(runCommand, cmd);
+    if (t.joinable())
+        t.join();
+    #endif
+    #endif
+    
     return true;
 }
 void DoGethMaintenance() {

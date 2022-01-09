@@ -310,7 +310,7 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << commMessage;
     if(!SendZmqMessageNEVM(MSG_NEVMCOMMS, &(*ss.begin()), ss.size())) {
-        LogPrintf("NotifyNEVMComms: nevm-connect-not-sent\n");
+        LogPrintf("NotifyNEVMComms: nevm-connect-not-sent: %s\n", commMessage);
         return false;
     }
     if(commMessage != "disconnect") {
@@ -329,7 +329,7 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
             }
             bResponse = true;
         } else {
-            LogPrintf("NotifyNEVMComms: nevm-response-not-found\n");
+            LogPrintf("NotifyNEVMComms: nevm-response-not-found: %s\n", commMessage);
             return false;
         }
     }
