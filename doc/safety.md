@@ -27,7 +27,7 @@ Do not use blocks and chainstate from unknown sources. Attackers could be provid
 
 ### RPC
 
-The JSON-RPC interface is intended for local access. By default it will only accept connections from localhost, but it can be configured to be accessed for a wider netmask; e.g. a trusted LAN network. Bitcoin Core does not allow anyone to connect to the rpcport. You will need to explicitly allow an IP address to connect to it by using the `rpcallowip=<ip>` option in the _bitcoin.conf_ file. If you set it to 0.0.0.0, it will be open to all IP addresses, but this is not recommended as it is not secure.
+The JSON-RPC interface is intended for local access. By default it will only accept connections from localhost, but it can be configured to be accessed for a wider netmask; e.g. a trusted LAN network. You will need to explicitly allow an IP address to connect to it by using the `rpcallowip=<ip>` option in the _bitcoin.conf_ file. If you set it to 0.0.0.0, it will be open to all IP addresses, but this is not recommended as it is not secure.
 
 If you have a need to access it over an untrusted network like the internet, tunnel it through technology specifically designed for that, such as stunnel (SSL) or a VPN.
 
