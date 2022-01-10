@@ -49,6 +49,7 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v23.0**):
 * [`BIP 174`](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki): RPCs to operate on Partially Signed Bitcoin Transactions (PSBT) are present as of **v0.17.0** ([PR 13557](https://github.com/bitcoin/bitcoin/pull/13557)).
 * [`BIP 176`](https://github.com/bitcoin/bips/blob/master/bip-0176.mediawiki): Bits Denomination [QT only] is supported as of **v0.16.0** ([PR 12035](https://github.com/bitcoin/bitcoin/pull/12035)).
 * [`BIP 325`](https://github.com/bitcoin/bips/blob/master/bip-0325.mediawiki): Signet test network is supported as of **v0.21.0** ([PR 18267](https://github.com/bitcoin/bitcoin/pull/18267)).
+* [`BIP 338`](https://github.com/bitcoin/bips/blob/master/bip-0338.mediawiki): disabletx messages are respected and sent to block-relay-only peers with version `>=70017` as of **v24.0** ([PR 20726](https://github.com/bitcoin/bitcoin/pull/20726)).
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
 * [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)
   [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
