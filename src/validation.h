@@ -858,7 +858,7 @@ public:
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
-    BlockManager m_blockman GUARDED_BY(::cs_main);
+    BlockManager m_blockman;
 
     /**
      * In order to efficiently track invalidity of headers, we keep the set of
