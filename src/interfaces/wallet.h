@@ -6,6 +6,7 @@
 #define BITCOIN_INTERFACES_WALLET_H
 
 #include <consensus/amount.h>
+#include <fs.h>
 #include <interfaces/chain.h>          // For ChainClient
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
@@ -326,7 +327,7 @@ public:
    virtual std::string getWalletDir() = 0;
 
    //! Restore backup wallet
-   virtual std::unique_ptr<Wallet> restoreWallet(const std::string& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+   virtual std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Return available wallets in wallet directory.
    virtual std::vector<std::string> listWalletDir() = 0;

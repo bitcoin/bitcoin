@@ -357,12 +357,12 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     return wallet;
 }
 
-std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const std::string& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
     options.require_existing = true;
 
-    if (!fs::exists(fs::u8path(backup_file))) {
+    if (!fs::exists(backup_file)) {
         error = Untranslated("Backup file does not exist");
         status = DatabaseStatus::FAILED_INVALID_BACKUP_FILE;
         return nullptr;
@@ -377,7 +377,7 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const std::string
     }
 
     auto wallet_file = wallet_path / "wallet.dat";
-    fs::copy_file(fs::u8path(backup_file), wallet_file, fs::copy_option::fail_if_exists);
+    fs::copy_file(backup_file, wallet_file, fs::copy_option::fail_if_exists);
 
     auto wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
 
