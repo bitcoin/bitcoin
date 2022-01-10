@@ -3218,13 +3218,14 @@ void CConnman::Stop()
         }
 
     // clean up some globals (to help leak detection)
-    for (CNode *pnode : vNodes) {
+    std::vector<CNode*> nodes;
+    WITH_LOCK(cs_vNodes, nodes.swap(vNodes));
+    for (CNode *pnode : nodes) {
         DeleteNode(pnode);
     }
     for (CNode *pnode : vNodesDisconnected) {
         DeleteNode(pnode);
     }
-    vNodes.clear();
     mapSocketToNode.clear();
     {
         LOCK(cs_vNodes);

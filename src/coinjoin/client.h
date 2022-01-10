@@ -9,6 +9,7 @@
 #include <coinjoin/coinjoin.h>
 
 #include <utility>
+#include <atomic>
 
 class CDeterministicMN;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
@@ -178,7 +179,7 @@ private:
     // TODO: or map<denom, CCoinJoinClientSession> ??
     std::deque<CCoinJoinClientSession> deqSessions GUARDED_BY(cs_deqsessions);
 
-    bool fMixing{false};
+    std::atomic<bool> fMixing{false};
 
     int nCachedLastSuccessBlock{0};
     int nMinBlocksToWait{1}; // how many blocks to wait for after one successful mixing tx in non-multisession mode

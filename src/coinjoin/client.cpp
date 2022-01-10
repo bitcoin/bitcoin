@@ -235,10 +235,8 @@ void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& str
 }
 
 bool CCoinJoinClientManager::StartMixing() {
-    if (IsMixing()) {
-        return false;
-    }
-    return fMixing = true;
+    bool expected{false};
+    return fMixing.compare_exchange_strong(expected, true);
 }
 
 void CCoinJoinClientManager::StopMixing() {

@@ -1,8 +1,14 @@
 # ThreadSanitizer suppressions
 # ============================
 
+# Data races from zmq namespace
+race:zmq::*
+
 # WalletBatch (unidentified deadlock)
 deadlock:WalletBatch
+
+# deadlock false positive (see: https://github.com/dashpay/dash/pull/4563)
+deadlock:CChainState::ConnectTip
 
 # Intentional deadlock in tests
 deadlock:sync_tests::potential_deadlock_detected
