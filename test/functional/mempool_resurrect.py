@@ -33,9 +33,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # Mine a new block
         # ... make sure all the transactions are confirmed again
         blocks = []
-        spends1_ids = [wallet.send_self_transfer(from_node=node)['txid'] for _ in range(3)]
+        spends1_ids = [wallet.send_self_transfer()['txid'] for _ in range(3)]
         blocks.extend(self.generate(node, 1))
-        spends2_ids = [wallet.send_self_transfer(from_node=node)['txid'] for _ in range(3)]
+        spends2_ids = [wallet.send_self_transfer()['txid'] for _ in range(3)]
         blocks.extend(self.generate(node, 1))
 
         spends_ids = set(spends1_ids + spends2_ids)

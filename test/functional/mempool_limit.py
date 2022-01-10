@@ -61,7 +61,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.generate(node, COINBASE_MATURITY - 1)
 
         self.log.info('Create a mempool tx that will be evicted')
-        tx_to_be_evicted_id = miniwallet.send_self_transfer(from_node=node, fee_rate=relayfee)["txid"]
+        tx_to_be_evicted_id = miniwallet.send_self_transfer(fee_rate=relayfee)["txid"]
 
         # Increase the tx fee rate to give the subsequent transactions a higher priority in the mempool
         # The tx has an approx. vsize of 65k, i.e. multiplying the previous fee rate (in sats/kvB)
@@ -85,7 +85,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
         # Deliberately try to create a tx with a fee less than the minimum mempool fee to assert that it does not get added to the mempool
         self.log.info('Create a mempool tx that will not pass mempoolminfee')
-        assert_raises_rpc_error(-26, "mempool min fee not met", miniwallet.send_self_transfer, from_node=node, fee_rate=relayfee, mempool_valid=False)
+        assert_raises_rpc_error(-26, "mempool min fee not met", miniwallet.send_self_transfer, fee_rate=relayfee, mempool_valid=False)
 
 
 if __name__ == '__main__':

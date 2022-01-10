@@ -44,7 +44,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         mini_wallet = MiniWallet(self.nodes[1])
         mini_wallet.rescan_utxos()
         spend_utxo = mini_wallet.get_utxo()
-        mini_wallet.send_self_transfer(from_node=self.nodes[1], utxo_to_spend=spend_utxo)
+        mini_wallet.send_self_transfer(utxo_to_spend=spend_utxo)
         self.generate(self.nodes[1], 1)
 
         self.log.info("Check legacy txindex")

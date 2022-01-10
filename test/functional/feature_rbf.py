@@ -114,7 +114,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         """Simple doublespend"""
         # we use MiniWallet to create a transaction template with inputs correctly set,
         # and modify the output (amount, scriptPubKey) according to our needs
-        tx_template = self.wallet.create_self_transfer(from_node=self.nodes[0])['tx']
+        tx_template = self.wallet.create_self_transfer()['tx']
 
         tx1a = deepcopy(tx_template)
         tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
@@ -554,7 +554,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # Create an explicitly opt-in parent transaction
         optin_parent_tx = self.wallet.send_self_transfer(
-            from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
             sequence=BIP125_SEQUENCE_NUMBER,
             fee_rate=Decimal('0.01'),
@@ -562,7 +561,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
 
         replacement_parent_tx = self.wallet.create_self_transfer(
-            from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
             sequence=BIP125_SEQUENCE_NUMBER,
             fee_rate=Decimal('0.02'),
@@ -577,7 +575,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # Create an opt-out child tx spending the opt-in parent
         parent_utxo = self.wallet.get_utxo(txid=optin_parent_tx['txid'])
         optout_child_tx = self.wallet.send_self_transfer(
-            from_node=self.nodes[0],
             utxo_to_spend=parent_utxo,
             sequence=0xffffffff,
             fee_rate=Decimal('0.01'),
@@ -587,7 +584,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(True, self.nodes[0].getmempoolentry(optout_child_tx['txid'])['bip125-replaceable'])
 
         replacement_child_tx = self.wallet.create_self_transfer(
-            from_node=self.nodes[0],
             utxo_to_spend=parent_utxo,
             sequence=0xffffffff,
             fee_rate=Decimal('0.02'),
@@ -606,7 +602,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         self.log.info('Check that the child tx can still be replaced (via a tx that also replaces the parent)')
         replacement_parent_tx = self.wallet.send_self_transfer(
-            from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
             sequence=0xffffffff,
             fee_rate=Decimal('0.03'),
@@ -616,7 +611,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.wallet.get_utxo(txid=optout_child_tx['txid'])
 
     def test_replacement_relay_fee(self):
-        tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['tx']
+        tx = self.wallet.send_self_transfer()['tx']
 
         # Higher fee, higher feerate, different txid, but the replacement does not provide a relay
         # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.

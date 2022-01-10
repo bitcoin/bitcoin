@@ -27,7 +27,7 @@ class ScantxoutsetTest(BitcoinTestFramework):
         # interpret strings as addresses, assume scriptPubKey otherwise
         if isinstance(destination, str):
             destination = address_to_scriptpubkey(destination)
-        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=destination, amount=int(COIN * amount))
+        self.wallet.send_to(scriptPubKey=destination, amount=int(COIN * amount))
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

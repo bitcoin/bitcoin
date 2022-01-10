@@ -36,7 +36,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         self.log.info("Running test up to {} times.".format(MAX_REPEATS))
         for i in range(MAX_REPEATS):
             self.log.info('Run repeat {}'.format(i + 1))
-            txid = miniwallet.send_self_transfer(from_node=gen_node)['wtxid']
+            txid = miniwallet.send_self_transfer()['wtxid']
 
             want_tx = msg_getdata()
             want_tx.inv.append(CInv(t=MSG_TX, h=int(txid, 16)))

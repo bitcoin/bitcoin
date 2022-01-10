@@ -35,8 +35,8 @@ class MerkleBlockTest(BitcoinTestFramework):
         chain_height = self.nodes[1].getblockcount()
         assert_equal(chain_height, 105)
 
-        txid1 = miniwallet.send_self_transfer(from_node=self.nodes[0])['txid']
-        txid2 = miniwallet.send_self_transfer(from_node=self.nodes[0])['txid']
+        txid1 = miniwallet.send_self_transfer()['txid']
+        txid2 = miniwallet.send_self_transfer()['txid']
         # This will raise an exception because the transaction is not yet in a block
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
 
@@ -53,7 +53,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2], blockhash)), txlist)
 
         txin_spent = miniwallet.get_utxo(txid=txid2)  # Get the change from txid2
-        tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
+        tx3 = miniwallet.send_self_transfer(utxo_to_spend=txin_spent)
         txid3 = tx3['txid']
         self.generate(self.nodes[0], 1)
 

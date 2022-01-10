@@ -443,7 +443,7 @@ class BlockchainTest(BitcoinTestFramework):
         fee_per_byte = Decimal('0.00000010')
         fee_per_kb = 1000 * fee_per_byte
 
-        self.wallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
+        self.wallet.send_self_transfer(fee_rate=fee_per_kb)
         blockhash = self.generate(node, 1)[0]
 
         def assert_fee_not_in_block(verbosity):

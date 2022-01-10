@@ -298,7 +298,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         segwit_tx_generated = False
         for _ in range(num_transactions):
-            hex_tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['hex']
+            hex_tx = self.wallet.send_self_transfer()['hex']
             tx = tx_from_hex(hex_tx)
             if not tx.wit.is_null():
                 segwit_tx_generated = True

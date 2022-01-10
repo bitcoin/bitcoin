@@ -104,7 +104,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def create_self_transfer_from_utxo(self, input_tx):
         utxo = self.miniwallet.get_utxo(txid=input_tx.rehash(), mark_as_spent=False)
-        tx = self.miniwallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo)['tx']
+        tx = self.miniwallet.create_self_transfer(utxo_to_spend=utxo)['tx']
         return tx
 
     def create_bip112special(self, input, txversion):
@@ -124,7 +124,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
     def send_generic_input_tx(self, coinbases):
         input_txid = self.nodes[0].getblock(coinbases.pop(), 2)['tx'][0]['txid']
         utxo_to_spend = self.miniwallet.get_utxo(txid=input_txid)
-        return self.miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_to_spend)['tx']
+        return self.miniwallet.send_self_transfer(utxo_to_spend=utxo_to_spend)['tx']
 
     def create_bip68txs(self, bip68inputs, txversion, locktime_delta=0):
         """Returns a list of bip68 transactions with different bits set."""

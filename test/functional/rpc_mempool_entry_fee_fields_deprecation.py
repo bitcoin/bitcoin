@@ -29,7 +29,7 @@ class MempoolFeeFieldsDeprecationTest(BitcoinTestFramework):
 
         # we create the tx on the first node and wait until it syncs to node_deprecated
         # thus, any differences must be coming from getmempoolentry or getrawmempool
-        tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
+        tx = self.wallet.send_self_transfer()
         self.nodes[1].sendrawtransaction(tx["hex"])
 
         deprecated_fields = ["ancestorfees", "descendantfees", "modifiedfee", "fee"]

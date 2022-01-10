@@ -70,7 +70,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.log.debug("Send 5 transactions from node2 (to its own address)")
         tx_creation_time_lower = int(time.time())
         for _ in range(5):
-            last_txid = self.mini_wallet.send_self_transfer(from_node=self.nodes[2])["txid"]
+            last_txid = self.mini_wallet.send_self_transfer()["txid"]
         if self.is_sqlite_compiled():
             self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
             node2_balance = wallet_watch.getbalance()

@@ -95,7 +95,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['pooledtx'], 0)
 
         self.log.info("getblocktemplate: Test default witness commitment")
-        txid = int(self.wallet.send_self_transfer(from_node=node)['wtxid'], 16)
+        txid = int(self.wallet.send_self_transfer()['wtxid'], 16)
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
 
         # Check that default_witness_commitment is present.

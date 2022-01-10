@@ -79,7 +79,7 @@ class NetTest(BitcoinTestFramework):
     def test_getpeerinfo(self):
         self.log.info("Test getpeerinfo")
         # Create a few getpeerinfo last_block/last_transaction values.
-        self.wallet.send_self_transfer(from_node=self.nodes[0]) # Make a transaction so we can see it in the getpeerinfo results
+        self.wallet.send_self_transfer() # Make a transaction so we can see it in the getpeerinfo results
         self.generate(self.nodes[1], 1)
         time_now = int(time.time())
         peer_info = [x.getpeerinfo() for x in self.nodes]
