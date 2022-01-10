@@ -139,6 +139,40 @@ static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector
     return (it + 1 == script.end());
 }
 
+std::optional<std::pair<int, std::vector<Span<const unsigned char>>>> MatchMultiA(const CScript& script)
+{
+    std::vector<Span<const unsigned char>> keyspans;
+
+    // Redundant, but very fast and selective test.
+    if (script.size() == 0 || script[0] != 32 || script.back() != OP_NUMEQUAL) return {};
+
+    // Parse keys
+    auto it = script.begin();
+    while (script.end() - it >= 34) {
+        if (*it != 32) return {};
+        ++it;
+        keyspans.emplace_back(&*it, 32);
+        it += 32;
+        if (*it != (keyspans.size() == 1 ? OP_CHECKSIG : OP_CHECKSIGADD)) return {};
+        ++it;
+    }
+    if (keyspans.size() == 0 || keyspans.size() > MAX_PUBKEYS_PER_MULTI_A) return {};
+
+    // Parse threshold.
+    opcodetype opcode;
+    std::vector<unsigned char> data;
+    if (!script.GetOp(it, opcode, data)) return {};
+    if (it == script.end()) return {};
+    if (*it != OP_NUMEQUAL) return {};
+    ++it;
+    if (it != script.end()) return {};
+    auto threshold = GetScriptNumber(opcode, data, 1, (int)keyspans.size());
+    if (!threshold) return {};
+
+    // Construct result.
+    return std::pair{*threshold, std::move(keyspans)};
+}
+
 TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet)
 {
     vSolutionsRet.clear();
