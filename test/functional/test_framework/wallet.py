@@ -157,10 +157,10 @@ class MiniWallet:
     def send_self_transfer(self, **kwargs):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         tx = self.create_self_transfer(**kwargs)
-        self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx['hex'])
+        self.sendrawtransaction(from_node=kwargs.get('from_node'), tx_hex=tx['hex'])
         return tx
 
-    def send_to(self, *, from_node, scriptPubKey, amount, fee=1000):
+    def send_to(self, *, from_node=None, scriptPubKey, amount, fee=1000):
         """
         Create and send a tx with an output to a given scriptPubKey/amount,
         plus a change output to our internal address. To keep things simple, a
@@ -172,6 +172,7 @@ class MiniWallet:
 
         Returns a tuple (txid, n) referring to the created external utxo outpoint.
         """
+        from_node = from_node or self._test_node
         tx = self.create_self_transfer(from_node=from_node, fee_rate=0, mempool_valid=False)['tx']
         assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
         tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
@@ -179,8 +180,9 @@ class MiniWallet:
         txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
         return txid, 1
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._priv_key is None:
             vsize = Decimal(104)  # anyone-can-spend
@@ -213,7 +215,8 @@ class MiniWallet:
             assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 
-    def sendrawtransaction(self, *, from_node, tx_hex):
+    def sendrawtransaction(self, *, from_node=None, tx_hex):
+        from_node = from_node or self._test_node
         txid = from_node.sendrawtransaction(tx_hex)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
