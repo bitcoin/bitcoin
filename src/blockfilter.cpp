@@ -29,7 +29,7 @@ uint64_t GCSFilter::HashToRange(const Element& element) const
     uint64_t hash = CSipHasher(m_params.m_siphash_k0, m_params.m_siphash_k1)
         .Write(element.data(), element.size())
         .Finalize();
-    return MapIntoRange(hash, m_F);
+    return FastRange64(hash, m_F);
 }
 
 std::vector<uint64_t> GCSFilter::BuildHashedSet(const ElementSet& elements) const
