@@ -348,7 +348,7 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray({
                    CTxIn::SEQUENCE_FINAL,
-                   CTxIn::SEQUENCE_FINAL - 1
+                   CTxIn::MAX_SEQUENCE_NONFINAL,
                }) :
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 }
