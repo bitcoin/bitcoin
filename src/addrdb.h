@@ -59,12 +59,10 @@ std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, con
  */
 void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors);
 
-/**
- * Read the anchor IP address database (anchors.dat)
- *
- * Deleting anchors.dat is intentional as it avoids renewed peering to anchors after
- * an unclean shutdown and thus potential exploitation of the anchor peer policy.
- */
+/** Read the anchor IP address database (anchors.dat) */
 std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path);
+
+/** Delete the anchor IP address database (anchors.dat) */
+void DeleteAnchorsFile(const fs::path& anchors_db_path);
 
 #endif // BITCOIN_ADDRDB_H
