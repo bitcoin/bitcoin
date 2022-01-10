@@ -305,7 +305,7 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
 bool CSigSharesManager::ProcessMessageSigSesAnn(const CNode* pfrom, const CSigSesAnn& ann)
 {
     auto llmqType = ann.llmqType;
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
+    if (!Params().HasLLMQ(llmqType)) {
         return false;
     }
     if (ann.sessionId == UNINITIALIZED_SESSION_ID || ann.quorumHash.IsNull() || ann.id.IsNull() || ann.msgHash.IsNull()) {

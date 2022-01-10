@@ -193,9 +193,9 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex)
 
     LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Process block %s\n", __func__, pIndex->GetBlockHash().ToString());
 
-    for (auto& llmq : Params().GetConsensus().llmqs) {
+    for (auto& params : Params().GetConsensus().llmqs) {
         // Process signingActiveQuorumCount + 1 quorums for all available llmqTypes
-        const auto vecQuorums = ScanQuorums(llmq.first, pIndex, llmq.second.signingActiveQuorumCount + 1);
+        const auto vecQuorums = ScanQuorums(params.type, pIndex, params.signingActiveQuorumCount + 1);
 
         // First check if we are member of any quorum of this type
         auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
@@ -241,8 +241,8 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         return;
     }
 
-    for (auto& p : Params().GetConsensus().llmqs) {
-        EnsureQuorumConnections(p.second, pindexNew);
+    for (auto& params : Params().GetConsensus().llmqs) {
+        EnsureQuorumConnections(params, pindexNew);
     }
 
     {
@@ -377,7 +377,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pFrom is neither a verified masternode nor a qwatch connection\n", __func__);
         return false;
     }
-    if (Params().GetConsensus().llmqs.count(llmqType) == 0) {
+    if (!Params().HasLLMQ(llmqType)) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid llmqType: %d\n", __func__, static_cast<uint8_t>(llmqType));
         return false;
     }
@@ -565,7 +565,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
             }
         }
 
-        if (Params().GetConsensus().llmqs.count(request.GetLLMQType()) == 0) {
+        if (!Params().HasLLMQ(request.GetLLMQType())) {
             sendQDATA(CQuorumDataRequest::Errors::QUORUM_TYPE_INVALID);
             return;
         }

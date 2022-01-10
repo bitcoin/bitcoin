@@ -19,7 +19,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
 {
     UniValue ret(UniValue::VOBJ);
 
-    if (!Params().GetConsensus().llmqs.count(llmqType) || quorumHash.IsNull()) {
+    if (!Params().HasLLMQ(llmqType) || quorumHash.IsNull()) {
         return ret;
     }
 
@@ -117,7 +117,7 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
 
     UniValue sessionsJson(UniValue::VOBJ);
     for (const auto& p : sessions) {
-        if (!Params().GetConsensus().llmqs.count(p.first)) {
+        if (!Params().HasLLMQ(p.first)) {
             continue;
         }
         sessionsJson.pushKV(std::string(GetLLMQParams(p.first).name), p.second.ToJson(detailLevel));

@@ -33,7 +33,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         return false;
     }
 
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
+    if (!Params().HasLLMQ(llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", static_cast<uint8_t>(llmqType));
         return false;
     }
@@ -108,7 +108,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
 
 bool CFinalCommitment::VerifyNull() const
 {
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
+    if (!Params().HasLLMQ(llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", static_cast<uint8_t>(llmqType));
         return false;
     }
@@ -159,7 +159,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
     }
 
-    if (!Params().GetConsensus().llmqs.count(qcTx.commitment.llmqType)) {
+    if (!Params().HasLLMQ(qcTx.commitment.llmqType)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-type");
     }
 

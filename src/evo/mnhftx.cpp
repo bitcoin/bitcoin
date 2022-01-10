@@ -51,7 +51,7 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidat
         return state.DoS(100, false, REJECT_INVALID, "bad-mnhf-quorum-hash");
     }
 
-    if (!Params().GetConsensus().llmqs.count(Params().GetConsensus().llmqTypeMnhf)) {
+    if (!Params().HasLLMQ(Params().GetConsensus().llmqTypeMnhf)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mnhf-type");
     }
 

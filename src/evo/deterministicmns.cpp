@@ -1010,8 +1010,8 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
             mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
         } else {
             // keep snapshots for yet alive quorums
-            if (ranges::any_of(Params().GetConsensus().llmqs, [&snapshot, this](const auto& p_llmq){
-                const auto& [_, params] = p_llmq; LOCK(cs);
+            if (ranges::any_of(Params().GetConsensus().llmqs, [&snapshot, this](const auto& params){
+                LOCK(cs);
                 return (snapshot.GetHeight() % params.dkgInterval == 0) &&
                 (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >= tipIndex->nHeight);
             })) {
@@ -1081,8 +1081,7 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
             toDeleteLists.emplace_back(p.first);
             continue;
         }
-        bool fQuorumCache = ranges::any_of(Params().GetConsensus().llmqs, [&nHeight, &p](const auto& p_llmq){
-            const auto& [_, params] = p_llmq;
+        bool fQuorumCache = ranges::any_of(Params().GetConsensus().llmqs, [&nHeight, &p](const auto& params){
             return (p.second.GetHeight() % params.dkgInterval == 0) &&
                    (p.second.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >= nHeight);
         });
@@ -1094,7 +1093,7 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
         if (tipIndex && tipIndex->pprev && (p.first == tipIndex->pprev->GetBlockHash())) {
             toDeleteLists.emplace_back(p.first);
         } else if (ranges::any_of(Params().GetConsensus().llmqs,
-                                  [&p](const auto& p_llmq){ return p.second.GetHeight() % p_llmq.second.dkgInterval == 0; })) {
+                                  [&p](const auto& llmqParams){ return p.second.GetHeight() % llmqParams.dkgInterval == 0; })) {
             toDeleteLists.emplace_back(p.first);
         }
     }

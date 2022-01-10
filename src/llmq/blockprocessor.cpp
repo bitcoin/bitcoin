@@ -57,7 +57,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             return;
         }
 
-        if (!Params().GetConsensus().llmqs.count(qc.llmqType)) {
+        if (!Params().HasLLMQ(qc.llmqType)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                      static_cast<uint8_t>(qc.llmqType), pfrom->GetId());
             LOCK(cs_main);
@@ -483,10 +483,10 @@ std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> CQuorumBlockProce
 {
     std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> ret;
 
-    for (const auto& p : Params().GetConsensus().llmqs) {
-        auto& v = ret[p.second.type];
-        v.reserve(p.second.signingActiveQuorumCount);
-        auto commitments = GetMinedCommitmentsUntilBlock(p.second.type, pindex, p.second.signingActiveQuorumCount);
+    for (const auto& params : Params().GetConsensus().llmqs) {
+        auto& v = ret[params.type];
+        v.reserve(params.signingActiveQuorumCount);
+        auto commitments = GetMinedCommitmentsUntilBlock(params.type, pindex, params.signingActiveQuorumCount);
         std::copy(commitments.begin(), commitments.end(), std::back_inserter(v));
     }
 

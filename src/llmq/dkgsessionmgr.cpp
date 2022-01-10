@@ -27,10 +27,10 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, bool unitTests, b
 {
     MigrateDKG();
 
-    for (const auto& qt : Params().GetConsensus().llmqs) {
+    for (const auto& params : Params().GetConsensus().llmqs) {
         dkgSessionHandlers.emplace(std::piecewise_construct,
-                std::forward_as_tuple(qt.first),
-                std::forward_as_tuple(qt.second, blsWorker, *this));
+                std::forward_as_tuple(params.type),
+                std::forward_as_tuple(params, blsWorker, *this));
     }
 }
 
