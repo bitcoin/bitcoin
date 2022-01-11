@@ -214,8 +214,8 @@ class MiniWallet:
             assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 
-    def sendrawtransaction(self, *, from_node, tx_hex):
-        txid = from_node.sendrawtransaction(tx_hex)
+    def sendrawtransaction(self, *, from_node, tx_hex, **kwargs):
+        txid = from_node.sendrawtransaction(hexstring=tx_hex, **kwargs)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
 
