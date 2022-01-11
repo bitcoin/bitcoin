@@ -33,7 +33,7 @@ struct MinerTestingSetup : public TestingSetup {
     bool TestSequenceLocks(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs)
     {
         CCoinsViewMemPool view_mempool(&m_node.chainman->ActiveChainstate().CoinsTip(), *m_node.mempool);
-        return CheckSequenceLocks(m_node.chainman->ActiveChain().Tip(), view_mempool, tx);
+        return CheckSequenceLocksAtTip(m_node.chainman->ActiveChain().Tip(), view_mempool, tx);
     }
     BlockAssembler AssemblerForTest(const CChainParams& params);
 };
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.nLockTime = 0;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Fee(HIGHFEE).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
-    BOOST_CHECK(CheckFinalTx(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
+    BOOST_CHECK(CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx})); // Sequence locks fail
 
     {
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(CheckFinalTx(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
+    BOOST_CHECK(CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx})); // Sequence locks fail
 
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(!CheckFinalTx(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime fails
+    BOOST_CHECK(!CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime fails
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx})); // Sequence locks pass
     BOOST_CHECK(IsFinalTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip()->nHeight + 2, m_node.chainman->ActiveChain().Tip()->GetMedianTimePast())); // Locktime passes on 2nd block
 
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     prevheights[0] = baseheight + 4;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(!CheckFinalTx(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime fails
+    BOOST_CHECK(!CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime fails
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx})); // Sequence locks pass
     BOOST_CHECK(IsFinalTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip()->nHeight + 2, m_node.chainman->ActiveChain().Tip()->GetMedianTimePast() + 1)); // Locktime passes 1 second later
 
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     prevheights[0] = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     tx.nLockTime = 0;
     tx.vin[0].nSequence = 0;
-    BOOST_CHECK(CheckFinalTx(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
+    BOOST_CHECK(CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx})); // Sequence locks pass
     tx.vin[0].nSequence = 1;
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx})); // Sequence locks fail

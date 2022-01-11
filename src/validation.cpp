@@ -178,12 +178,12 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        std::vector<CScriptCheck>* pvChecks = nullptr)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction& tx)
+bool CheckFinalTxAtTip(const CBlockIndex* active_chain_tip, const CTransaction& tx)
 {
     AssertLockHeld(cs_main);
     assert(active_chain_tip); // TODO: Make active_chain_tip a reference
 
-    // CheckFinalTx() uses active_chain_tip.Height()+1 to evaluate
+    // CheckFinalTxAtTip() uses active_chain_tip.Height()+1 to evaluate
     // nLockTime because when IsFinalTx() is called within
     // AcceptBlock(), the height of the block *being*
     // evaluated is what is used. Thus if we want to know if a
@@ -201,7 +201,7 @@ bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction& tx)
     return IsFinalTx(tx, nBlockHeight, nBlockTime);
 }
 
-bool CheckSequenceLocks(CBlockIndex* tip,
+bool CheckSequenceLocksAtTip(CBlockIndex* tip,
                         const CCoinsView& coins_view,
                         const CTransaction& tx,
                         LockPoints* lp,
@@ -211,7 +211,7 @@ bool CheckSequenceLocks(CBlockIndex* tip,
 
     CBlockIndex index;
     index.pprev = tip;
-    // CheckSequenceLocks() uses active_chainstate.m_chain.Height()+1 to evaluate
+    // CheckSequenceLocksAtTip() uses active_chainstate.m_chain.Height()+1 to evaluate
     // height based locks because when SequenceLocks() is called within
     // ConnectBlock(), the height of the block *being*
     // evaluated is what is used.
@@ -257,7 +257,7 @@ bool CheckSequenceLocks(CBlockIndex* tip,
             // lockPair from CalculateSequenceLocks against tip+1.  We know
             // EvaluateSequenceLocks will fail if there was a non-zero sequence
             // lock on a mempool input, so we can use the return value of
-            // CheckSequenceLocks to indicate the LockPoints validity
+            // CheckSequenceLocksAtTip to indicate the LockPoints validity
             int maxInputHeight = 0;
             for (const int height : prevheights) {
                 // Can ignore mempool inputs since we'll fail if they had non-zero locks
@@ -352,19 +352,19 @@ void CChainState::MaybeUpdateMempoolForReorg(
         const CTransaction& tx = it->GetTx();
 
         // The transaction must be final.
-        if (!CheckFinalTx(m_chain.Tip(), tx)) return true;
+        if (!CheckFinalTxAtTip(m_chain.Tip(), tx)) return true;
         LockPoints lp = it->GetLockPoints();
         const bool validLP{TestLockPointValidity(m_chain, lp)};
         CCoinsViewMemPool view_mempool(&CoinsTip(), *m_mempool);
-        // CheckSequenceLocks checks if the transaction will be final in the next block to be
+        // CheckSequenceLocksAtTip checks if the transaction will be final in the next block to be
         // created on top of the new chain. We use useExistingLockPoints=false so that, instead of
         // using the information in lp (which might now refer to a block that no longer exists in
         // the chain), it will update lp to contain LockPoints relevant to the new chain.
-        if (!CheckSequenceLocks(m_chain.Tip(), view_mempool, tx, &lp, validLP)) {
-            // If CheckSequenceLocks fails, remove the tx and don't depend on the LockPoints.
+        if (!CheckSequenceLocksAtTip(m_chain.Tip(), view_mempool, tx, &lp, validLP)) {
+            // If CheckSequenceLocksAtTip fails, remove the tx and don't depend on the LockPoints.
             return true;
         } else if (!validLP) {
-            // If CheckSequenceLocks succeeded, it also updated the LockPoints.
+            // If CheckSequenceLocksAtTip succeeded, it also updated the LockPoints.
             // Now update the mempool entry lockpoints as well.
             m_mempool->mapTx.modify(it, [&lp](CTxMemPoolEntry& e) { e.UpdateLockPoints(lp); });
         }
@@ -688,7 +688,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
-    if (!CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx)) {
+    if (!CheckFinalTxAtTip(m_active_chainstate.m_chain.Tip(), tx)) {
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
     }
 
@@ -770,7 +770,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // be mined yet.
     // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
     // backend was removed, it no longer pulls coins from the mempool.
-    if (!CheckSequenceLocks(m_active_chainstate.m_chain.Tip(), m_view, tx, &lp)) {
+    if (!CheckSequenceLocksAtTip(m_active_chainstate.m_chain.Tip(), m_view, tx, &lp)) {
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
 
