@@ -67,6 +67,11 @@ public:
      * After this, we won't be able to reconcile transactions with the peer.
      */
     void ForgetPeer(NodeId peer_id);
+
+    /**
+     * Check if a peer is registered to reconcile transactions with us.
+     */
+    bool IsPeerRegistered(NodeId peer_id) const;
 };
 
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
