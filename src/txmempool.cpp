@@ -64,16 +64,6 @@ private:
     int64_t feeDelta;
 };
 
-struct update_lock_points
-{
-    explicit update_lock_points(const LockPoints& _lp) : lp(_lp) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateLockPoints(lp); }
-
-private:
-    const LockPoints& lp;
-};
-
 bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 {
     AssertLockHeld(cs_main);
@@ -649,10 +639,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        const LockPoints lp{it->GetLockPoints()};
-        if (!TestLockPointValidity(chain, lp)) {
-            mapTx.modify(it, update_lock_points(lp));
-        }
+        assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
 }
 

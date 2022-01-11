@@ -10,43 +10,57 @@ signed-integer-overflow:policy/feerate.cpp
 
 # -fsanitize=integer suppressions
 # ===============================
+# Dependencies
+# ------------
+# Suppressions in dependencies that are developed outside this repository.
+unsigned-integer-overflow:*/include/c++/
+unsigned-integer-overflow:bench/bench.h
+# unsigned-integer-overflow in FuzzedDataProvider's ConsumeIntegralInRange
+unsigned-integer-overflow:FuzzedDataProvider.h
+unsigned-integer-overflow:leveldb/
+unsigned-integer-overflow:minisketch/
+unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+implicit-integer-sign-change:*/include/boost/
+implicit-integer-sign-change:*/include/c++/
+implicit-integer-sign-change:*/new_allocator.h
+implicit-integer-sign-change:crc32c/
+# implicit-integer-sign-change in FuzzedDataProvider's ConsumeIntegralInRange
+implicit-integer-sign-change:FuzzedDataProvider.h
+implicit-integer-sign-change:minisketch/
+implicit-signed-integer-truncation:leveldb/
+implicit-unsigned-integer-truncation:*/include/c++/
+implicit-unsigned-integer-truncation:leveldb/
+implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+# std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
+implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
+shift-base:*/include/c++/
+shift-base:leveldb/
+shift-base:minisketch/
+shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 # Unsigned integer overflow occurs when the result of an unsigned integer
 # computation cannot be represented in its type. Unlike signed integer overflow,
 # this is not undefined behavior, but it is often unintentional. The list below
 # contains files in which we expect unsigned integer overflows to occur. The
 # list is used to suppress -fsanitize=integer warnings when running our CI UBSan
 # job.
-unsigned-integer-overflow:*/include/c++/
 unsigned-integer-overflow:addrman.cpp
 unsigned-integer-overflow:arith_uint256.h
-unsigned-integer-overflow:basic_string.h
-unsigned-integer-overflow:bench/bench.h
 unsigned-integer-overflow:bitcoin-tx.cpp
 unsigned-integer-overflow:common/bloom.cpp
 unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h
-unsigned-integer-overflow:coded_stream.h
 unsigned-integer-overflow:coins.cpp
 unsigned-integer-overflow:compressor.cpp
 unsigned-integer-overflow:core_write.cpp
 unsigned-integer-overflow:crypto/
-# unsigned-integer-overflow in FuzzedDataProvider's ConsumeIntegralInRange
-unsigned-integer-overflow:FuzzedDataProvider.h
 unsigned-integer-overflow:hash.cpp
-unsigned-integer-overflow:leveldb/
-unsigned-integer-overflow:minisketch/
 unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:pubkey.h
 unsigned-integer-overflow:script/interpreter.cpp
-unsigned-integer-overflow:stl_bvector.h
-unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
-implicit-integer-sign-change:*/include/boost/
-implicit-integer-sign-change:*/include/c++/
-implicit-integer-sign-change:*/new_allocator.h
 implicit-integer-sign-change:addrman.h
 implicit-integer-sign-change:arith_uint256.cpp
 implicit-integer-sign-change:bech32.cpp
@@ -56,12 +70,8 @@ implicit-integer-sign-change:chain.h
 implicit-integer-sign-change:coins.h
 implicit-integer-sign-change:compat/stdin.cpp
 implicit-integer-sign-change:compressor.h
-implicit-integer-sign-change:crc32c/
 implicit-integer-sign-change:crypto/
-# implicit-integer-sign-change in FuzzedDataProvider's ConsumeIntegralInRange
-implicit-integer-sign-change:FuzzedDataProvider.h
 implicit-integer-sign-change:key.cpp
-implicit-integer-sign-change:minisketch/
 implicit-integer-sign-change:noui.cpp
 implicit-integer-sign-change:policy/fees.cpp
 implicit-integer-sign-change:prevector.h
@@ -77,7 +87,6 @@ implicit-integer-sign-change:test/skiplist_tests.cpp
 implicit-integer-sign-change:test/streams_tests.cpp
 implicit-integer-sign-change:test/transaction_tests.cpp
 implicit-integer-sign-change:txmempool.cpp
-implicit-integer-sign-change:validation.cpp
 implicit-integer-sign-change:zmq/zmqpublishnotifier.cpp
 implicit-signed-integer-truncation,implicit-integer-sign-change:chain.h
 implicit-signed-integer-truncation,implicit-integer-sign-change:test/skiplist_tests.cpp
@@ -85,7 +94,6 @@ implicit-signed-integer-truncation:addrman.cpp
 implicit-signed-integer-truncation:addrman.h
 implicit-signed-integer-truncation:chain.h
 implicit-signed-integer-truncation:crypto/
-implicit-signed-integer-truncation:leveldb/
 implicit-signed-integer-truncation:node/miner.cpp
 implicit-signed-integer-truncation:net.cpp
 implicit-signed-integer-truncation:net_processing.cpp
@@ -93,19 +101,9 @@ implicit-signed-integer-truncation:streams.h
 implicit-signed-integer-truncation:test/arith_uint256_tests.cpp
 implicit-signed-integer-truncation:test/skiplist_tests.cpp
 implicit-signed-integer-truncation:torcontrol.cpp
-implicit-unsigned-integer-truncation:*/include/c++/
 implicit-unsigned-integer-truncation:crypto/
-implicit-unsigned-integer-truncation:leveldb/
-implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
-# std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
-implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
-shift-base:*/include/c++/
 shift-base:arith_uint256.cpp
 shift-base:crypto/
 shift-base:hash.cpp
-shift-base:leveldb/
-shift-base:minisketch/
-shift-base:net_processing.cpp
 shift-base:streams.h
-shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 shift-base:util/bip32.cpp

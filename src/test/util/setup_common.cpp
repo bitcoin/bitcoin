@@ -182,28 +182,28 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    auto rv = LoadChainstate(fReindex.load(),
-                             *Assert(m_node.chainman.get()),
-                             Assert(m_node.mempool.get()),
-                             fPruneMode,
-                             chainparams.GetConsensus(),
-                             m_args.GetBoolArg("-reindex-chainstate", false),
-                             m_cache_sizes.block_tree_db,
-                             m_cache_sizes.coins_db,
-                             m_cache_sizes.coins,
-                             true,
-                             true);
-    assert(!rv.has_value());
+    auto maybe_load_error = LoadChainstate(fReindex.load(),
+                                           *Assert(m_node.chainman.get()),
+                                           Assert(m_node.mempool.get()),
+                                           fPruneMode,
+                                           chainparams.GetConsensus(),
+                                           m_args.GetBoolArg("-reindex-chainstate", false),
+                                           m_cache_sizes.block_tree_db,
+                                           m_cache_sizes.coins_db,
+                                           m_cache_sizes.coins,
+                                           /*block_tree_db_in_memory=*/true,
+                                           /*coins_db_in_memory=*/true);
+    assert(!maybe_load_error.has_value());
 
-    auto maybe_verify_failure = VerifyLoadedChainstate(
+    auto maybe_verify_error = VerifyLoadedChainstate(
         *Assert(m_node.chainman),
         fReindex.load(),
         m_args.GetBoolArg("-reindex-chainstate", false),
         chainparams.GetConsensus(),
         m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
         m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
-        static_cast<int64_t(*)()>(GetTime));
-    assert(!maybe_verify_failure.has_value());
+        /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime));
+    assert(!maybe_verify_error.has_value());
 
     BlockValidationState state;
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {

@@ -4,7 +4,7 @@ define(_CLIENT_VERSION_MINOR, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
-define(_COPYRIGHT_YEAR, 2021)
+define(_COPYRIGHT_YEAR, 2022)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core]])
 AC_INIT([Bitcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
@@ -137,11 +137,11 @@ AC_ARG_WITH([bdb],
   [use_bdb=$withval],
   [use_bdb=auto])
 
-AC_ARG_ENABLE([ebpf],
-  [AS_HELP_STRING([--enable-ebpf],
-  [enable eBPF tracing (default is yes if sys/sdt.h is found)])],
-  [use_ebpf=$enableval],
-  [use_ebpf=yes])
+AC_ARG_ENABLE([usdt],
+  [AS_HELP_STRING([--enable-usdt],
+  [enable tracepoints for Userspace, Statically Defined Tracing (default is yes if sys/sdt.h is found)])],
+  [use_usdt=$enableval],
+  [use_usdt=yes])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -684,7 +684,6 @@ case $host in
      TARGET_OS=darwin
      if  test $cross_compiling != "yes"; then
        BUILD_OS=darwin
-       AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
        AC_CHECK_PROG([BREW], [brew], [brew])
        if test "$BREW" = "brew"; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
@@ -746,9 +745,6 @@ case $host in
            AC_PATH_TOOL([OTOOL], [otool], [otool])
            AC_PATH_PROGS([XORRISOFS], [xorrisofs], [xorrisofs])
            AC_PATH_PROGS([DMG], [dmg], [dmg])
-           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
-           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert], [convert])
-           AC_PATH_PROGS([TIFFCP], [tiffcp], [tiffcp])
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
@@ -1341,15 +1337,15 @@ if test "$enable_wallet" != "no"; then
     fi
 fi
 
-if test "$use_ebpf" != "no"; then
-  AC_MSG_CHECKING([whether eBPF tracepoints are supported])
+if test "$use_usdt" != "no"; then
+  AC_MSG_CHECKING([whether Userspace, Statically Defined Tracing tracepoints are supported])
   AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM(
       [#include <sys/sdt.h>],
       [DTRACE_PROBE("context", "event");]
     )],
-    [AC_MSG_RESULT([yes]); have_sdt=yes; AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable eBPF user static defined tracepoints])],
-    [AC_MSG_RESULT([no]); have_sdt=no;]
+    [AC_MSG_RESULT([yes]); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
+    [AC_MSG_RESULT([no]); use_usdt=no;]
   )
 fi
 
@@ -1763,7 +1759,6 @@ AM_CONDITIONAL([TARGET_WINDOWS], [test "$TARGET_OS" = "windows"])
 AM_CONDITIONAL([ENABLE_WALLET], [test "$enable_wallet" = "yes"])
 AM_CONDITIONAL([USE_SQLITE], [test "$use_sqlite" = "yes"])
 AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
-AM_CONDITIONAL([ENABLE_TRACING], [test "$have_sdt" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
@@ -1865,6 +1860,7 @@ AC_CONFIG_LINKS([contrib/devtools/symbol-check.py:contrib/devtools/symbol-check.
 AC_CONFIG_LINKS([contrib/devtools/test-security-check.py:contrib/devtools/test-security-check.py])
 AC_CONFIG_LINKS([contrib/devtools/test-symbol-check.py:contrib/devtools/test-symbol-check.py])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
+AC_CONFIG_LINKS([contrib/macdeploy/background.tiff:contrib/macdeploy/background.tiff])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/test_runner.py:test/util/test_runner.py])
@@ -1932,14 +1928,14 @@ echo "  with bench      = $use_bench"
 echo "  with upnp       = $use_upnp"
 echo "  with natpmp     = $use_natpmp"
 echo "  use asm         = $use_asm"
-echo "  ebpf tracing    = $have_sdt"
+echo "  USDT tracing    = $use_usdt"
 echo "  sanitizers      = $use_sanitizers"
 echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"
 echo "  werror          = $enable_werror"
 echo "  LTO             = $enable_lto"
 echo
-echo "  target os       = $TARGET_OS"
+echo "  target os       = $host_os"
 echo "  build os        = $build_os"
 echo
 echo "  CC              = $CC"

@@ -302,7 +302,7 @@
           </property>
           <property name="icon">
            <iconset resource="../bitcoin.qrc">
-            <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
+            <normaloff>:/icons/eye</normaloff>:/icons/eye</iconset>
           </property>
           <property name="autoDefault">
            <bool>false</bool>

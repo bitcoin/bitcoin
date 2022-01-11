@@ -24,9 +24,10 @@ enum class CoinStatsHashType {
     NONE,
 };
 
-struct CCoinsStats
-{
-    CoinStatsHashType m_hash_type;
+struct CCoinsStats {
+    //! Which hash type to use
+    const CoinStatsHashType m_hash_type;
+
     int nHeight{0};
     uint256 hashBlock{};
     uint64_t nTransactions{0};
@@ -34,7 +35,8 @@ struct CCoinsStats
     uint64_t nBogoSize{0};
     uint256 hashSerialized{};
     uint64_t nDiskSize{0};
-    CAmount nTotalAmount{0};
+    //! The total amount, or nullopt if an overflow occurred calculating it
+    std::optional<CAmount> total_amount{0};
 
     //! The number of coins contained.
     uint64_t coins_count{0};
