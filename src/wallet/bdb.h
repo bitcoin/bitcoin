@@ -31,6 +31,7 @@
 
 struct bilingual_str;
 
+namespace wallet {
 static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
 static const bool DEFAULT_WALLET_PRIVDB = true;
 
@@ -229,5 +230,6 @@ bool BerkeleyDatabaseSanityCheck();
 
 //! Return object giving access to Berkeley database at specified path.
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_BDB_H

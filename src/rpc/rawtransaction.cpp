@@ -45,6 +45,15 @@
 
 #include <univalue.h>
 
+using node::AnalyzePSBT;
+using node::BroadcastTransaction;
+using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::FindCoins;
+using node::GetTransaction;
+using node::NodeContext;
+using node::PSBTAnalysis;
+using node::ReadBlockFromDisk;
+
 static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, CChainState& active_chainstate)
 {
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.

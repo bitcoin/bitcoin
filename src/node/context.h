@@ -26,6 +26,7 @@ class Init;
 class WalletLoader;
 } // namespace interfaces
 
+namespace node {
 //! NodeContext struct containing references to chain state and connection
 //! state.
 //!
@@ -62,5 +63,6 @@ struct NodeContext {
     NodeContext();
     ~NodeContext();
 };
+} // namespace node
 
 #endif // BITCOIN_NODE_CONTEXT_H

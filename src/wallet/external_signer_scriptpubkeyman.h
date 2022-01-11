@@ -9,6 +9,7 @@
 
 #include <memory>
 
+namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {
   public:
@@ -30,4 +31,5 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 
   TransactionError FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
 };
+} // namespace wallet
 #endif // BITCOIN_WALLET_EXTERNAL_SIGNER_SCRIPTPUBKEYMAN_H

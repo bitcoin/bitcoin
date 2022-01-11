@@ -7,12 +7,14 @@
 
 #include <primitives/transaction.h>
 
-class CWallet;
-class CWalletTx;
 class uint256;
-class CCoinControl;
 enum class FeeEstimateMode;
 struct bilingual_str;
+
+namespace wallet {
+class CCoinControl;
+class CWallet;
+class CWalletTx;
 
 namespace feebumper {
 
@@ -54,5 +56,6 @@ Result CommitTransaction(CWallet& wallet,
     uint256& bumped_txid);
 
 } // namespace feebumper
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_FEEBUMPER_H

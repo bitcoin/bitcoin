@@ -26,11 +26,13 @@
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
 
 // Enable BOOST_CHECK_EQUAL for enum class types
+namespace std {
 template <typename T>
 std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
 {
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
+} // namespace std
 
 /**
  * This global and the helpers that use it are not thread-safe.
@@ -76,7 +78,7 @@ static constexpr CAmount CENT{1000000};
  */
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
-    NodeContext m_node;
+    node::NodeContext m_node;
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
@@ -90,7 +92,7 @@ struct BasicTestingSetup {
  * initialization behaviour.
  */
 struct ChainTestingSetup : public BasicTestingSetup {
-    CacheSizes m_cache_sizes{};
+    node::CacheSizes m_cache_sizes{};
 
     explicit ChainTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~ChainTestingSetup();

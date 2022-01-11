@@ -33,6 +33,8 @@
 
 #include <test/fuzz/fuzz.h>
 
+using node::SnapshotMetadata;
+
 void initialize_deserialize()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.

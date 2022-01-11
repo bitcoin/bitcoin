@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #endif
 
+namespace wallet {
 namespace {
 
 //! Make sure database has a unique fileid within the environment. If it
@@ -846,3 +847,4 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
     status = DatabaseStatus::SUCCESS;
     return db;
 }
+} // namespace wallet

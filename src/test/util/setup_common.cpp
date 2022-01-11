@@ -43,6 +43,14 @@
 
 #include <functional>
 
+using node::BlockAssembler;
+using node::CalculateCacheSizes;
+using node::LoadChainstate;
+using node::RegenerateCommitments;
+using node::VerifyLoadedChainstate;
+using node::fPruneMode;
+using node::fReindex;
+
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 

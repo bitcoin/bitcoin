@@ -24,6 +24,13 @@
 #include <QTimer>
 #include <QMessageBox>
 
+using wallet::AddWallet;
+using wallet::CWallet;
+using wallet::CreateMockWalletDatabase;
+using wallet::RemoveWallet;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WalletContext;
+
 namespace
 {
 
