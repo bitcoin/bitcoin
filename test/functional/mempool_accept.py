@@ -17,6 +17,7 @@ from test_framework.messages import (
     CTxOut,
     MAX_BLOCK_WEIGHT,
     MAX_MONEY,
+    SEQUENCE_FINAL,
     tx_from_hex,
 )
 from test_framework.script import (
@@ -100,7 +101,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         coin = coins.pop()  # Pick a random coin(base) to spend
         output_amount = Decimal('0.025')
         raw_tx_final = node.signrawtransactionwithwallet(node.createrawtransaction(
-            inputs=[{'txid': coin['txid'], 'vout': coin['vout'], "sequence": 0xffffffff}],  # SEQUENCE_FINAL
+            inputs=[{'txid': coin['txid'], 'vout': coin['vout'], "sequence": SEQUENCE_FINAL}],
             outputs=[{node.getnewaddress(): output_amount}],
             locktime=node.getblockcount() + 2000,  # Can be anything
         ))['hex']

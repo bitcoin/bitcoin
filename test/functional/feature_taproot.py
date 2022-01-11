@@ -19,6 +19,7 @@ from test_framework.messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
+    SEQUENCE_FINAL,
 )
 from test_framework.script import (
     ANNEX_TAG,
@@ -1516,7 +1517,7 @@ class TaprootTest(BitcoinTestFramework):
         assert self.nodes[1].getblockcount() == 0
         coinbase = CTransaction()
         coinbase.nVersion = 1
-        coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), 0xffffffff)]
+        coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
         coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
         coinbase.rehash()
@@ -1604,7 +1605,7 @@ class TaprootTest(BitcoinTestFramework):
             val = 42000000 * (i + 7)
             tx = CTransaction()
             tx.nVersion = 1
-            tx.vin = [CTxIn(COutPoint(lasttxid, i & 1), CScript([]), 0xffffffff)]
+            tx.vin = [CTxIn(COutPoint(lasttxid, i & 1), CScript([]), SEQUENCE_FINAL)]
             tx.vout = [CTxOut(val, spk), CTxOut(amount - val, CScript([OP_1]))]
             if i & 1:
                 tx.vout = list(reversed(tx.vout))
@@ -1664,7 +1665,7 @@ class TaprootTest(BitcoinTestFramework):
         tx.vin = []
         inputs = []
         input_spks = [tap_spks[0], tap_spks[1], old_spks[0], tap_spks[2], tap_spks[5], old_spks[2], tap_spks[6], tap_spks[3], tap_spks[4]]
-        sequences = [0, 0xffffffff, 0xffffffff, 0xfffffffe, 0xfffffffe, 0, 0, 0xffffffff, 0xffffffff]
+        sequences = [0, SEQUENCE_FINAL, SEQUENCE_FINAL, 0xfffffffe, 0xfffffffe, 0, 0, SEQUENCE_FINAL, SEQUENCE_FINAL]
         hashtypes = [SIGHASH_SINGLE, SIGHASH_SINGLE|SIGHASH_ANYONECANPAY, SIGHASH_ALL, SIGHASH_ALL, SIGHASH_DEFAULT, SIGHASH_ALL, SIGHASH_NONE, SIGHASH_NONE|SIGHASH_ANYONECANPAY, SIGHASH_ALL|SIGHASH_ANYONECANPAY]
         for i, spk in enumerate(input_spks):
             tx.vin.append(CTxIn(spend_info[spk]['prevout'], CScript(), sequences[i]))
