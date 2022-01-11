@@ -489,7 +489,7 @@ public:
     bool checkFinalTx(const CTransaction& tx) override
     {
         LOCK(cs_main);
-        return CheckFinalTx(chainman().ActiveChain().Tip(), tx);
+        return CheckFinalTx(chainman().ActiveChain().Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS);
     }
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {

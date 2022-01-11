@@ -116,7 +116,7 @@ public:
     //! or one of its ancestors.
     virtual std::optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
 
-    //! Check if transaction will be final given chain height current time.
+    //! Check if the transaction will be final in the block following the current chain tip.
     virtual bool checkFinalTx(const CTransaction& tx) = 0;
 
     //! Return whether node has the block and optionally return block metadata
