@@ -76,7 +76,7 @@ class AnchorsTest(BitcoinTestFramework):
         self.start_node(0)
 
         self.log.info("When node starts, check if anchors.dat doesn't exist anymore")
-        assert not os.path.exists(node_anchors_path)
+        self.wait_until(lambda: not os.path.exists(node_anchors_path))
 
 
 if __name__ == "__main__":
