@@ -2302,6 +2302,8 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         m_anchors = ReadAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
             m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+        } else if (m_anchors.empty()) {
+            DeleteAnchorsFile(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         }
         LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
     }
