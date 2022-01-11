@@ -210,7 +210,10 @@ static RPCHelpMan generatetodescriptor()
 {
     return RPCHelpMan{
         "generatetodescriptor",
-        "\nMine blocks immediately to a specified descriptor (before the RPC call returns)\n",
+        "\nMine blocks immediately to a specified descriptor (before the RPC call returns)\n"
+        "Only maxtries hash attempts will be performed. If no valid block can be found among those,\n"
+        "an error will be returned. This RPC is only intended for testing purposes, as it is highly inefficient and extremely\n"
+        "unlikely to succeed on mainnet\n",
         {
             {"num_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor to send the newly generated bitcoin to."},
@@ -254,7 +257,10 @@ static RPCHelpMan generate()
 static RPCHelpMan generatetoaddress()
 {
     return RPCHelpMan{"generatetoaddress",
-                "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
+                "\nMine blocks immediately to a specified address (before the RPC call returns)\n"
+                "Only maxtries hash attempts will be performed. If no valid block can be found among those,\n"
+                "an error will be returned. This RPC is only intended for testing purposes, as it is highly inefficient and extremely\n"
+                "unlikely to succeed on mainnet\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
@@ -295,7 +301,10 @@ static RPCHelpMan generatetoaddress()
 static RPCHelpMan generateblock()
 {
     return RPCHelpMan{"generateblock",
-        "\nMine a block with a set of ordered transactions immediately to a specified address or descriptor (before the RPC call returns)\n",
+        "\nMine a block with a set of ordered transactions immediately to a specified address or descriptor (before the RPC call returns)\n"
+        "Only " + strprintf("%i", DEFAULT_MAX_TRIES) + " hash attempts will be performed. If no valid block can be found among those,\n"
+        "an error will be returned. This RPC is only intended for testing purposes, as it is highly inefficient and extremely\n"
+        "unlikely to succeed on mainnet\n",
         {
             {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
             {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
