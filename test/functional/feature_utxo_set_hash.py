@@ -67,8 +67,8 @@ class UTXOSetHashTest(BitcoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
         self.log.info("Test deterministic UTXO set hash results")
-        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "4eb23b9673b7472e33ebf6e6aefee849fe5bc5e598fd387c2f9222070cc2f711")
-        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "dd74d7f1fb047577915d490e82d063e843f7853ae7543c9980a28c67326e1a2c")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "91ceba6561281d14db95afb48894fa6f764daa9f2190d05cb397e759634e10bf")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "c75ac7fcf057ef30cb5880fc800a99d3908fd0eb8593647512823ada6e359ef5")
 
     def run_test(self):
         self.test_muhash_implementation()
