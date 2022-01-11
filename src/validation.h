@@ -995,10 +995,7 @@ public:
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    ~ChainstateManager() {
-        LOCK(::cs_main);
-        UnloadBlockIndex(/*mempool=*/nullptr, *this);
-    }
+    ~ChainstateManager();
 };
 
 using FopenFn = std::function<FILE*(const fs::path&, const char*)>;

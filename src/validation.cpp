@@ -4151,10 +4151,6 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
     AssertLockHeld(::cs_main);
     chainman.Unload();
     if (mempool) mempool->clear();
-    g_versionbitscache.Clear();
-    for (auto& i : warningcache) {
-        i.clear();
-    }
 }
 
 bool ChainstateManager::LoadBlockIndex()
@@ -5229,5 +5225,18 @@ void ChainstateManager::MaybeRebalanceCaches()
             m_ibd_chainstate->ResizeCoinsCaches(
                 m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
         }
+    }
+}
+
+ChainstateManager::~ChainstateManager()
+{
+    LOCK(::cs_main);
+    UnloadBlockIndex(/*mempool=*/nullptr, *this);
+
+    // TODO: The version bits cache and warning cache should probably become
+    // non-globals
+    g_versionbitscache.Clear();
+    for (auto& i : warningcache) {
+        i.clear();
     }
 }
