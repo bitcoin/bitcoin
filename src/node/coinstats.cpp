@@ -17,6 +17,7 @@
 
 #include <map>
 
+namespace node {
 // Database-independent metric indicating the UTXO set size
 uint64_t GetBogoSize(const CScript& script_pub_key)
 {
@@ -92,7 +93,7 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point, const CBlockIndex* pindex)
+static bool GetUTXOStats(CCoinsView* view, node::BlockManager& blockman, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point, const CBlockIndex* pindex)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
@@ -181,3 +182,4 @@ static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
     stats.hashSerialized = out;
 }
 static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
+} // namespace node

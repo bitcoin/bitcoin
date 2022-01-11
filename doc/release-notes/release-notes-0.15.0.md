@@ -411,7 +411,7 @@ Low-level RPC changes
 - #10446 `2772dc9` net: avoid extra dns query per seed (theuni)
 - #10824 `9dd6a2b` Avoid unnecessary work in SetNetworkActive (promag)
 - #10948 `df3a6f4` p2p: Hardcoded seeds update pre-0.15 branch (laanwj)
-- #10977 `02f4c4a` [net] Fix use of uninitialized value in getnetworkinfo(const JSONRPCRequest&) (practicalswift)
+- #10977 `02f4c4a` [net] Fix use of uninitialized value in getnetworkinfo(const node::JSONRPCRequest&) (practicalswift)
 - #10982 `c8b62c7` Disconnect network service bits 6 and 8 until Aug 1, 2018 (TheBlueMatt)
 - #11012 `0e5cff6` Make sure to clean up mapBlockSource if we've already seen the block (theuni)
 

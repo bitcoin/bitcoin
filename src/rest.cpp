@@ -33,6 +33,11 @@
 #include <univalue.h>
 // SYSCOIN
 #include <services/asset.h>
+
+using node::GetTransaction;
+using node::IsBlockPruned;
+using node::ReadBlockFromDisk;
+
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 static constexpr unsigned int MAX_REST_HEADERS_RESULTS = 2000;
 
@@ -81,9 +86,9 @@ static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string me
  *                  context is not found.
  * @returns         Pointer to the node context or nullptr if not found.
  */
-static NodeContext* GetNodeContext(const std::any& context, HTTPRequest* req)
+static node::NodeContext* GetNodeContext(const std::any& context, HTTPRequest* req)
 {
-    auto node_context = util::AnyPtr<NodeContext>(context);
+    auto node_context = util::AnyPtr<node::NodeContext>(context);
     if (!node_context) {
         RESTERR(req, HTTP_INTERNAL_SERVER_ERROR,
                 strprintf("%s:%d (%s)\n"
@@ -104,7 +109,7 @@ static NodeContext* GetNodeContext(const std::any& context, HTTPRequest* req)
  */
 static CTxMemPool* GetMemPool(const std::any& context, HTTPRequest* req)
 {
-    auto node_context = util::AnyPtr<NodeContext>(context);
+    auto node_context = util::AnyPtr<node::NodeContext>(context);
     if (!node_context || !node_context->mempool) {
         RESTERR(req, HTTP_NOT_FOUND, "Mempool disabled or instance not found");
         return nullptr;
@@ -121,7 +126,7 @@ static CTxMemPool* GetMemPool(const std::any& context, HTTPRequest* req)
  */
 static ChainstateManager* GetChainman(const std::any& context, HTTPRequest* req)
 {
-    auto node_context = util::AnyPtr<NodeContext>(context);
+    auto node_context = util::AnyPtr<node::NodeContext>(context);
     if (!node_context || !node_context->chainman) {
         RESTERR(req, HTTP_INTERNAL_SERVER_ERROR,
                 strprintf("%s:%d (%s)\n"
@@ -559,7 +564,7 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
 
     switch (rf) {
     case RetFormat::JSON: {
-        JSONRPCRequest jsonRequest;
+        node::JSONRPCRequest jsonRequest;
         jsonRequest.context = context;
         jsonRequest.params = UniValue(UniValue::VARR);
         UniValue chainInfoObject = getblockchaininfo().HandleRequest(jsonRequest);
@@ -633,7 +638,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
     CBlockIndex* blockindex = nullptr;
     uint256 hashBlock = uint256();
-    const NodeContext* const node = GetNodeContext(context, req);
+    const node::NodeContext* const node = GetNodeContext(context, req);
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }

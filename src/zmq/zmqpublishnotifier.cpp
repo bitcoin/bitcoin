@@ -28,6 +28,9 @@
 #include <core_io.h>
 #include <validationinterface.h>
 #include <shutdown.h>
+
+using node::ReadBlockFromDisk;
+
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 static bool bFirstTime = true;
 static const char *MSG_HASHBLOCK = "hashblock";

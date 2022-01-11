@@ -11,7 +11,9 @@
 
 #include <univalue.h>
 #include <evo/cbtx.h>
+namespace node {
 class BlockManager;
+}
 namespace llmq
 {
 
@@ -118,7 +120,7 @@ public:
     inline bool IsNull() const {return commitments.empty();}
 };
 
-bool CheckLLMQCommitment(BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)  EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool CheckLLMQCommitment(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)  EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 } // namespace llmq
 

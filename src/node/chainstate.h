@@ -14,11 +14,12 @@ class ChainstateManager;
 class CConnman;
 class BanMan;
 class PeerManager;
-namespace Consensus {
-    struct Params;
-}
 class CTxMemPool;
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 
+namespace node {
 enum class ChainstateLoadingError {
     // SYSCOIN
     ERROR_COMMIT_EVODB,
@@ -94,5 +95,6 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 unsigned int check_blocks,
                                                                 unsigned int check_level,
                                                                 std::function<int64_t()> get_unix_time_seconds);
+} // namespace node
 
 #endif // SYSCOIN_NODE_CHAINSTATE_H

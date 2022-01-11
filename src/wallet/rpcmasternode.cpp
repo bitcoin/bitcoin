@@ -5,7 +5,8 @@
 #include <rpc/server.h>
 #include <wallet/rpc/util.h>
 #include <wallet/spend.h>
-
+#include <wallet/rpc/wallet.h>
+using namespace wallet;
 static RPCHelpMan masternode_outputs()
 {
     return RPCHelpMan{"masternode_outputs",
@@ -17,14 +18,14 @@ static RPCHelpMan masternode_outputs()
                 HelpExampleCli("masternode_outputs", "")
             + HelpExampleRpc("masternode_outputs", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<wallet::CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
 
     // Find possible candidates
-    std::vector<COutput> vPossibleCoins;
+    std::vector<wallet::COutput> vPossibleCoins;
     {
         LOCK(pwallet->cs_wallet);
         AvailableCoins(*pwallet, vPossibleCoins, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, MAX_ASSET, MAX_ASSET, 0, true);
@@ -45,7 +46,7 @@ static RPCHelpMan masternode_outputs()
 
 
 
-Span<const CRPCCommand> GetMasternodeWalletRPCCommands()
+Span<const CRPCCommand> wallet::GetMasternodeWalletRPCCommands()
 {
 // clang-format off
 static const CRPCCommand commands[] =

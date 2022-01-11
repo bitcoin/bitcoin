@@ -23,6 +23,7 @@ class CScript;
 
 namespace Consensus { struct Params; };
 
+namespace node {
 static const bool DEFAULT_PRINTPRIORITY = false;
 
 struct CBlockTemplate
@@ -213,5 +214,6 @@ bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainParams);
 // SYSCOIN
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman, const std::vector<unsigned char> &vchExtraData);
+} // namespace node
 
 #endif // SYSCOIN_NODE_MINER_H

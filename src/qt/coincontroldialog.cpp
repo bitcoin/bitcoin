@@ -35,6 +35,10 @@
 #include <core_io.h>
 #include <univalue.h>
 #include <rpc/util.h>
+
+using wallet::CCoinControl;
+using wallet::MIN_CHANGE;
+
 QList<CAmount> CoinControlDialog::payAmounts;
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
 

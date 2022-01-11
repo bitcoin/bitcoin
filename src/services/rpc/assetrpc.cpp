@@ -20,11 +20,14 @@
 #include <node/context.h>
 #include <node/transaction.h>
 #include <rpc/server_util.h>
+#include <interfaces/node.h>
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 
-
+using node::ReadBlockFromDisk;
+using node::IsBlockPruned;
+using node::GetTransaction;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
     oAsset.__pushKV("asset_guid", UniValue(nBaseAsset).write());
     oAsset.__pushKV("symbol", DecodeBase64(asset.strSymbol));
@@ -149,7 +152,7 @@ static RPCHelpMan assettransactionnotarize()
             HelpExampleCli("assettransactionnotarize", "\"hex\" 12121 \"signature\"")	
             + HelpExampleRpc("assettransactionnotarize", "\"hex\",12121,\"signature\"")	
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
     const std::string &hexstring = request.params[0].get_str();
@@ -185,7 +188,7 @@ static RPCHelpMan getnotarysighash()
             HelpExampleCli("getnotarysighash", "\"hex\" 12121")
             + HelpExampleRpc("getnotarysighash", "\"hex\",12121")	
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {	
     const std::string &hexstring = request.params[0].get_str();
     uint64_t nAsset;
@@ -231,7 +234,7 @@ static RPCHelpMan convertaddress()
             HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
             + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {	
 
     UniValue ret(UniValue::VOBJ);	
@@ -339,7 +342,7 @@ static RPCHelpMan assetallocationverifyzdag()
             HelpExampleCli("assetallocationverifyzdag", "\"txid\"")
             + HelpExampleRpc("assetallocationverifyzdag", "\"txid\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 	const UniValue &params = request.params;
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
@@ -381,10 +384,10 @@ static RPCHelpMan syscoindecoderawtransaction()
         HelpExampleCli("syscoindecoderawtransaction", "\"hexstring\"")
         + HelpExampleRpc("syscoindecoderawtransaction", "\"hexstring\"")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
 
     std::string hexstring = params[0].get_str();
     CMutableTransaction tx;
@@ -435,7 +438,7 @@ static RPCHelpMan getnevmblockchaininfo()
             HelpExampleCli("getnevmblockchaininfo", "")
             + HelpExampleRpc("getnevmblockchaininfo", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     UniValue oNEVM(UniValue::VOBJ);
@@ -510,7 +513,7 @@ static RPCHelpMan assetinfo()
             HelpExampleCli("assetinfo", "\"assetguid\"")
             + HelpExampleRpc("assetinfo", "\"assetguid\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
     UniValue oAsset(UniValue::VOBJ);
@@ -567,7 +570,7 @@ static RPCHelpMan listassets()
             + HelpExampleCli("listassets", "0 0 '{\"asset_guid\":\"3473733\"}'")
             + HelpExampleRpc("listassets", "0, 0, '{\"asset_guid\":\"3473733\"}'")
             },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
     UniValue options;
@@ -604,9 +607,9 @@ static RPCHelpMan syscoingetspvproof()
     RPCResult{
         RPCResult::Type::ANY, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
     RPCExamples{""},
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     CBlockIndex* pblockindex = nullptr;
     uint256 hashBlock;
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
@@ -703,7 +706,7 @@ static RPCHelpMan syscoinstopgeth()
         HelpExampleCli("syscoinstopgeth", "")
         + HelpExampleRpc("syscoinstopgeth", "")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!StopGethNode())
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
@@ -728,7 +731,7 @@ static RPCHelpMan syscoinstartgeth()
         HelpExampleCli("syscoinstartgeth", "")
         + HelpExampleRpc("syscoinstartgeth", "")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if(!chainman.ActiveChainstate().RestartGethNode()) {
@@ -758,7 +761,7 @@ static RPCHelpMan syscoingettxroots()
         HelpExampleCli("syscoingettxroots", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
         + HelpExampleRpc("syscoingettxroots", "0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_setethstatus);
     std::string blockHashStr = request.params[0].get_str();
@@ -798,7 +801,7 @@ static RPCHelpMan syscoincheckmint()
         HelpExampleCli("syscoincheckmint", "d8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
         + HelpExampleRpc("syscoincheckmint", "d8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::string strTxHash = request.params[0].get_str();
     boost::erase_all(strTxHash, "0x");  // strip 0x
@@ -840,7 +843,7 @@ static RPCHelpMan syscoinsetethheaders()
             HelpExampleCli("syscoinsetethheaders", "\"[[\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
             + HelpExampleRpc("syscoinsetethheaders", "\"[[\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fRegTest) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "This function is only available in regtest mode for testing");

@@ -36,6 +36,8 @@ struct Params;
 }
 // SYSCOIN
 struct NodeContext;
+
+namespace node {
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
@@ -195,4 +197,5 @@ bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, con
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 // SYSCOIN
 void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface, NodeContext& node);
+}
 #endif // SYSCOIN_NODE_BLOCKSTORAGE_H

@@ -33,7 +33,7 @@ UniValue RPCTestingSetup::CallRPC(std::string args)
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
-    JSONRPCRequest request;
+    node::JSONRPCRequest request;
     request.context = &m_node;
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);

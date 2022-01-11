@@ -4,6 +4,13 @@
 
 #ifndef SYSCOIN_WALLET_RPC_SPEND_H
 #define SYSCOIN_WALLET_RPC_SPEND_H
+#include <vector>
 class RPCHelpMan;
+class UniValue;
+namespace wallet {
+    class CWallet;
+    class CCoinControl;
 RPCHelpMan signrawtransactionwithwallet();
+UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);
+}
 #endif // SYSCOIN_WALLET_RPC_SPEND_H

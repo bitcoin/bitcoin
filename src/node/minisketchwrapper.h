@@ -10,9 +10,11 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace node {
 /** Wrapper around Minisketch::Minisketch(32, implementation, capacity). */
 Minisketch MakeMinisketch32(size_t capacity);
 /** Wrapper around Minisketch::CreateFP. */
 Minisketch MakeMinisketch32FP(size_t max_elements, uint32_t fpbits);
+} // namespace node
 
 #endif // SYSCOIN_NODE_MINISKETCHWRAPPER_H

@@ -537,8 +537,8 @@ public:
     void registerRpcs() override
     {
         for (const CRPCCommand& command : GetWalletRPCCommands()) {
-            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                JSONRPCRequest wallet_request = request;
+            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const node::JSONRPCRequest& request, UniValue& result, bool last_handler) {
+                node::JSONRPCRequest wallet_request = request;
                 wallet_request.context = &m_context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
@@ -546,10 +546,10 @@ public:
         }
         // SYSCOIN
         for (const CRPCCommand& command : GetAssetWalletRPCCommands()) {
-            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                JSONRPCRequest wallet_request = request;
+            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const node::JSONRPCRequest& request, UniValue& result, bool last_handler) {
+                node::JSONRPCRequest wallet_request = request;
                 wallet_request.context = &m_context;
-                auto context = util::AnyPtr<NodeContext>(request.context);
+                auto context = util::AnyPtr<node::NodeContext>(request.context);
                 if(context)
                     wallet_request.nodeContext = context;
                 return command.actor(wallet_request, result, last_handler);
@@ -557,18 +557,18 @@ public:
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetEvoWalletRPCCommands()) {
-            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                JSONRPCRequest wallet_request = request;
+            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const node::JSONRPCRequest& request, UniValue& result, bool last_handler) {
+                node::JSONRPCRequest wallet_request = request;
                 wallet_request.context = &m_context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetGovernanceWalletRPCCommands()) {
-            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                JSONRPCRequest wallet_request = request;
+            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const node::JSONRPCRequest& request, UniValue& result, bool last_handler) {
+                node::JSONRPCRequest wallet_request = request;
                 wallet_request.context = &m_context;
-                auto context = util::AnyPtr<NodeContext>(request.context);
+                auto context = util::AnyPtr<node::NodeContext>(request.context);
                 if(context)
                     wallet_request.nodeContext = context;
                 return command.actor(wallet_request, result, last_handler);
@@ -576,8 +576,8 @@ public:
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetMasternodeWalletRPCCommands()) {
-            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                JSONRPCRequest wallet_request = request;
+            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const node::JSONRPCRequest& request, UniValue& result, bool last_handler) {
+                node::JSONRPCRequest wallet_request = request;
                 wallet_request.context = &m_context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
@@ -650,7 +650,7 @@ public:
 } // namespace wallet
 
 namespace interfaces {
-std::unique_ptr<Wallet> MakeWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(context, wallet) : nullptr; }
+std::unique_ptr<Wallet> MakeWallet(wallet::WalletContext& context, const std::shared_ptr<wallet::CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(context, wallet) : nullptr; }
 
 std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args)
 {

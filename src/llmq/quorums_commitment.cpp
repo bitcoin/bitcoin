@@ -13,6 +13,7 @@
 
 #include <evo/cbtx.h>
 #include <logging.h>
+#include <node/blockstorage.h>
 namespace llmq
 {
 
@@ -135,9 +136,9 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
     return true;
 }
 
-bool CheckLLMQCommitment(BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+bool CheckLLMQCommitment(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
     if (!tx.IsCoinBase()) {
         return FormatSyscoinErrorMessage(state, "bad-qctx-invalid", fJustCheck);
     }

@@ -8,23 +8,22 @@
 #include <auxpow.h>
 #include <chainparams.h>
 #include <net.h>
-#include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <validation.h>
-
+#include <node/context.h>
 #include <cassert>
 #include <util/check.h>
 #include <rpc/server_util.h>
+
 namespace
 {
-
-void auxMiningCheck(const JSONRPCRequest& request)
+void auxMiningCheck(const node::JSONRPCRequest& request)
 {
-  NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext (request.context);
+  node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext (request.context);
   if (!node.connman)
     throw JSONRPCError (RPC_CLIENT_P2P_DISABLED,
                         "Error: Peer-to-peer functionality missing or"
@@ -135,14 +134,14 @@ AuxpowMiner::lookupSavedBlock (const std::string& hashHex) const
 }
 
 UniValue
-AuxpowMiner::createAuxBlock (const JSONRPCRequest& request,
+AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
                              const CScript& scriptPubKey)
 {
   auxMiningCheck (request);
   LOCK (cs);
 
   const auto& mempool = EnsureAnyMemPool (request.nodeContext? request.nodeContext: request.context);
-  const NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
+  const node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
   uint256 target;
   const CBlock* pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target);
 
@@ -160,7 +159,7 @@ AuxpowMiner::createAuxBlock (const JSONRPCRequest& request,
 }
 
 bool
-AuxpowMiner::submitAuxBlock (const JSONRPCRequest& request,
+AuxpowMiner::submitAuxBlock (const node::JSONRPCRequest& request,
                              const std::string& hashHex,
                              const std::string& auxpowHex) const
 {

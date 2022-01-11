@@ -34,7 +34,7 @@ static SimpleUTXOVec BuildSimpleUTXOVec(const std::vector<CTransactionRef>& txs)
     return utxos;
 }
 
-static std::vector<COutPoint> SelectUTXOs(const NodeContext& node, SimpleUTXOVec& utxos, CAmount amount, CAmount& changeRet)
+static std::vector<COutPoint> SelectUTXOs(const node::NodeContext& node, SimpleUTXOVec& utxos, CAmount amount, CAmount& changeRet)
 {
     changeRet = 0;
     std::vector<COutPoint> selectedUtxos;
@@ -59,7 +59,7 @@ static std::vector<COutPoint> SelectUTXOs(const NodeContext& node, SimpleUTXOVec
     return selectedUtxos;
 }
 
-static void FundTransaction(const NodeContext& node, CMutableTransaction& tx, SimpleUTXOVec& utoxs, const CScript& scriptPayout, CAmount amount)
+static void FundTransaction(const node::NodeContext& node, CMutableTransaction& tx, SimpleUTXOVec& utoxs, const CScript& scriptPayout, CAmount amount)
 {
     CAmount change;
     auto inputs = SelectUTXOs(node, utoxs, amount, change);
@@ -72,7 +72,7 @@ static void FundTransaction(const NodeContext& node, CMutableTransaction& tx, Si
     }
 }
 
-static void SignTransaction(const NodeContext& node, CMutableTransaction& tx, const CKey& coinbaseKey)
+static void SignTransaction(const node::NodeContext& node, CMutableTransaction& tx, const CKey& coinbaseKey)
 {
     LOCK(cs_main);
     FillableSigningProvider tempKeystore;
@@ -86,7 +86,7 @@ static void SignTransaction(const NodeContext& node, CMutableTransaction& tx, co
     BOOST_CHECK(SignTransaction(tx, &tempKeystore, coins, SIGHASH_ALL, input_errors));
 }
 
-static CMutableTransaction CreateProRegTx(const NodeContext& node, SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
+static CMutableTransaction CreateProRegTx(const node::NodeContext& node, SimpleUTXOVec& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
@@ -110,7 +110,7 @@ static CMutableTransaction CreateProRegTx(const NodeContext& node, SimpleUTXOVec
     return tx;
 }
 
-static CMutableTransaction CreateProUpServTx(const NodeContext& node, SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpServTx(const node::NodeContext& node, SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CKey& coinbaseKey)
 {
     CProUpServTx proTx;
     proTx.proTxHash = proTxHash;
@@ -127,7 +127,7 @@ static CMutableTransaction CreateProUpServTx(const NodeContext& node, SimpleUTXO
     return tx;
 }
 
-static CMutableTransaction CreateProUpRegTx(const NodeContext& node, SimpleUTXOVec& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRegTx(const node::NodeContext& node, SimpleUTXOVec& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
 
     CProUpRegTx proTx;
@@ -147,7 +147,7 @@ static CMutableTransaction CreateProUpRegTx(const NodeContext& node, SimpleUTXOV
     return tx;
 }
 
-static CMutableTransaction CreateProUpRevTx(const NodeContext& node, SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRevTx(const node::NodeContext& node, SimpleUTXOVec& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
 {
     CProUpRevTx proTx;
     proTx.proTxHash = proTxHash;
@@ -204,7 +204,7 @@ static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
     return nullptr;
 }
 
-static bool CheckTransactionSignature(const NodeContext& node, const CMutableTransaction& tx)
+static bool CheckTransactionSignature(const node::NodeContext& node, const CMutableTransaction& tx)
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const auto& txin = tx.vin[i];

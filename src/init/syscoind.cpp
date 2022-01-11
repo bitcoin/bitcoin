@@ -12,6 +12,8 @@
 
 #include <memory>
 
+using node::NodeContext;
+
 namespace init {
 namespace {
 class SyscoindInit : public interfaces::Init

@@ -13,6 +13,8 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
 #include <governance/governance.h>
+
+namespace node {
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
                                                      CConnman& connman,
@@ -231,3 +233,4 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
 
     return std::nullopt;
 }
+} // namespace node

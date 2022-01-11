@@ -15,6 +15,8 @@
 #include <wallet/receive.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
+
+namespace wallet {
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
 static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -298,3 +300,4 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
 }
 
 } // namespace feebumper
+} // namespace wallet

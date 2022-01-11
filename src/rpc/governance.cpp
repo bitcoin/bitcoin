@@ -27,7 +27,7 @@ static RPCHelpMan gobject_count()
                 HelpExampleCli("gobject_count", "json")
             + HelpExampleRpc("gobject_count", "json")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
     std::string strMode{"json"};
@@ -54,7 +54,7 @@ static RPCHelpMan gobject_deserialize()
                 HelpExampleCli("gobject_deserialize", "")
             + HelpExampleRpc("gobject_deserialize", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::string strHex = request.params[0].get_str();
 
@@ -82,7 +82,7 @@ static RPCHelpMan gobject_check()
                 HelpExampleCli("gobject_check", "")
             + HelpExampleRpc("gobject_check", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
@@ -130,12 +130,12 @@ static RPCHelpMan gobject_submit()
                 HelpExampleCli("gobject_submit", "")
             + HelpExampleRpc("gobject_submit", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!masternodeSync.IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -238,9 +238,9 @@ static RPCHelpMan gobject_vote_conf()
                 HelpExampleCli("gobject_vote_conf", "")
             + HelpExampleRpc("gobject_vote_conf", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -405,9 +405,9 @@ static RPCHelpMan gobject_list()
                 HelpExampleCli("gobject_list", "")
             + HelpExampleRpc("gobject_list", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string strCachedSignal = "valid";
     if (!request.params[0].isNull()) {
         strCachedSignal = request.params[0].get_str();
@@ -440,9 +440,9 @@ static RPCHelpMan gobject_diff()
                 HelpExampleCli("gobject_diff", "")
             + HelpExampleRpc("gobject_diff", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string strCachedSignal = "valid";
     if (!request.params[0].isNull()) {
         strCachedSignal = request.params[0].get_str();
@@ -474,11 +474,11 @@ static RPCHelpMan gobject_get()
                 HelpExampleCli("gobject_get", "")
             + HelpExampleRpc("gobject_get", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     // COLLECT VARIABLES FROM OUR USER
     uint256 hash = ParseHashV(request.params[0], "GovObj hash");
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     LOCK(governance->cs);
 
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
@@ -563,7 +563,7 @@ static RPCHelpMan gobject_getcurrentvotes()
                 HelpExampleCli("gobject_getcurrentvotes", "")
             + HelpExampleRpc("gobject_getcurrentvotes", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     // COLLECT PARAMETERS FROM USER
 
@@ -620,10 +620,10 @@ static RPCHelpMan voteraw()
                 HelpExampleCli("voteraw", "")
             + HelpExampleRpc("voteraw", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -712,9 +712,9 @@ static RPCHelpMan getgovernanceinfo()
                 HelpExampleCli("getgovernanceinfo", "")
             + HelpExampleRpc("getgovernanceinfo", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
     int nBlockHeight = WITH_LOCK(cs_main, return node.chainman->ActiveHeight());
@@ -746,7 +746,7 @@ static RPCHelpMan getsuperblockbudget()
                 HelpExampleCli("getsuperblockbudget", "")
             + HelpExampleRpc("getsuperblockbudget", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     int nBlockHeight = request.params[0].get_int();
     if (nBlockHeight < 0) {

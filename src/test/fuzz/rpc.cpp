@@ -43,7 +43,7 @@ struct RPCFuzzTestingSetup : public TestingSetup {
 
     void CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
     {
-        JSONRPCRequest request;
+        node::JSONRPCRequest request;
         request.context = &m_node;
         request.strMethod = rpc_method;
         try {

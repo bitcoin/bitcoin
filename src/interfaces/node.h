@@ -22,7 +22,6 @@
 #include <vector>
 
 class BanMan;
-class CCoinControl;
 class CFeeRate;
 class CNodeStats;
 class Coin;
@@ -34,8 +33,13 @@ class CDeterministicMNList;
 enum class SynchronizationState;
 enum class TransactionError;
 struct CNodeStateStats;
-struct NodeContext;
 struct bilingual_str;
+namespace node {
+struct NodeContext;
+} // namespace node
+namespace wallet {
+class CCoinControl;
+} // namespace wallet
 
 namespace interfaces {
 class Handler;
@@ -279,12 +283,12 @@ public:
     //! Return pointer to internal chain interface, useful for testing.
     //! Get and set internal node context. Useful for testing, but not
     //! accessible across processes.
-    virtual NodeContext* context() { return nullptr; }
-    virtual void setContext(NodeContext* context) { }
+    virtual node::NodeContext* context() { return nullptr; }
+    virtual void setContext(node::NodeContext* context) { }
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode(NodeContext& context);
+std::unique_ptr<Node> MakeNode(node::NodeContext& context);
 
 //! Block tip (could be a header or not, depends on the subscribed signal).
 struct BlockTip {

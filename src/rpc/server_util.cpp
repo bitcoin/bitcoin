@@ -15,16 +15,16 @@
 
 #include <any>
 
-NodeContext& EnsureAnyNodeContext(const std::any& context)
+node::NodeContext& EnsureAnyNodeContext(const std::any& context)
 {
-    auto node_context = util::AnyPtr<NodeContext>(context);
+    auto node_context = util::AnyPtr<node::NodeContext>(context);
     if (!node_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
     return *node_context;
 }
 
-CTxMemPool& EnsureMemPool(const NodeContext& node)
+CTxMemPool& EnsureMemPool(const node::NodeContext& node)
 {
     if (!node.mempool) {
         throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Mempool disabled or instance not found");
@@ -37,7 +37,7 @@ CTxMemPool& EnsureAnyMemPool(const std::any& context)
     return EnsureMemPool(EnsureAnyNodeContext(context));
 }
 
-ArgsManager& EnsureArgsman(const NodeContext& node)
+ArgsManager& EnsureArgsman(const node::NodeContext& node)
 {
     if (!node.args) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node args not found");
@@ -50,7 +50,7 @@ ArgsManager& EnsureAnyArgsman(const std::any& context)
     return EnsureArgsman(EnsureAnyNodeContext(context));
 }
 
-ChainstateManager& EnsureChainman(const NodeContext& node)
+ChainstateManager& EnsureChainman(const node::NodeContext& node)
 {
     if (!node.chainman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node chainman not found");
@@ -63,7 +63,7 @@ ChainstateManager& EnsureAnyChainman(const std::any& context)
     return EnsureChainman(EnsureAnyNodeContext(context));
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
+CBlockPolicyEstimator& EnsureFeeEstimator(const node::NodeContext& node)
 {
     if (!node.fee_estimator) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
@@ -76,7 +76,7 @@ CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
     return EnsureFeeEstimator(EnsureAnyNodeContext(context));
 }
 
-CConnman& EnsureConnman(const NodeContext& node)
+CConnman& EnsureConnman(const node::NodeContext& node)
 {
     if (!node.connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -84,7 +84,7 @@ CConnman& EnsureConnman(const NodeContext& node)
     return *node.connman;
 }
 
-PeerManager& EnsurePeerman(const NodeContext& node)
+PeerManager& EnsurePeerman(const node::NodeContext& node)
 {
     if (!node.peerman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");

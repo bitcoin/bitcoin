@@ -28,9 +28,11 @@
 #include <nevm/sha3.h>
 #include <wallet/spend.h>
 #include <wallet/rpc/coins.h>
+#include <wallet/rpc/wallet.h>
+#include <wallet/rpc/spend.h>
+using namespace wallet;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
-UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);
 uint64_t nCustomAssetGuid = 0;
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
     CRecipient recp = { scriptPubKey, 0, false };
@@ -187,7 +189,7 @@ static RPCHelpMan signhash()
         "\nAs a JSON-RPC call\n"
         + HelpExampleRpc("signhash", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"hash\"")
             },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
@@ -248,7 +250,7 @@ static RPCHelpMan signmessagebech32()
             "\nAs a JSON-RPC signmessagebech32\n"
             + HelpExampleRpc("signmessagebech32", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"message\"")
                 },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -311,7 +313,7 @@ static RPCHelpMan syscoinburntoassetallocation()
             HelpExampleCli("syscoinburntoassetallocation", "\"asset_guid\" \"amount\"")
             + HelpExampleRpc("syscoinburntoassetallocation", "\"asset_guid\", \"amount\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -477,7 +479,7 @@ RPCHelpMan assetnew()
     HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
     + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     uint64_t nCustomGuid = nCustomAssetGuid;
     if(nCustomAssetGuid > 0)
@@ -739,7 +741,7 @@ static RPCHelpMan assetnewtest()
     HelpExampleCli("assetnewtest", "123456 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
     + HelpExampleRpc("assetnewtest", "123456, 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
     UniValue paramsFund(UniValue::VARR);
@@ -747,7 +749,7 @@ static RPCHelpMan assetnewtest()
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");    
     for(int i = 1;i<=12;i++)
         paramsFund.push_back(params[i]);
-    JSONRPCRequest assetNewRequest;
+    node::JSONRPCRequest assetNewRequest;
     assetNewRequest.context = request.context;
     assetNewRequest.params = paramsFund;
     assetNewRequest.URI = request.URI;
@@ -913,7 +915,7 @@ static RPCHelpMan assetupdate()
             HelpExampleCli("assetupdate", "\"asset_guid\" \"description\" \"contract\" \"updatecapability_flags\" \"notary_address\" {} {}")
             + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"updatecapability_flags\", \"notary_address\", {}, {}")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
@@ -1060,7 +1062,7 @@ static RPCHelpMan assettransfer()
             HelpExampleCli("assettransfer", "\"asset_guid\" \"address\"")
             + HelpExampleRpc("assettransfer", "\"asset_guid\", \"address\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
@@ -1146,7 +1148,7 @@ static RPCHelpMan assetsendmany()
         + HelpExampleRpc("assetsendmany", "\"asset_guid\",\'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\'")
         + HelpExampleRpc("assetsendmany", "\"asset_guid\",\"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
@@ -1293,7 +1295,7 @@ static RPCHelpMan assetsend()
         HelpExampleCli("assetsend", "\"asset_guid\" \"address\" \"amount\" \"sys_amount\" \"NFTID\"")
         + HelpExampleRpc("assetsend", "\"asset_guid\", \"address\", \"amount\",  \"sys_amount\", \"NFTID\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
@@ -1311,7 +1313,7 @@ static RPCHelpMan assetsend()
     paramsFund.push_back(output);
     paramsFund.push_back(params[5]);
     paramsFund.push_back(params[6]);
-    JSONRPCRequest requestMany;
+    node::JSONRPCRequest requestMany;
     requestMany.context = request.context;
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
@@ -1359,7 +1361,7 @@ static RPCHelpMan assetallocationsendmany()
             + HelpExampleRpc("assetallocationsendmany", "\'[{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress2\",\"amount\":200}]\',\"false\"")
             + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\",\"true\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
@@ -1632,7 +1634,7 @@ static RPCHelpMan assetallocationburn()
             HelpExampleCli("assetallocationburn", "\"asset_guid\" \"amount\" \"nevm_destination_address\"")
             + HelpExampleRpc("assetallocationburn", "\"asset_guid\", \"amount\", \"nevm_destination_address\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
@@ -1805,7 +1807,7 @@ static RPCHelpMan assetallocationmint()
             HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blockhash\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
             + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blockhash\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -1980,7 +1982,7 @@ static RPCHelpMan assetallocationsend()
             HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"sys_amount\" \"false\"")
             + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\", \"sys_amount\", \"false\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
@@ -2015,7 +2017,7 @@ static RPCHelpMan assetallocationsend()
     paramsFund.push_back(feeObj); // estimate_mode
     paramsFund.push_back(params[5]);
     paramsFund.push_back(params[6]);
-    JSONRPCRequest requestMany;
+    node::JSONRPCRequest requestMany;
     requestMany.context = request.context;
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
@@ -2044,7 +2046,7 @@ static RPCHelpMan convertaddresswallet()
         HelpExampleCli("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
         + HelpExampleRpc("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
@@ -2156,7 +2158,7 @@ static RPCHelpMan listunspentasset()
         HelpExampleCli("listunspentasset", "2328882 0")	
         + HelpExampleRpc("listunspentasset", "2328882 0")	
     },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
     int nMinDepth = 1;
@@ -2177,7 +2179,7 @@ static RPCHelpMan listunspentasset()
     UniValue options(UniValue::VOBJ);
     options.__pushKV("assetGuid", request.params[0]);
     paramsFund.push_back(options);
-    JSONRPCRequest requestSpent;
+    node::JSONRPCRequest requestSpent;
     requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
@@ -2207,7 +2209,7 @@ static RPCHelpMan addressbalance() {
             HelpExampleCli("addressbalance", "\"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\" 6 9999999")
             + HelpExampleRpc("addressbalance", "\"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\", 6, 9999999")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {	
     int nMinDepth = 1;
     if (!request.params[1].isNull()) {
@@ -2221,7 +2223,7 @@ static RPCHelpMan addressbalance() {
     paramsFund.push_back(nMinDepth);
     paramsFund.push_back(nMaxDepth);
     paramsFund.push_back(request.params[0]);
-    JSONRPCRequest requestSpent;
+    node::JSONRPCRequest requestSpent;
     requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
@@ -2283,7 +2285,7 @@ static RPCHelpMan assetallocationbalance() {
             HelpExampleCli("assetallocationbalance", "552723762 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\" 6 9999999")
             + HelpExampleRpc("assetallocationbalance", "552723762, \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\", 6, 9999999")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {	
     uint64_t nAsset;
     if(!ParseUInt64(request.params[0].get_str(), &nAsset))
@@ -2322,7 +2324,7 @@ static RPCHelpMan assetallocationbalance() {
     UniValue options(UniValue::VOBJ);
     options.__pushKV("assetGuid", request.params[0]);
     paramsFund.push_back(options);
-    JSONRPCRequest requestSpent;
+    node::JSONRPCRequest requestSpent;
     requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
@@ -2371,7 +2373,7 @@ static RPCHelpMan sendfrom() {
             HelpExampleCli("sendfrom",  "\\\"" + EXAMPLE_ADDRESS[0] + "\\\" \\\"" + EXAMPLE_ADDRESS[1] + "\\\" 0.1")
             + HelpExampleRpc("sendfrom", "\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\", 0.1")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {	
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
@@ -2408,7 +2410,7 @@ static RPCHelpMan sendfrom() {
     paramsFund.push_back(nMinDepth);
     paramsFund.push_back(nMaxDepth);
     paramsFund.push_back(paramsAddress);
-    JSONRPCRequest requestSpent;
+    node::JSONRPCRequest requestSpent;
     requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
@@ -2601,7 +2603,7 @@ static RPCHelpMan getauxblock()
                     + HelpExampleCli("getauxblock", "\"hash\" \"serialised auxpow\"")
                     + HelpExampleRpc("getauxblock", "")
                 },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     /* RPCHelpMan::Check is not applicable here since we have the
        custom check for exactly zero or two arguments.  */
@@ -2635,7 +2637,7 @@ static RPCHelpMan getauxblock()
     };
 }
 
-Span<const CRPCCommand> GetAssetWalletRPCCommands()
+Span<const CRPCCommand> wallet::GetAssetWalletRPCCommands()
 {
 // clang-format off
 static const CRPCCommand commands[] =

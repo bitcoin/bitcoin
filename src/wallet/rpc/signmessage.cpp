@@ -10,6 +10,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 RPCHelpMan signmessage()
 {
     return RPCHelpMan{"signmessage",
@@ -32,7 +33,7 @@ RPCHelpMan signmessage()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"my message\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
         {
             const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return NullUniValue;
@@ -66,3 +67,4 @@ RPCHelpMan signmessage()
         },
     };
 }
+} // namespace wallet

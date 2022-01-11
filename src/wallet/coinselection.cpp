@@ -11,6 +11,7 @@
 
 #include <optional>
 
+namespace wallet {
 // Descending order comparator
 struct {
     bool operator()(const OutputGroup& a, const OutputGroup& b) const
@@ -451,4 +452,5 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
+}
 }

@@ -14,6 +14,8 @@
 #include <validation.h>
 #include <node/transaction.h>
 #include <rpc/server_util.h>
+using node::ReadBlockFromDisk;
+using node::GetTransaction;
 RPCHelpMan masternodelist();
 
 static RPCHelpMan masternode_list()
@@ -46,9 +48,9 @@ static RPCHelpMan masternode_list()
                 HelpExampleCli("masternode_list", "")
             + HelpExampleRpc("masternode_list", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    JSONRPCRequest newRequest = request;
+    node::JSONRPCRequest newRequest = request;
     newRequest.params.setArray();
     for (unsigned int i = 0; i < request.params.size(); i++) {
         newRequest.params.push_back(request.params[i]);
@@ -71,14 +73,14 @@ static RPCHelpMan masternode_connect()
                 HelpExampleCli("masternode_connect", "")
             + HelpExampleRpc("masternode_connect", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::string strAddress = request.params[0].get_str();
 
     CService addr;
     if (!Lookup(strAddress.c_str(), addr, 0, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
-  NodeContext& node = EnsureAnyNodeContext(request.context);
+  node::NodeContext& node = EnsureAnyNodeContext(request.context);
   if(!node.connman)
       throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     // TODO: Pass CConnman instance somehow and don't use global variable.
@@ -103,7 +105,7 @@ static RPCHelpMan masternode_count()
                 HelpExampleCli("masternode_count", "")
             + HelpExampleRpc("masternode_count", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
     int total = mnList.GetAllMNsCount();
@@ -150,7 +152,7 @@ static RPCHelpMan masternode_winner()
                 HelpExampleCli("masternode_winner", "")
             + HelpExampleRpc("masternode_winner", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     return GetNextMasternodeForPayment(10);
 },
@@ -168,7 +170,7 @@ static RPCHelpMan masternode_current()
                 HelpExampleCli("masternode_current", "")
             + HelpExampleRpc("masternode_current", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     return GetNextMasternodeForPayment(1);
 },
@@ -186,7 +188,7 @@ static RPCHelpMan masternode_status()
                 HelpExampleCli("masternode_status", "")
             + HelpExampleRpc("masternode_status", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     if (!fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
@@ -266,9 +268,9 @@ static RPCHelpMan masternode_winners()
                 HelpExampleCli("masternode_winners", "")
             + HelpExampleRpc("masternode_winners", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     const CBlockIndex* pindexTip{nullptr};
     {
         LOCK(cs_main);
@@ -324,10 +326,10 @@ RPCHelpMan masternode_payments()
                 HelpExampleCli("masternode_payments", "")
             + HelpExampleRpc("masternode_payments", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     CBlockIndex* pindex{nullptr};
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     if (request.params[0].isNull()) {
         LOCK(cs_main);
         pindex = node.chainman->ActiveTip();
@@ -442,9 +444,9 @@ RPCHelpMan masternodelist()
                 HelpExampleCli("masternodelist", "")
             + HelpExampleRpc("masternodelist", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string strMode = "json";
     std::string strFilter = "";
 

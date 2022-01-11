@@ -5,5 +5,7 @@
 #ifndef SYSCOIN_WALLET_RPC_COINS_H
 #define SYSCOIN_WALLET_RPC_COINS_H
 class RPCHelpMan;
+namespace wallet {
 RPCHelpMan listunspent();
+}
 #endif // SYSCOIN_WALLET_RPC_COINS_H

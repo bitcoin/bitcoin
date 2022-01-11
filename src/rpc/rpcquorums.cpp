@@ -34,9 +34,9 @@ static RPCHelpMan quorum_list()
                 HelpExampleCli("quorum_list", "1")
             + HelpExampleRpc("quorum_list", "1")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     int count = -1;
     if (!request.params[0].isNull()) {
         count = request.params[0].get_int();
@@ -113,7 +113,7 @@ static RPCHelpMan quorum_info()
                 HelpExampleCli("quorum_info", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_info", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
     uint8_t llmqType = (uint8_t)request.params[0].get_int();
@@ -150,9 +150,9 @@ static RPCHelpMan quorum_dkgstatus()
                 HelpExampleCli("quorum_dkgstatus", "0")
             + HelpExampleRpc("quorum_dkgstatus", "0")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     int detailLevel = 0;
     if (!request.params[0].isNull()) {
         detailLevel = request.params[0].get_int();
@@ -238,9 +238,9 @@ static RPCHelpMan quorum_memberof()
                 HelpExampleCli("quorum_memberof", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_memberof", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     uint256 protxHash = ParseHashV(request.params[0], "proTxHash");
     int scanQuorumsCount = -1;
     if (!request.params[1].isNull()) {
@@ -302,9 +302,9 @@ static RPCHelpMan quorum_sign()
                 HelpExampleCli("quorum_sign", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_sign", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     uint8_t llmqType = (uint8_t)request.params[0].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
@@ -370,7 +370,7 @@ static RPCHelpMan quorum_hasrecsig()
                 HelpExampleCli("quorum_hasrecsig", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_hasrecsig", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     uint8_t llmqType = (uint8_t)request.params[0].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
@@ -401,9 +401,9 @@ static RPCHelpMan quorum_verify()
                 HelpExampleCli("quorum_verify", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_verify", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     uint8_t llmqType = (uint8_t)request.params[0].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
@@ -451,7 +451,7 @@ static RPCHelpMan quorum_getrecsig()
                 HelpExampleCli("quorum_getrecsig", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_getrecsig", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     uint8_t llmqType = (uint8_t)request.params[0].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
@@ -487,7 +487,7 @@ static RPCHelpMan quorum_isconflicting()
                 HelpExampleCli("quorum_isconflicting", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_isconflicting", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     uint8_t llmqType = (uint8_t)request.params[0].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
@@ -516,9 +516,9 @@ static RPCHelpMan quorum_selectquorum()
                 HelpExampleCli("quorum_selectquorum", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_selectquorum", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     uint8_t llmqType = (uint8_t)request.params[0].get_int();
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
@@ -568,7 +568,7 @@ static RPCHelpMan quorum_dkgsimerror()
                 HelpExampleCli("quorum_dkgsimerror", "contribution-omit 1")
             + HelpExampleRpc("quorum_dkgsimerror", "\"contribution-omit\", 1")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::string type = request.params[0].get_str();
     double rate = request.params[1].get_real();

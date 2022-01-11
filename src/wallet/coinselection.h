@@ -10,6 +10,9 @@
 #include <primitives/transaction.h>
 #include <random.h>
 
+// #include <optional>
+
+namespace wallet {
 //! target minimum change amount
 static constexpr CAmount MIN_CHANGE{COIN / 100};
 //! final minimum change amount after paying for fees
@@ -184,5 +187,6 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
 // SYSCOIN
 bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+} // namespace wallet
 
 #endif // SYSCOIN_WALLET_COINSELECTION_H

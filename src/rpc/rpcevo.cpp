@@ -20,7 +20,7 @@
 #include <node/context.h>
 #include <rpc/server_util.h>
 
-UniValue BuildDMNListEntry(const NodeContext& node, const CDeterministicMNCPtr& dmn, bool detailed)
+UniValue BuildDMNListEntry(const node::NodeContext& node, const CDeterministicMNCPtr& dmn, bool detailed)
 {
     if (!detailed) {
         return dmn->proTxHash.ToString();
@@ -62,10 +62,10 @@ static RPCHelpMan protx_list()
                 HelpExampleCli("protx_list", "registered true")
             + HelpExampleRpc("protx_list", "\"registered\", true")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string type = "registered";
     if (!request.params[0].isNull()) {
         type = request.params[0].get_str();
@@ -111,9 +111,9 @@ static RPCHelpMan protx_info()
                 HelpExampleCli("protx_info", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("protx_info", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[0], "proTxHash");
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(proTxHash);
@@ -152,9 +152,9 @@ static RPCHelpMan protx_diff()
                 HelpExampleCli("protx_diff", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("protx_diff", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     uint256 baseBlockHash = ParseBlock(*node.chainman, request.params[0], "baseBlock");
     uint256 blockHash = ParseBlock(*node.chainman, request.params[1], "block");
 
@@ -182,7 +182,7 @@ static RPCHelpMan bls_generate()
                 HelpExampleCli("bls_generate", "")
             + HelpExampleRpc("bls_generate", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
     CBLSSecretKey sk;
@@ -208,7 +208,7 @@ static RPCHelpMan bls_fromsecret()
                 HelpExampleCli("bls_fromsecret", "")
             + HelpExampleRpc("bls_fromsecret", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     CBLSSecretKey sk;
     if (!sk.SetHexStr(request.params[0].get_str())) {

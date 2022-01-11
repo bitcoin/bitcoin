@@ -36,7 +36,6 @@
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <node/chainstate.h>
-#include <node/context.h>
 #include <node/miner.h>
 #include <node/ui_interface.h>
 #include <policy/feerate.h>
@@ -116,7 +115,23 @@
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
 #include <curl/curl.h>
+#include <node/context.h>
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
+
+using node::CacheSizes;
+using node::CalculateCacheSizes;
+using node::ChainstateLoadVerifyError;
+using node::ChainstateLoadingError;
+using node::CleanupBlockRevFiles;
+using node::DEFAULT_PRINTPRIORITY;
+using node::DEFAULT_STOPAFTERBLOCKIMPORT;
+using node::LoadChainstate;
+using node::ThreadImport;
+using node::VerifyLoadedChainstate;
+using node::fHavePruned;
+using node::fPruneMode;
+using node::fReindex;
+using node::nPruneTarget;
 
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -182,7 +197,7 @@ static fs::path GetPidFile(const ArgsManager& args)
 // shutdown thing.
 //
 
-void Interrupt(NodeContext& node)
+void Interrupt(node::NodeContext& node)
 {
     InterruptHTTPServer();
     InterruptHTTPRPC();
@@ -203,7 +218,7 @@ void Interrupt(NodeContext& node)
     }
 }
 
-void Shutdown(NodeContext& node)
+void Shutdown(node::NodeContext& node)
 {
     static Mutex g_shutdown_mutex;
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
@@ -738,7 +753,7 @@ static void StartupNotify(const ArgsManager& args)
 }
 #endif
 
-static bool AppInitServers(NodeContext& node)
+static bool AppInitServers(node::NodeContext& node)
 {
     const ArgsManager& args = *Assert(node.args);
     RPCServer::OnStarted(&OnRPCStarted);
@@ -1278,13 +1293,13 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitInterfaces(NodeContext& node)
+bool AppInitInterfaces(node::NodeContext& node)
 {
     node.chain = node.init->makeChain();
     return true;
 }
 
-bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
+bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     const ArgsManager& args = *Assert(node.args);
     const CChainParams& chainparams = Params();

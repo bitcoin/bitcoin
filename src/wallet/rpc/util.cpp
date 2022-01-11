@@ -12,6 +12,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
@@ -41,7 +42,7 @@ bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wal
     return include_watchonly.get_bool();
 }
 
-bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
+bool GetWalletNameFromJSONRPCRequest(const node::JSONRPCRequest& request, std::string& wallet_name)
 {
     if (URL_DECODE && request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used
@@ -51,9 +52,9 @@ bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string&
     return false;
 }
 
-std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
+std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const node::JSONRPCRequest& request)
 {
-    CHECK_NONFATAL(request.mode == JSONRPCRequest::EXECUTE);
+    CHECK_NONFATAL(request.mode == node::JSONRPCRequest::EXECUTE);
     WalletContext& context = EnsureWalletContext(request.context);
 
     std::string wallet_name;
@@ -148,3 +149,4 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
         throw JSONRPCError(code, error.original);
     }
 }
+} // namespace wallet

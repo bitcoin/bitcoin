@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/context.h>
-#include <wallet/wallet.h>
+
+namespace wallet {
 WalletContext::WalletContext() {}
 WalletContext::~WalletContext() {}
+} // namespace wallet

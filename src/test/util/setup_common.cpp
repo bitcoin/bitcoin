@@ -50,6 +50,15 @@
 #include <llmq/quorums_commitment.h>
 #include <governance/governance.h>
 #include <services/assetconsensus.h>
+
+using node::BlockAssembler;
+using node::CalculateCacheSizes;
+using node::LoadChainstate;
+using node::RegenerateCommitments;
+using node::VerifyLoadedChainstate;
+using node::fPruneMode;
+using node::fReindex;
+
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 

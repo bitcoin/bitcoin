@@ -597,16 +597,16 @@ std::string RPCExamples::ToDescriptionString() const
     return m_examples.empty() ? m_examples : "\nExamples:\n" + m_examples;
 }
 
-UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
+UniValue RPCHelpMan::HandleRequest(const node::JSONRPCRequest& request) const
 {
-    if (request.mode == JSONRPCRequest::GET_ARGS) {
+    if (request.mode == node::JSONRPCRequest::GET_ARGS) {
         return GetArgMap();
     }
     /*
      * Check if the given request is valid according to this command or if
      * the user is asking for help information, and throw help when appropriate.
      */
-    if (request.mode == JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
+    if (request.mode == node::JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(ToString());
     }
     const UniValue ret = m_fun(*this, request);

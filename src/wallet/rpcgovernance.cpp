@@ -12,6 +12,8 @@
 #include <node/context.h>
 #include <evo/deterministicmns.h>
 #include <rpc/server_util.h>
+#include <wallet/rpc/wallet.h>
+using namespace wallet;
 UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
                              vote_outcome_enum_t eVoteOutcome, CConnman& connman)
@@ -86,9 +88,9 @@ static RPCHelpMan gobject_list_prepared()
                 HelpExampleCli("gobject_list_prepared", "")
             + HelpExampleRpc("gobject_list_prepared", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {   
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<wallet::CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
     EnsureWalletIsUnlocked(*pwallet);
 
@@ -135,11 +137,11 @@ static RPCHelpMan gobject_prepare()
                 HelpExampleCli("gobject_prepare", "")
             + HelpExampleRpc("gobject_prepare", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<wallet::CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
-    NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -242,12 +244,12 @@ static RPCHelpMan gobject_vote_many()
                 HelpExampleCli("gobject_vote_many", "")
             + HelpExampleRpc("gobject_vote_many", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<wallet::CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
-    NodeContext& node =  request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
+    node::NodeContext& node =  request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -307,12 +309,12 @@ static RPCHelpMan gobject_vote_alias()
                 HelpExampleCli("gobject_vote_alias", "")
             + HelpExampleRpc("gobject_vote_alias", "")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {   
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<wallet::CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
-    NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
+    node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -363,7 +365,7 @@ static RPCHelpMan gobject_vote_alias()
     };
 } 
 
-Span<const CRPCCommand> GetGovernanceWalletRPCCommands()
+Span<const CRPCCommand> wallet::GetGovernanceWalletRPCCommands()
 {
 // clang-format off
 static const CRPCCommand commands[] =

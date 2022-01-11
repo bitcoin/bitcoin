@@ -18,11 +18,15 @@
 #include <string>
 #include <vector>
 extern RecursiveMutex cs_main;
+using namespace node;
+namespace node
+{
+  class JSONRPCRequest;
+}
 namespace auxpow_tests
 {
 class AuxpowMinerForTest;
 }
-class JSONRPCRequest;
 class ChainstateManager;
 /**
  * This class holds "global" state used to construct blocks for the auxpow
@@ -40,7 +44,7 @@ private:
   /** The lock used for state in this object.  */
   mutable RecursiveMutex cs;
   /** All currently "active" block templates.  */
-  std::vector<std::unique_ptr<CBlockTemplate>> templates;
+  std::vector<std::unique_ptr<node::CBlockTemplate>> templates;
   /** Maps block hashes to pointers in vTemplates.  Does not own the memory.  */
   std::map<uint256, const CBlock*> blocks;
   /** Maps coinbase script hashes to pointers in vTemplates.  Does not own the memory.  */
@@ -80,7 +84,7 @@ public:
    * to work on with the given address for the block reward and return the
    * necessary information for the miner to construct an auxpow for it.
    */
-  UniValue createAuxBlock (const JSONRPCRequest& request,
+  UniValue createAuxBlock (const node::JSONRPCRequest& request,
                            const CScript& scriptPubKey);
 
   /**
@@ -89,7 +93,7 @@ public:
    * and try to submit it.  Returns true if all was successful and the block
    * was accepted.
    */
-  bool submitAuxBlock (const JSONRPCRequest& request,
+  bool submitAuxBlock (const node::JSONRPCRequest& request,
                        const std::string& hashHex,
                        const std::string& auxpowHex) const;
 

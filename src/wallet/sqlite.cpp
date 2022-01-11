@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
 static Mutex g_sqlite_mutex;
@@ -578,3 +579,4 @@ std::string SQLiteDatabaseVersion()
 {
     return std::string(sqlite3_libversion());
 }
+} // namespace wallet

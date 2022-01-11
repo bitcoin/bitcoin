@@ -19,6 +19,7 @@
 #include <univalue.h>
 #include <validation.h>
 #include <node/blockstorage.h>
+using node::ReadBlockFromDisk;
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
     confirmedHash(dmn.pdmnState->confirmedHash),

@@ -23,6 +23,9 @@
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
+using node::NodeContext;
+
+namespace wallet {
 class WalletInit : public WalletInitInterface
 {
 public:
@@ -40,8 +43,6 @@ public:
     // SYSCOIN
     void AutoLockMasternodeCollaterals(NodeContext& node) const override;
 };
-
-const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
 void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
@@ -160,3 +161,6 @@ void WalletInit::AutoLockMasternodeCollaterals(NodeContext& node) const
         pwallet->AutoLockMasternodeCollaterals();
     }
 }
+} // namespace wallet
+
+const WalletInitInterface& g_wallet_init_interface = wallet::WalletInit();

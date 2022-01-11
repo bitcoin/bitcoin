@@ -37,7 +37,6 @@
 
 // SYSCOIN
 #include <consensus/amount.h>
-class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool fDisableGovernance;
 extern bool fRegTest;

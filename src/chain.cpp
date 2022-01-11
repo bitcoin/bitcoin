@@ -4,7 +4,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <util/time.h>
 #include <node/blockstorage.h>
+using node::ReadBlockHeaderFromDisk;
 /* Moved here from the header, because we need auxpow and the logic
    becomes more involved.  */
 CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParams) const
@@ -29,6 +31,11 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
     block.nBits          = nBits;
     block.nNonce         = nNonce;
     return block;
+}
+
+std::string CBlockFileInfo::ToString() const
+{
+    return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
 }
 
 void CChain::SetTip(CBlockIndex *pindex) {
