@@ -36,15 +36,10 @@ private:
 
     CService addr;
     CCoinJoinAccept dsa;
-    int64_t nTimeCreated;
+    int64_t nTimeCreated{0};
 
 public:
-    CPendingDsaRequest() :
-        addr(CService()),
-        dsa(CCoinJoinAccept()),
-        nTimeCreated(0)
-    {
-    }
+    CPendingDsaRequest() = default;
 
     CPendingDsaRequest(CService addr_, CCoinJoinAccept dsa_) :
         addr(std::move(addr_)),
@@ -123,13 +118,6 @@ private:
 
 public:
     explicit CCoinJoinClientSession(CWallet& pwallet) :
-        vecOutPointLocked(),
-        strLastMessage(),
-        strAutoDenomResult(),
-        mixingMasternode(),
-        txMyCollateral(),
-        pendingDsaRequest(),
-        keyHolderStorage(),
         mixingWallet(pwallet)
     {
     }

@@ -8,7 +8,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <core_io.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 #include <masternode/node.h>
@@ -300,31 +299,8 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
 }
 
 // Definitions for static data members
-std::vector<CAmount> CCoinJoin::vecStandardDenominations;
 CCriticalSection CCoinJoin::cs_mapdstx;
 std::map<uint256, CCoinJoinBroadcastTx> CCoinJoin::mapDSTX GUARDED_BY(CCoinJoin::cs_mapdstx);
-
-void CCoinJoin::InitStandardDenominations()
-{
-    vecStandardDenominations.clear();
-    /* Denominations
-
-        A note about convertibility. Within mixing pools, each denomination
-        is convertible to another.
-
-        For example:
-        1DRK+1000 == (.1DRK+100)*10
-        10DRK+10000 == (1DRK+1000)*10
-    */
-    /* Disabled
-    vecStandardDenominations.push_back( (100      * COIN)+100000 );
-    */
-    vecStandardDenominations.push_back((10 * COIN) + 10000);
-    vecStandardDenominations.push_back((1 * COIN) + 1000);
-    vecStandardDenominations.push_back((COIN / 10) + 100);
-    vecStandardDenominations.push_back((COIN / 100) + 10);
-    vecStandardDenominations.push_back((COIN / 1000) + 1);
-}
 
 // check to make sure the collateral provided by the client is valid
 bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
@@ -379,107 +355,6 @@ bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
     }
 
     return true;
-}
-
-bool CCoinJoin::IsCollateralAmount(CAmount nInputAmount)
-{
-    // collateral input can be anything between 1x and "max" (including both)
-    return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
-}
-
-int CCoinJoin::CalculateAmountPriority(CAmount nInputAmount)
-{
-    if (auto optDenom = ranges::find_if_opt(GetStandardDenominations(), [&nInputAmount](const auto& denom) {
-        return nInputAmount == denom;
-    })) {
-        return (float)COIN / *optDenom * 10000;
-    }
-    if (nInputAmount < COIN) {
-        return 20000;
-    }
-
-    //nondenom return largest first
-    return -1 * (nInputAmount / COIN);
-}
-
-/*
-    Return a bitshifted integer representing a denomination in vecStandardDenominations
-    or 0 if none was found
-*/
-int CCoinJoin::AmountToDenomination(CAmount nInputAmount)
-{
-    for (size_t i = 0; i < vecStandardDenominations.size(); ++i) {
-        if (nInputAmount == vecStandardDenominations[i]) {
-            return 1 << i;
-        }
-    }
-    return 0;
-}
-
-/*
-    Returns:
-    - one of standard denominations from vecStandardDenominations based on the provided bitshifted integer
-    - 0 for non-initialized sessions (nDenom = 0)
-    - a value below 0 if an error occurred while converting from one to another
-*/
-CAmount CCoinJoin::DenominationToAmount(int nDenom)
-{
-    if (nDenom == 0) {
-        // not initialized
-        return 0;
-    }
-
-    size_t nMaxDenoms = vecStandardDenominations.size();
-
-    if (nDenom >= (1 << nMaxDenoms) || nDenom < 0) {
-        // out of bounds
-        return -1;
-    }
-
-    if ((nDenom & (nDenom - 1)) != 0) {
-        // non-denom
-        return -2;
-    }
-
-    CAmount nDenomAmount{-3};
-
-    for (size_t i = 0; i < nMaxDenoms; ++i) {
-        if (nDenom & (1 << i)) {
-            nDenomAmount = vecStandardDenominations[i];
-            break;
-        }
-    }
-
-    return nDenomAmount;
-}
-
-/*
-    Same as DenominationToAmount but returns a string representation
-*/
-std::string CCoinJoin::DenominationToString(int nDenom)
-{
-    CAmount nDenomAmount = DenominationToAmount(nDenom);
-
-    switch (nDenomAmount) {
-        case  0: return "N/A";
-        case -1: return "out-of-bounds";
-        case -2: return "non-denom";
-        case -3: return "to-amount-error";
-        default: return ValueFromAmount(nDenomAmount).getValStr();
-    }
-
-    // shouldn't happen
-    return "to-string-error";
-}
-
-bool CCoinJoin::IsDenominatedAmount(CAmount nInputAmount)
-{
-    return AmountToDenomination(nInputAmount) > 0;
-}
-
-bool CCoinJoin::IsValidDenomination(int nDenom)
-{
-    return DenominationToAmount(nDenom) > 0;
 }
 
 std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)

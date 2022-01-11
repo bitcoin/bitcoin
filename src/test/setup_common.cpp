@@ -84,7 +84,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    CCoinJoin::InitStandardDenominations();
     fCheckBlockIndex = true;
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));

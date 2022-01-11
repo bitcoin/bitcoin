@@ -92,7 +92,7 @@ public:
     virtual CAmount getMaxCollateralAmount() = 0;
     virtual CAmount getSmallestDenomination() = 0;
     virtual bool isDenominated(CAmount nAmount) = 0;
-    virtual std::vector<CAmount> getStandardDenominations() = 0;
+    virtual std::array<CAmount, 5> getStandardDenominations() = 0;
 };
 }
 

@@ -30,7 +30,7 @@ namespace ranges {
     MK_RANGE(find_if)
 
     template <typename X, typename Z>
-    inline auto find_if_opt(const X& ds, const Z& fn) {
+    constexpr inline auto find_if_opt(const X& ds, const Z& fn) {
         const auto it = ranges::find_if(ds, fn);
         if (it != end(ds)) {
             return std::make_optional(*it);

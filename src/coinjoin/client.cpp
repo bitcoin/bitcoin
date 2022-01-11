@@ -355,7 +355,8 @@ std::string CCoinJoinClientManager::GetSessionDenoms()
 
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
-        strSessionDenoms += CCoinJoin::DenominationToString(session.nSessionDenom) + "; ";
+        strSessionDenoms += CCoinJoin::DenominationToString(session.nSessionDenom);
+        strSessionDenoms += "; ";
     }
     return strSessionDenoms.empty() ? "N/A" : strSessionDenoms;
 }
@@ -1626,10 +1627,10 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
     // ****** Add outputs for denoms ************ /
 
     bool fAddFinal = true;
-    std::vector<CAmount> vecStandardDenoms = CCoinJoin::GetStandardDenominations();
+    auto denoms = CCoinJoin::GetStandardDenominations();
 
     std::map<CAmount, int> mapDenomCount;
-    for (auto nDenomValue : vecStandardDenoms) {
+    for (auto nDenomValue : denoms) {
         mapDenomCount.insert(std::pair<CAmount, int>(nDenomValue, mixingWallet.CountInputsWithAmount(nDenomValue)));
     }
 
@@ -1643,7 +1644,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
     // the same transaction, creating up to nCoinJoinDenomsHardCap per denomination in a single transaction.
 
     while (txBuilder.CouldAddOutput(CCoinJoin::GetSmallestDenomination()) && txBuilder.CountOutputs() < COINJOIN_DENOM_OUTPUTS_THRESHOLD) {
-        for (auto it = vecStandardDenoms.rbegin(); it != vecStandardDenoms.rend(); ++it) {
+        for (auto it = denoms.rbegin(); it != denoms.rend(); ++it) {
             CAmount nDenomValue = *it;
             auto currentDenomIt = mapDenomCount.find(nDenomValue);
 
@@ -1703,7 +1704,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
 
     // Now that nCoinJoinDenomsGoal worth of each denom have been created or the max number of denoms given the value of the input, do something with the remainder.
     if (txBuilder.CouldAddOutput(CCoinJoin::GetSmallestDenomination()) && nBalanceToDenominate >= CCoinJoin::GetSmallestDenomination() && txBuilder.CountOutputs() < COINJOIN_DENOM_OUTPUTS_THRESHOLD) {
-        CAmount nLargestDenomValue = vecStandardDenoms.front();
+        CAmount nLargestDenomValue = denoms.front();
 
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- 2 - Process remainder: %s\n", __func__, txBuilder.ToString());
 
@@ -1723,7 +1724,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
         };
 
         // Go big to small
-        for (auto nDenomValue : vecStandardDenoms) {
+        for (auto nDenomValue : denoms) {
             int nOutputs = 0;
 
             // Number of denoms we can create given our denom and the amount of funds we have left
