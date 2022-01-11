@@ -115,7 +115,7 @@ class BIP65Test(BitcoinTestFramework):
         # create one invalid tx per CLTV failure reason (5 in total) and collect them
         invalid_cltv_txs = []
         for i in range(5):
-            spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
+            spendtx = wallet.create_self_transfer()['tx']
             cltv_invalidate(spendtx, i)
             invalid_cltv_txs.append(spendtx)
 
@@ -146,7 +146,7 @@ class BIP65Test(BitcoinTestFramework):
 
         # create and test one invalid tx per CLTV failure reason (5 in total)
         for i in range(5):
-            spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
+            spendtx = wallet.create_self_transfer()['tx']
             cltv_invalidate(spendtx, i)
 
             expected_cltv_reject_reason = [

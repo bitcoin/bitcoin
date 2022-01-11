@@ -63,7 +63,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         assert_equal(block['tx'][1], txid)
 
         self.log.info('Generate block with raw tx')
-        rawtx = miniwallet.create_self_transfer(from_node=node)['hex']
+        rawtx = miniwallet.create_self_transfer()['hex']
         hash = self.generateblock(node, address, [rawtx])['hash']
 
         block = node.getblock(hash, 1)
@@ -74,7 +74,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         self.log.info('Fail to generate block with out of order txs')
         txid1 = miniwallet.send_self_transfer(from_node=node)['txid']
         utxo1 = miniwallet.get_utxo(txid=txid1)
-        rawtx2 = miniwallet.create_self_transfer(from_node=node, utxo_to_spend=utxo1)['hex']
+        rawtx2 = miniwallet.create_self_transfer(utxo_to_spend=utxo1)['hex']
         assert_raises_rpc_error(-25, 'TestBlockValidity failed: bad-txns-inputs-missingorspent', self.generateblock, node, address, [rawtx2, txid1])
 
         self.log.info('Fail to generate block with txid not in mempool')

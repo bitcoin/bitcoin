@@ -45,14 +45,13 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         utxo_2 = wallet.get_utxo(txid=coinbase_txids[2])
         utxo_3 = wallet.get_utxo(txid=coinbase_txids[3])
         self.log.info("Create three transactions spending from coinbase utxos: spend_1, spend_2, spend_3")
-        spend_1 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_1)
-        spend_2 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_2)
-        spend_3 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_3)
+        spend_1 = wallet.create_self_transfer(utxo_to_spend=utxo_1)
+        spend_2 = wallet.create_self_transfer(utxo_to_spend=utxo_2)
+        spend_3 = wallet.create_self_transfer(utxo_to_spend=utxo_3)
 
         self.log.info("Create another transaction which is time-locked to two blocks in the future")
         utxo = wallet.get_utxo(txid=coinbase_txids[0])
         timelock_tx = wallet.create_self_transfer(
-            from_node=self.nodes[0],
             utxo_to_spend=utxo,
             mempool_valid=False,
             locktime=self.nodes[0].getblockcount() + 2
@@ -71,9 +70,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         self.log.info("Create spend_2_1 and spend_3_1")
         spend_2_utxo = wallet.get_utxo(txid=spend_2['txid'])
-        spend_2_1 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=spend_2_utxo)
+        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2_utxo)
         spend_3_utxo = wallet.get_utxo(txid=spend_3['txid'])
-        spend_3_1 = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=spend_3_utxo)
+        spend_3_1 = wallet.create_self_transfer(utxo_to_spend=spend_3_utxo)
 
         self.log.info("Broadcast and mine spend_3_1")
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])

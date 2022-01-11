@@ -102,7 +102,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
     def check_p2p_tx_violation(self):
         self.log.info('Check that txs from P2P are rejected and result in disconnect')
-        spendtx = self.miniwallet.create_self_transfer(from_node=self.nodes[0])
+        spendtx = self.miniwallet.create_self_transfer()
 
         with self.nodes[0].assert_debug_log(['transaction sent in violation of protocol peer=0']):
             self.nodes[0].p2ps[0].send_message(msg_tx(spendtx['tx']))
