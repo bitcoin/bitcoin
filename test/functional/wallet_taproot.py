@@ -12,8 +12,11 @@ from test_framework.util import assert_equal
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
     CScript,
+    MAX_PUBKEYS_PER_MULTI_A,
     OP_1,
     OP_CHECKSIG,
+    OP_CHECKSIGADD,
+    OP_NUMEQUAL,
     taproot_construct,
 )
 from test_framework.segwit_addr import encode_segwit_address
@@ -167,6 +170,17 @@ def pk(hex_key):
     """Construct a script expression for taproot_construct for pk(hex_key)."""
     return (None, CScript([bytes.fromhex(hex_key), OP_CHECKSIG]))
 
+def multi_a(k, hex_keys, sort=False):
+    """Construct a script expression for taproot_construct for a multi_a script."""
+    xkeys = [bytes.fromhex(hex_key) for hex_key in hex_keys]
+    if sort:
+        xkeys.sort()
+    ops = [xkeys[0], OP_CHECKSIG]
+    for i in range(1, len(hex_keys)):
+        ops += [xkeys[i], OP_CHECKSIGADD]
+    ops += [k, OP_NUMEQUAL]
+    return (None, CScript(ops))
+
 def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
     tap = taproot_construct(pubkey, scripts)
@@ -275,7 +289,8 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(self.rpc_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            res = self.rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True)
+            # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
+            res = self.rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True, fee_rate=200)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert(self.rpc_online.gettransaction(res)["confirmations"] > 0)
 
@@ -306,7 +321,8 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(self.psbt_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0]})['psbt']
+            # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
+            psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200})['psbt']
             res = self.psbt_offline.walletprocesspsbt(psbt)
             assert(res['complete'])
             rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
@@ -406,6 +422,56 @@ class WalletTaprootTest(BitcoinTestFramework):
             "tr($1/*,{pk($2/*),{{pk($2/*),{pk($H),pk($H)}},{{pk($H),pk($H)},pk($2/*)}}})",
             [True, False],
             lambda k1, k2: (key(k1), [pk(k2), [[pk(k2), [pk(H_POINT), pk(H_POINT)]], [[pk(H_POINT), pk(H_POINT)], pk(k2)]]]),
+            2
+        )
+        self.do_test(
+            "tr(H,multi_a(1,XPRV))",
+            "tr($H,multi_a(1,$1/*))",
+            [True],
+            lambda k1: (key(H_POINT), [multi_a(1, [k1])]),
+            1
+        )
+        self.do_test(
+            "tr(H,sortedmulti_a(1,XPRV,XPUB))",
+            "tr($H,sortedmulti_a(1,$1/*,$2/*))",
+            [True, False],
+            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2], True)]),
+            2
+        )
+        self.do_test(
+            "tr(H,multi_a(1,XPUB,XPRV))",
+            "tr($H,multi_a(1,$1/*,$2/*))",
+            [False, True],
+            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2])]),
+            2
+        )
+        self.do_test(
+            "tr(H,sortedmulti_a(1,XPUB,XPRV,XPRV))",
+            "tr($H,sortedmulti_a(1,$1/*,$2/*,$3/*))",
+            [False, True, True],
+            lambda k1, k2, k3: (key(H_POINT), [multi_a(1, [k1, k2, k3], True)]),
+            3
+        )
+        self.do_test(
+            "tr(H,multi_a(2,XPRV,XPUB,XPRV))",
+            "tr($H,multi_a(2,$1/*,$2/*,$3/*))",
+            [True, False, True],
+            lambda k1, k2, k3: (key(H_POINT), [multi_a(2, [k1, k2, k3])]),
+            3
+        )
+        self.do_test(
+            "tr(XPUB,{{XPUB,{XPUB,sortedmulti_a(2,XPRV,XPUB,XPRV)}})",
+            "tr($2/*,{pk($2/*),{pk($2/*),sortedmulti_a(2,$1/*,$2/*,$3/*)}})",
+            [True, False, True],
+            lambda k1, k2, k3: (key(k2), [pk(k2), [pk(k2), multi_a(2, [k1, k2, k3], True)]]),
+            3
+        )
+        rnd_pos = random.randrange(MAX_PUBKEYS_PER_MULTI_A)
+        self.do_test(
+            "tr(XPUB,multi_a(1,H...,XPRV,H...))",
+            "tr($2/*,multi_a(1" + (",$H" * rnd_pos) + ",$1/*" + (",$H" * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)) + "))",
+            [True, False],
+            lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))]),
             2
         )
 
