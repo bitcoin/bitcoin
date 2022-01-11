@@ -1762,11 +1762,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         const auto current_time{NodeClock::now()};
         int nTries = 0;
+        bool delete_anchors_file{false};
         while (!interruptNet)
         {
             if (anchor && !m_anchors.empty()) {
                 const CAddress addr = m_anchors.back();
                 m_anchors.pop_back();
+                if (m_anchors.empty()) delete_anchors_file = true;
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
                     setConnected.count(m_netgroupman.GetGroup(addr))) continue;
@@ -1855,6 +1857,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
+        }
+
+        if (delete_anchors_file) {
+            DeleteAnchorsFile(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         }
     }
 }
