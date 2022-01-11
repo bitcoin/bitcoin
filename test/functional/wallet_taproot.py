@@ -330,7 +330,8 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert(self.psbt_online.gettransaction(txid)['confirmations'] > 0)
 
-    def do_test(self, comment, pattern, privmap, treefn, nkeys):
+    def do_test(self, comment, pattern, privmap, treefn):
+        nkeys = len(privmap)
         keys = self.rand_keys(nkeys * 4)
         self.do_test_addr(comment, pattern, privmap, treefn, keys[0:nkeys])
         self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
@@ -365,114 +366,98 @@ class WalletTaprootTest(BitcoinTestFramework):
             "tr(XPRV)",
             "tr($1/*)",
             [True],
-            lambda k1: (key(k1), []),
-            1
+            lambda k1: (key(k1), [])
         )
         self.do_test(
             "tr(H,XPRV)",
             "tr($H,pk($1/*))",
             [True],
-            lambda k1: (key(H_POINT), [pk(k1)]),
-            1
+            lambda k1: (key(H_POINT), [pk(k1)])
         )
         self.do_test(
             "wpkh(XPRV)",
             "wpkh($1/*)",
             [True],
-            None,
-            1
+            None
         )
         self.do_test(
             "tr(XPRV,{H,{H,XPUB}})",
             "tr($1/*,{pk($H),{pk($H),pk($2/*)}})",
             [True, False],
-            lambda k1, k2: (key(k1), [pk(H_POINT), [pk(H_POINT), pk(k2)]]),
-            2
+            lambda k1, k2: (key(k1), [pk(H_POINT), [pk(H_POINT), pk(k2)]])
         )
         self.do_test(
             "wsh(multi(1,XPRV,XPUB))",
             "wsh(multi(1,$1/*,$2/*))",
             [True, False],
-            None,
-            2
+            None
         )
         self.do_test(
             "tr(XPRV,{XPUB,XPUB})",
             "tr($1/*,{pk($2/*),pk($2/*)})",
             [True, False],
-            lambda k1, k2: (key(k1), [pk(k2), pk(k2)]),
-            2
+            lambda k1, k2: (key(k1), [pk(k2), pk(k2)])
         )
         self.do_test(
             "tr(XPRV,{{XPUB,H},{H,XPUB}})",
             "tr($1/*,{{pk($2/*),pk($H)},{pk($H),pk($2/*)}})",
             [True, False],
-            lambda k1, k2: (key(k1), [[pk(k2), pk(H_POINT)], [pk(H_POINT), pk(k2)]]),
-            2
+            lambda k1, k2: (key(k1), [[pk(k2), pk(H_POINT)], [pk(H_POINT), pk(k2)]])
         )
         self.do_test(
             "tr(XPUB,{{H,{H,XPUB}},{H,{H,{H,XPRV}}}})",
             "tr($1/*,{{pk($H),{pk($H),pk($2/*)}},{pk($H),{pk($H),{pk($H),pk($3/*)}}}})",
             [False, False, True],
-            lambda k1, k2, k3: (key(k1), [[pk(H_POINT), [pk(H_POINT), pk(k2)]], [pk(H_POINT), [pk(H_POINT), [pk(H_POINT), pk(k3)]]]]),
-            3
+            lambda k1, k2, k3: (key(k1), [[pk(H_POINT), [pk(H_POINT), pk(k2)]], [pk(H_POINT), [pk(H_POINT), [pk(H_POINT), pk(k3)]]]])
         )
         self.do_test(
             "tr(XPRV,{XPUB,{{XPUB,{H,H}},{{H,H},XPUB}}})",
             "tr($1/*,{pk($2/*),{{pk($2/*),{pk($H),pk($H)}},{{pk($H),pk($H)},pk($2/*)}}})",
             [True, False],
-            lambda k1, k2: (key(k1), [pk(k2), [[pk(k2), [pk(H_POINT), pk(H_POINT)]], [[pk(H_POINT), pk(H_POINT)], pk(k2)]]]),
-            2
+            lambda k1, k2: (key(k1), [pk(k2), [[pk(k2), [pk(H_POINT), pk(H_POINT)]], [[pk(H_POINT), pk(H_POINT)], pk(k2)]]])
         )
         self.do_test(
             "tr(H,multi_a(1,XPRV))",
             "tr($H,multi_a(1,$1/*))",
             [True],
-            lambda k1: (key(H_POINT), [multi_a(1, [k1])]),
-            1
+            lambda k1: (key(H_POINT), [multi_a(1, [k1])])
         )
         self.do_test(
             "tr(H,sortedmulti_a(1,XPRV,XPUB))",
             "tr($H,sortedmulti_a(1,$1/*,$2/*))",
             [True, False],
-            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2], True)]),
-            2
+            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2], True)])
         )
         self.do_test(
             "tr(H,multi_a(1,XPUB,XPRV))",
             "tr($H,multi_a(1,$1/*,$2/*))",
             [False, True],
-            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2])]),
-            2
+            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2])])
         )
         self.do_test(
             "tr(H,sortedmulti_a(1,XPUB,XPRV,XPRV))",
             "tr($H,sortedmulti_a(1,$1/*,$2/*,$3/*))",
             [False, True, True],
-            lambda k1, k2, k3: (key(H_POINT), [multi_a(1, [k1, k2, k3], True)]),
-            3
+            lambda k1, k2, k3: (key(H_POINT), [multi_a(1, [k1, k2, k3], True)])
         )
         self.do_test(
             "tr(H,multi_a(2,XPRV,XPUB,XPRV))",
             "tr($H,multi_a(2,$1/*,$2/*,$3/*))",
             [True, False, True],
-            lambda k1, k2, k3: (key(H_POINT), [multi_a(2, [k1, k2, k3])]),
-            3
+            lambda k1, k2, k3: (key(H_POINT), [multi_a(2, [k1, k2, k3])])
         )
         self.do_test(
             "tr(XPUB,{{XPUB,{XPUB,sortedmulti_a(2,XPRV,XPUB,XPRV)}})",
             "tr($2/*,{pk($2/*),{pk($2/*),sortedmulti_a(2,$1/*,$2/*,$3/*)}})",
             [True, False, True],
-            lambda k1, k2, k3: (key(k2), [pk(k2), [pk(k2), multi_a(2, [k1, k2, k3], True)]]),
-            3
+            lambda k1, k2, k3: (key(k2), [pk(k2), [pk(k2), multi_a(2, [k1, k2, k3], True)]])
         )
         rnd_pos = random.randrange(MAX_PUBKEYS_PER_MULTI_A)
         self.do_test(
             "tr(XPUB,multi_a(1,H...,XPRV,H...))",
             "tr($2/*,multi_a(1" + (",$H" * rnd_pos) + ",$1/*" + (",$H" * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)) + "))",
             [True, False],
-            lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))]),
-            2
+            lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))])
         )
 
         self.log.info("Sending everything back...")
