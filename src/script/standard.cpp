@@ -96,47 +96,45 @@ static constexpr bool IsPushdataOp(opcodetype opcode)
     return opcode > OP_FALSE && opcode <= OP_PUSHDATA4;
 }
 
-static constexpr bool IsValidMultisigKeyCount(int n_keys)
+/** Retrieve a minimally-encoded number in range [min,max] from an (opcode, data) pair,
+ *  whether it's OP_n or through a push. */
+static std::optional<int> GetScriptNumber(opcodetype opcode, valtype data, int min, int max)
 {
-    return n_keys > 0 && n_keys <= MAX_PUBKEYS_PER_MULTISIG;
-}
-
-static bool GetMultisigKeyCount(opcodetype opcode, valtype data, int& count)
-{
+    int count;
     if (IsSmallInteger(opcode)) {
         count = CScript::DecodeOP_N(opcode);
-        return IsValidMultisigKeyCount(count);
-    }
-
-    if (IsPushdataOp(opcode)) {
-        if (!CheckMinimalPush(data, opcode)) return false;
+    } else if (IsPushdataOp(opcode)) {
+        if (!CheckMinimalPush(data, opcode)) return {};
         try {
             count = CScriptNum(data, /* fRequireMinimal = */ true).getint();
-            return IsValidMultisigKeyCount(count);
         } catch (const scriptnum_error&) {
-            return false;
+            return {};
         }
+    } else {
+        return {};
     }
-
-    return false;
+    if (count < min || count > max) return {};
+    return count;
 }
 
 static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector<valtype>& pubkeys)
 {
     opcodetype opcode;
     valtype data;
-    int num_keys;
 
     CScript::const_iterator it = script.begin();
     if (script.size() < 1 || script.back() != OP_CHECKMULTISIG) return false;
 
-    if (!script.GetOp(it, opcode, data) || !GetMultisigKeyCount(opcode, data, required_sigs)) return false;
+    if (!script.GetOp(it, opcode, data)) return false;
+    auto req_sigs = GetScriptNumber(opcode, data, 1, MAX_PUBKEYS_PER_MULTISIG);
+    if (!req_sigs) return false;
+    required_sigs = *req_sigs;
     while (script.GetOp(it, opcode, data) && CPubKey::ValidSize(data)) {
         pubkeys.emplace_back(std::move(data));
     }
-    if (!GetMultisigKeyCount(opcode, data, num_keys)) return false;
-
-    if (pubkeys.size() != static_cast<unsigned long>(num_keys) || num_keys < required_sigs) return false;
+    auto num_keys = GetScriptNumber(opcode, data, required_sigs, MAX_PUBKEYS_PER_MULTISIG);
+    if (!num_keys) return false;
+    if (pubkeys.size() != static_cast<unsigned long>(*num_keys)) return false;
 
     return (it + 1 == script.end());
 }
