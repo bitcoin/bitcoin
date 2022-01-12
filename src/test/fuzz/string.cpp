@@ -276,20 +276,14 @@ FUZZ_TARGET(string)
     }
 
     {
-        const int atoi_result = atoi(random_string_1.c_str());
         const int locale_independent_atoi_result = LocaleIndependentAtoi<int>(random_string_1);
         const int64_t atoi64_result = atoi64_legacy(random_string_1);
-        const bool out_of_range = atoi64_result < std::numeric_limits<int>::min() || atoi64_result > std::numeric_limits<int>::max();
-        if (out_of_range) {
-            assert(locale_independent_atoi_result == 0);
-        } else {
-            assert(atoi_result == locale_independent_atoi_result);
-        }
+        assert(locale_independent_atoi_result == std::clamp<int64_t>(atoi64_result, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
     }
 
     {
         const int64_t atoi64_result = atoi64_legacy(random_string_1);
         const int64_t locale_independent_atoi_result = LocaleIndependentAtoi<int64_t>(random_string_1);
-        assert(atoi64_result == locale_independent_atoi_result || locale_independent_atoi_result == 0);
+        assert(atoi64_result == locale_independent_atoi_result);
     }
 }
