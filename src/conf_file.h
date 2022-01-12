@@ -42,12 +42,6 @@ static const char* DEFAULT_BITCOIN_CONF_TEXT = R"(##
 #[main]
 
 # Options only for testnet
-#[test]
-
-# Options only for regtest
-#[regtest]
-
-# Options only for regtest
-#[signet])";
+#[test])";
 
 #endif // BITCOIN_CONF_FILE_H
