@@ -24,8 +24,6 @@ static const char* DEFAULT_BITCOIN_CONF_TEXT = R"(##
 #listen=0
 # Use separate SOCKS5 proxy <ip:port> to reach peers via Tor hidden services.
 #onion=127.0.0.1:9050
-# Only connect to peers via Tor.
-#onlynet=onion
 # Connect through <ip:port> SOCKS5 proxy.
 #proxy=127.0.0.1:9050
 # Connect to a node (IP address) to retrieve peer addresses, then disconnect.
