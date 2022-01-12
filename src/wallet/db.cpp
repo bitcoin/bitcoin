@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 
 #include <string>
 
+namespace wallet {
 std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
 {
     std::vector<fs::path> paths;
@@ -132,3 +133,4 @@ bool IsSQLiteFile(const fs::path& path)
     // Check the application id matches our network magic
     return memcmp(Params().MessageStart(), app_id, 4) == 0;
 }
+} // namespace wallet

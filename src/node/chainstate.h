@@ -10,11 +10,12 @@
 #include <optional>
 
 class ChainstateManager;
-namespace Consensus {
-    struct Params;
-}
 class CTxMemPool;
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 
+namespace node {
 enum class ChainstateLoadingError {
     ERROR_LOADING_BLOCK_DB,
     ERROR_BAD_GENESIS_BLOCK,
@@ -50,7 +51,7 @@ enum class ChainstateLoadingError {
  *        this sequence, when we explicitly checked shutdown_requested() at
  *        arbitrary points, one of those calls returned true". Therefore, a
  *        return value other than SHUTDOWN_PROBED does not guarantee that
- *        shutdown_requested() hasn't been called indirectly.
+ *        shutdown hasn't been called indirectly.
  *  - else
  *      - Success!
  */
@@ -81,5 +82,6 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 unsigned int check_blocks,
                                                                 unsigned int check_level,
                                                                 std::function<int64_t()> get_unix_time_seconds);
+} // namespace node
 
 #endif // BITCOIN_NODE_CHAINSTATE_H

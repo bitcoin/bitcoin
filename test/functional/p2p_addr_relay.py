@@ -44,7 +44,7 @@ class AddrReceiver(P2PInterface):
                 assert_equal(addr.nServices, 9)
                 if not 8333 <= addr.port < 8343:
                     raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
-                assert addr.ip.startswith('123.123.123.')
+                assert addr.ip.startswith('123.123.')
 
     def on_getaddr(self, message):
         # When the node sends us a getaddr, it increments the addr relay tokens for the connection by 1000
@@ -91,37 +91,31 @@ class AddrTest(BitcoinTestFramework):
         self.blocksonly_mode_tests()
         self.rate_limit_tests()
 
-    def setup_addr_msg(self, num):
+    def setup_addr_msg(self, num, sequential_ips=True):
         addrs = []
         for i in range(num):
             addr = CAddress()
-            addr.time = self.mocktime + i
+            addr.time = self.mocktime + random.randrange(-100, 100)
             addr.nServices = P2P_SERVICES
-            addr.ip = f"123.123.123.{self.counter % 256}"
+            if sequential_ips:
+                assert self.counter < 256 ** 2  # Don't allow the returned ip addresses to wrap.
+                addr.ip = f"123.123.{self.counter // 256}.{self.counter % 256}"
+                self.counter += 1
+            else:
+                addr.ip = f"{random.randrange(128,169)}.{random.randrange(1,255)}.{random.randrange(1,255)}.{random.randrange(1,255)}"
             addr.port = 8333 + i
             addrs.append(addr)
-            self.counter += 1
 
-        msg = msg_addr()
-        msg.addrs = addrs
-        return msg
-
-    def setup_rand_addr_msg(self, num):
-        addrs = []
-        for i in range(num):
-            addr = CAddress()
-            addr.time = self.mocktime + i
-            addr.nServices = P2P_SERVICES
-            addr.ip = f"{random.randrange(128,169)}.{random.randrange(1,255)}.{random.randrange(1,255)}.{random.randrange(1,255)}"
-            addr.port = 8333
-            addrs.append(addr)
         msg = msg_addr()
         msg.addrs = addrs
         return msg
 
     def send_addr_msg(self, source, msg, receivers):
         source.send_and_ping(msg)
-        # pop m_next_addr_send timer
+        # invoke m_next_addr_send timer:
+        # `addr` messages are sent on an exponential distribution with mean interval of 30s.
+        # Setting the mocktime 600s forward gives a probability of (1 - e^-(600/30)) that
+        # the event will occur (i.e. this fails once in ~500 million repeats).
         self.mocktime += 10 * 60
         self.nodes[0].setmocktime(self.mocktime)
         for peer in receivers:
@@ -282,7 +276,8 @@ class AddrTest(BitcoinTestFramework):
         block_relay_peer.send_and_ping(msg_getaddr())
         inbound_peer.send_and_ping(msg_getaddr())
 
-        self.mocktime += 5 * 60
+        # invoke m_next_addr_send timer, see under send_addr_msg() function for rationale
+        self.mocktime += 10 * 60
         self.nodes[0].setmocktime(self.mocktime)
         inbound_peer.wait_until(lambda: inbound_peer.addr_received() is True)
 
@@ -313,7 +308,7 @@ class AddrTest(BitcoinTestFramework):
     def send_addrs_and_test_rate_limiting(self, peer, no_relay, *, new_addrs, total_addrs):
         """Send an addr message and check that the number of addresses processed and rate-limited is as expected"""
 
-        peer.send_and_ping(self.setup_rand_addr_msg(new_addrs))
+        peer.send_and_ping(self.setup_addr_msg(new_addrs, sequential_ips=False))
 
         peerinfo = self.nodes[0].getpeerinfo()[0]
         addrs_processed = peerinfo['addr_processed']

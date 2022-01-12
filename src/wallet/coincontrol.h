@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,6 +18,7 @@
 #include <map>
 #include <set>
 
+namespace wallet {
 const int DEFAULT_MIN_DEPTH = 0;
 const int DEFAULT_MAX_DEPTH = 9999999;
 
@@ -118,5 +119,6 @@ private:
     std::set<COutPoint> setSelected;
     std::map<COutPoint, CTxOut> m_external_txouts;
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_COINCONTROL_H
