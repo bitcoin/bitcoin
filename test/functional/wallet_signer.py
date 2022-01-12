@@ -194,6 +194,12 @@ class WalletSignerTest(BitcoinTestFramework):
         assert(res["complete"])
         assert_equal(res["hex"], mock_tx)
 
+        self.log.info('Test sendall using hww1')
+
+        res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()],options={"add_to_wallet": False})
+        assert(res["complete"])
+        assert_equal(res["hex"], mock_tx)
+
         # # Handle error thrown by script
         # self.set_mock_result(self.nodes[4], "2")
         # assert_raises_rpc_error(-1, 'Unable to parse JSON',
