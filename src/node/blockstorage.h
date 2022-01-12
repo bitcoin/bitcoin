@@ -34,10 +34,10 @@ struct FlatFilePos;
 namespace Consensus {
 struct Params;
 }
-// SYSCOIN
-struct NodeContext;
 
 namespace node {
+// SYSCOIN
+struct NodeContext;
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
