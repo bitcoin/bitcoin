@@ -448,7 +448,6 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
         path /= fs::PathFromString(BaseParams().DataDir());
 
     if (fs::create_directories(path)) {
-        // This is the first run, create wallets subdirectory and bitcoin.conf
         SetupDatadir(path);
     }
 
@@ -458,6 +457,7 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
 
 void SetupDatadir(fs::path path)
 {
+    // This is the first run, create wallets subdirectory and bitcoin.conf
     fs::create_directories(path / "wallets");
 
     std::string conf_filename(BITCOIN_CONF_FILENAME);
