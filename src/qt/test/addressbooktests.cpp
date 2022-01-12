@@ -20,6 +20,8 @@
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
+#include <chrono>
+
 #include <QApplication>
 #include <QTimer>
 #include <QMessageBox>
@@ -47,7 +49,7 @@ void EditAddressAndSubmit(
     dialog->findChild<QLineEdit*>("labelEdit")->setText(label);
     dialog->findChild<QValidatedLineEdit*>("addressEdit")->setText(address);
 
-    ConfirmMessage(&warning_text, 5);
+    ConfirmMessage(&warning_text, 5ms);
     dialog->accept();
     QCOMPARE(warning_text, expected_msg);
 }

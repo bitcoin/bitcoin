@@ -5,7 +5,11 @@
 #ifndef SYSCOIN_QT_TEST_UTIL_H
 #define SYSCOIN_QT_TEST_UTIL_H
 
-#include <QString>
+#include <chrono>
+
+QT_BEGIN_NAMESPACE
+class QString;
+QT_END_NAMESPACE
 
 /**
  * Press "Ok" button in message box dialog.
@@ -13,6 +17,6 @@
  * @param text - Optionally store dialog text.
  * @param msec - Number of milliseconds to pause before triggering the callback.
  */
-void ConfirmMessage(QString* text = nullptr, int msec = 0);
+void ConfirmMessage(QString* text, std::chrono::milliseconds msec);
 
 #endif // SYSCOIN_QT_TEST_UTIL_H
