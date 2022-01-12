@@ -24,10 +24,11 @@
 #include <node/ui_interface.h>
 #include <policy/fees.h>
 #include <txmempool.h>
+#include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
-#include <validation.h>
+#include <chrono>
 
 #include <array>
 #include <fstream>
@@ -1080,7 +1081,7 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
 int SendConfirmationDialog::exec()
 {
     updateYesButton();
-    countDownTimer.start(1000);
+    countDownTimer.start(1s);
     return QMessageBox::exec();
 }
 
