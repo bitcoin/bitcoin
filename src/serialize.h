@@ -632,7 +632,7 @@ template <typename T>
 void UnserializeOrThrowParams(const std::vector<uint8_t>& in, T& out) {
     altintegration::ValidationState state;
     altintegration::ReadStream stream(in);
-    if(!altintegration::DeserializeFromVbkEncoding(stream, out, state, VeriBlock::GetPop().getConfig().getAltParams())) {
+    if(!altintegration::DeserializeFromVbkEncoding(stream, out, state)) {
         throw std::invalid_argument(state.toString());
     }
 }
