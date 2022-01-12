@@ -45,6 +45,7 @@ KNOWN_VIOLATIONS=(
     "src/test/fuzz/string.cpp"
     "src/util/strencodings.cpp:.*strtoul"
     "src/rpc/blockchain.cpp:.*fprintf"
+    "src/test/util_tests.cpp"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|minisketch/|tinyformat.h|univalue/|bls-dash/)"
