@@ -208,19 +208,13 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
         return nullptr;
     }
 
-    // Return existing
-    BlockMap::iterator mi = m_block_index.find(hash);
-    if (mi != m_block_index.end()) {
-        return &(*mi).second;
+    // Return existing or create new
+    auto [mi, inserted] = m_block_index.try_emplace(hash);
+    CBlockIndex* pindex = &(*mi).second;
+    if (inserted) {
+        pindex->phashBlock = &((*mi).first);
     }
-
-    // Create new
-    CBlockIndex new_index{};
-    mi = m_block_index.insert(std::make_pair(hash, std::move(new_index))).first;
-    CBlockIndex* pindexNew = &(*mi).second;
-    pindexNew->phashBlock = &((*mi).first);
-
-    return pindexNew;
+    return pindex;
 }
 
 bool BlockManager::LoadBlockIndex(
