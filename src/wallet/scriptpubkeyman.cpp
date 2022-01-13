@@ -646,16 +646,26 @@ bool LegacyScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::
     return ::SignTransaction(tx, this, coins, sighash, input_errors);
 }
 
-SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+SigningResult LegacyScriptPubKeyMan::SignMessage(const MessageSignatureFormat format, const std::string& message, const CTxDestination& address, std::string& str_sig) const
 {
+    if (format != MessageSignatureFormat::LEGACY) {
+        return SignMessageBIP322(format, this, message, address, str_sig);
+    }
+
+    const PKHash* pkhash = std::get_if<PKHash>(&address);
+    if (!pkhash) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
     CKey key;
-    if (!GetKey(ToKeyID(pkhash), key)) {
+    if (!GetKey(ToKeyID(*pkhash), key)) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
     }
 
     if (MessageSign(key, message, str_sig)) {
         return SigningResult::OK;
     }
+
     return SigningResult::SIGNING_FAILED;
 }
 
@@ -2482,21 +2492,31 @@ bool DescriptorScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const s
     return ::SignTransaction(tx, keys.get(), coins, sighash, input_errors);
 }
 
-SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+SigningResult DescriptorScriptPubKeyMan::SignMessage(const MessageSignatureFormat format, const std::string& message, const CTxDestination& address, std::string& str_sig) const
 {
-    std::unique_ptr<FlatSigningProvider> keys = GetSigningProvider(GetScriptForDestination(pkhash), true);
+    std::unique_ptr<FlatSigningProvider> keys = GetSigningProvider(GetScriptForDestination(address), true);
     if (!keys) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
     }
 
+    if (format != MessageSignatureFormat::LEGACY) {
+        return SignMessageBIP322(format, keys.get(), message, address, str_sig);
+    }
+
+    const PKHash* pkhash = std::get_if<PKHash>(&address);
+    if (!pkhash) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
     CKey key;
-    if (!keys->GetKey(ToKeyID(pkhash), key)) {
+    if (!keys->GetKey(ToKeyID(*pkhash), key)) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
     }
 
     if (!MessageSign(key, message, str_sig)) {
         return SigningResult::SIGNING_FAILED;
     }
+
     return SigningResult::OK;
 }
 

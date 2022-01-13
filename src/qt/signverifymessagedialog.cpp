@@ -120,13 +120,6 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
-    const PKHash* pkhash = std::get_if<PKHash>(&destination);
-    if (!pkhash) {
-        ui->addressIn_SM->setValid(false);
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
-        return;
-    }
 
     WalletModel::UnlockContext ctx(model->requestUnlock());
     if (!ctx.isValid())
@@ -138,7 +131,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
 
     const std::string& message = ui->messageIn_SM->document()->toPlainText().toStdString();
     std::string signature;
-    SigningResult res = model->wallet().signMessage(message, *pkhash, signature);
+    SigningResult res = model->wallet().signMessage(MessageSignatureFormat::SIMPLE, message, destination, signature);
 
     QString error;
     switch (res) {
@@ -212,6 +205,27 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
     case MessageVerificationResult::OK:
         ui->statusLabel_VM->setText(
             QString("<nobr>") + tr("Message verified.") + QString("</nobr>")
+        );
+        return;
+    case MessageVerificationResult::OK_TIMELOCKED:
+        ui->statusLabel_VM->setText(
+            QString("<nobr>") + tr("Message verified, but includes timelocks.") + QString("</nobr>")
+        );
+        return;
+    case MessageVerificationResult::INCONCLUSIVE:
+        ui->statusLabel_VM->setText(
+            QString("<nobr>") + tr("Inconclusive.") + QString("</nobr>")
+        );
+        return;
+    case MessageVerificationResult::ERR_INVALID:
+        ui->statusLabel_VM->setText(
+            tr("Some check failed.")
+        );
+        return;
+    case MessageVerificationResult::ERR_POF:
+        // TODO: support proof of funds verifications
+        ui->statusLabel_VM->setText(
+            QString("</nobr>") + tr("Proof of funds verification unavailable right now.") + QString("</nobr>")
         );
         return;
     case MessageVerificationResult::ERR_INVALID_ADDRESS:
