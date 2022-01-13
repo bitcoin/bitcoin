@@ -53,7 +53,7 @@ protected:
 
 public:
     // Constructs the index, which becomes available to be queried.
-    explicit CoinStatsIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Look up stats for a specific block using CBlockIndex
     std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex* block_index) const;

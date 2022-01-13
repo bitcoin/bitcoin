@@ -4,7 +4,9 @@
 
 #include <chainparams.h>
 #include <index/base.h>
+#include <interfaces/chain.h>
 #include <node/blockstorage.h>
+#include <node/context.h>
 #include <node/interface_ui.h>
 #include <shutdown.h>
 #include <tinyformat.h>
@@ -48,6 +50,9 @@ void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator
 {
     batch.Write(DB_BEST_BLOCK, locator);
 }
+
+BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain)
+    : m_chain{std::move(chain)} {}
 
 BaseIndex::~BaseIndex()
 {
@@ -346,9 +351,11 @@ void BaseIndex::Interrupt()
     m_interrupt();
 }
 
-bool BaseIndex::Start(CChainState& active_chainstate)
+bool BaseIndex::Start()
 {
-    m_chainstate = &active_chainstate;
+    // m_chainstate member gives indexing code access to node internals. It is
+    // removed in followup https://github.com/bitcoin/bitcoin/pull/24230
+    m_chainstate = &m_chain->context()->chainman->ActiveChainstate();
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.
     RegisterValidationInterface(this);

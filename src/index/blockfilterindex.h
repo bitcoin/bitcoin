@@ -55,7 +55,7 @@ protected:
 
 public:
     /** Constructs the index, which becomes available to be queried. */
-    explicit BlockFilterIndex(BlockFilterType filter_type,
+    explicit BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                               size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
@@ -88,7 +88,7 @@ void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn);
  * Initialize a block filter index for the given type if one does not already exist. Returns true if
  * a new index is created and false if one has already been initialized.
  */
-bool InitBlockFilterIndex(BlockFilterType filter_type,
+bool InitBlockFilterIndex(std::function<std::unique_ptr<interfaces::Chain>()> make_chain, BlockFilterType filter_type,
                           size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
 /**
