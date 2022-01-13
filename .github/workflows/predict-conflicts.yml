@@ -1,5 +1,7 @@
 name: "Check Potential Conflicts"
-on: pull_request_target
+on:
+  - pull_request_target
+  - pull_request_review
 
 permissions:
   contents: read
@@ -18,7 +20,9 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - name: check potential conflicts
-        uses: PastaPastaPasta/potential-conflicts-checker-action@0.1.1
+      - name: check for potential conflicts
+        uses: PastaPastaPasta/potential-conflicts-checker-action@0.1.9
         with:
           ghToken: "${{ secrets.GITHUB_TOKEN }}"
+      - name: validate potential conflicts
+        run: wget https://raw.githubusercontent.com/dashpay/dash/develop/.github/workflows/handle_potential_conflicts.py && pip3 install hjson && python3 handle_potential_conflicts.py "$conflicts"
