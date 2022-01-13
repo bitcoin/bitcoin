@@ -22,6 +22,10 @@ from test_framework.util import (
 
 from test_framework.messages import BLOCK_HEADER_SIZE
 
+INVALID_PARAM = "abc"
+UNKNOWN_PARAM = "0000000000000000000000000000000000000000000000000000000000000000"
+
+
 class ReqType(Enum):
     JSON = 1
     BIN = 2
@@ -102,6 +106,12 @@ class RESTTest (BitcoinTestFramework):
         # get n of 0.1 outpoint
         n, = filter_output_indices_by_value(json_obj['vout'], Decimal('0.1'))
         spending = (txid, n)
+
+        # Test /tx with an invalid and an unknown txid
+        resp = self.test_rest_request(uri=f"/tx/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
+        resp = self.test_rest_request(uri=f"/tx/{UNKNOWN_PARAM}", ret_type=RetType.OBJ, status=404)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"{UNKNOWN_PARAM} not found")
 
         self.log.info("Query an unspent TXO using the /getutxos URI")
 
@@ -205,8 +215,8 @@ class RESTTest (BitcoinTestFramework):
         bb_hash = self.nodes[0].getbestblockhash()
 
         # Check result if block does not exists
-        assert_equal(self.test_rest_request('/headers/1/0000000000000000000000000000000000000000000000000000000000000000'), [])
-        self.test_rest_request('/block/0000000000000000000000000000000000000000000000000000000000000000', status=404, ret_type=RetType.OBJ)
+        assert_equal(self.test_rest_request(f"/headers/1/{UNKNOWN_PARAM}"), [])
+        self.test_rest_request(f"/block/{UNKNOWN_PARAM}", status=404, ret_type=RetType.OBJ)
 
         # Check result if block is not in the active chain
         self.nodes[0].invalidateblock(bb_hash)
@@ -250,8 +260,8 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(blockhash, bb_hash)
 
         # Check invalid blockhashbyheight requests
-        resp = self.test_rest_request("/blockhashbyheight/abc", ret_type=RetType.OBJ, status=400)
-        assert_equal(resp.read().decode('utf-8').rstrip(), "Invalid height: abc")
+        resp = self.test_rest_request(f"/blockhashbyheight/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid height: {INVALID_PARAM}")
         resp = self.test_rest_request("/blockhashbyheight/1000000", ret_type=RetType.OBJ, status=404)
         assert_equal(resp.read().decode('utf-8').rstrip(), "Block height out of range")
         resp = self.test_rest_request("/blockhashbyheight/-1", ret_type=RetType.OBJ, status=400)
