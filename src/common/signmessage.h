@@ -14,6 +14,17 @@ class CKey;
 
 extern const std::string MESSAGE_MAGIC;
 
+enum class MessageSignatureFormat {
+    //! Legacy format, which only works on legacy addresses
+    LEGACY,
+
+    //! Simple BIP-322 format, i.e. the script witness stack only
+    SIMPLE,
+
+    //! Full BIP-322 format, i.e. the serialized to_sign transaction in full
+    FULL,
+};
+
 /** The result of a signed message verification.
  * Message verification takes as an input:
  * - address (with whose private key the message is supposed to have been signed)
@@ -56,7 +67,7 @@ MessageVerificationResult MessageVerify(
     const std::string& signature,
     const std::string& message);
 
-/** Sign a message.
+/** Sign a message using legacy format.
  * @param[in] privkey Private key to sign with.
  * @param[in] message The message to sign.
  * @param[out] signature Signature, base64 encoded, only set if true is returned.
