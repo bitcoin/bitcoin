@@ -169,6 +169,8 @@ class ScriptPubKeyMan
 protected:
     WalletStorage& m_storage;
 
+    SigningResult SignMessageBIP322(MessageSignatureFormat format, const SigningProvider* keystore, const std::string& message, const CTxDestination& address, std::string& str_sig) const;
+
 public:
     explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
     virtual ~ScriptPubKeyMan() {};

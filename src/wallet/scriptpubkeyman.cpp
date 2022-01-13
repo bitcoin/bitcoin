@@ -208,6 +208,47 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
 
 } // namespace
 
+SigningResult ScriptPubKeyMan::SignMessageBIP322(MessageSignatureFormat format, const SigningProvider* keystore, const std::string& message, const CTxDestination& address, std::string& str_sig) const
+{
+    assert(format != MessageSignatureFormat::LEGACY);
+
+    MessageVerificationResult result; // unused
+    auto txs = BIP322Txs::Create(address, message, result);
+    assert(txs);
+
+    const CTransaction& to_spend = txs->m_to_spend;
+    CMutableTransaction to_sign(txs->m_to_sign);
+
+    // Create the "unspent output" map, consisting of the to_spend output
+    std::map<COutPoint, Coin> coins;
+    coins[to_sign.vin[0].prevout] = Coin(to_spend.vout[0], 1, false);
+
+    // Sign the transaction
+    std::map<int, bilingual_str> errors;
+    if (!::SignTransaction(to_sign, keystore, coins, SIGHASH_ALL, errors)) {
+        // TODO: this may be a multisig which successfully signed but needed additional signatures
+        return SigningResult::SIGNING_FAILED;
+    }
+
+    // We force the format to FULL, if this turned out to be a legacy format (p2pkh) signature
+    if (to_sign.vin[0].scriptSig.size() > 0 || to_sign.vin[0].scriptWitness.IsNull()) {
+        format = MessageSignatureFormat::FULL;
+    }
+
+    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+    if (format == MessageSignatureFormat::SIMPLE) {
+        // Simple format output
+        ds << to_sign.vin[0].scriptWitness.stack;
+    } else {
+        // Full format output
+        ds << to_sign;
+    }
+
+    str_sig = EncodeBase64(ds);
+
+    return SigningResult::OK;
+}
+
 isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
 {
     switch (IsMineInner(*this, script, IsMineSigVersion::TOP)) {
