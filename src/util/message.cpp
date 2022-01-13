@@ -30,31 +30,101 @@ const std::string MESSAGE_MAGIC = "Bitcoin Signed Message:\n";
  */
 static const HashWriter HASHER_BIP322{TaggedHash("BIP0322-signed-message")};
 
+static constexpr unsigned int BIP322_REQUIRED_FLAGS =
+    SCRIPT_VERIFY_CONST_SCRIPTCODE // disallows OP_CODESEPARATOR and FindAndDelete
+|   SCRIPT_VERIFY_LOW_S
+|   SCRIPT_VERIFY_STRICTENC
+|   SCRIPT_VERIFY_NULLFAIL
+|   SCRIPT_VERIFY_MINIMALDATA
+|   SCRIPT_VERIFY_CLEANSTACK
+|   SCRIPT_VERIFY_P2SH
+|   SCRIPT_VERIFY_WITNESS
+|   SCRIPT_VERIFY_TAPROOT
+|   SCRIPT_VERIFY_MINIMALIF;
+
+static constexpr unsigned int BIP322_INCONCLUSIVE_FLAGS =
+    SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS
+|   SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS
+|   SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE
+|   SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION
+|   SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM;
+
+MessageVerificationResult MessageVerifyBIP322(
+    CTxDestination& destination,
+    std::vector<unsigned char>& signature,
+    const std::string& message,
+    MessageVerificationResult legacyError)
+{
+    auto txs = BIP322Txs::Create(destination, message, legacyError, signature);
+    if (!txs) return legacyError;
+
+    const CTransaction& to_sign = txs->m_to_sign;
+    const CTransaction& to_spend = txs->m_to_spend;
+
+    const CScript scriptSig = to_sign.vin[0].scriptSig;
+    const CScriptWitness& witness = to_sign.vin[0].scriptWitness;
+
+    PrecomputedTransactionData txdata;
+    txdata.Init(to_sign, {to_spend.vout[0]});
+    TransactionSignatureChecker sigcheck(&to_sign, /* nInIn= */ 0, /* amountIn= */ to_spend.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL, true);
+
+    if (!VerifyScript(scriptSig, to_spend.vout[0].scriptPubKey, &witness, BIP322_REQUIRED_FLAGS, sigcheck)) {
+        return MessageVerificationResult::ERR_INVALID;
+    }
+
+    // inconclusive checks
+
+    if (to_sign.nVersion != 0 && to_sign.nVersion != 2) {
+        return MessageVerificationResult::INCONCLUSIVE;
+    }
+
+    if (!VerifyScript(scriptSig, to_spend.vout[0].scriptPubKey, &witness, BIP322_INCONCLUSIVE_FLAGS, sigcheck)) {
+        return MessageVerificationResult::INCONCLUSIVE;
+    }
+
+    // timelock check
+    if (to_sign.nLockTime > 0 || to_sign.vin[0].nSequence > 0) {
+        return MessageVerificationResult::OK_TIMELOCKED;
+    }
+
+    return MessageVerificationResult::OK;
+}
+
 MessageVerificationResult MessageVerify(
     const std::string& address,
     const std::string& signature,
     const std::string& message)
 {
+    auto signature_bytes = DecodeBase64(signature);
+    if (!signature_bytes) {
+        return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
+    }
+
     CTxDestination destination = DecodeDestination(address);
     if (!IsValidDestination(destination)) {
         return MessageVerificationResult::ERR_INVALID_ADDRESS;
     }
 
     if (std::get_if<PKHash>(&destination) == nullptr) {
-        return MessageVerificationResult::ERR_ADDRESS_NO_KEY;
-    }
-
-    auto signature_bytes = DecodeBase64(signature);
-    if (!signature_bytes) {
-        return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
+        return MessageVerifyBIP322(destination, *signature_bytes, message, MessageVerificationResult::ERR_ADDRESS_NO_KEY);
     }
 
     CPubKey pubkey;
     if (!pubkey.RecoverCompact(MessageHash(message, MessageSignatureFormat::LEGACY), *signature_bytes)) {
-        return MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED;
+        return MessageVerifyBIP322(destination, *signature_bytes, message, MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED);
     }
 
     if (!(CTxDestination(PKHash(pubkey)) == destination)) {
+        /*
+        By the time we reach this line, the destination must be `PKHash` and
+        we must have been able to recover a pubkey from the signature, which
+        means that the signature must have been 65 bytes, otherwise
+        `RecoverCompact` will have failed. However, a BIP322 signature for
+        `PKHash` must be greater than 65 bytes because it will include a full
+        transaction for the p2pkh address. So if we do reach this line, the
+        signature is just invalid and there's no need to attempt a
+        `MessageVerifyBIP322`.
+        */
         return MessageVerificationResult::ERR_NOT_SIGNED;
     }
 
