@@ -19,6 +19,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
+#include <kernel/chain.h>
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/transaction.h>
@@ -426,11 +427,11 @@ public:
     }
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockConnected(*block, index->nHeight);
+        m_notifications->blockConnected(kernel::MakeBlockInfo(index, block.get()));
     }
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockDisconnected(*block, index->nHeight);
+        m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get()));
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
