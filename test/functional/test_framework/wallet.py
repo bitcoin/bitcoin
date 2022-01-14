@@ -179,8 +179,9 @@ class MiniWallet:
         txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
         return txid, 1
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._priv_key is None:
             vsize = Decimal(104)  # anyone-can-spend
@@ -213,8 +214,8 @@ class MiniWallet:
             assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 
-    def sendrawtransaction(self, *, from_node, tx_hex):
-        txid = from_node.sendrawtransaction(tx_hex)
+    def sendrawtransaction(self, *, from_node, tx_hex, **kwargs):
+        txid = from_node.sendrawtransaction(hexstring=tx_hex, **kwargs)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
 

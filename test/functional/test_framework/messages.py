@@ -43,6 +43,7 @@ MAX_MONEY = 1000000000000000000 - 1
 BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
 # SYSCOIN
 MAX_PROTOCOL_MESSAGE_LENGTH = 32 * 1024 * 1024  # Maximum length of incoming protocol messages
+SEQUENCE_FINAL = 0xffffffff  # Sequence number that disables nLockTime if set for every input of a tx
 MAX_HEADERS_RESULTS = 2000  # Number of headers sent in one getheaders result
 MAX_INV_SIZE = 50000  # Maximum number of entries in an 'inv' protocol message
 
@@ -646,7 +647,7 @@ class CTransaction:
         # SYSCOIN
         self.extraData = None
         if tx is None:
-            self.nVersion = 1
+            self.nVersion = 2
             self.vin = []
             self.vout = []
             self.wit = CTxWitness()
