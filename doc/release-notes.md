@@ -77,13 +77,6 @@ Otherwise, please use the `rescanblockchain` RPC to trigger a rescan. (#23123)
 Updated RPCs
 ------------
 
-- `upgradewallet` will now automatically flush the keypool if upgrading
-  from a non-HD wallet to an HD wallet, to immediately start using the
-  newly-generated HD keys. (#23093)
-
-- a new RPC `newkeypool` has been added, which will flush (entirely
-  clear and refill) the keypool. (#23093)
-
 - The `validateaddress` RPC now returns an `error_locations` array for invalid
   addresses, with the indices of invalid character locations in the address (if
   known). For example, this will attempt to locate up to two Bech32 errors, and
@@ -106,14 +99,6 @@ Updated RPCs
   - `value`
   - `scriptPubKey`
 
-- `listunspent` now includes `ancestorcount`, `ancestorsize`, and
-  `ancestorfees` for each transaction output that is still in the mempool.
-  (#12677)
-
-- `lockunspent` now optionally takes a third parameter, `persistent`, which
-  causes the lock to be written persistently to the wallet database. This
-  allows UTXOs to remain locked even after node restarts or crashes. (#23065)
-
 - The top-level fee fields `fee`, `modifiedfee`, `ancestorfees` and `descendantfees`
   returned by RPCs `getmempoolentry`,`getrawmempool(verbose=true)`,
   `getmempoolancestors(verbose=true)` and `getmempooldescendants(verbose=true)`
@@ -122,6 +107,10 @@ Updated RPCs
   through the `fees` object in the result. WARNING: deprecated
   fields `ancestorfees` and `descendantfees` are denominated in sats, whereas all
   fields in the `fees` object are denominated in BTC. (#22689)
+
+- Both `createmultisig` and `addmultisigaddress` now include a `warnings`
+  field, which will show a warning if a non-legacy address type is requested
+  when using uncompressed public keys. (#23113)
 
 New RPCs
 --------
@@ -167,11 +156,28 @@ Tools and Utilities
 Wallet
 ------
 
+- `upgradewallet` will now automatically flush the keypool if upgrading
+  from a non-HD wallet to an HD wallet, to immediately start using the
+  newly-generated HD keys. (#23093)
+
+- a new RPC `newkeypool` has been added, which will flush (entirely
+  clear and refill) the keypool. (#23093)
+
+- `listunspent` now includes `ancestorcount`, `ancestorsize`, and
+  `ancestorfees` for each transaction output that is still in the mempool.
+  (#12677)
+
+- `lockunspent` now optionally takes a third parameter, `persistent`, which
+  causes the lock to be written persistently to the wallet database. This
+  allows UTXOs to remain locked even after node restarts or crashes. (#23065)
+
 GUI changes
 -----------
 
 - UTXOs which are locked via the GUI are now stored persistently in the
   wallet database, so are not lost on node shutdown or crash. (#23065)
+
+- The Bech32 checkbox has been replaced with a dropdown for all address types, including the new Bech32m (BIP-350) standard for Taproot enabled wallets.
 
 Low-level changes
 =================
