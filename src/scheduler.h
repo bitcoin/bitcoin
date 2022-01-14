@@ -119,7 +119,7 @@ class SingleThreadedSchedulerClient
 private:
     CScheduler* m_pscheduler;
 
-    RecursiveMutex m_callbacks_mutex;
+    Mutex m_callbacks_mutex;
     std::list<std::function<void()>> m_callbacks_pending GUARDED_BY(m_callbacks_mutex);
     bool m_are_callbacks_running GUARDED_BY(m_callbacks_mutex) = false;
 
