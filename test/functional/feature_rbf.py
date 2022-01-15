@@ -63,6 +63,16 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             assert_equal(self.nodes[3].getmempoolinfo()["rbf_policy"], 'always')
         test_rpc_rbf_policy()
 
+        self.log.info("Running test service flag")
+        def test_service_flag():
+            NODE_REPLACE_BY_FEE = (1 << 26)
+            for i in range(3):
+                assert not (int(self.nodes[i].getnetworkinfo()['localservices'], 0x10) & NODE_REPLACE_BY_FEE)
+                assert 'REPLACE_BY_FEE?' not in self.nodes[i].getnetworkinfo()['localservicesnames']
+            assert int(self.nodes[3].getnetworkinfo()['localservices'], 0x10) & NODE_REPLACE_BY_FEE
+            assert 'REPLACE_BY_FEE?' in self.nodes[3].getnetworkinfo()['localservicesnames']
+        test_service_flag()
+
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
 
