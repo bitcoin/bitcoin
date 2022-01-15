@@ -4164,22 +4164,18 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     }
 
     msg.SetVersion(pfrom->GetCommonVersion());
-    const std::string& msg_type = msg.m_type;
-
-    // Message size
-    unsigned int nMessageSize = msg.m_message_size;
 
     try {
-        ProcessMessage(*pfrom, msg_type, msg.m_recv, msg.m_time, interruptMsgProc);
+        ProcessMessage(*pfrom, msg.m_type, msg.m_recv, msg.m_time, interruptMsgProc);
         if (interruptMsgProc) return false;
         {
             LOCK(peer->m_getdata_requests_mutex);
             if (!peer->m_getdata_requests.empty()) fMoreWork = true;
         }
     } catch (const std::exception& e) {
-        LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' (%s) caught\n", __func__, SanitizeString(msg_type), nMessageSize, e.what(), typeid(e).name());
+        LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' (%s) caught\n", __func__, SanitizeString(msg.m_type), msg.m_message_size, e.what(), typeid(e).name());
     } catch (...) {
-        LogPrint(BCLog::NET, "%s(%s, %u bytes): Unknown exception caught\n", __func__, SanitizeString(msg_type), nMessageSize);
+        LogPrint(BCLog::NET, "%s(%s, %u bytes): Unknown exception caught\n", __func__, SanitizeString(msg.m_type), msg.m_message_size);
     }
 
     return fMoreWork;
