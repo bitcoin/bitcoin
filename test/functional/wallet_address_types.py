@@ -206,7 +206,6 @@ class AddressTypeTest(BitcoinTestFramework):
             # P2WSH-multisig
             assert_equal(info['desc'], descsum_create("wsh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]])))
         else:
-            # Unknown type
             fail("Unknown type")
 
     def test_change_output_type(self, node_sender, destinations, expected_type):

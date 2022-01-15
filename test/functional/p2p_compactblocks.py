@@ -58,8 +58,8 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_true,
     assert_greater_than_or_equal,
+    assert_true,
     softfork_active,
 )
 from test_framework.wallet import MiniWallet

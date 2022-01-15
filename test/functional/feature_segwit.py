@@ -44,9 +44,9 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_not_equal,
     assert_greater_than_or_equal,
     assert_is_hex_string,
+    assert_not_equal,
     assert_raises_rpc_error,
     try_rpc,
 )

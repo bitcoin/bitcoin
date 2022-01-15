@@ -92,12 +92,12 @@ from test_framework.script_util import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_raises_rpc_error,
     assert_equal,
-    assert_not_equal,
-    assert_true,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
+    assert_raises_rpc_error,
+    assert_true,
     random_bytes,
 )
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
@@ -1253,7 +1253,7 @@ class TaprootTest(BitcoinTestFramework):
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
             assert_true(block_response is not None and err_msg in block_response,
-                        err_msg= "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg))
+                        err_msg="Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg))
         if accept:
             assert_equal(node.getbestblockhash(), block.hash, err_msg="Failed to accept: %s (response: %s)" % (msg, block_response))
             self.tip = block.sha256

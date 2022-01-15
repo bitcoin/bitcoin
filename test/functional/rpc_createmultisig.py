@@ -14,8 +14,8 @@ from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey, ECKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_raises_rpc_error,
     assert_equal,
+    assert_raises_rpc_error,
     assert_true,
 )
 from test_framework.wallet_util import bytes_to_wif

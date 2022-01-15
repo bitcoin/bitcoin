@@ -23,8 +23,8 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     assert_true,
-    fail,
     count_bytes,
+    fail,
     find_vout_for_address,
 )
 from test_framework.wallet_util import bytes_to_wif

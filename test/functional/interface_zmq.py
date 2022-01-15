@@ -21,9 +21,9 @@ from test_framework.messages import (
 )
 from test_framework.util import (
     assert_equal,
-    assert_true,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -72,7 +72,7 @@ class ZMQSubscriber:
         label = chr(body[32])
         mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
         if mempool_sequence is not None:
-            assert_true(label == "A" or label == "R", err_msg="{} different from A or C".format(label))
+            assert_true(label == "A" or label == "R", err_msg="{} different from A or R".format(label))
         else:
             assert_true(label == "D" or label == "C", err_msg="{} different from D or C".format(label))
         return (hash, label, mempool_sequence)
@@ -519,7 +519,7 @@ class ZMQTest (BitcoinTestFramework):
                 mempool_view.add(hash_str)
                 expected_sequence = mempool_sequence + 1
             elif label == "R":
-                assert_true(hash_str in mempool_view)
+                assert hash_str in mempool_view
                 mempool_view.remove(hash_str)
                 expected_sequence = mempool_sequence + 1
             elif label == "C":
