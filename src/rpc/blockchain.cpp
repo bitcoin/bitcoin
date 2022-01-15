@@ -962,6 +962,10 @@ static CBlockUndo GetUndoChecked(const CBlockIndex* pblockindex)
         throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
     }
 
+    if (pblockindex->nHeight == 0) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available for genesis block");
+    }
+
     if (!UndoReadFromDisk(blockUndo, pblockindex)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Can't read undo data from disk");
     }
