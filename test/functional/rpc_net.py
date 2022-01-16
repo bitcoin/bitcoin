@@ -215,6 +215,8 @@ class NetTest(BitcoinTestFramework):
         assert_equal(added_nodes[0]['addednode'], ip_port)
         # check that node cannot be added again
         assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
+        # check that the node cannot be added again as manual-block-relay
+        assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add', connection_type='manual-block-relay')
         # check that node can be removed
         self.nodes[0].addnode(node=ip_port, command='remove')
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
@@ -222,6 +224,16 @@ class NetTest(BitcoinTestFramework):
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
         # check that a non-existent node returns an error
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
+        # add a node with an invalid connection type
+        dummy_node = "dummyNode.invalid."
+        assert_raises_rpc_error(-5, "Unsupported connection type", self.nodes[0].addnode, node=dummy_node, command='add', connection_type='foo')
+        # add a manual-block-relay node (the validity of the 'node' parameter is not validated)
+        self.nodes[0].addnode(node=dummy_node, command='add', connection_type='manual-block-relay')
+        added_nodes = self.nodes[0].getaddednodeinfo(dummy_node)
+        assert_equal(len(added_nodes), 1)
+        assert_equal(added_nodes[0]['addednode'], dummy_node)
+        assert_equal(added_nodes[0]['connection_type'], 'manual-block-relay')
+        self.nodes[0].addnode(node=dummy_node, command='remove')
 
     def test_service_flags(self):
         self.log.info("Test service flags")

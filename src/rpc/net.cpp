@@ -288,6 +288,7 @@ static RPCHelpMan addnode()
                 {
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
+                    {"connection_type", RPCArg::Type::STR, RPCArg::Default{"manual"}, "Type of connection to open ('manual' or 'manual-block-relay')"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -303,6 +304,19 @@ static RPCHelpMan addnode()
         throw std::runtime_error(
             self.ToString());
     }
+    if (strCommand == "remove" && !request.params[2].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Cannot specify a connection type with 'remove'");
+    }
+    const std::string manual_block_relay_name{ConnectionTypeAsString(ConnectionType::MANUAL_BLOCK_RELAY)};
+    ConnectionType connection_type{ConnectionType::MANUAL};
+    if (!request.params[2].isNull()) {
+        const std::string connection_type_name{request.params[2].get_str()};
+        if (connection_type_name == manual_block_relay_name) {
+            connection_type = ConnectionType::MANUAL_BLOCK_RELAY;
+        } else {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unsupported connection type: " + connection_type_name);
+        }
+    }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
@@ -312,13 +326,13 @@ static RPCHelpMan addnode()
     if (strCommand == "onetry")
     {
         CAddress addr;
-        connman.OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), ConnectionType::MANUAL);
+        connman.OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), connection_type);
         return UniValue::VNULL;
     }
 
     if (strCommand == "add")
     {
-        if (!connman.AddNode(strNode)) {
+        if (!connman.AddNode(strNode, connection_type)) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
         }
     }
@@ -451,6 +465,7 @@ static RPCHelpMan getaddednodeinfo()
                         {
                             {RPCResult::Type::STR, "addednode", "The node IP address or name (as provided to addnode)"},
                             {RPCResult::Type::BOOL, "connected", "If connected"},
+                            {RPCResult::Type::STR, "connection_type", "The connection type, manual or manual-block-relay"},
                             {RPCResult::Type::ARR, "addresses", "Only when connected = true",
                             {
                                 {RPCResult::Type::OBJ, "", "",
@@ -476,7 +491,7 @@ static RPCHelpMan getaddednodeinfo()
     if (!request.params[0].isNull()) {
         bool found = false;
         for (const AddedNodeInfo& info : vInfo) {
-            if (info.strAddedNode == request.params[0].get_str()) {
+            if (info.m_params.m_node_address == request.params[0].get_str()) {
                 vInfo.assign(1, info);
                 found = true;
                 break;
@@ -491,8 +506,9 @@ static RPCHelpMan getaddednodeinfo()
 
     for (const AddedNodeInfo& info : vInfo) {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("addednode", info.strAddedNode);
+        obj.pushKV("addednode", info.m_params.m_node_address);
         obj.pushKV("connected", info.fConnected);
+        obj.pushKV("connection_type", ConnectionTypeAsString(info.m_params.m_conn_type));
         UniValue addresses(UniValue::VARR);
         if (info.fConnected) {
             UniValue address(UniValue::VOBJ);

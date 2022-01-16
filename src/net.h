@@ -93,14 +93,6 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 typedef int64_t NodeId;
 
-struct AddedNodeInfo
-{
-    std::string strAddedNode;
-    CService resolvedAddress;
-    bool fConnected;
-    bool fInbound;
-};
-
 class CNodeStats;
 class CClientUIInterface;
 
@@ -122,6 +114,18 @@ struct CSerializedNetMsg {
 
     std::vector<unsigned char> data;
     std::string m_type;
+};
+
+struct AddedNodeParams {
+    std::string m_node_address;
+    ConnectionType m_conn_type;
+};
+
+struct AddedNodeInfo {
+    AddedNodeParams m_params;
+    CService resolvedAddress;
+    bool fConnected;
+    bool fInbound;
 };
 
 /**
@@ -760,7 +764,9 @@ public:
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
             LOCK(m_added_nodes_mutex);
-            m_added_nodes = connOptions.m_added_nodes;
+            for (const auto& added_node : connOptions.m_added_nodes) {
+                m_added_nodes.push_back(AddedNodeParams{added_node, ConnectionType::MANUAL});
+            }
         }
         m_onion_binds = connOptions.onion_binds;
     }
@@ -844,7 +850,7 @@ public:
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const;
 
-    bool AddNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool AddNode(const std::string& node, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     std::vector<AddedNodeInfo> GetAddedNodeInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
 
@@ -1050,7 +1056,7 @@ private:
     const NetGroupManager& m_netgroupman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
     Mutex m_addr_fetches_mutex;
-    std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
+    std::vector<AddedNodeParams> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
     mutable Mutex m_added_nodes_mutex;
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
