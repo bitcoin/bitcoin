@@ -1595,8 +1595,8 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                         nSizeAdded += it->m_raw_message_size;
                     }
                     {
-                        LOCK(pnode->cs_vProcessMsg);
-                        pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
+                        LOCK(pnode->m_process_msgs_mutex);
+                        pnode->m_process_msgs.splice(pnode->m_process_msgs.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
                         pnode->nProcessQueueSize += nSizeAdded;
                         pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
                     }

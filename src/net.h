@@ -413,8 +413,8 @@ public:
     Mutex cs_hSocket;
     Mutex cs_vRecv;
 
-    RecursiveMutex cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
+    RecursiveMutex m_process_msgs_mutex;
+    std::list<CNetMessage> m_process_msgs GUARDED_BY(m_process_msgs_mutex);
     size_t nProcessQueueSize{0};
 
     RecursiveMutex cs_sendProcessing;

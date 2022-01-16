@@ -4140,13 +4140,13 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
 
     std::list<CNetMessage> msgs;
     {
-        LOCK(pfrom->cs_vProcessMsg);
-        if (pfrom->vProcessMsg.empty()) return false;
+        LOCK(pfrom->m_process_msgs_mutex);
+        if (pfrom->m_process_msgs.empty()) return false;
         // Just take one message
-        msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
+        msgs.splice(msgs.begin(), pfrom->m_process_msgs, pfrom->m_process_msgs.begin());
         pfrom->nProcessQueueSize -= msgs.front().m_raw_message_size;
         pfrom->fPauseRecv = pfrom->nProcessQueueSize > m_connman.GetReceiveFloodSize();
-        fMoreWork = !pfrom->vProcessMsg.empty();
+        fMoreWork = !pfrom->m_process_msgs.empty();
     }
     CNetMessage& msg(msgs.front());
 

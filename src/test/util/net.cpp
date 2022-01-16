@@ -22,8 +22,8 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
             nSizeAdded += it->m_raw_message_size;
         }
         {
-            LOCK(node.cs_vProcessMsg);
-            node.vProcessMsg.splice(node.vProcessMsg.end(), node.vRecvMsg, node.vRecvMsg.begin(), it);
+            LOCK(node.m_process_msgs_mutex);
+            node.m_process_msgs.splice(node.m_process_msgs.end(), node.vRecvMsg, node.vRecvMsg.begin(), it);
             node.nProcessQueueSize += nSizeAdded;
             node.fPauseRecv = node.nProcessQueueSize > nReceiveFloodSize;
         }
