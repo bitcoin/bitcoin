@@ -595,7 +595,7 @@ void CNode::CopyStats(CNodeStats& stats)
     X(m_addr_name);
     X(nVersion);
     {
-        LOCK(cs_SubVer);
+        LOCK(m_subver_mutex);
         X(cleanSubVer);
     }
     stats.fInbound = IsInboundConn();
