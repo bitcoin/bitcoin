@@ -30,17 +30,32 @@ The easiest way to resolve VCPKG dependencies is to allow VCPKG to resolve them 
 # Install dependencies
 sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
 sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
+# Install bdb support for wallet if needed
+sudo apt install libdb-dev libdb++-dev
 
 # clone the repo
 git clone https://github.com/dynamofoundation/dynamo-core.git
 cd dynamo-core
 git checkout v1.1
 
-# Build the two necessary binaries
+# Configure with or without wallet support
 ./autogen.sh
+./configure --with-incompatible-bdb
+#   OR
 ./configure --disable-wallet
+
+# Build the two necessary binaries
 make src/bitcoind
 make src/bitcoin-cli
+
+# Create directory to hold binaries; example defaults to home a sub-directory
+mkdir ~/dynamo
+
+# Move and rename binaries to your liking
+mv src/bitcoind ~/dynamo/<choose-filename>
+mv src/bitcoincli ~/dynamo/<choose-filename>
+# Copy hash_algo.txt file too
+cp build_msvc/bitcoind/hash_algo.txt ~/dynamo/
 ```
 
 If you try to run `make` to build all tools, you will get errors as not all are yet supported.  The CLI and core will build and are the only binaries you need to run and interact with your node.
