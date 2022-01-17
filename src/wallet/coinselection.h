@@ -110,6 +110,15 @@ public:
     /** Whether the transaction containing this output is sent from the owning wallet */
     bool from_me;
 
+    /** The output's value minus fees required to spend it. Initialized as the output's absolute value. */
+    CAmount effective_value;
+
+    /** The fee required to spend this output at the transaction's target feerate. */
+    CAmount fee{0};
+
+    /** The fee required to spend this output at the consolidation feerate. */
+    CAmount long_term_fee{0};
+
     COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
         : outpoint(outpoint),
         txout(txout),
@@ -119,7 +128,8 @@ public:
         solvable(solvable),
         safe(safe),
         time(time),
-        from_me(from_me)
+        from_me(from_me),
+        effective_value(txout.nValue)
     {}
 
     std::string ToString() const;
