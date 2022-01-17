@@ -3528,7 +3528,10 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
     }
     if (NotifyHeaderTip(ActiveChainstate())) {
         if (ActiveChainstate().IsInitialBlockDownload() && ppindex && *ppindex) {
-            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", (*ppindex)->nHeight, 100.0/((*ppindex)->nHeight+(GetAdjustedTime() - (*ppindex)->GetBlockTime()) / Params().GetConsensus().nPowTargetSpacing) * (*ppindex)->nHeight);
+            const CBlockIndex& last_accepted{**ppindex};
+            const int64_t blocks_left{(GetTime() - last_accepted.GetBlockTime()) / chainparams.GetConsensus().nPowTargetSpacing};
+            const double progress{100.0 * last_accepted.nHeight / (last_accepted.nHeight + blocks_left)};
+            LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", last_accepted.nHeight, progress);
         }
     }
     return true;
