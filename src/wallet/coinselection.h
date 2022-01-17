@@ -138,6 +138,18 @@ public:
     {
         return CInputCoin(outpoint, txout, input_bytes);
     }
+
+    bool operator<(const COutput& rhs) const {
+        return outpoint < rhs.outpoint;
+    }
+
+    bool operator!=(const COutput& rhs) const {
+        return outpoint != rhs.outpoint;
+    }
+
+    bool operator==(const COutput& rhs) const {
+        return outpoint == rhs.outpoint;
+    }
 };
 
 /** Parameters for one iteration of Coin Selection. */
@@ -207,7 +219,7 @@ struct CoinEligibilityFilter
 struct OutputGroup
 {
     /** The list of UTXOs contained in this output group. */
-    std::vector<CInputCoin> m_outputs;
+    std::vector<COutput> m_outputs;
     /** Whether the UTXOs were sent by the wallet to itself. This is relevant because we may want at
      * least a certain number of confirmations on UTXOs received from outside wallets while trusting
      * our own UTXOs more. */
@@ -244,7 +256,7 @@ struct OutputGroup
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
     {}
 
-    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only);
+    void Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
     CAmount GetSelectionAmount() const;
 };
@@ -266,13 +278,13 @@ struct OutputGroup
  * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
  * @return The waste
  */
-[[nodiscard]] CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
+[[nodiscard]] CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
 
 struct SelectionResult
 {
 private:
     /** Set of inputs selected by the algorithm to use in the transaction */
-    std::set<CInputCoin> m_selected_inputs;
+    std::set<COutput> m_selected_inputs;
     /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
     const CAmount m_target;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
@@ -298,9 +310,9 @@ public:
     [[nodiscard]] CAmount GetWaste() const;
 
     /** Get m_selected_inputs */
-    const std::set<CInputCoin>& GetInputSet() const;
-    /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
-    std::vector<CInputCoin> GetShuffledInputVector() const;
+    const std::set<COutput>& GetInputSet() const;
+    /** Get the vector of COutputs that will be used to fill in a CTransaction's vin */
+    std::vector<COutput> GetShuffledInputVector() const;
 
     bool operator<(SelectionResult other) const;
 };

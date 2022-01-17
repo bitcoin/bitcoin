@@ -82,9 +82,9 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    CInputCoin coin(MakeTransactionRef(tx), nInput);
+    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 0, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ true);
     set.emplace_back();
-    set.back().Insert(coin, 0, true, 0, 0, false);
+    set.back().Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
 }
 // Copied from src/wallet/test/coinselector_tests.cpp
 static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)

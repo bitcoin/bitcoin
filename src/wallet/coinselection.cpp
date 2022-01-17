@@ -50,8 +50,8 @@ struct {
  * The Branch and Bound algorithm is described in detail in Murch's Master Thesis:
  * https://murch.one/wp-content/uploads/2016/11/erhardt2016coinselection.pdf
  *
- * @param const std::vector<CInputCoin>& utxo_pool The set of UTXOs that we are choosing from.
- *        These UTXOs will be sorted in descending order by effective value and the CInputCoins'
+ * @param const std::vector<OutputGroup>& utxo_pool The set of UTXO groups that we are choosing from.
+ *        These UTXO groups will be sorted in descending order by effective value and the OutputGroups'
  *        values are their effective values.
  * @param const CAmount& selection_target This is the value that we want to select. It is the lower
  *        bound of the range.
@@ -315,29 +315,29 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
 
  ******************************************************************************/
 
-void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only) {
+void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only) {
     // Compute the effective value first
-    const CAmount coin_fee = output.m_input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.m_input_bytes);
+    const CAmount coin_fee = output.input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.input_bytes);
     const CAmount ev = output.txout.nValue - coin_fee;
 
     // Filter for positive only here before adding the coin
     if (positive_only && ev <= 0) return;
 
     m_outputs.push_back(output);
-    CInputCoin& coin = m_outputs.back();
+    COutput& coin = m_outputs.back();
 
-    coin.m_fee = coin_fee;
-    fee += coin.m_fee;
+    coin.fee = coin_fee;
+    fee += coin.fee;
 
-    coin.m_long_term_fee = coin.m_input_bytes < 0 ? 0 : m_long_term_feerate.GetFee(coin.m_input_bytes);
-    long_term_fee += coin.m_long_term_fee;
+    coin.long_term_fee = coin.input_bytes < 0 ? 0 : m_long_term_feerate.GetFee(coin.input_bytes);
+    long_term_fee += coin.long_term_fee;
 
     coin.effective_value = ev;
     effective_value += coin.effective_value;
 
-    m_from_me &= from_me;
-    m_value += output.txout.nValue;
-    m_depth = std::min(m_depth, depth);
+    m_from_me &= coin.from_me;
+    m_value += coin.txout.nValue;
+    m_depth = std::min(m_depth, coin.depth);
     // ancestors here express the number of ancestors the new coin will end up having, which is
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs
     // have common ancestors
@@ -359,7 +359,7 @@ CAmount OutputGroup::GetSelectionAmount() const
     return m_subtract_fee_outputs ? m_value : effective_value;
 }
 
-CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
+CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
 {
     // This function should not be called with empty inputs as that would mean the selection failed
     assert(!inputs.empty());
@@ -367,8 +367,8 @@ CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cos
     // Always consider the cost of spending an input now vs in the future.
     CAmount waste = 0;
     CAmount selected_effective_value = 0;
-    for (const CInputCoin& coin : inputs) {
-        waste += coin.m_fee - coin.m_long_term_fee;
+    for (const COutput& coin : inputs) {
+        waste += coin.fee - coin.long_term_fee;
         selected_effective_value += use_effective_value ? coin.effective_value : coin.txout.nValue;
     }
 
@@ -413,14 +413,14 @@ void SelectionResult::AddInput(const OutputGroup& group)
     m_use_effective = !group.m_subtract_fee_outputs;
 }
 
-const std::set<CInputCoin>& SelectionResult::GetInputSet() const
+const std::set<COutput>& SelectionResult::GetInputSet() const
 {
     return m_selected_inputs;
 }
 
-std::vector<CInputCoin> SelectionResult::GetShuffledInputVector() const
+std::vector<COutput> SelectionResult::GetShuffledInputVector() const
 {
-    std::vector<CInputCoin> coins(m_selected_inputs.begin(), m_selected_inputs.end());
+    std::vector<COutput> coins(m_selected_inputs.begin(), m_selected_inputs.end());
     Shuffle(coins.begin(), coins.end(), FastRandomContext());
     return coins;
 }
