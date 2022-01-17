@@ -210,8 +210,8 @@ bool IsReachable(enum Network net);
 /** @returns true if the address is in a reachable network, false otherwise */
 bool IsReachable(const CNetAddr& addr);
 
-bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
-bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
+bool AddLocal(const CService& addr, int64_t nScore = LOCAL_NONE);
+bool AddLocal(const CNetAddr& addr, int64_t nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
@@ -226,7 +226,7 @@ extern bool fListen;
 extern std::string strSubVersion;
 
 struct LocalServiceInfo {
-    int nScore;
+    int64_t nScore;
     uint16_t nPort;
 };
 

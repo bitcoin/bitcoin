@@ -134,13 +134,13 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
     if (!fListen)
         return false;
 
-    int nBestScore = -1;
+    int64_t nBestScore = -1;
     int nBestReachability = -1;
     {
         LOCK(cs_mapLocalHost);
         for (const auto& entry : mapLocalHost)
         {
-            int nScore = entry.second.nScore;
+            int64_t nScore = entry.second.nScore;
             int nReachability = entry.first.GetReachabilityFrom(paddrPeer);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
             {
@@ -191,7 +191,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
     return ret;
 }
 
-static int GetnScore(const CService& addr)
+static int64_t GetnScore(const CService& addr)
 {
     LOCK(cs_mapLocalHost);
     const auto it = mapLocalHost.find(addr);
@@ -248,7 +248,7 @@ CService MaybeFlipIPv6toCJDNS(const CService& service)
 }
 
 // learn a new local address
-bool AddLocal(const CService& addr_, int nScore)
+bool AddLocal(const CService& addr_, int64_t nScore)
 {
     CService addr{MaybeFlipIPv6toCJDNS(addr_)};
 
@@ -276,7 +276,7 @@ bool AddLocal(const CService& addr_, int nScore)
     return true;
 }
 
-bool AddLocal(const CNetAddr &addr, int nScore)
+bool AddLocal(const CNetAddr &addr, int64_t nScore)
 {
     return AddLocal(CService(addr, GetListenPort()), nScore);
 }
