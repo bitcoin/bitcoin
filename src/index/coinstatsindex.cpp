@@ -299,23 +299,23 @@ bool CoinStatsIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* n
     return BaseIndex::Rewind(current_tip, new_tip);
 }
 
-static bool LookUpOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVal& result)
+static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockKey& block, DBVal& result)
 {
     // First check if the result is stored under the height index and the value
     // there matches the block hash. This should be the case if the block is on
     // the active chain.
     std::pair<uint256, DBVal> read_out;
-    if (!db.Read(DBHeightKey(block_index->nHeight), read_out)) {
+    if (!db.Read(DBHeightKey(block.height), read_out)) {
         return false;
     }
-    if (read_out.first == block_index->GetBlockHash()) {
+    if (read_out.first == block.hash) {
         result = std::move(read_out.second);
         return true;
     }
 
     // If value at the height index corresponds to an different block, the
     // result will be stored in the hash index.
-    return db.Read(DBHashKey(block_index->GetBlockHash()), result);
+    return db.Read(DBHashKey(block.hash), result);
 }
 
 std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex* block_index) const
@@ -324,7 +324,7 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex* block_
     stats.index_used = true;
 
     DBVal entry;
-    if (!LookUpOne(*m_db, block_index, entry)) {
+    if (!LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
         return std::nullopt;
     }
 
@@ -363,7 +363,7 @@ bool CoinStatsIndex::Init()
 
     if (pindex) {
         DBVal entry;
-        if (!LookUpOne(*m_db, pindex, entry)) {
+        if (!LookUpOne(*m_db, {pindex->GetBlockHash(), pindex->nHeight}, entry)) {
             return error("%s: Cannot read current %s state; index may be corrupted",
                          __func__, GetName());
         }
