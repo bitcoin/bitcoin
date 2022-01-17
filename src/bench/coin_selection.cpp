@@ -13,7 +13,6 @@
 
 using node::NodeContext;
 using wallet::AttemptSelection;
-using wallet::CInputCoin;
 using wallet::COutput;
 using wallet::CWallet;
 using wallet::CWalletTx;
@@ -73,8 +72,6 @@ static void CoinSelection(benchmark::Bench& bench)
         assert(result->GetInputSet().size() == 2);
     });
 }
-
-typedef std::set<CInputCoin> CoinSet;
 
 // Copied from src/wallet/test/coinselector_tests.cpp
 static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>& set)

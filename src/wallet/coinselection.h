@@ -19,59 +19,6 @@ static constexpr CAmount MIN_CHANGE{COIN / 100};
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 
 /** A UTXO under consideration for use in funding a new transaction. */
-class CInputCoin {
-public:
-    CInputCoin(const CTransactionRef& tx, unsigned int i)
-    {
-        if (!tx)
-            throw std::invalid_argument("tx should not be null");
-        if (i >= tx->vout.size())
-            throw std::out_of_range("The output index is out of range");
-
-        outpoint = COutPoint(tx->GetHash(), i);
-        txout = tx->vout[i];
-        effective_value = txout.nValue;
-    }
-
-    CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(tx, i)
-    {
-        m_input_bytes = input_bytes;
-    }
-
-    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in)
-    {
-        outpoint = outpoint_in;
-        txout = txout_in;
-        effective_value = txout.nValue;
-    }
-
-    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in, int input_bytes) : CInputCoin(outpoint_in, txout_in)
-    {
-        m_input_bytes = input_bytes;
-    }
-
-    COutPoint outpoint;
-    CTxOut txout;
-    CAmount effective_value;
-    CAmount m_fee{0};
-    CAmount m_long_term_fee{0};
-
-    /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
-    int m_input_bytes{-1};
-
-    bool operator<(const CInputCoin& rhs) const {
-        return outpoint < rhs.outpoint;
-    }
-
-    bool operator!=(const CInputCoin& rhs) const {
-        return outpoint != rhs.outpoint;
-    }
-
-    bool operator==(const CInputCoin& rhs) const {
-        return outpoint == rhs.outpoint;
-    }
-};
-
 class COutput
 {
 public:
@@ -133,11 +80,6 @@ public:
     {}
 
     std::string ToString() const;
-
-    inline CInputCoin GetInputCoin() const
-    {
-        return CInputCoin(outpoint, txout, input_bytes);
-    }
 
     bool operator<(const COutput& rhs) const {
         return outpoint < rhs.outpoint;
