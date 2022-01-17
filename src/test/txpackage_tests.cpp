@@ -332,6 +332,8 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
 // the mempool.
 BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
 {
+    // Mine blocks to mature coinbases.
+    mineBlocks(5);
     LOCK(cs_main);
 
     // Transactions with a same-txid-different-witness transaction in the mempool should be ignored,
@@ -445,6 +447,116 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_child2->GetHash())));
         BOOST_CHECK(!m_node.mempool->exists(GenTxid::Wtxid(ptx_child2->GetWitnessHash())));
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Wtxid(ptx_grandchild->GetWitnessHash())));
+    }
+
+    // A package Package{parent1, parent2, parent3, child} where the parents are a mixture of
+    // identical-tx-in-mempool, same-txid-different-witness-in-mempool, and new transactions.
+    Package package_mixed;
+
+    // Give all the parents anyone-can-spend scripts so we don't have to deal with signing the child.
+    CScript acs_script = CScript() << OP_TRUE;
+    CScript acs_spk = GetScriptForDestination(WitnessV0ScriptHash(acs_script));
+    CScriptWitness acs_witness;
+    acs_witness.stack.push_back(std::vector<unsigned char>(acs_script.begin(), acs_script.end()));
+
+    // parent1 will already be in the mempool
+    auto mtx_parent1 = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[1], /*vout=*/ 0,
+                                                     /*input_height=*/ 0, /*input_signing_key=*/ coinbaseKey,
+                                                     /*output_destination=*/ acs_spk,
+                                                     /*output_amount=*/ CAmount(49 * COIN), /*submit=*/ true);
+    CTransactionRef ptx_parent1 = MakeTransactionRef(mtx_parent1);
+    package_mixed.push_back(ptx_parent1);
+
+    // parent2 will have a same-txid-different-witness tx already in the mempool
+    CScript grandparent2_script = CScript() << OP_DROP << OP_TRUE;
+    CScript grandparent2_spk = GetScriptForDestination(WitnessV0ScriptHash(grandparent2_script));
+    CScriptWitness parent2_witness1;
+    parent2_witness1.stack.push_back(std::vector<unsigned char>(1));
+    parent2_witness1.stack.push_back(std::vector<unsigned char>(grandparent2_script.begin(), grandparent2_script.end()));
+    CScriptWitness parent2_witness2;
+    parent2_witness2.stack.push_back(std::vector<unsigned char>(2));
+    parent2_witness2.stack.push_back(std::vector<unsigned char>(grandparent2_script.begin(), grandparent2_script.end()));
+
+    // Create grandparent2 creating an output with multiple spending paths. Submit to mempool.
+    auto mtx_grandparent2 = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[2], /* vout=*/ 0,
+                                                          /*input_height=*/ 0, /*input_signing_key=*/ coinbaseKey,
+                                                          /*output_destination=*/ grandparent2_spk,
+                                                          /*output_amount=*/ CAmount(49 * COIN), /*submit=*/ true);
+    CTransactionRef ptx_grandparent2 = MakeTransactionRef(mtx_grandparent2);
+
+    CMutableTransaction mtx_parent2_v1;
+    mtx_parent2_v1.nVersion = 1;
+    mtx_parent2_v1.vin.resize(1);
+    mtx_parent2_v1.vin[0].prevout.hash = ptx_grandparent2->GetHash();
+    mtx_parent2_v1.vin[0].prevout.n = 0;
+    mtx_parent2_v1.vin[0].scriptSig = CScript();
+    mtx_parent2_v1.vin[0].scriptWitness = parent2_witness1;
+    mtx_parent2_v1.vout.resize(1);
+    mtx_parent2_v1.vout[0].nValue = CAmount(48 * COIN);
+    mtx_parent2_v1.vout[0].scriptPubKey = acs_spk;
+
+    CMutableTransaction mtx_parent2_v2{mtx_parent2_v1};
+    mtx_parent2_v2.vin[0].scriptWitness = parent2_witness2;
+
+    CTransactionRef ptx_parent2_v1 = MakeTransactionRef(mtx_parent2_v1);
+    CTransactionRef ptx_parent2_v2 = MakeTransactionRef(mtx_parent2_v2);
+    // Put parent2_v1 in the package, submit parent2_v2 to the mempool.
+    const MempoolAcceptResult parent2_v2_result = m_node.chainman->ProcessTransaction(ptx_parent2_v2);
+    BOOST_CHECK(parent2_v2_result.m_result_type == MempoolAcceptResult::ResultType::VALID);
+    package_mixed.push_back(ptx_parent2_v1);
+
+    // parent3 will be a new transaction
+    auto mtx_parent3 = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[3], /*vout=*/ 0,
+                                                     /*input_height=*/ 0, /*input_signing_key=*/ coinbaseKey,
+                                                     /*output_destination=*/ acs_spk,
+                                                     /*output_amount=*/ CAmount(49 * COIN), /*submit=*/ false);
+    CTransactionRef ptx_parent3 = MakeTransactionRef(mtx_parent3);
+    package_mixed.push_back(ptx_parent3);
+
+    // child spends parent1, parent2, and parent3
+    CKey mixed_grandchild_key;
+    mixed_grandchild_key.MakeNewKey(true);
+    CScript mixed_child_spk = GetScriptForDestination(WitnessV0KeyHash(mixed_grandchild_key.GetPubKey()));
+
+    CMutableTransaction mtx_mixed_child;
+    mtx_mixed_child.vin.push_back(CTxIn(COutPoint(ptx_parent1->GetHash(), 0)));
+    mtx_mixed_child.vin.push_back(CTxIn(COutPoint(ptx_parent2_v1->GetHash(), 0)));
+    mtx_mixed_child.vin.push_back(CTxIn(COutPoint(ptx_parent3->GetHash(), 0)));
+    mtx_mixed_child.vin[0].scriptWitness = acs_witness;
+    mtx_mixed_child.vin[1].scriptWitness = acs_witness;
+    mtx_mixed_child.vin[2].scriptWitness = acs_witness;
+    mtx_mixed_child.vout.push_back(CTxOut(145 * COIN, mixed_child_spk));
+    CTransactionRef ptx_mixed_child = MakeTransactionRef(mtx_mixed_child);
+    package_mixed.push_back(ptx_mixed_child);
+
+    // Submit package:
+    // parent1 should be ignored
+    // parent2_v1 should be ignored (and v2 wtxid returned)
+    // parent3 should be accepted
+    // child should be accepted
+    {
+        const auto mixed_result = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package_mixed, false);
+        BOOST_CHECK_MESSAGE(mixed_result.m_state.IsValid(), mixed_result.m_state.GetRejectReason());
+        auto it_parent1 = mixed_result.m_tx_results.find(ptx_parent1->GetWitnessHash());
+        auto it_parent2 = mixed_result.m_tx_results.find(ptx_parent2_v1->GetWitnessHash());
+        auto it_parent3 = mixed_result.m_tx_results.find(ptx_parent3->GetWitnessHash());
+        auto it_child = mixed_result.m_tx_results.find(ptx_mixed_child->GetWitnessHash());
+        BOOST_CHECK(it_parent1 != mixed_result.m_tx_results.end());
+        BOOST_CHECK(it_parent2 != mixed_result.m_tx_results.end());
+        BOOST_CHECK(it_parent3 != mixed_result.m_tx_results.end());
+        BOOST_CHECK(it_child != mixed_result.m_tx_results.end());
+
+        BOOST_CHECK(it_parent1->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
+        BOOST_CHECK(it_parent2->second.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS);
+        BOOST_CHECK(it_parent3->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK(it_child->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(ptx_parent2_v2->GetWitnessHash(), it_parent2->second.m_other_wtxid.value());
+
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_parent1->GetHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_parent2_v1->GetHash())));
+        BOOST_CHECK(!m_node.mempool->exists(GenTxid::Wtxid(ptx_parent2_v1->GetWitnessHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_parent3->GetHash())));
+        BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_mixed_child->GetHash())));
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
