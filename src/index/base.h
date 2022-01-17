@@ -63,6 +63,9 @@ private:
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
+    /// Read best block locator and check that data needed to sync has not been pruned.
+    bool Init();
+
     /// Sync the index with the block index starting from the current best block.
     /// Intended to be run in its own thread, m_thread_sync, and can be
     /// interrupted with m_interrupt. Once the index gets in sync, the m_synced
@@ -90,10 +93,8 @@ protected:
 
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
-    const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };
-
     /// Initialize internal state from the database and block index.
-    [[nodiscard]] virtual bool Init();
+    [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockKey>& block) { return true; }
 
     /// Write update index entries for a newly connected block.
     virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }

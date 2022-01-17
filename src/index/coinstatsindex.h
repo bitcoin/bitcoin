@@ -39,7 +39,7 @@ private:
     bool AllowPrune() const override { return true; }
 
 protected:
-    bool Init() override;
+    bool CustomInit(const std::optional<interfaces::BlockKey>& block) override;
 
     bool CommitInternal(CDBBatch& batch) override;
 

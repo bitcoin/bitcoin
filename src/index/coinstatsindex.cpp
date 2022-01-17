@@ -345,7 +345,7 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex* block_
     return stats;
 }
 
-bool CoinStatsIndex::Init()
+bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockKey>& block)
 {
     if (!m_db->Read(DB_MUHASH, m_muhash)) {
         // Check that the cause of the read failure is that the key does not
@@ -357,13 +357,9 @@ bool CoinStatsIndex::Init()
         }
     }
 
-    if (!BaseIndex::Init()) return false;
-
-    const CBlockIndex* pindex{CurrentIndex()};
-
-    if (pindex) {
+    if (block) {
         DBVal entry;
-        if (!LookUpOne(*m_db, {pindex->GetBlockHash(), pindex->nHeight}, entry)) {
+        if (!LookUpOne(*m_db, *block, entry)) {
             return error("%s: Cannot read current %s state; index may be corrupted",
                          __func__, GetName());
         }
