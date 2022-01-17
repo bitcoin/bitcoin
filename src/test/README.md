@@ -33,19 +33,31 @@ the `src/qt/test/test_main.cpp` file.
 
 ### Running individual tests
 
-`test_bitcoin` has some built-in command-line arguments; for
-example, to run just the `getarg_tests` verbosely:
+`test_bitcoin` accepts the command line arguments from the boost framework.
+For example, to run just the `getarg_tests` suite of tests:
 
-    test_bitcoin --log_level=all --run_test=getarg_tests -- DEBUG_LOG_OUT
+```bash
+test_bitcoin --log_level=all --run_test=getarg_tests
+```
 
 `log_level` controls the verbosity of the test framework, which logs when a
-test case is entered, for example. The `DEBUG_LOG_OUT` after the two dashes
-redirects the debug log, which would normally go to a file in the test datadir
+test case is entered, for example. `test_bitcoin` also accepts the command
+line arguments accepted by `bitcoind`. Use `--` to separate both types of
+arguments:
+
+```bash
+test_bitcoin --log_level=all --run_test=getarg_tests -- -printtoconsole=1
+```
+
+The `-printtoconsole=1` after the two dashes redirects the debug log, which
+would normally go to a file in the test datadir
 (`BasicTestingSetup::m_path_root`), to the standard terminal output.
 
 ... or to run just the doubledash test:
 
-    test_bitcoin --run_test=getarg_tests/doubledash
+```bash
+test_bitcoin --run_test=getarg_tests/doubledash
+```
 
 Run `test_bitcoin --help` for the full list.
 
@@ -68,7 +80,7 @@ on failure. For running individual tests verbosely, refer to the section
 To write to logs from unit tests you need to use specific message methods
 provided by Boost. The simplest is `BOOST_TEST_MESSAGE`.
 
-For debugging you can launch the `test_bitcoin` executable with `gdb`or `lldb` and
+For debugging you can launch the `test_bitcoin` executable with `gdb` or `lldb` and
 start debugging, just like you would with any other program:
 
 ```bash
@@ -95,7 +107,7 @@ Running the tests and hitting a segmentation fault should now produce a file cal
 `/proc/sys/kernel/core_pattern`).
 
 You can then explore the core dump using
-``` bash
+```bash
 gdb src/test/test_bitcoin core
 
 (gbd) bt  # produce a backtrace for where a segfault occurred
