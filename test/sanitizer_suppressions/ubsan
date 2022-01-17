@@ -62,7 +62,6 @@ unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
 implicit-integer-sign-change:addrman.h
-implicit-integer-sign-change:arith_uint256.cpp
 implicit-integer-sign-change:bech32.cpp
 implicit-integer-sign-change:common/bloom.cpp
 implicit-integer-sign-change:chain.cpp
