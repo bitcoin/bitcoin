@@ -72,6 +72,64 @@ public:
     }
 };
 
+class COutput
+{
+public:
+    /** The outpoint identifying this UTXO */
+    COutPoint outpoint;
+
+    /** The output itself */
+    CTxOut txout;
+
+    /**
+     * Depth in block chain.
+     * If > 0: the tx is on chain and has this many confirmations.
+     * If = 0: the tx is waiting confirmation.
+     * If < 0: a conflicting tx is on chain and has this many confirmations. */
+    int depth;
+
+    /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
+    int input_bytes;
+
+    /** Whether we have the private keys to spend this output */
+    bool spendable;
+
+    /** Whether we know how to spend this output, ignoring the lack of keys */
+    bool solvable;
+
+    /**
+     * Whether this output is considered safe to spend. Unconfirmed transactions
+     * from outside keys and unconfirmed replacement transactions are considered
+     * unsafe and will not be used to fund new spending transactions.
+     */
+    bool safe;
+
+    /** The time of the transaction containing this output as determined by CWalletTx::nTimeSmart */
+    int64_t time;
+
+    /** Whether the transaction containing this output is sent from the owning wallet */
+    bool from_me;
+
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
+        : outpoint(outpoint),
+        txout(txout),
+        depth(depth),
+        input_bytes(input_bytes),
+        spendable(spendable),
+        solvable(solvable),
+        safe(safe),
+        time(time),
+        from_me(from_me)
+    {}
+
+    std::string ToString() const;
+
+    inline CInputCoin GetInputCoin() const
+    {
+        return CInputCoin(outpoint, txout, input_bytes);
+    }
+};
+
 /** Parameters for one iteration of Coin Selection. */
 struct CoinSelectionParams
 {
