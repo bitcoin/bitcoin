@@ -375,7 +375,7 @@ void CChainState::MaybeUpdateMempoolForReorg(
         } else if (!validLP) {
             // If CheckSequenceLocks succeeded, it also updated the LockPoints.
             // Now update the mempool entry lockpoints as well.
-            m_mempool->mapTx.modify(it, update_lock_points(lp));
+            m_mempool->mapTx.modify(it, [&lp](CTxMemPoolEntry& e) { e.UpdateLockPoints(lp); });
         }
 
         // If the transaction spends any coinbase outputs, it must be mature.
