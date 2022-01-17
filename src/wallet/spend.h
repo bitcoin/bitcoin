@@ -54,9 +54,9 @@ public:
     /** Whether the transaction containing this output is sent from the owning wallet */
     bool from_me;
 
-    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
-        : outpoint(COutPoint(wtx.GetHash(), iIn)),
-        txout(wtx.tx->vout.at(iIn)),
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
+        : outpoint(outpoint),
+        txout(txout),
         depth(depth),
         input_bytes(input_bytes),
         spendable(spendable),
