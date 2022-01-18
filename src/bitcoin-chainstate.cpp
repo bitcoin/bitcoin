@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
             LOCK(cs_main);
             const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock);
             if (pindex) {
-                UpdateUncommittedBlockStructures(block, pindex, chainparams.GetConsensus());
+                chainman.UpdateUncommittedBlockStructures(block, pindex);
             }
         }
 
