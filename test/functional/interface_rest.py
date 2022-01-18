@@ -49,12 +49,13 @@ class RESTTest (BitcoinTestFramework):
 
     def test_rest_request(self, uri, http_method='GET', req_type=ReqType.JSON, body='', status=200, ret_type=RetType.JSON):
         rest_uri = '/rest' + uri
-        if req_type == ReqType.JSON:
-            rest_uri += '.json'
-        elif req_type == ReqType.BIN:
-            rest_uri += '.bin'
-        elif req_type == ReqType.HEX:
-            rest_uri += '.hex'
+        query_string = ''
+        if '?' in rest_uri:
+            rest_uri, query_string = rest_uri.split('?')
+            query_string = '?' + query_string
+        if req_type in ReqType:
+            rest_uri += f'.{req_type.name.lower()}'
+        rest_uri = rest_uri + query_string
 
         conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
         self.log.debug(f'{http_method} {rest_uri} {body}')

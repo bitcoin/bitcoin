@@ -132,17 +132,20 @@ static ChainstateManager* GetChainman(const std::any& context, HTTPRequest* req)
     return node_context->chainman.get();
 }
 
-static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
+RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
 {
-    const std::string::size_type pos = strReq.rfind('.');
-    if (pos == std::string::npos)
+    const std::string::size_type pos_format = strReq.rfind('.');
+    if (pos_format == std::string::npos)
     {
         param = strReq;
         return rf_names[0].rf;
     }
 
-    param = strReq.substr(0, pos);
-    const std::string suff(strReq, pos + 1);
+    // query string (optional, separated with '?') should not interfere with parsing param and data format
+    const std::string::size_type pos_querystr = strReq.rfind('?');
+    auto len_suff = (pos_querystr != std::string::npos) ? (pos_querystr - pos_format - 1) : std::string::npos;
+    param = strReq.substr(0, pos_format);
+    const std::string suff(strReq, pos_format + 1, len_suff);
 
     for (const auto& rf_name : rf_names) {
         if (suff == rf_name.name)
