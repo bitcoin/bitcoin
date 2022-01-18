@@ -86,7 +86,7 @@ private:
     //!clean unused entries (if bantime has expired)
     void SweepBanned();
 
-    RecursiveMutex m_banned_mutex;
+    Mutex m_banned_mutex;
     banmap_t m_banned GUARDED_BY(m_banned_mutex);
     bool m_is_dirty GUARDED_BY(m_banned_mutex){false};
     CClientUIInterface* m_client_interface = nullptr;
