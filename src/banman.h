@@ -84,7 +84,8 @@ private:
     //!set the "dirty" flag for the banlist
     void SetBannedSetDirty(bool dirty = true);
     //!clean unused entries (if bantime has expired)
-    void SweepBanned();
+    bool SweepBanned();
+    void SweepBanned(bool isLockHeld) EXCLUSIVE_LOCKS_REQUIRED(m_banned_mutex);
 
     Mutex m_banned_mutex;
     banmap_t m_banned GUARDED_BY(m_banned_mutex);

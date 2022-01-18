@@ -19,7 +19,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
 
     int64_t n_start = GetTimeMillis();
     if (m_ban_db.Read(m_banned)) {
-        SweepBanned(); // sweep out unused entries
+        SweepBanned(false); // sweep out unused entries
 
         LogPrint(BCLog::NET, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),
                  GetTimeMillis() - n_start);
@@ -39,7 +39,7 @@ BanMan::~BanMan()
 
 void BanMan::DumpBanlist()
 {
-    SweepBanned(); // clean unused entries (if bantime has expired)
+    SweepBanned(false); // clean unused entries (if bantime has expired)
 
     if (!BannedSetIsDirty()) return;
 
@@ -161,29 +161,45 @@ void BanMan::GetBanned(banmap_t& banmap)
 {
     LOCK(m_banned_mutex);
     // Sweep the banlist so expired bans are not returned
-    SweepBanned();
+    SweepBanned(true);
     banmap = m_banned; //create a thread safe copy
 }
 
-void BanMan::SweepBanned()
+bool BanMan::SweepBanned()
 {
+    AssertLockHeld(m_banned_mutex);
+
     int64_t now = GetTime();
     bool notify_ui = false;
-    {
-        LOCK(m_banned_mutex);
-        banmap_t::iterator it = m_banned.begin();
-        while (it != m_banned.end()) {
-            CSubNet sub_net = (*it).first;
-            CBanEntry ban_entry = (*it).second;
-            if (!sub_net.IsValid() || now > ban_entry.nBanUntil) {
-                m_banned.erase(it++);
-                m_is_dirty = true;
-                notify_ui = true;
-                LogPrint(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
-            } else
-                ++it;
-        }
+
+    banmap_t::iterator it = m_banned.begin();
+    while (it != m_banned.end()) {
+        CSubNet sub_net = (*it).first;
+        CBanEntry ban_entry = (*it).second;
+        if (!sub_net.IsValid() || now > ban_entry.nBanUntil) {
+            m_banned.erase(it++);
+            m_is_dirty = true;
+            notify_ui = true;
+            LogPrint(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
+        } else
+            ++it;
     }
+
+    return notify_ui;
+}
+
+void BanMan::SweepBanned(bool isLockHeld)
+{
+    bool notify_ui = false;
+
+    if (!isLockHeld) {
+        AssertLockNotHeld(m_banned_mutex);
+        LOCK(m_banned_mutex);
+        notify_ui = SweepBanned();
+    } else {
+        notify_ui = SweepBanned();
+    }
+
     // update UI
     if (notify_ui && m_client_interface) {
         m_client_interface->BannedListChanged();
