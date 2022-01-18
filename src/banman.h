@@ -86,13 +86,13 @@ private:
     //!clean unused entries (if bantime has expired)
     void SweepBanned();
 
-    RecursiveMutex m_cs_banned;
-    banmap_t m_banned GUARDED_BY(m_cs_banned);
-    bool m_is_dirty GUARDED_BY(m_cs_banned){false};
+    RecursiveMutex m_banned_mutex;
+    banmap_t m_banned GUARDED_BY(m_banned_mutex);
+    bool m_is_dirty GUARDED_BY(m_banned_mutex){false};
     CClientUIInterface* m_client_interface = nullptr;
     CBanDB m_ban_db;
     const int64_t m_default_ban_time;
-    CRollingBloomFilter m_discouraged GUARDED_BY(m_cs_banned) {50000, 0.000001};
+    CRollingBloomFilter m_discouraged GUARDED_BY(m_banned_mutex) {50000, 0.000001};
 };
 
 #endif // BITCOIN_BANMAN_H
