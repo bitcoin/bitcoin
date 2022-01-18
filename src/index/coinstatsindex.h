@@ -45,7 +45,7 @@ protected:
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
-    bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
+    bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
 
     BaseIndex::DB& GetDB() const override { return *m_db; }
 

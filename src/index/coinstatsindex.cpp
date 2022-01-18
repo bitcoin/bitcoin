@@ -265,17 +265,15 @@ static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
     return true;
 }
 
-bool CoinStatsIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
+bool CoinStatsIndex::CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip)
 {
-    assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
-
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());
 
     // During a reorg, we need to copy all hash digests for blocks that are
     // getting disconnected from the height index to the hash index so we can
     // still find them when the height index entries are overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip->nHeight, current_tip->nHeight)) {
+    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip.height, current_tip.height)) {
         return false;
     }
 
@@ -283,7 +281,8 @@ bool CoinStatsIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* n
 
     {
         LOCK(cs_main);
-        const CBlockIndex* iter_tip{m_chainstate->m_blockman.LookupBlockIndex(current_tip->GetBlockHash())};
+        const CBlockIndex* iter_tip{m_chainstate->m_blockman.LookupBlockIndex(current_tip.hash)};
+        const CBlockIndex* new_tip_index{m_chainstate->m_blockman.LookupBlockIndex(new_tip.hash)};
         const auto& consensus_params{Params().GetConsensus()};
 
         do {
@@ -297,10 +296,10 @@ bool CoinStatsIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* n
             ReverseBlock(block, iter_tip);
 
             iter_tip = iter_tip->GetAncestor(iter_tip->nHeight - 1);
-        } while (new_tip != iter_tip);
+        } while (new_tip_index != iter_tip);
     }
 
-    return BaseIndex::Rewind(current_tip, new_tip);
+    return true;
 }
 
 static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockKey& block, DBVal& result)
