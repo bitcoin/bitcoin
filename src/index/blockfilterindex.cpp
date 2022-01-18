@@ -9,6 +9,7 @@
 #include <index/blockfilterindex.h>
 #include <node/blockstorage.h>
 #include <util/system.h>
+#include <validation.h>
 
 using node::UndoReadFromDisk;
 
@@ -214,22 +215,25 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     return data_size;
 }
 
-bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
+bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     CBlockUndo block_undo;
     uint256 prev_header;
 
-    if (pindex->nHeight > 0) {
+    if (block.height > 0) {
+        // pindex variable gives indexing code access to node internals. It
+        // will be removed in upcoming commit
+        const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
         if (!UndoReadFromDisk(block_undo, pindex)) {
             return false;
         }
 
         std::pair<uint256, DBVal> read_out;
-        if (!m_db->Read(DBHeightKey(pindex->nHeight - 1), read_out)) {
+        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
             return false;
         }
 
-        uint256 expected_block_hash = pindex->pprev->GetBlockHash();
+        uint256 expected_block_hash = *Assert(block.prev_hash);
         if (read_out.first != expected_block_hash) {
             return error("%s: previous block header belongs to unexpected block %s; expected %s",
                          __func__, read_out.first.ToString(), expected_block_hash.ToString());
@@ -238,18 +242,18 @@ bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex
         prev_header = read_out.second.header;
     }
 
-    BlockFilter filter(m_filter_type, block, block_undo);
+    BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
 
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
     if (bytes_written == 0) return false;
 
     std::pair<uint256, DBVal> value;
-    value.first = pindex->GetBlockHash();
+    value.first = block.hash;
     value.second.hash = filter.GetHash();
     value.second.header = filter.ComputeHeader(prev_header);
     value.second.pos = m_next_filter_pos;
 
-    if (!m_db->Write(DBHeightKey(pindex->nHeight), value)) {
+    if (!m_db->Write(DBHeightKey(block.height), value)) {
         return false;
     }
 

@@ -23,7 +23,7 @@ private:
     bool AllowPrune() const override { return false; }
 
 protected:
-    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+    bool CustomAppend(const interfaces::BlockInfo& block) override;
 
     BaseIndex::DB& GetDB() const override;
 

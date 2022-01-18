@@ -111,24 +111,27 @@ CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t 
     m_db = std::make_unique<CoinStatsIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
 }
 
-bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
+bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     CBlockUndo block_undo;
-    const CAmount block_subsidy{GetBlockSubsidy(pindex->nHeight, Params().GetConsensus())};
+    const CAmount block_subsidy{GetBlockSubsidy(block.height, Params().GetConsensus())};
     m_total_subsidy += block_subsidy;
 
     // Ignore genesis block
-    if (pindex->nHeight > 0) {
+    if (block.height > 0) {
+        // pindex variable gives indexing code access to node internals. It
+        // will be removed in upcoming commit
+        const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
         if (!UndoReadFromDisk(block_undo, pindex)) {
             return false;
         }
 
         std::pair<uint256, DBVal> read_out;
-        if (!m_db->Read(DBHeightKey(pindex->nHeight - 1), read_out)) {
+        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
             return false;
         }
 
-        uint256 expected_block_hash{pindex->pprev->GetBlockHash()};
+        uint256 expected_block_hash{*Assert(block.prev_hash)};
         if (read_out.first != expected_block_hash) {
             LogPrintf("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
                       read_out.first.ToString(), expected_block_hash.ToString());
@@ -140,12 +143,13 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
         }
 
         // TODO: Deduplicate BIP30 related code
-        bool is_bip30_block{(pindex->nHeight == 91722 && pindex->GetBlockHash() == uint256S("0x00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e")) ||
-                            (pindex->nHeight == 91812 && pindex->GetBlockHash() == uint256S("0x00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"))};
+        bool is_bip30_block{(block.height == 91722 && block.hash == uint256S("0x00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e")) ||
+                            (block.height == 91812 && block.hash == uint256S("0x00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"))};
 
         // Add the new utxos created from the block
-        for (size_t i = 0; i < block.vtx.size(); ++i) {
-            const auto& tx{block.vtx.at(i)};
+        assert(block.data);
+        for (size_t i = 0; i < block.data->vtx.size(); ++i) {
+            const auto& tx{block.data->vtx.at(i)};
 
             // Skip duplicate txid coinbase transactions (BIP30).
             if (is_bip30_block && tx->IsCoinBase()) {
@@ -156,7 +160,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 
             for (uint32_t j = 0; j < tx->vout.size(); ++j) {
                 const CTxOut& out{tx->vout[j]};
-                Coin coin{out, pindex->nHeight, tx->IsCoinBase()};
+                Coin coin{out, block.height, tx->IsCoinBase()};
                 COutPoint outpoint{tx->GetHash(), j};
 
                 // Skip unspendable coins
@@ -212,7 +216,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     m_total_unspendables_unclaimed_rewards += unclaimed_rewards;
 
     std::pair<uint256, DBVal> value;
-    value.first = pindex->GetBlockHash();
+    value.first = block.hash;
     value.second.transaction_output_count = m_transaction_output_count;
     value.second.bogo_size = m_bogo_size;
     value.second.total_amount = m_total_amount;
@@ -232,7 +236,7 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 
     // Intentionally do not update DB_MUHASH here so it stays in sync with
     // DB_BEST_BLOCK, and the index is not corrupted if there is an unclean shutdown.
-    return m_db->Write(DBHeightKey(pindex->nHeight), value);
+    return m_db->Write(DBHeightKey(block.height), value);
 }
 
 static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,

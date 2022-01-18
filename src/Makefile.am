@@ -884,6 +884,7 @@ libbitcoinkernel_la_SOURCES = \
   flatfile.cpp \
   fs.cpp \
   hash.cpp \
+  kernel/chain.cpp \
   kernel/checks.cpp \
   kernel/coinstats.cpp \
   kernel/context.cpp \

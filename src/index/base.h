@@ -97,7 +97,7 @@ protected:
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockKey>& block) { return true; }
 
     /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+    [[nodiscard]] virtual bool CustomAppend(const interfaces::BlockInfo& block) { return true; }
 
     /// Virtual method called internally by Commit that can be overridden to atomically
     /// commit more index state.
