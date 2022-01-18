@@ -152,9 +152,11 @@ protected:
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
 
-    void BlockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block_info);
+    /// Return whether to ignore stale, out-of-sync block connected event
+    bool IgnoreBlockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block);
 
-    void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator);
+    /// Return whether to ignore stale, out-of-sync chain flushed event
+    bool IgnoreChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator);
 
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
