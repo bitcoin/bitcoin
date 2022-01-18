@@ -2214,7 +2214,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
     }
 
     BlockValidationState state;
-    if (!m_chainman.ProcessNewBlockHeaders(headers, state, m_chainparams, &pindexLast)) {
+    if (!m_chainman.ProcessNewBlockHeaders(headers, state, &pindexLast)) {
         if (state.IsInvalid()) {
             MaybePunishNodeForBlock(pfrom.GetId(), state, via_compact_block, "invalid header received");
             return;
@@ -2591,7 +2591,7 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv)
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing)
 {
     bool new_block{false};
-    m_chainman.ProcessNewBlock(m_chainparams, block, force_processing, &new_block);
+    m_chainman.ProcessNewBlock(block, force_processing, &new_block);
     if (new_block) {
         node.m_last_block_time = GetTime<std::chrono::seconds>();
     } else {
@@ -3569,7 +3569,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const CBlockIndex *pindex = nullptr;
         BlockValidationState state;
-        if (!m_chainman.ProcessNewBlockHeaders({cmpctblock.header}, state, m_chainparams, &pindex)) {
+        if (!m_chainman.ProcessNewBlockHeaders({cmpctblock.header}, state, &pindex)) {
             if (state.IsInvalid()) {
                 MaybePunishNodeForBlock(pfrom.GetId(), state, /*via_compact_block=*/true, "invalid header via cmpctblock");
                 return;
