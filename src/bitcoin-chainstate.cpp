@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Chainstate
-    ChainstateManager chainman;
+    ChainstateManager chainman{chainparams};
 
     auto rv = node::LoadChainstate(false,
                                    std::ref(chainman),

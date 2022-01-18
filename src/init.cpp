@@ -1424,7 +1424,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     for (bool fLoaded = false; !fLoaded && !ShutdownRequested();) {
         node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), mempool_check_ratio);
 
-        node.chainman = std::make_unique<ChainstateManager>();
+        node.chainman = std::make_unique<ChainstateManager>(chainparams);
         ChainstateManager& chainman = *node.chainman;
 
         const bool fReset = fReindex;

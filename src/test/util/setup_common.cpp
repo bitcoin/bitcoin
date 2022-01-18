@@ -151,6 +151,8 @@ BasicTestingSetup::~BasicTestingSetup()
 ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : BasicTestingSetup(chainName, extra_args)
 {
+    const CChainParams& chainparams = Params();
+
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
     m_node.scheduler = std::make_unique<CScheduler>();
@@ -162,7 +164,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_cache_sizes = CalculateCacheSizes(m_args);
 
-    m_node.chainman = std::make_unique<ChainstateManager>();
+    m_node.chainman = std::make_unique<ChainstateManager>(chainparams);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
