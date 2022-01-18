@@ -142,9 +142,11 @@ protected:
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
 
-    void BlockConnected(ChainstateRole role, const interfaces::BlockInfo& block_info);
+    /// Return whether to ignore stale, out-of-sync block connected event
+    bool IgnoreBlockConnected(ChainstateRole role, const interfaces::BlockInfo& block);
 
-    void ChainStateFlushed(ChainstateRole role, const CBlockLocator& locator);
+    /// Return whether to ignore stale, out-of-sync chain flushed event
+    bool IgnoreChainStateFlushed(ChainstateRole role, const CBlockLocator& locator);
 
     /// Return custom notification options for index.
     [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
