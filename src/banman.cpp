@@ -55,12 +55,13 @@ void BanMan::DumpBanlist()
         SweepBanned();
         if (!m_is_dirty) return;
         banmap = m_banned;
-        SetBannedSetDirty(false);
+        m_is_dirty = false;
     }
 
     int64_t n_start = GetTimeMillis();
     if (!m_ban_db.Write(banmap)) {
-        SetBannedSetDirty(true);
+        LOCK(m_cs_banned);
+        m_is_dirty = true;
     }
 
     LogPrint(BCLog::NET, "Flushed %d banned node addresses/subnets to disk  %dms\n", banmap.size(),
@@ -201,10 +202,4 @@ void BanMan::SweepBanned()
     if (notify_ui && m_client_interface) {
         m_client_interface->BannedListChanged();
     }
-}
-
-void BanMan::SetBannedSetDirty(bool dirty)
-{
-    LOCK(m_cs_banned); //reuse m_banned lock for the m_is_dirty flag
-    m_is_dirty = dirty;
 }
