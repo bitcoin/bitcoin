@@ -14,6 +14,7 @@
 #include <node/context.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <rest.h>
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
@@ -27,6 +28,7 @@
 #include <version.h>
 
 #include <any>
+#include <string>
 
 #include <boost/algorithm/string.hpp>
 
@@ -39,13 +41,6 @@ using node::ReadBlockFromDisk;
 
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 static constexpr unsigned int MAX_REST_HEADERS_RESULTS = 2000;
-
-enum class RetFormat {
-    UNDEF,
-    BINARY,
-    HEX,
-    JSON,
-};
 
 static const struct {
     RetFormat rf;
