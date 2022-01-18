@@ -53,7 +53,7 @@ void BanMan::DumpBanlist()
     {
         LOCK(m_cs_banned);
         SweepBanned();
-        if (!BannedSetIsDirty()) return;
+        if (!m_is_dirty) return;
         banmap = m_banned;
         SetBannedSetDirty(false);
     }
@@ -201,12 +201,6 @@ void BanMan::SweepBanned()
     if (notify_ui && m_client_interface) {
         m_client_interface->BannedListChanged();
     }
-}
-
-bool BanMan::BannedSetIsDirty()
-{
-    LOCK(m_cs_banned);
-    return m_is_dirty;
 }
 
 void BanMan::SetBannedSetDirty(bool dirty)
