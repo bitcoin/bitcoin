@@ -135,23 +135,26 @@ static ChainstateManager* GetChainman(const std::any& context, HTTPRequest* req)
 
 RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq)
 {
-    const std::string::size_type pos = strReq.rfind('.');
-    if (pos == std::string::npos)
-    {
-        param = strReq;
+    // Remove query string (if any, separated with '?') as it should not interfere with
+    // parsing param and data format
+    param = strReq.substr(0, strReq.rfind('?'));
+    const std::string::size_type pos_format{param.rfind('.')};
+
+    // No format string is found
+    if (pos_format == std::string::npos) {
         return rf_names[0].rf;
     }
 
-    param = strReq.substr(0, pos);
-    const std::string suff(strReq, pos + 1);
-
+    // Match format string to available formats
+    const std::string suffix(param, pos_format + 1);
     for (const auto& rf_name : rf_names) {
-        if (suff == rf_name.name)
+        if (suffix == rf_name.name) {
+            param.erase(pos_format);
             return rf_name.rf;
+        }
     }
 
-    /* If no suffix is found, return original string.  */
-    param = strReq;
+    // If no suffix is found, return RESTResponseFormat::UNDEF and original string without query string
     return rf_names[0].rf;
 }
 
