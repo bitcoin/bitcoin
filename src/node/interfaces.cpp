@@ -402,6 +402,7 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
     if (block.m_max_time) *block.m_max_time = index->GetBlockTimeMax();
     if (block.m_mtp_time) *block.m_mtp_time = index->GetMedianTimePast();
     if (block.m_in_active_chain) *block.m_in_active_chain = active[index->nHeight] == index;
+    if (block.m_locator) { *block.m_locator = active.GetLocator(index); }
     if (block.m_next_block) FillBlock(active[index->nHeight] == index ? active[index->nHeight + 1] : nullptr, *block.m_next_block, lock, active);
     if (block.m_data) {
         REVERSE_LOCK(lock);

@@ -57,6 +57,8 @@ public:
     FoundBlock& mtpTime(int64_t& mtp_time) { m_mtp_time = &mtp_time; return *this; }
     //! Return whether block is in the active (most-work) chain.
     FoundBlock& inActiveChain(bool& in_active_chain) { m_in_active_chain = &in_active_chain; return *this; }
+    //! Return locator if block is in the active chain.
+    FoundBlock& locator(CBlockLocator& locator) { m_locator = &locator; return *this; }
     //! Return next block in the active chain if current block is in the active chain.
     FoundBlock& nextBlock(const FoundBlock& next_block) { m_next_block = &next_block; return *this; }
     //! Read block data from disk. If the block exists but doesn't have data
@@ -69,6 +71,7 @@ public:
     int64_t* m_max_time = nullptr;
     int64_t* m_mtp_time = nullptr;
     bool* m_in_active_chain = nullptr;
+    CBlockLocator* m_locator = nullptr;
     const FoundBlock* m_next_block = nullptr;
     CBlock* m_data = nullptr;
     mutable bool found = false;

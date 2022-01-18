@@ -34,6 +34,15 @@ static void FatalError(const char* fmt, const Args&... args)
     StartShutdown();
 }
 
+CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
+{
+    CBlockLocator locator;
+    bool found = chain.findBlock(block_hash, interfaces::FoundBlock().locator(locator));
+    assert(found);
+    assert(!locator.IsNull());
+    return locator;
+}
+
 BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
     CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate)
 {}
@@ -206,22 +215,20 @@ void BaseIndex::ThreadSync()
 
 bool BaseIndex::Commit()
 {
-    CDBBatch batch(GetDB());
-    if (!CommitInternal(batch) || !GetDB().WriteBatch(batch)) {
-        return error("%s: Failed to commit latest %s state", __func__, GetName());
-    }
-    return true;
-}
-
-bool BaseIndex::CommitInternal(CDBBatch& batch)
-{
-    LOCK(cs_main);
     // Don't commit anything if we haven't indexed any block yet
     // (this could happen if init is interrupted).
-    if (m_best_block_index == nullptr) {
-        return false;
+    bool ok = m_best_block_index != nullptr;
+    if (ok) {
+        CDBBatch batch(GetDB());
+        ok = CustomCommit(batch);
+        if (ok) {
+            GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
+            ok = GetDB().WriteBatch(batch);
+        }
     }
-    GetDB().WriteBestBlock(batch, m_chainstate->m_chain.GetLocator(m_best_block_index));
+    if (!ok) {
+        return error("%s: Failed to commit latest %s state", __func__, GetName());
+    }
     return true;
 }
 
