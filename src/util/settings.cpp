@@ -112,7 +112,7 @@ bool WriteSettings(const fs::path& path,
         errors.emplace_back(strprintf("Error: Unable to open settings file %s for writing", fs::PathToString(path)));
         return false;
     }
-    file << out.write(/* prettyIndent= */ 1, /* indentLevel= */ 4) << std::endl;
+    file << out.write(/* prettyIndent= */ 4, /* indentLevel= */ 1) << std::endl;
     file.close();
     return true;
 }
