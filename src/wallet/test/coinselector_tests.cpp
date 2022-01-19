@@ -82,23 +82,13 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
         assert(destination_ok);
         tx.vout[nInput].scriptPubKey = GetScriptForDestination(dest);
     }
-    if (fIsFromMe) {
-        // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),
-        // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
-        tx.vin.resize(1);
-    }
     uint256 txid = tx.GetHash();
 
     LOCK(wallet.cs_wallet);
     auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
     assert(ret.second);
     CWalletTx& wtx = (*ret.first).second;
-    if (fIsFromMe)
-    {
-        wtx.m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
-        wtx.m_is_cache_empty = false;
-    }
-    coins.emplace_back(wallet, wtx, nInput, nAge, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), /*use_max_sig_in=*/ false);
+    coins.emplace_back(wallet, wtx, nInput, nAge, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, /*use_max_sig_in=*/ false);
 }
 
 /** Check if SelectionResult a is equivalent to SelectionResult b.
@@ -156,7 +146,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
     static_groups.clear();
     for (auto& coin : coins) {
         static_groups.emplace_back();
-        static_groups.back().Insert(coin.GetInputCoin(), coin.depth, coin.tx->m_amounts[CWalletTx::DEBIT].m_cached[ISMINE_SPENDABLE] && coin.tx->m_amounts[CWalletTx::DEBIT].m_value[ISMINE_SPENDABLE] == 1 /* HACK: we can't figure out the is_me flag so we use the conditions defined above; perhaps set safe to false for !fIsFromMe in add_coin() */, 0, 0, false);
+        static_groups.back().Insert(coin.GetInputCoin(), coin.depth, coin.from_me, 0, 0, false);
     }
     return static_groups;
 }

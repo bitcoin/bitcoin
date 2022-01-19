@@ -51,7 +51,10 @@ public:
     /** The time of the transaction containing this output as determined by CWalletTx::nTimeSmart */
     int64_t time;
 
-    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, bool spendable, bool solvable, bool safe, int64_t time, bool use_max_sig_in)
+    /** Whether the transaction containing this output is sent from the owning wallet */
+    bool from_me;
+
+    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, bool use_max_sig_in)
         : tx(&wtx),
         i(iIn),
         depth(depth),
@@ -60,7 +63,8 @@ public:
         solvable(solvable),
         use_max_sig(use_max_sig_in),
         safe(safe),
-        time(time)
+        time(time),
+        from_me(from_me)
     {
         // If known and signable by the given wallet, compute input_bytes
         // Failure will keep this value -1

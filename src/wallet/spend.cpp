@@ -158,6 +158,8 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             continue;
         }
 
+        bool tx_from_me = CachedTxIsFromMe(wallet, wtx, ISMINE_ALL);
+
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             // Only consider selected coins if add_inputs is false
             if (coinControl && !coinControl->m_add_inputs && !coinControl->IsSelected(COutPoint(entry.first, i))) {
@@ -191,7 +193,7 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.emplace_back(wallet, wtx, i, nDepth, spendable, solvable, safeTx, wtx.GetTxTime(), /*use_max_sig_in=*/ (coinControl && coinControl->fAllowWatchOnly));
+            vCoins.emplace_back(wallet, wtx, i, nDepth, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, /*use_max_sig_in=*/ (coinControl && coinControl->fAllowWatchOnly));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -276,7 +278,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(wallet, *wtx.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        wallet, wtx, output.n, depth, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), /*use_max_sig_in=*/ false);
+                        wallet, wtx, output.n, depth, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL), /*use_max_sig_in=*/ false);
                 }
             }
         }
@@ -301,7 +303,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
 
             // Make an OutputGroup containing just this output
             OutputGroup group{coin_sel_params};
-            group.Insert(input_coin, output.depth, CachedTxIsFromMe(wallet, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
+            group.Insert(input_coin, output.depth, output.from_me, ancestors, descendants, positive_only);
 
             // Check the OutputGroup's eligibility. Only add the eligible ones.
             if (positive_only && group.GetSelectionAmount() <= 0) continue;
@@ -346,7 +348,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
         }
 
         // Add the input_coin to group
-        group->Insert(input_coin, output.depth, CachedTxIsFromMe(wallet, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
+        group->Insert(input_coin, output.depth, output.from_me, ancestors, descendants, positive_only);
     }
 
     // Now we go through the entire map and pull out the OutputGroups
