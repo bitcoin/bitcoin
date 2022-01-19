@@ -14,10 +14,8 @@
  */
 class TxIndex final : public BaseIndex
 {
-protected:
-    class DB;
-
 private:
+    class DB;
     const std::unique_ptr<DB> m_db;
     BaseIndex::DB& GetDB() const override;
 
