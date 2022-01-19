@@ -191,7 +191,7 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.push_back(COutput(wallet, wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
+            vCoins.emplace_back(wallet, wtx, i, nDepth, spendable, solvable, safeTx, wtx.GetTxTime(), /*use_max_sig_in=*/ (coinControl && coinControl->fAllowWatchOnly));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -268,14 +268,15 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     for (const COutPoint& output : lockedCoins) {
         auto it = wallet.mapWallet.find(output.hash);
         if (it != wallet.mapWallet.end()) {
-            int depth = wallet.GetTxDepthInMainChain(it->second);
-            if (depth >= 0 && output.n < it->second.tx->vout.size() &&
-                wallet.IsMine(it->second.tx->vout[output.n]) == is_mine_filter
+            const auto& wtx = it->second;
+            int depth = wallet.GetTxDepthInMainChain(wtx);
+            if (depth >= 0 && output.n < wtx.tx->vout.size() &&
+                wallet.IsMine(wtx.tx->vout[output.n]) == is_mine_filter
             ) {
                 CTxDestination address;
-                if (ExtractDestination(FindNonChangeParentOutput(wallet, *it->second.tx, output.n).scriptPubKey, address)) {
+                if (ExtractDestination(FindNonChangeParentOutput(wallet, *wtx.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        wallet, it->second, output.n, depth, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, /*use_max_sig_in=*/ false);
+                        wallet, wtx, output.n, depth, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), /*use_max_sig_in=*/ false);
                 }
             }
         }

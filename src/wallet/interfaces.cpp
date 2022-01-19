@@ -111,6 +111,17 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     return result;
 }
 
+WalletTxOut MakeWalletTxOut(const CWallet& wallet,
+    const COutput& output) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    WalletTxOut result;
+    result.txout = output.tx->tx->vout[output.i];
+    result.time = output.time;
+    result.depth_in_main_chain = output.depth;
+    result.is_spent = wallet.IsSpent(output.tx->GetHash(), output.i);
+    return result;
+}
+
 class WalletImpl : public Wallet
 {
 public:
@@ -420,7 +431,7 @@ public:
             auto& group = result[entry.first];
             for (const auto& coin : entry.second) {
                 group.emplace_back(COutPoint(coin.tx->GetHash(), coin.i),
-                    MakeWalletTxOut(*m_wallet, *coin.tx, coin.i, coin.depth));
+                    MakeWalletTxOut(*m_wallet, coin));
             }
         }
         return result;
