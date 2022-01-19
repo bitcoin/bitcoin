@@ -533,10 +533,11 @@ protected:
     arith_uint256 nLastPreciousChainwork = 0;
 
     /**
-     * the ChainState CriticalSection
-     * A lock that must be held when modifying this ChainState - held in ActivateBestChain()
+     * The ChainState Mutex
+     * A lock that must be held when modifying this ChainState - held in ActivateBestChain() and
+     * InvalidateBlock()
      */
-    RecursiveMutex m_chainstate_mutex;
+    Mutex m_chainstate_mutex;
 
     /**
      * Whether this chainstate is undergoing initial block download.
