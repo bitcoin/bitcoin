@@ -22,12 +22,13 @@ private:
 
     bool AllowPrune() const override { return false; }
 
+    /// Get the name of the index for display in logs.
+    const char* GetIndexName() const override { return "txindex"; }
+
 protected:
     bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
 
     BaseIndex::DB& GetDB() const override;
-
-    const char* GetIndexName() const override { return "txindex"; }
 
 public:
     /// Constructs the index, which becomes available to be queried.

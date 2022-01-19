@@ -40,6 +40,9 @@ private:
 
     bool AllowPrune() const override { return true; }
 
+    /// Get the name of the index for display in logs.
+    const char* GetIndexName() const override { return m_name.c_str(); }
+
 protected:
     bool Init() override;
 
@@ -50,8 +53,6 @@ protected:
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
 
     BaseIndex::DB& GetDB() const override { return *m_db; }
-
-    const char* GetIndexName() const override { return m_name.c_str(); }
 
 public:
     /** Constructs the index, which becomes available to be queried. */
