@@ -1562,10 +1562,10 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     }
 
     const auto& output = vCoins.at(GetRand(vCoins.size()));
-    const CTxOut txout = output.tx->tx->vout[output.i];
+    const CTxOut txout = output.txout;
 
     txCollateral.vin.clear();
-    txCollateral.vin.emplace_back(output.tx->GetHash(), output.i);
+    txCollateral.vin.emplace_back(output.outpoint.hash, output.outpoint.n);
     txCollateral.vout.clear();
 
     // pay collateral charge in fees

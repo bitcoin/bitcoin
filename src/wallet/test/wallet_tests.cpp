@@ -604,7 +604,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     for (const auto& group : list) {
         for (const auto& coin : group.second) {
             LOCK(wallet->cs_wallet);
-            wallet->LockCoin(COutPoint(coin.tx->GetHash(), coin.i));
+            wallet->LockCoin(coin.outpoint);
         }
     }
     {
@@ -1294,9 +1294,8 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
             LOCK(wallet->cs_wallet);
             AvailableCoins(*wallet, vecAvailable);
             for (auto coin : vecAvailable) {
-                auto out = COutPoint(coin.tx->GetHash(), coin.i);
-                if (std::find(setCoins.begin(), setCoins.end(), out) == setCoins.end()) {
-                    wallet->LockCoin(out);
+                if (std::find(setCoins.begin(), setCoins.end(), coin.outpoint) == setCoins.end()) {
+                    wallet->LockCoin(coin.outpoint);
                 }
             }
         }
@@ -1353,7 +1352,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
                 LOCK(wallet->cs_wallet);
                 AvailableCoins(*wallet, vecAvailable);
                 for (auto coin : vecAvailable) {
-                    wallet->LockCoin(COutPoint(coin.tx->GetHash(), coin.i));
+                    wallet->LockCoin(coin.outpoint);
                 }
             }
 

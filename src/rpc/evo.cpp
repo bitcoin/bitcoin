@@ -261,8 +261,8 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
 
     for (const auto& out : vecOutputs) {
         CTxDestination txDest;
-        if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == fundDest) {
-            coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+        if (ExtractDestination(out.txout.scriptPubKey, txDest) && txDest == fundDest) {
+            coinControl.Select(out.outpoint);
         }
     }
 

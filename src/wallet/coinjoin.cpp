@@ -68,14 +68,14 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
     Shuffle(vCoins.rbegin(), vCoins.rend(), FastRandomContext());
 
     for (const auto& out : vCoins) {
-        uint256 txHash = out.tx->GetHash();
-        CAmount nValue = out.tx->tx->vout[out.i].nValue;
+        uint256 txHash = out.outpoint.hash;
+        CAmount nValue = out.txout.nValue;
         if (setRecentTxIds.find(txHash) != setRecentTxIds.end()) continue; // no duplicate txids
         if (nValueTotal + nValue > nValueMax) continue;
         if (nValue != nDenomAmount) continue;
 
-        CTxIn txin = CTxIn(txHash, out.i);
-        CScript scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
+        CTxIn txin = CTxIn(txHash, out.outpoint.n);
+        CScript scriptPubKey = out.txout.scriptPubKey;
         int nRounds = GetRealOutpointCoinJoinRounds(txin.prevout);
 
         nValueTotal += nValue;
@@ -95,7 +95,7 @@ struct CompareByPriority
     bool operator()(const COutput& t1,
                     const COutput& t2) const
     {
-        return CoinJoin::CalculateAmountPriority(t1.GetInputCoin().effective_value) > CoinJoin::CalculateAmountPriority(t2.GetInputCoin().effective_value);
+        return CoinJoin::CalculateAmountPriority(t1.effective_value) > CoinJoin::CalculateAmountPriority(t2.effective_value);
     }
 };
 
@@ -114,7 +114,7 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
     for (const auto& out : vCoins) {
-        CAmount nValue = out.tx->tx->vout[out.i].nValue;
+        CAmount nValue = out.txout.nValue;
         if (nValueTotal + nValue <= nValueMax) {
             nValueTotal += nValue;
             setAmountsRet.emplace(nValue);
