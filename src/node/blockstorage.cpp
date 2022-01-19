@@ -50,22 +50,17 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
 {
     AssertLockHeld(cs_main);
 
-    // Check for duplicate
-    uint256 hash = block.GetHash();
-    BlockMap::iterator it = m_block_index.find(hash);
-    if (it != m_block_index.end()) {
-        return &it->second;
+    auto [mi, inserted] = m_block_index.try_emplace(block.GetHash(), block);
+    if (!inserted) {
+        return &mi->second;
     }
+    CBlockIndex* pindexNew = &(*mi).second;
 
-    // Construct new block index object
-    CBlockIndex new_index{block};
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
-    new_index.nSequenceId = 0;
-    BlockMap::iterator mi = m_block_index.insert(std::make_pair(hash, std::move(new_index))).first;
+    pindexNew->nSequenceId = 0;
 
-    CBlockIndex* pindexNew = &(*mi).second;
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
     if (miPrev != m_block_index.end()) {
