@@ -536,7 +536,7 @@ protected:
      * the ChainState CriticalSection
      * A lock that must be held when modifying this ChainState - held in ActivateBestChain()
      */
-    RecursiveMutex m_cs_chainstate;
+    RecursiveMutex m_chainstate_mutex;
 
     /**
      * Whether this chainstate is undergoing initial block download.

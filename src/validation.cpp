@@ -2830,8 +2830,8 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, std::shared_ptr
     // ABC maintains a fair degree of expensive-to-calculate internal state
     // because this function periodically releases cs_main so that it does not lock up other threads for too long
     // during large connects - and to allow for e.g. the callback queue to drain
-    // we use m_cs_chainstate to enforce mutual exclusion so that only one caller may execute this function at a time
-    LOCK(m_cs_chainstate);
+    // we use m_chainstate_mutex to enforce mutual exclusion so that only one caller may execute this function at a time
+    LOCK(m_chainstate_mutex);
 
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
@@ -2961,7 +2961,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
     // We do not allow ActivateBestChain() to run while InvalidateBlock() is
     // running, as that could cause the tip to change while we disconnect
     // blocks.
-    LOCK(m_cs_chainstate);
+    LOCK(m_chainstate_mutex);
 
     // We'll be acquiring and releasing cs_main below, to allow the validation
     // callbacks to run. However, we should keep the block index in a
