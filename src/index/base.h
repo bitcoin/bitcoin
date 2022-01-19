@@ -78,6 +78,8 @@ private:
 
     virtual bool AllowPrune() const = 0;
 
+    virtual DB& GetDB() const = 0;
+
     /// Write update index entries for a newly connected block.
     virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
 
@@ -103,8 +105,6 @@ protected:
     /// Rewind index to an earlier chain tip during a chain reorg. The tip must
     /// be an ancestor of the current best block.
     virtual bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
-
-    virtual DB& GetDB() const = 0;
 
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);

@@ -19,6 +19,7 @@ protected:
 
 private:
     const std::unique_ptr<DB> m_db;
+    BaseIndex::DB& GetDB() const override;
 
     bool AllowPrune() const override { return false; }
 
@@ -27,9 +28,6 @@ private:
 
     /// Get the name of the index for display in logs.
     const char* GetIndexName() const override { return "txindex"; }
-
-protected:
-    BaseIndex::DB& GetDB() const override;
 
 public:
     /// Constructs the index, which becomes available to be queried.

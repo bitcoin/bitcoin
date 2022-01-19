@@ -19,6 +19,7 @@ class CoinStatsIndex final : public BaseIndex
 private:
     std::string m_name;
     std::unique_ptr<BaseIndex::DB> m_db;
+    BaseIndex::DB& GetDB() const override { return *m_db; }
 
     MuHash3072 m_muhash;
     uint64_t m_transaction_output_count{0};
@@ -50,8 +51,6 @@ protected:
     bool CommitInternal(CDBBatch& batch) override;
 
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
-
-    BaseIndex::DB& GetDB() const override { return *m_db; }
 
 public:
     // Constructs the index, which becomes available to be queried.

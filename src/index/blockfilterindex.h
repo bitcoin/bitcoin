@@ -27,6 +27,7 @@ private:
     BlockFilterType m_filter_type;
     std::string m_name;
     std::unique_ptr<BaseIndex::DB> m_db;
+    BaseIndex::DB& GetDB() const override { return *m_db; }
 
     FlatFilePos m_next_filter_pos;
     std::unique_ptr<FlatFileSeq> m_filter_fileseq;
@@ -52,8 +53,6 @@ protected:
     bool CommitInternal(CDBBatch& batch) override;
 
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
-
-    BaseIndex::DB& GetDB() const override { return *m_db; }
 
 public:
     /** Constructs the index, which becomes available to be queried. */
