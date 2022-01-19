@@ -38,6 +38,9 @@ private:
 
     bool AllowPrune() const override { return true; }
 
+    /// Write update index entries for a newly connected block.
+    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+
     /// Get the name of the index for display in logs.
     const char* GetIndexName() const override { return "coinstatsindex"; }
 
@@ -45,8 +48,6 @@ protected:
     bool Init() override;
 
     bool CommitInternal(CDBBatch& batch) override;
-
-    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
 
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
 

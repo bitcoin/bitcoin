@@ -33,7 +33,7 @@ protected:
      * A locator is used instead of a simple hash of the chain tip because blocks
      * and block index entries may not be flushed to disk until after this database
      * is updated.
-    */
+     */
     class DB : public CDBWrapper
     {
     public:
@@ -78,6 +78,9 @@ private:
 
     virtual bool AllowPrune() const = 0;
 
+    /// Write update index entries for a newly connected block.
+    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+
     /// Get the name of the index for display in logs.
     virtual const char* GetIndexName() const = 0;
 
@@ -92,9 +95,6 @@ protected:
 
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool Init();
-
-    /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
 
     /// Virtual method called internally by Commit that can be overridden to atomically
     /// commit more index state.

@@ -22,12 +22,13 @@ private:
 
     bool AllowPrune() const override { return false; }
 
+    /// Write update index entries for a newly connected block.
+    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+
     /// Get the name of the index for display in logs.
     const char* GetIndexName() const override { return "txindex"; }
 
 protected:
-    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
-
     BaseIndex::DB& GetDB() const override;
 
 public:
