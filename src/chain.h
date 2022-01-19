@@ -164,13 +164,13 @@ public:
     int nHeight{0};
 
     //! Which # file this block is stored in (blk?????.dat)
-    int nFile{0};
+    int nFile GUARDED_BY(::cs_main){0};
 
     //! Byte offset within blk?????.dat where this block's data is stored
-    unsigned int nDataPos{0};
+    unsigned int nDataPos GUARDED_BY(::cs_main){0};
 
     //! Byte offset within rev?????.dat where this block's undo data is stored
-    unsigned int nUndoPos{0};
+    unsigned int nUndoPos GUARDED_BY(::cs_main){0};
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
@@ -198,7 +198,7 @@ public:
     //! load to avoid the block index being spuriously rewound.
     //! @sa NeedsRedownload
     //! @sa ActivateSnapshot
-    uint32_t nStatus{0};
+    uint32_t nStatus GUARDED_BY(::cs_main){0};
 
     //! block header
     int32_t nVersion{0};
@@ -382,6 +382,7 @@ public:
 
     SERIALIZE_METHODS(CDiskBlockIndex, obj)
     {
+        LOCK(::cs_main);
         int _nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH)) READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
