@@ -11,7 +11,9 @@
 #include <wallet/wallet.h>
 
 namespace wallet {
-/** Get the marginal bytes if spending the specified output from this transaction */
+/** Get the marginal bytes if spending the specified output from this transaction.
+ * use_max_sig indicates whether to use the maximum sized, 72 byte signature when calculating the
+ * size of the input spend. This should only be set when watch-only outputs are allowed */
 int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig = false);
 
 class COutput
@@ -38,9 +40,6 @@ public:
     /** Whether we know how to spend this output, ignoring the lack of keys */
     bool solvable;
 
-    /** Whether to use the maximum sized, 72 byte signature when calculating the size of the input spend. This should only be set when watch-only outputs are allowed */
-    bool use_max_sig;
-
     /**
      * Whether this output is considered safe to spend. Unconfirmed transactions
      * from outside keys and unconfirmed replacement transactions are considered
@@ -54,24 +53,17 @@ public:
     /** Whether the transaction containing this output is sent from the owning wallet */
     bool from_me;
 
-    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, bool use_max_sig_in)
+    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
         : tx(&wtx),
         i(iIn),
         depth(depth),
-        input_bytes(-1),
+        input_bytes(input_bytes),
         spendable(spendable),
         solvable(solvable),
-        use_max_sig(use_max_sig_in),
         safe(safe),
         time(time),
         from_me(from_me)
-    {
-        // If known and signable by the given wallet, compute input_bytes
-        // Failure will keep this value -1
-        if (spendable) {
-            input_bytes = GetTxSpendSize(wallet, wtx, i, use_max_sig);
-        }
-    }
+    {}
 
     std::string ToString() const;
 

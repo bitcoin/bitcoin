@@ -88,7 +88,7 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
     auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
     assert(ret.second);
     CWalletTx& wtx = (*ret.first).second;
-    coins.emplace_back(wallet, wtx, nInput, nAge, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, /*use_max_sig_in=*/ false);
+    coins.emplace_back(wallet, wtx, nInput, nAge, GetTxSpendSize(wallet, wtx, nInput), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe);
 }
 
 /** Check if SelectionResult a is equivalent to SelectionResult b.
