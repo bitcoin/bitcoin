@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(coins, *wallet, 2 * CENT, 6 * 24, false, 0, true);
         CCoinControl coin_control;
         coin_control.fAllowOtherInputs = true;
-        coin_control.Select(COutPoint(coins.at(0).tx->GetHash(), coins.at(0).i));
+        coin_control.Select(coins.at(0).outpoint);
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
         const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);

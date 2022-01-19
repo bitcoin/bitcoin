@@ -648,16 +648,16 @@ RPCHelpMan listunspent()
 
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
-        const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
+        const CScript& scriptPubKey = out.txout.scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsSpentKey(out.tx->GetHash(), out.i);
+        bool reused = avoid_reuse && pwallet->IsSpentKey(out.outpoint.hash, out.outpoint.n);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
 
         UniValue entry(UniValue::VOBJ);
-        entry.pushKV("txid", out.tx->GetHash().GetHex());
-        entry.pushKV("vout", out.i);
+        entry.pushKV("txid", out.outpoint.hash.GetHex());
+        entry.pushKV("vout", (int)out.outpoint.n);
 
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
@@ -702,12 +702,12 @@ RPCHelpMan listunspent()
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
-        entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        entry.pushKV("amount", ValueFromAmount(out.txout.nValue));
         entry.pushKV("confirmations", out.depth);
         if (!out.depth) {
             size_t ancestor_count, descendant_count, ancestor_size;
             CAmount ancestor_fees;
-            pwallet->chain().getTransactionAncestry(out.tx->GetHash(), ancestor_count, descendant_count, &ancestor_size, &ancestor_fees);
+            pwallet->chain().getTransactionAncestry(out.outpoint.hash, ancestor_count, descendant_count, &ancestor_size, &ancestor_fees);
             if (ancestor_count) {
                 entry.pushKV("ancestorcount", uint64_t(ancestor_count));
                 entry.pushKV("ancestorsize", uint64_t(ancestor_size));

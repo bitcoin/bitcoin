@@ -19,10 +19,11 @@ int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out
 class COutput
 {
 public:
-    const CWalletTx *tx;
+    /** The outpoint identifying this UTXO */
+    COutPoint outpoint;
 
-    /** Index in tx->vout. */
-    int i;
+    /** The output itself */
+    CTxOut txout;
 
     /**
      * Depth in block chain.
@@ -54,8 +55,8 @@ public:
     bool from_me;
 
     COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
-        : tx(&wtx),
-        i(iIn),
+        : outpoint(COutPoint(wtx.GetHash(), iIn)),
+        txout(wtx.tx->vout.at(iIn)),
         depth(depth),
         input_bytes(input_bytes),
         spendable(spendable),
@@ -69,7 +70,7 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(tx->tx, i, input_bytes);
+        return CInputCoin(outpoint, txout, input_bytes);
     }
 };
 
@@ -100,6 +101,7 @@ CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinContr
  * Find non-change parent output.
  */
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransaction& tx, int output) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Return list of available coins and locked coins grouped by non-change output address.

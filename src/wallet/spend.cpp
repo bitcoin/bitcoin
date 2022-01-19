@@ -31,7 +31,7 @@ int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out
 
 std::string COutput::ToString() const
 {
-    return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, depth, FormatMoney(tx->tx->vout[i].nValue));
+    return strprintf("COutput(%s, %d, %d) [%s]", outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
 }
 
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* provider, bool use_max_sig)
@@ -221,7 +221,7 @@ CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinContr
     AvailableCoins(wallet, vCoins, coinControl);
     for (const COutput& out : vCoins) {
         if (out.spendable) {
-            balance += out.tx->tx->vout[out.i].nValue;
+            balance += out.txout.nValue;
         }
     }
     return balance;
@@ -245,6 +245,12 @@ const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransactio
     return ptx->vout[n];
 }
 
+const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    return FindNonChangeParentOutput(wallet, *wallet.GetWalletTx(outpoint.hash)->tx, outpoint.n);
+}
+
 std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -257,7 +263,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     for (const COutput& coin : availableCoins) {
         CTxDestination address;
         if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
-            ExtractDestination(FindNonChangeParentOutput(wallet, *coin.tx->tx, coin.i).scriptPubKey, address)) {
+            ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
             result[address].emplace_back(std::move(coin));
         }
     }
@@ -298,7 +304,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
             if (!output.spendable) continue;
 
             size_t ancestors, descendants;
-            wallet.chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
+            wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, descendants);
             CInputCoin input_coin = output.GetInputCoin();
 
             // Make an OutputGroup containing just this output
@@ -324,7 +330,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
         if (!output.spendable) continue;
 
         size_t ancestors, descendants;
-        wallet.chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
+        wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, descendants);
         CInputCoin input_coin = output.GetInputCoin();
         CScript spk = input_coin.txout.scriptPubKey;
 
