@@ -27,7 +27,7 @@ protected:
 
     BaseIndex::DB& GetDB() const override;
 
-    const char* GetName() const override { return "txindex"; }
+    const char* GetIndexName() const override { return "txindex"; }
 
 public:
     /// Constructs the index, which becomes available to be queried.

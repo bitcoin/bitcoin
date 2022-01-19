@@ -49,7 +49,7 @@ protected:
 
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
-    const char* GetName() const override { return "coinstatsindex"; }
+    const char* GetIndexName() const override { return "coinstatsindex"; }
 
 public:
     // Constructs the index, which becomes available to be queried.

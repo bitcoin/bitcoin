@@ -104,7 +104,7 @@ protected:
     virtual DB& GetDB() const = 0;
 
     /// Get the name of the index for display in logs.
-    virtual const char* GetName() const = 0;
+    virtual const char* GetIndexName() const = 0;
 
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);

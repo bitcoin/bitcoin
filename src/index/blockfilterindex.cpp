@@ -116,7 +116,7 @@ bool BlockFilterIndex::Init()
         // further corruption.
         if (m_db->Exists(DB_FILTER_POS)) {
             return error("%s: Cannot read current %s state; index may be corrupted",
-                         __func__, GetName());
+                         __func__, GetIndexName());
         }
 
         // If the DB_FILTER_POS is not set, then initialize to the first location.
