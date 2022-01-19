@@ -58,7 +58,7 @@ FUZZ_TARGET(chain)
         if (block_status & ~BLOCK_VALID_MASK) {
             continue;
         }
-        (void)disk_block_index->RaiseValidity(block_status);
+        WITH_LOCK(::cs_main, (void)disk_block_index->RaiseValidity(block_status));
     }
 
     CBlockIndex block_index{block_header};
