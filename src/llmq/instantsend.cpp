@@ -326,10 +326,10 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash
 
     ret = std::make_shared<CInstantSendLock>(CInstantSendLock::isdlock_version);
     bool exists = db->Read(std::make_tuple(DB_ISLOCK_BY_HASH, hash), *ret);
-    if (!exists) {
+    if (!exists || (::SerializeHash(*ret) != hash)) {
         ret = std::make_shared<CInstantSendLock>();
         exists = db->Read(std::make_tuple(DB_ISLOCK_BY_HASH, hash), *ret);
-        if (!exists) {
+        if (!exists || (::SerializeHash(*ret) != hash)) {
             ret = nullptr;
         }
     }
