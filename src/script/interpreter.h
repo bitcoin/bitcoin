@@ -174,7 +174,6 @@ struct PrecomputedTransactionData
 
     // BIP119 precomputed data (single SHA256).
     uint256 m_scriptSigs_single_hash;
-    uint256 m_standard_template_single_hash;
 
     // BIP143 precomputed data (double-SHA256).
     uint256 hashPrevouts, hashSequence, hashOutputs;
