@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     // that a normal IPv4 address is among the entries, but if this address is
     // !IsRoutable the undefined behavior is easier to trigger deterministically
     {
-        LOCK(cs_mapLocalHost);
+        LOCK(g_maplocalhost_mutex);
         in_addr ipv4AddrLocal;
         ipv4AddrLocal.s_addr = 0x0100007f;
         CNetAddr addr = CNetAddr(ipv4AddrLocal);
