@@ -13,4 +13,4 @@ export DPKG_ADD_ARCH="i386"
 export PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64 wine32 file"
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
-export BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests --disable-external-signer"
+export BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
