@@ -88,7 +88,7 @@ static inline auto quoted(const std::string& s)
 // Allow safe path append operations.
 static inline path operator+(path p1, path p2)
 {
-    p1 += std::move(p2);
+    p1 += static_cast<boost::filesystem::path&&>(p2);
     return p1;
 }
 
