@@ -694,7 +694,7 @@ private:
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(m_addr_local_mutex);
-    mutable RecursiveMutex m_addr_local_mutex;
+    mutable Mutex m_addr_local_mutex;
 
     mapMsgCmdSize mapSendBytesPerMsgCmd GUARDED_BY(cs_vSend);
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
