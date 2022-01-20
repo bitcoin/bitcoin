@@ -1603,7 +1603,7 @@ static RPCHelpMan utxoupdatepsbt()
     }
 
     // Fill the inputs
-    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
+    PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
 
