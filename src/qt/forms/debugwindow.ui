@@ -1355,10 +1355,10 @@
                <item row="13" column="0">
                 <widget class="QLabel" name="peerLastTxLabel">
                  <property name="toolTip">
-                  <string>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</string>
+                  <string extracomment="Tooltip text for the Last Transaction field in the peer details area.">Elapsed time since a novel transaction accepted into our mempool was received from this peer.</string>
                  </property>
                  <property name="text">
-                  <string>Last Tx</string>
+                  <string>Last Transaction</string>
                  </property>
                 </widget>
                </item>
