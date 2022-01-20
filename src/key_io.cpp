@@ -164,6 +164,12 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
 
             if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
                 static_assert(WITNESS_V1_TAPROOT_SIZE == WitnessV1Taproot::size());
+
+                if (!XOnlyPubKey(data).IsFullyValid()) {
+                    error_str = "Invalid x coordinate on the secp256k1 curve";
+                    return CNoDestination();
+                }
+
                 WitnessV1Taproot tap;
                 std::copy(data.begin(), data.end(), tap.begin());
                 return tap;

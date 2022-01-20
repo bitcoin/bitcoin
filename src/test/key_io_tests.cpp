@@ -53,7 +53,11 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
             BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid privkey as pubkey:" + strTest);
         } else {
             // Must be valid public key
-            destination = DecodeDestination(exp_base58string);
+            std::string error_msg;
+            destination = DecodeDestination(exp_base58string, error_msg);
+
+            if (error_msg.compare("Invalid x coordinate on the secp256k1 curve") == 0) continue;
+
             CScript script = GetScriptForDestination(destination);
             BOOST_CHECK_MESSAGE(IsValidDestination(destination), "!IsValid:" + strTest);
             BOOST_CHECK_EQUAL(HexStr(script), HexStr(exp_payload));

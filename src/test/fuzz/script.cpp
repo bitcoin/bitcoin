@@ -163,7 +163,13 @@ FUZZ_TARGET_INIT(script, initialize_script)
         const CTxDestination tx_destination_2{ConsumeTxDestination(fuzzed_data_provider)};
         const std::string encoded_dest{EncodeDestination(tx_destination_1)};
         const UniValue json_dest{DescribeAddress(tx_destination_1)};
-        Assert(tx_destination_1 == DecodeDestination(encoded_dest));
+
+        std::string error_msg;
+        auto destination = DecodeDestination(encoded_dest, error_msg);
+
+        if (error_msg.compare("Invalid x coordinate on the secp256k1 curve") == 0) return;
+
+        Assert(tx_destination_1 == destination);
         (void)GetKeyForDestination(/*store=*/{}, tx_destination_1);
         const CScript dest{GetScriptForDestination(tx_destination_1)};
         const bool valid{IsValidDestination(tx_destination_1)};
