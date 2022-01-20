@@ -820,6 +820,17 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
 
+    // TxoutType::WITNESS_V1_TAPROOT with invalid x-only pubkey (non-standard)
+    auto invalid_xpubkey{ParseHex("658204033e46a1fa8cceb84013cfe2d376ca72d5f595319497b95b08aa64a970")};
+    BOOST_CHECK(!XOnlyPubKey(invalid_xpubkey).IsFullyValid());
+    t.vout[0].scriptPubKey = CScript() << OP_1 << invalid_xpubkey;
+    CheckIsNotStandard(t, "scriptpubkey");
+
+    auto valid_xpubkey{ParseHex("a37c3903c8d0db6512e2b40b0dffa05e5a3ab73603ce8c9c4b7771e5412328f9")};
+    BOOST_CHECK(XOnlyPubKey(valid_xpubkey).IsFullyValid());
+    t.vout[0].scriptPubKey = CScript() << OP_1 << valid_xpubkey;
+    CheckIsStandard(t);
+
     // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY, t.vout[0].scriptPubKey.size());
