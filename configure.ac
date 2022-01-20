@@ -322,7 +322,7 @@ AC_ARG_ENABLE([werror],
 AC_ARG_ENABLE([external-signer],
     [AS_HELP_STRING([--enable-external-signer],[compile external signer support (default is auto, requires Boost::Process)])],
     [use_external_signer=$enableval],
-    [use_external_signer=yes])
+    [use_external_signer=auto])
 
 AC_LANG_PUSH([C++])
 
@@ -1611,8 +1611,22 @@ if test "$use_boost" = "yes"; then
   fi
 fi
 
-if test "$use_external_signer" != no; then
-  AC_DEFINE([ENABLE_EXTERNAL_SIGNER],,[define if external signer support is enabled])
+if test "$use_external_signer" != "no"; then
+  case $host in
+    *mingw*)
+      dnl Boost Process uses Boost Filesystem when targeting Windows. Also,
+      dnl since Boost 1.71.0, Process does not work with mingw-w64 without
+      dnl workarounds. See 67669ab425b52a2b6be3d2f3b3b7e3939b676a2c.
+      if test "$use_external_signer" = "yes"; then
+        AC_MSG_ERROR([External signing is not supported on Windows])
+      fi
+      use_external_signer="no";
+    ;;
+    *)
+      use_external_signer="yes"
+      AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
+    ;;
+  esac
 fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$use_external_signer" = "yes"])
 
