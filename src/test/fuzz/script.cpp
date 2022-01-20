@@ -59,7 +59,8 @@ FUZZ_TARGET_INIT(script, initialize_script)
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||
-               which_type == TxoutType::MULTISIG);
+               which_type == TxoutType::MULTISIG ||
+               which_type == TxoutType::WITNESS_V1_TAPROOT);
     }
     if (which_type == TxoutType::NONSTANDARD) {
         assert(!is_standard_ret);

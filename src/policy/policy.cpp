@@ -73,6 +73,9 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
     } else if (whichType == TxoutType::NULL_DATA &&
                (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes)) {
           return false;
+    } else if (whichType == TxoutType::WITNESS_V1_TAPROOT &&
+               !XOnlyPubKey(vSolutions.front()).IsFullyValid()) {
+        return false;
     }
 
     return true;
