@@ -553,11 +553,13 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
 
 CService CNode::GetAddrLocal() const
 {
+    AssertLockNotHeld(m_addr_local_mutex);
     LOCK(m_addr_local_mutex);
     return addrLocal;
 }
 
 void CNode::SetAddrLocal(const CService& addrLocalIn) {
+    AssertLockNotHeld(m_addr_local_mutex);
     LOCK(m_addr_local_mutex);
     if (addrLocal.IsValid()) {
         error("Addr local already set for node: %i. Refusing to change from %s to %s", id, addrLocal.ToString(), addrLocalIn.ToString());
