@@ -693,8 +693,8 @@ private:
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
-    CService addrLocal GUARDED_BY(cs_addrLocal);
-    mutable RecursiveMutex cs_addrLocal;
+    CService addrLocal GUARDED_BY(m_addr_local_mutex);
+    mutable RecursiveMutex m_addr_local_mutex;
 
     mapMsgCmdSize mapSendBytesPerMsgCmd GUARDED_BY(cs_vSend);
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
