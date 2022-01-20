@@ -99,25 +99,36 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[1].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): 9.999})
         rawTxSigned = self.nodes[1].signrawtransactionwithwallet(rawTx)
         txId = self.nodes[1].sendrawtransaction(rawTxSigned['hex'])
-        self.generate(self.nodes[0], 1)
+        self.generateblock(self.nodes[0], output=self.nodes[0].getnewaddress(), transactions=[rawTxSigned['hex']])
+        err_msg = (
+            "No such mempool transaction. Use -txindex or provide a block hash to enable"
+            " blockchain transaction queries. Use gettransaction for wallet transactions."
+        )
 
         for n in [0, 3]:
             self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex")
-            # 1. valid parameters - only supply txid
-            assert_equal(self.nodes[n].getrawtransaction(txId), rawTxSigned['hex'])
 
-            # 2. valid parameters - supply txid and 0 for non-verbose
-            assert_equal(self.nodes[n].getrawtransaction(txId, 0), rawTxSigned['hex'])
+            if n == 0:
+                # With -txindex.
+                # 1. valid parameters - only supply txid
+                assert_equal(self.nodes[n].getrawtransaction(txId), rawTxSigned['hex'])
 
-            # 3. valid parameters - supply txid and False for non-verbose
-            assert_equal(self.nodes[n].getrawtransaction(txId, False), rawTxSigned['hex'])
+                # 2. valid parameters - supply txid and 0 for non-verbose
+                assert_equal(self.nodes[n].getrawtransaction(txId, 0), rawTxSigned['hex'])
 
-            # 4. valid parameters - supply txid and 1 for verbose.
-            # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
-            assert_equal(self.nodes[n].getrawtransaction(txId, 1)["hex"], rawTxSigned['hex'])
+                # 3. valid parameters - supply txid and False for non-verbose
+                assert_equal(self.nodes[n].getrawtransaction(txId, False), rawTxSigned['hex'])
 
-            # 5. valid parameters - supply txid and True for non-verbose
-            assert_equal(self.nodes[n].getrawtransaction(txId, True)["hex"], rawTxSigned['hex'])
+                # 4. valid parameters - supply txid and 1 for verbose.
+                # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
+                assert_equal(self.nodes[n].getrawtransaction(txId, 1)["hex"], rawTxSigned['hex'])
+
+                # 5. valid parameters - supply txid and True for non-verbose
+                assert_equal(self.nodes[n].getrawtransaction(txId, True)["hex"], rawTxSigned['hex'])
+            else:
+                # Without -txindex, expect to raise.
+                for verbose in [None, 0, False, 1, True]:
+                    assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txId, verbose)
 
             # 6. invalid parameters - supply txid and invalid boolean values (strings) for verbose
             for value in ["True", "False"]:
@@ -145,10 +156,6 @@ class RawTransactionsTest(BitcoinTestFramework):
                 assert 'in_active_chain' not in gottx
             else:
                 self.log.info("Test getrawtransaction without -txindex, without blockhash: expect the call to raise")
-                err_msg = (
-                    "No such mempool transaction. Use -txindex or provide a block hash to enable"
-                    " blockchain transaction queries. Use gettransaction for wallet transactions."
-                )
                 assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txid=tx, verbose=True)
             # We should not get the tx if we provide an unrelated block
             assert_raises_rpc_error(-5, "No such transaction found", self.nodes[n].getrawtransaction, txid=tx, blockhash=block2)
