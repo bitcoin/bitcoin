@@ -54,6 +54,11 @@ namespace sha256_arm_shani
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
 
+namespace sha256d64_arm_shani
+{
+void Transform_2way(unsigned char* out, const unsigned char* in);
+}
+
 // Internal implementation code.
 namespace
 {
@@ -665,7 +670,8 @@ std::string SHA256AutoDetect()
     if (have_arm_shani) {
         Transform = sha256_arm_shani::Transform;
         TransformD64 = TransformD64Wrapper<sha256_arm_shani::Transform>;
-        ret = "arm_shani(1way)";
+        TransformD64_2way = sha256d64_arm_shani::Transform_2way;
+        ret = "arm_shani(1way,2way)";
     }
 #endif
 
