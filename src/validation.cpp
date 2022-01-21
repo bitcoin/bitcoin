@@ -1306,7 +1306,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         // we know is that the inputs aren't available.
         if (m_pool.exists(GenTxid::Wtxid(wtxid))) {
             // Exact transaction already exists in the mempool.
-            auto iter = m_pool.GetIter(wtxid);
+            auto iter = m_pool.GetIter(txid);
             assert(iter != std::nullopt);
             results.emplace(wtxid, MempoolAcceptResult::MempoolTx(iter.value()->GetTxSize(), iter.value()->GetFee()));
         } else if (m_pool.exists(GenTxid::Txid(txid))) {
