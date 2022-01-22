@@ -314,7 +314,7 @@ public:
     /** Implement NetEventsInterface */
     void InitializeNode(CNode* pnode) override;
     void FinalizeNode(const CNode& node) override;
-    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
+    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override LOCKS_EXCLUDED(pfrom->m_process_msgs_mutex);
     bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
     /** Implement PeerManager */
@@ -4140,6 +4140,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
 
     std::list<CNetMessage> msgs;
     {
+        AssertLockNotHeld(pfrom->m_process_msgs_mutex);
         LOCK(pfrom->m_process_msgs_mutex);
         if (pfrom->m_process_msgs.empty()) return false;
         // Just take one message
