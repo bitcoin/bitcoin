@@ -17,7 +17,7 @@ if test -z "$1"; then
     exit 1
 fi
 
-if ! sed --help | grep -q 'GNU'; then
+if ! sed --help 2>&1 | grep -q 'GNU'; then
     echo "Error: the installed sed package is not compatible. Please make sure you have GNU sed installed in your system.";
     exit 1;
 fi
