@@ -4,7 +4,7 @@ define(_CLIENT_VERSION_MINOR, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
-define(_COPYRIGHT_YEAR, 2021)
+define(_COPYRIGHT_YEAR, 2022)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core]])
 AC_INIT([Bitcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
@@ -13,7 +13,7 @@ AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR([PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh])])
+m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh])])
 PKG_PROG_PKG_CONFIG
 if test "$PKG_CONFIG" = ""; then
   AC_MSG_ERROR([pkg-config not found])
@@ -137,11 +137,11 @@ AC_ARG_WITH([bdb],
   [use_bdb=$withval],
   [use_bdb=auto])
 
-AC_ARG_ENABLE([ebpf],
-  [AS_HELP_STRING([--enable-ebpf],
-  [enable eBPF tracing (default is yes if sys/sdt.h is found)])],
-  [use_ebpf=$enableval],
-  [use_ebpf=yes])
+AC_ARG_ENABLE([usdt],
+  [AS_HELP_STRING([--enable-usdt],
+  [enable tracepoints for Userspace, Statically Defined Tracing (default is yes if sys/sdt.h is found)])],
+  [use_usdt=$enableval],
+  [use_usdt=yes])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -321,7 +321,7 @@ AC_ARG_ENABLE([werror],
 AC_ARG_ENABLE([external-signer],
     [AS_HELP_STRING([--enable-external-signer],[compile external signer support (default is yes, requires Boost::Process)])],
     [use_external_signer=$enableval],
-    [use_external_signer=yes])
+    [use_external_signer=auto])
 
 AC_ARG_ENABLE([lto],
     [AS_HELP_STRING([--enable-lto],[build using LTO (default is no)])],
@@ -684,7 +684,6 @@ case $host in
      TARGET_OS=darwin
      if  test $cross_compiling != "yes"; then
        BUILD_OS=darwin
-       AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
        AC_CHECK_PROG([BREW], [brew], [brew])
        if test "$BREW" = "brew"; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
@@ -746,9 +745,6 @@ case $host in
            AC_PATH_TOOL([OTOOL], [otool], [otool])
            AC_PATH_PROGS([XORRISOFS], [xorrisofs], [xorrisofs])
            AC_PATH_PROGS([DMG], [dmg], [dmg])
-           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg], [rsvg-convert])
-           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert], [convert])
-           AC_PATH_PROGS([TIFFCP], [tiffcp], [tiffcp])
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
@@ -1341,15 +1337,15 @@ if test "$enable_wallet" != "no"; then
     fi
 fi
 
-if test "$use_ebpf" != "no"; then
-  AC_MSG_CHECKING([whether eBPF tracepoints are supported])
+if test "$use_usdt" != "no"; then
+  AC_MSG_CHECKING([whether Userspace, Statically Defined Tracing tracepoints are supported])
   AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM(
       [#include <sys/sdt.h>],
       [DTRACE_PROBE("context", "event");]
     )],
-    [AC_MSG_RESULT([yes]); have_sdt=yes; AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable eBPF user static defined tracepoints])],
-    [AC_MSG_RESULT([no]); have_sdt=no;]
+    [AC_MSG_RESULT([yes]); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
+    [AC_MSG_RESULT([no]); use_usdt=no;]
   )
 fi
 
@@ -1419,7 +1415,21 @@ if test "$use_boost" = "yes"; then
 fi
 
 if test "$use_external_signer" != "no"; then
-  AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [], [Define if external signer support is enabled])
+  case $host in
+    *mingw*)
+      dnl Boost Process uses Boost Filesystem when targeting Windows. Also,
+      dnl since Boost 1.71.0, Process does not work with mingw-w64 without
+      dnl workarounds. See 67669ab425b52a2b6be3d2f3b3b7e3939b676a2c.
+      if test "$use_external_signer" = "yes"; then
+        AC_MSG_ERROR([External signing is not supported on Windows])
+      fi
+      use_external_signer="no";
+    ;;
+    *)
+      use_external_signer="yes"
+      AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
+    ;;
+  esac
 fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$use_external_signer" = "yes"])
 
@@ -1504,6 +1514,26 @@ if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench
   fi
 fi
 
+if test x$use_libevent = xyes; then
+  TEMP_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS $EVENT_CFLAGS"
+  AC_MSG_CHECKING([if evhttp_connection_get_peer expects const char**])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+      #include <cstdint>
+      #include <event2/http.h>
+    ]], [[
+      evhttp_connection *conn = (evhttp_connection *)1;
+      const char *host;
+      uint16_t port;
+
+      evhttp_connection_get_peer(conn, &host, &port);
+    ]])],
+    [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR], [1], [Define this symbol if evhttp_connection_get_peer expects const char**]) ],
+    [ AC_MSG_RESULT([no]) ]
+  )
+  CXXFLAGS="$TEMP_CXXFLAGS"
+fi
+
 dnl QR Code encoding library check
 
 if test "$use_qr" != "no"; then
@@ -1535,15 +1565,13 @@ dnl libmultiprocess library check
 
 libmultiprocess_found=no
 if test "$with_libmultiprocess" = "yes" || test "$with_libmultiprocess" = "auto"; then
-  m4_ifdef([PKG_CHECK_MODULES], [PKG_CHECK_MODULES([LIBMULTIPROCESS], [libmultiprocess], [
+  PKG_CHECK_MODULES([LIBMULTIPROCESS], [libmultiprocess], [
      libmultiprocess_found=yes;
      libmultiprocess_prefix=`$PKG_CONFIG --variable=prefix libmultiprocess`;
-  ], [true])])
+  ], [true])
 elif test "$with_libmultiprocess" != "no"; then
   AC_MSG_ERROR([--with-libmultiprocess=$with_libmultiprocess value is not yes, auto, or no])
 fi
-AC_SUBST(LIBMULTIPROCESS_CFLAGS)
-AC_SUBST(LIBMULTIPROCESS_LIBS)
 
 dnl Enable multiprocess check
 
@@ -1765,7 +1793,6 @@ AM_CONDITIONAL([TARGET_WINDOWS], [test "$TARGET_OS" = "windows"])
 AM_CONDITIONAL([ENABLE_WALLET], [test "$enable_wallet" = "yes"])
 AM_CONDITIONAL([USE_SQLITE], [test "$use_sqlite" = "yes"])
 AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
-AM_CONDITIONAL([ENABLE_TRACING], [test "$have_sdt" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
@@ -1846,16 +1873,11 @@ AC_SUBST(ENABLE_EXTERNAL_SIGNER)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
 AC_SUBST(BOOST_LIBS)
-AC_SUBST(SQLITE_LIBS)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
 AC_SUBST(NATPMP_CPPFLAGS)
 AC_SUBST(NATPMP_LIBS)
-AC_SUBST(EVENT_LIBS)
-AC_SUBST(EVENT_PTHREADS_LIBS)
-AC_SUBST(ZMQ_LIBS)
-AC_SUBST(QR_LIBS)
 AC_SUBST(HAVE_GMTIME_R)
 AC_SUBST(HAVE_FDATASYNC)
 AC_SUBST(HAVE_FULLFSYNC)
@@ -1864,6 +1886,7 @@ AC_SUBST(HAVE_BUILTIN_PREFETCH)
 AC_SUBST(HAVE_MM_PREFETCH)
 AC_SUBST(HAVE_STRONG_GETAUXVAL)
 AC_SUBST(ANDROID_ARCH)
+AC_SUBST(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
@@ -1872,6 +1895,7 @@ AC_CONFIG_LINKS([contrib/devtools/symbol-check.py:contrib/devtools/symbol-check.
 AC_CONFIG_LINKS([contrib/devtools/test-security-check.py:contrib/devtools/test-security-check.py])
 AC_CONFIG_LINKS([contrib/devtools/test-symbol-check.py:contrib/devtools/test-symbol-check.py])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
+AC_CONFIG_LINKS([contrib/macdeploy/background.tiff:contrib/macdeploy/background.tiff])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/test_runner.py:test/util/test_runner.py])
@@ -1939,14 +1963,14 @@ echo "  with bench      = $use_bench"
 echo "  with upnp       = $use_upnp"
 echo "  with natpmp     = $use_natpmp"
 echo "  use asm         = $use_asm"
-echo "  ebpf tracing    = $have_sdt"
+echo "  USDT tracing    = $use_usdt"
 echo "  sanitizers      = $use_sanitizers"
 echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"
 echo "  werror          = $enable_werror"
 echo "  LTO             = $enable_lto"
 echo
-echo "  target os       = $TARGET_OS"
+echo "  target os       = $host_os"
 echo "  build os        = $build_os"
 echo
 echo "  CC              = $CC"

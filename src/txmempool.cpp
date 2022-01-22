@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,16 +62,6 @@ struct update_fee_delta
 
 private:
     int64_t feeDelta;
-};
-
-struct update_lock_points
-{
-    explicit update_lock_points(const LockPoints& _lp) : lp(_lp) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateLockPoints(lp); }
-
-private:
-    const LockPoints& lp;
 };
 
 bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
@@ -649,10 +639,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        const LockPoints lp{it->GetLockPoints()};
-        if (!TestLockPointValidity(chain, lp)) {
-            mapTx.modify(it, update_lock_points(lp));
-        }
+        assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
 }
 

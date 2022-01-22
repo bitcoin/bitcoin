@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <script/standard.h>
 #include <span.h>
 #include <streams.h>
+#include <util/fastrange.h>
 
 #include <algorithm>
 #include <cmath>
@@ -191,14 +192,6 @@ static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, 
     return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash);
 }
 
-
-// A replacement for x % n. This assumes that x and n are 32bit integers, and x is a uniformly random distributed 32bit value
-// which should be the case for a good hash.
-// See https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
-static inline uint32_t FastMod(uint32_t x, size_t n) {
-    return ((uint64_t)x * (uint64_t)n) >> 32;
-}
-
 void CRollingBloomFilter::insert(Span<const unsigned char> vKey)
 {
     if (nEntriesThisGeneration == nEntriesPerGeneration) {
@@ -223,7 +216,7 @@ void CRollingBloomFilter::insert(Span<const unsigned char> vKey)
         uint32_t h = RollingBloomHash(n, nTweak, vKey);
         int bit = h & 0x3F;
         /* FastMod works with the upper bits of h, so it is safe to ignore that the lower bits of h are already used for bit. */
-        uint32_t pos = FastMod(h, data.size());
+        uint32_t pos = FastRange32(h, data.size());
         /* The lowest bit of pos is ignored, and set to zero for the first bit, and to one for the second. */
         data[pos & ~1] = (data[pos & ~1] & ~(((uint64_t)1) << bit)) | ((uint64_t)(nGeneration & 1)) << bit;
         data[pos | 1] = (data[pos | 1] & ~(((uint64_t)1) << bit)) | ((uint64_t)(nGeneration >> 1)) << bit;
@@ -235,7 +228,7 @@ bool CRollingBloomFilter::contains(Span<const unsigned char> vKey) const
     for (int n = 0; n < nHashFuncs; n++) {
         uint32_t h = RollingBloomHash(n, nTweak, vKey);
         int bit = h & 0x3F;
-        uint32_t pos = FastMod(h, data.size());
+        uint32_t pos = FastRange32(h, data.size());
         /* If the relevant bit is not set in either data[pos & ~1] or data[pos | 1], the filter does not contain vKey */
         if (!(((data[pos & ~1] | data[pos | 1]) >> bit) & 1)) {
             return false;

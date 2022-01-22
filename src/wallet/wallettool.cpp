@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
+namespace wallet {
 namespace WalletTool {
 
 // The standard wallet deleter function blocks on the validation interface
@@ -219,3 +220,4 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
     return true;
 }
 } // namespace WalletTool
+} // namespace wallet

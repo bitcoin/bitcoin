@@ -20,7 +20,7 @@ const char* EXE_NAME = "bitcoin-node";
 class BitcoinNodeInit : public interfaces::Init
 {
 public:
-    BitcoinNodeInit(NodeContext& node, const char* arg0)
+    BitcoinNodeInit(node::NodeContext& node, const char* arg0)
         : m_node(node),
           m_ipc(interfaces::MakeIpc(EXE_NAME, arg0, *this))
     {
@@ -29,20 +29,20 @@ public:
     }
     std::unique_ptr<interfaces::Node> makeNode() override { return interfaces::MakeNode(m_node); }
     std::unique_ptr<interfaces::Chain> makeChain() override { return interfaces::MakeChain(m_node); }
-    std::unique_ptr<interfaces::WalletClient> makeWalletClient(interfaces::Chain& chain) override
+    std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain) override
     {
-        return MakeWalletClient(chain, *Assert(m_node.args));
+        return MakeWalletLoader(chain, *Assert(m_node.args));
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
-    NodeContext& m_node;
+    node::NodeContext& m_node;
     std::unique_ptr<interfaces::Ipc> m_ipc;
 };
 } // namespace
 } // namespace init
 
 namespace interfaces {
-std::unique_ptr<Init> MakeNodeInit(NodeContext& node, int argc, char* argv[], int& exit_status)
+std::unique_ptr<Init> MakeNodeInit(node::NodeContext& node, int argc, char* argv[], int& exit_status)
 {
     auto init = std::make_unique<init::BitcoinNodeInit>(node, argc > 0 ? argv[0] : "");
     // Check if bitcoin-node is being invoked as an IPC server. If so, then

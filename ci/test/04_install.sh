@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -87,13 +87,17 @@ fi
 DOCKER_EXEC echo "Free disk space:"
 DOCKER_EXEC df -h
 
-if [ "$RUN_FUZZ_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
-  if [ ! -d "${DIR_QA_ASSETS}" ]; then
+if [ "$RUN_FUZZ_TESTS" = "true" ]; then
+  export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
+  if [ ! -d "$DIR_FUZZ_IN" ]; then
     DOCKER_EXEC git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${DIR_QA_ASSETS}"
   fi
-
-  export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
+elif [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
   export DIR_UNIT_TEST_DATA=${DIR_QA_ASSETS}/unit_test_data/
+  if [ ! -d "$DIR_UNIT_TEST_DATA" ]; then
+    DOCKER_EXEC mkdir -p "$DIR_UNIT_TEST_DATA"
+    DOCKER_EXEC curl --location --fail https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json -o "${DIR_UNIT_TEST_DATA}/script_assets_test.json"
+  fi
 fi
 
 DOCKER_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"

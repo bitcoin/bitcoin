@@ -57,11 +57,11 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listbanned()), 0)
 
         self.log.info("setban: test persistence across node restart")
-        self.nodes[1].setban("127.0.0.0/32", "add")
-        self.nodes[1].setban("127.0.0.0/24", "add")
         # Set the mocktime so we can control when bans expire
         old_time = int(time.time())
         self.nodes[1].setmocktime(old_time)
+        self.nodes[1].setban("127.0.0.0/32", "add")
+        self.nodes[1].setban("127.0.0.0/24", "add")
         self.nodes[1].setban("192.168.0.1", "add", 1)  # ban for 1 seconds
         self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000)  # ban for 1000 seconds
         listBeforeShutdown = self.nodes[1].listbanned()
@@ -69,6 +69,15 @@ class DisconnectBanTest(BitcoinTestFramework):
         # Move time forward by 3 seconds so the third ban has expired
         self.nodes[1].setmocktime(old_time + 3)
         assert_equal(len(self.nodes[1].listbanned()), 3)
+
+        self.log.info("Test ban_duration and time_remaining")
+        for ban in self.nodes[1].listbanned():
+            if ban["address"] in ["127.0.0.0/32", "127.0.0.0/24"]:
+                assert_equal(ban["ban_duration"], 86400)
+                assert_equal(ban["time_remaining"], 86397)
+            elif ban["address"] == "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19":
+                assert_equal(ban["ban_duration"], 1000)
+                assert_equal(ban["time_remaining"], 997)
 
         self.restart_node(1)
 

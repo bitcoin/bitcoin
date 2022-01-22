@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,18 +15,22 @@
 #include <cstdint>
 #include <functional>
 
-class BlockManager;
 class CCoinsView;
+namespace node {
+class BlockManager;
+} // namespace node
 
+namespace node {
 enum class CoinStatsHashType {
     HASH_SERIALIZED,
     MUHASH,
     NONE,
 };
 
-struct CCoinsStats
-{
-    CoinStatsHashType m_hash_type;
+struct CCoinsStats {
+    //! Which hash type to use
+    const CoinStatsHashType m_hash_type;
+
     int nHeight{0};
     uint256 hashBlock{};
     uint64_t nTransactions{0};
@@ -34,7 +38,8 @@ struct CCoinsStats
     uint64_t nBogoSize{0};
     uint256 hashSerialized{};
     uint64_t nDiskSize{0};
-    CAmount nTotalAmount{0};
+    //! The total amount, or nullopt if an overflow occurred calculating it
+    std::optional<CAmount> total_amount{0};
 
     //! The number of coins contained.
     uint64_t coins_count{0};
@@ -69,10 +74,11 @@ struct CCoinsStats
 };
 
 //! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, const std::function<void()>& interruption_point = {}, const CBlockIndex* pindex = nullptr);
+bool GetUTXOStats(CCoinsView* view, node::BlockManager& blockman, CCoinsStats& stats, const std::function<void()>& interruption_point = {}, const CBlockIndex* pindex = nullptr);
 
 uint64_t GetBogoSize(const CScript& script_pub_key);
 
 CDataStream TxOutSer(const COutPoint& outpoint, const Coin& coin);
+} // namespace node
 
 #endif // BITCOIN_NODE_COINSTATS_H

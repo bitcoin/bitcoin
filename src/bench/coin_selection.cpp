@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,19 @@
 #include <wallet/wallet.h>
 
 #include <set>
+
+using node::NodeContext;
+using wallet::AttemptSelection;
+using wallet::CInputCoin;
+using wallet::COutput;
+using wallet::CWallet;
+using wallet::CWalletTx;
+using wallet::CoinEligibilityFilter;
+using wallet::CoinSelectionParams;
+using wallet::CreateDummyWalletDatabase;
+using wallet::OutputGroup;
+using wallet::SelectCoinsBnB;
+using wallet::TxStateInactive;
 
 static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
 {

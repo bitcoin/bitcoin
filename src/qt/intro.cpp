@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,7 +67,7 @@ FreespaceChecker::FreespaceChecker(Intro *_intro)
 void FreespaceChecker::check()
 {
     QString dataDirStr = intro->getPathToCheck();
-    fs::path dataDir = GUIUtil::qstringToBoostPath(dataDirStr);
+    fs::path dataDir = GUIUtil::QStringToPath(dataDirStr);
     uint64_t freeBytesAvailable = 0;
     int replyStatus = ST_OK;
     QString replyMessage = tr("A new data directory will be created.");
@@ -216,7 +216,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
+    if(!fs::exists(GUIUtil::QStringToPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
     {
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
@@ -240,9 +240,9 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
             }
             dataDir = intro.getDataDirectory();
             try {
-                if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
+                if (TryCreateDirectories(GUIUtil::QStringToPath(dataDir))) {
                     // If a new data directory has been created, make wallets subdirectory too
-                    TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
+                    TryCreateDirectories(GUIUtil::QStringToPath(dataDir) / "wallets");
                 }
                 break;
             } catch (const fs::filesystem_error&) {
@@ -263,7 +263,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
      * (to be consistent with bitcoind behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
-        gArgs.SoftSetArg("-datadir", fs::PathToString(GUIUtil::qstringToBoostPath(dataDir))); // use OS locale for path setting
+        gArgs.SoftSetArg("-datadir", fs::PathToString(GUIUtil::QStringToPath(dataDir))); // use OS locale for path setting
     }
     return true;
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +9,10 @@
 
 #include <wallet/test/init_test_fixture.h>
 
+namespace wallet {
 InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
-    m_wallet_client = MakeWalletClient(*m_node.chain, *Assert(m_node.args));
+    m_wallet_loader = MakeWalletLoader(*m_node.chain, *Assert(m_node.args));
 
     std::string sep;
     sep += fs::path::preferred_separator;
@@ -48,3 +49,4 @@ void InitWalletDirTestingSetup::SetWalletDir(const fs::path& walletdir_path)
 {
     gArgs.ForceSetArg("-walletdir", fs::PathToString(walletdir_path));
 }
+} // namespace wallet

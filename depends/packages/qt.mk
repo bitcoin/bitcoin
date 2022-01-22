@@ -13,6 +13,7 @@ $(package)_patches += dont_use_avx_android_x86_64.patch dont_hardcode_x86_64.pat
 $(package)_patches += fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch fix_limits_header.patch
 $(package)_patches += fix_bigsur_style.patch use_android_ndk23.patch
+$(package)_patches += rcc_hardcode_timestamp.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=d5788e86257b21d5323f1efd94376a213e091d1e5e03b45a95dd052b5f570db8
@@ -146,7 +147,11 @@ $(package)_config_opts_linux += -no-feature-vulkan
 $(package)_config_opts_linux += -dbus-runtime
 $(package)_config_opts_arm_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
+ifneq (,$(findstring -stdlib=libc++,$($(1)_cxx)))
+$(package)_config_opts_x86_64_linux = -xplatform linux-clang-libc++
+else
 $(package)_config_opts_x86_64_linux = -xplatform linux-g++-64
+endif
 $(package)_config_opts_aarch64_linux = -xplatform linux-aarch64-gnu-g++
 $(package)_config_opts_powerpc64_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_powerpc64le_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
@@ -168,7 +173,6 @@ $(package)_config_opts_android += -android-sdk $(ANDROID_SDK)
 $(package)_config_opts_android += -android-ndk $(ANDROID_NDK)
 $(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
 $(package)_config_opts_android += -egl
-$(package)_config_opts_android += -qpa xcb
 $(package)_config_opts_android += -no-dbus
 $(package)_config_opts_android += -opengl es2
 $(package)_config_opts_android += -qt-freetype
@@ -237,6 +241,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_bigsur_style.patch && \
   patch -p1 -i $($(package)_patch_dir)/use_android_ndk23.patch && \
+  patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \

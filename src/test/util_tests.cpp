@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@
 #include <util/getuniquepath.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
+#include <util/overflow.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -23,6 +24,8 @@
 
 #include <array>
 #include <optional>
+#include <limits>
+#include <map>
 #include <stdint.h>
 #include <string.h>
 #include <thread>
@@ -1463,6 +1466,38 @@ BOOST_AUTO_TEST_CASE(test_IsDigit)
     BOOST_CHECK_EQUAL(IsDigit(9), false);
 }
 
+/* Check for overflow */
+template <typename T>
+static void TestAddMatrixOverflow()
+{
+    constexpr T MAXI{std::numeric_limits<T>::max()};
+    BOOST_CHECK(!CheckedAdd(T{1}, MAXI));
+    BOOST_CHECK(!CheckedAdd(MAXI, MAXI));
+    BOOST_CHECK_EQUAL(0, CheckedAdd(T{0}, T{0}).value());
+    BOOST_CHECK_EQUAL(MAXI, CheckedAdd(T{0}, MAXI).value());
+    BOOST_CHECK_EQUAL(MAXI, CheckedAdd(T{1}, MAXI - 1).value());
+}
+
+/* Check for overflow or underflow */
+template <typename T>
+static void TestAddMatrix()
+{
+    TestAddMatrixOverflow<T>();
+    constexpr T MINI{std::numeric_limits<T>::min()};
+    constexpr T MAXI{std::numeric_limits<T>::max()};
+    BOOST_CHECK(!CheckedAdd(T{-1}, MINI));
+    BOOST_CHECK(!CheckedAdd(MINI, MINI));
+    BOOST_CHECK_EQUAL(MINI, CheckedAdd(T{0}, MINI).value());
+    BOOST_CHECK_EQUAL(MINI, CheckedAdd(T{-1}, MINI + 1).value());
+    BOOST_CHECK_EQUAL(-1, CheckedAdd(MINI, MAXI).value());
+}
+
+BOOST_AUTO_TEST_CASE(util_overflow)
+{
+    TestAddMatrixOverflow<unsigned>();
+    TestAddMatrix<signed>();
+}
+
 BOOST_AUTO_TEST_CASE(test_ParseInt32)
 {
     int32_t n;
@@ -1588,6 +1623,11 @@ BOOST_AUTO_TEST_CASE(test_ToIntegral)
     BOOST_CHECK(!ToIntegral<uint8_t>("256"));
 }
 
+int64_t atoi64_legacy(const std::string& str)
+{
+    return strtoll(str.c_str(), nullptr, 10);
+}
+
 BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
 {
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("1234"), 1'234);
@@ -1615,48 +1655,68 @@ BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>(""), 0);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("aap"), 0);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("0x1"), 0);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-32482348723847471234"), 0);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("32482348723847471234"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-32482348723847471234"), -2'147'483'647 - 1);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("32482348723847471234"), 2'147'483'647);
 
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("-9223372036854775809"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("-9223372036854775809"), -9'223'372'036'854'775'807LL - 1LL);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("-9223372036854775808"), -9'223'372'036'854'775'807LL - 1LL);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("9223372036854775807"), 9'223'372'036'854'775'807);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("9223372036854775808"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>("9223372036854775808"), 9'223'372'036'854'775'807);
+
+    std::map<std::string, int64_t> atoi64_test_pairs = {
+        {"-9223372036854775809", std::numeric_limits<int64_t>::min()},
+        {"-9223372036854775808", -9'223'372'036'854'775'807LL - 1LL},
+        {"9223372036854775807", 9'223'372'036'854'775'807},
+        {"9223372036854775808", std::numeric_limits<int64_t>::max()},
+        {"+-", 0},
+        {"0x1", 0},
+        {"ox1", 0},
+        {"", 0},
+    };
+
+    for (const auto& pair : atoi64_test_pairs) {
+        BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>(pair.first), pair.second);
+    }
+
+    // Ensure legacy compatibility with previous versions of Bitcoin Core's atoi64
+    for (const auto& pair : atoi64_test_pairs) {
+        BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int64_t>(pair.first), atoi64_legacy(pair.first));
+    }
 
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("-1"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("0"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("18446744073709551615"), 18'446'744'073'709'551'615ULL);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("18446744073709551616"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint64_t>("18446744073709551616"), 18'446'744'073'709'551'615ULL);
 
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-2147483649"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-2147483649"), -2'147'483'648LL);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("-2147483648"), -2'147'483'648LL);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("2147483647"), 2'147'483'647);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("2147483648"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int32_t>("2147483648"), 2'147'483'647);
 
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("-1"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("0"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("4294967295"), 4'294'967'295U);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("4294967296"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint32_t>("4294967296"), 4'294'967'295U);
 
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("-32769"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("-32769"), -32'768);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("-32768"), -32'768);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("32767"), 32'767);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("32768"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int16_t>("32768"), 32'767);
 
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("-1"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("0"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("65535"), 65'535U);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("65536"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint16_t>("65536"), 65'535U);
 
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("-129"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("-129"), -128);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("-128"), -128);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("127"), 127);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("128"), 0);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<int8_t>("128"), 127);
 
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("-1"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("0"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("255"), 255U);
-    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("256"), 0U);
+    BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("256"), 255U);
 }
 
 BOOST_AUTO_TEST_CASE(test_ParseInt64)

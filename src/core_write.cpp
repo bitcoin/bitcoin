@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -208,22 +208,17 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             const CTxOut& prev_txout = prev_coin.out;
 
             amt_total_in += prev_txout.nValue;
-            switch (verbosity) {
-                case TxVerbosity::SHOW_TXID:
-                case TxVerbosity::SHOW_DETAILS:
-                    break;
 
-                case TxVerbosity::SHOW_DETAILS_AND_PREVOUT:
-                    UniValue o_script_pub_key(UniValue::VOBJ);
-                    ScriptPubKeyToUniv(prev_txout.scriptPubKey, o_script_pub_key, /* includeHex */ true);
+            if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
+                UniValue o_script_pub_key(UniValue::VOBJ);
+                ScriptPubKeyToUniv(prev_txout.scriptPubKey, o_script_pub_key, /*include_hex=*/ true);
 
-                    UniValue p(UniValue::VOBJ);
-                    p.pushKV("generated", bool(prev_coin.fCoinBase));
-                    p.pushKV("height", uint64_t(prev_coin.nHeight));
-                    p.pushKV("value", ValueFromAmount(prev_txout.nValue));
-                    p.pushKV("scriptPubKey", o_script_pub_key);
-                    in.pushKV("prevout", p);
-                    break;
+                UniValue p(UniValue::VOBJ);
+                p.pushKV("generated", bool(prev_coin.fCoinBase));
+                p.pushKV("height", uint64_t(prev_coin.nHeight));
+                p.pushKV("value", ValueFromAmount(prev_txout.nValue));
+                p.pushKV("scriptPubKey", o_script_pub_key);
+                in.pushKV("prevout", p);
             }
         }
         in.pushKV("sequence", (int64_t)txin.nSequence);

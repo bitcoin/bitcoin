@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -112,9 +112,9 @@ static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256
 //
 bool fDiscover = true;
 bool fListen = true;
-RecursiveMutex cs_mapLocalHost;
-std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
-static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
+Mutex g_maplocalhost_mutex;
+std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
+static bool vfLimited[NET_MAX] GUARDED_BY(g_maplocalhost_mutex) = {};
 std::string strSubVersion;
 
 void CConnman::AddAddrFetch(const std::string& strDest)
@@ -137,7 +137,7 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
     int nBestScore = -1;
     int nBestReachability = -1;
     {
-        LOCK(cs_mapLocalHost);
+        LOCK(g_maplocalhost_mutex);
         for (const auto& entry : mapLocalHost)
         {
             int nScore = entry.second.nScore;
@@ -193,7 +193,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 
 static int GetnScore(const CService& addr)
 {
-    LOCK(cs_mapLocalHost);
+    LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
     return (it != mapLocalHost.end()) ? it->second.nScore : 0;
 }
@@ -264,7 +264,7 @@ bool AddLocal(const CService& addr_, int nScore)
     LogPrintf("AddLocal(%s,%i)\n", addr.ToString(), nScore);
 
     {
-        LOCK(cs_mapLocalHost);
+        LOCK(g_maplocalhost_mutex);
         const auto [it, is_newly_added] = mapLocalHost.emplace(addr, LocalServiceInfo());
         LocalServiceInfo &info = it->second;
         if (is_newly_added || nScore >= info.nScore) {
@@ -283,7 +283,7 @@ bool AddLocal(const CNetAddr &addr, int nScore)
 
 void RemoveLocal(const CService& addr)
 {
-    LOCK(cs_mapLocalHost);
+    LOCK(g_maplocalhost_mutex);
     LogPrintf("RemoveLocal(%s)\n", addr.ToString());
     mapLocalHost.erase(addr);
 }
@@ -292,13 +292,13 @@ void SetReachable(enum Network net, bool reachable)
 {
     if (net == NET_UNROUTABLE || net == NET_INTERNAL)
         return;
-    LOCK(cs_mapLocalHost);
+    LOCK(g_maplocalhost_mutex);
     vfLimited[net] = !reachable;
 }
 
 bool IsReachable(enum Network net)
 {
-    LOCK(cs_mapLocalHost);
+    LOCK(g_maplocalhost_mutex);
     return !vfLimited[net];
 }
 
@@ -310,7 +310,7 @@ bool IsReachable(const CNetAddr &addr)
 /** vote for a local address */
 bool SeenLocal(const CService& addr)
 {
-    LOCK(cs_mapLocalHost);
+    LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
     if (it == mapLocalHost.end()) return false;
     ++it->second.nScore;
@@ -321,7 +321,7 @@ bool SeenLocal(const CService& addr)
 /** check whether a given address is potentially local */
 bool IsLocal(const CService& addr)
 {
-    LOCK(cs_mapLocalHost);
+    LOCK(g_maplocalhost_mutex);
     return mapLocalHost.count(addr) > 0;
 }
 
@@ -595,7 +595,7 @@ void CNode::CopyStats(CNodeStats& stats)
     X(m_addr_name);
     X(nVersion);
     {
-        LOCK(cs_SubVer);
+        LOCK(m_subver_mutex);
         X(cleanSubVer);
     }
     stats.fInbound = IsInboundConn();
@@ -1099,10 +1099,10 @@ bool CConnman::AttemptToEvictConnection()
 void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
+    auto sock = hListenSocket.sock->Accept((struct sockaddr*)&sockaddr, &len);
     CAddress addr;
 
-    if (hSocket == INVALID_SOCKET) {
+    if (!sock) {
         const int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK) {
             LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
@@ -1116,15 +1116,15 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
     }
 
-    const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(hSocket)), NODE_NONE};
+    const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(sock->Get())), NODE_NONE};
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::None;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
 
-    CreateNodeFromAcceptedSocket(hSocket, permissionFlags, addr_bind, addr);
+    CreateNodeFromAcceptedSocket(std::move(sock), permissionFlags, addr_bind, addr);
 }
 
-void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
+void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                             NetPermissionFlags permissionFlags,
                                             const CAddress& addr_bind,
                                             const CAddress& addr)
@@ -1150,27 +1150,24 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
 
     if (!fNetworkActive) {
         LogPrint(BCLog::NET, "connection from %s dropped: not accepting new connections\n", addr.ToString());
-        CloseSocket(hSocket);
         return;
     }
 
-    if (!IsSelectableSocket(hSocket))
+    if (!IsSelectableSocket(sock->Get()))
     {
         LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToString());
-        CloseSocket(hSocket);
         return;
     }
 
     // According to the internet TCP_NODELAY is not carried into accepted sockets
     // on all platforms.  Set it again here just to be sure.
-    SetSocketNoDelay(hSocket);
+    SetSocketNoDelay(sock->Get());
 
     // Don't accept connections from banned peers.
     bool banned = m_banman && m_banman->IsBanned(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && banned)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
-        CloseSocket(hSocket);
         return;
     }
 
@@ -1179,7 +1176,6 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());
-        CloseSocket(hSocket);
         return;
     }
 
@@ -1188,7 +1184,6 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
             LogPrint(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
-            CloseSocket(hSocket);
             return;
         }
     }
@@ -1202,7 +1197,7 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
-    CNode* pnode = new CNode(id, nodeServices, hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
+    CNode* pnode = new CNode(id, nodeServices, sock->Release(), addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
     pnode->AddRef();
     pnode->m_permissionFlags = permissionFlags;
     pnode->m_prefer_evict = discouraged;
@@ -1364,7 +1359,7 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
                                  std::set<SOCKET>& error_set)
 {
     for (const ListenSocket& hListenSocket : vhListenSocket) {
-        recv_set.insert(hListenSocket.socket);
+        recv_set.insert(hListenSocket.sock->Get());
     }
 
     for (CNode* pnode : nodes) {
@@ -1646,7 +1641,7 @@ void CConnman::SocketHandlerListening(const std::set<SOCKET>& recv_set)
         if (interruptNet) {
             return;
         }
-        if (recv_set.count(listen_socket.socket) > 0) {
+        if (recv_set.count(listen_socket.sock->Get()) > 0) {
             AcceptConnection(listen_socket);
         }
     }
@@ -2335,7 +2330,7 @@ void CConnman::ThreadI2PAcceptIncoming()
             continue;
         }
 
-        CreateNodeFromAcceptedSocket(conn.sock->Release(), NetPermissionFlags::None,
+        CreateNodeFromAcceptedSocket(std::move(conn.sock), NetPermissionFlags::None,
                                      CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE});
     }
 }
@@ -2397,7 +2392,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
-    vhListenSocket.push_back(ListenSocket(sock->Release(), permissions));
+    vhListenSocket.emplace_back(std::move(sock), permissions);
     return true;
 }
 
@@ -2704,15 +2699,6 @@ void CConnman::StopNodes()
     for (CNode* pnode : nodes) {
         pnode->CloseSocketDisconnect();
         DeleteNode(pnode);
-    }
-
-    // Close listening sockets.
-    for (ListenSocket& hListenSocket : vhListenSocket) {
-        if (hListenSocket.socket != INVALID_SOCKET) {
-            if (!CloseSocket(hListenSocket.socket)) {
-                LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
-            }
-        }
     }
 
     for (CNode* pnode : m_nodes_disconnected) {

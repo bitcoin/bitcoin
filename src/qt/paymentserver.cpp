@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,7 +51,7 @@ static QString ipcServerName()
     // Append a simple hash of the datadir
     // Note that gArgs.GetDataDirNet() returns a different path
     // for -testnet versus main net
-    QString ddir(GUIUtil::boostPathToQString(gArgs.GetDataDirNet()));
+    QString ddir(GUIUtil::PathToQString(gArgs.GetDataDirNet()));
     name.append(QString::number(qHash(ddir)));
 
     return name;

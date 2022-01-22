@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,7 @@
 #include <optional>
 #include <string>
 
+namespace wallet {
 namespace DBKeys {
 const std::string ACENTRY{"acentry"};
 const std::string ACTIVEEXTERNALSPK{"activeexternalspk"};
@@ -1194,3 +1195,4 @@ std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
     return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
 #endif
 }
+} // namespace wallet

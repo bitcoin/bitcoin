@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -209,10 +209,10 @@ namespace GUIUtil
     bool SetStartOnSystemStartup(bool fAutoStart);
 
     /** Convert QString to OS specific boost path through UTF-8 */
-    fs::path qstringToBoostPath(const QString &path);
+    fs::path QStringToPath(const QString &path);
 
     /** Convert OS specific boost path to QString through UTF-8 */
-    QString boostPathToQString(const fs::path &path);
+    QString PathToQString(const fs::path &path);
 
     /** Convert enum Network to QString */
     QString NetworkToQString(Network net);

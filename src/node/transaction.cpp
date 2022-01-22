@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 
 #include <future>
 
+namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
 {
     err_string_out = state.ToString();
@@ -153,3 +154,4 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
     }
     return nullptr;
 }
+} // namespace node

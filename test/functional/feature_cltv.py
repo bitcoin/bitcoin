@@ -13,6 +13,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     CTransaction,
+    SEQUENCE_FINAL,
     msg_block,
 )
 from test_framework.p2p import P2PInterface
@@ -53,7 +54,7 @@ def cltv_invalidate(tx, failure_reason):
     # 3) the lock-time type (height vs. timestamp) of the top stack item and the
     #    nLockTime field are not the same
     # 4) the top stack item is greater than the transaction's nLockTime field
-    # 5) the nSequence field of the txin is 0xffffffff
+    # 5) the nSequence field of the txin is 0xffffffff (SEQUENCE_FINAL)
     assert failure_reason in range(5)
     scheme = [
         # | Script to prepend to scriptSig                  | nSequence  | nLockTime    |
@@ -62,7 +63,7 @@ def cltv_invalidate(tx, failure_reason):
         [[OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP],       None,       None],
         [[CScriptNum(100), OP_CHECKLOCKTIMEVERIFY, OP_DROP],  0,          1296688602],  # timestamp of genesis block
         [[CScriptNum(100), OP_CHECKLOCKTIMEVERIFY, OP_DROP],  0,          50],
-        [[CScriptNum(50),  OP_CHECKLOCKTIMEVERIFY, OP_DROP],  0xffffffff, 50],
+        [[CScriptNum(50),  OP_CHECKLOCKTIMEVERIFY, OP_DROP],  SEQUENCE_FINAL, 50],
     ][failure_reason]
 
     cltv_modify_tx(tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
@@ -114,7 +115,7 @@ class BIP65Test(BitcoinTestFramework):
         # create one invalid tx per CLTV failure reason (5 in total) and collect them
         invalid_cltv_txs = []
         for i in range(5):
-            spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
+            spendtx = wallet.create_self_transfer()['tx']
             cltv_invalidate(spendtx, i)
             invalid_cltv_txs.append(spendtx)
 
@@ -145,7 +146,7 @@ class BIP65Test(BitcoinTestFramework):
 
         # create and test one invalid tx per CLTV failure reason (5 in total)
         for i in range(5):
-            spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
+            spendtx = wallet.create_self_transfer()['tx']
             cltv_invalidate(spendtx, i)
 
             expected_cltv_reject_reason = [

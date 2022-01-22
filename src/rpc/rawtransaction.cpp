@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,6 +44,15 @@
 #include <stdint.h>
 
 #include <univalue.h>
+
+using node::AnalyzePSBT;
+using node::BroadcastTransaction;
+using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::FindCoins;
+using node::GetTransaction;
+using node::NodeContext;
+using node::PSBTAnalysis;
+using node::ReadBlockFromDisk;
 
 static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, CChainState& active_chainstate)
 {
@@ -1066,8 +1075,9 @@ static RPCHelpMan testmempoolaccept()
 
 static RPCHelpMan decodepsbt()
 {
-    return RPCHelpMan{"decodepsbt",
-                "\nReturn a JSON object representing the serialized, base64-encoded partially signed Bitcoin transaction.\n",
+    return RPCHelpMan{
+        "decodepsbt",
+        "Return a JSON object representing the serialized, base64-encoded partially signed Bitcoin transaction.",
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The PSBT base64 string"},
                 },
@@ -1176,7 +1186,7 @@ static RPCHelpMan decodepsbt()
                                 {
                                     {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                                 }},
-                                {RPCResult::Type::ARR, "proprietary", "The input proprietary map",
+                                {RPCResult::Type::ARR, "proprietary", /*optional=*/true, "The input proprietary map",
                                 {
                                     {RPCResult::Type::OBJ, "", "",
                                     {
@@ -1217,7 +1227,7 @@ static RPCHelpMan decodepsbt()
                                 {
                                     {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                                 }},
-                                {RPCResult::Type::ARR, "proprietary", "The output proprietary map",
+                                {RPCResult::Type::ARR, "proprietary", /*optional=*/true, "The output proprietary map",
                                 {
                                     {RPCResult::Type::OBJ, "", "",
                                     {

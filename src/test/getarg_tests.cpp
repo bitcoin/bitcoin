@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -143,6 +144,11 @@ BOOST_AUTO_TEST_CASE(intarg)
     ResetArgs("-foo -bar");
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 11), 0);
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 0);
+
+    // Check under-/overflow behavior.
+    ResetArgs("-foo=-9223372036854775809 -bar=9223372036854775808");
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 0), std::numeric_limits<int64_t>::min());
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 0), std::numeric_limits<int64_t>::max());
 
     ResetArgs("-foo=11 -bar=12");
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 0), 11);
