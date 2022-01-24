@@ -35,7 +35,6 @@
 using wallet::CCoinControl;
 
 QList<CAmount> CoinControlDialog::payAmounts;
-bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
 bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
     int column = treeWidget()->sortColumn();
@@ -452,19 +451,12 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
             nBytes += nQuantity; // account for the witness byte that holds the number of stack items for each input.
         }
 
-        // in the subtract fee from amount case, we can tell if zero change already and subtract the bytes, so that fee calculation afterwards is accurate
-        if (CoinControlDialog::fSubtractFeeFromAmount)
-            if (nAmount - nPayAmount == 0)
-                nBytes -= 34;
-
         // Fee
         nPayFee = model->wallet().getMinimumFee(nBytes, m_coin_control, /*returned_target=*/nullptr, /*reason=*/nullptr);
 
         if (nPayAmount > 0)
         {
-            nChange = nAmount - nPayAmount;
-            if (!CoinControlDialog::fSubtractFeeFromAmount)
-                nChange -= nPayFee;
+            nChange = nAmount - nPayAmount - nPayFee;
 
             if (nChange > 0) {
                 // Assumes a p2pkh script size
@@ -474,13 +466,11 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
                 {
                     nPayFee += nChange;
                     nChange = 0;
-                    if (CoinControlDialog::fSubtractFeeFromAmount)
-                        nBytes -= 34; // we didn't detect lack of change above
                 }
             }
-
-            if (nChange == 0 && !CoinControlDialog::fSubtractFeeFromAmount)
+            if (nChange == 0) {
                 nBytes -= 34;
+            }
         }
 
         // after fee
@@ -514,7 +504,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     {
         l3->setText(ASYMP_UTF8 + l3->text());
         l4->setText(ASYMP_UTF8 + l4->text());
-        if (nChange > 0 && !CoinControlDialog::fSubtractFeeFromAmount)
+        if (nChange > 0)
             l8->setText(ASYMP_UTF8 + l8->text());
     }
 

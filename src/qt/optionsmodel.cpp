@@ -206,14 +206,6 @@ bool OptionsModel::Init(bilingual_str& error)
     if (!settings.contains("strDataDir"))
         settings.setValue("strDataDir", GUIUtil::getDefaultDataDirectory());
 
-    // Wallet
-#ifdef ENABLE_WALLET
-    if (!settings.contains("SubFeeFromAmount")) {
-        settings.setValue("SubFeeFromAmount", false);
-    }
-    m_sub_fee_from_amount = settings.value("SubFeeFromAmount", false).toBool();
-#endif
-
     // Display
     if (!settings.contains("UseEmbeddedMonospacedFont")) {
         settings.setValue("UseEmbeddedMonospacedFont", "true");
@@ -418,8 +410,6 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return SettingToBool(setting(), wallet::DEFAULT_SPEND_ZEROCONF_CHANGE);
     case ExternalSignerPath:
         return QString::fromStdString(SettingToString(setting(), ""));
-    case SubFeeFromAmount:
-        return m_sub_fee_from_amount;
 #endif
     case DisplayUnit:
         return QVariant::fromValue(m_display_bitcoin_unit);
@@ -564,10 +554,6 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             update(value.toString().toStdString());
             setRestartRequired(true);
         }
-        break;
-    case SubFeeFromAmount:
-        m_sub_fee_from_amount = value.toBool();
-        settings.setValue("SubFeeFromAmount", m_sub_fee_from_amount);
         break;
 #endif
     case DisplayUnit:
