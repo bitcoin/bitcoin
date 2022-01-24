@@ -278,7 +278,7 @@ public:
 
 /** Transport protocol agnostic message container.
  * Ideally it should only contain receive time, payload,
- * command and size.
+ * type and size.
  */
 class CNetMessage {
 public:
@@ -286,7 +286,7 @@ public:
     std::chrono::microseconds m_time{0}; //!< time of message receipt
     uint32_t m_message_size{0};          //!< size of the payload
     uint32_t m_raw_message_size{0};      //!< used wire size of the message (including header/checksum)
-    std::string m_command;
+    std::string m_type;
 
     CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
 

@@ -657,7 +657,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 
             // Store received bytes per message command
             // to prevent a memory DOS, only allow valid commands
-            auto i = mapRecvBytesPerMsgCmd.find(msg.m_command);
+            auto i = mapRecvBytesPerMsgCmd.find(msg.m_type);
             if (i == mapRecvBytesPerMsgCmd.end()) {
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             }
@@ -747,7 +747,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
     CNetMessage msg(std::move(vRecv));
 
     // store command string, time, and sizes
-    msg.m_command = hdr.GetCommand();
+    msg.m_type = hdr.GetCommand();
     msg.m_time = time;
     msg.m_message_size = hdr.nMessageSize;
     msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
@@ -760,7 +760,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
     // Check checksum and header command string
     if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
         LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
-                 SanitizeString(msg.m_command), msg.m_message_size,
+                 SanitizeString(msg.m_type), msg.m_message_size,
                  HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
