@@ -316,7 +316,7 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     return true;
 }
 
-bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip)
+bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
 {
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());
@@ -324,7 +324,7 @@ bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, con
     // During a reorg, we need to copy all filters for blocks that are getting disconnected from the
     // height index to the hash index so we can still find them when the height index entries are
     // overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip.height, current_tip.height)) {
+    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, block.height - 1, block.height)) {
         return false;
     }
 
@@ -334,8 +334,8 @@ bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, con
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
     if (!m_db->WriteBatch(batch)) return false;
 
-    // Update cached header
-    m_last_header = *Assert(ReadFilterHeader(new_tip.height, new_tip.hash));
+    // Update cached header to the previous block hash
+    m_last_header = *Assert(ReadFilterHeader(block.height - 1, *Assert(block.prev_hash)));
     return true;
 }
 

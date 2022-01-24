@@ -14,6 +14,7 @@
 #include <node/database_args.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
+#include <undo.h>
 #include <util/string.h>
 #include <util/thread.h>
 #include <util/translation.h>
@@ -254,8 +255,28 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     assert(current_tip == m_best_block_index);
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
-    if (!CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight})) {
-        return false;
+    CBlock block;
+    CBlockUndo block_undo;
+
+    for (const CBlockIndex* iter_tip = current_tip; iter_tip != new_tip; iter_tip = iter_tip->pprev) {
+        interfaces::BlockInfo block_info = kernel::MakeBlockInfo(iter_tip);
+        if (CustomOptions().disconnect_data) {
+            if (!m_chainstate->m_blockman.ReadBlock(block, *iter_tip)) {
+                LogError("%s: Failed to read block %s from disk",
+                             __func__, iter_tip->GetBlockHash().ToString());
+                return false;
+            }
+            block_info.data = &block;
+        }
+        if (CustomOptions().disconnect_undo_data && iter_tip->nHeight > 0) {
+            if (!m_chainstate->m_blockman.ReadBlockUndo(block_undo, *iter_tip)) {
+                return false;
+            }
+            block_info.undo_data = &block_undo;
+        }
+        if (!CustomRemove(block_info)) {
+            return false;
+        }
     }
 
     // In the case of a reorg, ensure persisted block locator is not stale.
