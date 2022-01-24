@@ -27,7 +27,6 @@
 
   <key>CFBundleExecutable</key>
   <string>Dash-Qt</string>
-
   <key>CFBundleName</key>
   <string>Dash-Qt</string>
 
@@ -99,7 +98,6 @@
 
   <key>NSHumanReadableCopyright</key>
   <string>Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers, 2014-@COPYRIGHT_YEAR@ @COPYRIGHT_HOLDERS_FINAL@</string>
-
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

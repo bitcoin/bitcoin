@@ -91,6 +91,8 @@ The following can be set when running make: `make FOO=bar`
 <dd>Don't download/build/cache packages needed for enabling upnp</dd>
 <dt>DEBUG</dt>
 <dd>disable some optimizations and enable more runtime checking</dd>
+<dt>PROTOBUF</dt>
+<dd>build protobuf (used for deprecated BIP70 support)</dd>
 <dt>HOST_ID_SALT</dt>
 <dd>Optional salt to use when generating host package ids</dd>
 <dt>BUILD_ID_SALT</dt>
