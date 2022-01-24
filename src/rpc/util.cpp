@@ -1335,3 +1335,10 @@ void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj)
     if (warnings.empty()) return;
     obj.pushKV("warnings", BilingualStringsToUniValue(warnings));
 }
+
+bool IsDeprecatedRPCEnabled(const ArgsManager& args, const std::string& method)
+{
+    const std::vector<std::string> enabled_methods = args.GetArgs("-deprecatedrpc");
+
+    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
+}

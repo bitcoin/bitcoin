@@ -174,8 +174,6 @@ public:
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
 };
 
-bool IsDeprecatedRPCEnabled(const std::string& method);
-
 extern CRPCTable tableRPC;
 
 void StartRPC();

@@ -765,7 +765,7 @@ public:
     {
         return std::make_unique<RpcHandlerImpl>(command);
     }
-    bool rpcEnableDeprecated(const std::string& method) override { return IsDeprecatedRPCEnabled(method); }
+    bool rpcEnableDeprecated(const std::string& method) override { return IsDeprecatedRPCEnabled(gArgs, method); }
     void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) override
     {
         RPCRunLater(name, std::move(fn), seconds);

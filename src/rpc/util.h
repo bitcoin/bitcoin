@@ -58,6 +58,7 @@ extern const std::string UNIX_EPOCH_TIME;
  */
 extern const std::string EXAMPLE_ADDRESS[2];
 
+class ArgsManager;
 class FillableSigningProvider;
 class CPubKey;
 class CScript;
@@ -134,6 +135,8 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
 
 /** Returns, given services flags, a list of humanly readable (known) network services */
 UniValue GetServicesNames(ServiceFlags services);
+
+bool IsDeprecatedRPCEnabled(const ArgsManager& args, const std::string& method);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
