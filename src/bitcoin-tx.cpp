@@ -433,13 +433,16 @@ static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strIn
     if (pos==0)
         throw std::runtime_error("TX output value not specified");
 
-    if (pos != std::string::npos) {
+    if (pos == std::string::npos) {
+        pos = 0;
+    } else {
         // Extract and validate VALUE
         value = ExtractAndValidateValue(strInput.substr(0, pos));
+        ++pos;
     }
 
     // extract and validate DATA
-    std::string strData = strInput.substr(pos + 1, std::string::npos);
+    const std::string strData{strInput.substr(pos, std::string::npos)};
 
     if (!IsHex(strData))
         throw std::runtime_error("invalid TX output data");

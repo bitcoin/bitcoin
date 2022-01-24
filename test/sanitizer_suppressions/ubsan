@@ -45,7 +45,6 @@ shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 # job.
 unsigned-integer-overflow:addrman.cpp
 unsigned-integer-overflow:arith_uint256.h
-unsigned-integer-overflow:bitcoin-tx.cpp
 unsigned-integer-overflow:common/bloom.cpp
 unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h
