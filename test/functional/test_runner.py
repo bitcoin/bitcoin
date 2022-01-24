@@ -565,7 +565,11 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
                 logging.debug("Early exiting after test failure")
                 break
 
-            shutil_disk_usage_stat_ = shutil.disk_usage(testdir)
+            try:  # XXX
+             shutil_disk_usage_stat_ = shutil.disk_usage(testdir)
+            except FileNotFoundError:  # XXX
+             logging.debug('I am here')  # XXX
+             shutil_disk_usage_stat_ = shutil.disk_usage('/tmp/')  # XXX
             # Stop testing if free space in the drive is so low every subsequent test will fail,
             # sometimes without even being able to properly write logs (when getting busiest down to 0 free bytes).
             # If free space is larger than 0 but smaller than several MiB, nodes will fail to boot and log a message
