@@ -49,6 +49,10 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
             }
         }
 
+        if (!IsDeprecatedRPCEnabled(gArgs, "sffo") && subtract_fee) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Subtract fee from outputs is deprecated and will be removed in the next major release. To enable, please restart with '-deprecatedprc=sffo'.");
+        }
+
         CRecipient recipient = {dest, amount, subtract_fee};
         recipients.push_back(recipient);
     }
@@ -222,7 +226,7 @@ RPCHelpMan sendtoaddress()
                     {"comment_to", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment to store the name of the person or organization\n"
                                          "to which you're sending the transaction. This is not part of the \n"
                                          "transaction, just kept in your wallet."},
-                    {"subtractfeefromamount", RPCArg::Type::BOOL, RPCArg::Default{false}, "The fee will be deducted from the amount being sent.\n"
+                    {"subtractfeefromamount", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) The fee will be deducted from the amount being sent.\n"
                                          "The recipient will receive less bitcoins than you enter in the amount field."},
                     {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Signal that this transaction can be replaced by a transaction (BIP 125)"},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
@@ -299,6 +303,9 @@ RPCHelpMan sendtoaddress()
     address_amounts.pushKV(address, request.params[1]);
     UniValue subtractFeeFromAmount(UniValue::VARR);
     if (fSubtractFeeFromAmount) {
+        if (!IsDeprecatedRPCEnabled(gArgs, "sffo")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Subtract fee from outputs is deprecated and will be removed in the next major release. To enable, please restart with '-deprecatedprc=sffo'.");
+        }
         subtractFeeFromAmount.push_back(address);
     }
 
@@ -328,7 +335,7 @@ RPCHelpMan sendmany()
                     },
                     {"minconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Ignored dummy value"},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment"},
-                    {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The addresses.\n"
+                    {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "(DEPRECATED) The addresses.\n"
                                        "The fee will be equally deducted from the amount of each selected address.\n"
                                        "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                                        "If no addresses are specified here, the sender pays the fee.",
@@ -592,8 +599,12 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
             coinControl.fOverrideFeeRate = true;
         }
 
-        if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") )
+        if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") ) {
+            if (!IsDeprecatedRPCEnabled(gArgs, "sffo")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Subtract fee from outputs is deprecated and will be removed in the next major release. To enable, please restart with '-deprecatedprc=sffo'.");
+            }
             subtractFeeFromOutputs = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array();
+        }
 
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
@@ -776,7 +787,7 @@ RPCHelpMan fundrawtransaction()
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
-                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The integers.\n"
+                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "(DEPRECATED) The integers.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
                                                           "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                                                           "If no outputs are specified here, the sender pays the fee.",
@@ -1229,7 +1240,7 @@ RPCHelpMan send()
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                     {"psbt", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PSBT, implies add_to_wallet=false."},
-                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Outputs to subtract the fee from, specified as integer indices.\n"
+                    {"subtract_fee_from_outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "(DEPRECATED) Outputs to subtract the fee from, specified as integer indices.\n"
                     "The fee will be equally deducted from the amount of each specified output.\n"
                     "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                     "If no outputs are specified here, the sender pays the fee.",
@@ -1671,7 +1682,7 @@ RPCHelpMan walletcreatefundedpsbt()
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
-                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The outputs to subtract the fee from.\n"
+                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "(DEPRECATED) The outputs to subtract the fee from.\n"
                                                           "The fee will be equally deducted from the amount of each specified output.\n"
                                                           "Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                                                           "If no outputs are specified here, the sender pays the fee.",
