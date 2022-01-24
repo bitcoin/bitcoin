@@ -26,10 +26,9 @@
 
 #include <bip39.h>
 #include <bip39_english.h>
+#include <crypto/pkcs5_pbkdf2_hmac_sha512.h>
 #include <crypto/sha256.h>
 #include <random.h>
-
-#include <openssl/evp.h>
 
 SecureString CMnemonic::Generate(int strength)
 {
@@ -154,9 +153,5 @@ void CMnemonic::ToSeed(SecureString mnemonic, SecureString passphrase, SecureVec
     SecureString ssSalt = SecureString("mnemonic") + passphrase;
     SecureVector vchSalt(ssSalt.begin(), ssSalt.end());
     seedRet.resize(64);
-    // int PKCS5_PBKDF2_HMAC(const char *pass, int passlen,
-    //                    const unsigned char *salt, int saltlen, int iter,
-    //                    const EVP_MD *digest,
-    //                    int keylen, unsigned char *out);
-    PKCS5_PBKDF2_HMAC(mnemonic.c_str(), mnemonic.size(), vchSalt.data(), vchSalt.size(), 2048, EVP_sha512(), 64, seedRet.data());
+    PKCS5_PBKDF2_HMAC_SHA512(mnemonic.c_str(), mnemonic.size(), vchSalt.data(), vchSalt.size(), 2048, 64, seedRet.data());
 }
