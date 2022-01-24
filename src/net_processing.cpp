@@ -328,9 +328,20 @@ public:
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) override;
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override LOCKS_EXCLUDED(m_mutex_message_handling);
 
 private:
+    /** Message handling mutex.
+     *  Message processing is single-threaded, so anything only accessed
+     *  by ProcessMessage(s) or SendMessages can be guarded by this mutex,
+     *  which guarantees it's only accessed by a single thread.
+     */
+    Mutex m_mutex_message_handling;
+
+    void _ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc)
+        EXCLUSIVE_LOCKS_REQUIRED(m_mutex_message_handling);
+
     void _RelayTransaction(const uint256& txid, const uint256& wtxid)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -2553,6 +2564,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
 {
+    LOCK(m_mutex_message_handling);
+    return _ProcessMessage(pfrom, msg_type, vRecv, time_received, interruptMsgProc);
+}
+
+void PeerManagerImpl::_ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                                     const std::chrono::microseconds time_received,
+                                     const std::atomic<bool>& interruptMsgProc)
+{
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
 
     PeerRef peer = GetPeerRef(pfrom.GetId());
@@ -3658,7 +3677,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         } // cs_main
 
         if (fProcessBLOCKTXN) {
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, time_received, interruptMsgProc);
+            return _ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, time_received, interruptMsgProc);
         }
 
         if (fRevertToHeaderProcessing) {
@@ -4129,6 +4148,8 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     PeerRef peer = GetPeerRef(pfrom->GetId());
     if (peer == nullptr) return false;
 
+    LOCK(m_mutex_message_handling);
+
     {
         LOCK(peer->m_getdata_requests_mutex);
         if (!peer->m_getdata_requests.empty()) {
@@ -4189,7 +4210,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     msg.SetVersion(pfrom->GetCommonVersion());
 
     try {
-        ProcessMessage(*pfrom, msg.m_type, msg.m_recv, msg.m_time, interruptMsgProc);
+        _ProcessMessage(*pfrom, msg.m_type, msg.m_recv, msg.m_time, interruptMsgProc);
         if (interruptMsgProc) return false;
         {
             LOCK(peer->m_getdata_requests_mutex);
@@ -4583,6 +4604,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     PeerRef peer = GetPeerRef(pto->GetId());
     if (!peer) return false;
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
+
+    LOCK(m_mutex_message_handling);
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
     // disconnect misbehaving peers even before the version handshake is complete.
