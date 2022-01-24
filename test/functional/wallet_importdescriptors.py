@@ -623,7 +623,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         w0.sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 6)
         # It is standard and would relay.
-        txid = multi_priv_big.sendtoaddress(w0.getnewaddress(), 10, "", "", True)
+        txid = multi_priv_big.sweep([w0.getnewaddress()])["txid"]
         decoded = multi_priv_big.gettransaction(txid=txid, verbose=True)['decoded']
 
         self.log.info("Amending multisig with new private keys")

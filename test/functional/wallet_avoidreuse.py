@@ -14,9 +14,7 @@ from test_framework.util import (
 
 def reset_balance(node, discardaddr):
     '''Throw away all owned coins by the node so it gets a balance of 0.'''
-    balance = node.getbalance(avoid_reuse=False)
-    if balance > 0.5:
-        node.sendtoaddress(address=discardaddr, amount=balance, subtractfeefromamount=True, avoid_reuse=False)
+    node.sweep([discardaddr])
 
 def count_unspent(node):
     '''Count the unspent outputs for the given node and return various statistics'''

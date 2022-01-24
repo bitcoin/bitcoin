@@ -97,11 +97,7 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         # send 50 from each address to a third address not in this wallet
         common_address = "msf4WtN1YQKXvNtvdFYt9JBnUD2FB41kjr"
-        node.sendmany(
-            amounts={common_address: 100},
-            subtractfeefrom=[common_address],
-            minconf=1,
-        )
+        node.sweep([common_address])
         # there should be 1 address group, with the previously
         # unlinked addresses now linked (they both have 0 balance)
         address_groups = node.listaddressgroupings()
