@@ -25,7 +25,6 @@
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/simplifiedmns.h>
-#include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/utils.h>

@@ -20,6 +20,7 @@
 #include <consensus/merkle.h>
 #include <univalue.h>
 #include <validation.h>
+#include <key_io.h>
 
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),

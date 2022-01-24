@@ -7,10 +7,11 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <evo/providertx.h>
 #include <evo/deterministicmns.h>
+#include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+#include <evo/specialtxman.h>
 #include <index/txindex.h>
 #include <masternode/meta.h>
 #include <messagesigner.h>

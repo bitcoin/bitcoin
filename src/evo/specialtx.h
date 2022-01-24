@@ -6,21 +6,12 @@
 #define BITCOIN_EVO_SPECIALTX_H
 
 #include <primitives/transaction.h>
+#include <serialize.h>
 #include <streams.h>
-#include <sync.h>
-#include <threadsafety.h>
+#include <uint256.h>
 #include <version.h>
 
-class CBlock;
-class CBlockIndex;
-class CCoinsViewCache;
-class CValidationState;
-
-extern CCriticalSection cs_main;
-
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+#include <vector>
 
 template <typename T>
 inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)

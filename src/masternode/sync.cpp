@@ -5,7 +5,6 @@
 #include <masternode/sync.h>
 
 #include <chainparams.h>
-#include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>

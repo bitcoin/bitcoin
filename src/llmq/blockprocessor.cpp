@@ -4,7 +4,6 @@
 
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
-#include <llmq/debug.h>
 
 #include <evo/evodb.h>
 #include <evo/specialtx.h>
