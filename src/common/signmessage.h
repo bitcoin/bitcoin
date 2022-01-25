@@ -81,7 +81,7 @@ bool MessageSign(
  * Hashes a message for signing and verification in a manner that prevents
  * inadvertently signing a transaction.
  */
-uint256 MessageHash(const std::string& message);
+uint256 MessageHash(const std::string& message, MessageSignatureFormat format);
 
 std::string SigningResultString(const SigningResult res);
 
