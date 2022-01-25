@@ -508,6 +508,19 @@ public:
             };
         }
 
+        /** Parameters for a single transaction within a package. */
+        static ATMPArgs SingleInPackageAccept(const ATMPArgs& package_args) {
+            return ATMPArgs{/* m_chainparams */ package_args.m_chainparams,
+                            /* m_accept_time */ package_args.m_accept_time,
+                            /* m_bypass_limits */ false,
+                            /* m_coins_to_uncache */ package_args.m_coins_to_uncache,
+                            /* m_test_accept */ package_args.m_test_accept,
+                            /* m_allow_bip125_replacement */ true,
+                            /* m_package_submission */ false,
+                            /* m_package_feerates */ false, // only 1 transaction
+            };
+        }
+
     private:
         // Private ctor to avoid exposing details to clients and allowing the possibility of
         // mixing up the order of the arguments. Use static functions above instead.
@@ -1328,6 +1341,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     // transactions that are already in the mempool, and only call AcceptMultipleTransactions() with
     // the new transactions. This ensures we don't double-count transaction counts and sizes when
     // checking ancestor/descendant limits, or double-count transaction fees for fee-related policy.
+    ATMPArgs single_args = ATMPArgs::SingleInPackageAccept(args);
     std::vector<CTransactionRef> txns_new;
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
@@ -1354,18 +1368,31 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             results.emplace(wtxid, MempoolAcceptResult::MempoolTxDifferentWitness(iter.value()->GetTx().GetWitnessHash()));
         } else {
             // Transaction does not already exist in the mempool.
-            txns_new.push_back(tx);
+            // Try submitting the transaction on its own.
+            const auto single_res = AcceptSingleTransaction(tx, single_args);
+            if (single_res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                // The transaction succeeded on its own and is now in the mempool. Don't include it
+                // in package validation, because its fees should only be "used" once.
+                assert(m_pool.exists(GenTxid::Wtxid(wtxid)));
+                results.emplace(wtxid, single_res);
+            } else {
+                txns_new.push_back(tx);
+            }
         }
     }
 
     // Nothing to do if the entire package has already been submitted.
-    if (txns_new.empty()) return PackageMempoolAcceptResult(package_state, std::move(results));
+    if (txns_new.empty()) {
+        // No package feerate when no package validation was done.
+        return PackageMempoolAcceptResult(package_state, std::move(results));
+    }
     // Validate the (deduplicated) transactions as a package.
     auto submission_result = AcceptMultipleTransactions(txns_new, args);
     // Include already-in-mempool transaction results in the final result.
     for (const auto& [wtxid, mempoolaccept_res] : results) {
         submission_result.m_tx_results.emplace(wtxid, mempoolaccept_res);
     }
+    if (submission_result.m_state.IsValid()) assert(submission_result.m_package_feerate.has_value());
     return submission_result;
 }
 
