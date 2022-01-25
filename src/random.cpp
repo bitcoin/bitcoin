@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,7 @@
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
 
+#include <cmath>
 #include <stdlib.h>
 #include <thread>
 
@@ -713,4 +714,10 @@ void RandomInit()
     ProcRand(nullptr, 0, RNGLevel::FAST);
 
     ReportHardwareRand();
+}
+
+std::chrono::microseconds GetExponentialRand(std::chrono::microseconds now, std::chrono::seconds average_interval)
+{
+    double unscaled = -std::log1p(GetRand(uint64_t{1} << 48) * -0.0000000000000035527136788 /* -1/2^48 */);
+    return now + std::chrono::duration_cast<std::chrono::microseconds>(unscaled * average_interval + 0.5us);
 }

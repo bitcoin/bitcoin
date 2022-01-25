@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 
 #include <scheduler.h>
 
+namespace wallet {
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
       m_wallet(m_node.chain.get(), "", m_args, CreateMockWalletDatabase())
@@ -19,3 +20,4 @@ WalletTestingSetup::~WalletTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
 }
+} // namespace wallet

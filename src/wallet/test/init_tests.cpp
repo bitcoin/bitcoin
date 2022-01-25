@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 #include <util/system.h>
 #include <wallet/test/init_test_fixture.h>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(init_tests, InitWalletDirTestingSetup)
 
 BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_default)
@@ -83,3 +84,4 @@ BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_no_trailing2)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

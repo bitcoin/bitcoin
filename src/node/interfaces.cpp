@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -249,8 +249,8 @@ public:
     bool isInitialBlockDownload() override {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
-    bool getReindex() override { return ::fReindex; }
-    bool getImporting() override { return ::fImporting; }
+    bool getReindex() override { return node::fReindex; }
+    bool getImporting() override { return node::fImporting; }
     void setNetworkActive(bool active) override
     {
         if (m_context->connman) {
@@ -486,11 +486,6 @@ public:
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
         return active.GetLocator();
     }
-    bool checkFinalTx(const CTransaction& tx) override
-    {
-        LOCK(cs_main);
-        return CheckFinalTx(chainman().ActiveChain().Tip(), tx);
-    }
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
@@ -649,9 +644,9 @@ public:
     bool havePruned() override
     {
         LOCK(cs_main);
-        return ::fHavePruned;
+        return node::fHavePruned;
     }
-    bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
+    bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
@@ -729,6 +724,6 @@ public:
 } // namespace node
 
 namespace interfaces {
-std::unique_ptr<Node> MakeNode(NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
-std::unique_ptr<Chain> MakeChain(NodeContext& context) { return std::make_unique<node::ChainImpl>(context); }
+std::unique_ptr<Node> MakeNode(node::NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
+std::unique_ptr<Chain> MakeChain(node::NodeContext& context) { return std::make_unique<node::ChainImpl>(context); }
 } // namespace interfaces

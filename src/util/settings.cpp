@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -112,7 +112,7 @@ bool WriteSettings(const fs::path& path,
         errors.emplace_back(strprintf("Error: Unable to open settings file %s for writing", fs::PathToString(path)));
         return false;
     }
-    file << out.write(/* prettyIndent= */ 1, /* indentLevel= */ 4) << std::endl;
+    file << out.write(/* prettyIndent= */ 4, /* indentLevel= */ 1) << std::endl;
     file.close();
     return true;
 }

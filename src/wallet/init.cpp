@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,6 +23,9 @@
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
+using node::NodeContext;
+
+namespace wallet {
 class WalletInit : public WalletInitInterface
 {
 public:
@@ -38,8 +41,6 @@ public:
     //! Add wallets that should be opened to list of chain clients.
     void Construct(NodeContext& node) const override;
 };
-
-const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
 void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
@@ -137,3 +138,6 @@ void WalletInit::Construct(NodeContext& node) const
     node.wallet_loader = wallet_loader.get();
     node.chain_clients.emplace_back(std::move(wallet_loader));
 }
+} // namespace wallet
+
+const WalletInitInterface& g_wallet_init_interface = wallet::WalletInit();

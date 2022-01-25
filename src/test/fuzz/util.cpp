@@ -8,9 +8,12 @@
 #include <pubkey.h>
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
+#include <util/overflow.h>
 #include <util/rbf.h>
 #include <util/time.h>
 #include <version.h>
+
+#include <memory>
 
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
     : m_fuzzed_data_provider{fuzzed_data_provider}
@@ -157,6 +160,20 @@ int FuzzedSock::Connect(const sockaddr*, socklen_t) const
     return 0;
 }
 
+std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) const
+{
+    constexpr std::array accept_errnos{
+        ECONNABORTED,
+        EINTR,
+        ENOMEM,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, accept_errnos);
+        return std::unique_ptr<FuzzedSock>();
+    }
+    return std::make_unique<FuzzedSock>(m_fuzzed_data_provider);
+}
+
 int FuzzedSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     constexpr std::array getsockopt_errnos{
@@ -264,8 +281,8 @@ CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::option
 int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept
 {
     // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) disables mocktime.
-    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:01Z");
-    static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
+    static const int64_t time_min{ParseISO8601DateTime("2000-01-01T00:00:01Z")};
+    static const int64_t time_max{ParseISO8601DateTime("2100-12-31T23:59:59Z")};
     return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.value_or(time_min), max.value_or(time_max));
 }
 

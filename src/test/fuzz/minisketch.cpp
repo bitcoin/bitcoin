@@ -12,6 +12,8 @@
 #include <map>
 #include <numeric>
 
+using node::MakeMinisketch32;
+
 FUZZ_TARGET(minisketch)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};

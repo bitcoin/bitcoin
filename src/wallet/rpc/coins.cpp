@@ -15,6 +15,7 @@
 #include <univalue.h>
 
 
+namespace wallet {
 static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     std::set<CTxDestination> address_set;
@@ -59,8 +60,8 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         if (depth < min_depth
             // Coinbase with less than 1 confirmation is no longer in the main chain
             || (wtx.IsCoinBase() && (depth < 1 || !include_coinbase))
-            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase)
-            || !wallet.chain().checkFinalTx(*wtx.tx)) {
+            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase))
+        {
             continue;
         }
 
@@ -731,3 +732,4 @@ RPCHelpMan listunspent()
 },
     };
 }
+} // namespace wallet

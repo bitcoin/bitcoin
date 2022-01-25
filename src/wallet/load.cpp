@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 bool VerifyWallets(WalletContext& context)
 {
     interfaces::Chain& chain = *context.chain;
@@ -28,7 +29,7 @@ bool VerifyWallets(WalletContext& context)
         fs::path wallet_dir = fs::PathFromString(args.GetArg("-walletdir", ""));
         boost::system::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
-        fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error);
+        fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error).remove_trailing_separator();
         if (error || !fs::exists(wallet_dir)) {
             chain.initError(strprintf(_("Specified -walletdir \"%s\" does not exist"), fs::PathToString(wallet_dir)));
             return false;
@@ -169,3 +170,4 @@ void UnloadWallets(WalletContext& context)
         UnloadWallet(std::move(wallet));
     }
 }
+} // namespace wallet

@@ -10,6 +10,7 @@
 #include <util/system.h>
 #include <util/time.h>
 
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -71,6 +72,32 @@ ssize_t Sock::Recv(void* buf, size_t len, int flags) const
 int Sock::Connect(const sockaddr* addr, socklen_t addr_len) const
 {
     return connect(m_socket, addr, addr_len);
+}
+
+std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
+{
+#ifdef WIN32
+    static constexpr auto ERR = INVALID_SOCKET;
+#else
+    static constexpr auto ERR = SOCKET_ERROR;
+#endif
+
+    std::unique_ptr<Sock> sock;
+
+    const auto socket = accept(m_socket, addr, addr_len);
+    if (socket != ERR) {
+        try {
+            sock = std::make_unique<Sock>(socket);
+        } catch (const std::exception&) {
+#ifdef WIN32
+            closesocket(socket);
+#else
+            close(socket);
+#endif
+        }
+    }
+
+    return sock;
 }
 
 int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const

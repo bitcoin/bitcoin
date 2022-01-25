@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,7 @@
 #include <wallet/wallet.h>
 
 #include <algorithm>
+#include <chrono>
 
 #include <QApplication>
 #include <QMessageBox>
@@ -27,6 +28,11 @@
 #include <QThread>
 #include <QTimer>
 #include <QWindow>
+
+using wallet::WALLET_FLAG_BLANK_WALLET;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+using wallet::WALLET_FLAG_EXTERNAL_SIGNER;
 
 WalletController::WalletController(ClientModel& client_model, const PlatformStyle* platform_style, QObject* parent)
     : QObject(parent)
@@ -254,12 +260,12 @@ void CreateWalletActivity::createWallet()
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
     }
 
-    QTimer::singleShot(500, worker(), [this, name, flags] {
+    QTimer::singleShot(500ms, worker(), [this, name, flags] {
         std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
-        QTimer::singleShot(500, this, &CreateWalletActivity::finish);
+        QTimer::singleShot(500ms, this, &CreateWalletActivity::finish);
     });
 }
 

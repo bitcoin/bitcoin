@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,7 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/receiverequestdialog.h>
 
+#include <chrono>
 #include <memory>
 
 #include <QAbstractButton>
@@ -38,6 +39,15 @@
 #include <QTextEdit>
 #include <QListView>
 #include <QDialogButtonBox>
+
+using wallet::AddWallet;
+using wallet::CWallet;
+using wallet::CreateMockWalletDatabase;
+using wallet::RemoveWallet;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WalletContext;
+using wallet::WalletDescriptor;
+using wallet::WalletRescanReserver;
 
 namespace
 {
@@ -112,7 +122,7 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
     if (expectError.empty()) {
         ConfirmSend(&text, cancel);
     } else {
-        ConfirmMessage(&text);
+        ConfirmMessage(&text, 0ms);
     }
     action->trigger();
     QVERIFY(text.indexOf(QString::fromStdString(expectError)) != -1);

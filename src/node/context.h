@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,7 @@ class Init;
 class WalletLoader;
 } // namespace interfaces
 
+namespace node {
 //! NodeContext struct containing references to chain state and connection
 //! state.
 //!
@@ -62,5 +63,6 @@ struct NodeContext {
     NodeContext();
     ~NodeContext();
 };
+} // namespace node
 
 #endif // BITCOIN_NODE_CONTEXT_H

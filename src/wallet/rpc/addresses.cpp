@@ -13,6 +13,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 RPCHelpMan getnewaddress()
 {
     return RPCHelpMan{"getnewaddress",
@@ -802,3 +803,4 @@ RPCHelpMan walletdisplayaddress()
     };
 }
 #endif // ENABLE_EXTERNAL_SIGNER
+} // namespace wallet

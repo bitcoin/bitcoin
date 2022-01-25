@@ -13,6 +13,7 @@
 
 using interfaces::FoundBlock;
 
+namespace wallet {
 static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
 {
     interfaces::Chain& chain = wallet.chain();
@@ -113,8 +114,8 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
         // Coinbase with less than 1 confirmation is no longer in the main chain
         if ((wtx.IsCoinBase() && (nDepth < 1 || !include_coinbase))
-            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase)
-            || !wallet.chain().checkFinalTx(*wtx.tx)) {
+            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase))
+        {
             continue;
         }
 
@@ -958,3 +959,4 @@ RPCHelpMan abortrescan()
 },
     };
 }
+} // namespace wallet

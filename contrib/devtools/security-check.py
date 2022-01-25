@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -11,6 +11,10 @@ import sys
 from typing import List
 
 import lief #type:ignore
+
+# temporary constant, to be replaced with lief.ELF.ARCH.RISCV
+# https://github.com/lief-project/LIEF/pull/562
+LIEF_ELF_ARCH_RISCV = lief.ELF.ARCH(243)
 
 def check_ELF_RELRO(binary) -> bool:
     '''
@@ -107,6 +111,17 @@ def check_ELF_separate_code(binary):
                 return False
     return True
 
+def check_ELF_control_flow(binary) -> bool:
+    '''
+    Check for control flow instrumentation
+    '''
+    main = binary.get_function_address('main')
+    content = binary.get_content_from_virtual_address(main, 4, lief.Binary.VA_TYPES.AUTO)
+
+    if content == [243, 15, 30, 250]: # endbr64
+        return True
+    return False
+
 def check_PE_DYNAMIC_BASE(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
     return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
@@ -168,7 +183,7 @@ def check_NX(binary) -> bool:
     '''
     return binary.has_nx
 
-def check_control_flow(binary) -> bool:
+def check_MACHO_control_flow(binary) -> bool:
     '''
     Check for control flow instrumentation
     '''
@@ -178,31 +193,46 @@ def check_control_flow(binary) -> bool:
         return True
     return False
 
-
-CHECKS = {
-lief.EXE_FORMATS.ELF: [
+BASE_ELF = [
     ('PIE', check_PIE),
     ('NX', check_NX),
     ('RELRO', check_ELF_RELRO),
     ('Canary', check_ELF_Canary),
     ('separate_code', check_ELF_separate_code),
-],
-lief.EXE_FORMATS.PE: [
+]
+
+BASE_PE = [
     ('PIE', check_PIE),
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
     ('NX', check_NX),
     ('RELOC_SECTION', check_PE_RELOC_SECTION),
     ('CONTROL_FLOW', check_PE_control_flow),
-],
-lief.EXE_FORMATS.MACHO: [
+]
+
+BASE_MACHO = [
     ('PIE', check_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
     ('NX', check_NX),
     ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
     ('Canary', check_MACHO_Canary),
-    ('CONTROL_FLOW', check_control_flow),
+    ('CONTROL_FLOW', check_MACHO_control_flow),
 ]
+
+CHECKS = {
+    lief.EXE_FORMATS.ELF: {
+        lief.ARCHITECTURES.X86: BASE_ELF + [('CONTROL_FLOW', check_ELF_control_flow)],
+        lief.ARCHITECTURES.ARM: BASE_ELF,
+        lief.ARCHITECTURES.ARM64: BASE_ELF,
+        lief.ARCHITECTURES.PPC: BASE_ELF,
+        LIEF_ELF_ARCH_RISCV: BASE_ELF,
+    },
+    lief.EXE_FORMATS.PE: {
+        lief.ARCHITECTURES.X86: BASE_PE,
+    },
+    lief.EXE_FORMATS.MACHO: {
+        lief.ARCHITECTURES.X86: BASE_MACHO,
+    }
 }
 
 if __name__ == '__main__':
@@ -211,13 +241,24 @@ if __name__ == '__main__':
         try:
             binary = lief.parse(filename)
             etype = binary.format
+            arch = binary.abstract.header.architecture
+            binary.concrete
+
             if etype == lief.EXE_FORMATS.UNKNOWN:
                 print(f'{filename}: unknown executable format')
                 retval = 1
                 continue
 
+            if arch == lief.ARCHITECTURES.NONE:
+                if binary.header.machine_type == LIEF_ELF_ARCH_RISCV:
+                    arch = LIEF_ELF_ARCH_RISCV
+                else:
+                    print(f'{filename}: unknown architecture')
+                    retval = 1
+                    continue
+
             failed: List[str] = []
-            for (name, func) in CHECKS[etype]:
+            for (name, func) in CHECKS[etype][arch]:
                 if not func(binary):
                     failed.append(name)
             if failed:

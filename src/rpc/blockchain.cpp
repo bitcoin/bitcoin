@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,10 +19,10 @@
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
+#include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
-#include <logging/timer.h>
 #include <node/coinstats.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
@@ -55,6 +55,16 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+
+using node::BlockManager;
+using node::CCoinsStats;
+using node::CoinStatsHashType;
+using node::GetUTXOStats;
+using node::IsBlockPruned;
+using node::NodeContext;
+using node::ReadBlockFromDisk;
+using node::SnapshotMetadata;
+using node::UndoReadFromDisk;
 
 struct CUpdatedBlock
 {
@@ -185,6 +195,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
                 TxToUniv(*tx, uint256(), objTx, true, RPCSerializationFlags(), txundo, verbosity);
                 txs.push_back(objTx);
             }
+            break;
     }
 
     result.pushKV("tx", txs);
@@ -781,15 +792,13 @@ static RPCHelpMan getblockfrompeer()
         "getblockfrompeer",
         "\nAttempt to fetch block from a given peer.\n"
         "\nWe must have the header for this block, e.g. using submitheader.\n"
-        "\nReturns {} if a block-request was successfully scheduled\n",
+        "Subsequent calls for the same block and a new peer will cause the response from the previous peer to be ignored.\n"
+        "\nReturns an empty JSON object if the request was successfully scheduled.",
         {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-            {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The node ID (see getpeerinfo for node IDs)"},
+            {"block_hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
+            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
         },
-        RPCResult{RPCResult::Type::OBJ, "", "",
-        {
-            {RPCResult::Type::STR, "warnings", /*optional=*/true, "any warnings"},
-        }},
+        RPCResult{RPCResult::Type::OBJ_EMPTY, "", /*optional=*/ false, "", {}},
         RPCExamples{
             HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
             + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
@@ -799,31 +808,24 @@ static RPCHelpMan getblockfrompeer()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     PeerManager& peerman = EnsurePeerman(node);
-    CConnman& connman = EnsureConnman(node);
 
-    uint256 hash(ParseHashV(request.params[0], "hash"));
+    const uint256& block_hash{ParseHashV(request.params[0], "block_hash")};
+    const NodeId peer_id{request.params[1].get_int64()};
 
-    const NodeId nodeid = static_cast<NodeId>(request.params[1].get_int64());
-
-    // Check that the peer with nodeid exists
-    if (!connman.ForNode(nodeid, [](CNode* node) {return true;})) {
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("Peer nodeid %d does not exist", nodeid));
-    }
-
-    const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(hash););
+    const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
 
     if (!index) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
     }
 
-    UniValue result = UniValue::VOBJ;
-
     if (index->nStatus & BLOCK_HAVE_DATA) {
-        result.pushKV("warnings", "Block already downloaded");
-    } else if (!peerman.FetchBlock(nodeid, hash, *index)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Failed to fetch block from peer");
+        throw JSONRPCError(RPC_MISC_ERROR, "Block already downloaded");
     }
-    return result;
+
+    if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
+        throw JSONRPCError(RPC_MISC_ERROR, err.value());
+    }
+    return UniValue::VOBJ;
 },
     };
 }
@@ -967,7 +969,7 @@ static RPCHelpMan getblock()
                 "If verbosity is 3, returns an Object with information about block <hash> and information about each transaction, including prevout information for inputs (only for unpruned blocks in the current best chain).\n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
+                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a JSON object, 2 for JSON object with transaction data, and 3 for JSON object with transaction data including prevout information for inputs"},
                 },
                 {
                     RPCResult{"for verbosity = 0",
@@ -1006,6 +1008,37 @@ static RPCHelpMan getblock()
                         {
                             {RPCResult::Type::ELISION, "", "The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result"},
                             {RPCResult::Type::NUM, "fee", "The transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
+                        }},
+                    }},
+                }},
+                    RPCResult{"for verbosity = 3",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::ELISION, "", "Same output as verbosity = 2"},
+                    {RPCResult::Type::ARR, "tx", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::ARR, "vin", "",
+                            {
+                                {RPCResult::Type::OBJ, "", "",
+                                {
+                                    {RPCResult::Type::ELISION, "", "The same output as verbosity = 2"},
+                                    {RPCResult::Type::OBJ, "prevout", "(Only if undo information is available)",
+                                    {
+                                        {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
+                                        {RPCResult::Type::NUM, "height", "The height of the prevout"},
+                                        {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
+                                        {RPCResult::Type::OBJ, "scriptPubKey", "",
+                                        {
+                                            {RPCResult::Type::STR, "asm", "The asm"},
+                                            {RPCResult::Type::STR, "hex", "The hex"},
+                                            {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
+                                            {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                        }},
+                                    }},
+                                }},
+                            }},
                         }},
                     }},
                 }},
@@ -1080,7 +1113,7 @@ static RPCHelpMan pruneblockchain()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (!fPruneMode)
+    if (!node::fPruneMode)
         throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
@@ -1242,9 +1275,10 @@ static RPCHelpMan gettxoutsetinfo()
             ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
         }
         if (hash_type == CoinStatsHashType::MUHASH) {
-              ret.pushKV("muhash", stats.hashSerialized.GetHex());
+            ret.pushKV("muhash", stats.hashSerialized.GetHex());
         }
-        ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
+        CHECK_NONFATAL(stats.total_amount.has_value());
+        ret.pushKV("total_amount", ValueFromAmount(stats.total_amount.value()));
         if (!stats.index_used) {
             ret.pushKV("transactions", static_cast<int64_t>(stats.nTransactions));
             ret.pushKV("disk_size", stats.nDiskSize);
@@ -1512,6 +1546,7 @@ RPCHelpMan getblockchaininfo()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
     CChainState& active_chainstate = chainman.ActiveChainstate();
@@ -1530,9 +1565,9 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
     obj.pushKV("initialblockdownload",  active_chainstate.IsInitialBlockDownload());
     obj.pushKV("chainwork",             tip->nChainWork.GetHex());
-    obj.pushKV("size_on_disk",          CalculateCurrentUsage());
-    obj.pushKV("pruned",                fPruneMode);
-    if (fPruneMode) {
+    obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
+    obj.pushKV("pruned",                node::fPruneMode);
+    if (node::fPruneMode) {
         const CBlockIndex* block = tip;
         CHECK_NONFATAL(block);
         while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
@@ -1542,10 +1577,10 @@ RPCHelpMan getblockchaininfo()
         obj.pushKV("pruneheight",        block->nHeight);
 
         // if 0, execution bypasses the whole if block.
-        bool automatic_pruning = (gArgs.GetIntArg("-prune", 0) != 1);
+        bool automatic_pruning{args.GetIntArg("-prune", 0) != 1};
         obj.pushKV("automatic_pruning",  automatic_pruning);
         if (automatic_pruning) {
-            obj.pushKV("prune_target_size",  nPruneTarget);
+            obj.pushKV("prune_target_size",  node::nPruneTarget);
         }
     }
 
@@ -1709,7 +1744,7 @@ static RPCHelpMan getmempoolinfo()
                         {RPCResult::Type::NUM, "size", "Current tx count"},
                         {RPCResult::Type::NUM, "bytes", "Sum of all virtual transaction sizes as defined in BIP 141. Differs from actual serialized size because witness data is discounted"},
                         {RPCResult::Type::NUM, "usage", "Total memory usage for the mempool"},
-                        {RPCResult::Type::STR_AMOUNT, "total_fee", "Total fees for the mempool in " + CURRENCY_UNIT + ", ignoring modified fees through prioritizetransaction"},
+                        {RPCResult::Type::STR_AMOUNT, "total_fee", "Total fees for the mempool in " + CURRENCY_UNIT + ", ignoring modified fees through prioritisetransaction"},
                         {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
                         {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kvB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
                         {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
@@ -2238,9 +2273,8 @@ static RPCHelpMan savemempool()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     if (!mempool.IsLoaded()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
@@ -2251,7 +2285,7 @@ static RPCHelpMan savemempool()
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("filename", fs::path((node.args->GetDataDirNet() / "mempool.dat")).u8string());
+    ret.pushKV("filename", fs::path((args.GetDataDirNet() / "mempool.dat")).u8string());
 
     return ret;
 },
@@ -2576,13 +2610,9 @@ static RPCHelpMan dumptxoutset()
 {
     return RPCHelpMan{
         "dumptxoutset",
-        "\nWrite the serialized UTXO set to disk.\n",
+        "Write the serialized UTXO set to disk.",
         {
-            {"path",
-                RPCArg::Type::STR,
-                RPCArg::Optional::NO,
-                /* default_val */ "",
-                "path to the output file. If relative, will be prefixed by datadir."},
+            {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -2600,10 +2630,11 @@ static RPCHelpMan dumptxoutset()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const fs::path path = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
+    const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
-    const fs::path temppath = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
+    const fs::path temppath = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
 
     if (fs::exists(path)) {
         throw JSONRPCError(

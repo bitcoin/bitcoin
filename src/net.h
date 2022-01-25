@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,6 +25,7 @@
 #include <threadinterrupt.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/sock.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -229,8 +230,8 @@ struct LocalServiceInfo {
     uint16_t nPort;
 };
 
-extern RecursiveMutex cs_mapLocalHost;
-extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
+extern Mutex g_maplocalhost_mutex;
+extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
 
 extern const std::string NET_MESSAGE_COMMAND_OTHER;
 typedef std::map<std::string, uint64_t> mapMsgCmdSize; //command, total bytes
@@ -277,7 +278,7 @@ public:
 
 /** Transport protocol agnostic message container.
  * Ideally it should only contain receive time, payload,
- * command and size.
+ * type and size.
  */
 class CNetMessage {
 public:
@@ -285,7 +286,7 @@ public:
     std::chrono::microseconds m_time{0}; //!< time of message receipt
     uint32_t m_message_size{0};          //!< size of the payload
     uint32_t m_raw_message_size{0};      //!< used wire size of the message (including header/checksum)
-    std::string m_command;
+    std::string m_type;
 
     CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
 
@@ -433,12 +434,12 @@ public:
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
     std::atomic<int> nVersion{0};
-    RecursiveMutex cs_SubVer;
+    Mutex m_subver_mutex;
     /**
      * cleanSubVer is a sanitized string of the user agent byte array we read
      * from the wire. This cleaned string can safely be logged or displayed.
      */
-    std::string cleanSubVer GUARDED_BY(cs_SubVer){};
+    std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
     bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permissionFlags, permission);
@@ -617,9 +618,9 @@ public:
         return m_greatest_common_version;
     }
 
-    CService GetAddrLocal() const;
+    CService GetAddrLocal() const LOCKS_EXCLUDED(m_addr_local_mutex);
     //! May not be called more than once
-    void SetAddrLocal(const CService& addrLocalIn);
+    void SetAddrLocal(const CService& addrLocalIn) LOCKS_EXCLUDED(m_addr_local_mutex);
 
     CNode* AddRef()
     {
@@ -692,8 +693,8 @@ private:
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
-    CService addrLocal GUARDED_BY(cs_addrLocal);
-    mutable RecursiveMutex cs_addrLocal;
+    CService addrLocal GUARDED_BY(m_addr_local_mutex);
+    mutable Mutex m_addr_local_mutex;
 
     mapMsgCmdSize mapSendBytesPerMsgCmd GUARDED_BY(cs_vSend);
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
@@ -935,21 +936,19 @@ public:
 
     void WakeMessageHandler();
 
-    /** Attempts to obfuscate tx time through exponentially distributed emitting.
-        Works assuming that a single interval is used.
-        Variable intervals will result in privacy decrease.
-    */
-    std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
-
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
 private:
     struct ListenSocket {
     public:
-        SOCKET socket;
+        std::shared_ptr<Sock> sock;
         inline void AddSocketPermissionFlags(NetPermissionFlags& flags) const { NetPermissions::AddFlag(flags, m_permissions); }
-        ListenSocket(SOCKET socket_, NetPermissionFlags permissions_) : socket(socket_), m_permissions(permissions_) {}
+        ListenSocket(std::shared_ptr<Sock> sock_, NetPermissionFlags permissions_)
+            : sock{sock_}, m_permissions{permissions_}
+        {
+        }
+
     private:
         NetPermissionFlags m_permissions;
     };
@@ -969,12 +968,12 @@ private:
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
      * the `m_nodes` member.
-     * @param[in] hSocket Connected socket to communicate with the peer.
+     * @param[in] sock Connected socket to communicate with the peer.
      * @param[in] permissionFlags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
      * @param[in] addr The address and port at the peer's side of the connection.
      */
-    void CreateNodeFromAcceptedSocket(SOCKET hSocket,
+    void CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                       NetPermissionFlags permissionFlags,
                                       const CAddress& addr_bind,
                                       const CAddress& addr);
@@ -1216,8 +1215,6 @@ private:
      */
     std::atomic_bool m_start_extra_block_relay_peers{false};
 
-    std::atomic<std::chrono::microseconds> m_next_send_inv_to_incoming{0us};
-
     /**
      * A vector of -bind=<address>:<port>=onion arguments each of which is
      * an address and port that are designated for incoming Tor connections.
@@ -1264,9 +1261,6 @@ private:
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;
 };
-
-/** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
-std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
 /** Dump binary message to file, with timestamp */
 void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming);

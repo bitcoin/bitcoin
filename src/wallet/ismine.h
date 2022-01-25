@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,8 +12,10 @@
 #include <cstdint>
 #include <type_traits>
 
-class CWallet;
 class CScript;
+
+namespace wallet {
+class CWallet;
 
 /**
  * IsMine() return codes, which depend on ScriptPubKeyMan implementation.
@@ -66,5 +68,6 @@ struct CachableAmount
         m_value[filter] = value;
     }
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_ISMINE_H

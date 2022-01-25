@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2019 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +15,7 @@ libs = [
     'libbitcoin_cli',
     'libbitcoin_common',
     'libbitcoin_crypto',
-    'libbitcoin_server',
+    'libbitcoin_node',
     'libbitcoin_util',
     'libbitcoin_wallet_tool',
     'libbitcoin_wallet',

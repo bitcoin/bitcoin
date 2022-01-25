@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <wallet/bdb.h>
 
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
 static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, std::string& database_filename)
@@ -77,3 +78,4 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

@@ -193,17 +193,6 @@ template <typename T>
     }
 }
 
-template <class T>
-[[nodiscard]] bool AdditionOverflow(const T i, const T j) noexcept
-{
-    static_assert(std::is_integral<T>::value, "Integral required.");
-    if (std::numeric_limits<T>::is_signed) {
-        return (i > 0 && j > std::numeric_limits<T>::max() - i) ||
-               (i < 0 && j < std::numeric_limits<T>::min() - i);
-    }
-    return std::numeric_limits<T>::max() - i < j;
-}
-
 [[nodiscard]] bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept;
 
 /**
@@ -411,6 +400,8 @@ public:
     ssize_t Recv(void* buf, size_t len, int flags) const override;
 
     int Connect(const sockaddr*, socklen_t) const override;
+
+    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
 
     int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
 

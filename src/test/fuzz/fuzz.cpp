@@ -12,12 +12,36 @@
 
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unistd.h>
 #include <vector>
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
+/**
+ * A copy of the command line arguments that start with `--`.
+ * First `LLVMFuzzerInitialize()` is called, which saves the arguments to `g_args`.
+ * Later, depending on the fuzz test, `G_TEST_COMMAND_LINE_ARGUMENTS()` may be
+ * called by `BasicTestingSetup` constructor to fetch those arguments and store
+ * them in `BasicTestingSetup::m_node::args`.
+ */
+static std::vector<const char*> g_args;
+
+static void SetArgs(int argc, char** argv) {
+    for (int i = 1; i < argc; ++i) {
+        // Only take into account arguments that start with `--`. The others are for the fuzz engine:
+        // `fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5`
+        if (strlen(argv[i]) > 2 && argv[i][0] == '-' && argv[i][1] == '-') {
+            g_args.push_back(argv[i]);
+        }
+    }
+}
+
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = []() {
+    return g_args;
+};
 
 std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>>& FuzzTargets()
 {
@@ -95,6 +119,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
+    SetArgs(*argc, *argv);
     initialize();
     return 0;
 }

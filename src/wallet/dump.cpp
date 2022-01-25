@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #include <util/translation.h>
 #include <wallet/wallet.h>
 
+namespace wallet {
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
 uint32_t DUMP_VERSION = 1;
 
@@ -214,6 +215,11 @@ bool CreateFromDump(const std::string& name, const fs::path& wallet_path, biling
 
             if (key == "checksum") {
                 std::vector<unsigned char> parsed_checksum = ParseHex(value);
+                if (parsed_checksum.size() != checksum.size()) {
+                    error = Untranslated("Error: Checksum is not the correct size");
+                    ret = false;
+                    break;
+                }
                 std::copy(parsed_checksum.begin(), parsed_checksum.end(), checksum.begin());
                 break;
             }
@@ -279,3 +285,4 @@ bool CreateFromDump(const std::string& name, const fs::path& wallet_path, biling
 
     return ret;
 }
+} // namespace wallet

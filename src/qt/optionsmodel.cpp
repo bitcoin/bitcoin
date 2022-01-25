@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -82,6 +82,11 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fCoinControlFeatures"))
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
+
+    if (!settings.contains("enable_psbt_controls")) {
+        settings.setValue("enable_psbt_controls", false);
+    }
+    m_enable_psbt_controls = settings.value("enable_psbt_controls", false).toBool();
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -204,8 +209,8 @@ static void CopySettings(QSettings& dst, const QSettings& src)
 /** Back up a QSettings to an ini-formatted file. */
 static void BackupSettings(const fs::path& filename, const QSettings& src)
 {
-    qInfo() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
-    QSettings dst(GUIUtil::boostPathToQString(filename), QSettings::IniFormat);
+    qInfo() << "Backing up GUI settings to" << GUIUtil::PathToQString(filename);
+    QSettings dst(GUIUtil::PathToQString(filename), QSettings::IniFormat);
     dst.clear();
     CopySettings(dst, src);
 }
@@ -360,6 +365,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return m_use_embedded_monospaced_font;
         case CoinControlFeatures:
             return fCoinControlFeatures;
+        case EnablePSBTControls:
+            return settings.value("enable_psbt_controls");
         case Prune:
             return settings.value("bPrune");
         case PruneSize:
@@ -506,6 +513,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
+            break;
+        case EnablePSBTControls:
+            m_enable_psbt_controls = value.toBool();
+            settings.setValue("enable_psbt_controls", m_enable_psbt_controls);
             break;
         case Prune:
             if (settings.value("bPrune") != value) {

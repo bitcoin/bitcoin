@@ -11,8 +11,10 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/setup_common.h>
 #include <time.h>
 #include <util/asmap.h>
+#include <util/system.h>
 
 #include <cassert>
 #include <cstdint>
@@ -20,16 +22,26 @@
 #include <string>
 #include <vector>
 
+namespace {
+const BasicTestingSetup* g_setup;
+
+int32_t GetCheckRatio()
+{
+    return std::clamp<int32_t>(g_setup->m_node.args->GetIntArg("-checkaddrman", 0), 0, 1000000);
+}
+} // namespace
+
 void initialize_addrman()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::REGTEST);
+    g_setup = testing_setup.get();
 }
 
 FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
-    AddrMan addr_man(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/0);
+    AddrMan addr_man{/*asmap=*/std::vector<bool>(), /*deterministic=*/false, GetCheckRatio()};
     try {
         ReadFromStream(addr_man, data_stream);
     } catch (const std::exception&) {
@@ -113,7 +125,7 @@ class AddrManDeterministic : public AddrMan
 {
 public:
     explicit AddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
-        : AddrMan(std::move(asmap), /*deterministic=*/true, /*consistency_check_ratio=*/0)
+        : AddrMan{std::move(asmap), /*deterministic=*/true, GetCheckRatio()}
     {
         WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
     }
