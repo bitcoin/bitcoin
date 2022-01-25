@@ -47,7 +47,6 @@ private:
     /// Get the name of the index for display in logs.
     const char* GetIndexName() const override { return m_name.c_str(); }
 
-protected:
     bool Init() override;
 
     bool CommitInternal(CDBBatch& batch) override;

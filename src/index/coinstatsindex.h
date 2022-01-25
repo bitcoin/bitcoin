@@ -45,7 +45,6 @@ private:
     /// Get the name of the index for display in logs.
     const char* GetIndexName() const override { return "coinstatsindex"; }
 
-protected:
     bool Init() override;
 
     bool CommitInternal(CDBBatch& batch) override;
