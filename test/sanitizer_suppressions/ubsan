@@ -85,10 +85,6 @@ implicit-signed-integer-truncation:addrman.cpp
 implicit-signed-integer-truncation:addrman.h
 implicit-signed-integer-truncation:chain.h
 implicit-signed-integer-truncation:crypto/
-implicit-signed-integer-truncation:node/miner.cpp
-implicit-signed-integer-truncation:net.cpp
-implicit-signed-integer-truncation:streams.h
-implicit-signed-integer-truncation:torcontrol.cpp
 implicit-unsigned-integer-truncation:crypto/
 shift-base:arith_uint256.cpp
 shift-base:crypto/
