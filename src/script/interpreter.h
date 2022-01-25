@@ -11,6 +11,7 @@
 #include <span.h>
 #include <primitives/transaction.h>
 
+#include <optional>
 #include <vector>
 #include <stdint.h>
 
@@ -215,6 +216,9 @@ struct ScriptExecutionData
     bool m_validation_weight_left_init = false;
     //! How much validation weight is left (decremented for every successful non-empty signature check).
     int64_t m_validation_weight_left;
+
+    //! The hash of the corresponding output
+    std::optional<uint256> m_output_hash;
 };
 
 /** Signature hash sizes */
@@ -244,7 +248,7 @@ public:
         return false;
     }
 
-    virtual bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, const ScriptExecutionData& execdata, ScriptError* serror = nullptr) const
+    virtual bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const
     {
         return false;
     }
@@ -272,7 +276,7 @@ enum class MissingDataBehavior
 };
 
 template<typename T>
-bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache, MissingDataBehavior mdb);
+bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache, MissingDataBehavior mdb);
 
 template <class T>
 class GenericTransactionSignatureChecker : public BaseSignatureChecker
@@ -292,7 +296,7 @@ public:
     GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, MissingDataBehavior mdb) : txTo(txToIn), m_mdb(mdb), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
     GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn, MissingDataBehavior mdb) : txTo(txToIn), m_mdb(mdb), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
-    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, const ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
+    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
 };
@@ -313,7 +317,7 @@ public:
         return m_checker.CheckECDSASignature(scriptSig, vchPubKey, scriptCode, sigversion);
     }
 
-    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, const ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override
+    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override
     {
         return m_checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata, serror);
     }
