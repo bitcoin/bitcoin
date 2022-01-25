@@ -760,7 +760,10 @@ public:
         bool m_i2p_accept_incoming;
     };
 
-    void Init(const Options& connOptions) {
+    void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex)
+    {
+        AssertLockNotHeld(m_total_bytes_sent_mutex);
+
         nLocalServices = connOptions.nLocalServices;
         nMaxConnections = connOptions.nMaxConnections;
         m_max_outbound_full_relay = std::min(connOptions.m_max_outbound_full_relay, connOptions.nMaxConnections);
@@ -789,7 +792,7 @@ public:
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, bool network_active = true);
     ~CConnman();
-    bool Start(CScheduler& scheduler, const Options& options);
+    bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     void StopThreads();
     void StopNodes();
@@ -808,7 +811,7 @@ public:
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
-    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
+    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     using NodeFn = std::function<void(CNode*)>;
     void ForEachNode(const NodeFn& func)
@@ -899,24 +902,22 @@ public:
     //! that peer during `net_processing.cpp:PushNodeVersion()`.
     ServiceFlags GetLocalServices() const;
 
-    uint64_t GetMaxOutboundTarget() const;
+    uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     std::chrono::seconds GetMaxOutboundTimeframe() const;
 
     //! check if the outbound target is reached
     //! if param historicalBlockServingLimit is set true, the function will
     //! response true if the limit for serving historical blocks has been reached
-    bool OutboundTargetReached(bool historicalBlockServingLimit) const;
+    bool OutboundTargetReached(bool historicalBlockServingLimit) const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     //! response the bytes left in the current max outbound cycle
     //! in case of no limit, it will always response 0
-    uint64_t GetOutboundTargetBytesLeft() const;
+    uint64_t GetOutboundTargetBytesLeft() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
-    //! returns the time left in the current max outbound cycle
-    //! in case of no limit, it will always return 0
-    std::chrono::seconds GetMaxOutboundTimeLeftInCycle() const;
+    std::chrono::seconds GetMaxOutboundTimeLeftInCycle() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     uint64_t GetTotalBytesRecv() const;
-    uint64_t GetTotalBytesSent() const;
+    uint64_t GetTotalBytesSent() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id) const;
@@ -941,6 +942,10 @@ private:
     private:
         NetPermissionFlags m_permissions;
     };
+
+    //! returns the time left in the current max outbound cycle
+    //! in case of no limit, it will always return 0
+    std::chrono::seconds GetMaxOutboundTimeLeftInCycle_() const EXCLUSIVE_LOCKS_REQUIRED(m_total_bytes_sent_mutex);
 
     bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
@@ -1001,7 +1006,7 @@ private:
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
      */
-    void SocketHandler();
+    void SocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /**
      * Do the read/write for connected sockets that are ready for IO.
@@ -1014,7 +1019,8 @@ private:
     void SocketHandlerConnected(const std::vector<CNode*>& nodes,
                                 const std::set<SOCKET>& recv_set,
                                 const std::set<SOCKET>& send_set,
-                                const std::set<SOCKET>& error_set);
+                                const std::set<SOCKET>& error_set)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /**
      * Accept incoming connections, one from each read-ready listening socket.
@@ -1022,7 +1028,7 @@ private:
      */
     void SocketHandlerListening(const std::set<SOCKET>& recv_set);
 
-    void ThreadSocketHandler();
+    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     void ThreadDNSAddressSeed();
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
@@ -1051,7 +1057,7 @@ private:
 
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
-    void RecordBytesSent(uint64_t bytes);
+    void RecordBytesSent(uint64_t bytes) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /**
      * Return vector of current BLOCK_RELAY peers.
