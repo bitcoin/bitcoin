@@ -4759,15 +4759,16 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
                             vHeaders.front().GetHash().ToString(), pto->GetId());
 
-                    bool fGotBlockFromCache = false;
+                    std::optional<CSerializedNetMsg> cached_cmpctblock_msg;
                     {
                         LOCK(m_most_recent_block_mutex);
                         if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block));
-                            fGotBlockFromCache = true;
+                            cached_cmpctblock_msg = msgMaker.Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
                         }
                     }
-                    if (!fGotBlockFromCache) {
+                    if (cached_cmpctblock_msg.has_value()) {
+                        m_connman.PushMessage(pto, std::move(cached_cmpctblock_msg.value()));
+                    } else {
                         CBlock block;
                         bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
                         assert(ret);
