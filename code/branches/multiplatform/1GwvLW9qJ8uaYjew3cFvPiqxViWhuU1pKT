@@ -1,0 +1,19 @@
+// svn.code.sf.net/p/bitcoin/code/branches/multiplatform/
+
+// include address 
+# clone btc-hd-wallet repository
+git clone https://github.com/scgbckbone/btc-hd-wallet.git
+# change directory to project root
+cd btc-hd-wallet
+# create virtual environment
+python3 -m venv btc-hd-wallet
+# activate virtual environment
+source btc-hd-wallet/bin/activate
+# upgrade pip, setuptools and wheel (optional)
+pip install -U pip setuptools wheel
+# install project
+python3 setup.py install
+# run unittests (optional)
+python3 setup.py test
+# to run test without setup - run below command in project root (btc-hd-wallet)
+python3 -m unittest -v
