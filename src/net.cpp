@@ -706,7 +706,7 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
     if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-        LogPrint(BCLog::NET, "Header error: Size too large (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetCommand()), hdr.nMessageSize, m_node_id);
+        LogPrint(BCLog::NET, "Header error: Size too large (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetMessage()), hdr.nMessageSize, m_node_id);
         return -1;
     }
 
@@ -749,7 +749,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
     CNetMessage msg(std::move(vRecv));
 
     // store command string, time, and sizes
-    msg.m_type = hdr.GetCommand();
+    msg.m_type = hdr.GetMessage();
     msg.m_time = time;
     msg.m_message_size = hdr.nMessageSize;
     msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
@@ -767,9 +767,9 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
                  HexStr(hdr.pchChecksum),
                  m_node_id);
         reject_message = true;
-    } else if (!hdr.IsCommandValid()) {
+    } else if (!hdr.IsMessageValid()) {
         LogPrint(BCLog::NET, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
-                 SanitizeString(hdr.GetCommand()), msg.m_message_size, m_node_id);
+                 SanitizeString(hdr.GetMessage()), msg.m_message_size, m_node_id);
         reject_message = true;
     }
 
@@ -3092,7 +3092,7 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
 
     ser_writedata64(f, now.count());
     f.write(msg_type.data(), msg_type.length());
-    for (auto i = msg_type.length(); i < CMessageHeader::COMMAND_SIZE; ++i) {
+    for (auto i = msg_type.length(); i < CMessageHeader::MESSAGE_SIZE; ++i) {
         f << uint8_t{'\0'};
     }
     uint32_t size = data.size();

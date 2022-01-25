@@ -31,28 +31,28 @@ class CMessageHeader
 {
 public:
     static constexpr size_t MESSAGE_START_SIZE = 4;
-    static constexpr size_t COMMAND_SIZE = 12;
+    static constexpr size_t MESSAGE_SIZE = 12;
     static constexpr size_t MESSAGE_SIZE_SIZE = 4;
     static constexpr size_t CHECKSUM_SIZE = 4;
-    static constexpr size_t MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE;
+    static constexpr size_t MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + MESSAGE_SIZE;
     static constexpr size_t CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE;
-    static constexpr size_t HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
+    static constexpr size_t HEADER_SIZE = MESSAGE_START_SIZE + MESSAGE_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
     explicit CMessageHeader() = default;
 
     /** Construct a P2P message header from message-start characters, a command and the size of the message.
-     * @note Passing in a `pszCommand` longer than COMMAND_SIZE will result in a run-time assertion error.
+     * @note Passing in a `pszMessage` longer than MESSAGE_SIZE will result in a run-time assertion error.
      */
-    CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
+    CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszMessage, unsigned int nMessageSizeIn);
 
-    std::string GetCommand() const;
-    bool IsCommandValid() const;
+    std::string GetMessage() const;
+    bool IsMessageValid() const;
 
-    SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchCommand, obj.nMessageSize, obj.pchChecksum); }
+    SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchMessage, obj.nMessageSize, obj.pchChecksum); }
 
     char pchMessageStart[MESSAGE_START_SIZE]{};
-    char pchCommand[COMMAND_SIZE]{};
+    char pchMessage[MESSAGE_SIZE]{};
     uint32_t nMessageSize{std::numeric_limits<uint32_t>::max()};
     uint8_t pchChecksum[CHECKSUM_SIZE]{};
 };
@@ -483,7 +483,7 @@ public:
 
     friend bool operator<(const CInv& a, const CInv& b);
 
-    std::string GetCommand() const;
+    std::string GetMessage() const;
     std::string ToString() const;
 
     // Single-message helper methods

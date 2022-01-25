@@ -247,7 +247,7 @@ FUZZ_TARGET_DESERIALIZE(service_deserialize, {
 FUZZ_TARGET_DESERIALIZE(messageheader_deserialize, {
     CMessageHeader mh;
     DeserializeFromFuzzingInput(buffer, mh);
-    (void)mh.IsCommandValid();
+    (void)mh.IsMessageValid();
 })
 FUZZ_TARGET_DESERIALIZE(address_deserialize_v1_notime, {
     CAddress a;
