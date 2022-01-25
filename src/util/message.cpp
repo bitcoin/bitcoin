@@ -24,6 +24,11 @@
  */
 const std::string MESSAGE_MAGIC = "Bitcoin Signed Message:\n";
 
+/**
+ * BIP-322 tagged hash
+ */
+static const HashWriter HASHER_BIP322{TaggedHash("BIP0322-signed-message")};
+
 MessageVerificationResult MessageVerify(
     const std::string& address,
     const std::string& signature,
@@ -44,7 +49,7 @@ MessageVerificationResult MessageVerify(
     }
 
     CPubKey pubkey;
-    if (!pubkey.RecoverCompact(MessageHash(message), *signature_bytes)) {
+    if (!pubkey.RecoverCompact(MessageHash(message, MessageSignatureFormat::LEGACY), *signature_bytes)) {
         return MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED;
     }
 
@@ -62,7 +67,7 @@ bool MessageSign(
 {
     std::vector<unsigned char> signature_bytes;
 
-    if (!privkey.SignCompact(MessageHash(message), signature_bytes)) {
+    if (!privkey.SignCompact(MessageHash(message, MessageSignatureFormat::LEGACY), signature_bytes)) {
         return false;
     }
 
@@ -71,12 +76,27 @@ bool MessageSign(
     return true;
 }
 
-uint256 MessageHash(const std::string& message)
+uint256 MessageHash(const std::string& message, MessageSignatureFormat format)
 {
-    HashWriter hasher{};
-    hasher << MESSAGE_MAGIC << message;
+    switch (format) {
+    case MessageSignatureFormat::LEGACY:
+        {
+            HashWriter hasher{};
+            hasher << MESSAGE_MAGIC << message;
+            return hasher.GetHash();
+        }
 
-    return hasher.GetHash();
+    case MessageSignatureFormat::SIMPLE:
+    case MessageSignatureFormat::FULL:
+        {
+            HashWriter hasher{HASHER_BIP322};
+            if (!message.empty()) {
+                hasher.write(AsBytes(Span{message.data(), message.size() * sizeof(char)}));
+            }
+            return hasher.GetSHA256();
+        }
+    }
+    assert(false);
 }
 
 std::string SigningResultString(const SigningResult res)
