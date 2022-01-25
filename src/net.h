@@ -1068,7 +1068,7 @@ private:
     static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
-    mutable RecursiveMutex m_total_bytes_sent_mutex;
+    mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};
     uint64_t nTotalBytesSent GUARDED_BY(m_total_bytes_sent_mutex) {0};
 
