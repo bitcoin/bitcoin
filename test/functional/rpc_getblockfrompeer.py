@@ -40,12 +40,8 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.sync_blocks()
 
         self.log.info("Node 0 should only have the header for node 1's block 3")
-        for x in self.nodes[0].getchaintips():
-            if x['hash'] == short_tip:
-                assert_equal(x['status'], "headers-only")
-                break
-        else:
-            raise AssertionError("short tip not synced")
+        x = next(filter(lambda x: x['hash'] == short_tip, self.nodes[0].getchaintips()))
+        assert_equal(x['status'], "headers-only")
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, short_tip)
 
         self.log.info("Fetch block from node 1")
@@ -60,17 +56,15 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "Block header missing", self.nodes[0].getblockfrompeer, "00" * 32, 0)
 
         self.log.info("Non-existent peer generates error")
-        assert_raises_rpc_error(-1, f"Peer nodeid {peer_0_peer_1_id + 1} does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
+        assert_raises_rpc_error(-1, "Peer does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
 
         self.log.info("Successful fetch")
         result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
         self.wait_until(lambda: self.check_for_block(short_tip), timeout=1)
-        assert(not "warnings" in result)
+        assert_equal(result, {})
 
         self.log.info("Don't fetch blocks we already have")
-        result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
-        assert("warnings" in result)
-        assert_equal(result["warnings"], "Block already downloaded")
+        assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id)
 
 if __name__ == '__main__':
     GetBlockFromPeerTest().main()
