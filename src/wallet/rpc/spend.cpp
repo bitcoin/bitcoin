@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/validation.h>
 #include <core_io.h>
 #include <key_io.h>
 #include <policy/policy.h>
@@ -421,6 +422,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"input_sizes", UniValueType(UniValue::VARR)},
             },
             true, true);
 
@@ -526,6 +528,37 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         }
     }
 
+    if (options.exists("input_sizes")) {
+        for (const UniValue& input : options["input_sizes"].get_array().getValues()) {
+            uint256 txid = ParseHashO(input, "txid");
+
+            const UniValue& vout_v = input.find_value("vout");
+            if (!vout_v.isNum()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
+            }
+            int vout = vout_v.getInt<int>();
+            if (vout < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
+            }
+
+            const UniValue& weight_v = input.find_value("size");
+            if (!weight_v.isNum()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing size key");
+            }
+            int64_t size = weight_v.getInt<int64_t>();
+            const int64_t min_input_size = ::GetSerializeSize(CTxIn());
+            CHECK_NONFATAL(min_input_size == 41);
+            if (size < min_input_size) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, size cannot be less than 41 bytes (size of outpoint + sequence + empty scriptSig)");
+            }
+            if (size > MAX_STANDARD_TX_SIZE) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, size cannot be greater than the maximum standard tx size of %d", MAX_STANDARD_TX_SIZE));
+            }
+
+            coinControl.SetInputWeight(COutPoint(txid, vout), size);
+        }
+    }
+
     if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -548,6 +581,23 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
     if (!FundTransaction(wallet, tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
+}
+
+static void SetOptionsInputWeights(const UniValue& inputs, UniValue& options)
+{
+    if (options.exists("input_sizes")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Input sizes should be specified in inputs rather than in options.");
+    }
+    if (inputs.size() == 0) {
+        return;
+    }
+    UniValue sizes(UniValue::VARR);
+    for (const UniValue& input : inputs.getValues()) {
+        if (input.exists("size")) {
+            sizes.push_back(input);
+        }
+    }
+    options.pushKV("input_sizes", sizes);
 }
 
 RPCHelpMan fundrawtransaction()
@@ -590,6 +640,20 @@ RPCHelpMan fundrawtransaction()
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
+                            {"input_sizes", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Inputs and their corresponding sizes",
+                                {
+                                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                        {
+                                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                                            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output index"},
+                                            {"size", RPCArg::Type::NUM, RPCArg::Optional::NO, "The maximum size for this input, "
+                                                "including the size of the outpoint and sequence number. "
+                                                "Note that serialized signature sizes are not guaranteed to be consistent, "
+                                                "so the maximum DER signatures size of 73 bytes should be used when considering ECDSA signatures."},
+                                        },
+                                    },
+                                },
+                             },
                         },
                         FundTxDoc()),
                         "options"},
@@ -778,6 +842,10 @@ RPCHelpMan send()
                             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
                             {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
                             {"sequence", RPCArg::Type::NUM, RPCArg::Optional::NO, "The sequence number"},
+                            {"size", RPCArg::Type::NUM, RPCArg::DefaultHint{"Calculated from wallet and solving data"}, "The maximum size for this input, "
+                                        "including the size of the outpoint and sequence number. "
+                                        "Note that signature sizes are not guaranteed to be consistent, "
+                                        "so the maximum DER signatures size of 73 bytes should be used when considering ECDSA signatures."},
                         },
                     },
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
@@ -877,6 +945,7 @@ RPCHelpMan send()
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
+    SetOptionsInputWeights(options["inputs"], options);
     FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /* override_min_fee */ false);
 
     bool add_to_wallet = true;
@@ -1020,6 +1089,10 @@ RPCHelpMan walletcreatefundedpsbt()
                             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
                             {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
                             {"sequence", RPCArg::Type::NUM, RPCArg::DefaultHint{"depends on the value of the 'locktime' argument"}, "The sequence number"},
+                            {"size", RPCArg::Type::NUM, RPCArg::DefaultHint{"Calculated from wallet and solving data"}, "The maximum size for this input, "
+                                "including the size of the outpoint and sequence number. "
+                                "Note that signature sizes are not guaranteed to be consistent, "
+                                "so the maximum DER signatures size of 73 bytes should be used when considering ECDSA signatures."},
                         },
                     },
                 },
@@ -1099,6 +1172,8 @@ RPCHelpMan walletcreatefundedpsbt()
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
+    UniValue options = request.params[3];
+
     CAmount fee;
     int change_position;
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2]);
@@ -1106,7 +1181,8 @@ RPCHelpMan walletcreatefundedpsbt()
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
-    FundTransaction(*pwallet, rawTx, fee, change_position, request.params[3], coin_control, /*override_min_fee=*/true);
+    SetOptionsInputWeights(request.params[0], options);
+    FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/true);
 
     // Make a blank psbt
     PartiallySignedTransaction psbtx{rawTx};

@@ -550,6 +550,11 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
             // even if some non-mixed inputs were manually selected via CoinControl
             if (!wallet.IsFullyMixed(outpoint)) continue;
         }
+        // If available, override calculated size with coin control specified size
+        if (coin_control.HasInputWeight(outpoint)) {
+            input_bytes = GetVirtualTransactionSize(coin_control.GetInputWeight(outpoint), 0, 0);
+        }
+
         if (input_bytes == -1) {
             return std::nullopt; // Not solvable, can't estimate size for fee
         }
