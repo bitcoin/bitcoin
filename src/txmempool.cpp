@@ -116,10 +116,9 @@ size_t CTxMemPoolEntry::GetTxSize() const
     return GetVirtualTransactionSize(nTxWeight, sigOpCost);
 }
 
-// Update the given tx for any in-mempool descendants.
-// Assumes that CTxMemPool::m_children is correct for the given tx and all
-// descendants.
-void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
+void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
+                                      const std::set<uint256>& setExclude, std::set<uint256>& descendants_to_remove,
+                                      uint64_t ancestor_size_limit, uint64_t ancestor_count_limit)
 {
     CTxMemPoolEntry::Children stageEntries, descendants;
     stageEntries = updateIt->GetMemPoolChildrenConst();
@@ -156,17 +155,18 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
             cachedDescendants[updateIt].insert(mapTx.iterator_to(descendant));
             // Update ancestor state for each descendant
             mapTx.modify(mapTx.iterator_to(descendant), update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
+            // Don't directly remove the transaction here -- doing so would
+            // invalidate iterators in cachedDescendants. Mark it for removal
+            // by inserting into descendants_to_remove.
+            if (descendant.GetCountWithAncestors() > ancestor_count_limit || descendant.GetSizeWithAncestors() > ancestor_size_limit) {
+                descendants_to_remove.insert(descendant.GetTx().GetHash());
+            }
         }
     }
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
 }
 
-// vHashesToUpdate is the set of transaction hashes from a disconnected block
-// which has been re-added to the mempool.
-// for each entry, look for descendants that are outside vHashesToUpdate, and
-// add fee/size information for such descendants to the parent.
-// for each such descendant, also update the ancestor state to include the parent.
-void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashesToUpdate)
+void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashesToUpdate, uint64_t ancestor_size_limit, uint64_t ancestor_count_limit)
 {
     AssertLockHeld(cs);
     // For each entry in vHashesToUpdate, store the set of in-mempool, but not
@@ -177,6 +177,8 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
     // Use a set for lookups into vHashesToUpdate (these entries are already
     // accounted for in the state of their ancestors)
     std::set<uint256> setAlreadyIncluded(vHashesToUpdate.begin(), vHashesToUpdate.end());
+
+    std::set<uint256> descendants_to_remove;
 
     // Iterate in reverse, so that whenever we are looking at a transaction
     // we are sure that all in-mempool descendants have already been processed.
@@ -207,7 +209,15 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
                 }
             }
         } // release epoch guard for UpdateForDescendants
-        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded);
+        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded, descendants_to_remove, ancestor_size_limit, ancestor_count_limit);
+    }
+
+    for (const auto& txid : descendants_to_remove) {
+        // This txid may have been removed already in a prior call to removeRecursive.
+        // Therefore we ensure it is not yet removed already.
+        if (const std::optional<txiter> txiter = GetIter(txid)) {
+            removeRecursive((*txiter)->GetTx(), MemPoolRemovalReason::SIZELIMIT);
+        }
     }
 }
 
