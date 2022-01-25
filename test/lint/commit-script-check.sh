@@ -17,8 +17,12 @@ if test -z "$1"; then
     exit 1
 fi
 
-if ! sed --help 2>&1 | grep -q 'GNU'; then
-    echo "Error: the installed sed package is not compatible. Please make sure you have GNU sed installed in your system.";
+test gsed && SED=$(which gsed) || SED=$(which sed)
+export SED
+
+if  ! $SED --help 2>&1 | grep -q 'GNU'; then
+    echo "Error: The installed sed package is not compatible. Please make sure you have GNU sed installed in your system.";
+    test brew && echo '       Try installing gnu-sed with the Homebrew package installer (brew install gnu-sed).'
     exit 1;
 fi
 
@@ -28,7 +32,7 @@ PREV_HEAD=$(git rev-parse HEAD)
 for commit in $(git rev-list --reverse "$1"); do
     if git rev-list -n 1 --pretty="%s" "$commit" | grep -q "^scripted-diff:"; then
         git checkout --quiet "$commit"^ || exit
-        SCRIPT="$(git rev-list --format=%b -n1 "$commit" | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d')"
+        SCRIPT="$(git rev-list --format=%b -n1 "$commit" | $SED '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d')"
         if test -z "$SCRIPT"; then
             echo "Error: missing script for: $commit"
             echo "Failed"
