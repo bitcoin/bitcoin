@@ -950,6 +950,8 @@ void getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount, CAmo
 bool AddAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &assetInfo, const uint32_t &nChangePosIn);
 
 bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool use_max_sig);
+
+bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
 } // namespace wallet
 
 #endif // SYSCOIN_WALLET_WALLET_H
