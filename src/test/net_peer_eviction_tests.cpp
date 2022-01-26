@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // Test protection of onion, localhost, and I2P peers...
 
     // Expect 1/4 onion peers to be protected from eviction,
-    // if no localhost or I2P peers.
+    // if no localhost, I2P, or CJDNS peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_is_local = false;
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 onion peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest m_connected), if no localhost or I2P peers.
+    // sorted by longest uptime (lowest m_connected), if no localhost, I2P or CJDNS peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 localhost peers to be protected from eviction,
-    // if no onion or I2P peers.
+    // if no onion, I2P, or CJDNS peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_is_local = (c.id == 1 || c.id == 9 || c.id == 11);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 localhost peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest m_connected), if no onion or I2P peers.
+    // sorted by longest uptime (lowest m_connected), if no onion, I2P, or CJDNS peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 I2P peers to be protected from eviction,
-    // if no onion or localhost peers.
+    // if no onion, localhost, or CJDNS peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_is_local = false;
@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         /*unprotected_peer_ids=*/{},
         random_context));
 
-    // Expect 1/4 I2P peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest m_connected), if no onion or localhost peers.
+    // Expect 1/4 I2P peers and 1/4 of the other peers to be protected, sorted
+    // by longest uptime (lowest m_connected), if no onion, localhost, or CJDNS peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
