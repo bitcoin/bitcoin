@@ -97,6 +97,49 @@ static RPCHelpMan validateaddress()
     };
 }
 
+static RPCHelpMan deriveaddressesfromprivkey()
+{
+    return RPCHelpMan{"deriveaddressesfromprivkey",
+        "\nDerives plausible addresses from a given private key.\n",
+        {
+            {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The WIF-encoded private key."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ_DYN, "", "",
+            {
+                {RPCResult::Type::STR, "addresstype", "The private key expressed using the given address type (e.g. p2pkh, p2sh-p2wpkh, etc)."},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("deriveaddressesfromprivkey", "cTsWy7DsaN2uKgVueRHcUKAP3mCNzX5r77GsiLWw9C9zapjiK8tQ") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("deriveaddressesfromprivkey", "\"cTsWy7DsaN2uKgVueRHcUKAP3mCNzX5r77GsiLWw9C9zapjiK8tQ\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::string secret = request.params[0].get_str();
+
+    CKey key = DecodeSecret(secret);
+    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
+    CPubKey pubkey = key.GetPubKey();
+    CHECK_NONFATAL(key.VerifyPubKey(pubkey));
+    UniValue rv(UniValue::VOBJ);
+
+    // derive addresses
+    PKHash keyid(pubkey);
+    rv.pushKV("p2pkh", EncodeDestination(CTxDestination(keyid)));
+    if (pubkey.IsCompressed()) {
+        CTxDestination segwit = WitnessV0KeyHash(keyid);
+        CTxDestination p2sh = ScriptHash(GetScriptForDestination(segwit));
+        rv.pushKV("segwit", EncodeDestination(segwit));
+        rv.pushKV("p2sh", EncodeDestination(p2sh));
+    }
+    return rv;
+},
+    };
+}
+
 static RPCHelpMan createmultisig()
 {
     return RPCHelpMan{"createmultisig",
@@ -815,7 +858,7 @@ static const CRPCCommand commands[] =
     { "util",               &verifymessage,           },
     { "util",               &signmessagewithprivkey,  },
     { "util",               &getindexinfo,            },
-
+    { "util",               &deriveaddressesfromprivkey, },
     /* Not shown in help */
     { "hidden",             &setmocktime,             },
     { "hidden",             &mockscheduler,           },
