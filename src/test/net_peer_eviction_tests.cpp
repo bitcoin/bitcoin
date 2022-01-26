@@ -158,6 +158,29 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         /*unprotected_peer_ids=*/{3, 5, 6, 7, 8, 11},
         random_context));
 
+    // Expect 1/4 CJDNS peers to be protected from eviction,
+    // if no onion, localhost, or I2P peers.
+    BOOST_CHECK(IsProtected(
+        num_peers, [](NodeEvictionCandidate& c) {
+            c.m_is_local = false;
+            c.m_network = (c.id == 2 || c.id == 7 || c.id == 10) ? NET_CJDNS : NET_IPV4;
+        },
+        /*protected_peer_ids=*/{2, 7, 10},
+        /*unprotected_peer_ids=*/{},
+        random_context));
+
+    // Expect 1/4 CJDNS peers and 1/4 of the other peers to be protected, sorted
+    // by longest uptime (lowest m_connected), if no onion, localhost, or I2P peers.
+    BOOST_CHECK(IsProtected(
+        num_peers, [](NodeEvictionCandidate& c) {
+            c.m_connected = std::chrono::seconds{c.id};
+            c.m_is_local = false;
+            c.m_network = (c.id == 4 || c.id > 8) ? NET_CJDNS : NET_IPV6;
+        },
+        /*protected_peer_ids=*/{0, 1, 2, 4, 9, 10},
+        /*unprotected_peer_ids=*/{3, 5, 6, 7, 8, 11},
+        random_context));
+
     // Tests with 2 networks...
 
     // Combined test: expect having 1 localhost and 1 onion peer out of 4 to
@@ -416,15 +439,15 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         /*unprotected_peer_ids=*/{6, 7, 8, 9, 10, 11, 16, 19, 20, 21, 22, 23},
         random_context));
 
-    // Combined test: expect having 8 localhost, 4 I2P, and 3 onion peers out of
-    // 24 to protect 2 of each (6 total), plus 6 others for 12/24 total, sorted
-    // by longest uptime.
+    // Combined test: expect having 8 localhost, 4 CJDNS, and 3 onion peers out
+    // of 24 to protect 2 of each (6 total), plus 6 others for 12/24 total,
+    // sorted by longest uptime.
     BOOST_CHECK(IsProtected(
         24, [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id > 15);
             if (c.id > 10 && c.id < 15) {
-                c.m_network = NET_I2P;
+                c.m_network = NET_CJDNS;
             } else if (c.id > 6 && c.id < 10) {
                 c.m_network = NET_ONION;
             } else {
