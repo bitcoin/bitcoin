@@ -12,7 +12,7 @@
 #include <primitives/transaction.h>
 
 #include <optional>
-#include <mutex>
+#include <functional>
 #include <vector>
 #include <stdint.h>
 
@@ -178,8 +178,10 @@ struct PrecomputedTransactionData
     //! Whether the bip341 fields above are initialized.
     bool m_bip341_taproot_ready = false;
 
-    //! Whether the bip119 fields above are initialized.
-    std::unique_ptr<std::once_flag> m_bip119_ctv_init;
+    //! Whether the bip119 fields above are initialized directly (nullptr)
+    //! or lazily (using sync primitves)
+    typedef std::function<void(std::function<void()>)> bip_119_cache_synchronizer_t;
+    bip_119_cache_synchronizer_t m_bip119_cache_synchronizer;
 
     //! Whether the bip143 fields above are initialized.
     bool m_bip143_segwit_ready = false;
@@ -187,7 +189,8 @@ struct PrecomputedTransactionData
     //! Whether m_spent_outputs is initialized.
     bool m_spent_outputs_ready = false;
 
-    PrecomputedTransactionData() : m_bip119_ctv_init(std::make_unique<std::once_flag>()) {};
+    PrecomputedTransactionData(bip_119_cache_synchronizer_t f) : m_bip119_cache_synchronizer(f) {};
+    PrecomputedTransactionData()= default;
 
     /** Initialize this PrecomputedTransactionData with transaction data.
      *
@@ -197,12 +200,14 @@ struct PrecomputedTransactionData
      *                             regardless of what is in the inputs (used at signing
      *                             time, when the inputs aren't filled in yet). */
     template <class T>
-    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs, bool force = false);
+    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs, bool force = false, bip_119_cache_synchronizer_t f = nullptr);
     template <class T>
     void BIP119LazyInit(const T& tx);
+    template <class T>
+    void BIP119EagerInit(const T& tx);
 
     template <class T>
-    explicit PrecomputedTransactionData(const T& tx);
+    explicit PrecomputedTransactionData(const T& tx, bip_119_cache_synchronizer_t f);
 };
 
 /* Standard Template Hash Declarations */

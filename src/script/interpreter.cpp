@@ -1486,8 +1486,10 @@ uint256 GetDefaultCheckTemplateVerifyHash(const TxType& tx, const uint256& outpu
 }
 
 template <class T>
-void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force)
+void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force, PrecomputedTransactionData::bip_119_cache_synchronizer_t f)
 {
+    // Do not allow overriding a sync function if one is already set
+    if (m_bip119_cache_synchronizer) assert(f == nullptr);
     assert(!m_spent_outputs_ready);
 
     m_spent_outputs = std::move(spent_outputs);
@@ -1535,36 +1537,60 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
         m_spent_scripts_single_hash = GetSpentScriptsSHA256(m_spent_outputs);
         m_bip341_taproot_ready = true;
     }
+
+    if (force) {
+        // Eagerly compute BIP119 state
+        BIP119EagerInit(txTo);
+        // Disable Lazy Sync Wrapper
+        m_bip119_cache_synchronizer = nullptr;
+    } else if (!m_bip119_cache_synchronizer) {
+        // If no function was provided, assume that we are single-threaded but
+        // still cache-on-first-use
+        auto single_threaded = [&](std::function<void()> f)
+        {
+            f();
+            // disables future calls from recomputing
+            m_bip119_cache_synchronizer = nullptr;
+        };
+        m_bip119_cache_synchronizer = single_threaded;
+    }
 }
 
+template <class T>
+void PrecomputedTransactionData::BIP119EagerInit(const T& txTo)
+{
+    if (!(m_bip143_segwit_ready || m_bip341_taproot_ready)) {
+        m_prevouts_single_hash = GetPrevoutsSHA256(txTo);
+        m_sequences_single_hash = GetSequencesSHA256(txTo);
+        m_outputs_single_hash = GetOutputsSHA256(txTo);
+    }
+    // 0 hash used to signal if we should skip scriptSigs
+    // when re-computing for different indexes.
+    m_scriptSigs_single_hash = NoScriptSigs(txTo) ? uint256{} : GetScriptSigsSHA256(txTo);
+}
 template <class T>
 void PrecomputedTransactionData::BIP119LazyInit(const T& txTo)
 {
-    std::call_once(*m_bip119_ctv_init, [&]() {
-        if (!(m_bip143_segwit_ready || m_bip341_taproot_ready)) {
-            m_prevouts_single_hash = GetPrevoutsSHA256(txTo);
-            m_sequences_single_hash = GetSequencesSHA256(txTo);
-            m_outputs_single_hash = GetOutputsSHA256(txTo);
-        }
-        // 0 hash used to signal if we should skip scriptSigs
-        // when re-computing for different indexes.
-        m_scriptSigs_single_hash = NoScriptSigs(txTo) ? uint256{} : GetScriptSigsSHA256(txTo);
-    });
+    if (m_bip119_cache_synchronizer) {
+        m_bip119_cache_synchronizer([&]() {
+            BIP119EagerInit(txTo);
+        });
+    }
 }
 
 template <class T>
-PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo) : m_bip119_ctv_init(std::make_unique<std::once_flag>())
+PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo, PrecomputedTransactionData::bip_119_cache_synchronizer_t f) : m_bip119_cache_synchronizer(f)
 {
     Init(txTo, {});
 }
 
 // explicit instantiation
-template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
-template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
+template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force, PrecomputedTransactionData::bip_119_cache_synchronizer_t f);
+template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force, PrecomputedTransactionData::bip_119_cache_synchronizer_t f);
 template void PrecomputedTransactionData::BIP119LazyInit(const CTransaction& txTo);
 template void PrecomputedTransactionData::BIP119LazyInit(const CMutableTransaction& txTo);
-template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
-template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
+template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo, PrecomputedTransactionData::bip_119_cache_synchronizer_t f);
+template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo, PrecomputedTransactionData::bip_119_cache_synchronizer_t f);
 
 const HashWriter HASHER_TAPSIGHASH{TaggedHash("TapSighash")};
 const HashWriter HASHER_TAPLEAF{TaggedHash("TapLeaf")};
