@@ -289,16 +289,16 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     BOOST_CHECK(IsProtected(
         4, [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
-            c.m_is_local = (c.id == 3);
-            if (c.id == 4) {
+            c.m_is_local = (c.id == 2);
+            if (c.id == 3) {
                 c.m_network = NET_I2P;
-            } else if (c.id == 2) {
+            } else if (c.id == 1) {
                 c.m_network = NET_ONION;
             } else {
                 c.m_network = NET_IPV6;
             }
         },
-        /*protected_peer_ids=*/{0, 4},
+        /*protected_peer_ids=*/{0, 3},
         /*unprotected_peer_ids=*/{1, 2},
         random_context));
 
