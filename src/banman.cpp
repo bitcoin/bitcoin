@@ -7,6 +7,7 @@
 
 #include <netaddress.h>
 #include <node/ui_interface.h>
+#include <sync.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -39,6 +40,9 @@ BanMan::~BanMan()
 
 void BanMan::DumpBanlist()
 {
+    static Mutex dump_mutex;
+    LOCK(dump_mutex);
+
     SweepBanned(); // clean unused entries (if bantime has expired)
 
     if (!BannedSetIsDirty()) return;
