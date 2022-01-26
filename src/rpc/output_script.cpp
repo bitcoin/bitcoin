@@ -245,9 +245,16 @@ static RPCHelpMan deriveaddresses()
             }
         },
         RPCExamples{
-            "First three native segwit receive addresses\n" +
+            "First three native segwit receive addresses:\n" +
             HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\" \"[0,2]\"") +
-            HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"")
+            HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"") +
+            "\nAll addresses from a given private key cPsQTSmMZ8e3AEUWGjS73f5R364yJxH6RxcgnwbHjbKbFPUP2Dtu:\n" +
+            "First, we derive the descriptor with the checksum included:\n" +
+            HelpExampleCli("getdescriptorinfo", "\"combo(cPsQTSmMZ8e3AEUWGjS73f5R364yJxH6RxcgnwbHjbKbFPUP2Dtu)\"") +
+            "{\n" +
+            "  \"descriptor\": \"combo(03c128164e8b88a2e80cb4d719b63ec9300d79ee3fe34100e7ef7d7a5b6b71d303)#v39lpemt\",\n" +
+            "  ...\n}\n" +
+            HelpExampleCli("deriveaddresses", "\"combo(03c128164e8b88a2e80cb4d719b63ec9300d79ee3fe34100e7ef7d7a5b6b71d303)#v39lpemt\"")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
