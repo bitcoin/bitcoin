@@ -149,15 +149,13 @@ class RawTransactionsTest(SyscoinTestFramework):
             gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
             assert_equal(gottx['txid'], tx)
             assert_equal(gottx['in_active_chain'], True)
-            if n == 0:
-                self.log.info("Test getrawtransaction with -txindex, without blockhash: 'in_active_chain' should be absent")
-                gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True)
-                assert_equal(gottx['txid'], tx)
-                # SYSCOIN
-                assert 'in_active_chain' in gottx
-            else:
-                self.log.info("Test getrawtransaction without -txindex, without blockhash: expect the call to raise")
-                assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txid=tx, verbose=True)
+  
+            self.log.info("Test getrawtransaction with -txindex, without blockhash: 'in_active_chain' should be absent")
+            gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True)
+            assert_equal(gottx['txid'], tx)
+            # SYSCOIN
+            assert 'in_active_chain' in gottx
+
             # We should not get the tx if we provide an unrelated block
             assert_raises_rpc_error(-5, "No such transaction found", self.nodes[n].getrawtransaction, txid=tx, blockhash=block2)
             # An invalid block hash should raise the correct errors
