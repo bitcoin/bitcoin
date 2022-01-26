@@ -457,6 +457,116 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         /*protected_peer_ids=*/{0, 1, 2, 3, 4, 5, 7, 8, 11, 12, 16, 17},
         /*unprotected_peer_ids=*/{6, 9, 10, 13, 14, 15, 18, 19, 20, 21, 22, 23},
         random_context));
+
+    // Tests with 4 networks...
+
+    // Combined test: expect having 1 CJDNS, 1 I2P, 1 localhost and 1 onion peer
+    // out of 5 to protect 1 CJDNS, 0 I2P, 0 localhost, 0 onion and 1 other peer
+    // (2 total), sorted by longest uptime; stable sort breaks tie with array
+    // order of CJDNS first.
+    BOOST_CHECK(IsProtected(
+        5, [](NodeEvictionCandidate& c) {
+            c.m_connected = std::chrono::seconds{c.id};
+            c.m_is_local = (c.id == 3);
+            if (c.id == 4) {
+                c.m_network = NET_CJDNS;
+            } else if (c.id == 1) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 2) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /* protected_peer_ids */ {0, 4},
+        /* unprotected_peer_ids */ {1, 2, 3},
+        random_context));
+
+    // Combined test: expect having 1 CJDNS, 1 I2P, 1 localhost and 1 onion peer
+    // out of 7 to protect 1 CJDNS, 0, I2P, 0 localhost, 0 onion and 2 other
+    // peers (3 total) sorted by longest uptime; stable sort breaks tie with
+    // array order of CJDNS first.
+    BOOST_CHECK(IsProtected(
+        7, [](NodeEvictionCandidate& c) {
+            c.m_connected = std::chrono::seconds{c.id};
+            c.m_is_local = (c.id == 4);
+            if (c.id == 6) {
+                c.m_network = NET_CJDNS;
+            } else if (c.id == 5) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 3) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV4;
+            }
+        },
+        /*protected_peer_ids=*/{0, 1, 6},
+        /*unprotected_peer_ids=*/{2, 3, 4, 5},
+        random_context));
+
+    // Combined test: expect having 1 CJDNS, 1 I2P, 1 localhost and 1 onion peer
+    // out of 8 to protect 1 CJDNS, 1 I2P, 0 localhost, 0 onion and 2 other
+    // peers (4 total) sorted by longest uptime; stable sort breaks tie with
+    // array order of CJDNS first.
+    BOOST_CHECK(IsProtected(
+        8, [](NodeEvictionCandidate& c) {
+            c.m_connected = std::chrono::seconds{c.id};
+            c.m_is_local = (c.id == 3);
+            if (c.id == 5) {
+                c.m_network = NET_CJDNS;
+            } else if (c.id == 6) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 3) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /*protected_peer_ids=*/{0, 1, 5, 6},
+        /*unprotected_peer_ids=*/{2, 3, 4, 7},
+        random_context));
+
+    // Combined test: expect having 2 CJDNS, 2 I2P, 4 localhost, and 2 onion
+    // peers out of 16 to protect 1 CJDNS, 1 I2P, 1 localhost, 1 onion (4/16
+    // total), plus 4 others for 8 total, sorted by longest uptime.
+    BOOST_CHECK(IsProtected(
+        16, [](NodeEvictionCandidate& c) {
+            c.m_connected = std::chrono::seconds{c.id};
+            c.m_is_local = (c.id > 5);
+            if (c.id == 11 || c.id == 15) {
+                c.m_network = NET_CJDNS;
+            } else if (c.id == 10 || c.id == 14) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 8 || c.id == 9) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV4;
+            }
+        },
+        /*protected_peer_ids=*/{0, 1, 2, 3, 6, 8, 10, 11},
+        /*unprotected_peer_ids=*/{4, 5, 7, 9, 12, 13, 14, 15},
+        random_context));
+
+    // Combined test: expect having 6 CJDNS, 1 I2P, 1 localhost, and 4 onion
+    // peers out of 24 to protect 2 CJDNS, 1 I2P, 1 localhost, and 2 onions (6
+    // total), plus 6 others for 12/24 total, sorted by longest uptime.
+    BOOST_CHECK(IsProtected(
+        24, [](NodeEvictionCandidate& c) {
+            c.m_connected = std::chrono::seconds{c.id};
+            c.m_is_local = (c.id == 13);
+            if (c.id > 17) {
+                c.m_network = NET_CJDNS;
+            } else if (c.id == 17) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 12 || c.id == 14 || c.id == 15 || c.id == 16) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /*protected_peer_ids=*/{0, 1, 2, 3, 4, 5, 12, 13, 14, 17, 18, 19},
+        /*unprotected_peer_ids=*/{6, 7, 8, 9, 10, 11, 15, 16, 20, 21, 22, 23},
+        random_context));
 }
 
 // Returns true if any of the node ids in node_ids are selected for eviction.
