@@ -694,3 +694,7 @@ kvrde7mcgjhz3xzeltwy4gs2rxdfbnbs2wc67mh2pt43wjmjnmbq.b32.i2p:0
 shh2ewyegnuwnmdse5kl5toybdvzkvk2yj4zcowz6iwhhh3ykdfa.b32.i2p:0
 wwbw7nqr3ahkqv62cuqfwgtneekvvpnuc4i4f6yo7tpoqjswvcwa.b32.i2p:0
 zsxwyo6qcn3chqzwxnseusqgsnuw3maqnztkiypyfxtya4snkoka.b32.i2p:0
+
+# manually added 2022-01 for minimal cjdns bootstrap support
+[fc32:17ea:e415:c3bf:9808:149d:b5a2:c9aa]:8333
+[fcc7:be49:ccd1:dc91:3125:f0da:457d:8ce]:8333
