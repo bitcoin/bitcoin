@@ -4681,10 +4681,31 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (m_chainman.m_best_header == nullptr) {
             m_chainman.m_best_header = m_chainman.ActiveChain().Tip();
         }
-        bool fFetch = state.fPreferredDownload || (m_num_preferred_download_peers == 0 && !pto->fClient && !pto->IsAddrFetchConn()); // Download if this is a nice peer, or we have no nice peers and this one might do.
+
+        // Determine whether we might try initial headers sync or parallel
+        // block download from this peer -- this mostly affects behavior while
+        // in IBD (once out of IBD, we sync from all peers).
+        bool sync_blocks_and_headers_from_peer = false;
+        if (state.fPreferredDownload) {
+            sync_blocks_and_headers_from_peer = true;
+        } else if (!pto->fClient && !pto->IsAddrFetchConn()) {
+            // Typically this is an inbound peer. If we don't have any outbound
+            // peers, or if we aren't downloading any blocks from such peers,
+            // then allow block downloads from this peer, too.
+            // We prefer downloading blocks from outbound peers to avoid
+            // putting undue load on (say) some home user who is just making
+            // outbound connections to the network, but if our only source of
+            // the latest blocks is from an inbound peer, we have to be sure to
+            // eventually download it (and not just wait indefinitely for an
+            // outbound peer to have it).
+            if (m_num_preferred_download_peers == 0 || mapBlocksInFlight.empty()) {
+                sync_blocks_and_headers_from_peer = true;
+            }
+        }
+
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && fFetch) || m_chainman.m_best_header->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
+            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 state.fSyncStarted = true;
                 state.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
                     (
@@ -5063,7 +5084,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (!pto->fClient && ((fFetch && !pto->m_limited_node) || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fClient && ((sync_blocks_and_headers_from_peer && !pto->m_limited_node) || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
