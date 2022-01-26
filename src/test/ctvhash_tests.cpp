@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ctvhash_from_data)
                 BOOST_ERROR("Bad test, couldn't deserialize hex_tx: " << strTest);
                 continue;
             }
-            PrecomputedTransactionData data{tx};
+            PrecomputedTransactionData data{tx, nullptr};
             data.BIP119LazyInit(tx);
             for (size_t i = 0; i < hash.size(); ++i) {
                 uint256 sh = GetDefaultCheckTemplateVerifyHash(tx, data.m_outputs_single_hash, data.m_sequences_single_hash, spend_index[i]);
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(ctvhash_from_data)
                         assert(0);
                     }
                 }
-                PrecomputedTransactionData data_txc{txc};
+                PrecomputedTransactionData data_txc{txc, nullptr};
                 data_txc.BIP119LazyInit(txc);
                 // iterate twice, one time with the correct spend indexes, one time with incorrect.
                 for (auto use_random_index = 0; use_random_index < 2; ++use_random_index) {
