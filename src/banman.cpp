@@ -49,11 +49,12 @@ void BanMan::DumpBanlist()
         SweepBanned();
         if (!BannedSetIsDirty()) return;
         banmap = m_banned;
+        SetBannedSetDirty(false);
     }
 
     int64_t n_start = GetTimeMillis();
-    if (m_ban_db.Write(banmap)) {
-        SetBannedSetDirty(false);
+    if (!m_ban_db.Write(banmap)) {
+        SetBannedSetDirty(true);
     }
 
     LogPrint(BCLog::NET, "Flushed %d banned node addresses/subnets to disk  %dms\n", banmap.size(),
