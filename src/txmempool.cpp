@@ -120,47 +120,91 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendan
                                       const std::set<uint256>& setExclude, std::set<uint256>& descendants_to_remove,
                                       uint64_t ancestor_size_limit, uint64_t ancestor_count_limit)
 {
-    CTxMemPoolEntry::Children stageEntries, descendants;
-    stageEntries = updateIt->GetMemPoolChildrenConst();
+    const CTxMemPoolEntry::Children& children = updateIt->GetMemPoolChildrenConst();
 
-    while (!stageEntries.empty()) {
-        const CTxMemPoolEntry& descendant = *stageEntries.begin();
-        descendants.insert(descendant);
-        stageEntries.erase(descendant);
-        const CTxMemPoolEntry::Children& children = descendant.GetMemPoolChildrenConst();
-        for (const CTxMemPoolEntry& childEntry : children) {
-            cacheMap::iterator cacheIt = cachedDescendants.find(mapTx.iterator_to(childEntry));
-            if (cacheIt != cachedDescendants.end()) {
-                // We've already calculated this one, just add the entries for this set
-                // but don't traverse again.
-                for (txiter cacheEntry : cacheIt->second) {
-                    descendants.insert(*cacheEntry);
+    // initialize to hold all direct children
+    // children guaranteed to be unique at this point
+    std::vector<txiter> descendants(children.size());
+    size_t i = 0;
+    for (const auto& child: children) {
+        descendants[i] = mapTx.iterator_to(child);
+        ++i;
+    }
+
+    {
+        WITH_FRESH_EPOCH(m_epoch);
+        // visit all children
+        for (auto& child : descendants) {
+            visited(child);
+        }
+        for (size_t i = 0, n_to_process = descendants.size(); i < n_to_process; ++i) {
+            const CTxMemPoolEntry& descendant = *descendants[i];
+            const CTxMemPoolEntry::Children& children = descendant.GetMemPoolChildrenConst();
+            for (const CTxMemPoolEntry& childEntry : children) {
+                cacheMap::iterator cacheIt = cachedDescendants.find(mapTx.iterator_to(childEntry));
+                if (cacheIt != cachedDescendants.end()) {
+                    // We've already calculated this one, just add the entries for this set
+                    // but don't traverse again.
+                    for (txiter cacheEntry : cacheIt->second) {
+                        // Add all to descendants which have not yet been added
+                        if (!visited(cacheEntry)) {
+                            descendants.emplace_back(cacheEntry);
+                            // skip self-swap because of buggy std::swap implementations
+                            // on some platforms
+                            if (!(descendants.size() == i+2)) {
+                                std::swap(descendants[i+1], descendants.back());
+                            }
+                            // skip processing this element
+                            ++i;
+                        }
+                    }
+                } else if (!visited(mapTx.iterator_to(childEntry))) {
+                    // Schedule for later processing
+                    descendants.emplace_back(mapTx.iterator_to(childEntry));
+                    ++n_to_process;
                 }
-            } else if (!descendants.count(childEntry)) {
-                // Schedule for later processing
-                stageEntries.insert(childEntry);
             }
         }
-    }
+    } // release epoch
+
+    // remove any descendants that are in setExclude
+    auto included_upto = std::remove_if(descendants.begin(), descendants.end(),
+            [&](txiter it) {
+                return setExclude.count(it->GetTx().GetHash());
+            });
+
+    // if none remain, we don't have to do any updating
+    if (included_upto == descendants.begin()) return;
+
     // descendants now contains all in-mempool descendants of updateIt.
     // Update and add to cached descendant map
     int64_t modifySize = 0;
     CAmount modifyFee = 0;
     int64_t modifyCount = 0;
-    for (const CTxMemPoolEntry& descendant : descendants) {
-        if (!setExclude.count(descendant.GetTx().GetHash())) {
-            modifySize += descendant.GetTxSize();
-            modifyFee += descendant.GetModifiedFee();
-            modifyCount++;
-            cachedDescendants[updateIt].insert(mapTx.iterator_to(descendant));
-            // Update ancestor state for each descendant
-            mapTx.modify(mapTx.iterator_to(descendant), update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
-            // Don't directly remove the transaction here -- doing so would
-            // invalidate iterators in cachedDescendants. Mark it for removal
-            // by inserting into descendants_to_remove.
-            if (descendant.GetCountWithAncestors() > ancestor_count_limit || descendant.GetSizeWithAncestors() > ancestor_size_limit) {
-                descendants_to_remove.insert(descendant.GetTx().GetHash());
-            }
+    // Note: the below contains code which does some hacks to keep memory tight.
+    // it could be improved in the future to detect if the vector is already tight
+    // and then directly move it to cachedDescendants. For simplicity, we just
+    // do a copy for now.
+
+    // emplace into a new vector to guarantee we trim memory
+    const auto& it = cachedDescendants.emplace(std::piecewise_construct,
+            std::forward_as_tuple(updateIt),
+            std::forward_as_tuple(descendants.begin(), included_upto));
+    // swap with descendants to release it early!
+    std::vector<txiter>().swap(descendants);
+
+    for (const auto& txit : it.first->second) {
+        const CTxMemPoolEntry& descendant = *txit;
+        modifySize += descendant.GetTxSize();
+        modifyFee += descendant.GetModifiedFee();
+        modifyCount++;
+        // Update ancestor state for each descendant
+        mapTx.modify(txit, update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
+        // Don't directly remove the transaction here -- doing so would
+        // invalidate iterators in cachedDescendants. Mark it for removal
+        // by inserting into descendants_to_remove.
+        if (descendant.GetCountWithAncestors() > ancestor_count_limit || descendant.GetSizeWithAncestors() > ancestor_size_limit) {
+            descendants_to_remove.insert(descendant.GetTx().GetHash());
         }
     }
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
