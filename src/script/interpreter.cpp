@@ -606,10 +606,13 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     // If the argument was not 32 bytes, treat as OP_NOP4:
                     switch (stack.back().size()) {
                         case 32:
-                            if (!checker.CheckDefaultCheckTemplateVerifyHash(stack.back())) {
+                        {
+                            const Span<const unsigned char> hash{stack.back()};
+                            if (!checker.CheckDefaultCheckTemplateVerifyHash(hash)) {
                                 return set_error(serror, SCRIPT_ERR_TEMPLATE_MISMATCH);
                             }
                             break;
+                        }
                         default:
                             // future upgrade can add semantics for this opcode with different length args
                             // so discourage use when applicable
@@ -1870,7 +1873,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::CheckDefaultCheckTemplateVerifyHash(const std::vector<unsigned char>& hash) const
+bool GenericTransactionSignatureChecker<T>::CheckDefaultCheckTemplateVerifyHash(const Span<const unsigned char>& hash) const
 {
     // Should already be checked before calling...
     assert(hash.size() == 32);
