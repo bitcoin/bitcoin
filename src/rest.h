@@ -7,13 +7,13 @@
 
 #include <string>
 
-enum class RetFormat {
+enum class RESTResponseFormat {
     UNDEF,
     BINARY,
     HEX,
     JSON,
 };
 
-RetFormat ParseDataFormat(std::string& param, const std::string& strReq);
+RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq);
 
 #endif // BITCOIN_REST_H
