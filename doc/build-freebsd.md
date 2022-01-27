@@ -4,6 +4,8 @@
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.
 
+bitcoind or bitcoin-daemon is a Bitcoin client under the MIT license in 32-bit and 64-bit versions.
+
 ## Dependencies
 
 The following dependencies are **required**:
@@ -70,6 +72,7 @@ pkg install sqlite3
 ---
 
 #### GUI Dependencies
+
 ###### Qt5
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install `qt5`. Skip if you don't intend to use the GUI.
@@ -121,7 +124,8 @@ This explicitly enables the GUI and disables legacy wallet support. If `qt5` is 
 ```
 
 ### 2. Compile
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
+
+**:warning: Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 ```bash
 gmake # use "-j N" for N parallel jobs
