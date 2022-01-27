@@ -158,7 +158,7 @@ void PSBTOperationsDialog::saveTransaction() {
     if (filename.isEmpty()) {
         return;
     }
-    std::ofstream out(filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary);
+    fsbridge::ofstream out{filename.toLocal8Bit().data(), fsbridge::ofstream::out | fsbridge::ofstream::binary};
     out << ssTx.str();
     out.close();
     showStatus(tr("PSBT saved to disk."), StatusLevel::INFO);
