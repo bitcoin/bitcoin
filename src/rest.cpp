@@ -194,15 +194,25 @@ static bool rest_headers(const std::any& context,
     std::vector<std::string> path;
     boost::split(path, param, boost::is_any_of("/"));
 
-    if (path.size() != 2)
-        return RESTERR(req, HTTP_BAD_REQUEST, "No header count specified. Use /rest/headers/<count>/<hash>.<ext>.");
-
-    const auto parsed_count{ToIntegral<size_t>(path[0])};
-    if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, path[0]));
+    std::string raw_count;
+    std::string hashStr;
+    if (path.size() == 2) {
+        // deprecated path: /rest/headers/<count>/<hash>
+        hashStr = path[1];
+        raw_count = path[0];
+    } else if (path.size() == 1) {
+        // new path with query parameter: /rest/headers/<hash>?count=<count>
+        hashStr = path[0];
+        raw_count = req->GetQueryParameter("count").value_or("5");
+    } else {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>.<ext>?count=<count>");
     }
 
-    std::string hashStr = path[1];
+    const auto parsed_count{ToIntegral<size_t>(raw_count)};
+    if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, raw_count));
+    }
+
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
@@ -354,13 +364,28 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 
     std::vector<std::string> uri_parts;
     boost::split(uri_parts, param, boost::is_any_of("/"));
-    if (uri_parts.size() != 3) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype>/<count>/<blockhash>");
+    std::string raw_count;
+    std::string raw_blockhash;
+    if (uri_parts.size() == 3) {
+        // deprecated path: /rest/blockfilterheaders/<filtertype>/<count>/<blockhash>
+        raw_blockhash = uri_parts[2];
+        raw_count = uri_parts[1];
+    } else if (uri_parts.size() == 2) {
+        // new path with query parameter: /rest/blockfilterheaders/<filtertype>/<blockhash>?count=<count>
+        raw_blockhash = uri_parts[1];
+        raw_count = req->GetQueryParameter("count").value_or("5");
+    } else {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype>/<blockhash>.<ext>?count=<count>");
+    }
+
+    const auto parsed_count{ToIntegral<size_t>(raw_count)};
+    if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, raw_count));
     }
 
     uint256 block_hash;
-    if (!ParseHashStr(uri_parts[2], block_hash)) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + uri_parts[2]);
+    if (!ParseHashStr(raw_blockhash, block_hash)) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + raw_blockhash);
     }
 
     BlockFilterType filtertype;
@@ -371,11 +396,6 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
     if (!index) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + uri_parts[0]);
-    }
-
-    const auto parsed_count{ToIntegral<size_t>(uri_parts[1])};
-    if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, uri_parts[1]));
     }
 
     std::vector<const CBlockIndex*> headers;
