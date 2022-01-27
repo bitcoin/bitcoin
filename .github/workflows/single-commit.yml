@@ -9,7 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      INITIAL_COMMIT: 8830cb58abc888144a1edb9b2fba427716cc45d8
+      # initial commit in BTC repo:
+      # INITIAL_COMMIT: 8830cb58abc888144a1edb9b2fba427716cc45d8
+      # maps to this commit in BTCSQ repo:
+      INITIAL_COMMIT: 5e3c897c44ec30510c7e0ab2248d5995b8422826
     steps:
       - uses: actions/checkout@v1
       - name: Configure GIT
