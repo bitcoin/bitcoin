@@ -478,9 +478,9 @@ public:
     const std::string strUnableToLocateCoinJoin1 = "Unable to locate enough non-denominated funds for this transaction.";
     const std::string strUnableToLocateCoinJoin2 = "Unable to locate enough mixed funds for this transaction. CoinJoin uses exact denominated amounts to send funds, you might simply need to mix some more coins.";
     const std::string strTransactionTooLarge = "Transaction too large";
-    const std::string strTransactionTooLargeForFeePolicy = "Transaction too large for fee policy";
     const std::string strChangeIndexOutOfRange = "Change index out of range";
     const std::string strExceededMaxTries = "Exceeded max tries.";
+    const std::string strMaxFeeExceeded = "Fee exceeds maximum configured by -maxtxfee";
 
     CreateTransactionTestSetup()
     {
@@ -886,13 +886,9 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
         createOutputEntries(2935);
         BOOST_CHECK(CreateTransaction(vecOutputEntries, strTransactionTooLarge, false));
 
-        auto prevRate = minRelayTxFee;
-        coinControl.m_feerate = prevRate;
-        coinControl.fOverrideFeeRate = true;
-        minRelayTxFee = CFeeRate(prevRate.GetFeePerK() * 10);
-        BOOST_CHECK(CreateTransaction({{5000, false}}, strTransactionTooLargeForFeePolicy, false));
-        coinControl.m_feerate.reset();
-        minRelayTxFee = prevRate;
+        wallet->m_default_max_tx_fee = 0;
+        BOOST_CHECK(CreateTransaction({{5000, false}}, strMaxFeeExceeded, false));
+        wallet->m_default_max_tx_fee = DEFAULT_TRANSACTION_MAXFEE;
 
         BOOST_CHECK(CreateTransaction({{5000, false}, {5000, false}, {5000, false}}, strChangeIndexOutOfRange, 4, false));
     }
