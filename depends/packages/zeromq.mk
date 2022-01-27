@@ -6,7 +6,8 @@ $(package)_sha256_hash=c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336
 $(package)_patches=remove_libstd_link.patch netbsd_kevent_void.patch
 
 define $(package)_set_vars
-  $(package)_config_opts=--without-docs --disable-shared --disable-curve --disable-curve-keygen --disable-perf
+  $(package)_config_opts = --without-docs --disable-shared --disable-valgrind
+  $(package)_config_opts += --disable-perf --disable-curve-keygen --disable-curve --disable-libbsd
   $(package)_config_opts += --without-libsodium --without-libgssapi_krb5 --without-pgm --without-norm --without-vmci
   $(package)_config_opts += --disable-libunwind --disable-radix-tree --without-gcov --disable-dependency-tracking
   $(package)_config_opts += --disable-Werror --disable-drafts --enable-option-checking
