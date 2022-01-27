@@ -78,11 +78,11 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
-    sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
+    sudo apt install libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
 SQLite is required for the descriptor wallet:
 
@@ -101,7 +101,7 @@ Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default
 
 ZMQ dependencies (provides ZMQ API):
 
-    sudo apt-get install libzmq3-dev
+    sudo apt install libzmq3-dev
 
 User-Space, Statically Defined Tracing (USDT) dependencies:
 
@@ -115,7 +115,7 @@ To build without GUI pass `--without-gui`.
 
 To build with Qt 5 you need the following:
 
-    sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+    sudo apt install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
 
 Additionally, to support Wayland protocol for modern desktop environments:
 
@@ -123,7 +123,7 @@ Additionally, to support Wayland protocol for modern desktop environments:
 
 libqrencode (optional) can be installed with:
 
-    sudo apt-get install libqrencode-dev
+    sudo apt install libqrencode-dev
 
 Once these are installed, they will be found by configure and a bitcoin-qt executable will be
 built by default.
@@ -326,7 +326,7 @@ installing the toolchain will be different.
 Make sure you install the build requirements mentioned above.
 Then, install the toolchain and curl:
 
-    sudo apt-get install g++-arm-linux-gnueabihf curl
+    sudo apt install g++-arm-linux-gnueabihf curl
 
 To build executables for ARM:
 
