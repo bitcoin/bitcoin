@@ -2,9 +2,11 @@
 
 **Updated for MacOS [11.2](https://www.apple.com/macos/big-sur/)**
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on macOS
+This guide describes how to build bitcoind, command-line utilities, and GUI on macOS.
 
-**Note:** The following is for Intel Macs only!
+bitcoind or bitcoin-daemon is a Bitcoin client under the MIT license in 32-bit and 64-bit versions.
+
+**:warning: Important:** The following is for Intel Macs only!
 
 ## Dependencies
 
@@ -103,7 +105,7 @@ To enable legacy wallets, you must install `berkeley-db@4`.
 To enable [descriptor wallets](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md), `sqlite` is required.
 Skip `berkeley-db@4` if you intend to *exclusively* use descriptor wallets.
 
-###### Legacy Wallet Support
+##### Legacy Wallet Support
 
 `berkeley-db@4` is required to enable support for legacy wallets.
 Skip if you don't intend to use legacy wallets.
@@ -112,7 +114,7 @@ Skip if you don't intend to use legacy wallets.
 brew install berkeley-db@4
 ```
 
-###### Descriptor Wallet Support
+##### Descriptor Wallet Support
 
 Note: Apple has included a useable `sqlite` package since macOS 10.14.
 You may not need to install this package.
@@ -127,7 +129,7 @@ brew install sqlite
 
 #### GUI Dependencies
 
-###### Qt
+##### Qt
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework.
 To compile the GUI, we need to install `qt@5`.
@@ -148,7 +150,7 @@ brew uninstall qt
 Note: Building with Qt binaries downloaded from the Qt website is not officially supported.
 See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).
 
-###### qrencode
+##### qrencode
 
 The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install `qrencode`.
 Skip if not using the GUI or don't want QR code functionality.
@@ -160,7 +162,7 @@ brew install qrencode
 
 #### Port Mapping Dependencies
 
-###### miniupnpc
+##### miniupnpc
 
 miniupnpc may be used for UPnP port mapping.
 Skip if you do not need this functionality.
@@ -169,7 +171,7 @@ Skip if you do not need this functionality.
 brew install miniupnpc
 ```
 
-###### libnatpmp
+##### libnatpmp
 
 libnatpmp may be used for NAT-PMP port mapping.
 Skip if you do not need this functionality.
@@ -227,7 +229,7 @@ pip3 install ds_store mac_alias
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
-##### Wallet (BDB + SQlite) Support, No GUI:
+#### Wallet (BDB + SQlite) Support, No GUI:
 
 If `berkeley-db@4` is installed, then legacy wallet support will be built.
 If `berkeley-db@4` is not installed, then this will throw an error.
@@ -239,7 +241,7 @@ Additionally, this explicitly disables the GUI.
 ./configure --with-gui=no
 ```
 
-##### Wallet (only SQlite) and GUI Support:
+#### Wallet (only SQlite) and GUI Support:
 
 This explicitly enables the GUI and disables legacy wallet support.
 If `qt` is not installed, this will throw an error.
@@ -251,14 +253,14 @@ If `sqlite` is not installed, then wallet functionality will be disabled.
 ./configure --without-bdb --with-gui=yes
 ```
 
-##### No Wallet or GUI
+#### No Wallet or GUI
 
 ``` bash
 ./autogen.sh
 ./configure --without-wallet --with-gui=no
 ```
 
-##### Further Configuration
+#### Further Configuration
 
 You may want to dig deeper into the configuration options to achieve your desired behavior.
 Examine the output of the following command for a full list of configuration options:
