@@ -21,15 +21,18 @@ FUZZ_TARGET(chain)
 
     const uint256 zero{};
     disk_block_index->phashBlock = &zero;
-    (void)disk_block_index->GetBlockHash();
-    (void)disk_block_index->GetBlockPos();
-    (void)disk_block_index->GetBlockTime();
-    (void)disk_block_index->GetBlockTimeMax();
-    (void)disk_block_index->GetMedianTimePast();
-    (void)disk_block_index->GetUndoPos();
-    (void)disk_block_index->HaveTxsDownloaded();
-    (void)disk_block_index->IsValid();
-    (void)disk_block_index->ToString();
+    {
+        LOCK(::cs_main);
+        (void)disk_block_index->GetBlockHash();
+        (void)disk_block_index->GetBlockPos();
+        (void)disk_block_index->GetBlockTime();
+        (void)disk_block_index->GetBlockTimeMax();
+        (void)disk_block_index->GetMedianTimePast();
+        (void)disk_block_index->GetUndoPos();
+        (void)disk_block_index->HaveTxsDownloaded();
+        (void)disk_block_index->IsValid();
+        (void)disk_block_index->ToString();
+    }
 
     const CBlockHeader block_header = disk_block_index->GetBlockHeader();
     (void)CDiskBlockIndex{*disk_block_index};
@@ -55,7 +58,7 @@ FUZZ_TARGET(chain)
         if (block_status & ~BLOCK_VALID_MASK) {
             continue;
         }
-        (void)disk_block_index->RaiseValidity(block_status);
+        WITH_LOCK(::cs_main, (void)disk_block_index->RaiseValidity(block_status));
     }
 
     CBlockIndex block_index{block_header};
