@@ -1,11 +1,11 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcoin Core in Unix.
+Some notes on how to build Bitcoin Core on Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
 Note
----------------------
+---
 Always use absolute paths to configure and compile Bitcoin Core and the dependencies.
 For example, when specifying the path of the dependency:
 
@@ -14,8 +14,8 @@ For example, when specifying the path of the dependency:
 Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
 
-To Build
----------------------
+To build
+---
 
 ```bash
 ./autogen.sh
@@ -27,7 +27,7 @@ make install # optional
 This will build bitcoin-qt as well, if the dependencies are met.
 
 Dependencies
----------------------
+---
 
 These dependencies are required:
 
@@ -52,7 +52,7 @@ Optional dependencies:
 For the versions used, see [dependencies.md](dependencies.md)
 
 Memory Requirements
---------------------
+---
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
 memory available when compiling Bitcoin Core. On systems with less, gcc can be
@@ -190,12 +190,12 @@ Once these are installed, they will be found by configure and a bitcoin-qt execu
 built by default.
 
 Notes
------
+---
 The release is built with GCC and then "strip bitcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 miniupnpc
----------
+---
 
 [miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
 https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
@@ -206,7 +206,7 @@ turned off by default.  See the configure options for UPnP behavior desired:
     --enable-upnp-default    UPnP support turned on by default at runtime
 
 libnatpmp
----------
+---
 
 [libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
 from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
@@ -217,7 +217,7 @@ turned off by default. See the configure options for NAT-PMP behavior desired:
     --enable-natpmp-default   NAT-PMP support turned on by default at runtime
 
 Berkeley DB
------------
+---
 
 The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
 recommended to use Berkeley DB 4.8. If you have to build it yourself, you can
@@ -281,7 +281,7 @@ Hardening enables the following features:
     The STK RW- means that the stack is readable and writeable but not executable.
 
 Disable-wallet mode
---------------------
+---
 When the intention is to run only a P2P node without a wallet, Bitcoin Core may be compiled in
 disable-wallet mode with:
 
@@ -292,14 +292,14 @@ In this case there is no dependency on Berkeley DB 4.8 and SQLite.
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 
 Additional Configure Flags
---------------------------
+---
 A list of additional configure flags can be displayed with:
 
     ./configure --help
 
 
 Setup and Build Example: Arch Linux
------------------------------------
+---
 This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
 
     pacman -S git base-devel boost libevent python
@@ -318,7 +318,7 @@ node software is desired, Berkeley DB 4.8 must be used.
 
 
 ARM Cross-compilation
--------------------
+---
 These steps can be performed on, for example, an Ubuntu VM. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
