@@ -9,7 +9,7 @@ The options known to work for building Bitcoin Core on Windows are:
 * On Windows, using [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and Mingw-w64.
 * On Windows, using [Microsoft Visual Studio](https://www.visualstudio.com). See [README.md](/build_msvc/README.md).
 
-Other options which may work, but which have not been extensively tested are (please contribute instructions):
+Other options which may work, but which have not been extensively tested are (we open for anyone who want to contribute for the instructions):
 
 * On Windows, using a POSIX compatibility layer application such as [cygwin](https://www.cygwin.com/) or [msys2](https://www.msys2.org/).
 
@@ -76,12 +76,12 @@ Build using:
 
 ## Depends system
 
-For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
+For further documentation on the depends system, see [README.md](../depends/README.md) in the depends directory.
 
 Installation
 -------------
 
-After building using the Windows subsystem it can be useful to copy the compiled
+After building using the Windows subsystem for Linux, it can be useful to copy the compiled
 executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
