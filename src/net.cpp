@@ -3091,11 +3091,11 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
     CAutoFile f(fsbridge::fopen(path, "ab"), SER_DISK, CLIENT_VERSION);
 
     ser_writedata64(f, now.count());
-    f.write(msg_type.data(), msg_type.length());
+    f.write(MakeByteSpan(msg_type));
     for (auto i = msg_type.length(); i < CMessageHeader::COMMAND_SIZE; ++i) {
         f << uint8_t{'\0'};
     }
     uint32_t size = data.size();
     ser_writedata32(f, size);
-    f.write((const char*)data.data(), data.size());
+    f.write(AsBytes(data));
 }
