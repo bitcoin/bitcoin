@@ -10,7 +10,7 @@ diff --git a/configure.ac b/configure.ac
 index 1a571291..402f8b86 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -308,6 +308,27 @@ case "${host_os}" in
+@@ -307,6 +307,27 @@ case "${host_os}" in
          if test "x$libzmq_netbsd_has_atomic" = "xno"; then
              AC_DEFINE(ZMQ_FORCE_MUTEXES, 1, [Force to use mutexes])
          fi
