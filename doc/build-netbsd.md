@@ -4,9 +4,11 @@ NetBSD build guide
 
 This guide describes how to build bitcoind and command-line utilities on NetBSD.
 
+bitcoind or bitcoin-daemon is a Bitcoin client under the MIT license in 32-bit and 64-bit versions.
+
 This guide does not contain instructions for building the GUI.
 
-Preparation
+Preparations
 -------------
 
 You will need the following modules, which can be installed via pkgsrc or pkgin:
@@ -27,7 +29,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-### Building BerkeleyDB
+### Building the BerkeleyDB
 
 BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 `--disable-wallet` to `./configure` and skip to the next section.
@@ -47,9 +49,9 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building Bitcoin Core
+### Building the Bitcoin Core
 
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
+**:warning: Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 With wallet:
 ```bash
