@@ -4,10 +4,10 @@
 
 #include <bench/bench.h>
 
+#include <fs.h>
 #include <test/util/setup_common.h>
 
 #include <chrono>
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -29,7 +29,7 @@ void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& bench
         // nothing to write, bail out
         return;
     }
-    std::ofstream fout(filename);
+    fsbridge::ofstream fout{fs::PathFromString(filename)};
     if (fout.is_open()) {
         ankerl::nanobench::render(tpl, benchmarkResults, fout);
     } else {
