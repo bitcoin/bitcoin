@@ -921,16 +921,11 @@ if test "$use_hardening" != "no"; then
   dnl Use CHECK_LINK_FLAG & --fatal-warnings to ensure we won't use the flag in this case.
   AX_CHECK_LINK_FLAG([-fcf-protection=full], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"], [], [$LDFLAG_WERROR])
 
-  case $host in
-    *mingw*)
-      dnl stack-clash-protection doesn't currently work, and likely should just be skipped for Windows.
-      dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
-      ;;
-    *)
-      AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-clash-protection"], [], [$CXXFLAG_WERROR])
-      ;;
-  esac
-
+  dnl stack-clash-protection doesn't currently work, and likely should just be skipped for Windows.
+  dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+  AS_CASE([$host], [*mingw*], [], [
+    AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-clash-protection"], [], [$CXXFLAG_WERROR])
+  ])
 
   dnl When enable_debug is yes, all optimizations are disabled.
   dnl However, FORTIFY_SOURCE requires that there is some level of optimization, otherwise it does nothing and just creates a compiler warning.
@@ -953,11 +948,9 @@ if test "$use_hardening" != "no"; then
   AX_CHECK_LINK_FLAG([-Wl,-z,separate-code], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,separate-code"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-fPIE -pie], [PIE_FLAGS="-fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"], [], [$CXXFLAG_WERROR])
 
-  case $host in
-    *mingw*)
-       AC_CHECK_LIB([ssp], [main], [], [AC_MSG_ERROR([libssp missing])])
-    ;;
-  esac
+  AS_CASE([$host], [*mingw*], [
+    AC_CHECK_LIB([ssp], [main], [], [AC_MSG_ERROR([libssp missing])])
+  ])
 fi
 
 dnl These flags are specific to ld64, and may cause issues with other linkers.
@@ -1577,11 +1570,7 @@ fi
 
 if test "$use_zmq" = "yes"; then
   dnl Assume libzmq was built for static linking
-  case $host in
-    *mingw*)
-      ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"
-    ;;
-  esac
+  AS_CASE([$host], [*mingw*], [ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"])
 fi
 
 dnl libmultiprocess library check
