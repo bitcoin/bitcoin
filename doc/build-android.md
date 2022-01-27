@@ -1,7 +1,7 @@
 ANDROID BUILD NOTES
 ======================
 
-This guide describes how to build and package the `bitcoin-qt` GUI for Android on Linux and macOS.
+This guide describes how to build and packaging the `bitcoin-qt` GUI for Android on Linux and macOS.
 
 
 ## Dependencies
@@ -10,7 +10,7 @@ Before proceeding with an Android build one needs to get the [Android SDK](https
 
 The minimum supported Android NDK version is [r23](https://github.com/android/ndk/wiki/Changelog-r23).
 
-In order to build `ANDROID_API_LEVEL` (API level corresponding to the Android version targeted, e.g. Android 9.0 Pie is 28 and its "Platform package" needs to be available) and `ANDROID_TOOLCHAIN_BIN` (path to toolchain binaries depending on the platform the build is being performed on) need to be set.
+In order to build `ANDROID_API_LEVEL` (API level corresponding to the Android version targeted, e.g. Android 9.0 Pie is 28 and it's "Platform Package" needs to be available) and `ANDROID_TOOLCHAIN_BIN` (path to toolchain binaries depending on the platform the build is being performed on) need to be set.
 
 API levels from 24 to 29 have been tested to work.
 
@@ -22,4 +22,4 @@ This is an example command for a default build with no disabled dependencies:
 
 ## Building and packaging
 
-After the depends are built configure with one of the resulting prefixes and run `make && make apk` in `src/qt`.
+After the depends are built, configure with one of the resulting prefixes and run `make && make apk` in `src/qt`.
