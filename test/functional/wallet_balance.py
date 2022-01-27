@@ -195,7 +195,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
 
         # Now confirm tx_orig
-        self.restart_node(1, ['-persistmempool=0'])
+        self.restart_node(1, ['-persistmempool=0', '-checklevel=0'])
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 0)
         sync_blocks(self.nodes)
