@@ -399,7 +399,7 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
 
 bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data, std::string& error)
 {
-    CDataStream ss_data(MakeUCharSpan(tx_data), SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ss_data(MakeByteSpan(tx_data), SER_NETWORK, PROTOCOL_VERSION);
     try {
         ss_data >> psbt;
         if (!ss_data.empty()) {

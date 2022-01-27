@@ -328,7 +328,6 @@ void WriteToStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) noe
             CallOneOf(
                 fuzzed_data_provider,
                 WRITE_TO_STREAM_CASE(bool, fuzzed_data_provider.ConsumeBool()),
-                WRITE_TO_STREAM_CASE(char, fuzzed_data_provider.ConsumeIntegral<char>()),
                 WRITE_TO_STREAM_CASE(int8_t, fuzzed_data_provider.ConsumeIntegral<int8_t>()),
                 WRITE_TO_STREAM_CASE(uint8_t, fuzzed_data_provider.ConsumeIntegral<uint8_t>()),
                 WRITE_TO_STREAM_CASE(int16_t, fuzzed_data_provider.ConsumeIntegral<int16_t>()),
@@ -338,7 +337,7 @@ void WriteToStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) noe
                 WRITE_TO_STREAM_CASE(int64_t, fuzzed_data_provider.ConsumeIntegral<int64_t>()),
                 WRITE_TO_STREAM_CASE(uint64_t, fuzzed_data_provider.ConsumeIntegral<uint64_t>()),
                 WRITE_TO_STREAM_CASE(std::string, fuzzed_data_provider.ConsumeRandomLengthString(32)),
-                WRITE_TO_STREAM_CASE(std::vector<char>, ConsumeRandomLengthIntegralVector<char>(fuzzed_data_provider)));
+                WRITE_TO_STREAM_CASE(std::vector<uint8_t>, ConsumeRandomLengthIntegralVector<uint8_t>(fuzzed_data_provider)));
         } catch (const std::ios_base::failure&) {
             break;
         }
@@ -358,7 +357,6 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
             CallOneOf(
                 fuzzed_data_provider,
                 READ_FROM_STREAM_CASE(bool),
-                READ_FROM_STREAM_CASE(char),
                 READ_FROM_STREAM_CASE(int8_t),
                 READ_FROM_STREAM_CASE(uint8_t),
                 READ_FROM_STREAM_CASE(int16_t),
@@ -368,7 +366,7 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
                 READ_FROM_STREAM_CASE(int64_t),
                 READ_FROM_STREAM_CASE(uint64_t),
                 READ_FROM_STREAM_CASE(std::string),
-                READ_FROM_STREAM_CASE(std::vector<char>));
+                READ_FROM_STREAM_CASE(std::vector<uint8_t>));
         } catch (const std::ios_base::failure&) {
             break;
         }
