@@ -4,7 +4,9 @@ OpenBSD build guide
 
 This guide describes how to build bitcoind, bitcoin-qt, and command-line utilities on OpenBSD.
 
-Preparation
+bitcoind or bitcoin-daemon is a Bitcoin client under the MIT license in 32-bit and 64-bit versions.
+
+Preparations
 -------------
 
 Run the following as root to install the base dependencies for building:
@@ -22,13 +24,13 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-**Important**: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is
+**:warning: Important**: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is
 part of the base image, and while building it is necessary to make sure that
 this compiler is used and not ancient g++ 4.2.1. This is done by appending
 `CC=cc CXX=c++` to configuration commands. Mixing different compilers within
 the same executable will result in errors.
 
-### Building BerkeleyDB
+### Building the BerkeleyDB
 
 BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 `--disable-wallet` to `./configure` and skip to the next section.
@@ -48,13 +50,12 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building Bitcoin Core
+### Building the Bitcoin Core
 
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
+**:warning: Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 Preparation:
 ```bash
-
 # Replace this with the autoconf version that you installed. Include only
 # the major and minor parts of the version: use "2.69" for "autoconf-2.69p2".
 export AUTOCONF_VERSION=2.69
