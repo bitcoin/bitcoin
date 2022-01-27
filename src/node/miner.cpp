@@ -246,8 +246,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     pblock->vtx[0] = MakeTransactionRef(coinbaseTx);
     // SYSCOIN
-    pblocktemplate->vchCoinbaseCommitmentExtra = std::vector<unsigned char>(ds.begin(), ds.end());
-    pblocktemplate->vchCoinbaseCommitmentExtra.insert( pblocktemplate->vchCoinbaseCommitmentExtra.end(), dsNEVM.begin(), dsNEVM.end() );
+    const auto bytesVec = MakeUCharSpan(ds);
+    pblocktemplate->vchCoinbaseCommitmentExtra = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
+    const auto bytesVecNEVM = MakeUCharSpan(dsNEVM);
+    pblocktemplate->vchCoinbaseCommitmentExtra.insert( pblocktemplate->vchCoinbaseCommitmentExtra.end(), bytesVecNEVM.begin(), bytesVecNEVM.end() );
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus(), pblocktemplate->vchCoinbaseCommitmentExtra);
     // add coinbase payload if not witness commitment which would append it after witness data, in this case we can assume no witness commitment
     if(pblocktemplate->vchCoinbaseCommitment.empty() && !pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {

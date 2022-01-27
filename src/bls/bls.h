@@ -161,13 +161,13 @@ public:
     template <typename Stream>
     inline void Serialize(Stream& s) const
     {
-        s.write((const char*)ToByteVector().data(), SerSize);
+        s.write(MakeByteSpan(ToByteVector()));
     }
     template <typename Stream>
     inline void Unserialize(Stream& s, bool checkMalleable = true)
     {
         std::vector<uint8_t> vecBytes(SerSize, 0);
-        s.read((char*)vecBytes.data(), SerSize);
+        s.read(MakeWritableByteSpan(vecBytes));
         SetByteVector(vecBytes);
 
         if (checkMalleable && !CheckMalleable(vecBytes)) {
@@ -360,14 +360,14 @@ public:
             bufValid = true;
             hash.SetNull();
         }
-        s.write((const char*)vecBytes.data(), vecBytes.size());
+        s.write(MakeByteSpan(vecBytes));
     }
 
     template<typename Stream>
     inline void Unserialize(Stream& s)
     {
         std::unique_lock<std::mutex> l(mutex);
-        s.read((char*)vecBytes.data(), BLSObject::SerSize);
+        s.read(AsWritableBytes(Span{vecBytes.data(), BLSObject::SerSize}));
         bufValid = true;
         objInitialized = false;
         hash.SetNull();

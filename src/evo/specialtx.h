@@ -55,7 +55,8 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << payload;
     CScript scriptData;
-    scriptData << OP_RETURN << std::vector<unsigned char>(ds.begin(), ds.end());
+    const auto bytesVec = MakeUCharSpan(ds);
+    scriptData << OP_RETURN << std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
     // if opreturn exists update payload
 	if (GetSyscoinData(CTransaction(tx), vchData, nOut))
         tx.vout[nOut].scriptPubKey = scriptData;

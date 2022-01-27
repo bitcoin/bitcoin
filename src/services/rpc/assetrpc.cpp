@@ -683,8 +683,9 @@ static RPCHelpMan syscoingetspvproof()
     const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     res.__pushKV("transaction",rawTx);
     res.__pushKV("blockhash", hashBlock.GetHex());
+    const auto bytesVec = MakeUCharSpan(ssBlock);
     // get first 80 bytes of header (non auxpow part)
-    res.__pushKV("header", HexStr(std::vector<unsigned char>(ssBlock.begin(), ssBlock.begin()+80)));
+    res.__pushKV("header", HexStr(std::vector<unsigned char>(bytesVec.begin(), bytesVec.begin()+80)));
     UniValue siblings(UniValue::VARR);
     // store the index of the transaction we are looking for within the block
     int nIndex = 0;

@@ -741,22 +741,26 @@ bool CBurnSyscoin::UnserializeFromTx(const CMutableTransaction &mtx) {
 void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsAsset);
-	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
+    const auto bytesVec = MakeUCharSpan(dsAsset);
+	vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 
 }
 void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsMint);
-    vchData = std::vector<unsigned char>(dsMint.begin(), dsMint.end());
+    const auto bytesVec = MakeUCharSpan(dsMint);
+    vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }
 
 void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsBurn);
-    vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
+    const auto bytesVec = MakeUCharSpan(dsBurn);
+    vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }
 void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
     SerializeTx(dsAsset);
-	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
+    const auto bytesVec = MakeUCharSpan(dsAsset);
+	vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }

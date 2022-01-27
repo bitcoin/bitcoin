@@ -61,7 +61,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(sizes)
 {
-    BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(char(0), 0));
+    BOOST_CHECK_EQUAL(sizeof(unsigned char), GetSerializeSize((unsigned char)0, 0));
     BOOST_CHECK_EQUAL(sizeof(int8_t), GetSerializeSize(int8_t(0), 0));
     BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(uint8_t(0), 0));
     BOOST_CHECK_EQUAL(sizeof(int16_t), GetSerializeSize(int16_t(0), 0));
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(sizes)
     BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(bool(0), 0));
 
     // Sanity-check GetSerializeSize and c++ type matching
-    BOOST_CHECK_EQUAL(GetSerializeSize(char(0), 0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize((unsigned char)0, 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), 0), 1U);
     BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), 0), 2U);
@@ -186,76 +186,78 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
-    ss.write("\xfd\x00\x00", 3);
+    ss.write(MakeByteSpan("\xfd\x00\x00").first(3));
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfc encoded with three bytes:
-    ss.write("\xfd\xfc\x00", 3);
+    ss.write(MakeByteSpan("\xfd\xfc\x00").first(3));
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfd encoded with three bytes is OK:
-    ss.write("\xfd\xfd\x00", 3);
+    ss.write(MakeByteSpan("\xfd\xfd\x00").first(3));
     n = ReadCompactSize(ss);
     BOOST_CHECK(n == 0xfd);
 
     // zero encoded with five bytes:
-    ss.write("\xfe\x00\x00\x00\x00", 5);
+    ss.write(MakeByteSpan("\xfe\x00\x00\x00\x00").first(5));
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xffff encoded with five bytes:
-    ss.write("\xfe\xff\xff\x00\x00", 5);
+    ss.write(MakeByteSpan("\xfe\xff\xff\x00\x00").first(5));
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // zero encoded with nine bytes:
-    ss.write("\xff\x00\x00\x00\x00\x00\x00\x00\x00", 9);
+    ss.write(MakeByteSpan("\xff\x00\x00\x00\x00\x00\x00\x00\x00").first(9));
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0x01ffffff encoded with nine bytes:
-    ss.write("\xff\xff\xff\xff\x01\x00\x00\x00\x00", 9);
+    ss.write(MakeByteSpan("\xff\xff\xff\xff\x01\x00\x00\x00\x00").first(9));
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 }
 
 BOOST_AUTO_TEST_CASE(insert_delete)
 {
+    constexpr auto B2I{[](std::byte b) { return std::to_integer<uint8_t>(b); }};
+
     // Test inserting/deleting bytes.
     CDataStream ss(SER_DISK, 0);
     BOOST_CHECK_EQUAL(ss.size(), 0U);
 
-    ss.write("\x00\x01\x02\xff", 4);
+    ss.write(MakeByteSpan("\x00\x01\x02\xff").first(4));
     BOOST_CHECK_EQUAL(ss.size(), 4U);
 
-    char c = (char)11;
+    uint8_t c{11};
 
     // Inserting at beginning/end/middle:
-    ss.insert(ss.begin(), c);
+    ss.insert(ss.begin(), std::byte{c});
     BOOST_CHECK_EQUAL(ss.size(), 5U);
-    BOOST_CHECK_EQUAL(ss[0], c);
-    BOOST_CHECK_EQUAL(ss[1], 0);
+    BOOST_CHECK_EQUAL(B2I(ss[0]), c);
+    BOOST_CHECK_EQUAL(B2I(ss[1]), 0);
 
-    ss.insert(ss.end(), c);
+    ss.insert(ss.end(), std::byte{c});
     BOOST_CHECK_EQUAL(ss.size(), 6U);
-    BOOST_CHECK_EQUAL(ss[4], 0xff);
-    BOOST_CHECK_EQUAL(ss[5], c);
+    BOOST_CHECK_EQUAL(B2I(ss[4]), 0xff);
+    BOOST_CHECK_EQUAL(B2I(ss[5]), c);
 
-    ss.insert(ss.begin()+2, c);
+    ss.insert(ss.begin() + 2, std::byte{c});
     BOOST_CHECK_EQUAL(ss.size(), 7U);
-    BOOST_CHECK_EQUAL(ss[2], c);
+    BOOST_CHECK_EQUAL(B2I(ss[2]), c);
 
     // Delete at beginning/end/middle
     ss.erase(ss.begin());
     BOOST_CHECK_EQUAL(ss.size(), 6U);
-    BOOST_CHECK_EQUAL(ss[0], 0);
+    BOOST_CHECK_EQUAL(B2I(ss[0]), 0);
 
     ss.erase(ss.begin()+ss.size()-1);
     BOOST_CHECK_EQUAL(ss.size(), 5U);
-    BOOST_CHECK_EQUAL(ss[4], 0xff);
+    BOOST_CHECK_EQUAL(B2I(ss[4]), 0xff);
 
     ss.erase(ss.begin()+1);
     BOOST_CHECK_EQUAL(ss.size(), 4U);
-    BOOST_CHECK_EQUAL(ss[0], 0);
-    BOOST_CHECK_EQUAL(ss[1], 1);
-    BOOST_CHECK_EQUAL(ss[2], 2);
-    BOOST_CHECK_EQUAL(ss[3], 0xff);
+    BOOST_CHECK_EQUAL(B2I(ss[0]), 0);
+    BOOST_CHECK_EQUAL(B2I(ss[1]), 1);
+    BOOST_CHECK_EQUAL(B2I(ss[2]), 2);
+    BOOST_CHECK_EQUAL(B2I(ss[3]), 0xff);
 }
 
 BOOST_AUTO_TEST_CASE(class_methods)

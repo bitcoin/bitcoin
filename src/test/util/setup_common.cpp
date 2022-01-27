@@ -337,7 +337,8 @@ CBlock TestChain100Setup::CreateBlock(
         ds << qc;
     }
     // SYSCOIN
-    std::vector<unsigned char> vchCoinbaseCommitmentExtra(ds.begin(), ds.end());
+    const auto bytesVec = MakeUCharSpan(ds);
+    std::vector<unsigned char> vchCoinbaseCommitmentExtra(bytesVec.begin(), bytesVec.end());
     RegenerateCommitments(block, *Assert(m_node.chainman), vchCoinbaseCommitmentExtra);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;

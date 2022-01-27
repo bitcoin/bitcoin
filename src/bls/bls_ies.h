@@ -71,7 +71,7 @@ public:
 class CBLSIESMultiRecipientBlobs
 {
 public:
-    using Blob = std::vector<unsigned char>;
+    using Blob = std::vector<uint8_t>;
     using BlobVector = std::vector<Blob>;
 
 public:
@@ -114,7 +114,8 @@ public:
                 ds.clear();
 
                 ds << _objects[i];
-                blobs[i].assign(ds.begin(), ds.end());
+                const auto bytesVec = MakeUCharSpan(ds);
+                blobs[i].assign(bytesVec.begin(), bytesVec.end());
             }
         } catch (const std::exception&) {
             return false;
@@ -127,7 +128,8 @@ public:
     {
         CDataStream ds(SER_NETWORK, nVersion);
         ds << obj;
-        Blob blob(ds.begin(), ds.end());
+        const auto bytesVec = MakeUCharSpan(ds);
+        Blob blob(bytesVec.begin(), bytesVec.end());
         return CBLSIESMultiRecipientBlobs::Encrypt(idx, recipient, blob);
     }
 
