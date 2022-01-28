@@ -14,9 +14,6 @@ Anyone can contribute to Litecoin Core. Please scroll down to ‘How to contribu
 By downloading or upgrading Litecoin Core, you’re helping to secure the network, so thank you and enjoy the upgrade!
 
 
-
-
-
 How to upgrade: 
 ==============
 
@@ -94,14 +91,6 @@ P2P and network changes
   filters to peers on the network when enabled using
   `-blockfilterindex=1 -peercfilters=1`. (#16442)
 
-- This release adds support for signets
-  ([BIP325](https://github.com/Litecoin/bips/blob/master/bip-0325.mediawiki)) in
-  addition to the existing mainnet, testnet, and regtest networks. Signets are
-  centrally-controlled test networks, allowing them to be more predictable
-  test environments than the older testnet. One public signet is maintained, and
-  selectable using `-signet`. It is also possible to create personal signets.
-  (#18267).
-
 - This release implements
   [BIP339](https://github.com/Litecoin/bips/blob/master/bip-0339.mediawiki)
   wtxid relay. When negotiated, transactions are announced using their wtxid
@@ -110,8 +99,7 @@ P2P and network changes
 - This release implements the proposed Taproot consensus rules
   ([BIP341](https://github.com/Litecoin/bips/blob/master/bip-0341.mediawiki) and
   [BIP342](https://github.com/Litecoin/bips/blob/master/bip-0342.mediawiki)),
-  without activation on mainnet. Experimentation with Taproot can be done on
-  signet, where its rules are already active. (#19553)
+  without activation on mainnet. (#19553)
 
 Updated RPCs
 ------------
@@ -325,91 +313,6 @@ New wallets can be created through the GUI (which has a more prominent create
 wallet option), through the `Litecoin-cli createwallet` or `Litecoin-wallet
 create` commands, or the `createwallet` RPC. (#15454, #20186)
 
-### Experimental Descriptor Wallets
-
-Please note that Descriptor Wallets are still experimental and not all expected functionality
-is available. Additionally there may be some bugs and current functions may change in the future. Bugs and missing functionality can be reported to the [issue tracker](https://github.com/Litecoin-Project/Litecoin/issues).
-
-0.21 introduces a new type of wallet - Descriptor Wallets. Descriptor Wallets store
-scriptPubKey information using output descriptors. This is in contrast to the Legacy Wallet
-structure where keys are used to implicitly generate scriptPubKeys and addresses. Because of this shift to being script based instead of key based, many of the confusing things that Legacy Wallets do are not possible with Descriptor Wallets. Descriptor Wallets use a definition
-of "mine" for scripts which is simpler and more intuitive than that used by Legacy Wallets.
-Descriptor Wallets also uses different semantics for watch-only things and imports.
-
-As Descriptor Wallets are a new type of wallet, their introduction does not affect existing wallets. Users who already have a Litecoin Core wallet can continue to use it as they did before without any change in behavior. Newly created Legacy Wallets (which remains the default type of wallet) will behave as they did in previous versions of Litecoin Core.
-
-The differences between Descriptor Wallets and Legacy Wallets are largely limited to non user facing things. They are intended to behave similarly except for the import/export and watchonly functionality as described below.
-
-#### Creating Descriptor Wallets
-
-Descriptor wallets are not the default type of wallet.
-
-In the GUI, a checkbox has been added to the Create Wallet Dialog to indicate that a
-Descriptor Wallet should be created. And a `descriptors` option has been added to `createwallet` RPC. Setting `descriptors` to `true` will create a Descriptor Wallet instead of a Legacy Wallet.
-
-Without those options being set, a Legacy Wallet will be created instead.
-
-#### `IsMine` Semantics
-
-`IsMine` refers to the function used to determine whether a script belongs to the wallet.
-This is used to determine whether an output belongs to the wallet. `IsMine` in Legacy Wallets
-returns true if the wallet would be able to sign an input that spends an output with that script.
-Since keys can be involved in a variety of different scripts, this definition for `IsMine` can
-lead to many unexpected scripts being considered part of the wallet.
-
-With Descriptor Wallets, descriptors explicitly specify the set of scripts that are owned by
-the wallet. Since descriptors are deterministic and easily enumerable, users will know exactly what scripts the wallet will consider to belong to it. Additionally the implementation of `IsMine` in Descriptor Wallets is far simpler than for Legacy Wallets. Notably, in Legacy Wallets, `IsMine` allowed for users to take one type of address (e.g. P2PKH), mutate it into another address type (e.g. P2WPKH), and the wallet would still detect outputs sending to the new address type even without that address being requested from the wallet. Descriptor Wallets do not allow for this and will only watch for the addresses that were explicitly requested from the wallet.
-
-These changes to `IsMine` will make it easier to reason about what scripts the wallet will
-actually be watching for in outputs. However for the vast majority of users, this change is
-largely transparent and will not have a noticeable effect.
-
-#### Imports and Exports
-
-In Legacy Wallets, raw scripts and keys could be imported to the wallet. Those imported scripts and keys are treated separately from the keys generated by the wallet. This complicates the `IsMine` logic as it has to distinguish between spendable and watchonly.
-
-Descriptor Wallets handle importing scripts and keys differently. Only complete descriptors can be imported. These descriptors are then added to the wallet as if it were a descriptor generated by the wallet itself. This simplifies the `IsMine` logic so that it no longer has to distinguish between spendable and watchonly. As such, the watchonly model for Descriptor Wallets is also different and described in more detail in the next section.
-
-To import into a Descriptor Wallet, a new `importdescriptors` RPC has been added that uses a syntax similar to that of `importmulti`.
-
-As Legacy Wallets and Descriptor Wallets use different mechanisms for storing and importing scripts and keys the existing import RPCs have been disabled for descriptor wallets.
-New export RPCs for Descriptor Wallets have not yet been added.
-
-
-
-The following RPCs are disabled for Descriptor Wallets:
-
-* `importprivkey`
-* `importpubkey`
-* `importaddress`
-* `importwallet`
-* `dumpprivkey`
-* `dumpwallet`
-* `importmulti`
-* `addmultisigaddress`
-* `sethdseed`
-
-#### Watchonly Wallets
-
-A Legacy Wallet contains both private keys and scripts that were being watched.
-Those watched scripts would not contribute to your normal balance. In order to see the watchonly balance and to use watchonly things in transactions, an `include_watchonly` option was added to many RPCs that would allow users to do that. However it is easy to forget to include this option.
-
-Descriptor Wallets move to a per-wallet watchonly model. Instead an entire wallet is considered to be watchonly depending on whether it was created with private keys disabled. This eliminates the need to distinguish between things that are watchonly and things that are not within a wallet itself.
-
-This change does have a caveat. If a Descriptor Wallet with private keys *enabled* has
-a multiple key descriptor without all of the private keys (e.g. `multi(...)` with only one private key), then the wallet will fail to sign and broadcast transactions. Such wallets would need to use the PSBT workflow but the typical GUI Send, `sendtoaddress`, etc. workflows would still be available, just non-functional.
-
-This issue is worsened if the wallet contains both single key (e.g. `wpkh(...)`) descriptors and such multiple key descriptors as some transactions could be signed and broadcast and others not. This is due to some transactions containing only single key inputs, while others would contain both single key and multiple key inputs, depending on which are available and how the coin selection algorithm selects inputs. However this is not considered to be a supported use case; multisigs should be in their own wallets which do not already have descriptors. Although users cannot export descriptors with private keys for now as explained earlier.
-
-#### BIP 44/49/84 Support
-
-The change to using descriptors changes the default derivation paths used by Litecoin Core
-to adhere to BIP 44/49/84. Descriptors with different derivation paths can be imported without
-issue.
-
-#### SQLite Database Backend
-
-Descriptor wallets use SQLite for the wallet file instead of the Berkeley DB used in legacy wallets. This will break compatibility with any existing tooling that operates on wallets, however compatibility was already being broken by the move to descriptors.
 
 ### Wallet RPC changes
 
@@ -481,15 +384,8 @@ RPC
 Tests
 -----
 
-- The BIP 325 default signet can be enabled by the `-chain=signet` or `-signet`
-  setting. The settings `-signetchallenge` and `-signetseednode` allow
-  enabling a custom signet.
-
 - The `generateblock` RPC allows testers using regtest mode to
   generate blocks that consist of a custom set of transactions. (#17693)
-
-
-
 
 
 Credits
