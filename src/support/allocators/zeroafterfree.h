@@ -41,6 +41,6 @@ struct zero_after_free_allocator : public std::allocator<T> {
 };
 
 /** Byte-vector that clears its contents before deletion. */
-using SerializeData = std::vector<std::byte, zero_after_free_allocator<std::byte>>;
+using SerializeData = std::vector<uint8_t, zero_after_free_allocator<uint8_t>>;
 
 #endif // SYSCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H

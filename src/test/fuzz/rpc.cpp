@@ -327,7 +327,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
             }
             CDataStream data_stream{SER_NETWORK, PROTOCOL_VERSION};
             data_stream << *opt_psbt;
-            r = EncodeBase64(data_stream);
+            r = EncodeBase64({data_stream.begin(), data_stream.end()});
         },
         [&] {
             // base58 encoded key

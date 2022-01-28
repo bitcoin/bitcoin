@@ -1302,12 +1302,12 @@ public:
         it = itBegin;
         while (scriptCode.GetOp(it, opcode)) {
             if (opcode == OP_CODESEPARATOR) {
-                s.write(AsBytes(Span{&itBegin[0], size_t(it - itBegin - 1)}));
+                s.write((char*)&itBegin[0], it-itBegin-1);
                 itBegin = it;
             }
         }
         if (itBegin != scriptCode.end())
-            s.write(AsBytes(Span{&itBegin[0], size_t(it - itBegin)}));
+            s.write((char*)&itBegin[0], it-itBegin);
     }
 
     /** Serialize an input of txTo */

@@ -66,7 +66,7 @@ void CBloomFilter::insert(const COutPoint& outpoint)
 {
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << outpoint;
-    insert(MakeUCharSpan(stream));
+    insert(stream);
 }
 
 bool CBloomFilter::contains(Span<const unsigned char> vKey) const
@@ -87,7 +87,7 @@ bool CBloomFilter::contains(const COutPoint& outpoint) const
 {
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << outpoint;
-    return contains(MakeUCharSpan(stream));
+    return contains(stream);
 }
 bool CBloomFilter::contains(const CKeyID& keyId) const
 {

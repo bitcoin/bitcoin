@@ -22,23 +22,20 @@ public:
     m_remaining(txToLen)
     {}
 
-    void read(Span<std::byte> dst)
+    void read(char* pch, size_t nSize)
     {
-        if (dst.size() > m_remaining) {
+        if (nSize > m_remaining)
             throw std::ios_base::failure(std::string(__func__) + ": end of data");
-        }
 
-        if (dst.data() == nullptr) {
+        if (pch == nullptr)
             throw std::ios_base::failure(std::string(__func__) + ": bad destination buffer");
-        }
 
-        if (m_data == nullptr) {
+        if (m_data == nullptr)
             throw std::ios_base::failure(std::string(__func__) + ": bad source buffer");
-        }
 
-        memcpy(dst.data(), m_data, dst.size());
-        m_remaining -= dst.size();
-        m_data += dst.size();
+        memcpy(pch, m_data, nSize);
+        m_remaining -= nSize;
+        m_data += nSize;
     }
 
     template<typename T>

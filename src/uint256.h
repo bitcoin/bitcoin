@@ -6,8 +6,6 @@
 #ifndef SYSCOIN_UINT256_H
 #define SYSCOIN_UINT256_H
 
-#include <span.h>
-
 #include <assert.h>
 #include <cstring>
 #include <stdint.h>
@@ -98,13 +96,13 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        s.write(MakeByteSpan(m_data));
+        s.write((char*)m_data, sizeof(m_data));
     }
 
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        s.read(MakeWritableByteSpan(m_data));
+        s.read((char*)m_data, sizeof(m_data));
     }
 };
 
