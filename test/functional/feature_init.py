@@ -3,8 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Stress tests related to node initialization."""
-import random
-import time
 import os
 from pathlib import Path
 
@@ -26,7 +24,6 @@ class InitStressTest(BitcoinTestFramework):
     def run_test(self):
         """
         - test terminating initialization after seeing a certain log line.
-        - test terminating init after seeing a random number of log lines.
         - test removing certain essential files to test startup error paths.
         """
         # TODO: skip Windows for now since it isn't clear how to SIGTERM.
@@ -76,10 +73,9 @@ class InitStressTest(BitcoinTestFramework):
 
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will exit after line '{terminate_line}'")
-            node.start(extra_args=['-txindex=1'])
-
-            num_total_logs = node.wait_for_debug_log([terminate_line], ignore_case=True)
-            self.log.debug(f"Terminating node after {num_total_logs} log lines seen")
+            with node.wait_for_debug_log([terminate_line], ignore_case=True):
+                node.start(extra_args=['-txindex=1'])
+            self.log.debug("Terminating node after terminate line was found")
             sigterm_node()
 
         check_clean_start()
