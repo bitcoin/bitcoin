@@ -362,12 +362,9 @@ public:
         nReadPos = nReadPosNext;
     }
 
-    void ignore(int nSize)
+    void ignore(size_t nSize)
     {
         // Ignore from the beginning of the buffer
-        if (nSize < 0) {
-            throw std::ios_base::failure("CDataStream::ignore(): nSize negative");
-        }
         unsigned int nReadPosNext = nReadPos + nSize;
         if (nReadPosNext >= vch.size())
         {
