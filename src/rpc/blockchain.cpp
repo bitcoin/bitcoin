@@ -1806,7 +1806,7 @@ static RPCHelpMan getdeploymentinfo()
             }
         },
         RPCExamples{ HelpExampleCli("getdeploymentinfo", "") + HelpExampleRpc("getdeploymentinfo", "") },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
         {
             ChainstateManager& chainman = EnsureAnyChainman(request.context);
             LOCK(cs_main);
