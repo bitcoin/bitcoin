@@ -1669,16 +1669,16 @@ static RPCHelpMan getdeploymentinfo()
         RPCExamples{ HelpExampleCli("getdeploymentinfo", "") + HelpExampleRpc("getdeploymentinfo", "") },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            ChainstateManager& chainman = EnsureAnyChainman(request.context);
+            const ChainstateManager& chainman = EnsureAnyChainman(request.context);
             LOCK(cs_main);
-            CChainState& active_chainstate = chainman.ActiveChainstate();
+            const CChainState& active_chainstate = chainman.ActiveChainstate();
 
             const CBlockIndex* tip;
             if (request.params[0].isNull()) {
                 tip = active_chainstate.m_chain.Tip();
                 CHECK_NONFATAL(tip);
             } else {
-                uint256 hash(ParseHashV(request.params[0], "blockhash"));
+                const uint256 hash(ParseHashV(request.params[0], "blockhash"));
                 tip = chainman.m_blockman.LookupBlockIndex(hash);
                 if (!tip) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
