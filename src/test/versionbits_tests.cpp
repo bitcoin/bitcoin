@@ -319,6 +319,7 @@ static void check_computeblockversion_bip8(const Consensus::Params& params, Cons
     BOOST_CHECK(params.vDeployments[dep].nStartTime == 0 && params.vDeployments[dep].nTimeout == 0);
 
     int64_t bit = params.vDeployments[dep].bit;
+    int32_t bit_mask = (1 << bit);
     int64_t nStartHeight = params.vDeployments[dep].nStartHeight;
     int64_t nTimeoutHeight = params.vDeployments[dep].nTimeoutHeight;
     uint32_t nMinerConfirmationWindow = params.nMinerConfirmationWindow;
@@ -333,7 +334,7 @@ static void check_computeblockversion_bip8(const Consensus::Params& params, Cons
     BOOST_CHECK_EQUAL(nTimeoutHeight % nMinerConfirmationWindow, 0U);
 
     BOOST_CHECK(0 <= bit && bit < 32);
-    BOOST_CHECK(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
+    BOOST_CHECK((bit_mask & VERSIONBITS_TOP_MASK) == 0);
 
     int64_t nTime = 100000;
 
@@ -343,28 +344,32 @@ static void check_computeblockversion_bip8(const Consensus::Params& params, Cons
         // In the first chain, we don't set the bit, and wait for forced activation via timeout.
         // The bit should be set by CBV during range [nStartHeight, nTimeoutHeight + nMinerConfirmationWindow)
         VersionBitsTester chain;
+        versionbitscache.Clear();
 
         // Bit should not be set before nStartHeight
         lastBlock = chain.Mine(nStartHeight - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & bit_mask, 0);
 
         // Once we hit nStartHeight, the feature switches to STARTED, we should be able to signal for activation.
         for (uint32_t i = nStartHeight; i < nTimeoutHeight; i++) {
             lastBlock = chain.Mine(i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & bit_mask) != 0);
             BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+            BOOST_CHECK_EQUAL(VersionBitsState(lastBlock, params, dep, versionbitscache), ThresholdState::STARTED);
         }
 
-        // Once the time height is hit, the feature switches to LOCKED_IN for 1 full miner confirmation window
+        // Once the timeout height is hit, the feature switches to LOCKED_IN for 1 full miner confirmation window
         for (uint32_t i = 0; i < nMinerConfirmationWindow; i++) {
             lastBlock = chain.Mine(nTimeoutHeight + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & bit_mask) != 0);
             BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+            BOOST_CHECK_EQUAL(VersionBitsState(lastBlock, params, dep, versionbitscache), ThresholdState::LOCKED_IN);
         }
 
         // After 1 full confirmation window, the feature should be ACTIVE, so we should stop setting the bit.
         lastBlock = chain.Mine(nTimeoutHeight + nMinerConfirmationWindow, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & bit_mask, 0);
+        BOOST_CHECK_EQUAL(VersionBitsState(lastBlock, params, dep, versionbitscache), ThresholdState::ACTIVE);
     }
 
     {
@@ -374,28 +379,33 @@ static void check_computeblockversion_bip8(const Consensus::Params& params, Cons
         // The bit should be set by CBV while STARTED and LOCKED-IN, and then no longer set while ACTIVE.
         // That is, it should be set by CBV during range [nStartHeight, nStartHeight + 2 * nMinerConfirmationWindow)
         VersionBitsTester chain;
+        versionbitscache.Clear();
 
         // Bit should not be set before nStartHeight
         lastBlock = chain.Mine(nStartHeight - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & bit_mask, 0);
+        BOOST_CHECK_EQUAL(VersionBitsState(lastBlock, params, dep, versionbitscache), ThresholdState::DEFINED);
 
         // Once we hit nStartHeight, the feature switches to STARTED, and we start signaling for activation.
         for (uint32_t i = 0; i < nMinerConfirmationWindow; i++) {
-            lastBlock = chain.Mine(nStartHeight + i, nTime, VERSIONBITS_TOP_BITS | (1 << bit)).Tip();
-            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            lastBlock = chain.Mine(nStartHeight + i, nTime, VERSIONBITS_TOP_BITS | bit_mask).Tip();
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & bit_mask) != 0);
             BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+            BOOST_CHECK_EQUAL(VersionBitsState(lastBlock, params, dep, versionbitscache), ThresholdState::STARTED);
         }
 
         // After the first confirmation window, the feature switches to LOCKED-IN for 1 full miner confirmation window.
         for (uint32_t i = 0; i < nMinerConfirmationWindow; i++) {
-            lastBlock = chain.Mine(nStartHeight + nMinerConfirmationWindow + i, nTime, VERSIONBITS_TOP_BITS | (1 << bit)).Tip();
-            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            lastBlock = chain.Mine(nStartHeight + nMinerConfirmationWindow + i, nTime, VERSIONBITS_TOP_BITS | bit_mask).Tip();
+            BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & bit_mask) != 0);
             BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+            BOOST_CHECK_EQUAL(VersionBitsState(lastBlock, params, dep, versionbitscache), ThresholdState::LOCKED_IN);
         }
 
         // After 1 full LOCKED-IN confirmation window, the feature should be ACTIVE, so we should stop setting the bit.
         lastBlock = chain.Mine(nStartHeight + (2 * nMinerConfirmationWindow), nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
-        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+        BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & bit_mask, 0);
+        BOOST_CHECK_EQUAL(VersionBitsState(lastBlock, params, dep, versionbitscache), ThresholdState::ACTIVE);
     }
 }
 

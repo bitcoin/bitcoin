@@ -41,9 +41,11 @@ class NotificationsTest(BitcoinTestFramework):
         self.extra_args = [[
             "-alertnotify=echo > {}".format(os.path.join(self.alertnotify_dir, '%s')),
             "-blocknotify=echo > {}".format(os.path.join(self.blocknotify_dir, '%s')),
+            "-mempoolreplacement=1",
         ], [
             "-rescan",
             "-walletnotify=echo > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))),
+            "-mempoolreplacement=1",
         ]]
         self.wallet_names = [self.default_wallet_name, self.wallet]
         super().setup_network()

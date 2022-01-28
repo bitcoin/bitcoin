@@ -49,8 +49,8 @@ class WalletTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.extra_args = [
-            ['-limitdescendantcount=3'],  # Limit mempool descendants as a hack to have wallet txs rejected from the mempool
-            [],
+            ['-limitdescendantcount=3', '-mempoolreplacement=1'],  # Limit mempool descendants as a hack to have wallet txs rejected from the mempool
+            ['-mempoolreplacement=1'],
         ]
 
     def skip_test_if_missing_module(self):

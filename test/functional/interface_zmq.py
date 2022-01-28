@@ -62,6 +62,10 @@ class ZMQSubscriber:
 class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.extra_args = [
+            ["-mempoolreplacement=1"],
+            ["-mempoolreplacement=1"]
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
@@ -245,7 +249,7 @@ class ZMQTest (BitcoinTestFramework):
         socket.set(zmq.RCVTIMEO, 60000)
         seq = ZMQSubscriber(socket, b'sequence')
 
-        self.restart_node(0, ['-zmqpub%s=%s' % (seq.topic.decode(), address)])
+        self.restart_node(0, ['-zmqpub%s=%s' % (seq.topic.decode(), address), '-mempoolreplacement=1'])
         socket.connect(address)
         # Relax so that the subscriber is ready before publishing zmq messages
         sleep(0.2)
@@ -404,7 +408,7 @@ class ZMQTest (BitcoinTestFramework):
         socket.set(zmq.RCVTIMEO, 60000)
         seq = ZMQSubscriber(socket, b'sequence')
 
-        self.restart_node(0, ['-zmqpub%s=%s' % (seq.topic.decode(), address)])
+        self.restart_node(0, ['-zmqpub%s=%s' % (seq.topic.decode(), address), '-mempoolreplacement=1'])
         self.connect_nodes(0, 1)
         socket.connect(address)
         # Relax so that the subscriber is ready before publishing zmq messages
