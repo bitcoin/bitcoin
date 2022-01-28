@@ -162,14 +162,10 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
     std::vector<std::byte> in;
     std::vector<char> expected_xor;
-    std::vector<unsigned char> key;
     CDataStream ds(in, 0, 0);
 
     // Degenerate case
-
-    key.push_back('\x00');
-    key.push_back('\x00');
-    ds.Xor(key);
+    ds.Xor({0x00, 0x00});
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
             ds.str());
@@ -183,10 +179,8 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     ds.clear();
     ds.insert(ds.begin(), in.begin(), in.end());
-    key.clear();
 
-    key.push_back('\xff');
-    ds.Xor(key);
+    ds.Xor({0xff});
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
             ds.str());
@@ -203,11 +197,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     ds.clear();
     ds.insert(ds.begin(), in.begin(), in.end());
 
-    key.clear();
-    key.push_back('\xff');
-    key.push_back('\x0f');
-
-    ds.Xor(key);
+    ds.Xor({0xff, 0x0f});
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
             ds.str());
@@ -421,7 +411,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 size_t find = currentPos + InsecureRandRange(8);
                 if (find >= fileSize)
                     find = fileSize - 1;
-                bf.FindByte(static_cast<char>(find));
+                bf.FindByte(uint8_t(find));
                 // The value at each offset is the offset.
                 BOOST_CHECK_EQUAL(bf.GetPos(), find);
                 currentPos = find;
