@@ -620,12 +620,16 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // unconfirmed ancestors anyway; doing otherwise is hopelessly
                 // insecure.
                 bool fReplacementOptOut = true;
-                for (const CTxIn &_txin : ptxConflicting->vin)
-                {
-                    if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
+
+                // Litecoin: Only support BIP125 RBF when -mempoolreplacement arg is set
+                if (gArgs.GetArg("-mempoolreplacement", DEFAULT_ENABLE_REPLACEMENT)) {
+                    for (const CTxIn &_txin : ptxConflicting->vin)
                     {
-                        fReplacementOptOut = false;
-                        break;
+                        if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
+                        {
+                            fReplacementOptOut = false;
+                            break;
+                        }
                     }
                 }
                 if (fReplacementOptOut) {
