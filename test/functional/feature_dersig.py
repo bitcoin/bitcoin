@@ -60,7 +60,7 @@ class BIP66Test(BitcoinTestFramework):
         return self.miniwallet.create_self_transfer(utxo_to_spend=utxo_to_spend)['tx']
 
     def test_dersig_info(self, *, is_active):
-        assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip66'],
+        assert_equal(self.nodes[0].getdeploymentinfo()['deployments']['bip66'],
             {
                 "active": is_active,
                 "height": DERSIG_HEIGHT,
