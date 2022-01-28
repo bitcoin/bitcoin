@@ -1603,6 +1603,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (!CheckDiskSpace(gArgs.GetBlocksDirPath())) {
         InitError(strprintf(_("Error: Disk space is low for %s"), fs::quoted(fs::PathToString(gArgs.GetBlocksDirPath()))));
         return false;
+        {
+            LOCK(cs_main);
+            unit64_t additionl_bytes_needed =0;
+            if(!fReindex && chainActive.Height() <=1){
+                if(fPruneMode)
+                    additional_byteS_needed = nPruneTarget;
+                else
+                    additional_bytes_needed = chainparams.AssumedBlockchainSize() * 1024 * 1024 * 1024;
+            }
+        }
     }
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
