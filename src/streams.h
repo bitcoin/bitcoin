@@ -9,6 +9,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
+#include <util/overflow.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -281,36 +282,32 @@ public:
         if (dst.size() == 0) return;
 
         // Read from the beginning of the buffer
-        unsigned int nReadPosNext = nReadPos + dst.size();
-        if (nReadPosNext > vch.size()) {
+        auto next_read_pos{CheckedAdd<uint32_t>(nReadPos, dst.size())};
+        if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
             throw std::ios_base::failure("CDataStream::read(): end of data");
         }
         memcpy(dst.data(), &vch[nReadPos], dst.size());
-        if (nReadPosNext == vch.size())
-        {
+        if (next_read_pos.value() == vch.size()) {
             nReadPos = 0;
             vch.clear();
             return;
         }
-        nReadPos = nReadPosNext;
+        nReadPos = next_read_pos.value();
     }
 
-    void ignore(int nSize)
+    void ignore(size_t num_ignore)
     {
         // Ignore from the beginning of the buffer
-        if (nSize < 0) {
-            throw std::ios_base::failure("CDataStream::ignore(): nSize negative");
+        auto next_read_pos{CheckedAdd<uint32_t>(nReadPos, num_ignore)};
+        if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
+            throw std::ios_base::failure("CDataStream::ignore(): end of data");
         }
-        unsigned int nReadPosNext = nReadPos + nSize;
-        if (nReadPosNext >= vch.size())
-        {
-            if (nReadPosNext > vch.size())
-                throw std::ios_base::failure("CDataStream::ignore(): end of data");
+        if (next_read_pos.value() == vch.size()) {
             nReadPos = 0;
             vch.clear();
             return;
         }
-        nReadPos = nReadPosNext;
+        nReadPos = next_read_pos.value();
     }
 
     void write(Span<const value_type> src)
