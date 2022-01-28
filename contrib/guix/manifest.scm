@@ -397,6 +397,11 @@ thus should be able to compile on most platforms where these exist.")
                   (string-append indent
                                  "@unittest.skip(\"Disabled by Guix\")\n"
                                  line)))
+               (substitute* "tests/test_validate.py"
+                 (("^(.*)def test_revocation_mode_soft" line indent)
+                  (string-append indent
+                                 "@unittest.skip(\"Disabled by Guix\")\n"
+                                 line)))
                #t))
            (replace 'check
              (lambda _
@@ -574,7 +579,7 @@ inspecting signatures in Mach-O binaries.")
         ;; Build tools
         gnu-make
         libtool
-        autoconf
+        autoconf-2.71
         automake
         pkg-config
         bison

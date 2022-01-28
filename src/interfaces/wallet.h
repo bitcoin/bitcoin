@@ -405,7 +405,6 @@ struct WalletTxStatus
     int depth_in_main_chain;
     unsigned int time_received;
     uint32_t lock_time;
-    bool is_final;
     bool is_trusted;
     bool is_abandoned;
     bool is_coinbase;

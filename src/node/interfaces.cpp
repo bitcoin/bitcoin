@@ -486,11 +486,6 @@ public:
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
         return active.GetLocator();
     }
-    bool checkFinalTx(const CTransaction& tx) override
-    {
-        LOCK(cs_main);
-        return CheckFinalTx(chainman().ActiveChain().Tip(), tx);
-    }
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);

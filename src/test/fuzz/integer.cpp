@@ -206,11 +206,6 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
         stream >> deserialized_i8;
         assert(i8 == deserialized_i8 && stream.empty());
 
-        char deserialized_ch;
-        stream << ch;
-        stream >> deserialized_ch;
-        assert(ch == deserialized_ch && stream.empty());
-
         bool deserialized_b;
         stream << b;
         stream >> deserialized_b;

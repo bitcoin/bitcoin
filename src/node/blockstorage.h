@@ -7,11 +7,14 @@
 
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <sync.h>
 #include <txdb.h>
 
 #include <atomic>
 #include <cstdint>
 #include <vector>
+
+extern RecursiveMutex cs_main;
 
 class ArgsManager;
 class BlockValidationState;
@@ -146,7 +149,8 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
 
-    bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams);
+    bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
@@ -163,7 +167,7 @@ public:
 };
 
 //! Check whether the block associated with this index entry is pruned or not.
-bool IsBlockPruned(const CBlockIndex* pblockindex);
+bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 void CleanupBlockRevFiles();
 
@@ -181,7 +185,6 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start);
-bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);
 
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 

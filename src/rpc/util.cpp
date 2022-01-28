@@ -831,11 +831,14 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
     }
     case Type::OBJ_DYN:
     case Type::OBJ: {
+        if (m_inner.empty()) {
+            sections.PushSection({indent + maybe_key + "{}", Description("empty JSON object")});
+            return;
+        }
         sections.PushSection({indent + maybe_key + "{", Description("json object")});
         for (const auto& i : m_inner) {
             i.ToSections(sections, OuterType::OBJ, current_indent + 2);
         }
-        CHECK_NONFATAL(!m_inner.empty());
         if (m_type == Type::OBJ_DYN && m_inner.back().m_type != Type::ELISION) {
             // If the dictionary keys are dynamic, use three dots for continuation
             sections.PushSection({indent_next + "...", ""});
@@ -884,6 +887,17 @@ bool RPCResult::MatchesType(const UniValue& result) const
     }
     } // no default case, so the compiler can warn about missing cases
     CHECK_NONFATAL(false);
+}
+
+void RPCResult::CheckInnerDoc() const
+{
+    if (m_type == Type::OBJ) {
+        // May or may not be empty
+        return;
+    }
+    // Everything else must either be empty or not
+    const bool inner_needed{m_type == Type::ARR || m_type == Type::ARR_FIXED || m_type == Type::OBJ_DYN};
+    CHECK_NONFATAL(inner_needed != m_inner.empty());
 }
 
 std::string RPCArg::ToStringObj(const bool oneline) const

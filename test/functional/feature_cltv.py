@@ -92,7 +92,7 @@ class BIP65Test(BitcoinTestFramework):
         self.rpc_timeout = 480
 
     def test_cltv_info(self, *, is_active):
-        assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip65'], {
+        assert_equal(self.nodes[0].getdeploymentinfo()['deployments']['bip65'], {
                 "active": is_active,
                 "height": CLTV_HEIGHT,
                 "type": "buried",

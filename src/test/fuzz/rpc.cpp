@@ -120,6 +120,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getchaintips",
     "getchaintxstats",
     "getconnectioncount",
+    "getdeploymentinfo",
     "getdescriptorinfo",
     "getdifficulty",
     "getindexinfo",
@@ -271,7 +272,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
             }
             CDataStream data_stream{SER_NETWORK, PROTOCOL_VERSION};
             data_stream << *opt_psbt;
-            r = EncodeBase64({data_stream.begin(), data_stream.end()});
+            r = EncodeBase64(data_stream);
         },
         [&] {
             // base58 encoded key
