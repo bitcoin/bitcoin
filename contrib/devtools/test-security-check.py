@@ -116,21 +116,34 @@ class TestSecurityChecks(unittest.TestCase):
         executable = 'test1'
         cc = determine_wellknown_cmd('CC', 'clang')
         write_testcode(source)
+        arch = get_arch(cc, source, executable)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fno-stack-protector']),
-            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS Canary CONTROL_FLOW'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fstack-protector-all']),
-            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS CONTROL_FLOW'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-fstack-protector-all']),
-            (1, executable+': failed PIE NOUNDEFS LAZY_BINDINGS CONTROL_FLOW'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all']),
-            (1, executable+': failed PIE LAZY_BINDINGS CONTROL_FLOW'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all']),
-            (1, executable+': failed PIE CONTROL_FLOW'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
-            (1, executable+': failed PIE'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
-            (0, ''))
+        if arch == lief.ARCHITECTURES.X86:
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fno-stack-protector']),
+                (1, executable+': failed NOUNDEFS LAZY_BINDINGS Canary PIE NX CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fstack-protector-all']),
+                (1, executable+': failed NOUNDEFS LAZY_BINDINGS PIE NX CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-fstack-protector-all']),
+                (1, executable+': failed NOUNDEFS LAZY_BINDINGS PIE CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all']),
+                (1, executable+': failed LAZY_BINDINGS PIE CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all']),
+                (1, executable+': failed PIE CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
+                (1, executable+': failed PIE'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
+                (0, ''))
+        else:
+            # arm64 darwin doesn't support non-PIE binaries, control flow or executable stacks
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fno-stack-protector']),
+                (1, executable+': failed NOUNDEFS LAZY_BINDINGS Canary'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fstack-protector-all']),
+                (1, executable+': failed NOUNDEFS LAZY_BINDINGS'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-fstack-protector-all']),
+                (1, executable+': failed LAZY_BINDINGS'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-bind_at_load','-fstack-protector-all']),
+                (0, ''))
+
 
         clean_files(source, executable)
 

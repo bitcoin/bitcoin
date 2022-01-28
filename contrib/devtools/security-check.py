@@ -211,12 +211,9 @@ BASE_PE = [
 ]
 
 BASE_MACHO = [
-    ('PIE', check_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('NX', check_NX),
     ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
     ('Canary', check_MACHO_Canary),
-    ('CONTROL_FLOW', check_MACHO_control_flow),
 ]
 
 CHECKS = {
@@ -231,7 +228,10 @@ CHECKS = {
         lief.ARCHITECTURES.X86: BASE_PE,
     },
     lief.EXE_FORMATS.MACHO: {
-        lief.ARCHITECTURES.X86: BASE_MACHO,
+        lief.ARCHITECTURES.X86: BASE_MACHO + [('PIE', check_PIE),
+                                              ('NX', check_NX),
+                                              ('CONTROL_FLOW', check_MACHO_control_flow)],
+        lief.ARCHITECTURES.ARM64: BASE_MACHO,
     }
 }
 
