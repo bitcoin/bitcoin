@@ -181,8 +181,8 @@ class BerkeleyBatch : public DatabaseBatch
         ~SafeDbt();
 
         // delegate to Dbt
-        const void* get_data() const;
-        u_int32_t get_size() const;
+        const std::byte* data() const;
+        uint32_t size() const;
 
         // conversion operator to access the underlying Dbt
         operator Dbt*();

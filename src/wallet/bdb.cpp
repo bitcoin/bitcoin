@@ -241,12 +241,12 @@ BerkeleyBatch::SafeDbt::~SafeDbt()
     }
 }
 
-const void* BerkeleyBatch::SafeDbt::get_data() const
+const std::byte* BerkeleyBatch::SafeDbt::data() const
 {
-    return m_dbt.get_data();
+    return BytePtr(m_dbt.get_data());
 }
 
-u_int32_t BerkeleyBatch::SafeDbt::get_size() const
+uint32_t BerkeleyBatch::SafeDbt::size() const
 {
     return m_dbt.get_size();
 }
@@ -673,18 +673,19 @@ bool BerkeleyBatch::ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool&
     if (ret == DB_NOTFOUND) {
         complete = true;
     }
-    if (ret != 0)
+    if (ret != 0) {
         return false;
-    else if (datKey.get_data() == nullptr || datValue.get_data() == nullptr)
+    } else if (datKey.data() == nullptr || datValue.data() == nullptr) {
         return false;
+    }
 
     // Convert to streams
     ssKey.SetType(SER_DISK);
     ssKey.clear();
-    ssKey.write({BytePtr(datKey.get_data()), datKey.get_size()});
+    ssKey.write(datKey);
     ssValue.SetType(SER_DISK);
     ssValue.clear();
-    ssValue.write({BytePtr(datValue.get_data()), datValue.get_size()});
+    ssValue.write(datValue);
     return true;
 }
 
@@ -755,8 +756,8 @@ bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
 
     SafeDbt datValue;
     int ret = pdb->get(activeTxn, datKey, datValue, 0);
-    if (ret == 0 && datValue.get_data() != nullptr) {
-        value.write({BytePtr(datValue.get_data()), datValue.get_size()});
+    if (ret == 0 && datValue.data() != nullptr) {
+        value.write(datValue);
         return true;
     }
     return false;
