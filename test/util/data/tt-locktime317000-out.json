@@ -203,7 +203,7 @@
             "n": 0,
             "scriptPubKey": {
                 "asm": "OP_DUP OP_HASH160 8fd139bb39ced713f231c58a4d07bf6954d1c201 OP_EQUALVERIFY OP_CHECKSIG",
-                "desc": "addr(1E7SGgAZFCHDnVZLuRViX3gUmxpMfdvd2o)#xvg87vgr",
+                "desc": "addr(SaQSJWwhyZURJoLoSrUo4wq3Rk3nRE4qbG)#d2cush8u",
                 "hex": "76a9148fd139bb39ced713f231c58a4d07bf6954d1c20188ac",
                 "address": "SaQSJWwhyZURJoLoSrUo4wq3Rk3nRE4qbG",
                 "type": "pubkeyhash"
@@ -214,7 +214,7 @@
             "n": 1,
             "scriptPubKey": {
                 "asm": "OP_DUP OP_HASH160 6c772e9cf96371bba3da8cb733da70a2fcf20078 OP_EQUALVERIFY OP_CHECKSIG",
-                "desc": "addr(1AtWkdmfmYkErU16d3KYykJUbEp9MAj9Sb)#tsyprkms",
+                "desc": "addr(SXBWnUYpVuwSNmnZAUJdXeT3F23a7pF5GB)#sq3jfwas",
                 "hex": "76a9146c772e9cf96371bba3da8cb733da70a2fcf2007888ac",
                 "address": "SXBWnUYpVuwSNmnZAUJdXeT3F23a7pF5GB",
                 "type": "pubkeyhash"
