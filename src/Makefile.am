@@ -204,6 +204,7 @@ BITCOIN_CORE_H = \
   miner.h \
   mweb/mweb_db.h \
   mweb/mweb_models.h \
+  mweb/mweb_policy.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -547,6 +548,7 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
+  mweb/mweb_policy.cpp \
   netaddress.cpp \
   netbase.cpp \
   net_permissions.cpp \
