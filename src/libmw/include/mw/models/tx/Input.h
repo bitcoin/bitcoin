@@ -19,12 +19,18 @@ class Input :
     public Traits::IHashable,
     public Traits::ISerializable
 {
+    enum FeatureBit {
+        STEALTH_KEY_FEATURE_BIT = 0x01,
+        EXTRA_DATA_FEATURE_BIT = 0x02
+    };
+
 public:
     //
     // Constructors
     //
-    Input(mw::Hash output_id, Commitment commitment, PublicKey input_pubkey, PublicKey output_pubkey, Signature signature)
-        : m_outputID(std::move(output_id)),
+    Input(uint8_t features, mw::Hash output_id, Commitment commitment, PublicKey input_pubkey, PublicKey output_pubkey, Signature signature)
+        : m_features(features),
+        m_outputID(std::move(output_id)),
         m_commitment(std::move(commitment)),
         m_inputPubKey(std::move(input_pubkey)),
         m_outputPubKey(std::move(output_pubkey)),
@@ -57,10 +63,12 @@ public:
     //
     // Getters
     //
+    bool IsStandard() const noexcept { return m_features < FeatureBit::EXTRA_DATA_FEATURE_BIT; }
     const mw::Hash& GetOutputID() const noexcept { return m_outputID; }
     const Commitment& GetCommitment() const noexcept final { return m_commitment; }
-    const PublicKey& GetInputPubKey() const noexcept { return m_inputPubKey; }
     const PublicKey& GetOutputPubKey() const noexcept { return m_outputPubKey; }
+    const boost::optional<PublicKey>& GetInputPubKey() const noexcept { return m_inputPubKey; }
+    const std::vector<uint8_t>& GetExtraData() const noexcept { return m_extraData; }
     const Signature& GetSignature() const noexcept { return m_signature; }
 
     SignedMessage BuildSignedMsg() const noexcept;
@@ -70,10 +78,22 @@ public:
     //
     IMPL_SERIALIZABLE(Input, obj)
     {
+        READWRITE(obj.m_features);
         READWRITE(obj.m_outputID);
         READWRITE(obj.m_commitment);
-        READWRITE(obj.m_inputPubKey);
         READWRITE(obj.m_outputPubKey);
+
+        if (obj.m_features & STEALTH_KEY_FEATURE_BIT) {
+            PublicKey input_pubkey;
+            SER_WRITE(obj, input_pubkey = *obj.m_inputPubKey);
+            READWRITE(input_pubkey);
+            SER_READ(obj, obj.m_inputPubKey = boost::make_optional<PublicKey>(std::move(input_pubkey)));
+        }
+
+        if (obj.m_features & EXTRA_DATA_FEATURE_BIT) {
+            READWRITE(obj.m_extraData);
+        }
+
         READWRITE(obj.m_signature);
         SER_READ(obj, obj.m_hash = Hashed(obj));
     }
@@ -84,6 +104,8 @@ public:
     const mw::Hash& GetHash() const noexcept final { return m_hash; }
 
 private:
+    uint8_t m_features;
+
     // The ID of the output being spent.
     mw::Hash m_outputID;
 
@@ -91,10 +113,12 @@ private:
     Commitment m_commitment;
 
     // The input pubkey.
-    PublicKey m_inputPubKey;
+    boost::optional<PublicKey> m_inputPubKey;
 
     // The public key of the output being spent.
     PublicKey m_outputPubKey;
+
+    std::vector<uint8_t> m_extraData;
 
     Signature m_signature;
 

@@ -25,6 +25,7 @@ BOOST_AUTO_TEST_CASE(ValidateStealthSum)
     SecretKey input1_key = SecretKey::Random();
     SecretKey input1_output_key = SecretKey::Random();
     Input input1(
+        1,                                  // features
         SecretKey::Random().GetBigInt(),    // output_id
         Commitment::Random(),               // commitment
         PublicKey::From(input1_key),        // input pubkey
@@ -36,6 +37,7 @@ BOOST_AUTO_TEST_CASE(ValidateStealthSum)
     SecretKey input2_key = SecretKey::Random();
     SecretKey input2_output_key = SecretKey::Random();
     Input input2(
+        1,                                  // features
         SecretKey::Random().GetBigInt(),    // output_id
         Commitment::Random(),               // commitment
         PublicKey::From(input2_key),        // input pubkey

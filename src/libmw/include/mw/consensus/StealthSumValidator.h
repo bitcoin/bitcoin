@@ -25,10 +25,11 @@ public:
             [](const Output& output) { return output.GetSenderPubKey(); }
         );
 
-        std::transform(
-            body.GetInputs().cbegin(), body.GetInputs().cend(), std::back_inserter(lhs_keys),
-            [](const Input& input) { return input.GetInputPubKey(); }
-        );
+        for (const Input& input : body.GetInputs()) {
+            if (!!input.GetInputPubKey()) {
+                lhs_keys.push_back(*input.GetInputPubKey());
+            }
+        }
 
         PublicKey lhs_total;
         if (!lhs_keys.empty()) {

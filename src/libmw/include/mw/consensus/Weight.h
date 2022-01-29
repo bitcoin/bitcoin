@@ -19,13 +19,20 @@ public:
     static constexpr size_t STANDARD_OUTPUT_WEIGHT = BASE_OUTPUT_WEIGHT + STANDARD_OUTPUT_FIELDS_WEIGHT;
 
     static constexpr size_t MAX_NUM_INPUTS = 50'000;
-    static constexpr size_t INPUT_BYTES = 195;
+    static constexpr size_t INPUT_BYTES = 196;
     static constexpr size_t MAX_MWEB_BYTES = 180 + (3 * 5) + // 180 bytes per header and 5 bytes each for input, output, and kernel vec size
-        (MAX_NUM_INPUTS * INPUT_BYTES) + // 50k inputs at 195 bytes each
+        (MAX_NUM_INPUTS * INPUT_BYTES) + // 50k inputs at 196 bytes each (ignoring extradata)
         (mw::MAX_BLOCK_WEIGHT * 60); // Ignoring inputs, no tx component is ever more than 60 bytes per unit of weight 
 
     static size_t Calculate(const TxBody& tx_body)
     {
+        size_t input_weight = std::accumulate(
+            tx_body.GetInputs().begin(), tx_body.GetInputs().end(), (size_t)0,
+            [](size_t sum, const Input& input) {
+                return sum + CalcInputWeight(input.GetExtraData());
+            }
+        );
+
         size_t kernel_weight = std::accumulate(
             tx_body.GetKernels().begin(), tx_body.GetKernels().end(), (size_t)0,
             [](size_t sum, const Kernel& kernel) {
@@ -45,12 +52,17 @@ public:
             }
         );
 
-        return kernel_weight + output_weight;
+        return input_weight + kernel_weight + output_weight;
     }
 
     static bool ExceedsMaximum(const TxBody& tx_body)
     {
         return tx_body.GetInputs().size() > MAX_NUM_INPUTS || Calculate(tx_body) > mw::MAX_BLOCK_WEIGHT;
+    }
+
+    static size_t CalcInputWeight(const std::vector<uint8_t>& extra_data)
+    {
+        return ExtraBytesToWeight(extra_data.size());
     }
 
     static size_t CalcKernelWeight(

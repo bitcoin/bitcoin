@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(PlainTxInput)
     PublicKey input_pubkey = PublicKey::Random();
     PublicKey output_pubkey = PublicKey::Random();
     Signature signature(SecretKey64::Random().GetBigInt());
-    Input input(output_id, commit, input_pubkey, output_pubkey, signature);
+    Input input(1, output_id, commit, input_pubkey, output_pubkey, signature);
 
     //
     // Serialization
@@ -25,6 +25,10 @@ BOOST_AUTO_TEST_CASE(PlainTxInput)
         std::vector<uint8_t> serialized = input.Serialized();
 
         CDataStream deserializer(serialized, SER_DISK, PROTOCOL_VERSION);
+        uint8_t features;
+        deserializer >>  features;
+        BOOST_REQUIRE(features == 1);
+
         mw::Hash output_id2;
         deserializer >> output_id2;
         BOOST_REQUIRE(output_id2 == output_id);
@@ -33,13 +37,13 @@ BOOST_AUTO_TEST_CASE(PlainTxInput)
         deserializer >> commit2;
         BOOST_REQUIRE(commit2 == commit);
 
-        PublicKey input_pubkey2;
-        deserializer >> input_pubkey2;
-        BOOST_REQUIRE(input_pubkey2 == input_pubkey);
-
         PublicKey output_pubkey2;
         deserializer >> output_pubkey2;
         BOOST_REQUIRE(output_pubkey2 == output_pubkey);
+
+        PublicKey input_pubkey2;
+        deserializer >> input_pubkey2;
+        BOOST_REQUIRE(input_pubkey2 == input_pubkey);
 
         Signature signature2;
         deserializer >> signature2;
@@ -54,10 +58,12 @@ BOOST_AUTO_TEST_CASE(PlainTxInput)
     {
         BOOST_REQUIRE(input.GetOutputID() == output_id);
         BOOST_REQUIRE(input.GetCommitment() == commit);
-        BOOST_REQUIRE(input.GetInputPubKey() == input_pubkey);
+        BOOST_REQUIRE(*input.GetInputPubKey() == input_pubkey);
         BOOST_REQUIRE(input.GetOutputPubKey() == output_pubkey);
         BOOST_REQUIRE(input.GetSignature() == signature);
     }
+
+    // MW: TODO - Input version tests
 }
 
 BOOST_AUTO_TEST_SUITE_END()

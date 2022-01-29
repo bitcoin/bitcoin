@@ -28,6 +28,12 @@ Transaction::CPtr Transaction::Create(
 
 bool Transaction::IsStandard() const noexcept
 {
+    for (const Input& input : GetInputs()) {
+        if (!input.IsStandard()) {
+            return false;
+        }
+    }
+
     for (const Kernel& kernel : GetKernels()) {
         if (!kernel.IsStandard()) {
             return false;
