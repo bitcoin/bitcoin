@@ -510,7 +510,7 @@ int RPCSerializationFlags()
 {
     int flag = 0;
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
-        flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
+        flag |= SERIALIZE_TRANSACTION_NO_WITNESS | SERIALIZE_NO_MWEB;
     return flag;
 }
 

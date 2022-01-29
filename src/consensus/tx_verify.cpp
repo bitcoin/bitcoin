@@ -115,6 +115,12 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
     {
         nSigOps += txout.scriptPubKey.GetSigOpCount(false);
     }
+
+    // MWEB: Include pegout scripts
+    for (const PegOutCoin& pegout : tx.mweb_tx.GetPegOuts()) {
+        nSigOps += pegout.GetScriptPubKey().GetSigOpCount(false);
+    }
+
     return nSigOps;
 }
 
