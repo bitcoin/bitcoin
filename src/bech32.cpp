@@ -165,7 +165,7 @@ std::string Encode(Encoding encoding, const std::string& hrp, const data& values
 }
 
 /** Decode a Bech32 or Bech32m string. */
-DecodeResult Decode(const std::string& str) {
+DecodeResult Decode(const std::string& str, const bool ext_length) {
     bool lower = false, upper = false;
     for (size_t i = 0; i < str.size(); ++i) {
         unsigned char c = str[i];
@@ -175,7 +175,7 @@ DecodeResult Decode(const std::string& str) {
     }
     if (lower && upper) return {};
     size_t pos = str.rfind('1');
-    if (str.size() > 90 || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
+    if ((str.size() > 90 && !ext_length) || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
         return {};
     }
     data values(str.size() - 1 - pos);
