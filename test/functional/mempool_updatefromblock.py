@@ -12,6 +12,10 @@ import time
 from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
+from test_framework.wallet import MiniWallet
+from test_framework.messages import (
+    SEQUENCE_FINAL,
+)
 
 
 class MempoolUpdateFromBlockTest(BitcoinTestFramework):
@@ -19,10 +23,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000', '-limitancestorcount=100']]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
-    def transaction_graph_test(self, size, n_tx_to_mine=None, start_input_txid='', end_address='', fee=Decimal(0.00100000)):
+    def transaction_graph_test(self, size, n_tx_to_mine=None):
         """Create an acyclic tournament (a type of directed graph) of transactions and use it for testing.
 
         Keyword arguments:
@@ -38,12 +39,8 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         More details: https://en.wikipedia.org/wiki/Tournament_(graph_theory)
         """
 
-        if not start_input_txid:
-            start_input_txid = self.nodes[0].getblock(self.nodes[0].getblockhash(1))['tx'][0]
-
-        if not end_address:
-            end_address = self.nodes[0].getnewaddress()
-
+        miniwallet = MiniWallet(self.nodes[0])
+        miniwallet.rescan_utxos()
         first_block_hash = ''
         tx_id = []
         tx_size = []
@@ -52,42 +49,16 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
             self.log.debug('Preparing transaction #{}...'.format(i))
             # Prepare inputs.
             if i == 0:
-                inputs = [{'txid': start_input_txid, 'vout': 0}]
-                inputs_value = self.nodes[0].gettxout(start_input_txid, 0)['value']
+                parent_utxo = miniwallet.get_utxo()
             else:
-                inputs = []
-                inputs_value = 0
-                for j, tx in enumerate(tx_id[0:i]):
-                    # Transaction tx[K] is a child of each of previous transactions tx[0]..tx[K-1] at their output K-1.
-                    vout = i - j - 1
-                    inputs.append({'txid': tx_id[j], 'vout': vout})
-                    inputs_value += self.nodes[0].gettxout(tx, vout)['value']
+                parent_utxo = miniwallet.get_utxo(txid=tx_id[i-1]['txid'])
 
-            self.log.debug('inputs={}'.format(inputs))
-            self.log.debug('inputs_value={}'.format(inputs_value))
+            tx = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=parent_utxo, sequence=SEQUENCE_FINAL)
+            tx_id.append(tx)
 
-            # Prepare outputs.
+            tx_size.append(self.nodes[0].getmempoolentry(tx['txid'])['vsize'])
+
             tx_count = i + 1
-            if tx_count < size:
-                # Transaction tx[K] is an ancestor of each of subsequent transactions tx[K+1]..tx[N-1].
-                n_outputs = size - tx_count
-                output_value = ((inputs_value - fee) / Decimal(n_outputs)).quantize(Decimal('0.00000001'))
-                outputs = {}
-                for _ in range(n_outputs):
-                    outputs[self.nodes[0].getnewaddress()] = output_value
-            else:
-                output_value = (inputs_value - fee).quantize(Decimal('0.00000001'))
-                outputs = {end_address: output_value}
-
-            self.log.debug('output_value={}'.format(output_value))
-            self.log.debug('outputs={}'.format(outputs))
-
-            # Create a new transaction.
-            unsigned_raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
-            signed_raw_tx = self.nodes[0].signrawtransactionwithwallet(unsigned_raw_tx)
-            tx_id.append(self.nodes[0].sendrawtransaction(signed_raw_tx['hex']))
-            tx_size.append(self.nodes[0].getmempoolentry(tx_id[-1])['vsize'])
-
             if tx_count in n_tx_to_mine:
                 # The created transactions are mined into blocks by batches.
                 self.log.info('The batch of {} transactions has been accepted into the mempool.'.format(len(self.nodes[0].getrawmempool())))
@@ -109,7 +80,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         self.log.info('Checking descendants/ancestors properties of all of the in-mempool transactions...')
         for k, tx in enumerate(tx_id):
             self.log.debug('Check transaction #{}.'.format(k))
-            entry = self.nodes[0].getmempoolentry(tx)
+            entry = self.nodes[0].getmempoolentry(tx['txid'])
             assert_equal(entry['descendantcount'], size - k)
             assert_equal(entry['descendantsize'], sum(tx_size[k:size]))
             assert_equal(entry['ancestorcount'], k + 1)
