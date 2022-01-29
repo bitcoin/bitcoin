@@ -17,6 +17,22 @@
 #include <utility>
 #include <vector>
 
+class DbInconsistentError : public std::exception
+{
+    using std::exception::exception;
+    const std::string error;
+
+public:
+    explicit DbInconsistentError(const std::string _error) : error{_error} {}
+    const char* what() const noexcept override { return error.c_str(); }
+};
+
+class InvalidAddrManVersionError : public std::ios_base::failure
+{
+public:
+    InvalidAddrManVersionError(std::string msg) : std::ios_base::failure(msg) { }
+};
+
 class AddrInfo;
 class AddrManImpl;
 
@@ -46,16 +62,6 @@ struct AddressPosition {
     }
     explicit AddressPosition(bool tried_in, int multiplicity_in, int bucket_in, int position_in)
         : tried{tried_in}, multiplicity{multiplicity_in}, bucket{bucket_in}, position{position_in} {}
-};
-
-class DbInconsistentError : public std::exception
-{
-    using std::exception::exception;
-    const std::string error;
-
-public:
-    explicit DbInconsistentError(const std::string _error) : error{_error} {}
-    const char* what() const noexcept override { return error.c_str(); }
 };
 
 /** Stochastic address manager
