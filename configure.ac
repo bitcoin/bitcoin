@@ -1414,6 +1414,9 @@ if test "x$use_zmq" = xyes; then
   esac
 fi
 
+
+AC_CHECK_LIB([fmt],[main],MWEB_LIBS=-lfmt,AC_MSG_ERROR(libfmt missing))
+
 dnl univalue check
 
 need_bundled_univalue=yes
