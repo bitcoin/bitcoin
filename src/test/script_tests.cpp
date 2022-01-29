@@ -1473,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
 static CMutableTransaction TxFromHex(const std::string& str)
 {
     CMutableTransaction tx;
-    VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, ParseHex(str), 0) >> tx;
+    VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS | SERIALIZE_NO_MWEB, ParseHex(str), 0) >> tx;
     return tx;
 }
 
@@ -1498,6 +1498,19 @@ static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
         scriptwitness.stack.push_back(std::move(bytes));
     }
     return scriptwitness;
+}
+
+// MWEB: Pegin Script
+BOOST_AUTO_TEST_CASE(script_mweb_pegin)
+{
+    CScript script;
+    mw::Hash kernel_id = SecretKey::Random().vec();
+
+    script << OP_9 << kernel_id.vec();
+
+    mw::Hash kernel_id2;
+    BOOST_CHECK(script.IsMWEBPegin(&kernel_id2));
+    BOOST_CHECK(kernel_id == kernel_id2);
 }
 
 #if defined(HAVE_CONSENSUS_LIB)

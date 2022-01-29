@@ -56,6 +56,8 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
+    case TxoutType::WITNESS_MWEB_PEGIN: return "witness_mweb_pegin";
+    case TxoutType::WITNESS_MWEB_HOGADDR: return "witness_mweb_hogaddr";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -135,6 +137,14 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
             vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
             vSolutionsRet.push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V1_TAPROOT;
+        }
+        if (witnessversion == MWEB_PEGIN_WITNESS_VERSION && witnessprogram.size() == WITNESS_MWEB_PEGIN_SIZE) {
+            vSolutionsRet.push_back(witnessprogram);
+            return TxoutType::WITNESS_MWEB_PEGIN;
+        }
+        if (witnessversion == MWEB_HOG_ADDR_WITNESS_VERSION && witnessprogram.size() == WITNESS_MWEB_HEADERHASH_SIZE) {
+            vSolutionsRet.push_back(witnessprogram);
+            return TxoutType::WITNESS_MWEB_HOGADDR;
         }
         if (witnessversion != 0) {
             vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
@@ -295,6 +305,11 @@ public:
     {
         return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
     }
+
+    CScript operator()(const StealthAddress& id) const
+    {
+		return CScript();
+    }
 };
 } // namespace
 
@@ -319,6 +334,26 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
+CScript GetScriptForPegin(const mw::Hash& kernel_id)
+{
+    CScript script;
+    script << CScript::EncodeOP_N(MWEB_PEGIN_WITNESS_VERSION);
+    script << kernel_id.vec();
+    return script;
+}
+
 bool IsValidDestination(const CTxDestination& dest) {
     return dest.which() != 0;
 }
+
+bool IsPegInOutput(const CTxOutput& output)
+{
+    if (!output.IsMWEB()) {
+        std::vector<std::vector<uint8_t>> solutions_data;
+        auto which_type = Solver(output.GetTxOut().scriptPubKey, solutions_data);
+        return which_type == TxoutType::WITNESS_MWEB_PEGIN;
+    }
+
+    return false;
+}
+

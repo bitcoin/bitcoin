@@ -3735,6 +3735,14 @@ public:
         return obj;
     }
 
+    UniValue operator()(const StealthAddress& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("scan_pubkey", id.GetScanPubKey().ToHex());
+        obj.pushKV("spend_pubkey", id.GetSpendPubKey().ToHex());
+        return obj;
+    }
+
     UniValue operator()(const WitnessUnknown& id) const { return UniValue(UniValue::VOBJ); }
 };
 

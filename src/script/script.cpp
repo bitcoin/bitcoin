@@ -5,6 +5,7 @@
 
 #include <script/script.h>
 
+#include <mw/models/crypto/Hash.h>
 #include <util/strencodings.h>
 
 #include <string>
@@ -230,6 +231,40 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
         program = std::vector<unsigned char>(this->begin() + 2, this->end());
         return true;
     }
+    return false;
+}
+
+bool CScript::IsMWEBPegin(mw::Hash* const kernel_id) const
+{
+    int version;
+    std::vector<uint8_t> program;
+    if (IsWitnessProgram(version, program)) {
+        if (version == MWEB_PEGIN_WITNESS_VERSION && program.size() == WITNESS_MWEB_PEGIN_SIZE) {
+            if (kernel_id != nullptr) {
+                *kernel_id = mw::Hash(std::move(program));
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CScript::IsMWEBHogAddr(mw::Hash* const header_hash) const
+{
+    int version;
+    std::vector<uint8_t> program;
+    if (IsWitnessProgram(version, program)) {
+        if (version == MWEB_HOG_ADDR_WITNESS_VERSION && program.size() == WITNESS_MWEB_HEADERHASH_SIZE) {
+            if (header_hash != nullptr) {
+                *header_hash = mw::Hash(std::move(program));
+            }
+
+            return true;
+        }
+    }
+
     return false;
 }
 

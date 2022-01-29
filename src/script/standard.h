@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_STANDARD_H
 #define BITCOIN_SCRIPT_STANDARD_H
 
+#include <mw/models/wallet/StealthAddress.h>
 #include <script/interpreter.h>
 #include <uint256.h>
 
@@ -130,6 +131,8 @@ enum class TxoutType {
     WITNESS_V0_SCRIPTHASH,
     WITNESS_V0_KEYHASH,
     WITNESS_V1_TAPROOT,
+    WITNESS_MWEB_PEGIN, //!< Hash of the peg-in kernel
+    WITNESS_MWEB_HOGADDR, //!< HogAddr (first output of HogEx)
     WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };
 
@@ -209,9 +212,10 @@ struct WitnessUnknown
  *  * WitnessV0KeyHash: TxoutType::WITNESS_V0_KEYHASH destination (P2WPKH)
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN/WITNESS_V1_TAPROOT destination (P2W???)
  *    (taproot outputs do not require their own type as long as no wallet support exists)
+ *  * StealthAddress: MWEB destination
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
+typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown, StealthAddress> CTxDestination;
 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
@@ -264,5 +268,9 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+
+bool IsPegInOutput(const CTxOutput& output);
+
+CScript GetScriptForPegin(const mw::Hash& kernel_id);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

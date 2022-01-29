@@ -66,6 +66,16 @@ public:
         return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
+    std::string operator()(const StealthAddress& id) const
+    {
+        std::vector<uint8_t> serialized = id.Serialized();
+
+        std::vector<uint8_t> converted = {0};
+        ConvertBits<8, 5, true>([&](unsigned char c) { converted.push_back(c); }, serialized.begin(), serialized.end());
+
+        return bech32::Encode(bech32::Encoding::BECH32, m_params.MWEB_HRP(), converted);
+    }
+
     std::string operator()(const CNoDestination& no) const { return {}; }
 };
 
@@ -138,6 +148,19 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             return unk;
         }
     }
+
+    auto decoded = bech32::Decode(str, true);
+    if (decoded.encoding == bech32::Encoding::BECH32 && decoded.hrp == params.MWEB_HRP()) {
+        std::vector<uint8_t> converted;
+        converted.reserve(((decoded.data.size() - 1) * 5) / 8);
+
+        if (ConvertBits<5, 8, false>([&](unsigned char c) { converted.push_back(c); }, decoded.data.begin() + 1, decoded.data.end())) {
+            if (converted.size() == 66) {
+                return StealthAddress(BigInt<33>(converted.data()), BigInt<33>(converted.data() + 33));
+            }
+        }
+    }
+
     return CNoDestination();
 }
 } // namespace
