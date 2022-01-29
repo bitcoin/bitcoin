@@ -202,6 +202,7 @@ BITCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   miner.h \
+  mweb/mweb_db.h \
   net.h \
   net_permissions.h \
   net_processing.h \

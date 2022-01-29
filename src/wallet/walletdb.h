@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 /**
  * Overview of wallet database classes:
  *
@@ -88,11 +90,13 @@ class CHDChain
 public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
+    uint32_t nMWEBIndexCounter;
     CKeyID seed_id; //!< seed hash160
 
     static const int VERSION_HD_BASE        = 1;
     static const int VERSION_HD_CHAIN_SPLIT = 2;
-    static const int CURRENT_VERSION        = VERSION_HD_CHAIN_SPLIT;
+    static const int VERSION_HD_MWEB        = 3;
+    static const int CURRENT_VERSION        = VERSION_HD_MWEB;
     int nVersion;
 
     CHDChain() { SetNull(); }
@@ -103,6 +107,10 @@ public:
         if (obj.nVersion >= VERSION_HD_CHAIN_SPLIT) {
             READWRITE(obj.nInternalChainCounter);
         }
+
+        if (obj.nVersion >= VERSION_HD_MWEB) {
+            READWRITE(obj.nMWEBIndexCounter);
+        }
     }
 
     void SetNull()
@@ -110,6 +118,7 @@ public:
         nVersion = CHDChain::CURRENT_VERSION;
         nExternalChainCounter = 0;
         nInternalChainCounter = 0;
+        nMWEBIndexCounter = 0;
         seed_id.SetNull();
     }
 
@@ -125,13 +134,15 @@ public:
     static const int VERSION_BASIC=1;
     static const int VERSION_WITH_HDDATA=10;
     static const int VERSION_WITH_KEY_ORIGIN = 12;
-    static const int CURRENT_VERSION=VERSION_WITH_KEY_ORIGIN;
+    static const int VERSION_WITH_MWEB_INDEX = 14;
+    static const int CURRENT_VERSION = VERSION_WITH_MWEB_INDEX;
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     std::string hdKeypath; //optional HD/bip32 keypath. Still used to determine whether a key is a seed. Also kept for backwards compatibility
     CKeyID hd_seed_id; //id of the HD seed used to derive this key
     KeyOriginInfo key_origin; // Key origin info with path and fingerprint
     bool has_key_origin = false; //!< Whether the key_origin is useful
+    boost::optional<uint32_t> mweb_index = boost::none;
 
     CKeyMetadata()
     {
@@ -154,6 +165,9 @@ public:
             READWRITE(obj.key_origin);
             READWRITE(obj.has_key_origin);
         }
+        if (obj.nVersion >= VERSION_WITH_MWEB_INDEX) {
+            READWRITE(obj.mweb_index);
+        }
     }
 
     void SetNull()
@@ -164,6 +178,7 @@ public:
         hd_seed_id.SetNull();
         key_origin.clear();
         has_key_origin = false;
+        mweb_index = boost::none;
     }
 };
 

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <mw/mmr/PruneList.h>
+#include <mw/file/File.h>
 
 #include <test_framework/TestMWEB.h>
 
