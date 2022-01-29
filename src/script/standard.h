@@ -273,4 +273,6 @@ bool IsPegInOutput(const CTxOutput& output);
 
 CScript GetScriptForPegin(const mw::Hash& kernel_id);
 
+#include <script/address.h>
+
 #endif // BITCOIN_SCRIPT_STANDARD_H
