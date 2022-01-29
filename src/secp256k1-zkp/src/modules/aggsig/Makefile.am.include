@@ -1,0 +1,8 @@
+include_HEADERS += include/secp256k1_aggsig.h
+noinst_HEADERS += src/modules/aggsig/main_impl.h
+noinst_HEADERS += src/modules/aggsig/tests_impl.h
+if USE_BENCHMARK
+noinst_PROGRAMS += bench_aggsig
+bench_aggsig_SOURCES = src/bench_aggsig.c
+bench_aggsig_LDADD = libsecp256k1.la $(SECP_LIBS) $(COMMON_LIB)
+endif

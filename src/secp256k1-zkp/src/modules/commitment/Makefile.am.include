@@ -1,0 +1,4 @@
+include_HEADERS += include/secp256k1_commitment.h
+noinst_HEADERS += src/modules/commitment/main_impl.h
+noinst_HEADERS += src/modules/commitment/pedersen_impl.h
+noinst_HEADERS += src/modules/commitment/tests_impl.h

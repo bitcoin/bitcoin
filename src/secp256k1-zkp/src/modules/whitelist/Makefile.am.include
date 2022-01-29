@@ -1,0 +1,10 @@
+include_HEADERS += include/secp256k1_whitelist.h
+noinst_HEADERS += src/modules/whitelist/whitelist_impl.h
+noinst_HEADERS += src/modules/whitelist/main_impl.h
+noinst_HEADERS += src/modules/whitelist/tests_impl.h
+if USE_BENCHMARK
+noinst_PROGRAMS += bench_whitelist
+bench_whitelist_SOURCES = src/bench_whitelist.c
+bench_whitelist_LDADD = libsecp256k1.la $(SECP_LIBS)
+bench_generator_LDFLAGS = -static
+endif
