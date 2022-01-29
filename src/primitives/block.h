@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <mweb/mweb_models.h>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -70,6 +71,8 @@ public:
     // memory only
     mutable bool fChecked;
 
+    MWEB::Block mweb_block;
+
     CBlock()
     {
         SetNull();
@@ -85,6 +88,11 @@ public:
     {
         READWRITEAS(CBlockHeader, obj);
         READWRITE(obj.vtx);
+        if (!(s.GetVersion() & SERIALIZE_NO_MWEB)) {
+            if (obj.vtx.size() >= 2 && obj.vtx.back()->IsHogEx()) {
+                READWRITE(obj.mweb_block);
+            }
+        }
     }
 
     void SetNull()
@@ -92,6 +100,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
+        mweb_block.SetNull();
     }
 
     CBlockHeader GetBlockHeader() const
@@ -107,6 +116,9 @@ public:
     }
 
     std::string ToString() const;
+
+    // Returns the hogex (integrating) transaction, if it exists.
+    CTransactionRef GetHogEx() const noexcept;
 };
 
 /** Describes a place in the block chain to another node such that if the

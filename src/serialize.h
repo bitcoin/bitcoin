@@ -23,6 +23,7 @@
 
 #include <prevector.h>
 #include <span.h>
+#include <boost/optional.hpp>
 
 /**
  * The maximum size of a serialized object in bytes or number of elements
@@ -689,12 +690,59 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 template<typename Stream, typename T> void Serialize(Stream& os, const std::shared_ptr<const T>& p);
 template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_ptr<const T>& p);
 
+class CTransaction;
+template<typename Stream> void Unserialize(Stream& is, std::shared_ptr<const CTransaction>& item);
+
 /**
  * unique_ptr
  */
 template<typename Stream, typename T> void Serialize(Stream& os, const std::unique_ptr<const T>& p);
 template<typename Stream, typename T> void Unserialize(Stream& os, std::unique_ptr<const T>& p);
 
+/**
+ * optional
+ */
+template<typename Stream, typename T> void Serialize(Stream& os, const boost::optional<T>& item);
+template<typename Stream, typename T> void Unserialize(Stream& is, boost::optional<T>& item);
+
+
+template <class T>
+class OptionalPtr
+{
+protected:
+    T& obj;
+
+public:
+    explicit OptionalPtr(T& _obj) : obj(_obj) {}
+
+    template <typename Stream>
+    void Serialize(Stream& os) const
+    {
+        uint8_t is_set = obj != nullptr ? 1 : 0;
+        os << is_set;
+
+        if (is_set == 1) {
+            ::Serialize(os, obj);
+        }
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& is)
+    {
+        uint8_t is_set = 0;
+        is >> is_set;
+
+        if (is_set == 1) {
+            ::Unserialize(is, obj);
+        }
+    }
+};
+
+template <typename I>
+OptionalPtr<I> WrapOptionalPtr(I& n)
+{
+    return OptionalPtr<I>(n);
+}
 
 
 /**
@@ -974,9 +1022,39 @@ Serialize(Stream& os, const std::shared_ptr<const T>& p)
 template<typename Stream, typename T>
 void Unserialize(Stream& is, std::shared_ptr<const T>& p)
 {
-    p = std::make_shared<const T>(deserialize, is);
+    T obj;
+    is >> obj;
+    p = std::make_shared<const T>(std::move(obj));
 }
 
+
+/**
+ * optional
+ */
+template <typename Stream, typename T>
+void Serialize(Stream& os, const boost::optional<T>& p)
+{
+    uint8_t is_set = !!p ? 1 : 0;
+    Serialize(os, is_set);
+
+    if (is_set == 1) {
+        Serialize(os, (*p));
+    }
+}
+
+template <typename Stream, typename T>
+void Unserialize(Stream& is, boost::optional<T>& p)
+{
+    uint8_t is_set = 0;
+    Unserialize(is, is_set);
+
+    if (is_set == 1) {
+        T val;
+        Unserialize(is, val);
+
+        p = boost::make_optional(std::move(val));
+    }
+}
 
 
 /**
