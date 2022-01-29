@@ -650,8 +650,11 @@ static RPCHelpMan syscoingetspvproof()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
 
     CBlock block;
-    if (IsBlockPruned(pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+    {
+        LOCK(cs_main);
+        if (IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+        }
     }
 
     if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
