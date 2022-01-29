@@ -20,6 +20,8 @@
 #include <index/txindex.h>
 #include <logging.h>
 #include <logging/timer.h>
+#include <mw/node/CoinsView.h>
+#include <mweb/mweb_db.h>
 #include <node/ui_interface.h>
 #include <optional.h>
 #include <policy/fees.h>
@@ -449,7 +451,7 @@ namespace {
 class MemPoolAccept
 {
 public:
-    MemPoolAccept(CTxMemPool& mempool) : m_pool(mempool), m_view(&m_dummy), m_viewmempool(&::ChainstateActive().CoinsTip(), m_pool),
+    MemPoolAccept(CTxMemPool& mempool) : m_pool(mempool), m_dummy{}, m_view(&m_dummy), m_viewmempool(&::ChainstateActive().CoinsTip(), m_pool),
         m_limit_ancestors(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT)),
         m_limit_ancestor_size(gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000),
         m_limit_descendants(gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT)),
@@ -534,9 +536,9 @@ private:
 
 private:
     CTxMemPool& m_pool;
+    CCoinsView m_dummy;
     CCoinsViewCache m_view;
     CCoinsViewMemPool m_viewmempool;
-    CCoinsView m_dummy;
 
     // The package limits in effect at the time of invocation.
     const size_t m_limit_ancestors;
@@ -675,7 +677,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // we have all inputs cached now, so switch back to dummy (to protect
     // against bugs where we pull more inputs from disk that miss being added
     // to coins_to_uncache)
-    m_view.SetBackend(m_dummy);
+    // MW: TODO - m_view.SetBackend(m_dummy);
 
     // Only accept BIP68 sequence locked transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
@@ -1282,6 +1284,22 @@ void CChainState::InitCoinsDB(
 
     m_coins_views = MakeUnique<CoinsViews>(
         leveldb_name, cache_size_bytes, in_memory, should_wipe);
+
+    CBlock block;
+    CBlockIndex* pindex = LookupBlockIndex(CoinsDB().GetBestBlock());
+    if (pindex != nullptr) {
+        if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+            // MW: TODO - Throw? return error("AppInitMain(): ReadBlockFromDisk() failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
+        }
+    }
+
+    // MWEB: Initialize MWEB node APIs
+    mw::CoinsViewDB::Ptr mweb_dbview = mw::CoinsViewDB::Open(
+        FilePath{GetDataDir()},
+        block.mweb_block.GetMWEBHeader(),
+        std::make_shared<MWEB::DBWrapper>(CoinsDB().GetDB())
+    );
+    CoinsDB().SetMWEBView(mweb_dbview);
 }
 
 void CChainState::InitCoinsCache(size_t cache_size_bytes)
