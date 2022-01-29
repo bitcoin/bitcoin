@@ -38,7 +38,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
-        if (fHeightBased ? (pindexPrev->nHeight + 1) < nHeightStart : pindexPrev->GetMedianTimePast() < nTimeStart) {
+        if (fHeightBased ? ((pindexPrev->nHeight + 1) < nHeightStart) : (pindexPrev->GetMedianTimePast() < nTimeStart)) {
             // Optimization: don't recompute down further, as we know every earlier block will be before the start time
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
@@ -76,7 +76,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                 }
                 if (count >= nThreshold) {
                     stateNext = ThresholdState::LOCKED_IN;
-                } else if (fHeightBased ? (pindexPrev->nHeight + 1) >= nHeightTimeout : pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
+                } else if (fHeightBased ? ((pindexPrev->nHeight + 1) >= nHeightTimeout) : (pindexPrev->GetMedianTimePast() >= nTimeTimeout)) {
                     stateNext = fHeightBased ? ThresholdState::LOCKED_IN : ThresholdState::FAILED;
                 }
                 break;

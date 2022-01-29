@@ -306,6 +306,9 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
  *  Note that transaction witness validation rules are always enforced when P2SH is enforced. */
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
+/** Check whether MWEB (LIPs 002-004) has activated. */
+bool IsMWEBEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+
 /** Update uncommitted block structures (currently: only the witness reserved value). This is safe for submitted blocks. */
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 
