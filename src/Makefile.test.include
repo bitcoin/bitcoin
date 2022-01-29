@@ -202,6 +202,7 @@ FUZZ_SUITE_LD_COMMON = \
  $(LIBLEVELDB) \
  $(LIBLEVELDB_SSE42) \
  $(BOOST_LIBS) \
+ $(MWEB_LIBS) \
  $(LIBMEMENV) \
  $(LIBSECP256K1) \
  $(EVENT_LIBS) \
@@ -310,15 +311,53 @@ BITCOIN_TEST_SUITE += \
   wallet/test/init_test_fixture.h
 endif
 
+BITCOIN_TEST_SUITE += \
+  libmw/test/framework/src/TxBuilder.cpp \
+  libmw/test/framework/src/models/Tx.cpp
+
+BITCOIN_TESTS += \
+  libmw/test/tests/consensus/Test_Aggregation.cpp \
+  libmw/test/tests/consensus/Test_KernelSumValidator.cpp \
+  libmw/test/tests/consensus/Test_StealthSumValidator.cpp \
+  libmw/test/tests/consensus/Test_Weight.cpp \
+  libmw/test/tests/crypto/Test_AddCommitments.cpp \
+  libmw/test/tests/crypto/Test_AggSig.cpp \
+  libmw/test/tests/crypto/Test_Keys.cpp \
+  libmw/test/tests/crypto/Test_RangeProofs.cpp \
+  libmw/test/tests/db/Test_LeafDB.cpp \
+  libmw/test/tests/mmr/Test_Index.cpp \
+  libmw/test/tests/mmr/Test_LeafIndex.cpp \
+  libmw/test/tests/mmr/Test_LeafSetCache.cpp \
+  libmw/test/tests/mmr/Test_LeafSet.cpp \
+  libmw/test/tests/mmr/Test_MMR.cpp \
+  libmw/test/tests/mmr/Test_MMRUtil.cpp \
+  libmw/test/tests/mmr/Test_PruneList.cpp \
+  libmw/test/tests/models/block/Test_Block.cpp \
+  libmw/test/tests/models/block/Test_Header.cpp \
+  libmw/test/tests/models/crypto/Test_BigInteger.cpp \
+  libmw/test/tests/models/tx/Test_Input.cpp \
+  libmw/test/tests/models/tx/Test_Kernel.cpp \
+  libmw/test/tests/models/tx/Test_Output.cpp \
+  libmw/test/tests/models/tx/Test_PegInCoin.cpp \
+  libmw/test/tests/models/tx/Test_PegOutCoin.cpp \
+  libmw/test/tests/models/tx/Test_Transaction.cpp \
+  libmw/test/tests/models/tx/Test_TxBody.cpp \
+  libmw/test/tests/models/tx/Test_UTXO.cpp \
+  libmw/test/tests/node/Test_BlockBuilder.cpp \
+  libmw/test/tests/node/Test_BlockValidator.cpp \
+  libmw/test/tests/node/Test_CoinsView.cpp \
+  libmw/test/tests/node/Test_MineChain.cpp \
+  libmw/test/tests/node/Test_Reorg.cpp
+
 test_test_litecoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_litecoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_litecoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS) $(LIBMW_CPPFLAGS) -Ilibmw/test/framework/include
 test_test_litecoin_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
 test_test_litecoin_LDADD += $(LIBBITCOIN_WALLET)
 endif
 
 test_test_litecoin_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
-  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(LIBMW) $(MWEB_LIBS) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
 test_test_litecoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 test_test_litecoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(CRYPTO_LIBS) $(SQLITE_LIBS)

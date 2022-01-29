@@ -78,7 +78,7 @@ dnl Require C++11 or C++17 compiler (no GNU extensions)
 if test "x$use_cxx17" = xyes -o "x$enable_fuzz" = xyes ; then
   AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 else
-  AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
+  AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory])
 fi
 
 dnl Check if -latomic is required for <std::atomic>
@@ -1723,6 +1723,7 @@ AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(QR_LIBS)
+AC_SUBST(MWEB_LIBS)
 AC_SUBST(HAVE_GMTIME_R)
 AC_SUBST(HAVE_FDATASYNC)
 AC_SUBST(HAVE_FULLFSYNC)

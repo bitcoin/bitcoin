@@ -1,0 +1,9 @@
+out/
+build/
+bin/
+build-aux/
+
+.vs/
+CMakeSettings.json
+libmw-config.h
+stamp-h1
