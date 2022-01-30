@@ -1631,13 +1631,14 @@
                  </property>
                 </widget>
                </item>
-               <widget class="QLabel" name="label_50">
+               <item row="23" column="2">
+                <widget class="QLabel" name="label_50">
                   <property name="text">
                   <string>Node Type</string>
                   </property>
                 </widget>
                 </item>
-                <item row="23" column="2">
+                <item row="23" column="3">
                 <widget class="QLabel" name="peerNodeType">
                   <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
