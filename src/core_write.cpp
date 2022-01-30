@@ -190,46 +190,88 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("locktime", (int64_t)tx.nLockTime);
 
     UniValue vin(UniValue::VARR);
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        const CTxIn& txin = tx.vin[i];
+    for (const CTxInput& input : tx.GetInputs()) {
         UniValue in(UniValue::VOBJ);
-        if (tx.IsCoinBase())
-            in.pushKV("coinbase", HexStr(txin.scriptSig));
-        else {
-            in.pushKV("txid", txin.prevout.hash.GetHex());
-            in.pushKV("vout", (int64_t)txin.prevout.n);
-            UniValue o(UniValue::VOBJ);
-            o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
-            o.pushKV("hex", HexStr(txin.scriptSig));
-            in.pushKV("scriptSig", o);
-        }
-        if (!tx.vin[i].scriptWitness.IsNull()) {
-            UniValue txinwitness(UniValue::VARR);
-            for (const auto& item : tx.vin[i].scriptWitness.stack) {
-                txinwitness.push_back(HexStr(item));
+        in.pushKV("ismweb", input.IsMWEB());
+
+        if (input.IsMWEB()) {
+            in.pushKV("output_id", input.ToMWEB().ToHex());
+        } else {
+            const CTxIn& txin = input.GetTxIn();
+            if (tx.IsCoinBase())
+                in.pushKV("coinbase", HexStr(txin.scriptSig));
+            else {
+                in.pushKV("txid", txin.prevout.hash.GetHex());
+                in.pushKV("vout", (int64_t)txin.prevout.n);
+                UniValue o(UniValue::VOBJ);
+                o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
+                o.pushKV("hex", HexStr(txin.scriptSig));
+                in.pushKV("scriptSig", o);
             }
-            in.pushKV("txinwitness", txinwitness);
+            if (!txin.scriptWitness.IsNull()) {
+                UniValue txinwitness(UniValue::VARR);
+                for (const auto& item : txin.scriptWitness.stack) {
+                    txinwitness.push_back(HexStr(item));
+                }
+                in.pushKV("txinwitness", txinwitness);
+            }
+            in.pushKV("sequence", (int64_t)txin.nSequence);
         }
-        in.pushKV("sequence", (int64_t)txin.nSequence);
+
         vin.push_back(in);
     }
     entry.pushKV("vin", vin);
 
     UniValue vout(UniValue::VARR);
-    for (unsigned int i = 0; i < tx.vout.size(); i++) {
-        const CTxOut& txout = tx.vout[i];
-
+    int64_t n = 0;
+    for (const CTxOutput& output : tx.GetOutputs()) {
         UniValue out(UniValue::VOBJ);
+        out.pushKV("ismweb", output.IsMWEB());
 
-        out.pushKV("value", ValueFromAmount(txout.nValue));
-        out.pushKV("n", (int64_t)i);
+        if (output.IsMWEB()) {
+            out.pushKV("output_id", output.ToMWEB().ToHex());
+        } else {
+            const CTxOut& txout = output.GetTxOut();
+            out.pushKV("value", ValueFromAmount(txout.nValue));
+            out.pushKV("n", n++);
 
-        UniValue o(UniValue::VOBJ);
-        ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
-        out.pushKV("scriptPubKey", o);
+            UniValue o(UniValue::VOBJ);
+            ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
+            out.pushKV("scriptPubKey", o);
+        }
+
         vout.push_back(out);
     }
     entry.pushKV("vout", vout);
+
+    if (tx.HasMWEBTx()) {
+        UniValue vkern(UniValue::VARR);
+
+        for (const Kernel& kernel : tx.mweb_tx.m_transaction->GetKernels()) {
+            UniValue kern(UniValue::VOBJ);
+            kern.pushKV("kernel_id", kernel.GetKernelID().ToHex());
+
+            kern.pushKV("fee", kernel.GetFee());
+            kern.pushKV("pegin", kernel.GetPegIn());
+
+            UniValue pegouts(UniValue::VARR);
+            for (const PegOutCoin& pegout : kernel.GetPegOuts()) {
+                UniValue uni_pegout(UniValue::VOBJ);
+                uni_pegout.pushKV("value", pegout.GetAmount());
+
+                UniValue p(UniValue::VOBJ);
+                ScriptPubKeyToUniv(pegout.GetScriptPubKey(), p, true);
+                uni_pegout.pushKV("scriptPubKey", p);
+
+                pegouts.push_back(uni_pegout);
+            }
+            kern.pushKV("pegout", pegouts);
+
+            vkern.push_back(kern);
+        }
+
+        entry.pushKV("vkern", vkern);
+    }
 
     if (!hashBlock.IsNull())
         entry.pushKV("blockhash", hashBlock.GetHex());
