@@ -204,6 +204,7 @@ BITCOIN_CORE_H = \
   miner.h \
   mweb/mweb_db.h \
   mweb/mweb_models.h \
+  mweb/mweb_node.h \
   mweb/mweb_policy.h \
   net.h \
   net_permissions.h \
@@ -352,6 +353,7 @@ libbitcoin_server_a_SOURCES = \
   interfaces/chain.cpp \
   interfaces/node.cpp \
   miner.cpp \
+  mweb/mweb_node.cpp \
   net.cpp \
   net_processing.cpp \
   node/coin.cpp \
