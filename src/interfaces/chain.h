@@ -132,6 +132,9 @@ public:
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
 
+    //! Get tip information.
+    virtual bool getTip(const FoundBlock& block={}) = 0;
+
     //! Return height of the highest block on chain in common with the locator,
     //! which will either be the original block used to create the locator,
     //! or one of its ancestors.
@@ -339,6 +342,9 @@ public:
 
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
+
+    //! Wait for pending notifications.
+    virtual void waitForPendingNotifications() = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.

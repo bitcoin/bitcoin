@@ -45,6 +45,7 @@
 #include <vector>
 
 using interfaces::BlockInfo;
+using interfaces::FoundBlock;
 using kernel::ChainstateRole;
 using node::MakeBlockInfo;
 
@@ -466,20 +467,22 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
         return false;
     }
 
-    {
+    // best_block_index may be null if here this method is called immediately after Init().
+    if (const CBlockIndex* index = m_best_block_index.load()) {
+        interfaces::BlockRef best_block{index->GetBlockHash(), index->nHeight};
         // Skip the queue-draining stuff if we know we're caught up with
         // m_chain.Tip().
-        LOCK(cs_main);
-        const CBlockIndex* chain_tip = m_chainstate->m_chain.Tip();
-        const CBlockIndex* best_block_index = m_best_block_index.load();
-        // best_block_index may be null if here this method is called immediately after Init().
-        if (best_block_index && best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
+        interfaces::BlockRef tip;
+        uint256 ancestor;
+        if (m_chain->getTip(FoundBlock().hash(tip.hash).height(tip.height)) &&
+            m_chain->findAncestorByHeight(best_block.hash, tip.height, FoundBlock().hash(ancestor)) &&
+            ancestor == tip.hash) {
             return true;
         }
     }
 
     LogInfo("%s is catching up on block notifications", GetName());
-    m_chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
+    m_chain->waitForPendingNotifications();
     return true;
 }
 
