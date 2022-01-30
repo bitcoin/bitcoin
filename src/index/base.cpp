@@ -78,14 +78,14 @@ public:
 
 void BaseIndexNotifications::blockConnected(ChainstateRole role, const interfaces::BlockInfo& block)
 {
-    processBlock(role, block, /*append=*/true);
-}
+    if (!block.error.empty()) {
+        m_index.FatalErrorf("%s", block.error);
+        return;
+    }
 
-void BaseIndexNotifications::processBlock(ChainstateRole role, const interfaces::BlockInfo& block, bool append)
-{
-    // processBlock is called an extra time with append=false and with
+    // blockConnected is called an extra time without block data and with
     // chain_tip=true as a signal that sync has caught up.
-    if (!append && block.chain_tip) {
+    if (!block.data && block.chain_tip) {
         m_index.m_synced = true;
         if (block.height >= 0) {
             LogPrintf("%s is enabled at height %d\n", m_index.GetName(), block.height);
@@ -118,7 +118,7 @@ void BaseIndexNotifications::processBlock(ChainstateRole role, const interfaces:
     }
 
     // Dispatch block to child class; errors are logged internally and abort the node.
-    if (append && !m_index.Append(block)) return;
+    if (block.data && !m_index.Append(block)) return;
 
     NodeClock::time_point current_time{0s};
     if (!block.chain_tip) {
@@ -137,7 +137,7 @@ void BaseIndexNotifications::processBlock(ChainstateRole role, const interfaces:
         // Commit if reached the last block flushed by the node, or if reached
         // the end of sync and no more data is being appended, or if enough time
         // has elapsed since the last commit.
-        if (block.status == BlockInfo::FLUSHED_TIP || !append || (block.status == BlockInfo::FLUSHED && current_time - m_last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL)) {
+        if (block.status == BlockInfo::FLUSHED_TIP || !block.data || (block.status == BlockInfo::FLUSHED && current_time - m_last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL)) {
             auto locator = GetLocator(*m_index.m_chain, block.hash);
             m_last_locator_write_time = current_time;
             // No need to handle errors in Commit. If it fails, the error will be already be
@@ -165,6 +165,11 @@ void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& bloc
     // Make a mutable copy of the BlockInfo argument so block data can be
     // attached below. This is temporary and removed in upcoming commits.
     interfaces::BlockInfo block{block_info};
+
+    if (!block.error.empty()) {
+        m_index.FatalErrorf("%s", block.error);
+        return;
+    }
 
     // During initial sync, ignore validation interface notifications, only
     // process notifications from sync thread.
@@ -294,10 +299,14 @@ bool BaseIndex::Init()
     AssertLockNotHeld(cs_main);
 
     // May need reset if index is being restarted.
-    m_interrupt.reset();
     m_best_block_index = nullptr;
     m_synced = false;
     m_ready = false;
+    {
+        LOCK(m_mutex);
+        assert(!m_handler);
+        assert(!m_notifications);
+    }
 
     // m_chainstate member gives indexing code access to node internals. It is
     // removed in followup https://github.com/bitcoin/bitcoin/pull/24230
@@ -310,6 +319,7 @@ bool BaseIndex::Init()
     }
 
     auto options = CustomOptions();
+    options.thread_name = GetName();
     auto notifications = std::make_shared<BaseIndexNotifications>(*this);
     auto prepare_sync = [&](const interfaces::BlockInfo& block) {
         const auto block_ref{block.height >= 0 ? std::make_optional(interfaces::BlockRef{block.hash, block.height}) : std::nullopt};
@@ -356,127 +366,15 @@ bool BaseIndex::Init()
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool BaseIndex::Append(const interfaces::BlockInfo& block_info)
 {
-    AssertLockHeld(cs_main);
-
-    if (!pindex_prev) {
-        return chain.Genesis();
-    }
-
-    const CBlockIndex* pindex = chain.Next(pindex_prev);
-    if (pindex) {
-        return pindex;
-    }
-
-    // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
-    // Caller will be responsible for rewinding back to the common ancestor.
-    return chain.Next(chain.FindFork(pindex_prev));
-}
-
-bool BaseIndex::Append(const interfaces::BlockInfo& new_block)
-{
-    // Make a mutable copy of the BlockInfo argument so data and undo_data can
-    // be attached below. This is temporary and removed in upcoming commits.
-    interfaces::BlockInfo block_info{new_block};
-    const CBlockIndex* pindex = &BlockIndex(block_info.hash);
-
-    CBlock block;
-    if (!block_info.data) { // disk lookup if block data wasn't provided
-        if (!m_chainstate->m_blockman.ReadBlock(block, *pindex)) {
-            FatalErrorf("Failed to read block %s from disk",
-                        pindex->GetBlockHash().ToString());
-            return false;
-        }
-        block_info.data = &block;
-    }
-
-    CBlockUndo block_undo;
-    if (CustomOptions().connect_undo_data) {
-        if (pindex->nHeight > 0 && !m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
-            FatalErrorf("Failed to read undo block data %s from disk",
-                        pindex->GetBlockHash().ToString());
-            return false;
-        }
-        block_info.undo_data = &block_undo;
-    }
-
     if (!CustomAppend(block_info)) {
         FatalErrorf("Failed to write block %s to index database",
-                    pindex->GetBlockHash().ToString());
+                    block_info.hash.ToString());
         return false;
     }
 
     return true;
-}
-
-void BaseIndex::Sync()
-{
-    auto notifications = WITH_LOCK(m_mutex, return m_notifications);
-    const CBlockIndex* pindex = m_best_block_index.load();
-    if (!m_synced) {
-        // Last block in the chain syncing to which is known to be flushed.
-        const CBlockIndex *last_flushed{nullptr};
-        // Return flush status of the block being indexed.
-        auto process_block = [&](bool append){
-            if (pindex) {
-                interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
-                block_info.chain_tip = false;
-                if (pindex && last_flushed) {
-                    if (pindex == last_flushed) {
-                        block_info.status = BlockInfo::FLUSHED_TIP;
-                    } else if (last_flushed->GetAncestor(pindex->nHeight) == pindex) {
-                        block_info.status = BlockInfo::FLUSHED;
-                    }
-                }
-                notifications->processBlock(ChainstateRole::NORMAL, block_info, append); // error logged internally
-            }
-        };
-        while (true) {
-            if (m_interrupt) {
-                LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
-                // Call process_block a final time to commit latest state.
-                process_block(/*append=*/false);
-                return;
-            }
-
-            const CBlockIndex* pindex_next = WITH_LOCK(cs_main,
-                last_flushed = m_chainstate->LastFlushedBlock();
-                return NextSyncBlock(pindex, m_chainstate->m_chain));
-            // If pindex_next is null, it means pindex is the chain tip, so
-            // commit data indexed so far.
-            if (!pindex_next) {
-                // Call process_block with append=false to force a commit.
-                process_block(/*append=*/false);
-
-                // If pindex is still the chain tip after committing, exit the
-                // sync loop. It is important for cs_main to be locked while
-                // enqueuing m_ready = true, otherwise a new block could be
-                // attached while m_synced is still false, and it would not be
-                // indexed.
-                LOCK(::cs_main);
-                pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
-                if (!pindex_next) {
-                    m_chain->context()->validation_signals->CallFunctionInValidationInterfaceQueue([this] { m_ready = true; });
-                    break;
-                }
-            }
-            if (pindex_next->pprev != pindex) {
-                const CBlockIndex* current_tip = pindex;
-                const CBlockIndex* new_tip = pindex_next->pprev;
-                for (const CBlockIndex* iter_tip = current_tip; iter_tip != new_tip; iter_tip = iter_tip->pprev) {
-                    CBlock block;
-                    interfaces::BlockInfo block_info = kernel::MakeBlockInfo(iter_tip);
-                    block_info.chain_tip = false;
-                    notifications->blockDisconnected(block_info);
-                    if (m_interrupt) break;
-                }
-            }
-            pindex = pindex_next;
-            process_block(/*append=*/true);
-        }
-    }
-    notifications->processBlock(ChainstateRole::NORMAL, kernel::MakeBlockInfo(pindex), /*append=*/false);
 }
 
 bool BaseIndex::Commit(const CBlockLocator& locator)
@@ -609,31 +507,28 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 
 void BaseIndex::Interrupt()
 {
-    m_interrupt();
     LOCK(m_mutex);
+    if (m_handler) m_handler->interrupt();
     m_notifications.reset();
 }
 
 bool BaseIndex::StartBackgroundSync()
 {
-    if (WITH_LOCK(m_mutex, return !m_handler)) throw std::logic_error("Error: Cannot start a non-initialized index");
-
-    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { Sync(); });
+    LOCK(m_mutex);
+    if (!m_handler) throw std::logic_error("Error: Cannot start a non-initialized index");
+    m_handler->start();
     return true;
 }
 
 void BaseIndex::Stop()
 {
-    {
-        m_interrupt();
-        LOCK(m_mutex);
-        m_notifications.reset();
-        m_handler.reset();
-    }
-
-    if (m_thread_sync.joinable()) {
-        m_thread_sync.join();
-    }
+    Interrupt();
+    // Call handler destructor after releasing m_mutex. Locking the mutex is
+    // required to access m_handler, but the lock should not be held while
+    // destroying the handler, because the handler destructor waits for the last
+    // notification to be processed, so holding the lock would deadlock if that
+    // last notification also needs the lock.
+    auto handler = WITH_LOCK(m_mutex, return std::move(m_handler));
 }
 
 IndexSummary BaseIndex::GetSummary() const
@@ -668,4 +563,10 @@ void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
     // BlockConnected notification and safely assume that prune locks are
     // updated and that the index object is safe to delete.
     m_best_block_index = block;
+}
+
+std::shared_ptr<interfaces::Chain::Notifications> BaseIndex::Notifications() const
+{
+    LOCK(m_mutex);
+    return m_notifications;
 }

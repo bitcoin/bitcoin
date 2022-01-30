@@ -96,6 +96,8 @@ struct BlockInfo {
     // state at the same point as the node, while avoiding flushing too
     // frequently.
     enum { UNFLUSHED, FLUSHED, FLUSHED_TIP } status{UNFLUSHED};
+    //! Error string. If non-empty it indicates some block data could not be read and may be missing.
+    std::string error;
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
@@ -329,11 +331,6 @@ public:
         virtual void chainStateFlushed(ChainstateRole role, const CBlockLocator& locator) {}
     };
 
-    // TODO: attachChain / PrepareSyncFn functions described below are not fully
-    // implemented yet. In particular there is no sync thread yet, so
-    // notifications begin from the current chain tip, not from the start_block
-    // passed to PrepareSyncFn.
-
     //! Options specifying which chain notifications are required.
     struct NotifyOptions
     {
@@ -343,6 +340,8 @@ public:
         bool disconnect_data = false;
         //! Include undo data with block disconnected notifications.
         bool disconnect_undo_data = false;
+        //! Name to use for attachChain sync thread.
+        std::string thread_name;
     };
 
     //! Prepare callback passed to attachChain, allowing the caller to perform
