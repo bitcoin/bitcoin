@@ -9,13 +9,13 @@ $(package)_config_opts_x86_64_mingw32=-DCMAKE_TOOLCHAIN_FILE=$(BASEDIR)/cmake/mi
 endef
 
 define $(package)_config_cmds
-  cmake -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true $($(package)_config_opts) .
+  $($(package)_cmake) -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true
 endef
 
 define $(package)_build_cmds
-  $(MAKE) && \
-  mkdir -p $($(package)_staging_dir)$(host_prefix)/include && \
-  cp -a include/* $($(package)_staging_dir)$(host_prefix)/include/ && \
-  mkdir -p $($(package)_staging_dir)$(host_prefix)/lib && \
-  cp -a libfmt.a $($(package)_staging_dir)$(host_prefix)/lib/
+  $(MAKE)
+endef
+
+define $(package)_stage_cmds
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
 endef
