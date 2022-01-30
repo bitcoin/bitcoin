@@ -145,8 +145,11 @@ BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name)
 
 BaseIndex::~BaseIndex()
 {
-    Interrupt();
-    Stop();
+    //! Assert Stop() was called before this base destructor. Notification
+    //! handlers call pure virtual methods like GetName(), so if they are still
+    //! being called at this point, they would segfault.
+    LOCK(m_mutex);
+    assert(!m_handler);
 }
 
 // Read index best block, register for block connected and disconnected
