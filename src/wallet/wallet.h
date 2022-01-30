@@ -549,6 +549,7 @@ public:
     const uint256& GetHash() const { return tx->GetHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
     bool IsImmatureCoinBase() const;
+    bool IsHogEx() const { return tx->IsHogEx(); }
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the

@@ -22,12 +22,13 @@
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
-    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryHeight(_entryHeight),
+    : tx(_tx), nFee(_nFee), nTxWeight(GetTransactionWeight(*tx)), mweb_weight(tx->mweb_tx.GetMWEBWeight()), nUsageSize(RecursiveDynamicUsage(tx)), nTime(_nTime), entryHeight(_entryHeight),
     spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), lockPoints(lp), m_epoch(0)
 {
     nCountWithDescendants = 1;
     nSizeWithDescendants = GetTxSize();
     nModFeesWithDescendants = nFee;
+    nMWEBWeightWithDescendants = mweb_weight;
 
     feeDelta = 0;
 
@@ -35,6 +36,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFe
     nSizeWithAncestors = GetTxSize();
     nModFeesWithAncestors = nFee;
     nSigOpCostWithAncestors = sigOpCost;
+    nMWEBWeightWithAncestors = mweb_weight;
 }
 
 void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
@@ -86,17 +88,19 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
     int64_t modifySize = 0;
     CAmount modifyFee = 0;
     int64_t modifyCount = 0;
+    int64_t modifyMWEBWeight = 0;
     for (const CTxMemPoolEntry& descendant : descendants) {
         if (!setExclude.count(descendant.GetTx().GetHash())) {
             modifySize += descendant.GetTxSize();
             modifyFee += descendant.GetModifiedFee();
+            modifyMWEBWeight += descendant.GetMWEBWeight();
             modifyCount++;
             cachedDescendants[updateIt].insert(mapTx.iterator_to(descendant));
             // Update ancestor state for each descendant
-            mapTx.modify(mapTx.iterator_to(descendant), update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
+            mapTx.modify(mapTx.iterator_to(descendant), update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost(), updateIt->GetMWEBWeight()));
         }
     }
-    mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
+    mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount, modifyMWEBWeight));
 }
 
 // vHashesToUpdate is the set of transaction hashes from a disconnected block
@@ -224,8 +228,9 @@ void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors
     const int64_t updateCount = (add ? 1 : -1);
     const int64_t updateSize = updateCount * it->GetTxSize();
     const CAmount updateFee = updateCount * it->GetModifiedFee();
+    const int64_t updateMWEBWeight = updateCount * it->GetMWEBWeight();
     for (txiter ancestorIt : setAncestors) {
-        mapTx.modify(ancestorIt, update_descendant_state(updateSize, updateFee, updateCount));
+        mapTx.modify(ancestorIt, update_descendant_state(updateSize, updateFee, updateCount, updateMWEBWeight));
     }
 }
 
@@ -235,12 +240,14 @@ void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries &setAncesto
     int64_t updateSize = 0;
     CAmount updateFee = 0;
     int64_t updateSigOpsCost = 0;
+    int64_t updateMWEBWeight = 0;
     for (txiter ancestorIt : setAncestors) {
         updateSize += ancestorIt->GetTxSize();
         updateFee += ancestorIt->GetModifiedFee();
         updateSigOpsCost += ancestorIt->GetSigOpCost();
+        updateMWEBWeight += ancestorIt->GetMWEBWeight();
     }
-    mapTx.modify(it, update_ancestor_state(updateSize, updateFee, updateCount, updateSigOpsCost));
+    mapTx.modify(it, update_ancestor_state(updateSize, updateFee, updateCount, updateSigOpsCost, updateMWEBWeight));
 }
 
 void CTxMemPool::UpdateChildrenForRemoval(txiter it)
@@ -270,8 +277,9 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
             int64_t modifySize = -((int64_t)removeIt->GetTxSize());
             CAmount modifyFee = -removeIt->GetModifiedFee();
             int modifySigOps = -removeIt->GetSigOpCost();
+            int64_t modifyMWEBWeight = -((int64_t)removeIt->GetMWEBWeight());
             for (txiter dit : setDescendants) {
-                mapTx.modify(dit, update_ancestor_state(modifySize, modifyFee, -1, modifySigOps));
+                mapTx.modify(dit, update_ancestor_state(modifySize, modifyFee, -1, modifySigOps, modifyMWEBWeight));
             }
         }
     }
@@ -311,24 +319,28 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
     }
 }
 
-void CTxMemPoolEntry::UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount)
+void CTxMemPoolEntry::UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifyMWEBWeight)
 {
     nSizeWithDescendants += modifySize;
     assert(int64_t(nSizeWithDescendants) > 0);
     nModFeesWithDescendants += modifyFee;
     nCountWithDescendants += modifyCount;
     assert(int64_t(nCountWithDescendants) > 0);
+    nMWEBWeightWithDescendants += modifyMWEBWeight;
+    assert(int64_t(nMWEBWeightWithDescendants) >= 0);
 }
 
-void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps)
+void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps, int64_t modifyMWEBWeight)
 {
     nSizeWithAncestors += modifySize;
-    assert(int64_t(nSizeWithAncestors) > 0);
+    assert(int64_t(nSizeWithAncestors) >= 0);
     nModFeesWithAncestors += modifyFee;
     nCountWithAncestors += modifyCount;
     assert(int64_t(nCountWithAncestors) > 0);
     nSigOpCostWithAncestors += modifySigOps;
     assert(int(nSigOpCostWithAncestors) >= 0);
+    nMWEBWeightWithAncestors += modifyMWEBWeight;
+    assert(int64_t(nMWEBWeightWithAncestors) >= 0);
 }
 
 CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator)
@@ -800,7 +812,7 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid) const
 }
 
 static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
-    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
+    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetMWEBWeight(), it->GetModifiedFee() - it->GetFee()};
 }
 
 std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
@@ -852,14 +864,14 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             std::string dummy;
             CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
             for (txiter ancestorIt : setAncestors) {
-                mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
+                mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0, 0));
             }
             // Now update all descendants' modified fees with ancestors
             setEntries setDescendants;
             CalculateDescendants(it, setDescendants);
             setDescendants.erase(it);
             for (txiter descendantIt : setDescendants) {
-                mapTx.modify(descendantIt, update_ancestor_state(0, nFeeDelta, 0, 0));
+                mapTx.modify(descendantIt, update_ancestor_state(0, nFeeDelta, 0, 0, 0));
             }
             ++nTransactionsUpdated;
         }
@@ -1047,7 +1059,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         // "minimum reasonable fee rate" (ie some value under which we consider txn
         // to have 0 fee). This way, we don't allow txn to enter mempool with feerate
         // equal to txn which were removed with no block in between.
-        CFeeRate removed(it->GetModFeesWithDescendants(), it->GetSizeWithDescendants());
+        CFeeRate removed(it->GetModFeesWithDescendants(), it->GetSizeWithDescendants(), it->GetMWEBWeightWithDescendants());
         removed += incrementalRelayFee;
         trackPackageRemoved(removed);
         maxFeeRateRemoved = std::max(maxFeeRateRemoved, removed);

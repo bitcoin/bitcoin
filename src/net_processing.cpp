@@ -4420,7 +4420,7 @@ bool PeerManager::SendMessages(CNode* pto)
                         CInv inv(state.m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
                         pto->m_tx_relay->setInventoryTxToSend.erase(hash);
                         // Don't send transactions that peers will not put into their mempool
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (txinfo.fee < filterrate.GetTotalFee(txinfo.vsize, txinfo.mweb_weight)) {
                             continue;
                         }
                         if (pto->m_tx_relay->pfilter) {
@@ -4479,7 +4479,7 @@ bool PeerManager::SendMessages(CNode* pto)
                         auto txid = txinfo.tx->GetHash();
                         auto wtxid = txinfo.tx->GetWitnessHash();
                         // Peer told you to not send transactions at that feerate? Don't bother sending it.
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (txinfo.fee < filterrate.GetTotalFee(txinfo.vsize, txinfo.mweb_weight)) {
                             continue;
                         }
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;

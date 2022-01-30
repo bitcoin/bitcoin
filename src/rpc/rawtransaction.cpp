@@ -858,7 +858,7 @@ static RPCHelpMan sendrawtransaction()
                                              CFeeRate(AmountFromValue(request.params[1]));
 
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
-    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetTotalFee(virtual_size, tx->mweb_tx.GetMWEBWeight());
 
     std::string err_string;
     AssertLockNotHeld(cs_main);
@@ -939,7 +939,7 @@ static RPCHelpMan testmempoolaccept()
 
     CTxMemPool& mempool = EnsureMemPool(request.context);
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
-    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetTotalFee(virtual_size, tx->mweb_tx.GetMWEBWeight());
 
     UniValue result(UniValue::VARR);
     UniValue result_0(UniValue::VOBJ);

@@ -426,15 +426,16 @@ public:
         }
         return result;
     }
-    CAmount getRequiredFee(unsigned int tx_bytes) override { return GetRequiredFee(*m_wallet, tx_bytes); }
+    CAmount getRequiredFee(unsigned int tx_bytes, uint64_t mweb_weight) override { return GetRequiredFee(*m_wallet, tx_bytes, mweb_weight); }
     CAmount getMinimumFee(unsigned int tx_bytes,
+        uint64_t mweb_weight,
         const CCoinControl& coin_control,
         int* returned_target,
         FeeReason* reason) override
     {
         FeeCalculation fee_calc;
         CAmount result;
-        result = GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc);
+        result = GetMinimumFee(*m_wallet, tx_bytes, mweb_weight, coin_control, &fee_calc);
         if (returned_target) *returned_target = fee_calc.returnedTarget;
         if (reason) *reason = fee_calc.reason;
         return result;

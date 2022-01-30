@@ -69,21 +69,21 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(100), altFeeRate.GetFee(100));
 
     // Check full constructor
-    BOOST_CHECK(CFeeRate(CAmount(-1), 0) == CFeeRate(0));
-    BOOST_CHECK(CFeeRate(CAmount(0), 0) == CFeeRate(0));
-    BOOST_CHECK(CFeeRate(CAmount(1), 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(-1), 0, 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(0), 0, 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(1), 0, 0) == CFeeRate(0));
     // default value
-    BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
-    BOOST_CHECK(CFeeRate(CAmount(0), 1000) == CFeeRate(0));
-    BOOST_CHECK(CFeeRate(CAmount(1), 1000) == CFeeRate(1));
+    BOOST_CHECK(CFeeRate(CAmount(-1), 1000, 0) == CFeeRate(-1));
+    BOOST_CHECK(CFeeRate(CAmount(0), 1000, 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(1), 1000, 0) == CFeeRate(1));
     // lost precision (can only resolve satoshis per kB)
-    BOOST_CHECK(CFeeRate(CAmount(1), 1001) == CFeeRate(0));
-    BOOST_CHECK(CFeeRate(CAmount(2), 1001) == CFeeRate(1));
+    BOOST_CHECK(CFeeRate(CAmount(1), 1001, 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(2), 1001, 0) == CFeeRate(1));
     // some more integer checks
-    BOOST_CHECK(CFeeRate(CAmount(26), 789) == CFeeRate(32));
-    BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
+    BOOST_CHECK(CFeeRate(CAmount(26), 789, 0) == CFeeRate(32));
+    BOOST_CHECK(CFeeRate(CAmount(27), 789, 0) == CFeeRate(34));
     // Maximum size in bytes, should not crash
-    CFeeRate(MAX_MONEY, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
+    CFeeRate(MAX_MONEY, std::numeric_limits<size_t>::max() >> 1, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
 }
 
 BOOST_AUTO_TEST_CASE(BinaryOperatorTest)

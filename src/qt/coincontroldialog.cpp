@@ -469,6 +469,9 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     // calculation
     if (nQuantity > 0)
     {
+        // MW: TODO - Implement byte & fee estimation for MWEB
+        uint64_t mweb_weight = 0;
+
         // Bytes
         nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
         if (fWitness)
@@ -486,7 +489,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
                 nBytes -= 34;
 
         // Fee
-        nPayFee = model->wallet().getMinimumFee(nBytes, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
+        nPayFee = model->wallet().getMinimumFee(nBytes, mweb_weight, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
 
         if (nPayAmount > 0)
         {

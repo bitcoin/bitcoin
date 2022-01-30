@@ -522,15 +522,15 @@ private:
     bool Finalize(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Compare a package's feerate against minimum allowed.
-    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state)
+    bool CheckFeeRate(size_t package_size, uint64_t mweb_weight, CAmount package_fee, TxValidationState& state)
     {
-        CAmount mempoolRejectFee = m_pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(package_size);
+        CAmount mempoolRejectFee = m_pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetTotalFee(package_size, mweb_weight);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
 
-        if (package_fee < ::minRelayTxFee.GetFee(package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(package_size)));
+        if (package_fee < ::minRelayTxFee.GetTotalFee(package_size, mweb_weight)) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetTotalFee(package_size, mweb_weight)));
         }
         return true;
     }
@@ -729,6 +729,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     entry.reset(new CTxMemPoolEntry(ptx, nFees, nAcceptTime, ::ChainActive().Height(),
             fSpendsCoinbase, nSigOpsCost, lp));
     unsigned int nSize = entry->GetTxSize();
+    uint64_t mweb_weight = entry->GetMWEBWeight();
 
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
@@ -736,7 +737,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // No transactions are allowed below minRelayTxFee except from disconnected
     // blocks
-    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state)) return false;
+    if (!bypass_limits && !CheckFeeRate(nSize, mweb_weight, nModifiedFees, state)) return false;
 
     const CTxMemPool::setEntries setIterConflicting = m_pool.GetIterSet(setConflicts);
     // Calculate in-mempool ancestors, up to a limit.
@@ -825,7 +826,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     fReplacementTransaction = setConflicts.size();
     if (fReplacementTransaction)
     {
-        CFeeRate newFeeRate(nModifiedFees, nSize);
+    	CFeeRate newFeeRate(nModifiedFees, nSize, mweb_weight);
         std::set<uint256> setConflictsParents;
         const int maxDescendantsToVisit = 100;
         for (const auto& mi : setIterConflicting) {
@@ -843,7 +844,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // mean high feerate children are ignored when deciding whether
             // or not to replace, we do require the replacement to pay more
             // overall fees too, mitigating most cases.
-            CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize());
+            CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize(), mi->GetMWEBWeight());
             if (newFeeRate <= oldFeeRate)
             {
                 return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
@@ -918,13 +919,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // Finally in addition to paying more fees than the conflicts the
         // new transaction must pay for its own bandwidth.
         CAmount nDeltaFees = nModifiedFees - nConflictingFees;
-        if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize))
+        if (nDeltaFees < ::incrementalRelayFee.GetTotalFee(nSize, mweb_weight))
         {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
                     strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
                         hash.ToString(),
                         FormatMoney(nDeltaFees),
-                        FormatMoney(::incrementalRelayFee.GetFee(nSize))));
+                        FormatMoney(::incrementalRelayFee.GetTotalFee(nSize, mweb_weight))));
         }
     }
     return true;

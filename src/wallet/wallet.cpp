@@ -2509,7 +2509,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
             return false;
         }
         const CWalletTx& wtx = mi->second;
-        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase());
+        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase(), wtx.IsHogEx());
     }
     std::map<int, std::string> input_errors;
     return SignTransaction(tx, coins, SIGHASH_ALL, input_errors);
@@ -3956,7 +3956,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
             warnings.push_back(AmountHighWarn("-paytxfee") + Untranslated(" ") +
                                _("This is the transaction fee you will pay if you send a transaction."));
         }
-        walletInstance->m_pay_tx_fee = CFeeRate(nFeePerK, 1000);
+        walletInstance->m_pay_tx_fee = CFeeRate(nFeePerK, 1000, 0);
         if (walletInstance->m_pay_tx_fee < chain.relayMinFee()) {
             error = strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
                 gArgs.GetArg("-paytxfee", ""), chain.relayMinFee().ToString());
@@ -3973,7 +3973,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         if (nMaxFee > HIGH_MAX_TX_FEE) {
             warnings.push_back(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         }
-        if (CFeeRate(nMaxFee, 1000) < chain.relayMinFee()) {
+        if (CFeeRate(nMaxFee, 1000, 0) < chain.relayMinFee()) {
             error = strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
                 gArgs.GetArg("-maxtxfee", ""), chain.relayMinFee().ToString());
             return nullptr;

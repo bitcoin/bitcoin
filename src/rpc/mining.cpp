@@ -429,6 +429,7 @@ static RPCHelpMan getmininginfo()
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("blocks",           (int)::ChainActive().Height());
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
+    if (BlockAssembler::m_last_block_mweb_weight) obj.pushKV("currentblockmwebweight", *BlockAssembler::m_last_block_mweb_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("difficulty",       (double)GetDifficulty(::ChainActive().Tip()));
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));

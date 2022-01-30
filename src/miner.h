@@ -42,18 +42,22 @@ struct CTxMemPoolModifiedEntry {
         nSizeWithAncestors = entry->GetSizeWithAncestors();
         nModFeesWithAncestors = entry->GetModFeesWithAncestors();
         nSigOpCostWithAncestors = entry->GetSigOpCostWithAncestors();
+        nMWEBWeightWithAncestors = entry->GetMWEBWeightWithAncestors();
     }
 
     int64_t GetModifiedFee() const { return iter->GetModifiedFee(); }
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
+    int64_t GetMWEBWeightWithAncestors() const { return nMWEBWeightWithAncestors; }
     size_t GetTxSize() const { return iter->GetTxSize(); }
+    uint64_t GetMWEBWeight() const { return iter->GetMWEBWeight(); }
     const CTransaction& GetTx() const { return iter->GetTx(); }
 
     CTxMemPool::txiter iter;
     uint64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
     int64_t nSigOpCostWithAncestors;
+    int64_t nMWEBWeightWithAncestors;
 };
 
 /** Comparator for CTxMemPool::txiter objects.
@@ -117,6 +121,7 @@ struct update_for_parent_inclusion
         e.nModFeesWithAncestors -= iter->GetFee();
         e.nSizeWithAncestors -= iter->GetTxSize();
         e.nSigOpCostWithAncestors -= iter->GetSigOpCost();
+        e.nMWEBWeightWithAncestors -= iter->GetMWEBWeight();
     }
 
     CTxMemPool::txiter iter;
@@ -138,6 +143,7 @@ private:
     uint64_t nBlockWeight;
     uint64_t nBlockTx;
     uint64_t nBlockSigOpsCost;
+    uint64_t nBlockMWEBWeight;
     CAmount nFees;
     CTxMemPool::setEntries inBlock;
 
@@ -162,6 +168,7 @@ public:
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
+    static Optional<int64_t> m_last_block_mweb_weight;
 
 private:
     // utility functions
@@ -180,7 +187,7 @@ private:
     /** Remove confirmed (inBlock) entries from given set */
     void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
     /** Test if a new package would "fit" in the block */
-    bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const;
+    bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost, int64_t packageMWEBWeight) const;
     /** Perform checks on each transaction in a package:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
