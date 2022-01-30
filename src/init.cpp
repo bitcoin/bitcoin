@@ -1781,6 +1781,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         }
         for (int n = 0; n < NET_MAX; n++) {
             enum Network net = (enum Network)n;
+            assert(IsReachable(net));
             if (!nets.count(net))
                 SetReachable(net, false);
         }
