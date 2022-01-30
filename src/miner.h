@@ -10,6 +10,7 @@
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <validation.h>
+#include <mweb/mweb_miner.h>
 
 #include <memory>
 #include <stdint.h>
@@ -134,8 +135,12 @@ private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
 
+    // MWEB Attributes
+    MWEB::Miner mweb_miner;
+
     // Configuration parameters for the block size
     bool fIncludeWitness;
+    bool fIncludeMWEB;
     unsigned int nBlockMaxWeight;
     CFeeRate blockMinFeeRate;
 

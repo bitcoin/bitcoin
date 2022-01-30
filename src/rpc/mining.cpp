@@ -277,7 +277,7 @@ static RPCHelpMan generatetoaddress()
     const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].get_int()};
 
     CTxDestination destination = DecodeDestination(request.params[1].get_str());
-    if (!IsValidDestination(destination)) {
+    if (!IsValidDestination(destination) || destination.type() == typeid(StealthAddress)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
 

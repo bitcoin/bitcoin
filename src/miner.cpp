@@ -13,6 +13,7 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <mw/consensus/Params.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -91,6 +92,7 @@ void BlockAssembler::resetBlock()
     nBlockSigOpsCost = 400;
     nBlockMWEBWeight = 0;
     fIncludeWitness = false;
+    fIncludeMWEB = false;
 
     // These counters do not include coinbase tx
     nBlockTx = 0;
@@ -147,9 +149,18 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
 
+    fIncludeMWEB = IsMWEBEnabled(pindexPrev, chainparams.GetConsensus());
+    if (fIncludeMWEB) {
+        mweb_miner.NewBlock(nHeight);
+    }
+
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
     addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+
+    if (fIncludeMWEB) {
+        mweb_miner.AddHogExTransaction(pindexPrev, pblock, pblocktemplate.get(), nFees);
+    }
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -225,17 +236,36 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
             return false;
         if (!fIncludeWitness && it->GetTx().HasWitness())
             return false;
+        if (!fIncludeMWEB && it->GetTx().HasMWEBTx()) {
+            return false;
+        }
     }
     return true;
 }
 
 void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 {
-    pblocktemplate->block.vtx.emplace_back(iter->GetSharedTx());
-    pblocktemplate->vTxFees.push_back(iter->GetFee());
-    pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
+    if (iter->GetTx().HasMWEBTx() && !mweb_miner.AddMWEBTransaction(iter)) {
+        return;
+    }
+
+    CTransactionRef pTx = iter->GetSharedTx();
+    if (!pTx->IsMWEBOnly()) {
+        if (pTx->HasMWEBTx()) {
+            CMutableTransaction mutable_tx(*pTx);
+            mutable_tx.mweb_tx.SetNull();
+            pTx = MakeTransactionRef(std::move(mutable_tx));
+        }
+
+        pblocktemplate->block.vtx.emplace_back(pTx);
+        // MWEB: Should probably recalculate fee (for vTxFees) and sigopcost (for vTxSigOpsCost) without MWEB data?
+        // Then we could use actual fee and sigop cost for hogex.
+        pblocktemplate->vTxFees.push_back(iter->GetFee());
+        pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
+        ++nBlockTx;
+    }
+
     nBlockWeight += iter->GetTxWeight();
-    ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
     nBlockMWEBWeight += iter->GetMWEBWeight();
     nFees += iter->GetFee();

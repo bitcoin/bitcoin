@@ -137,6 +137,25 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
 
+    if (blockindex->mweb_header != nullptr) {
+        UniValue mweb_header(UniValue::VOBJ);
+        mweb_header.pushKV("hash", blockindex->mweb_header->GetHash().ToHex());
+        mweb_header.pushKV("height", blockindex->mweb_header->GetHeight());
+        mweb_header.pushKV("kernel_offset", blockindex->mweb_header->GetKernelOffset().ToHex());
+        mweb_header.pushKV("stealth_offset", blockindex->mweb_header->GetStealthOffset().ToHex());
+        mweb_header.pushKV("num_kernels", blockindex->mweb_header->GetNumKernels());
+        mweb_header.pushKV("num_txos", blockindex->mweb_header->GetNumTXOs());
+        mweb_header.pushKV("kernel_root", blockindex->mweb_header->GetKernelRoot().ToHex());
+        mweb_header.pushKV("output_root", blockindex->mweb_header->GetOutputRoot().ToHex());
+        mweb_header.pushKV("leaf_root", blockindex->mweb_header->GetLeafsetRoot().ToHex());
+        result.pushKV("mweb_header", mweb_header);
+
+        result.pushKV("mweb_amount", blockindex->mweb_amount);
+        if (blockindex->pprev) {
+            result.pushKV("prev_mweb_amount", blockindex->pprev->mweb_amount);
+        }
+    }
+
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
@@ -181,6 +200,88 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
+
+    if (!block.mweb_block.IsNull()) {
+        UniValue mweb_block(UniValue::VOBJ);
+
+        // MWEB Header
+        mweb_block.pushKV("hash", block.mweb_block.GetMWEBHeader()->GetHash().ToHex());
+        mweb_block.pushKV("height", block.mweb_block.GetMWEBHeader()->GetHeight());
+        mweb_block.pushKV("kernel_offset", block.mweb_block.GetMWEBHeader()->GetKernelOffset().ToHex());
+        mweb_block.pushKV("stealth_offset", block.mweb_block.GetMWEBHeader()->GetStealthOffset().ToHex());
+        mweb_block.pushKV("num_kernels", block.mweb_block.GetMWEBHeader()->GetNumKernels());
+        mweb_block.pushKV("num_txos", block.mweb_block.GetMWEBHeader()->GetNumTXOs());
+        mweb_block.pushKV("kernel_root", block.mweb_block.GetMWEBHeader()->GetKernelRoot().ToHex());
+        mweb_block.pushKV("output_root", block.mweb_block.GetMWEBHeader()->GetOutputRoot().ToHex());
+        mweb_block.pushKV("leaf_root", block.mweb_block.GetMWEBHeader()->GetLeafsetRoot().ToHex());
+
+        // MWEB Inputs
+        UniValue inputs(UniValue::VARR);
+        for (const auto& input : block.mweb_block.m_block->GetInputs()) {
+            if (txDetails) {
+                UniValue objInput(UniValue::VOBJ);
+                objInput.pushKV("output_id", input.GetOutputID().ToHex());
+                objInput.pushKV("commit", input.GetCommitment().ToHex());
+                objInput.pushKV("output_pubkey", input.GetOutputPubKey().ToHex());
+
+                if (!!input.GetInputPubKey()) {
+                    objInput.pushKV("input_pubkey", input.GetInputPubKey()->ToHex());
+                }
+
+                if (!input.GetExtraData().empty()) {
+                    objInput.pushKV("extra_data", HexStr(input.GetExtraData()));
+                }
+
+                objInput.pushKV("sig", input.GetSignature().ToHex());
+                inputs.push_back(objInput);
+            } else {
+                inputs.push_back(input.GetOutputID().ToHex());
+            }
+        }
+        mweb_block.pushKV("inputs", inputs);
+
+        // MWEB Outputs
+        UniValue outputs(UniValue::VARR);
+        for (const auto& output : block.mweb_block.m_block->GetOutputs()) {
+            if (txDetails) {
+                UniValue objOutput(UniValue::VOBJ);
+                objOutput.pushKV("output_id", output.GetOutputID().ToHex());
+                objOutput.pushKV("commit", output.GetCommitment().ToHex());
+                objOutput.pushKV("sender_pubkey", output.GetSenderPubKey().ToHex());
+                objOutput.pushKV("receiver_pubkey", output.GetReceiverPubKey().ToHex());
+                objOutput.pushKV("range_proof", HexStr(output.GetRangeProof()->Serialized()));
+                objOutput.pushKV("message", HexStr(output.GetOutputMessage().Serialized()));
+                outputs.push_back(objOutput);
+            } else {
+                outputs.push_back(output.GetOutputID().ToHex());
+            }
+        }
+        mweb_block.pushKV("outputs", outputs);
+
+        // MWEB Kernels
+        UniValue kernels(UniValue::VARR);
+        for (const auto& kernel : block.mweb_block.m_block->GetKernels()) {
+            if (txDetails) {
+                UniValue objKernel(UniValue::VOBJ);
+                objKernel.pushKV("kernel_id", kernel.GetKernelID().ToHex());
+                objKernel.pushKV("features", kernel.GetFeatures());
+                objKernel.pushKV("commit", kernel.GetCommitment().ToHex());
+                objKernel.pushKV("fee", kernel.GetFee());
+                objKernel.pushKV("lock_height", kernel.GetLockHeight());
+                objKernel.pushKV("excess", kernel.GetExcess().ToHex());
+                objKernel.pushKV("signature", kernel.GetSignature().ToHex());
+                if (!kernel.GetExtraData().empty()) {
+                    objKernel.pushKV("extra_data", HexStr(kernel.GetExtraData()));
+                }
+                kernels.push_back(objKernel);
+            } else {
+                kernels.push_back(kernel.GetCommitment().ToHex());
+            }
+        }
+        mweb_block.pushKV("kernels", kernels);
+
+        result.pushKV("mweb", mweb_block);
+    }
 
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
@@ -468,6 +569,66 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     {
         if (pool.exists(txin.prevout.hash))
             setDepends.insert(txin.prevout.hash.ToString());
+    }
+
+    uint256 created_tx_hash;
+    for (const mw::Hash& spent_id : tx.mweb_tx.GetSpentIDs()) {
+        if (pool.GetCreatedTx(spent_id, created_tx_hash)) {
+            setDepends.insert(created_tx_hash.ToString());
+        }
+    }
+
+    if (tx.HasMWEBTx()) {
+        UniValue mweb_info(UniValue::VOBJ);
+
+        UniValue mweb_weight(UniValue::VOBJ);
+        mweb_weight.pushKV("base", (int)e.GetMWEBWeight());
+        mweb_weight.pushKV("ancestor", (int)e.GetMWEBWeightWithAncestors());
+        mweb_weight.pushKV("descendant", (int)e.GetMWEBWeightWithDescendants());
+        mweb_info.pushKV("weight", mweb_weight);
+
+        mweb_info.pushKV("fee", ValueFromAmount(tx.mweb_tx.GetFee()));
+        mweb_info.pushKV("lock_height", tx.mweb_tx.GetLockHeight());
+
+        // Pegins
+        UniValue pegins(UniValue::VARR);
+        for (const PegInCoin& pegin : tx.mweb_tx.GetPegIns()) {
+            UniValue pegin_uni(UniValue::VOBJ);
+            pegin_uni.pushKV("amount", pegin.GetAmount());
+            pegin_uni.pushKV("kernel_id", pegin.GetKernelID().ToHex());
+            pegins.push_back(pegin_uni);
+        }
+
+        mweb_info.pushKV("pegins", pegins);
+
+        // Pegouts
+        UniValue pegouts(UniValue::VARR);
+        for (const PegOutCoin& pegout : tx.mweb_tx.GetPegOuts()) {
+            UniValue pegout_uni(UniValue::VOBJ);
+            pegout_uni.pushKV("amount", pegout.GetAmount());
+            pegout_uni.pushKV("scriptpubkey", HexStr(pegout.GetScriptPubKey()));
+            pegouts.push_back(pegout_uni);
+        }
+
+        mweb_info.pushKV("pegouts", pegouts);
+
+        // Inputs
+        UniValue spent_ids(UniValue::VARR);
+        for (const mw::Hash& spent_id : tx.mweb_tx.GetSpentIDs()) {
+            spent_ids.push_back(spent_id.ToHex());
+        }
+
+        mweb_info.pushKV("inputs", spent_ids);
+
+        // Outputs
+        UniValue output_ids(UniValue::VARR);
+        for (const mw::Hash& output_id : tx.mweb_tx.GetOutputIDs()) {
+            output_ids.push_back(output_id.ToHex());
+        }
+
+        mweb_info.pushKV("outputs", output_ids);
+
+        info.pushKV("mweb", mweb_info);
     }
 
     UniValue depends(UniValue::VARR);
