@@ -175,7 +175,6 @@ protected:
 
 public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, std::string thread_name);
-    /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
 
     /// Get the name of the index for display in logs.
