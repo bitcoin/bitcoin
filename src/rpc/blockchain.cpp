@@ -2232,7 +2232,7 @@ static RPCHelpMan savemempool()
 
 namespace {
 //! Search for a given set of pubkey scripts
-bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results, std::function<void()>& interruption_point)
+bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<DestinationAddr>& needles, std::map<COutPoint, Coin>& out_results, std::function<void()>& interruption_point)
 {
     scan_progress = 0;
     count = 0;
@@ -2377,8 +2377,8 @@ static RPCHelpMan scantxoutset()
             throw JSONRPCError(RPC_MISC_ERROR, "scanobjects argument is required for the start action");
         }
 
-        std::set<CScript> needles;
-        std::map<CScript, std::string> descriptors;
+        std::set<DestinationAddr> needles;
+        std::map<DestinationAddr, std::string> descriptors;
         CAmount total_in = 0;
 
         // loop through the scan objects

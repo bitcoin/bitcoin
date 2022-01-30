@@ -226,10 +226,24 @@ public:
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
     void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) override { RPCSetTimerInterfaceIfUnset(iface); }
     void rpcUnsetTimerInterface(RPCTimerInterface* iface) override { RPCUnsetTimerInterface(iface); }
-    bool getUnspentOutput(const COutPoint& output, Coin& coin) override
+    bool getUnspentOutput(const OutputIndex& index, CTxOutput& output) override
     {
         LOCK(::cs_main);
-        return ::ChainstateActive().CoinsTip().GetCoin(output, coin);
+
+        if (index.type() == typeid(mw::Hash)) {
+            if (::ChainstateActive().CoinsTip().HaveCoin(index)) {
+                output = CTxOutput{boost::get<mw::Hash>(index)};
+                return true;
+            }
+        } else {
+            Coin coin;
+            if (::ChainstateActive().CoinsTip().GetCoin(boost::get<COutPoint>(index), coin)) {
+                output = CTxOutput{boost::get<COutPoint>(index), coin.out};
+                return true;
+            }
+        }
+
+        return false;
     }
     WalletClient& walletClient() override
     {

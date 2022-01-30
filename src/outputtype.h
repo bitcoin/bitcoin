@@ -7,6 +7,7 @@
 #define BITCOIN_OUTPUTTYPE_H
 
 #include <attributes.h>
+#include <mw/models/crypto/SecretKey.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
@@ -18,9 +19,10 @@ enum class OutputType {
     LEGACY,
     P2SH_SEGWIT,
     BECH32,
+    MWEB
 };
 
-extern const std::array<OutputType, 3> OUTPUT_TYPES;
+extern const std::array<OutputType, 4> OUTPUT_TYPES;
 
 NODISCARD bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);
@@ -29,10 +31,10 @@ const std::string& FormatOutputType(OutputType type);
  * Get a destination of the requested type (if possible) to the specified key.
  * The caller must make sure LearnRelatedScripts has been called beforehand.
  */
-CTxDestination GetDestinationForKey(const CPubKey& key, OutputType);
+CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type, const SecretKey& scan_secret);
 
 /** Get all destinations (potentially) supported by the wallet for the given key. */
-std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
+std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key, const SecretKey& scan_secret);
 
 /**
  * Get a destination of the requested type (if possible) to the specified script.

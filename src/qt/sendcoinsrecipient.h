@@ -16,6 +16,8 @@
 
 #include <QString>
 
+class ReserveDestination;
+
 class SendCoinsRecipient
 {
 public:
@@ -39,7 +41,14 @@ public:
     // Empty if no authentication or invalid signature/cert/etc.
     QString authenticatedMerchant;
 
+    enum Type {
+        REGULAR = 0,
+        MWEB_PEGIN = 1,
+        MWEB_PEGOUT = 2
+    } type; // memory only
+
     bool fSubtractFeeFromAmount; // memory only
+    std::shared_ptr<ReserveDestination> reserved_dest;   // memory only
 
     static const int CURRENT_VERSION = 1;
     int nVersion;

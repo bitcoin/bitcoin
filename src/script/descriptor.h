@@ -101,7 +101,7 @@ struct Descriptor {
      * @param[out] out Scripts and public keys necessary for solving the expanded scriptPubKeys (may be equal to `provider`).
      * @param[out] write_cache Cache data necessary to evaluate the descriptor at this point without access to private keys.
      */
-    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const = 0;
+    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<DestinationAddr>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const = 0;
 
     /** Expand a descriptor at a specified position using cached expansion data.
      *
@@ -110,7 +110,7 @@ struct Descriptor {
      * @param[out] output_scripts The expanded scriptPubKeys.
      * @param[out] out Scripts and public keys necessary for solving the expanded scriptPubKeys (may be equal to `provider`).
      */
-    virtual bool ExpandFromCache(int pos, const DescriptorCache& read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
+    virtual bool ExpandFromCache(int pos, const DescriptorCache& read_cache, std::vector<DestinationAddr>& output_scripts, FlatSigningProvider& out) const = 0;
 
     /** Expand the private key for a descriptor at a specified position, if possible.
      *
@@ -156,6 +156,6 @@ std::string GetDescriptorChecksum(const std::string& descriptor);
  *   returned (which is not IsSolvable()).
  * - Failing that, a "raw()" descriptor is returned.
  */
-std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
+std::unique_ptr<Descriptor> InferDescriptor(const DestinationAddr& script, const SigningProvider& provider);
 
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_H

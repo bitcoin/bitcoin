@@ -174,14 +174,17 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
     // Fill in recipients(and preserve a single change key if there is one)
     std::vector<CRecipient> recipients;
-    for (const auto& output : wtx.tx->vout) {
+    for (const auto& output : wtx.GetOutputs()) {
+        CTxDestination dest;
+        if (!wallet.ExtractOutputDestination(output, dest)) {
+            return Result::INVALID_ADDRESS_OR_KEY;
+        }
+
         if (!wallet.IsChange(output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {dest, wallet.GetValue(output), false};
             recipients.push_back(recipient);
         } else {
-            CTxDestination change_dest;
-            ExtractDestination(output.scriptPubKey, change_dest);
-            new_coin_control.destChange = change_dest;
+            new_coin_control.destChange = dest;
         }
     }
 
@@ -208,8 +211,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // A2 and A3 where A2 and A3 don't conflict (or alternatively bump A to A2 and A2
     // to A3 where A and A3 don't conflict). If both later get confirmed then the sender
     // has accidentally double paid.
-    for (const auto& inputs : wtx.tx->vin) {
-        new_coin_control.Select(COutPoint(inputs.prevout));
+    for (const auto& input : wtx.tx->GetInputs()) {
+        new_coin_control.Select(input.GetIndex());
     }
     new_coin_control.fAllowOtherInputs = true;
 

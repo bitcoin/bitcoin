@@ -44,6 +44,9 @@ public:
     void setAddress(const QString &address);
     void setAmount(const CAmount &amount);
 
+    void setPegInAddress(const std::string& address);
+    void setPegOut(const bool pegout_set);
+
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
      *  (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
      */
@@ -74,6 +77,8 @@ private:
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;
+    std::string pegInAddress;
+    bool pegout;
 
     bool updateLabel(const QString &address);
 };

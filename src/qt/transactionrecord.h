@@ -80,7 +80,7 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
     };
 
     /** Number of confirmation recommended for accepting a transaction */

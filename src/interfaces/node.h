@@ -170,7 +170,7 @@ public:
     virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
 
     //! Get unspent outputs associated with a transaction.
-    virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
+    virtual bool getUnspentOutput(const OutputIndex& index, CTxOutput& output) = 0;
 
     //! Get wallet client.
     virtual WalletClient& walletClient() = 0;

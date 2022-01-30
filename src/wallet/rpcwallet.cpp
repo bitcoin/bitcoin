@@ -238,7 +238,7 @@ static RPCHelpMan getnewaddress()
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, /* default */ "\"\"", "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\", and \"mweb\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new litecoin address"
@@ -316,6 +316,10 @@ static RPCHelpMan getrawchangeaddress()
         }
     }
 
+    if (output_type == OutputType::MWEB) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "MWEB address type not yet supported for raw transactions");
+    }
+
     CTxDestination dest;
     std::string error;
     if (!pwallet->GetNewChangeDestination(output_type, dest, error)) {
@@ -380,7 +384,7 @@ void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_f
         }
         destinations.insert(dest);
 
-        CScript script_pub_key = GetScriptForDestination(dest);
+        DestinationAddr recipient_addr(dest);
         CAmount amount = AmountFromValue(address_amounts[i++]);
 
         bool subtract_fee = false;
@@ -391,7 +395,11 @@ void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_f
             }
         }
 
-        CRecipient recipient = {script_pub_key, amount, subtract_fee};
+        if (recipient_addr.IsMWEB() && !subtract_fee_outputs.empty()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Subtract fee from amount not yet supported for MWEB transactions.");
+        }
+
+        CRecipient recipient = {recipient_addr, amount, subtract_fee};
         recipients.push_back(recipient);
     }
 }
@@ -665,8 +673,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         if (!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Litecoin address");
         }
-        CScript script_pub_key = GetScriptForDestination(dest);
-        if (!wallet.IsMine(script_pub_key)) {
+        if (!wallet.IsMine(dest)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Address not found in wallet");
         }
         address_set.insert(dest);
@@ -1023,7 +1030,7 @@ static RPCHelpMan addmultisigaddress()
     pwallet->SetAddressBook(dest, label, "send");
 
     // Make the descriptor
-    std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), spk_man);
+    std::unique_ptr<Descriptor> descriptor = InferDescriptor(DestinationAddr(dest), spk_man);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(dest));
@@ -1329,7 +1336,13 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
             if (address_book_entry) {
                 entry.pushKV("label", address_book_entry->GetLabel());
             }
-            entry.pushKV("vout", s.vout);
+
+            if (s.index.type() == typeid(COutPoint)) {
+                entry.pushKV("vout", (int)boost::get<COutPoint>(s.index).n);
+            } else {
+                entry.pushKV("mweb_out", boost::get<mw::Hash>(s.index).ToHex());
+            }
+
             entry.pushKV("fee", ValueFromAmount(-nFee));
             if (fLong)
                 WalletTxToJSON(pwallet->chain(), wtx, entry);
@@ -1359,7 +1372,7 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
             {
                 if (wtx.GetDepthInMainChain() < 1)
                     entry.pushKV("category", "orphan");
-                else if (wtx.IsImmatureCoinBase())
+                else if (wtx.IsImmature())
                     entry.pushKV("category", "immature");
                 else
                     entry.pushKV("category", "generate");
@@ -1372,7 +1385,13 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
             if (address_book_entry) {
                 entry.pushKV("label", label);
             }
-            entry.pushKV("vout", r.vout);
+
+            if (r.index.type() == typeid(COutPoint)) {
+                entry.pushKV("vout", (int)boost::get<COutPoint>(r.index).n);
+            } else {
+                entry.pushKV("mweb_out", boost::get<mw::Hash>(r.index).ToHex());
+            }
+
             if (fLong)
                 WalletTxToJSON(pwallet->chain(), wtx, entry);
             ret.push_back(entry);
@@ -1741,7 +1760,7 @@ static RPCHelpMan gettransaction()
     CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount nFee = -wtx.GetFee(filter);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     if (wtx.IsFromMe(filter))
@@ -2207,6 +2226,7 @@ static RPCHelpMan lockunspent()
     for (unsigned int idx = 0; idx < output_params.size(); idx++) {
         const UniValue& o = output_params[idx].get_obj();
 
+        // MW: TODO - Support locking MWEB output IDs
         RPCTypeCheckObj(o,
             {
                 {"txid", UniValueType(UniValue::VSTR)},
@@ -2232,11 +2252,11 @@ static RPCHelpMan lockunspent()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
         }
 
-        if (pwallet->IsSpent(outpt.hash, outpt.n)) {
+        if (pwallet->IsSpent(COutPoint(outpt.hash, outpt.n))) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
         }
 
-        const bool is_locked = pwallet->IsLockedCoin(outpt.hash, outpt.n);
+        const bool is_locked = pwallet->IsLockedCoin(outpt);
 
         if (fUnlock && !is_locked) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected locked output");
@@ -2296,16 +2316,22 @@ static RPCHelpMan listlockunspent()
 
     LOCK(pwallet->cs_wallet);
 
-    std::vector<COutPoint> vOutpts;
+    std::vector<OutputIndex> vOutpts;
     pwallet->ListLockedCoins(vOutpts);
 
     UniValue ret(UniValue::VARR);
 
-    for (const COutPoint& outpt : vOutpts) {
+    for (const OutputIndex& output : vOutpts) {
         UniValue o(UniValue::VOBJ);
 
-        o.pushKV("txid", outpt.hash.GetHex());
-        o.pushKV("vout", (int)outpt.n);
+        if (output.type() == typeid(COutPoint)) {
+            const COutPoint& outpt = boost::get<COutPoint>(output);
+            o.pushKV("txid", outpt.hash.GetHex());
+            o.pushKV("vout", (int)outpt.n);
+        } else {
+            o.pushKV("mweb_out", boost::get<mw::Hash>(output).ToHex());
+        }
+
         ret.push_back(o);
     }
 
@@ -2965,7 +2991,7 @@ static RPCHelpMan listunspent()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     UniValue results(UniValue::VARR);
-    std::vector<COutput> vecOutputs;
+    std::vector<COutputCoin> vecOutputs;
     {
         CCoinControl cctl;
         cctl.m_avoid_address_reuse = false;
@@ -2979,19 +3005,18 @@ static RPCHelpMan listunspent()
 
     const bool avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
 
-    for (const COutput& out : vecOutputs) {
+    for (const COutputCoin& output_coin : vecOutputs) {
         CTxDestination address;
-        const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
-        bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsSpentKey(out.tx->GetHash(), out.i);
+        bool fValidAddress = output_coin.GetDestination(address);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
 
         UniValue entry(UniValue::VOBJ);
-        entry.pushKV("txid", out.tx->GetHash().GetHex());
-        entry.pushKV("vout", out.i);
-
+        entry.pushKV("txid", output_coin.GetWalletTx()->GetHash().GetHex());
+        entry.pushKV("amount", ValueFromAmount(output_coin.GetValue()));
+        entry.pushKV("confirmations", output_coin.GetDepth());
+        entry.pushKV("spendable", output_coin.IsSpendable());
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
 
@@ -2999,7 +3024,30 @@ static RPCHelpMan listunspent()
             if (address_book_entry) {
                 entry.pushKV("label", address_book_entry->GetLabel());
             }
+        }
 
+        if (output_coin.IsMWEB()) {
+            results.push_back(entry);
+            continue;
+        }
+
+        const COutput& out = boost::get<COutput>(output_coin.m_output);
+        const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
+
+        entry.pushKV("vout", out.i);
+        entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
+        entry.pushKV("solvable", out.fSolvable);
+        if (out.fSolvable) {
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
+            if (provider) {
+                auto descriptor = InferDescriptor(scriptPubKey, *provider);
+                entry.pushKV("desc", descriptor->ToString());
+            }
+        }
+
+        if (avoid_reuse) entry.pushKV("reused", pwallet->IsSpentKey(out.tx->tx->GetOutput(output_coin.GetIndex())));
+        entry.pushKV("safe", out.fSafe);
+        if (fValidAddress) {
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
             if (provider) {
                 if (scriptPubKey.IsPayToScriptHash()) {
@@ -3034,20 +3082,6 @@ static RPCHelpMan listunspent()
             }
         }
 
-        entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
-        entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
-        entry.pushKV("confirmations", out.nDepth);
-        entry.pushKV("spendable", out.fSpendable);
-        entry.pushKV("solvable", out.fSolvable);
-        if (out.fSolvable) {
-            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
-            if (provider) {
-                auto descriptor = InferDescriptor(scriptPubKey, *provider);
-                entry.pushKV("desc", descriptor->ToString());
-            }
-        }
-        if (avoid_reuse) entry.pushKV("reused", reused);
-        entry.pushKV("safe", out.fSafe);
         results.push_back(entry);
     }
 
@@ -3842,19 +3876,22 @@ RPCHelpMan getaddressinfo()
     std::string currentAddress = EncodeDestination(dest);
     ret.pushKV("address", currentAddress);
 
-    CScript scriptPubKey = GetScriptForDestination(dest);
-    ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
+    DestinationAddr dest_addr(dest);
 
-    std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
+    if (!dest_addr.IsMWEB()) {
+        ret.pushKV("scriptPubKey", HexStr(dest_addr.GetScript()));
+    }
+
+    std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(dest_addr);
 
     isminetype mine = pwallet->IsMine(dest);
     ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
 
-    bool solvable = provider && IsSolvable(*provider, scriptPubKey);
+    bool solvable = provider && IsSolvable(*provider, dest_addr);
     ret.pushKV("solvable", solvable);
 
     if (solvable) {
-       ret.pushKV("desc", InferDescriptor(scriptPubKey, *provider)->ToString());
+       ret.pushKV("desc", InferDescriptor(dest_addr, *provider)->ToString());
     }
 
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
@@ -3862,14 +3899,19 @@ RPCHelpMan getaddressinfo()
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
 
-    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
+    ret.pushKV("ischange", pwallet->IsChange(dest_addr));
 
-    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
+    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(dest_addr);
     if (spk_man) {
         if (const std::unique_ptr<CKeyMetadata> meta = spk_man->GetMetadata(dest)) {
             ret.pushKV("timestamp", meta->nCreateTime);
             if (meta->has_key_origin) {
-                ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
+                if (!!meta->mweb_index) {
+                    ret.pushKV("hdkeypath", meta->hdKeypath);
+                } else {
+                    ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
+                }
+
                 ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
                 ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
             }

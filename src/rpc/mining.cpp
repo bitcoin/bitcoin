@@ -178,7 +178,7 @@ static bool getScriptFromDescriptor(const std::string& descriptor, CScript& scri
         }
 
         FlatSigningProvider provider;
-        std::vector<CScript> scripts;
+        std::vector<DestinationAddr> scripts;
         if (!desc->Expand(0, key_provider, scripts, provider)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
         }
@@ -186,14 +186,18 @@ static bool getScriptFromDescriptor(const std::string& descriptor, CScript& scri
         // Combo descriptors can have 2 or 4 scripts, so we can't just check scripts.size() == 1
         CHECK_NONFATAL(scripts.size() > 0 && scripts.size() <= 4);
 
+        for (const DestinationAddr& script : scripts) {
+            CHECK_NONFATAL(!script.IsMWEB());
+        }
+
         if (scripts.size() == 1) {
-            script = scripts.at(0);
+            script = scripts.at(0).GetScript();
         } else if (scripts.size() == 4) {
             // For uncompressed keys, take the 3rd script, since it is p2wpkh
-            script = scripts.at(2);
+            script = scripts.at(2).GetScript();
         } else {
             // Else take the 2nd script, since it is p2pkh
-            script = scripts.at(1);
+            script = scripts.at(1).GetScript();
         }
 
         return true;
@@ -724,6 +728,8 @@ static RPCHelpMan getblocktemplate()
     if (setClientRules.count("segwit") != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
     }
+
+    // MW: TODO - Handle deployment rule
 
     // Update block
     static CBlockIndex* pindexPrev;

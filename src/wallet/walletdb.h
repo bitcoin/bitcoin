@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <amount.h>
+#include <mw/models/wallet/Coin.h>
 #include <script/sign.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
@@ -242,6 +243,7 @@ public:
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
+    bool WriteMWEBCoin(const mw::Coin& coin);
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
     bool EraseWatchOnly(const CScript &script);

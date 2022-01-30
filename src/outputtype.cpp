@@ -18,8 +18,9 @@
 static const std::string OUTPUT_TYPE_STRING_LEGACY = "legacy";
 static const std::string OUTPUT_TYPE_STRING_P2SH_SEGWIT = "p2sh-segwit";
 static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
+static const std::string OUTPUT_TYPE_STRING_MWEB = "mweb";
 
-const std::array<OutputType, 3> OUTPUT_TYPES = {OutputType::LEGACY, OutputType::P2SH_SEGWIT, OutputType::BECH32};
+const std::array<OutputType, 4> OUTPUT_TYPES = {OutputType::LEGACY, OutputType::P2SH_SEGWIT, OutputType::BECH32, OutputType::MWEB};
 
 bool ParseOutputType(const std::string& type, OutputType& output_type)
 {
@@ -32,6 +33,9 @@ bool ParseOutputType(const std::string& type, OutputType& output_type)
     } else if (type == OUTPUT_TYPE_STRING_BECH32) {
         output_type = OutputType::BECH32;
         return true;
+    } else if (type == OUTPUT_TYPE_STRING_MWEB) {
+        output_type = OutputType::MWEB;
+        return true;
     }
     return false;
 }
@@ -42,12 +46,15 @@ const std::string& FormatOutputType(OutputType type)
     case OutputType::LEGACY: return OUTPUT_TYPE_STRING_LEGACY;
     case OutputType::P2SH_SEGWIT: return OUTPUT_TYPE_STRING_P2SH_SEGWIT;
     case OutputType::BECH32: return OUTPUT_TYPE_STRING_BECH32;
+    case OutputType::MWEB: return OUTPUT_TYPE_STRING_MWEB;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
+CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type, const SecretKey& scan_secret)
 {
+    assert(type != OutputType::MWEB || !scan_secret.IsNull());
+
     switch (type) {
     case OutputType::LEGACY: return PKHash(key);
     case OutputType::P2SH_SEGWIT:
@@ -61,18 +68,28 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
             return witdest;
         }
     }
+    case OutputType::MWEB: {
+        PublicKey spend_pubkey(key.data());
+        return StealthAddress(spend_pubkey.Mul(scan_secret), spend_pubkey);
+    }
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
+std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key, const SecretKey& scan_secret)
 {
     PKHash keyid(key);
     CTxDestination p2pkh{keyid};
     if (key.IsCompressed()) {
         CTxDestination segwit = WitnessV0KeyHash(keyid);
         CTxDestination p2sh = ScriptHash(GetScriptForDestination(segwit));
-        return Vector(std::move(p2pkh), std::move(p2sh), std::move(segwit));
+
+        if (!scan_secret.IsNull()) {
+            CTxDestination stealth = GetDestinationForKey(key, OutputType::MWEB, scan_secret);
+            return Vector(std::move(p2pkh), std::move(p2sh), std::move(segwit), std::move(stealth));
+        } else {
+            return Vector(std::move(p2pkh), std::move(p2sh), std::move(segwit));
+        }
     } else {
         return Vector(std::move(p2pkh));
     }
@@ -100,6 +117,8 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
             return ScriptHash(witprog);
         }
     }
+    case OutputType::MWEB:
+        assert(false);
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

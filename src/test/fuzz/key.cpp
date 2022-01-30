@@ -109,7 +109,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(pubkey.IsValid());
         assert(pubkey.IsFullyValid());
         assert(HexToPubKey(HexStr(pubkey)) == pubkey);
-        assert(GetAllDestinationsForKey(pubkey).size() == 3);
+        assert(GetAllDestinationsForKey(pubkey, SecretKey()).size() == 3);
     }
 
     {
@@ -182,7 +182,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(v_solutions_ret_tx_multisig[2].size() == 1);
 
         OutputType output_type{};
-        const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type);
+        const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type, SecretKey());
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));
         assert(CTxDestination{PKHash{pubkey}} == tx_destination);

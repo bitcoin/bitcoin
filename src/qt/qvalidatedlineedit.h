@@ -19,6 +19,7 @@ public:
     void clear();
     void setCheckValidator(const QValidator *v);
     bool isValid();
+    void setValidating(bool validating);
 
 protected:
     void focusInEvent(QFocusEvent *evt) override;
@@ -26,6 +27,7 @@ protected:
 
 private:
     bool valid;
+    bool validating;
     const QValidator *checkValidator;
 
 public Q_SLOTS:

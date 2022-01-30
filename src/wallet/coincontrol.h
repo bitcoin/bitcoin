@@ -51,6 +51,9 @@ public:
     //! Maximum chain depth value for coin availability
     int m_max_depth = DEFAULT_MAX_DEPTH;
 
+    bool fPegIn;
+    bool fPegOut;
+
     CCoinControl()
     {
         SetNull();
@@ -63,19 +66,19 @@ public:
         return (setSelected.size() > 0);
     }
 
-    bool IsSelected(const COutPoint& output) const
+    bool IsSelected(const OutputIndex& idx) const
     {
-        return (setSelected.count(output) > 0);
+        return (setSelected.count(idx) > 0);
     }
 
-    void Select(const COutPoint& output)
+    void Select(const OutputIndex& idx)
     {
-        setSelected.insert(output);
+        setSelected.insert(idx);
     }
 
-    void UnSelect(const COutPoint& output)
+    void UnSelect(const OutputIndex& idx)
     {
-        setSelected.erase(output);
+        setSelected.erase(idx);
     }
 
     void UnSelectAll()
@@ -83,13 +86,13 @@ public:
         setSelected.clear();
     }
 
-    void ListSelected(std::vector<COutPoint>& vOutpoints) const
+    void ListSelected(std::vector<OutputIndex>& vOutpoints) const
     {
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
 private:
-    std::set<COutPoint> setSelected;
+    std::set<OutputIndex> setSelected;
 };
 
 #endif // BITCOIN_WALLET_COINCONTROL_H

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
+#include <key_io.h>
 #include <script/standard.h>
 #include <test/util/setup_common.h>
 #include <wallet/scriptpubkeyman.h>
@@ -38,6 +39,53 @@ BOOST_AUTO_TEST_CASE(CanProvide)
     BOOST_CHECK(!keyman.CanProvide(p2sh_script, data));
     keyman.AddCScript(multisig_script);
     BOOST_CHECK(keyman.CanProvide(p2sh_script, data));
+}
+
+BOOST_AUTO_TEST_CASE(StealthAddresses)
+{
+    // Set up wallet and keyman variables.
+    NodeContext node;
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
+    CWallet wallet(chain.get(), "", CreateMockWalletDatabase());
+    wallet.SetMinVersion(WalletFeature::FEATURE_HD_SPLIT);
+    LegacyScriptPubKeyMan& keyman = *wallet.GetOrCreateLegacyScriptPubKeyMan();
+
+    // Set HD seed
+    CKey key = DecodeSecret("6usgJoGKXW12i7Ruxy8Z1C5hrRMVGfLmi9NU9uDQJMPXDJ6tQAH");
+    CPubKey seed = keyman.DeriveNewSeed(key);
+    keyman.SetHDSeed(seed);
+    keyman.TopUp();
+
+    // Check generated MWEB keychain
+    mw::Keychain::Ptr mweb_keychain = keyman.GetMWEBKeychain();
+    BOOST_CHECK(mweb_keychain != nullptr);
+    BOOST_CHECK(mweb_keychain->GetSpendSecret().GetBigInt().ToHex() == "2396e5c33b07dfa2d9e70da1dcbdad0ad2399e5672ff2d4afbe3b20bccf3ba1b");
+    BOOST_CHECK(mweb_keychain->GetScanSecret().GetBigInt().ToHex() == "918271168655385e387907612ee09d755be50c4685528f9f53eabae380ecba97");
+
+    // Check "change" (idx=0) address is USED
+    StealthAddress change_address = mweb_keychain->GetStealthAddress(0);
+    BOOST_CHECK(EncodeDestination(change_address) == "ltcmweb1qq20e2arnhvxw97katjkmsd35agw3capxjkrkh7dk8d30rczm8ypxuq329nwh2twmchhqn3jqh7ua4ps539f6aazh79jy76urqht4qa59ts3at6gf");
+    BOOST_CHECK(keyman.IsMine(change_address) == ISMINE_SPENDABLE);
+    CPubKey change_pubkey(change_address.B().vec());
+    BOOST_CHECK(keyman.GetAllReserveKeys().find(change_pubkey.GetID()) == keyman.GetAllReserveKeys().end());
+    BOOST_CHECK(*keyman.GetMetadata(change_address)->mweb_index == 0);
+
+    // Check "peg-in" (idx=1) address is USED
+    StealthAddress pegin_address = mweb_keychain->GetStealthAddress(1);
+    BOOST_CHECK(EncodeDestination(pegin_address) == "ltcmweb1qqg5hddkl4uhspjwg9tkmatxa4s6gswdaq9swl8vsg5xxznmye7phcqatzc62mzkg788tsrfcuegxe9q3agf5cplw7ztqdusqf7x3n2tl55x4gvyt");
+    BOOST_CHECK(keyman.IsMine(pegin_address) == ISMINE_SPENDABLE);
+    CPubKey pegin_pubkey(pegin_address.B().vec());
+    BOOST_CHECK(keyman.GetAllReserveKeys().find(pegin_pubkey.GetID()) == keyman.GetAllReserveKeys().end());
+    BOOST_CHECK(*keyman.GetMetadata(pegin_address)->mweb_index == 1);
+
+    // Check first receive (idx=2) address is UNUSED
+    StealthAddress receive_address = mweb_keychain->GetStealthAddress(2);
+    BOOST_CHECK(keyman.IsMine(receive_address) == ISMINE_SPENDABLE);
+    CPubKey receive_pubkey(receive_address.B().vec());
+    BOOST_CHECK(keyman.GetAllReserveKeys().find(receive_pubkey.GetID()) != keyman.GetAllReserveKeys().end());
+    BOOST_CHECK(*keyman.GetMetadata(receive_address)->mweb_index == 2);
+
+    BOOST_CHECK(keyman.GetHDChain().nMWEBIndexCounter == 1002);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

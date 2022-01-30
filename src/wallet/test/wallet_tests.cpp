@@ -361,7 +361,7 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
 
     // If transaction is already in map, to avoid inconsistencies, unconfirmation
     // is needed before confirm again with different block.
-    return wallet.AddToWallet(MakeTransactionRef(tx), confirm, [&](CWalletTx& wtx, bool /* new_tx */) {
+    return wallet.AddToWallet(MakeTransactionRef(tx), boost::none, confirm, [&](CWalletTx& wtx, bool /* new_tx */) {
         wtx.setUnconfirmed();
         return true;
     })->nTimeSmart;
@@ -555,7 +555,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 
     // Confirm ListCoins initially returns 1 coin grouped under coinbaseKey
     // address.
-    std::map<CTxDestination, std::vector<COutput>> list;
+    std::map<CTxDestination, std::vector<COutputCoin>> list;
     {
         LOCK(wallet->cs_wallet);
         list = wallet->ListCoins();
@@ -583,19 +583,19 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     // Lock both coins. Confirm number of available coins drops to 0.
     {
         LOCK(wallet->cs_wallet);
-        std::vector<COutput> available;
+        std::vector<COutputCoin> available;
         wallet->AvailableCoins(available);
         BOOST_CHECK_EQUAL(available.size(), 2U);
     }
     for (const auto& group : list) {
         for (const auto& coin : group.second) {
             LOCK(wallet->cs_wallet);
-            wallet->LockCoin(COutPoint(coin.tx->GetHash(), coin.i));
+            wallet->LockCoin(coin.GetIndex());
         }
     }
     {
         LOCK(wallet->cs_wallet);
-        std::vector<COutput> available;
+        std::vector<COutputCoin> available;
         wallet->AvailableCoins(available);
         BOOST_CHECK_EQUAL(available.size(), 0U);
     }

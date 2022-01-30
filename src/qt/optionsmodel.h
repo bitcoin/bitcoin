@@ -59,6 +59,7 @@ public:
         ThirdPartyTxUrls,       // QString
         Language,               // QString
         CoinControlFeatures,    // bool
+        MWEBFeatures,           // bool
         ThreadsScriptVerif,     // int
         Prune,                  // bool
         PruneSize,              // int
@@ -84,6 +85,7 @@ public:
     int getDisplayUnit() const { return nDisplayUnit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getMWEBFeatures() const { return fMWEBFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -107,6 +109,7 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
+    bool fMWEBFeatures;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 
@@ -118,6 +121,7 @@ private:
 Q_SIGNALS:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
+    void mwebFeaturesChanged(bool);
     void hideTrayIconChanged(bool);
 };
 

@@ -54,7 +54,7 @@ CMutableTransaction TxFromHex(const std::string& str)
 {
     CMutableTransaction tx;
     try {
-        VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, CheckedParseHex(str), 0) >> tx;
+        VectorReader(SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS | SERIALIZE_NO_MWEB, CheckedParseHex(str), 0) >> tx;
     } catch (const std::ios_base::failure&) {
         throw std::runtime_error("Tx deserialization failure");
     }

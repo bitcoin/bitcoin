@@ -50,10 +50,10 @@ static void CoinSelection(benchmark::Bench& bench)
     }
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
-    const CoinSelectionParams coin_selection_params(/* use_bnb= */ true, /* change_output_size= */ 34,
+    const CoinSelectionParams coin_selection_params(/* use_bnb= */ true, /* change_output_size= */ 34, /* mweb_change_output_weight= */ 0,
                                                     /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                     /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                                    /* tx_no_inputs_size= */ 0);
+                                                    /* tx_no_inputs_size= */ 0, /* mweb_no_change_weight= */ 0);
     bench.run([&] {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;

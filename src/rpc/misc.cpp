@@ -243,14 +243,14 @@ static RPCHelpMan deriveaddresses()
 
     for (int i = range_begin; i <= range_end; ++i) {
         FlatSigningProvider provider;
-        std::vector<CScript> scripts;
+        std::vector<DestinationAddr> scripts;
         if (!desc->Expand(i, key_provider, scripts, provider)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
         }
 
-        for (const CScript &script : scripts) {
+        for (const DestinationAddr& script : scripts) {
             CTxDestination dest;
-            if (!ExtractDestination(script, dest)) {
+            if (!script.ExtractDestination(dest)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Descriptor does not have a corresponding address"));
             }
 

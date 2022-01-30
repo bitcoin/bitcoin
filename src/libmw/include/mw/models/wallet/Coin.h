@@ -23,6 +23,9 @@ static constexpr uint32_t PEGIN_INDEX{1};
 /// Represents an output owned by the wallet, and the keys necessary to spend it.
 /// </summary>
 struct Coin : public Traits::ISerializable {
+    // Version byte to more easily support adding new fields to the object.
+    uint8_t version{0};
+
     // Index of the subaddress this coin was received at.
     uint32_t address_index;
 
@@ -46,6 +49,7 @@ struct Coin : public Traits::ISerializable {
 
     IMPL_SERIALIZABLE(Coin, obj)
     {
+        READWRITE(obj.version);
         READWRITE(VARINT(obj.address_index));
         READWRITE(obj.key);
         READWRITE(obj.blind);
