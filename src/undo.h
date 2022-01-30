@@ -9,6 +9,7 @@
 #include <coins.h>
 #include <compressor.h>
 #include <consensus/consensus.h>
+#include <mw/models/block/BlockUndo.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <version.h>
@@ -42,7 +43,7 @@ struct TxInUndoFormatter
             // Old versions stored the version number for the last spend of
             // a transaction's outputs. Non-final spends were indicated with
             // height = 0.
-            unsigned int nVersionDummy;
+            unsigned int nVersionDummy = 0;
             ::Unserialize(s, VARINT(nVersionDummy));
         }
         ::Unserialize(s, Using<TxOutCompression>(txout.out));
@@ -64,8 +65,33 @@ class CBlockUndo
 {
 public:
     std::vector<CTxUndo> vtxundo; // for all but the coinbase
+    mw::BlockUndo::CPtr mwundo;
 
-    SERIALIZE_METHODS(CBlockUndo, obj) { READWRITE(obj.vtxundo); }
+    SERIALIZE_METHODS(CBlockUndo, obj)
+	{
+		READWRITE(obj.vtxundo);
+		
+		if (obj.mwundo !=  nullptr) {
+			READWRITE(obj.mwundo);
+		}
+	}
 };
+
+template <typename Stream>
+inline void UnserializeBlockUndo(CBlockUndo& blockundo, Stream& s, const unsigned int num_bytes)
+{
+    const uint64_t num_txs = ::ReadCompactSize(s);
+    blockundo.vtxundo.reserve(num_txs);
+    for (uint64_t i = 0; i < num_txs; i++) {
+        CTxUndo txundo;
+        s >> txundo;
+        blockundo.vtxundo.emplace_back(std::move(txundo));
+    }
+
+    if (::GetSerializeSize(blockundo) < num_bytes) {
+        // There's more data to read. MWEB rewind data must be available.
+        s >> blockundo.mwundo;
+    }
+}
 
 #endif // BITCOIN_UNDO_H

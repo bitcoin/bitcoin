@@ -1656,17 +1656,24 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
         return error("%s: no undo data available", __func__);
     }
 
+    // Rewind 4 bytes in order to read the size
+    pos.nPos -= 4;
+
     // Open history file to read
     CAutoFile filein(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
         return error("%s: OpenUndoFile failed", __func__);
+
+    // Read undo size
+    unsigned int undo_size = 0;
+    filein >> undo_size;
 
     // Read block
     uint256 hashChecksum;
     CHashVerifier<CAutoFile> verifier(&filein); // We need a CHashVerifier as reserializing may lose data
     try {
         verifier << pindex->pprev->GetBlockHash();
-        verifier >> blockundo;
+        UnserializeBlockUndo(blockundo, verifier, undo_size);
         filein >> hashChecksum;
     }
     catch (const std::exception& e) {
@@ -1784,6 +1791,15 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 fClean = fClean && res != DISCONNECT_UNCLEAN;
             }
             // At this point, all of txundo.vprevout should have been moved out.
+        }
+    }
+
+    if (blockUndo.mwundo != nullptr) {
+        try {
+            view.GetMWEBCacheView()->UndoBlock(blockUndo.mwundo);
+        } catch (const std::exception& e) {
+            error("DisconnectBlock(): Failed to disconnect MWEB block");
+            return DISCONNECT_FAILED;
         }
     }
 
