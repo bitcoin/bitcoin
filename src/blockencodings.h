@@ -100,6 +100,7 @@ public:
     static constexpr int SHORTTXIDS_LENGTH = 6;
 
     CBlockHeader header;
+    MWEB::Block mweb_block;
 
     // Dummy for deserialization
     CBlockHeaderAndShortTxIDs() {}
@@ -112,7 +113,13 @@ public:
 
     SERIALIZE_METHODS(CBlockHeaderAndShortTxIDs, obj)
     {
+        const bool fAllowMWEB = !(s.GetVersion() & SERIALIZE_NO_MWEB);
+		
         READWRITE(obj.header, obj.nonce, Using<VectorFormatter<CustomUintFormatter<SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn);
+        if (fAllowMWEB) {
+            READWRITE(obj.mweb_block);
+        }
+
         if (ser_action.ForRead()) {
             if (obj.BlockTxCount() > std::numeric_limits<uint16_t>::max()) {
                 throw std::ios_base::failure("indexes overflowed 16 bits");
@@ -129,7 +136,8 @@ protected:
     const CTxMemPool* pool;
 public:
     CBlockHeader header;
-    explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
+    MWEB::Block mweb_block;
+    explicit PartiallyDownloadedBlock(CTxMemPool* poolIn, const MWEB::Block& mweb_blockIn) : pool(poolIn), mweb_block(mweb_blockIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
