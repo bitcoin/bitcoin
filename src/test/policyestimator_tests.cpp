@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     CFeeRate baseRate(basefee, GetVirtualTransactionSize(CTransaction(tx)), 0);
 
     // Create a fake block
-    std::vector<CTransactionRef> block;
+    CBlock block;
     int blocknum = 0;
 
     // Loop through 200 blocks
@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             while (txHashes[9-h].size()) {
                 CTransactionRef ptx = mpool.get(txHashes[9-h].back());
                 if (ptx)
-                    block.push_back(ptx);
+                    block.vtx.push_back(ptx);
                 txHashes[9-h].pop_back();
             }
         }
-        mpool.removeForBlock(block, ++blocknum);
-        block.clear();
+        mpool.removeForBlock(block, ++blocknum, nullptr);
+        block.vtx.clear();
         // Check after just a few txs that combining buckets works as expected
         if (blocknum == 3) {
             // At this point we should need to combine 3 buckets to get enough data points
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // Mine 50 more blocks with no transactions happening, estimates shouldn't change
     // We haven't decayed the moving average enough so we still have enough data points in every bucket
     while (blocknum < 250)
-        mpool.removeForBlock(block, ++blocknum);
+        mpool.removeForBlock(block, ++blocknum, nullptr);
 
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 txHashes[j].push_back(hash);
             }
         }
-        mpool.removeForBlock(block, ++blocknum);
+        mpool.removeForBlock(block, ++blocknum, nullptr);
     }
 
     for (int i = 1; i < 10;i++) {
@@ -146,12 +146,12 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         while(txHashes[j].size()) {
             CTransactionRef ptx = mpool.get(txHashes[j].back());
             if (ptx)
-                block.push_back(ptx);
+                block.vtx.push_back(ptx);
             txHashes[j].pop_back();
         }
     }
-    mpool.removeForBlock(block, 266);
-    block.clear();
+    mpool.removeForBlock(block, 266, nullptr);
+    block.vtx.clear();
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
         BOOST_CHECK(feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
@@ -167,12 +167,12 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
                 CTransactionRef ptx = mpool.get(hash);
                 if (ptx)
-                    block.push_back(ptx);
+                    block.vtx.push_back(ptx);
 
             }
         }
-        mpool.removeForBlock(block, ++blocknum);
-        block.clear();
+        mpool.removeForBlock(block, ++blocknum, nullptr);
+        block.vtx.clear();
     }
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 9; i++) { // At 9, the original estimate was already at the bottom (b/c scale = 2)

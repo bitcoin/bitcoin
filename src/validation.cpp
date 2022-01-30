@@ -385,7 +385,7 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
     while (it != disconnectpool.queuedTx.get<insertion_order>().rend()) {
         // ignore validation errors in resurrected transactions
         TxValidationState stateDummy;
-        if (!fAddToMempool || (*it)->IsCoinBase() ||
+        if (!fAddToMempool || (*it)->IsCoinBase() || (*it)->IsHogEx() ||
             !AcceptToMemoryPool(mempool, stateDummy, *it,
                                 nullptr /* plTxnReplaced */, true /* bypass_limits */)) {
             // If the transaction doesn't make it in to the mempool, remove any
@@ -473,7 +473,7 @@ public:
          * additions if the associated transaction ends up being rejected by
          * the mempool.
          */
-        std::vector<COutPoint>& m_coins_to_uncache;
+        std::vector<OutputIndex>& m_coins_to_uncache;
         const bool m_test_accept;
         CAmount* m_fee_out;
     };
@@ -560,7 +560,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     TxValidationState &state = args.m_state;
     const int64_t nAcceptTime = args.m_accept_time;
     const bool bypass_limits = args.m_bypass_limits;
-    std::vector<COutPoint>& coins_to_uncache = args.m_coins_to_uncache;
+    std::vector<OutputIndex>& coins_to_uncache = args.m_coins_to_uncache;
 
     // Alias what we need out of ws
     std::set<uint256>& setConflicts = ws.m_conflicts;
@@ -576,10 +576,19 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return false; // state filled in by CheckTransaction
     }
 
+    // MWEB: Check MWEB tx
+    if (!MWEB::Node::CheckTransaction(tx, state)) {
+        return false; // state filled in by CheckTransaction
+    }
+
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
 
+    // HogEx is only valid in a block, not as a loose transaction
+    if (tx.IsHogEx())
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "hogex");
+		
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))
@@ -606,9 +615,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // Check for conflicts with in-memory transactions
-    for (const CTxIn &txin : tx.vin)
+    for (const CTxInput& txin : tx.GetInputs())
     {
-        const CTransaction* ptxConflicting = m_pool.GetConflictTx(txin.prevout);
+        const CTransaction* ptxConflicting = m_pool.GetConflictTx(txin.GetIndex());
         if (ptxConflicting) {
             if (!setConflicts.count(ptxConflicting->GetHash()))
             {
@@ -651,19 +660,19 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     CCoinsViewCache& coins_cache = ::ChainstateActive().CoinsTip();
     // do all inputs exist?
-    for (const CTxIn& txin : tx.vin) {
-        if (!coins_cache.HaveCoinInCache(txin.prevout)) {
-            coins_to_uncache.push_back(txin.prevout);
+    for (const CTxInput& txin : tx.GetInputs()) {
+        if (!coins_cache.HaveCoinInCache(txin.GetIndex())) {
+            coins_to_uncache.push_back(txin.GetIndex());
         }
 
         // Note: this call may add txin.prevout to the coins cache
         // (coins_cache.cacheCoins) by way of FetchCoin(). It should be removed
         // later (via coins_to_uncache) if this tx turns out to be invalid.
-        if (!m_view.HaveCoin(txin.prevout)) {
+        if (!m_view.HaveCoin(txin.GetIndex())) {
             // Are inputs missing because we already have the tx?
-            for (size_t out = 0; out < tx.vout.size(); out++) {
+            for (const CTxOutput& txout : tx.GetOutputs()) {
                 // Optimistically just do efficient check of cache for outputs
-                if (coins_cache.HaveCoinInCache(COutPoint(hash, out))) {
+                if (coins_cache.HaveCoinInCache(txout.GetIndex())) {
                     return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-known");
                 }
             }
@@ -854,9 +863,15 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                             oldFeeRate.ToString()));
             }
 
-            for (const CTxIn &txin : mi->GetTx().vin)
-            {
-                setConflictsParents.insert(txin.prevout.hash);
+            for (const CTxInput& txin : mi->GetTx().GetInputs()) {
+                if (txin.IsMWEB()) {
+                    auto parent_iter = m_pool.mapTxOutputs_MWEB.find(txin.ToMWEB());
+                    if (parent_iter != m_pool.mapTxOutputs_MWEB.end()) {
+                        setConflictsParents.insert(parent_iter->second->GetHash());
+                    }
+                } else {
+                    setConflictsParents.insert(txin.GetTxIn().prevout.hash);
+                }
             }
 
             nConflictingCount += mi->GetCountWithDescendants();
@@ -1073,7 +1088,7 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
                         int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                         bool bypass_limits, bool test_accept, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    std::vector<COutPoint> coins_to_uncache;
+    std::vector<OutputIndex> coins_to_uncache;
     MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, plTxnReplaced, bypass_limits, coins_to_uncache, test_accept, fee_out };
     bool res = MemPoolAccept(pool).AcceptSingleTransaction(tx, args);
     if (!res) {
@@ -1082,7 +1097,7 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
         // invalid transactions that attempt to overrun the in-memory coins cache
         // (`CCoinsViewCache::cacheCoins`).
 
-        for (const COutPoint& hashTx : coins_to_uncache)
+        for (const OutputIndex& hashTx : coins_to_uncache)
             ::ChainstateActive().CoinsTip().Uncache(hashTx);
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
@@ -2574,6 +2589,14 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
         return false;
 
     if (disconnectpool) {
+        // MWEB: For each kernel, lookup kernel's txs in FIFO cache and add them back to the mempool.
+        for (const mw::Hash& kernel_id : block.mweb_block.GetKernelIDs()) {
+            if (m_mempool.recentTxsByKernel.Cached(kernel_id)) {
+                CTransactionRef ptx = m_mempool.recentTxsByKernel.Get(kernel_id);
+                disconnectpool->addTransaction(ptx);
+            }
+        }
+
         // Save transactions to re-add to mempool at end of reorg
         for (auto it = block.vtx.rbegin(); it != block.vtx.rend(); ++it) {
             disconnectpool->addTransaction(*it);
@@ -2692,8 +2715,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
     // Remove conflicting transactions from the mempool.;
-    m_mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
-    disconnectpool.removeForBlock(blockConnecting.vtx);
+    m_mempool.removeForBlock(blockConnecting, pindexNew->nHeight, &disconnectpool);
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
     UpdateTip(m_mempool, pindexNew, chainparams);

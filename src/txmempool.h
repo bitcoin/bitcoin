@@ -27,12 +27,18 @@
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
+#include <caches/Cache.h>
 
+class CBlock;
 class CBlockIndex;
+struct DisconnectedBlockTransactions;
 extern RecursiveMutex cs_main;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
+
+/** Default size of CMemPool's recentTxsByKernel cache */
+static const unsigned int DEFAULT_MEMPOOL_MWEB_CACHE_SIZE = 1000;
 
 struct LockPoints
 {
@@ -608,7 +614,21 @@ private:
     std::set<uint256> m_unbroadcast_txids GUARDED_BY(cs);
 
 public:
-    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
+    /**
+     * Maps outputs to mempool transactions that spend them.
+     */
+    std::map<OutputIndex, const CTransaction*> mapNextTx GUARDED_BY(cs);
+
+    /**
+     * Maps MWEB output IDs to mempool transactions that create them.
+     */
+    std::map<mw::Hash, const CTransaction*> mapTxOutputs_MWEB GUARDED_BY(cs);
+
+    /**
+     * FIFO cache of txs recently removed from the mempool keyed by kernel ID.
+     */
+    FIFOCache<mw::Hash, CTransactionRef> recentTxsByKernel GUARDED_BY(cs){DEFAULT_MEMPOOL_MWEB_CACHE_SIZE};
+	
     std::map<uint256, CAmount> mapDeltas;
 
     /** Create a new CTxMemPool.
@@ -637,13 +657,13 @@ public:
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeForBlock(const CBlock& block, unsigned int nBlockHeight, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
     void queryHashes(std::vector<uint256>& vtxid) const;
-    bool isSpent(const COutPoint& outpoint) const;
+    bool isSpent(const OutputIndex& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
     /**
@@ -658,7 +678,7 @@ public:
     void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Get the transaction in the pool that spends the same prevout */
-    const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    const CTransaction* GetConflictTx(const OutputIndex& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Returns an iterator to the given hash, if found */
     Optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -753,6 +773,17 @@ public:
         return (mapTx.count(gtxid.GetHash()) != 0);
     }
     bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
+
+    bool GetCreatedTx(const mw::Hash& output_id, uint256& hash) const
+    {
+        LOCK(cs);
+        auto iter = mapTxOutputs_MWEB.find(output_id);
+        if (iter != mapTxOutputs_MWEB.end()) {
+            hash = iter->second->GetHash();
+            return true;
+        }
+        return false;
+    }
 
     CTransactionRef get(const uint256& hash) const;
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
@@ -968,8 +999,10 @@ struct DisconnectedBlockTransactions {
 
     void addTransaction(const CTransactionRef& tx)
     {
-        queuedTx.insert(tx);
-        cachedInnerUsage += RecursiveDynamicUsage(tx);
+        if (queuedTx.find(tx->GetHash()) == queuedTx.end()) {
+            queuedTx.insert(tx);
+            cachedInnerUsage += RecursiveDynamicUsage(tx);
+        }
     }
 
     // Remove entries based on txid_index, and update memory usage.

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/policy.h>
+#include <primitives/block.h>
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/time.h>
@@ -389,9 +390,9 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     CheckSort<ancestor_score>(pool, sortedOrder);
 
     /* after tx6 is mined, tx7 should move up in the sort */
-    std::vector<CTransactionRef> vtx;
-    vtx.push_back(MakeTransactionRef(tx6));
-    pool.removeForBlock(vtx, 1);
+    CBlock block;
+    block.vtx.push_back(MakeTransactionRef(tx6));
+    pool.removeForBlock(block, 1, nullptr);
 
     sortedOrder.erase(sortedOrder.begin()+1);
     // Ties are broken by hash
@@ -546,12 +547,12 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.addUnchecked(entry.Fee(1000LL).FromTx(tx5));
     pool.addUnchecked(entry.Fee(9000LL).FromTx(tx7));
 
-    std::vector<CTransactionRef> vtx;
+    CBlock block;
     SetMockTime(42);
     SetMockTime(42 + CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
     // ... we should keep the same min fee until we get a block
-    pool.removeForBlock(vtx, 1);
+    pool.removeForBlock(block, 1, nullptr);
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/2.0));
     // ... then feerate should drop 1/2 each halflife
