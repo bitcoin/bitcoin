@@ -49,6 +49,8 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
         assert(filter_index.Init());
         assert(!filter_index.BlockUntilSyncedToCurrentChain());
         filter_index.Sync();
+        filter_index.Interrupt();
+        filter_index.Stop();
 
         IndexSummary summary = filter_index.GetSummary();
         assert(summary.synced);
