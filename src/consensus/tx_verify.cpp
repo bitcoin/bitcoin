@@ -186,6 +186,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
+        // If coin is a pegout, check that it's matured
+        if (coin.IsPegout() && nSpendHeight - coin.nHeight < PEGOUT_MATURITY) {
+            return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-pegout",
+                strprintf("tried to spend pegout output at depth %d", nSpendHeight - coin.nHeight));
+        }
+
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
         if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {

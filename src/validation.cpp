@@ -720,7 +720,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     bool fSpendsCoinbase = false;
     for (const CTxIn &txin : tx.vin) {
         const Coin &coin = m_view.AccessCoin(txin.prevout);
-        if (coin.IsCoinBase()) {
+        if (coin.IsCoinBase() || coin.IsPegout()) {
             fSpendsCoinbase = true;
             break;
         }

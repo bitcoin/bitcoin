@@ -109,10 +109,13 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
+        // MWEB: The first output in the HogEx transaction is the HogAddr.
+        // The HogAddr is always spent in the next HogEx, so should not be subjected to pegout maturity rules.
+        bool fPegout = tx.IsHogEx() && i > 0;
         bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
-        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
+        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase, fPegout), overwrite);
     }
 }
 

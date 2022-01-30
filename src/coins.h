@@ -40,27 +40,35 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
 
+    //! whether output was a pegout from a hogex transaction
+    bool fPegout;
+
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, bool fPegoutIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), fPegout(fPegoutIn) {}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, bool fPegoutIn) : out(outIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), fPegout(fPegoutIn) {}
 
     void Clear() {
         out.SetNull();
         fCoinBase = false;
+        fPegout = false;
         nHeight = 0;
     }
 
     //! empty constructor
-    Coin() : fCoinBase(false), nHeight(0) { }
+    Coin() : fCoinBase(false), nHeight(0), fPegout(false) {}
 
     bool IsCoinBase() const {
         return fCoinBase;
     }
 
+    bool IsPegout() const {
+        return fPegout;
+    }
+
     template<typename Stream>
     void Serialize(Stream &s) const {
         assert(!IsSpent());
-        uint32_t code = nHeight * uint32_t{2} + fCoinBase;
+        uint32_t code = nHeight * uint32_t{2} + fCoinBase + (fPegout ? (uint32_t{1} << 31) : uint32_t{0});
         ::Serialize(s, VARINT(code));
         ::Serialize(s, Using<TxOutCompression>(out));
     }
@@ -69,7 +77,8 @@ public:
     void Unserialize(Stream &s) {
         uint32_t code = 0;
         ::Unserialize(s, VARINT(code));
-        nHeight = code >> 1;
+        fPegout = code >> 31;
+        nHeight = (code & ~(uint32_t{1} << 31)) >> 1;
         fCoinBase = code & 1;
         ::Unserialize(s, Using<TxOutCompression>(out));
     }
