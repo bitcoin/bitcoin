@@ -31,7 +31,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # This test isn't testing tx relay. Set whitelist on the peers for
         # instant tx relay.
-        self.extra_args = [['-whitelist=noban@127.0.0.1']] * self.num_nodes
+        self.extra_args = [['-whitelist=noban@127.0.0.1', '-vbparams=mweb:-2:0']] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -532,6 +532,12 @@ class RawTransactionsTest(BitcoinTestFramework):
                 'internal': True
             }])
             self.nodes[1].walletlock()
+
+        # MWEB: We don't update hd seed when encrypting wallet, so new keypool was not generated.
+        # We need to refill keypool manually.
+        self.nodes[1].walletpassphrase('test', 10)
+        self.nodes[1].keypoolrefill(1)
+        self.nodes[1].walletlock()
 
         # Drain the keypool.
         self.nodes[1].getnewaddress()

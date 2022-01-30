@@ -56,6 +56,7 @@ from test_framework.script import (
     OP_0,
     OP_1,
     OP_2,
+    OP_8,
     OP_16,
     OP_2DROP,
     OP_CHECKMULTISIG,
@@ -220,9 +221,9 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1", "-mempoolreplacement=1"],
-            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT), "-mempoolreplacement=1"],
-            ["-acceptnonstdtxn=1", "-segwitheight=-1", "-mempoolreplacement=1"],
+            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1", "-mempoolreplacement=1", "-vbparams=mweb:0:0"],
+            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT), "-mempoolreplacement=1", "-vbparams=mweb:0:0"],
+            ["-acceptnonstdtxn=1", "-segwitheight=-1", "-mempoolreplacement=1", "-vbparams=mweb:0:0"],
         ]
         self.supports_cli = False
 
@@ -1400,6 +1401,10 @@ class SegWitTest(BitcoinTestFramework):
         witness_hash = sha256(witness_program)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
         for version in list(range(OP_1, OP_16 + 1)) + [OP_0]:
+            # MWEB: We no longer allow version byte of 8 for segwit outputs except for first output (HogAddr) of HogEx txs.
+            #if version == OP_8:
+            #    continue
+
             # First try to spend to a future version segwit script_pubkey.
             if version == OP_1:
                 # Don't use 32-byte v1 witness (used by Taproot; see BIP 341)

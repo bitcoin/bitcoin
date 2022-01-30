@@ -33,8 +33,12 @@ class BIP68Test(BitcoinTestFramework):
             [
                 "-acceptnonstdtxn=1",
                 "-peertimeout=9999",  # bump because mocktime might cause a disconnect otherwise
+                "-vbparams=mweb:-2:0",
             ],
-            ["-acceptnonstdtxn=0"],
+            [
+                "-acceptnonstdtxn=0",
+                "-vbparams=mweb:-2:0",
+            ],
         ]
 
     def skip_test_if_missing_module(self):

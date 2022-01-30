@@ -53,3 +53,21 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
             mempool_size = new_size
 
     return COutPoint(int(txid, 16), 0)
+
+def setup_mweb_chain(node):
+    # Create all pre-MWEB blocks
+    node.generate(431)
+
+    # Pegin some coins
+    node.sendtoaddress(node.getnewaddress(address_type='mweb'), 1)
+
+    # Create some blocks - activate MWEB
+    node.generate(1)
+
+def get_hog_addr_txout(node):
+    best_block = node.getblock(node.getbestblockhash(), 2)
+
+    hogex_tx = best_block['tx'][-1] # TODO: Should validate that the tx is marked as a hogex tx
+    hog_addr = hogex_tx['vout'][0]
+
+    return CTxOut(hog_addr['value'], hog_addr['scriptPubKey'])

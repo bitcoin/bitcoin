@@ -25,6 +25,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
         found_p2sh_segwit_addr = 0
         found_bech32_addr = 0
         found_script_addr = 0
+        found_mweb_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
         hd_master_addr_ret = None
@@ -55,8 +56,9 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     # ensure the old master is still available
                     assert hd_master_addr_old == addr
                 elif keytype == "hdseed=1":
-                    # ensure we have generated a new hd master key
-                    assert hd_master_addr_old != addr
+                    if hd_master_addr_old != None:
+                        # MWEB: No new seed is generated when encrypting, so assert hd master key is unchanged
+                        assert hd_master_addr_old == addr
                     hd_master_addr_ret = addr
                 elif keytype == "script=1":
                     # scripts don't have keypaths
@@ -75,6 +77,8 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                             found_p2sh_segwit_addr += 1
                         elif addr.startswith('rltc1'):
                             found_bech32_addr += 1
+                        elif addr.startswith('tmweb'):
+                            found_mweb_addr += 1
                         break
                     elif keytype == "change=1":
                         found_addr_chg += 1
@@ -89,7 +93,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                         found_script_addr += 1
                         break
 
-        return found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
+        return found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_mweb_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
 class WalletDumpTest(BitcoinTestFramework):
@@ -111,13 +115,14 @@ class WalletDumpTest(BitcoinTestFramework):
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 
-        # generate 30 addresses to compare against the dump
+        # generate 40 addresses to compare against the dump
         # - 10 legacy P2PKH
         # - 10 P2SH-segwit
         # - 10 bech32
+        # - 10 mweb
         test_addr_count = 10
         addrs = []
-        for address_type in ['legacy', 'p2sh-segwit', 'bech32']:
+        for address_type in ['legacy', 'p2sh-segwit', 'bech32', 'mweb']:
             for _ in range(test_addr_count):
                 addr = self.nodes[0].getnewaddress(address_type=address_type)
                 vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
@@ -155,7 +160,7 @@ class WalletDumpTest(BitcoinTestFramework):
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
         assert_equal(result['filename'], wallet_unenc_dump)
 
-        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
+        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_mweb_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(wallet_unenc_dump, addrs, [multisig_addr], None)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
@@ -165,8 +170,9 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_script_addr, 1)  # all scripts must be in the dump
-        assert_equal(found_addr_chg, 0)  # 0 blocks where mined
-        assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
+        assert_equal(found_mweb_addr, test_addr_count)
+        assert_equal(found_addr_chg, 0 + 2)  # 0 blocks were mined plus 2 initial MWEB keys (CHANGE and PEG-IN)
+        assert_equal(found_addr_rsv, 90 * 3)  # 90 keys plus 100% internal keys and 100% MWEB keys
 
         # encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
@@ -175,7 +181,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
-        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
+        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_mweb_addr, found_addr_chg, found_addr_rsv, _ = \
             read_dump(wallet_enc_dump, addrs, [multisig_addr], hd_master_addr_unenc)
         assert '# End of dump' in found_comments  # Check that file is not corrupt
         assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
@@ -185,8 +191,9 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_script_addr, 1)
-        assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
-        assert_equal(found_addr_rsv, 90 * 2)
+        assert_equal(found_mweb_addr, test_addr_count)
+        assert_equal(found_addr_chg, 0 + 2)  # 0 blocks were mined plus 2 initial MWEB keys (CHANGE and PEG-IN)
+        assert_equal(found_addr_rsv, 90 * 3)
 
         # Overwriting should fail
         assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))

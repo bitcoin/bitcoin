@@ -72,11 +72,19 @@ class KeyPoolTest(BitcoinTestFramework):
                 }
             ])
             nodes[0].walletlock()
+            
+        # MWEB: We don't update hd seed when encrypting wallet, so new keypool was not generated.
+        # We need to refill keypool manually.
+        self.nodes[0].walletpassphrase('test', 10)
+        self.nodes[0].keypoolrefill(1)
+        self.nodes[0].walletlock()
+
         # Keep creating keys
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
         wallet_info = nodes[0].getwalletinfo()
-        assert addr_before_encrypting_data['hdmasterfingerprint'] != addr_data['hdmasterfingerprint']
+        # MWEB: We don't update hd seed when encrypting wallet, so fingerprint shouldn't change
+        assert addr_before_encrypting_data['hdmasterfingerprint'] == addr_data['hdmasterfingerprint']
         if not self.options.descriptors:
             assert addr_data['hdseedid'] == wallet_info['hdseedid']
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)

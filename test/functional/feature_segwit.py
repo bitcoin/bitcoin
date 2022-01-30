@@ -57,17 +57,20 @@ class SegWitTest(BitcoinTestFramework):
                 "-rpcserialversion=0",
                 "-segwitheight=432",
                 "-addresstype=legacy",
+                "-vbparams=mweb:-2:0",
             ],
             [
                 "-acceptnonstdtxn=1",
                 "-rpcserialversion=1",
                 "-segwitheight=432",
                 "-addresstype=legacy",
+                "-vbparams=mweb:-2:0",
             ],
             [
                 "-acceptnonstdtxn=1",
                 "-segwitheight=432",
                 "-addresstype=legacy",
+                "-vbparams=mweb:-2:0",
             ],
         ]
         self.rpc_timeout = 120

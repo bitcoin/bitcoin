@@ -43,6 +43,7 @@ class BIP66Test(BitcoinTestFramework):
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
             '-par=1',  # Use only one script thread to get the exact log msg for testing
+            '-vbparams=mweb:-2:0',
         ]]
         self.setup_clean_chain = True
         self.rpc_timeout = 240

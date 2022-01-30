@@ -99,6 +99,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             "-acceptnonstdtxn=1",
+            "-vbparams=mweb:-2:0",
         ]]
         self.utxos = []
 

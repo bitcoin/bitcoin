@@ -50,10 +50,11 @@ class BlockchainTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.supports_cli = False
+        self.extra_args=[['-vbparams=mweb:-2:0']]
 
     def run_test(self):
         self.mine_chain()
-        self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1'])  # Set extra args with pruning after rescan is complete
+        self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1', '-vbparams=mweb:-2:0'])  # Set extra args with pruning after rescan is complete
 
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
@@ -112,16 +113,16 @@ class BlockchainTest(BitcoinTestFramework):
         # should have exact keys
         assert_equal(sorted(res.keys()), keys)
 
-        self.restart_node(0, ['-stopatheight=207', '-prune=550'])
+        self.restart_node(0, ['-stopatheight=207', '-prune=2200', '-vbparams=mweb:-2:0'])
         res = self.nodes[0].getblockchaininfo()
-        # result should have these additional pruning keys if prune=550
+        # result should have these additional pruning keys if prune=2200
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
 
         # check related fields
         assert res['pruned']
         assert_equal(res['pruneheight'], 0)
         assert res['automatic_pruning']
-        assert_equal(res['prune_target_size'], 576716800)
+        assert_equal(res['prune_target_size'], 2306867200)
         assert_greater_than(res['size_on_disk'], 0)
 
         assert_equal(res['softforks'], {
