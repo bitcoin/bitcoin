@@ -2232,6 +2232,18 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     if (fJustCheck)
         return true;
 
+    // MWEB: Update BlockIndex
+    if (!block.mweb_block.IsNull()) {
+        auto pHogEx = block.GetHogEx();
+        if ((pindex->nStatus & BLOCK_HAVE_MWEB) == 0) {
+            pindex->nStatus |= BLOCK_HAVE_MWEB;
+            pindex->mweb_header = block.mweb_block.GetMWEBHeader();
+            pindex->hogex_hash = pHogEx->GetHash();
+            pindex->mweb_amount = pHogEx->vout.front().nValue;
+            setDirtyBlockIndex.insert(pindex);
+        }
+    }
+
     if (!WriteUndoDataForBlock(blockundo, state, pindex, chainparams))
         return false;
 
