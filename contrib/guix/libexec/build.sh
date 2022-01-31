@@ -384,7 +384,7 @@ mkdir -p "$DISTSRC"
                 {
                     find "${DISTNAME}/bin" -type f -executable -print0
                     find "${DISTNAME}/lib" -type f -print0
-                } | xargs -0 -n1 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
+                } | xargs -0 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
                 # Syscoin: Release, delete symbol files from split-debug
                 find "${DISTNAME}/bin" -name "*.dbg" -delete
                 find "${DISTNAME}/lib" -name "*.dbg" -delete
