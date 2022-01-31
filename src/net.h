@@ -1199,17 +1199,6 @@ public:
         return nLocalServices;
     }
 
-    bool SupportsMWEB() const noexcept { return (nLocalServices & NODE_MWEB); }
-
-    uint64_t GetCmpctBlockVersion() const noexcept
-    {
-        if (nLocalServices & NODE_MWEB) {
-            return 3;
-        }
-
-        return (nLocalServices & NODE_WITNESS) ? 2 : 1;
-    }
-
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);

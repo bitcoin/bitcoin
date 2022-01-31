@@ -10,6 +10,7 @@
 #include <util/system.h>
 
 static std::atomic<bool> g_initial_block_download_completed(false);
+static std::atomic<bool> g_desire_mweb_flag(false);
 
 namespace NetMsgType {
 const char *VERSION="version";
@@ -137,15 +138,19 @@ bool CMessageHeader::IsCommandValid() const
 
 
 ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
+    ServiceFlags mweb_flags = g_desire_mweb_flag ? NODE_MWEB : NODE_NONE;
     if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
-        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS | NODE_MWEB);
+        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS | mweb_flags);
     }
-    return ServiceFlags(NODE_NETWORK | NODE_WITNESS | NODE_MWEB);
+    return ServiceFlags(NODE_NETWORK | NODE_WITNESS | mweb_flags);
 }
 
 void SetServiceFlagsIBDCache(bool state) {
     g_initial_block_download_completed = state;
 }
+
+bool GetDesireMWEBFlag() { return g_desire_mweb_flag; }
+void SetDesireMWEBFlag(const bool val) { g_desire_mweb_flag = val; }
 
 CInv::CInv()
 {

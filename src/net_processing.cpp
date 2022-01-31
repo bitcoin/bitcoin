@@ -339,6 +339,17 @@ struct CNodeState {
      */
     bool fSupportsDesiredCmpctVersion;
 
+    int GetCmpctBlockVersion()
+    {
+        if (fWantsCmpctMWEB) {
+            return 3;
+        } else if (fWantsCmpctWitness) {
+            return 2;
+        } else {
+            return 1;
+        }
+    }
+
     /** State used to enforce CHAIN_SYNC_TIMEOUT and EXTRA_PEER_CHECK_INTERVAL logic.
       *
       * Both are only in effect for outbound, non-manual, non-protected connections.
@@ -641,7 +652,7 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connma
         }
         connman.ForNode(nodeid, [&connman](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
-            uint64_t nCMPCTBLOCKVersion = pfrom->GetCmpctBlockVersion();
+            uint64_t nCMPCTBLOCKVersion = State(pfrom->GetId())->GetCmpctBlockVersion();
             if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
                 // As per BIP152, we only get 3 of our peers to announce
                 // blocks using compact encodings.
@@ -1349,6 +1360,10 @@ void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInde
     const int nNewHeight = pindexNew->nHeight;
     m_connman.SetBestHeight(nNewHeight);
 
+    if (!GetDesireMWEBFlag() && IsMWEBEnabled(pindexNew, m_chainparams.GetConsensus())) {
+        SetDesireMWEBFlag(true);
+    }
+
     SetServiceFlagsIBDCache(!fInitialDownload);
     if (!fInitialDownload) {
         // Find the hashes of all blocks that weren't previously in the best chain.
@@ -1727,7 +1742,7 @@ void static ProcessGetData(CNode& pfrom, Peer& peer, const CChainParams& chainpa
         CTransactionRef tx = FindTxForGetData(mempool, pfrom, ToGenTxid(inv), mempool_req, now);
         if (tx) {
             // WTX and WITNESS_TX imply we serialize with witness
-            int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS | SERIALIZE_NO_MWEB : (pfrom.SupportsMWEB() ? 0 : SERIALIZE_NO_MWEB));
+            int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS | SERIALIZE_NO_MWEB : (State(pfrom.GetId())->fHaveMWEB ? 0 : SERIALIZE_NO_MWEB));
             connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
             mempool.RemoveUnbroadcastTx(tx->GetHash());
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
@@ -3214,7 +3229,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             LOCK(cs_main);
             CBlockIndex* pTip = ::ChainActive().Tip();
             assert(pTip);
-            if (!IsMWEBEnabled(pTip->pprev, m_chainparams.GetConsensus()) && !State(pfrom.GetId())->fWantsCmpctMWEB) {
+            if (!State(pfrom.GetId())->fWantsCmpctMWEB) {
                 vRecv.SetVersion(vRecv.GetVersion() | SERIALIZE_NO_MWEB);
             }
         }
@@ -3300,7 +3315,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         if (!fAlreadyInFlight && !CanDirectFetch(m_chainparams.GetConsensus()))
             return;
 
-        if (IsWitnessEnabled(pindex->pprev, m_chainparams.GetConsensus()) && !nodestate->fSupportsDesiredCmpctVersion) {
+        if (IsWitnessEnabled(pindex->pprev, m_chainparams.GetConsensus()) && !nodestate->fWantsCmpctWitness) {
             // Don't bother trying to process compact blocks from v1 peers
             // after segwit activates.
             return;
