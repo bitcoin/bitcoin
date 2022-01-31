@@ -335,7 +335,7 @@ bool CRollingBloomFilter::contains(Span<const unsigned char> vKey) const
 
 void CRollingBloomFilter::reset()
 {
-    nTweak = GetRand(std::numeric_limits<unsigned int>::max());
+    nTweak = GetRand<unsigned int>();
     nEntriesThisGeneration = 0;
     nGeneration = 1;
     std::fill(data.begin(), data.end(), 0);

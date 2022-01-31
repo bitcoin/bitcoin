@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     FastRandomContext ctx2(true);
 
     for (int i = 10; i > 0; --i) {
-        BOOST_CHECK_EQUAL(GetRand(std::numeric_limits<uint64_t>::max()), uint64_t{10393729187455219830U});
-        BOOST_CHECK_EQUAL(GetRandInt(std::numeric_limits<int>::max()), int{769702006});
+        BOOST_CHECK_EQUAL(GetRand<uint64_t>(), uint64_t{10393729187455219830U});
+        BOOST_CHECK_EQUAL(GetRand<int>(), int{769702006});
         BOOST_CHECK_EQUAL(GetRandMicros(std::chrono::hours{1}).count(), 2917185654);
         BOOST_CHECK_EQUAL(GetRandMillis(std::chrono::hours{1}).count(), 2144374);
     }
@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     // Check that a nondeterministic ones are not
     g_mock_deterministic_tests = false;
     for (int i = 10; i > 0; --i) {
-        BOOST_CHECK(GetRand(std::numeric_limits<uint64_t>::max()) != uint64_t{10393729187455219830U});
-        BOOST_CHECK(GetRandInt(std::numeric_limits<int>::max()) != int{769702006});
+        BOOST_CHECK(GetRand<uint64_t>() != uint64_t{10393729187455219830U});
+        BOOST_CHECK(GetRand<int>() != int{769702006});
         BOOST_CHECK(GetRandMicros(std::chrono::hours{1}) != std::chrono::microseconds{2917185654});
         BOOST_CHECK(GetRandMillis(std::chrono::hours{1}) != std::chrono::milliseconds{2144374});
     }

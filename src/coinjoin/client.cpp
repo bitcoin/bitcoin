@@ -1191,7 +1191,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
         // try to get a single random denom out of setAmounts
         while (nSessionDenom == 0) {
             for (auto it = setAmounts.rbegin(); it != setAmounts.rend(); ++it) {
-                if (setAmounts.size() > 1 && GetRandInt(2)) continue;
+                if (setAmounts.size() > 1 && GetRand<size_t>(/*nMax=*/2)) continue;
                 nSessionDenom = CoinJoin::AmountToDenomination(*it);
                 break;
             }
@@ -1387,7 +1387,7 @@ bool CCoinJoinClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds, s
         } else {
             // randomly skip some inputs when we have at least one of the same denom already
             // TODO: make it adjustable via options/cmd-line params
-            if (nSteps >= 1 && GetRandInt(5) == 0) {
+            if (nSteps >= 1 && GetRand<size_t>(/*nMax=*/5) == 0) {
                 // still count it as a step to randomize number of inputs
                 // if we have more than (or exactly) COINJOIN_ENTRY_MAX_SIZE of them
                 ++nSteps;
@@ -1865,7 +1865,7 @@ void CCoinJoinClientManager::DoMaintenance(ChainstateManager& chainman, CConnman
     ProcessPendingDsaRequest(connman);
     if (nDoAutoNextRun == nTick) {
         DoAutomaticDenominating(chainman, connman, mempool);
-        nDoAutoNextRun = nTick + COINJOIN_AUTO_TIMEOUT_MIN + GetRandInt(COINJOIN_AUTO_TIMEOUT_MAX - COINJOIN_AUTO_TIMEOUT_MIN);
+        nDoAutoNextRun = nTick + COINJOIN_AUTO_TIMEOUT_MIN + GetRand<int>(/*nMax=*/COINJOIN_AUTO_TIMEOUT_MAX - COINJOIN_AUTO_TIMEOUT_MIN);
     }
 }
 
