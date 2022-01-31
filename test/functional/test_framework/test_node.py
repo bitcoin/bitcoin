@@ -422,7 +422,8 @@ class TestNode():
             time.sleep(0.05)
         self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
 
-    def wait_for_debug_log(self, expected_msgs, timeout=10, ignore_case=False) -> int:
+    @contextlib.contextmanager
+    def wait_for_debug_log(self, expected_msgs, timeout=60, ignore_case=False):
         """
         Block until we see a particular debug log message fragment or until we exceed the timeout.
         Return:
@@ -431,6 +432,8 @@ class TestNode():
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_bytes()
         re_flags = re.MULTILINE | (re.IGNORECASE if ignore_case else 0)
+
+        yield
 
         while True:
             found = True
@@ -443,8 +446,7 @@ class TestNode():
                     found = False
 
             if found:
-                num_logs = len(log.splitlines())
-                return num_logs
+                return
 
             if time.time() >= time_end:
                 print_log = " - " + "\n - ".join(log.splitlines())
@@ -456,7 +458,6 @@ class TestNode():
         self._raise_assertion_error(
             'Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(
                 str(expected_msgs), print_log))
-        return -1  # useless return to satisfy linter
 
     @contextlib.contextmanager
     def profile_with_perf(self, profile_name: str):
