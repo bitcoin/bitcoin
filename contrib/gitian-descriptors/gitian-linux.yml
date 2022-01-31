@@ -13,6 +13,7 @@ packages:
 - "binutils"
 - "bsdmainutils"
 - "ca-certificates"
+- "cmake"
 - "curl"
 - "faketime"
 - "git"
@@ -43,7 +44,7 @@ script: |
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
-  HOST_CXXFLAGS="-O2 -g"
+  HOST_CXXFLAGS="-O2 -g -Wno-psabi"
   HOST_LDFLAGS_BASE="-static-libstdc++ -Wl,-O2"
 
   export QT_RCC_TEST=1

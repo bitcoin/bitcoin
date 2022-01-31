@@ -8,6 +8,7 @@ architectures:
 - "amd64"
 packages:
 - "ca-certificates"
+- "cmake"
 - "curl"
 - "g++"
 - "git"
