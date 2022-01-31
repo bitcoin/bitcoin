@@ -190,7 +190,12 @@ static RPCHelpMan validateaddress()
     std::string error_msg;
     std::vector<int> error_locations;
     CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations);
-    const bool isValid = IsValidDestination(dest);
+    bool isValid = IsValidDestination(dest);
+    // SYSCOIN
+    if(!isValid) {
+        dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations, true);
+        isValid = IsValidDestination(dest);
+    }
     CHECK_NONFATAL(isValid == error_msg.empty());
 
     UniValue ret(UniValue::VOBJ);

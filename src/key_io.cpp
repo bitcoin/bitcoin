@@ -76,14 +76,14 @@ public:
     std::string operator()(const CNoDestination& no) const { return {}; }
 };
 
-CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
+CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations, bool forcelegacy)
 {
     std::vector<unsigned char> data;
     uint160 hash;
     error_str = "";
 
     // Note this will be false if it is a valid Bech32 address for a different network
-    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
+    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP()) && !forcelegacy;
 
     if (!is_bech32 && DecodeBase58Check(str, data, 21)) {
         // base58-encoded Syscoin addresses.
@@ -278,9 +278,9 @@ std::string EncodeDestination(const CTxDestination& dest)
     return std::visit(DestinationEncoder(Params()), dest);
 }
 
-CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations)
+CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations, bool forcelegacy)
 {
-    return DecodeDestination(str, Params(), error_msg, error_locations);
+    return DecodeDestination(str, Params(), error_msg, error_locations, forcelegacy);
 }
 
 CTxDestination DecodeDestination(const std::string& str)
@@ -292,7 +292,7 @@ CTxDestination DecodeDestination(const std::string& str)
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
     std::string error_msg;
-    return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr));
+    return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr, false));
 }
 
 bool IsValidDestinationString(const std::string& str)

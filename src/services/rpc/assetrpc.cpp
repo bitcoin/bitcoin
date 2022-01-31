@@ -23,7 +23,7 @@
 #include <interfaces/node.h>
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
-extern CTxDestination DecodeDestination(const std::string& str);
+extern CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations = nullptr, bool forcelegacy = false);
 
 using node::ReadBlockFromDisk;
 using node::IsBlockPruned;
@@ -237,11 +237,24 @@ static RPCHelpMan convertaddress()
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {	
 
+    std::string error_msg;
+    std::vector<int> error_locations;
     UniValue ret(UniValue::VOBJ);	
-    CTxDestination dest = DecodeDestination(request.params[0].get_str());	
+    CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations);	
+    bool isValid = IsValidDestination(dest);
+    if(!isValid) {
+        error_locations.clear();
+        error_msg.clear();
+        dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations, true);
+        isValid = IsValidDestination(dest);
+    }
     // Make sure the destination is valid	
-    if (!IsValidDestination(dest)) {	
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");	
+    if (!isValid) {	
+        UniValue error_indices(UniValue::VARR);
+        for (int i : error_locations) error_indices.push_back(i);
+        ret.pushKV("error_locations", error_indices);
+        ret.pushKV("error", error_msg);
+        return ret;
     }	
     std::string currentV4Address = "";	
     std::string currentV3Address = "";	
