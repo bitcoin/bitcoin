@@ -64,7 +64,7 @@ if [ -n "$DPKG_ADD_ARCH" ]; then
   DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
 fi
 
-if [[ $DOCKER_NAME_TAG == centos* ]]; then
+if [[ $DOCKER_NAME_TAG == *centos* ]]; then
   ${CI_RETRY_EXE} DOCKER_EXEC dnf -y install epel-release
   ${CI_RETRY_EXE} DOCKER_EXEC dnf -y --allowerasing install "$DOCKER_PACKAGES" "$PACKAGES"
 elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
