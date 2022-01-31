@@ -85,37 +85,6 @@ class InitStressTest(BitcoinTestFramework):
         check_clean_start()
         self.stop_node(0)
 
-        self.log.info(
-            f"Terminate at some random point in the init process (max logs: {num_total_logs})")
-
-        for _ in range(40):
-            num_logs = len(Path(node.debug_log_path).read_text().splitlines())
-            additional_lines = random.randint(1, num_total_logs)
-            self.log.debug(f"Starting node and will exit after {additional_lines} lines")
-            node.start(extra_args=['-txindex=1'])
-            logfile = open(node.debug_log_path, 'rb')
-
-            MAX_SECS_TO_WAIT = 10
-            start = time.time()
-            num_lines = 0
-
-            while True:
-                line = logfile.readline()
-                if line:
-                    num_lines += 1
-
-                if num_lines >= (num_logs + additional_lines) or \
-                        (time.time() - start) > MAX_SECS_TO_WAIT:
-                    self.log.debug(f"Terminating node after {num_lines} log lines seen")
-                    sigterm_node()
-                    break
-
-                if node.process.poll() is not None:
-                    raise AssertionError("node failed to start")
-
-        check_clean_start()
-        self.stop_node(0)
-
         self.log.info("Test startup errors after removing certain essential files")
 
         files_to_disturb = {
