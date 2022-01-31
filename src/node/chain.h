@@ -15,7 +15,10 @@ class CThreadInterrupt;
 
 namespace node {
 //! Send blockConnected and blockDisconnected notifications needed to sync from
-//! a specified block to the chain tip.
+//! a specified block to the chain tip. This sync function locks the ::cs_main
+//! mutex intermittently, releasing it while sending notifications and reading
+//! block data, so it follows the tip if the tip changes, and follows any
+//! reorgs.
 //!
 //! @param chainstate - chain to sync to
 //! @param block - starting block to sync from
@@ -26,7 +29,8 @@ namespace node {
 //!                  while cs_main is still held, before sending a final
 //!                  blockConnected notification. This can be used to
 //!                  synchronously register for new notifications.
-void SyncChain(const Chainstate& chainstate, const CBlockIndex* block, const interfaces::Chain::NotifyOptions& options, std::shared_ptr<interfaces::Chain::Notifications> notifications, const CThreadInterrupt& interrupt, std::function<void()> on_sync);
+//! @return true if synced, false if interrupted
+bool SyncChain(const Chainstate& chainstate, const CBlockIndex* block, const interfaces::Chain::NotifyOptions& options, std::shared_ptr<interfaces::Chain::Notifications> notifications, const CThreadInterrupt& interrupt, std::function<void()> on_sync);
 } // namespace node
 
 #endif // BITCOIN_NODE_CHAIN_H

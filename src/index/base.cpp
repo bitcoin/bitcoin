@@ -172,26 +172,11 @@ void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& bloc
         return;
     }
 
-    // During initial sync, ignore validation interface notifications, only
-    // process notifications from sync thread.
-    if (!m_index.m_ready && block.chain_tip) return;
-
     const CBlockIndex* pindex = &m_index.BlockIndex(block.hash);
     if (!m_rewind_start) m_rewind_start = pindex;
     if (m_rewind_error) return;
 
-    CBlock block_data;
-    if (m_options.disconnect_data && !block.data) {
-        if (!m_index.m_chainstate->m_blockman.ReadBlock(block_data, *pindex)) {
-            m_index.FatalErrorf("Failed to read block %s from disk",
-                        pindex->GetBlockHash().ToString());
-            m_rewind_error = true;
-            return;
-        } else {
-            block.data = &block_data;
-        }
-    }
-
+    assert(!m_options.disconnect_data || block.data);
     CBlockUndo block_undo;
     if (m_options.disconnect_undo_data && !block.undo_data && block.height > 0) {
         if (!m_index.m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
@@ -302,7 +287,6 @@ bool BaseIndex::Init()
     // May need reset if index is being restarted.
     m_best_block_index = nullptr;
     m_synced = false;
-    m_ready = false;
     {
         LOCK(m_mutex);
         assert(!m_handler);
@@ -331,29 +315,10 @@ bool BaseIndex::Init()
         assert(!m_best_block_index && !m_synced);
         SetBestBlockIndex(block_ref ? &BlockIndex(block_ref->hash) : nullptr);
 
-        // Call CustomInit and set m_ready. It is important to call CustomInit
-        // before setting m_ready to ensure that CustomInit is always called
-        // before CustomAppend. CustomAppend calls from the notification thread
-        // will start happening when m_ready is true.
         if (!CustomInit(block_ref)) {
             return false;
         }
-        // To prevent race conditions, m_ready = true needs to be set from the
-        // validationinterface thread and the m_ready = true callback needs to
-        // be queued while cs_main is held.
-        //
-        // Specifically, to prevent older, stale notifications currently in the
-        // validation queue from being processed by the index, it is important
-        // to delay setting m_ready = true until they are removed from the
-        // queue, using CallFunctionInValidationInterfaceQueue. It is also
-        // important to keep cs_main locked while calling
-        // CallFunctionInValidationInterfaceQueue, to ensure any new
-        // notifications being sent right now will be queued after the m_ready =
-        // true callback, and will not be lost.
         m_synced = block.chain_tip;
-        if (m_synced) {
-            m_chain->context()->validation_signals->CallFunctionInValidationInterfaceQueue([this] { m_ready = true; });
-        }
         return true;
     };
     auto handler = m_chain->attachChain(notifications, locator, options, prepare_sync);
@@ -409,29 +374,6 @@ bool BaseIndex::IgnoreBlockConnected(ChainstateRole role, const interfaces::Bloc
     if (role == ChainstateRole::ASSUMEDVALID) {
         return true;
     }
-
-    // Ignore BlockConnected signals until we have fully indexed the chain.
-    // During initial sync, only process notifications from sync thread.
-    if (!m_ready) {
-        return block.chain_tip;
-    }
-
-    const CBlockIndex* pindex = &BlockIndex(block.hash);
-    const CBlockIndex* best_block_index = m_best_block_index.load();
-    if (!best_block_index) {
-        if (pindex->nHeight != 0) {
-            FatalErrorf("First block connected is not the genesis block (height=%d)",
-                       pindex->nHeight);
-            return true;
-        }
-    } else {
-        // To allow handling reorgs, this only checks that the new block
-        // connects to ancestor of the current best block, instead of checking
-        // that it connects to directly to the current block. If there is a
-        // reorg, blockDisconnected calls will have removed existing blocks from
-        // the index, but best_block_index will not have been updated yet.
-        assert(best_block_index->GetAncestor(pindex->nHeight - 1) == pindex->pprev);
-    }
     return false;
 }
 
@@ -440,10 +382,6 @@ bool BaseIndex::IgnoreChainStateFlushed(ChainstateRole role, const CBlockLocator
     // Ignore events from the assumed-valid chain; we will process its blocks
     // (sequentially) after it is fully verified by the background chainstate.
     if (role == ChainstateRole::ASSUMEDVALID) {
-        return true;
-    }
-
-    if (!m_ready) {
         return true;
     }
 
