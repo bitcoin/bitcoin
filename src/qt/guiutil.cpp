@@ -212,6 +212,16 @@ bool isDust(interfaces::Node& node, const QString& address, const CAmount& amoun
     return IsDust(txOut, node.getDustRelayFee());
 }
 
+bool isMWEBAddressBeforeActivated(interfaces::Node& node, const QString& address)
+{
+    CTxDestination dest = DecodeDestination(address.toStdString());
+    if (dest.type() == typeid(StealthAddress)) {
+        return !node.isMWEBActive();
+    }
+
+    return false;
+}
+
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
     QString escaped = str.toHtmlEscaped();

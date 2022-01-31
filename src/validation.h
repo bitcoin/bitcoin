@@ -695,6 +695,9 @@ public:
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const;
 
+    /** Check whether MWEB has been activated */
+    bool IsMWEBActive() const;
+
     /**
      * Make various assertions about the state of the block index.
      *

@@ -139,6 +139,9 @@ public:
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
 
+    //! Is MWEB activated.
+    virtual bool isMWEBActive() = 0;
+
     //! Get reindex.
     virtual bool getReindex() = 0;
 

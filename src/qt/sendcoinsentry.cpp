@@ -167,6 +167,17 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
         retval = false;
     }
 
+    if (retval && GUIUtil::isMWEBAddressBeforeActivated(node, ui->payTo->text())) {
+        ui->payTo->setValid(false);
+        retval = false;
+
+        QMessageBox msgBox;
+        msgBox.setInformativeText("You cannot send to an MWEB address until after the feature has been activated.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.exec();
+    }
+
     return retval;
 }
 

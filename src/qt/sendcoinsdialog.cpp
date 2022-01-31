@@ -175,6 +175,10 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(_model->getOptionsModel(), &OptionsModel::mwebFeaturesChanged, this, &SendCoinsDialog::mwebFeatureChanged);
         ui->frameMWEBFeatures->setVisible(_model->getOptionsModel()->getMWEBFeatures());
 
+        bool mweb_active = model->node().isMWEBActive();
+        ui->pushButtonMWEBPegIn->setEnabled(mweb_active);
+        ui->pushButtonMWEBPegIn->setToolTip(mweb_active ? "" : "Pegin is not available until MWEB activation");
+
         // fee section
         for (const int n : confTargets) {
             ui->confTargetSelector->addItem(tr("%1 (%2 blocks)").arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing)).arg(n));

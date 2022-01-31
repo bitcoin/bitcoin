@@ -1353,6 +1353,11 @@ bool CChainState::IsInitialBlockDownload() const
     return false;
 }
 
+bool CChainState::IsMWEBActive() const
+{
+    return m_chain.Tip() != nullptr && IsMWEBEnabled(m_chain.Tip(), Params().GetConsensus());
+}
+
 static CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
 
 static void AlertNotify(const std::string& strMessage)
