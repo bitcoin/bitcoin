@@ -129,6 +129,7 @@ BASE_SCRIPTS = [
     'feature_pop_params.py',
     'feature_pop_payout.py',
     'feature_pop_shutdown_sync.py',
+    'feature_pop_shutdown_sync2.py',
     'feature_pop_sync.py',
     'feature_pop_verifydb.py',
     'feature_pop_stratum_compat.py',

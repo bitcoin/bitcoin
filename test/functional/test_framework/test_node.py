@@ -95,6 +95,7 @@ class TestNode():
             "-logtimemicros",
             "-logthreadnames",
             "-debug",
+            "-poplogverbosity=debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
             "-uacomment=testnode%d" % i,
