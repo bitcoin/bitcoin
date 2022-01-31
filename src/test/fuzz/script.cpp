@@ -94,17 +94,6 @@ FUZZ_TARGET(script, .init = initialize_script)
     (void)script.IsPushOnly();
     (void)script.GetSigOpCount(/* fAccurate= */ false);
 
-    (void)FormatScript(script);
-    (void)ScriptToAsmStr(script, false);
-    (void)ScriptToAsmStr(script, true);
-
-    UniValue o1(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o1, true);
-    UniValue o2(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o2, false);
-    UniValue o3(UniValue::VOBJ);
-    ScriptToUniv(script, o3);
-
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
         CompressedScript compressed_script;
@@ -142,4 +131,12 @@ FUZZ_TARGET(script, .init = initialize_script)
         (void)(tx_destination_1 == tx_destination_2);
         (void)(tx_destination_1 < tx_destination_2);
     }
+
+    (void)FormatScript(script);
+    (void)ScriptToAsmStr(script, /*fAttemptSighashDecode=*/fuzzed_data_provider.ConsumeBool());
+
+    UniValue o1(UniValue::VOBJ);
+    ScriptPubKeyToUniv(script, o1, /*include_hex=*/fuzzed_data_provider.ConsumeBool());
+    UniValue o3(UniValue::VOBJ);
+    ScriptToUniv(script, o3);
 }
