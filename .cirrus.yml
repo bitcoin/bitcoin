@@ -191,7 +191,7 @@ task:
     image: centos:8
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    PACKAGE_MANAGER_INSTALL: "yum install -y"
+    PACKAGE_MANAGER_INSTALL: "yum clean all && yum install -y"
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
