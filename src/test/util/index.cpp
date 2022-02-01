@@ -14,7 +14,7 @@ void IndexTester::Sync()
     Chainstate& chainstate{WITH_LOCK(::cs_main, return m_index.m_chain->context()->chainman->GetChainstateForIndexing())};
     CThreadInterrupt interrupt;
     node::SyncChain(chainstate,
-                    m_index.m_best_block_index,
+                    WITH_LOCK(::cs_main, return chainstate.m_blockman.LookupBlockIndex(Assert(m_index.GetBestBlock())->hash)),
                     m_index.CustomOptions(),
                     m_index.Notifications(),
                     interrupt,
