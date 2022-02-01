@@ -218,8 +218,8 @@ void CRollingBloomFilter::insert(Span<const unsigned char> vKey)
         /* FastMod works with the upper bits of h, so it is safe to ignore that the lower bits of h are already used for bit. */
         uint32_t pos = FastRange32(h, data.size());
         /* The lowest bit of pos is ignored, and set to zero for the first bit, and to one for the second. */
-        data[pos & ~1U] = (data[pos & ~1U] & ~(((uint64_t)1) << bit)) | ((uint64_t)(nGeneration & 1)) << bit;
-        data[pos | 1] = (data[pos | 1] & ~(((uint64_t)1) << bit)) | ((uint64_t)(nGeneration >> 1)) << bit;
+        data[pos & ~1U] = (data[pos & ~1U] & ~(uint64_t{1} << bit)) | (uint64_t(nGeneration & 1)) << bit;
+        data[pos | 1] = (data[pos | 1] & ~(uint64_t{1} << bit)) | (uint64_t(nGeneration >> 1)) << bit;
     }
 }
 
