@@ -1578,7 +1578,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("time",                  (int64_t)tip->nTime);
     obj.pushKV("mediantime",            (int64_t)tip->GetMedianTimePast());
     obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
-    obj.pushKV("initialblockdownload",  active_chainstate.IsInitialBlockDownload());
+    obj.pushKV("initialblockdownload",  active_chainstate.IsIBD());
     obj.pushKV("chainwork",             tip->nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned",                node::fPruneMode);

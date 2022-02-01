@@ -1690,7 +1690,7 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
     //    the tip yet so we have no way to check this directly here. Instead we
     //    just check that there are currently no other blocks in flight.
     else if (state.IsValid() &&
-             !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
+             !m_chainman.ActiveChainstate().IsIBD() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
             MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first);
@@ -2254,7 +2254,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
         }
         // If we're in IBD, we want outbound peers that will serve us a useful
         // chain. Disconnect peers that are on chains with insufficient work.
-        if (m_chainman.ActiveChainstate().IsInitialBlockDownload() && nCount != MAX_HEADERS_RESULTS) {
+        if (m_chainman.ActiveChainstate().IsIBD() && nCount != MAX_HEADERS_RESULTS) {
             // When nCount < MAX_HEADERS_RESULTS, we know we have no more
             // headers to fetch from this peer.
             if (nodestate->pindexBestKnownBlock && nodestate->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
@@ -3043,7 +3043,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 pfrom.AddKnownTx(inv.hash);
-                if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+                if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsIBD()) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
             } else {
@@ -3213,7 +3213,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         LOCK(cs_main);
-        if (m_chainman.ActiveChainstate().IsInitialBlockDownload() && !pfrom.HasPermission(NetPermissionFlags::Download)) {
+        if (m_chainman.ActiveChainstate().IsIBD() && !pfrom.HasPermission(NetPermissionFlags::Download)) {
             LogPrint(BCLog::NET, "Ignoring getheaders from peer=%d because node is in initial block download\n", pfrom.GetId());
             return;
         }
@@ -3501,7 +3501,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         if (!m_chainman.m_blockman.LookupBlockIndex(cmpctblock.header.hashPrevBlock)) {
             // Doesn't connect (or is genesis), instead of DoSing in AcceptBlockHeader, request deeper headers
-            if (!m_chainman.ActiveChainstate().IsInitialBlockDownload())
+            if (!m_chainman.ActiveChainstate().IsIBD())
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETHEADERS, m_chainman.ActiveChain().GetLocator(pindexBestHeader), uint256()));
             return;
         }
@@ -4511,7 +4511,7 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, std::chrono::microseconds c
     CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
     static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
 
-    if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+    if (m_chainman.ActiveChainstate().IsIBD()) {
         // Received tx-inv messages are discarded when the active
         // chainstate is in IBD, so tell the peer to not send them.
         currentFilter = MAX_MONEY;
@@ -5000,7 +5000,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (!pto->fClient && ((fFetch && !pto->m_limited_node) || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fClient && ((fFetch && !pto->m_limited_node) || !m_chainman.ActiveChainstate().IsIBD()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
