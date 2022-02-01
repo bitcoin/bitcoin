@@ -59,21 +59,21 @@ class InvalidAddressErrorMessageTest(SyscoinTestFramework):
             assert_equal(res['error_locations'], [])
 
     def test_validateaddress(self):
-        # Invalid Bech32
-        self.check_invalid(BECH32_INVALID_SIZE, 'Invalid Bech32 address data size')
+        # SYSCOIN Invalid Bech32
+        self.check_invalid(BECH32_INVALID_SIZE, 'Not a valid Bech32 or Base58 encoding')
         self.check_invalid(BECH32_INVALID_PREFIX, 'Not a valid Bech32 or Base58 encoding')
-        self.check_invalid(BECH32_INVALID_BECH32, 'Version 1+ witness address must use Bech32m checksum')
-        self.check_invalid(BECH32_INVALID_BECH32M, 'Version 0 witness address must use Bech32 checksum')
-        self.check_invalid(BECH32_INVALID_VERSION, 'Invalid Bech32 address witness version')
-        self.check_invalid(BECH32_INVALID_V0_SIZE, 'Invalid Bech32 v0 address data size')
-        self.check_invalid(BECH32_TOO_LONG, 'Bech32 string too long', list(range(90, 108)))
-        self.check_invalid(BECH32_ONE_ERROR, 'Invalid Bech32 checksum', [9])
-        self.check_invalid(BECH32_TWO_ERRORS, 'Invalid Bech32 checksum', [22, 43])
-        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid Bech32 checksum', [38])
-        self.check_invalid(BECH32_NO_SEPARATOR, 'Missing separator')
-        self.check_invalid(BECH32_INVALID_CHAR, 'Invalid Base 32 character', [8])
-        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Invalid Bech32 checksum', [19, 30])
-        self.check_invalid(BECH32_WRONG_VERSION, 'Invalid Bech32 checksum', [5])
+        self.check_invalid(BECH32_INVALID_BECH32, 'Not a valid Bech32 or Base58 encoding')
+        self.check_invalid(BECH32_INVALID_BECH32M, 'Not a valid Bech32 or Base58 encoding')
+        self.check_invalid(BECH32_INVALID_VERSION, 'Not a valid Bech32 or Base58 encoding')
+        self.check_invalid(BECH32_INVALID_V0_SIZE, 'Not a valid Bech32 or Base58 encoding')
+        self.check_invalid(BECH32_TOO_LONG, 'Not a valid Bech32 or Base58 encoding', list(range(90, 108)))
+        self.check_invalid(BECH32_ONE_ERROR, 'Not a valid Bech32 or Base58 encoding', [9])
+        self.check_invalid(BECH32_TWO_ERRORS, 'Not a valid Bech32 or Base58 encoding', [22, 43])
+        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid checksum or length of Base58 address', [38])
+        self.check_invalid(BECH32_NO_SEPARATOR, 'Not a valid Bech32 or Base58 encoding')
+        self.check_invalid(BECH32_INVALID_CHAR, 'Not a valid Bech32 or Base58 encoding', [8])
+        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Not a valid Bech32 or Base58 encoding', [19, 30])
+        self.check_invalid(BECH32_WRONG_VERSION, 'Not a valid Bech32 or Base58 encoding', [5])
 
         # Valid Bech32
         self.check_valid(BECH32_VALID)
