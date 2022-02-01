@@ -3356,7 +3356,7 @@ void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockInde
     // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
     // and mark all of them as conflicting.
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
-    TRY_LOCK(m_cs_chainstate, lockChainState);
+    TRY_LOCK(m_chainstate_mutex, lockChainState);
     if(!lockChainState) {
         LogPrint(BCLog::SYS, "Could not lock EnforceBestChainLock, skipping enforcement\n");
         return;
