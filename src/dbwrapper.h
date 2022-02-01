@@ -39,6 +39,10 @@ public:
 
 class CDBWrapper;
 
+namespace dbwrapper {
+    using leveldb::DestroyDB;
+}
+
 /** These should be considered an implementation detail of the specific database.
  */
 namespace dbwrapper_private {
@@ -219,6 +223,12 @@ private:
 
     std::vector<unsigned char> CreateObfuscateKey() const;
 
+    //! path to filesystem storage
+    const fs::path m_path;
+
+    //! whether or not the database resides in memory
+    bool m_is_memory;
+
 public:
     /**
      * @param[in] path        Location in the filesystem where leveldb data will be stored.
@@ -266,6 +276,14 @@ public:
         CDBBatch batch(*this);
         batch.Write(key, value);
         return WriteBatch(batch, fSync);
+    }
+
+    //! @returns filesystem path to the on-disk data.
+    std::optional<fs::path> StoragePath() {
+        if (m_is_memory) {
+            return {};
+        }
+        return m_path;
     }
 
     template <typename K>
