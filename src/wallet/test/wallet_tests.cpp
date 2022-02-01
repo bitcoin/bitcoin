@@ -491,7 +491,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
 
     {
         BlockFilter filter;
-        BOOST_REQUIRE(filter_index.LookupFilter(stale_block, filter));
+        BOOST_REQUIRE(filter_index.LookupFilter({stale_block->GetBlockHash(), stale_block->nHeight}, filter));
     }
 
     // Test wallet whose scripts do not match the stale block's filter.
@@ -827,7 +827,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_missing_filter, TestChain10
             tip_hash = tip->GetBlockHash();
             wallet.SetLastBlockProcessed(tip_height, tip_hash);
             BlockFilter filter;
-            BOOST_REQUIRE(!filter_index.LookupFilter(tip, filter));
+            BOOST_REQUIRE(!filter_index.LookupFilter({tip->GetBlockHash(), tip->nHeight}, filter));
         }
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
