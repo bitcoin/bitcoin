@@ -201,7 +201,33 @@ Codesigner only: Sign the macOS binary:
     tar xf litecoin-osx-unsigned.tar.gz
     ./detached-sig-create.sh -s "Key ID"
     Enter the keychain password and authorize the signature
-    Move signature-osx.tar.gz back to the gitian host
+    
+    Now a manual deterministic disk image (dmg) creation is required.
+
+    First time setup for codesigner, requires creation of app-specific-password via Apple ID website.
+    Once password is obtained, save it to the macOS Keychain for future reference:
+
+    $   xcrun altool -u "<apple-id-email>" -p "<app-specific-password>" --store-password-in-keychain-item "<apple-id-notarisation-app-specific-password>"
+
+    If <team-id-shortcode> is unknown for team accounts with multiple organisations, query:
+
+    $   xcrun altool --list-providers -u "<apple-id-email>" -p "@keychain:<apple-id-notarisation-app-specific-password>"
+
+    Notarize the disk image:
+
+    $   xcrun altool --notarize-app --primary-bundle-id "org.litecoin.Litecoin-Qt" -u "<apple-id-email>" -p "@keychain:<apple-id-notarisation-app-specific-password>" --asc-provider <team-id-shortcode> -t osx -f litecoin-${VERSION}-osx.dmg
+
+    The notarization takes a few minutes. Check the status:
+
+    $   xcrun altool --notarization-info <request-uuid> -u "<apple-id-email>" -p "@keychain:<apple-id-notarisation-app-specific-password>" --asc-provider <team-id-shortcode>
+
+    If notarization fails, query log with uuid:
+
+    $   xcrun altool --notarization-info <request-uuid> -u "<apple-id-email>" -p "@keychain:<apple-id-notarisation-app-specific-password>" --asc-provider <team-id-shortcode>
+
+    Staple the notarization ticket onto the application
+
+    $   xcrun stapler staple dist/Litecoin-Qt.app
 
 Codesigner only: Sign the windows binaries:
 
@@ -213,10 +239,12 @@ Codesigner only: Sign the windows binaries:
 Codesigner only: Commit the detached codesign payloads:
 
     cd ~/litecoin-detached-sigs
-    checkout the appropriate branch for this release series
+    #checkout the appropriate branch for this release series
     rm -rf *
     tar xf signature-osx.tar.gz
     tar xf signature-win.tar.gz
+    #copy the notarization ticket to detached-sigs repo
+    cp dist/Litecoin-Qt.app/Contents/CodeResources osx/dist/Litecoin-Qt.app/Contents/
     git add -A
     git commit -m "point to ${VERSION}"
     git tag -s v${VERSION} HEAD
