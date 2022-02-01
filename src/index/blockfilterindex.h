@@ -84,17 +84,17 @@ public:
     BlockFilterType GetFilterType() const { return m_filter_type; }
 
     /** Get a single filter by block. */
-    bool LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const EXCLUSIVE_LOCKS_REQUIRED(!m_filter_mutex);
+    bool LookupFilter(const interfaces::BlockRef& block, BlockFilter& filter_out) const EXCLUSIVE_LOCKS_REQUIRED(!m_filter_mutex);
 
     /** Get a single filter header by block. */
-    bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) EXCLUSIVE_LOCKS_REQUIRED(!m_cs_headers_cache);
+    bool LookupFilterHeader(const interfaces::BlockRef& block, uint256& header_out) EXCLUSIVE_LOCKS_REQUIRED(!m_cs_headers_cache);
 
     /** Get a range of filters between two heights on a chain. */
-    bool LookupFilterRange(int start_height, const CBlockIndex* stop_index,
+    bool LookupFilterRange(int start_height, const interfaces::BlockRef& stop_index,
                            std::vector<BlockFilter>& filters_out) const EXCLUSIVE_LOCKS_REQUIRED(!m_filter_mutex);
 
     /** Get a range of filter hashes between two heights on a chain. */
-    bool LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
+    bool LookupFilterHashRange(int start_height, const interfaces::BlockRef& stop_index,
                                std::vector<uint256>& hashes_out) const;
 };
 
