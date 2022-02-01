@@ -428,7 +428,9 @@ static RPCHelpMan getblockfrompeer()
         "getblockfrompeer",
         "Attempt to fetch block from a given peer.\n\n"
         "We must have the header for this block, e.g. using submitheader.\n"
-        "Subsequent calls for the same block and a new peer will cause the response from the previous peer to be ignored.\n\n"
+        "Subsequent calls for the same block and a new peer will cause the response from the previous peer to be ignored.\n"
+        "Peers generally ignore requests for a stale block that they never fully verified, or one that is more than a month old.\n"
+        "When a peer does not respond with a block, we will disconnect.\n\n"
         "Returns an empty JSON object if the request was successfully scheduled.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
