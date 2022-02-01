@@ -69,8 +69,8 @@ public:
 
     interfaces::Chain::NotifyOptions CustomOptions() override;
 
-    // Look up stats for a specific block using CBlockIndex
-    std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex& block_index) const;
+    // Look up stats for a specific block using hash and height
+    std::optional<kernel::CCoinsStats> LookUpStats(const interfaces::BlockRef& block) const;
 };
 
 /// The global UTXO set hash object.
