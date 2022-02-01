@@ -4493,7 +4493,8 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
         }
         uint64_t num;
         file >> num;
-        while (num--) {
+        while (num) {
+            --num;
             CTransactionRef tx;
             int64_t nTime;
             int64_t nFeeDelta;
