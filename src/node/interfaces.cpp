@@ -22,6 +22,7 @@
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
 #include <kernel/context.h>
+#include <kernel/types.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/types.h>
 #include <logging.h>
@@ -703,7 +704,7 @@ public:
 
         BlockFilter filter;
         const CBlockIndex* index{WITH_LOCK(::cs_main, return chainman().m_blockman.LookupBlockIndex(block_hash))};
-        if (index == nullptr || !block_filter_index->LookupFilter(index, filter)) return std::nullopt;
+        if (index == nullptr || !block_filter_index->LookupFilter({index->GetBlockHash(), index->nHeight}, filter)) return std::nullopt;
         return filter.GetFilter().MatchAny(filter_set);
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override

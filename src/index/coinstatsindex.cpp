@@ -235,13 +235,13 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
     return true;
 }
 
-std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_index) const
+std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const interfaces::BlockRef& block) const
 {
-    CCoinsStats stats{block_index.nHeight, block_index.GetBlockHash()};
+    CCoinsStats stats{block.height, block.hash};
     stats.index_used = true;
 
     DBVal entry;
-    if (!index_util::LookUpOne(*m_db, {block_index.GetBlockHash(), block_index.nHeight}, entry)) {
+    if (!index_util::LookUpOne(*m_db, block, entry)) {
         return std::nullopt;
     }
 

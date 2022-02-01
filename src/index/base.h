@@ -26,7 +26,6 @@
 
 class BaseIndexNotifications;
 class CBlock;
-class CBlockIndex;
 class Chainstate;
 
 struct CBlockLocator;
@@ -108,7 +107,7 @@ private:
     ///
     /// - The m_best_block_index value is not consistent with the DB_BEST_BLOCK
     ///   value, which can be updated at other times.
-    std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
+    std::optional<interfaces::BlockRef> m_best_block GUARDED_BY(m_mutex);
 
     /// Mutex to let m_notifications and m_handler be accessed from multiple
     /// threads (the sync thread and the init thread).
@@ -135,11 +134,6 @@ private:
 
     template <typename... Args>
     void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-
-    /// Temporary helper function to convert block hashes to index pointers
-    /// while index code is being migrated to use interfaces::Chain methods
-    /// instead of index pointers.
-    const CBlockIndex& BlockIndex(const uint256& hash);
 
     /// Get chain notification handler.
     std::shared_ptr<interfaces::Chain::Notifications> Notifications() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -175,8 +169,10 @@ protected:
 
     virtual DB& GetDB() const = 0;
 
+    std::optional<interfaces::BlockRef> GetBestBlock() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
     /// Update the internal best block index as well as the prune lock.
-    void SetBestBlockIndex(const CBlockIndex* block);
+    void SetBestBlock(const std::optional<interfaces::BlockRef>& block) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
@@ -190,7 +186,7 @@ public:
     /// sync once and only needs to process blocks in the ValidationInterface
     /// queue. If the index is catching up from far behind, this method does
     /// not block and immediately returns false.
-    bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main);
+    bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
@@ -208,7 +204,7 @@ public:
     void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /// Get a summary of the index and its state.
-    IndexSummary GetSummary() const;
+    IndexSummary GetSummary() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
 #endif // BITCOIN_INDEX_BASE_H

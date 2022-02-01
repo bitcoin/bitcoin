@@ -45,6 +45,7 @@
 #include <vector>
 
 using interfaces::BlockInfo;
+using interfaces::BlockRef;
 using interfaces::FoundBlock;
 using kernel::ChainstateRole;
 using node::MakeBlockInfo;
@@ -60,11 +61,6 @@ void BaseIndex::FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, co
     Interrupt(); // Cancel the sync thread
     auto message = tfm::format(fmt, args...);
     node::AbortNode(m_chain->context()->shutdown_request, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());
-}
-
-const CBlockIndex& BaseIndex::BlockIndex(const uint256& hash)
-{
-   return WITH_LOCK(cs_main, return *Assert(m_chainstate->m_blockman.LookupBlockIndex(hash)));
 }
 
 CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
@@ -83,13 +79,19 @@ public:
     void blockConnected(const ChainstateRole& role, const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void chainStateFlushed(const ChainstateRole& role, const CBlockLocator& locator) override;
+    void setBest(const interfaces::BlockRef& block)
+    {
+        assert(!block.hash.IsNull());
+        assert(block.height >= 0);
+        m_index.SetBestBlock(block);
+    }
     BaseIndex& m_index;
     interfaces::Chain::NotifyOptions m_options = m_index.CustomOptions();
     NodeClock::time_point m_last_log_time{NodeClock::now()};
     NodeClock::time_point m_last_locator_write_time{m_last_log_time};
     //! If blocks are disconnected, m_rewind_start is set to track starting
     //! point of the rewind and m_rewind_error is set to record any errors.
-    const CBlockIndex* m_rewind_start = nullptr;
+    std::optional<interfaces::BlockRef> m_rewind_start;
     bool m_rewind_error = false;
 };
 
@@ -115,8 +117,6 @@ void BaseIndexNotifications::blockConnected(const ChainstateRole& role, const in
 
     if (m_index.IgnoreBlockConnected(role, block)) return;
 
-    const CBlockIndex* pindex = &m_index.BlockIndex(block.hash);
-    const CBlockIndex* best_block_index = m_index.m_best_block_index.load();
     // If a new block is being connected after blocks were rewound, reset the
     // rewind state and handle any errors that happened while rewinding.
     if (m_rewind_error) {
@@ -124,15 +124,23 @@ void BaseIndexNotifications::blockConnected(const ChainstateRole& role, const in
                    m_index.GetName());
         return;
     } else if (m_rewind_start) {
-        assert(!best_block_index || best_block_index->GetAncestor(pindex->nHeight - 1) == pindex->pprev);
+        auto best_block = m_index.GetBestBlock();
+        // Assert m_best_block is null or is parent of new connected block, or is
+        // descendant of parent of new connected block.
+        if (best_block && best_block->hash != *block.prev_hash) {
+            uint256 best_ancestor_hash;
+            assert(m_index.m_chain->findAncestorByHeight(best_block->hash, block.height - 1, FoundBlock().hash(best_ancestor_hash)));
+            assert(best_ancestor_hash == *block.prev_hash);
+        }
+
         // Don't commit here - the committed index state must never be ahead of the
         // flushed chainstate, otherwise unclean restarts would lead to index corruption.
         // Pruning has a minimum of 288 blocks-to-keep and getting the index
         // out of sync may be possible but a users fault.
         // In case we reorg beyond the pruned depth, ReadBlock would
         // throw and lead to a graceful shutdown
-        m_index.SetBestBlockIndex(pindex->pprev);
-        m_rewind_start = nullptr;
+        setBest({*block.prev_hash, block.height-1});
+        m_rewind_start = std::nullopt;
     }
 
     // Dispatch block to child class; errors are logged internally and abort the node.
@@ -142,7 +150,7 @@ void BaseIndexNotifications::blockConnected(const ChainstateRole& role, const in
     if (block.state == BlockInfo::SYNCING) {
         current_time = NodeClock::now();
         if (current_time - m_last_log_time >= SYNC_LOG_INTERVAL) {
-            LogInfo("Syncing %s with block chain from height %d", m_index.GetName(), pindex->nHeight);
+            LogInfo("Syncing %s with block chain from height %d", m_index.GetName(), block.height);
             m_last_log_time = current_time;
         }
     }
@@ -175,7 +183,7 @@ void BaseIndexNotifications::blockConnected(const ChainstateRole& role, const in
     // function, so BlockUntilSyncedToCurrentChain callers waiting for the
     // best block index to be updated can rely on the block being fully
     // processed, and the index object being safe to delete.
-    m_index.SetBestBlockIndex(pindex);
+    setBest({block.hash, block.height});
 }
 
 void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& block)
@@ -185,8 +193,8 @@ void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& bloc
         return;
     }
 
-    const CBlockIndex* pindex = &m_index.BlockIndex(block.hash);
-    if (!m_rewind_start) m_rewind_start = pindex;
+    auto best_block = m_index.GetBestBlock();
+    if (!m_rewind_start) m_rewind_start = best_block;
     if (m_rewind_error) return;
 
     assert(!m_options.disconnect_data || block.data);
@@ -217,7 +225,8 @@ void BaseIndexNotifications::chainStateFlushed(const ChainstateRole& role, const
     // been indexed yet. In general, calling GetLocator() here is safer than
     // trusting the locator argument, and this code was changed to stop saving
     // the locator argument in 4368384f1d26 from #14121.
-    m_index.Commit(GetLocator(*m_index.m_chain, m_index.m_best_block_index.load()->GetBlockHash()));
+    auto best_block = m_index.GetBestBlock();
+    if (best_block) m_index.Commit(GetLocator(*m_index.m_chain, best_block->hash));
 }
 
 BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
@@ -287,9 +296,9 @@ bool BaseIndex::Init()
 
     // May need reset if index is being restarted (e.g. after assumeutxo background validation)
     m_state = State::SYNCING;
-    m_best_block_index = nullptr;
     {
         LOCK(m_mutex);
+        m_best_block.reset();
         assert(!m_handler);
         assert(!m_notifications);
     }
@@ -300,22 +309,18 @@ bool BaseIndex::Init()
                              return &m_chain->context()->chainman->ValidatedChainstate());
 
     const auto locator{GetDB().ReadBestBlock()};
-
-    if (locator.IsNull()) {
-        SetBestBlockIndex(nullptr);
-    } else {
+    std::optional<BlockRef> block;
+    if (!locator.IsNull()) {
         // Setting the best block to the locator's top block. If it is not part of the
         // best chain, we will rewind to the fork point during index sync
-        const CBlockIndex* locator_index{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0)))};
-        if (!locator_index) {
+        block.emplace(locator.vHave.at(0));
+        if (!m_chain->findBlock(block->hash, FoundBlock().height(block->height))) {
             return InitError(Untranslated(strprintf("best block of %s not found. Please rebuild the index.", GetName())));
         }
-        SetBestBlockIndex(locator_index);
     }
+    SetBestBlock(block);
 
     // Child init
-    const CBlockIndex* start_block = m_best_block_index.load();
-    auto block{start_block ? std::make_optional(interfaces::BlockRef{start_block->GetBlockHash(), start_block->nHeight}) : std::nullopt};
     if (!CustomInit(block)) {
         return false;
     }
@@ -389,13 +394,8 @@ bool BaseIndex::IgnoreChainStateFlushed(const ChainstateRole& role, const CBlock
     }
 
     const uint256& locator_tip_hash = locator.vHave.front();
-    const CBlockIndex* locator_tip_index;
-    {
-        LOCK(cs_main);
-        locator_tip_index = m_chainstate->m_blockman.LookupBlockIndex(locator_tip_hash);
-    }
-
-    if (!locator_tip_index) {
+    int locator_tip_height{-1};
+    if (!m_chain->findBlock(locator_tip_hash, FoundBlock().height(locator_tip_height))) {
         FatalErrorf("First block (hash=%s) in locator was not found",
                    locator_tip_hash.ToString());
         return true;
@@ -411,12 +411,15 @@ bool BaseIndex::IgnoreChainStateFlushed(const ChainstateRole& role, const CBlock
     // code. This can happen when -reindex-chainstate is used and many blocks
     // are connected quickly. Ignore the flush event in this case since it's
     // probably better not to commit when blocks are still in flight.
-    const CBlockIndex* best_block_index = m_best_block_index.load();
-    if (!best_block_index || best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
+    auto best_block = GetBestBlock();
+    uint256 ancestor;
+    if (!best_block ||
+        !m_chain->findAncestorByHeight(best_block->hash, locator_tip_height, FoundBlock().hash(ancestor)) ||
+        ancestor != locator_tip_hash) {
         LogWarning("Locator contains block (hash=%s) not on known best "
                   "chain (tip=%s); not writing index locator",
                   locator_tip_hash.ToString(),
-                  best_block_index->GetBlockHash().ToString());
+                  best_block ? best_block->hash.ToString() : "null");
         return true;
     }
 
@@ -432,14 +435,13 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
     }
 
     // best_block_index may be null if here this method is called immediately after Init().
-    if (const CBlockIndex* index = m_best_block_index.load()) {
-        interfaces::BlockRef best_block{index->GetBlockHash(), index->nHeight};
+    if (const auto best_block = GetBestBlock()) {
         // Skip the queue-draining stuff if we know we're caught up with
         // m_chain.Tip().
         interfaces::BlockRef tip;
         uint256 ancestor;
         if (m_chain->getTip(FoundBlock().hash(tip.hash).height(tip.height)) &&
-            m_chain->findAncestorByHeight(best_block.hash, tip.height, FoundBlock().hash(ancestor)) &&
+            m_chain->findAncestorByHeight(best_block->hash, tip.height, FoundBlock().hash(ancestor)) &&
             ancestor == tip.hash) {
             return true;
         }
@@ -488,9 +490,9 @@ IndexSummary BaseIndex::GetSummary() const
     IndexSummary summary{};
     summary.name = GetName();
     summary.synced = m_state == State::UPDATING;
-    if (const auto& pindex = m_best_block_index.load()) {
-        summary.best_block_height = pindex->nHeight;
-        summary.best_block_hash = pindex->GetBlockHash();
+    if (const auto best_block = GetBestBlock()) {
+        summary.best_block_height = best_block->height;
+        summary.best_block_hash = best_block->hash;
     } else {
         summary.best_block_height = 0;
         summary.best_block_hash = m_chain->getBlockHash(0);
@@ -498,23 +500,29 @@ IndexSummary BaseIndex::GetSummary() const
     return summary;
 }
 
-void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
+std::optional<interfaces::BlockRef> BaseIndex::GetBestBlock() const
+{
+    LOCK(m_mutex);
+    return m_best_block;
+}
+
+void BaseIndex::SetBestBlock(const std::optional<interfaces::BlockRef>& block)
 {
     assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
 
     if (AllowPrune() && block) {
         node::PruneLockInfo prune_lock;
-        prune_lock.height_first = block->nHeight;
+        prune_lock.height_first = block->height;
         WITH_LOCK(::cs_main, m_chainstate->m_blockman.UpdatePruneLock(GetName(), prune_lock));
     }
 
-    // Intentionally set m_best_block_index as the last step in this function,
+    // Intentionally set m_best_block as the last step in this function,
     // after updating prune locks above, and after making any other references
     // to *this, so the BlockUntilSyncedToCurrentChain function (which checks
-    // m_best_block_index as an optimization) can be used to wait for the last
+    // m_best_block as an optimization) can be used to wait for the last
     // BlockConnected notification and safely assume that prune locks are
     // updated and that the index object is safe to delete.
-    m_best_block_index = block;
+    WITH_LOCK(m_mutex, m_best_block = block);
 }
 
 std::shared_ptr<interfaces::Chain::Notifications> BaseIndex::Notifications() const
