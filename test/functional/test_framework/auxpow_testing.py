@@ -21,14 +21,17 @@ def computeAuxpow (block, target, ok):
   (header, _) = mineBlock (header, target, ok)
   return auxpow.finishAuxpow (tx, header)
 
-def mineAuxpowBlock (node):
+def mineAuxpowBlock (node, wallet):
   """
   Mine an auxpow block on the given RPC connection.  This uses the
   createauxblock and submitauxblock command pair.
   """
 
   def create ():
-    addr = node.getnewaddress ()
+    if wallet is None:
+      addr = node.getnewaddress ()
+    else:
+      addr = wallet.get_address()
     return node.createauxblock (addr)
 
   return mineAuxpowBlockWithMethods (create, node.submitauxblock)
