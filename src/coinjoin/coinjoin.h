@@ -438,21 +438,7 @@ public:
     /*
     Same as DenominationToAmount but returns a string representation
     */
-    static constexpr std::string_view DenominationToString(int nDenom)
-    {
-        CAmount nDenomAmount = DenominationToAmount(nDenom);
-
-        switch (nDenomAmount) {
-            case  0: return "N/A";
-            case -1: return "out-of-bounds";
-            case -2: return "non-denom";
-            case -3: return "to-amount-error";
-            default: return ValueFromAmount(nDenomAmount).getValStr();
-        }
-
-        // shouldn't happen
-        return "to-string-error";
-    }
+    static std::string DenominationToString(int nDenom);
 
     static std::string GetMessageByID(PoolMessage nMessageID);
 

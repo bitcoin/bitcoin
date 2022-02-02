@@ -357,6 +357,22 @@ bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
     return true;
 }
 
+std::string CCoinJoin::DenominationToString(int nDenom)
+{
+    CAmount nDenomAmount = DenominationToAmount(nDenom);
+
+    switch (nDenomAmount) {
+        case  0: return "N/A";
+        case -1: return "out-of-bounds";
+        case -2: return "non-denom";
+        case -3: return "to-amount-error";
+        default: return ValueFromAmount(nDenomAmount).getValStr();
+    }
+
+    // shouldn't happen
+    return "to-string-error";
+}
+
 std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)
 {
     switch (nMessageID) {
