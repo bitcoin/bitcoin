@@ -187,7 +187,7 @@ class CDataStream
 protected:
     using vector_type = SerializeData;
     vector_type vch;
-    unsigned int nReadPos{0};
+    vector_type::size_type nReadPos{0};
 
     int nType;
     int nVersion;
@@ -282,7 +282,7 @@ public:
         if (dst.size() == 0) return;
 
         // Read from the beginning of the buffer
-        auto next_read_pos{CheckedAdd<uint32_t>(nReadPos, dst.size())};
+        auto next_read_pos{CheckedAdd(nReadPos, dst.size())};
         if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
             throw std::ios_base::failure("CDataStream::read(): end of data");
         }
@@ -298,7 +298,7 @@ public:
     void ignore(size_t num_ignore)
     {
         // Ignore from the beginning of the buffer
-        auto next_read_pos{CheckedAdd<uint32_t>(nReadPos, num_ignore)};
+        auto next_read_pos{CheckedAdd(nReadPos, num_ignore)};
         if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
             throw std::ios_base::failure("CDataStream::ignore(): end of data");
         }
