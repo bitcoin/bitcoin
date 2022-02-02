@@ -32,10 +32,8 @@
 #include <sys/syscall.h>
 #include <linux/random.h>
 #endif
-#if defined(HAVE_GETENTROPY) || (defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX))
-#include <unistd.h>
-#endif
 #if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
+#include <unistd.h>
 #include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
