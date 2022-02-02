@@ -39,22 +39,23 @@ BOOST_AUTO_TEST_CASE(valid_proposals_test)
 
     BOOST_CHECK_MESSAGE(tests.size(), "Empty `tests`");
     for(size_t i = 0; i < tests.size(); ++i) {
-        const UniValue& objProposal = tests[i];
+        const UniValue& objProposal = tests[i][0];
+        bool fAllowScript = tests[i][1].get_bool();
 
         // legacy format
         std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1, true);
+        CProposalValidator validator1(strHexData1, true, fAllowScript);
         BOOST_CHECK_MESSAGE(validator1.Validate(false), validator1.GetErrorMessages());
         BOOST_CHECK_MESSAGE(!validator1.Validate(), validator1.GetErrorMessages());
 
         // legacy format w/validation flag off
-        CProposalValidator validator0(strHexData1, false);
+        CProposalValidator validator0(strHexData1, false, fAllowScript);
         BOOST_CHECK(!validator0.Validate());
         BOOST_CHECK_EQUAL(validator0.GetErrorMessages(), "Legacy proposal serialization format not allowed;JSON parsing error;");
 
         // new format
         std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2, false);
+        CProposalValidator validator2(strHexData2, false, fAllowScript);
         BOOST_CHECK_MESSAGE(validator2.Validate(false), validator2.GetErrorMessages());
         BOOST_CHECK_MESSAGE(!validator2.Validate(), validator2.GetErrorMessages());
     }
@@ -72,12 +73,12 @@ BOOST_AUTO_TEST_CASE(invalid_proposals_test)
 
         // legacy format
         std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1, true);
+        CProposalValidator validator1(strHexData1, true, false);
         BOOST_CHECK_MESSAGE(!validator1.Validate(false), validator1.GetErrorMessages());
 
         // new format
         std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2, false);
+        CProposalValidator validator2(strHexData2, false, false);
         BOOST_CHECK_MESSAGE(!validator2.Validate(false), validator2.GetErrorMessages());
     }
 }

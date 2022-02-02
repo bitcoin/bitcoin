@@ -453,6 +453,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollate
 
 bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const
 {
+    AssertLockHeld(cs_main);
+
     fMissingConfirmations = false;
 
     if (fUnparsable) {
@@ -462,7 +464,9 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
 
     switch (nObjectType) {
     case GOVERNANCE_OBJECT_PROPOSAL: {
-        CProposalValidator validator(GetDataAsHexString(), true);
+        bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+        bool fAllowLegacyFormat = !fAllowScript; // reusing the same bit to stop accepting proposals in legacy format
+        CProposalValidator validator(GetDataAsHexString(), fAllowLegacyFormat, fAllowScript);
         // Note: It's ok to have expired proposals
         // they are going to be cleared by CGovernanceManager::UpdateCachesAndClean()
         // TODO: should they be tagged as "expired" to skip vote downloading?
@@ -673,8 +677,25 @@ void CGovernanceObject::Relay(CConnman& connman) const
         return;
     }
 
+    int minProtoVersion = MIN_GOVERNANCE_PEER_PROTO_VERSION;
+    if (nObjectType == GOVERNANCE_OBJECT_PROPOSAL) {
+        // We know this proposal is valid locally, otherwise we would not get to the point we should relay it.
+        // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
+        // because they won't accept it anyway and will simply ban us eventually.
+        LOCK(cs_main);
+        bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+        if (fAllowScript) {
+            CProposalValidator validator(GetDataAsHexString(), false /* no legacy format */, false /* but also no script */);
+            if (!validator.Validate(false /* ignore expiration */)) {
+                // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
+                LogPrint(BCLog::GOBJECT, "CGovernanceObject::Relay -- won't relay %s to older peers\n", GetHash().ToString());
+                minProtoVersion = GOVSCRIPT_PROTO_VERSION;
+            }
+        }
+    }
+
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    connman.RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
+    connman.RelayInv(inv, minProtoVersion);
 }
 
 void CGovernanceObject::UpdateSentinelVariables()

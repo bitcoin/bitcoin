@@ -15,10 +15,11 @@
 const size_t MAX_DATA_SIZE = 512;
 const size_t MAX_NAME_SIZE = 40;
 
-CProposalValidator::CProposalValidator(const std::string& strHexData, bool fAllowLegacyFormat) :
+CProposalValidator::CProposalValidator(const std::string& strHexData, bool fAllowLegacyFormat, bool fAllowScript) :
     objJSON(UniValue::VOBJ),
     fJSONValid(false),
     fAllowLegacyFormat(fAllowLegacyFormat),
+    fAllowScript(fAllowScript),
     strErrorMessages()
 {
     if (!strHexData.empty()) {
@@ -180,7 +181,7 @@ bool CProposalValidator::ValidatePaymentAddress()
     }
 
     const CScriptID *scriptID = boost::get<CScriptID>(&dest);
-    if (scriptID) {
+    if (!fAllowScript && scriptID) {
         strErrorMessages += "script addresses are not supported;";
         return false;
     }

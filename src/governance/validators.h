@@ -15,10 +15,11 @@ private:
     UniValue objJSON;
     bool fJSONValid;
     bool fAllowLegacyFormat;
+    bool fAllowScript;
     std::string strErrorMessages;
 
 public:
-    explicit CProposalValidator(const std::string& strDataHexIn = std::string(), bool fAllowLegacyFormat = true);
+    explicit CProposalValidator(const std::string& strDataHexIn = std::string(), bool fAllowLegacyFormat = true, bool fAllowScript = false);
 
     bool Validate(bool fCheckExpiration = true);
 

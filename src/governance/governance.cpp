@@ -24,7 +24,7 @@ CGovernanceManager governance;
 
 int nSubmittedFinalBudget;
 
-const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-15";
+const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-16";
 const int CGovernanceManager::MAX_TIME_FUTURE_DEVIATION = 60 * 60;
 const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 60;
 
@@ -427,7 +427,9 @@ void CGovernanceManager::UpdateCachesAndClean()
         } else {
             // NOTE: triggers are handled via triggerman
             if (pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-                CProposalValidator validator(pObj->GetDataAsHexString(), true);
+                bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+                bool fAllowLegacyFormat = !fAllowScript; // reusing the same bit to stop accepting proposals in legacy format
+                CProposalValidator validator(pObj->GetDataAsHexString(), fAllowLegacyFormat, fAllowScript);
                 if (!validator.Validate()) {
                     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- set for deletion expired obj %s\n", strHash);
                     pObj->PrepareDeletion(nNow);
@@ -685,6 +687,22 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- not syncing deleted/expired govobj: %s, peer=%d\n", __func__,
                 strHash, pnode->GetId());
             continue;
+        }
+
+        if (pnode->nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+            // We know this proposal is valid locally, otherwise we would not store it.
+            // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
+            // because they won't accept it anyway and will simply ban us eventually.
+            bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+            if (fAllowScript) {
+                CProposalValidator validator(govobj.GetDataAsHexString(), false /* no legacy format */, false /* but also no script */);
+                if (!validator.Validate(false /* ignore expiration */)) {
+                    // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
+                    LogPrintf("CGovernanceManager::%s -- not syncing p2sh govobj to older node: %s, peer=%d\n", __func__,
+                        strHash, pnode->GetId());
+                    continue;
+                }
+            }
         }
 
         // Push the inventory budget proposal message over to the other client

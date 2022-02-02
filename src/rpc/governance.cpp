@@ -113,7 +113,10 @@ static UniValue gobject_check(const JSONRPCRequest& request)
     CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-        CProposalValidator validator(strDataHex, false);
+        LOCK(cs_main);
+        bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+        // Note: we do not allow legacy format in RPC already, no need to reuse DEPLOYMENT_GOV_FEE
+        CProposalValidator validator(strDataHex, false, fAllowScript);
         if (!validator.Validate())  {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
         }
@@ -190,7 +193,10 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-        CProposalValidator validator(strDataHex, false);
+        LOCK(cs_main);
+        bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+        // Note: we do not allow legacy format in RPC already, no need to reuse DEPLOYMENT_GOV_FEE
+        CProposalValidator validator(strDataHex, false, fAllowScript);
         if (!validator.Validate()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
         }
@@ -365,7 +371,10 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), txidFee.ToString());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-        CProposalValidator validator(strDataHex, false);
+        LOCK(cs_main);
+        bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+        // Note: we do not allow legacy format in RPC already, no need to reuse DEPLOYMENT_GOV_FEE
+        CProposalValidator validator(strDataHex, false, fAllowScript);
         if (!validator.Validate()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
         }
