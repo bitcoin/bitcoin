@@ -473,6 +473,19 @@ protected:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    //! This toggle exists for use when doing background validation for UTXO
+    //! snapshots.
+    //!
+    //! In the expected case, it is set once the background validation chain reaches the
+    //! same height as the base of the snapshot and its UTXO set is found to hash to
+    //! the expected assumeutxo value. It signals that we should no longer connect
+    //! blocks to the background chainstate. When set on the background validation
+    //! chainstate, it signifies that we have fully validated the snapshot chainstate.
+    //!
+    //! In the unlikely case that the snapshot chainstate is found to be invalid, this
+    //! is set to true on the snapshot chainstate.
+    bool m_disabled GUARDED_BY(::cs_main) {false};
+
 public:
     //! Reference to a BlockManager instance which itself is shared across all
     //! Chainstate instances.
@@ -840,10 +853,6 @@ private:
     //! that call.
     Chainstate* m_active_chainstate GUARDED_BY(::cs_main) {nullptr};
 
-    //! If true, the assumed-valid chainstate has been fully validated
-    //! by the background validation chainstate.
-    bool m_snapshot_validated GUARDED_BY(::cs_main){false};
-
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
     //! Internal helper for ActivateSnapshot().
@@ -875,6 +884,15 @@ private:
     //! Return the height of the base block of the snapshot in use, if one exists, else
     //! nullopt.
     std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return true if a chainstate is considered usable.
+    //!
+    //! This is false when a background validation chainstate has completed its
+    //! validation of an assumed-valid chainstate, or when a snapshot
+    //! chainstate has been found to be invalid.
+    bool IsUsable(const Chainstate* const cs) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        return cs && !cs->m_disabled;
+    }
 
 public:
     using Options = kernel::ChainstateManagerOpts;
@@ -987,7 +1005,10 @@ public:
     std::optional<uint256> SnapshotBlockhash() const;
 
     //! Is there a snapshot in use and has it been fully validated?
-    bool IsSnapshotValidated() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_snapshot_validated; }
+    bool IsSnapshotValidated() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        return m_snapshot_chainstate && m_ibd_chainstate && m_ibd_chainstate->m_disabled;
+    }
 
     /**
      * Process an incoming block. This only returns after the best known valid
