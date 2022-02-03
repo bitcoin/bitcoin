@@ -14,6 +14,50 @@
 #include <stdint.h>
 #include <algorithm>
 
+CDBBatch::CDBBatch(const CDBWrapper &_parent)
+    : parent(_parent),
+      size_estimate(0) {}
+
+void CDBBatch::Clear()
+{
+    batch.Clear();
+    size_estimate = 0;
+}
+
+void CDBBatch::doWrite(CDataStream& key, CDataStream& value)
+{
+    leveldb::Slice slKey((const char*)key.data(), key.size());
+
+    value.Xor(dbwrapper_private::GetObfuscateKey(parent));
+    leveldb::Slice slValue((const char*)value.data(), value.size());
+
+    batch.Put(slKey, slValue);
+
+    // LevelDB serializes writes as:
+    // - byte: header
+    // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
+    // - byte[]: key
+    // - varint: value length
+    // - byte[]: value
+    // The formula below assumes the key and value are both less than 16k.
+    size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
+}
+
+void CDBBatch::doErase(CDataStream& key)
+{
+    leveldb::Slice slKey((const char*)key.data(), key.size());
+    batch.Delete(slKey);
+
+    // LevelDB serializes erases as:
+    // - byte: header
+    // - varint: key length
+    // - byte[]: key
+    // The formula below assumes the key is less than 16kB.
+    size_estimate += 2 + (slKey.size() > 127) + slKey.size();
+}
+
+size_t CDBBatch::SizeEstimate() const { return size_estimate; }
+
 class DBIteratorImpl
 {
 private:
