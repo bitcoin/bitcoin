@@ -595,6 +595,7 @@ public:
         allowed_syscalls.insert(__NR_readlink);        // read value of a symbolic link
         allowed_syscalls.insert(__NR_rename);          // change the name or location of a file
         allowed_syscalls.insert(__NR_rmdir);           // delete a directory
+        allowed_syscalls.insert(__NR_sendfile);        // transfer data between file descriptors
         allowed_syscalls.insert(__NR_stat);            // get file status
         allowed_syscalls.insert(__NR_statfs);          // get filesystem statistics
         allowed_syscalls.insert(__NR_statx);           // get file status (extended)

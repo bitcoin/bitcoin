@@ -3,7 +3,6 @@
   "version-string": "1",
   "dependencies": [
     "berkeleydb",
-    "boost-filesystem",
     "boost-multi-index",
     "boost-process",
     "boost-signals2",

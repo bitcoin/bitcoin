@@ -74,6 +74,7 @@
 #include <rpc/request.h>
 #include <signal.h>
 #include <node/transaction.h>
+#include <fstream>
 // SYSCOIN
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
@@ -5809,7 +5810,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
 
   if (fs::is_directory(src)) {
     TryCreateDirectories(dst);
-    for (fs::directory_entry& item : fs::directory_iterator(src)) {
+    for (auto item : fs::directory_iterator(src)) {
       recursive_copy(item.path(), dst/item.path().filename());
     }
   } 
@@ -5895,13 +5896,13 @@ bool DownloadFile(const std::string &url, const fs::path &dest, const std::strin
         UninterruptibleSleep(std::chrono::milliseconds{100});
         if(fs::exists(destTmp) && mode == "wb")
             fs::permissions(destTmp,
-                    fs::perms::owner_exe  | fs::perms::owner_write | fs::perms::group_exe |
-                    fs::perms::others_exe | fs::perms::owner_read | fs::perms::group_read |
+                    fs::perms::owner_exec  | fs::perms::owner_write | fs::perms::group_exec |
+                    fs::perms::others_exec | fs::perms::owner_read | fs::perms::group_read |
                     fs::perms::others_read);
     }
     if(!checksum.empty()) {
         LogPrintf("%s: Checking file checksum of %s\n", __func__, fs::PathToString(destTmp));
-        fsbridge::ifstream file(destTmp, std::ios_base::binary);
+        std::ifstream file{destTmp, std::ios::binary};
         if (!file.is_open())
             return false;
         std::string fileBuffer;
@@ -5976,7 +5977,7 @@ bool DownloadFile(const std::string &url, const fs::path &dest, const std::strin
     return true;
 }
 bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
-    fsbridge::ifstream file(filePath);
+    std::ifstream file{filePath};
     if (!file.is_open())
         return false;
     std::string fileBuffer;

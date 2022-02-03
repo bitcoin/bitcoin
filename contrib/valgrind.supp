@@ -119,12 +119,6 @@
    fun:wcsnrtombs
 }
 {
-   Suppress wcsnrtombs warning (remove after removing boost::fs)
-   Memcheck:Cond
-   ...
-   fun:_ZN5boost10filesystem6detail11unique_pathERKNS0_4pathEPNS_6system10error_codeE
-}
-{
    Suppress boost warning
    Memcheck:Leak
    fun:_Znwm
@@ -133,21 +127,6 @@
    fun:_ZN5boost9unit_test9framework3runEmb
    fun:_ZN5boost9unit_test14unit_test_mainEPFbvEiPPc
    fun:main
-}
-{
-   Suppress boost::filesystem warning (fixed in boost 1.70: https://github.com/boostorg/filesystem/commit/bbe9d1771e5d679b3f10c42a58fc81f7e8c024a9)
-   Memcheck:Cond
-   fun:_ZN5boost10filesystem6detail28directory_iterator_incrementERNS0_18directory_iteratorEPNS_6system10error_codeE
-   ...
-   obj:*/libboost_filesystem.so.*
-}
-{
-   Suppress boost::filesystem warning (could be related: https://stackoverflow.com/questions/9830182/function-boostfilesystemcomplete-being-reported-as-possible-memory-leak-by-v)
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:_Znwm
-   ...
-   fun:_ZN5boost10filesystem8absoluteERKNS0_4pathES3_
 }
 {
    Suppress boost still reachable memory warning

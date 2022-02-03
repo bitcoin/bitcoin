@@ -7,6 +7,9 @@
 
 #include <fs.h>
 
+#include <string>
+#include <vector>
+
 struct bilingual_str;
 
 namespace wallet {
