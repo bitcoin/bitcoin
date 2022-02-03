@@ -5,6 +5,7 @@
 #ifndef BITCOIN_BENCH_BENCH_H
 #define BITCOIN_BENCH_BENCH_H
 
+#include <fs.h>
 #include <util/macros.h>
 
 #include <chrono>
@@ -44,8 +45,8 @@ struct Args {
     bool is_list_only;
     std::chrono::milliseconds min_time;
     std::vector<double> asymptote;
-    std::string output_csv;
-    std::string output_json;
+    fs::path output_csv;
+    fs::path output_json;
     std::string regex_filter;
 };
 
