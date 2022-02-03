@@ -55,6 +55,37 @@ private:
 
     size_t size_estimate;
 
+    void doWrite(CDataStream& key, CDataStream& value)
+    {
+        leveldb::Slice slKey((const char*)key.data(), key.size());
+
+        value.Xor(dbwrapper_private::GetObfuscateKey(parent));
+        leveldb::Slice slValue((const char*)value.data(), value.size());
+
+        batch.Put(slKey, slValue);
+
+        // LevelDB serializes writes as:
+        // - byte: header
+        // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
+        // - byte[]: key
+        // - varint: value length
+        // - byte[]: value
+        // The formula below assumes the key and value are both less than 16k.
+        size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
+    }
+
+    void doErase(CDataStream& key)
+    {
+        leveldb::Slice slKey((const char*)key.data(), key.size());
+        batch.Delete(slKey);
+
+        // LevelDB serializes erases as:
+        // - byte: header
+        // - varint: key length
+        // - byte[]: key
+        // The formula below assumes the key is less than 16kB.
+        size_estimate += 2 + (slKey.size() > 127) + slKey.size();
+    }
 public:
     /**
      * @param[in] _parent   CDBWrapper that this batch is to be submitted to
@@ -73,23 +104,12 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
 
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
         ssValue << value;
-        ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
-        leveldb::Slice slValue((const char*)ssValue.data(), ssValue.size());
 
-        batch.Put(slKey, slValue);
-        // LevelDB serializes writes as:
-        // - byte: header
-        // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
-        // - byte[]: key
-        // - varint: value length
-        // - byte[]: value
-        // The formula below assumes the key and value are both less than 16k.
-        size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
+        doWrite(ssKey, ssValue);
     }
 
     template <typename K>
@@ -98,15 +118,8 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
 
-        batch.Delete(slKey);
-        // LevelDB serializes erases as:
-        // - byte: header
-        // - varint: key length
-        // - byte[]: key
-        // The formula below assumes the key is less than 16kB.
-        size_estimate += 2 + (slKey.size() > 127) + slKey.size();
+        doErase(ssKey);
     }
 
     size_t SizeEstimate() const { return size_estimate; }
