@@ -44,17 +44,16 @@ const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
 
 };
 
+class DBBatchImpl;
+
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch
 {
     friend class DBWrapperImpl;
 
+protected:
+    const std::unique_ptr<DBBatchImpl> m_impl;
 private:
-    const CDBWrapper &parent;
-    leveldb::WriteBatch batch;
-
-    size_t size_estimate;
-
     void doWrite(CDataStream& key, CDataStream& value);
     void doErase(CDataStream& key);
 
@@ -63,6 +62,7 @@ public:
      * @param[in] _parent   CDBWrapper that this batch is to be submitted to
      */
     explicit CDBBatch(const CDBWrapper &_parent);
+    ~CDBBatch();
 
     void Clear();
 

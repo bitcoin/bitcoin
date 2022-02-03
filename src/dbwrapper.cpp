@@ -14,17 +14,52 @@
 #include <stdint.h>
 #include <algorithm>
 
-CDBBatch::CDBBatch(const CDBWrapper &_parent)
-    : parent(_parent),
-      size_estimate(0) {}
+class DBBatchImpl
+{
+private:
+    const CDBWrapper& parent;
+
+    leveldb::WriteBatch batch;
+
+    size_t size_estimate{0};
+public:
+    DBBatchImpl(const CDBWrapper& _parent);
+
+    void Clear();
+
+    void doWrite(CDataStream& key, CDataStream& value);
+    void doErase(CDataStream& key);
+
+    size_t SizeEstimate() const;
+
+    leveldb::WriteBatch& GetWriteBatch();
+};
+
+CDBBatch::CDBBatch(const CDBWrapper& _parent)
+    : m_impl(std::make_unique<DBBatchImpl>(_parent)) {}
+
+DBBatchImpl::DBBatchImpl(const CDBWrapper& _parent)
+    : parent(_parent) {}
+
+CDBBatch::~CDBBatch() = default;
 
 void CDBBatch::Clear()
+{
+    return m_impl->Clear();
+}
+
+void DBBatchImpl::Clear()
 {
     batch.Clear();
     size_estimate = 0;
 }
 
 void CDBBatch::doWrite(CDataStream& key, CDataStream& value)
+{
+    m_impl->doWrite(key, value);
+}
+
+void DBBatchImpl::doWrite(CDataStream& key, CDataStream& value)
 {
     leveldb::Slice slKey((const char*)key.data(), key.size());
 
@@ -45,6 +80,11 @@ void CDBBatch::doWrite(CDataStream& key, CDataStream& value)
 
 void CDBBatch::doErase(CDataStream& key)
 {
+    m_impl->doErase(key);
+}
+
+void DBBatchImpl::doErase(CDataStream& key)
+{
     leveldb::Slice slKey((const char*)key.data(), key.size());
     batch.Delete(slKey);
 
@@ -56,7 +96,11 @@ void CDBBatch::doErase(CDataStream& key)
     size_estimate += 2 + (slKey.size() > 127) + slKey.size();
 }
 
-size_t CDBBatch::SizeEstimate() const { return size_estimate; }
+size_t CDBBatch::SizeEstimate() const {
+    return m_impl->SizeEstimate();
+}
+
+size_t DBBatchImpl::SizeEstimate() const { return size_estimate; }
 
 class DBIteratorImpl
 {
@@ -77,6 +121,11 @@ public:
     void SeekToFirst();
     void Next();
 };
+
+leveldb::WriteBatch& DBBatchImpl::GetWriteBatch()
+{
+    return batch;
+}
 
 CDBIterator::CDBIterator(std::unique_ptr<DBIteratorImpl> impl)
     : m_impl(std::move(impl)) {};
@@ -475,7 +524,7 @@ bool DBWrapperImpl::WriteBatch(CDBBatch& batch, bool fSync)
     if (log_memory) {
         mem_before = DynamicMemoryUsage() / 1024.0 / 1024;
     }
-    leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.batch);
+    leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.m_impl->GetWriteBatch());
     dbwrapper_private::HandleError(status);
     if (log_memory) {
         double mem_after = DynamicMemoryUsage() / 1024.0 / 1024;
