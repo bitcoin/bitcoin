@@ -29,7 +29,10 @@
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 
+#include <array>
 #include <chrono>
+#include <fstream>
+#include <memory>
 
 #include <QFontMetrics>
 #include <QScrollBar>
@@ -509,7 +512,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             if (filename.isEmpty()) {
                 return;
             }
-            fsbridge::ofstream out{filename.toLocal8Bit().data(), fsbridge::ofstream::out | fsbridge::ofstream::binary};
+            std::ofstream out{filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary};
             out << ssTx.str();
             out.close();
             Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);

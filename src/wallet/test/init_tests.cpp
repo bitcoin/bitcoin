@@ -73,6 +73,8 @@ BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_no_trailing)
     BOOST_CHECK_EQUAL(walletdir, expected_path);
 }
 
+#ifndef WIN32
+// Windows does not consider "datadir/wallets//" to be a valid directory path.
 BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_no_trailing2)
 {
     SetWalletDir(m_walletdir_path_cases["trailing2"]);
@@ -82,6 +84,7 @@ BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_no_trailing2)
     fs::path expected_path = fs::canonical(m_walletdir_path_cases["default"]);
     BOOST_CHECK_EQUAL(walletdir, expected_path);
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
