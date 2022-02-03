@@ -43,9 +43,6 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   CI_EXEC "contrib/install_db4.sh \$(pwd) --enable-umrw CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 fi
 
-if [[ $HOST = *-mingw32 ]]; then
-  CI_EXEC update-alternatives --set "${HOST}-g++" \$\(which "${HOST}-g++-posix"\)
-fi
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $DOCKER_NAME_TAG == *centos* ]]; then
     # CentOS has problems building the depends if the config shell is not explicitly set
