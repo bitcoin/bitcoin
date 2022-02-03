@@ -21,9 +21,6 @@ fi
 if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
   CI_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
-if [[ $HOST = *-mingw32 ]]; then
-  CI_EXEC update-alternatives --set "${HOST}-g++" \$\(which "${HOST}-g++-posix"\)
-fi
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $DOCKER_NAME_TAG == *centos* ]]; then
     SHELL_OPTS="CONFIG_SHELL=/bin/dash"
