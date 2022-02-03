@@ -14,10 +14,44 @@
 #include <stdint.h>
 #include <algorithm>
 
+class DBIteratorImpl
+{
+private:
+    const CDBWrapper& parent;
+    leveldb::Iterator *piter;
+
+public:
+    explicit DBIteratorImpl(const CDBWrapper& _parent, leveldb::Iterator* _piter);
+
+    ~DBIteratorImpl();
+
+    void doSeek(const CDataStream& key);
+    CDataStream doGetKey();
+    CDataStream doGetValue();
+
+    unsigned int GetValueSize();
+
+    bool Valid() const;
+    void SeekToFirst();
+    void Next();
+};
+
 CDBIterator::CDBIterator(const CDBWrapper& _parent, leveldb::Iterator* _piter)
+    : m_impl(std::make_unique<DBIteratorImpl>(_parent, _piter)) {};
+
+DBIteratorImpl::DBIteratorImpl(const CDBWrapper& _parent, leveldb::Iterator* _piter)
     : parent(_parent), piter(_piter){};
 
+CDBIterator::~CDBIterator() = default;
+
+DBIteratorImpl::~DBIteratorImpl() { delete piter; }
+
 void CDBIterator::doSeek(const CDataStream& key)
+{
+    return m_impl->doSeek(key);
+}
+
+void DBIteratorImpl::doSeek(const CDataStream& key)
 {
     leveldb::Slice slKey((const char*)key.data(), key.size());
     piter->Seek(slKey);
@@ -25,11 +59,21 @@ void CDBIterator::doSeek(const CDataStream& key)
 
 CDataStream CDBIterator::doGetKey()
 {
+    return m_impl->doGetKey();
+}
+
+CDataStream DBIteratorImpl::doGetKey()
+{
     leveldb::Slice slKey = piter->key();
     return CDataStream{MakeByteSpan(slKey), SER_DISK, CLIENT_VERSION};
 }
 
 CDataStream CDBIterator::doGetValue()
+{
+    return m_impl->doGetValue();
+}
+
+CDataStream DBIteratorImpl::doGetValue()
 {
     leveldb::Slice slValue = piter->value();
     CDataStream ssValue{MakeByteSpan(slValue), SER_DISK, CLIENT_VERSION};
@@ -39,8 +83,22 @@ CDataStream CDBIterator::doGetValue()
 
 unsigned int CDBIterator::GetValueSize()
 {
+    return m_impl->GetValueSize();
+}
+
+unsigned int DBIteratorImpl::GetValueSize()
+{
     return piter->value().size();
 }
+
+bool CDBIterator::Valid() const { return m_impl->Valid(); }
+bool DBIteratorImpl::Valid() const { return piter->Valid(); }
+
+void CDBIterator::SeekToFirst() { m_impl->SeekToFirst(); }
+void DBIteratorImpl::SeekToFirst() { piter->SeekToFirst(); }
+
+void CDBIterator::Next() { m_impl->Next(); }
+void DBIteratorImpl::Next() { piter->Next(); }
 
 class CBitcoinLevelDBLogger : public leveldb::Logger
 {
@@ -439,11 +497,6 @@ bool DBWrapperImpl::IsEmpty()
     it->SeekToFirst();
     return !(it->Valid());
 }
-
-CDBIterator::~CDBIterator() { delete piter; }
-bool CDBIterator::Valid() const { return piter->Valid(); }
-void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
-void CDBIterator::Next() { piter->Next(); }
 
 namespace dbwrapper_private {
 

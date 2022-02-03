@@ -115,12 +115,13 @@ public:
     size_t SizeEstimate() const { return size_estimate; }
 };
 
+class DBIteratorImpl;
+
 class CDBIterator
 {
+protected:
+    const std::unique_ptr<DBIteratorImpl> m_impl;
 private:
-    const CDBWrapper &parent;
-    leveldb::Iterator *piter;
-
     void doSeek(const CDataStream& key);
     CDataStream doGetKey();
     CDataStream doGetValue();
