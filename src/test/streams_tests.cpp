@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 currentPos = find;
 
                 bf.SetLimit(currentPos + 1);
-                int8_t i;
+                uint8_t i;
                 bf >> i;
                 BOOST_CHECK_EQUAL(i, currentPos);
                 currentPos++;
