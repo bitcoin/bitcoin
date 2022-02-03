@@ -164,22 +164,23 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
     std::vector<std::byte> in;
-    CDataStream ds(in, 0, 0);
 
     // Degenerate case
-    ds.Xor({0x00, 0x00});
-    BOOST_CHECK_EQUAL(""s, ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0x00, 0x00});
+        BOOST_CHECK_EQUAL(""s, ds.str());
+    }
 
     in.push_back(std::byte{0x0f});
     in.push_back(std::byte{0xf0});
 
     // Single character key
-
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-
-    ds.Xor({0xff});
-    BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff});
+        BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
+    }
 
     // Multi character key
 
@@ -187,11 +188,11 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     in.push_back(std::byte{0xf0});
     in.push_back(std::byte{0x0f});
 
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-
-    ds.Xor({0xff, 0x0f});
-    BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff, 0x0f});
+        BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
