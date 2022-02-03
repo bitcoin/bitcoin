@@ -18,12 +18,10 @@ class DBIteratorImpl
 {
 private:
     const CDBWrapper& parent;
-    leveldb::Iterator *piter;
+    std::unique_ptr<leveldb::Iterator> piter;
 
 public:
     explicit DBIteratorImpl(const CDBWrapper& _parent, leveldb::Iterator* _piter);
-
-    ~DBIteratorImpl();
 
     void doSeek(const CDataStream& key);
     CDataStream doGetKey();
@@ -43,8 +41,6 @@ DBIteratorImpl::DBIteratorImpl(const CDBWrapper& _parent, leveldb::Iterator* _pi
     : parent(_parent), piter(_piter){};
 
 CDBIterator::~CDBIterator() = default;
-
-DBIteratorImpl::~DBIteratorImpl() { delete piter; }
 
 void CDBIterator::doSeek(const CDataStream& key)
 {
