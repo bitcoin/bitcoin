@@ -36,8 +36,8 @@ public:
     void Next();
 };
 
-CDBIterator::CDBIterator(const CDBWrapper& _parent, leveldb::Iterator* _piter)
-    : m_impl(std::make_unique<DBIteratorImpl>(_parent, _piter)) {};
+CDBIterator::CDBIterator(std::unique_ptr<DBIteratorImpl> impl)
+    : m_impl(std::move(impl)) {};
 
 DBIteratorImpl::DBIteratorImpl(const CDBWrapper& _parent, leveldb::Iterator* _piter)
     : parent(_parent), piter(_piter){};
@@ -248,7 +248,7 @@ public:
 
     size_t DynamicMemoryUsage() const;
 
-    std::unique_ptr<CDBIterator> NewIterator();
+    std::unique_ptr<DBIteratorImpl> NewIterator();
 
     bool IsEmpty();
 
@@ -463,12 +463,12 @@ size_t DBWrapperImpl::DynamicMemoryUsage() const
 
 std::unique_ptr<CDBIterator> CDBWrapper::NewIterator()
 {
-    return m_impl->NewIterator();
+    return std::make_unique<CDBIterator>(m_impl->NewIterator());
 }
 
-std::unique_ptr<CDBIterator> DBWrapperImpl::NewIterator()
+std::unique_ptr<DBIteratorImpl> DBWrapperImpl::NewIterator()
 {
-    return std::make_unique<CDBIterator>(m_parent, pdb->NewIterator(iteroptions));
+    return std::make_unique<DBIteratorImpl>(m_parent, pdb->NewIterator(iteroptions));
 }
 
 // Prefixed with null character to avoid collisions with other keys
@@ -493,7 +493,7 @@ bool CDBWrapper::IsEmpty()
 
 bool DBWrapperImpl::IsEmpty()
 {
-    std::unique_ptr<CDBIterator> it(NewIterator());
+    std::unique_ptr<DBIteratorImpl> it(NewIterator());
     it->SeekToFirst();
     return !(it->Valid());
 }

@@ -127,12 +127,10 @@ private:
     CDataStream doGetValue();
 
 public:
-
     /**
-     * @param[in] _parent          Parent CDBWrapper instance.
-     * @param[in] _piter           The original leveldb iterator.
+     * @param[in] impl          DBIteratorImpl instance.
      */
-    CDBIterator(const CDBWrapper &_parent, leveldb::Iterator *_piter);
+    CDBIterator(std::unique_ptr<DBIteratorImpl> impl);
     ~CDBIterator();
 
     bool Valid() const;
