@@ -219,6 +219,9 @@ private:
 
     bool doExists(const CDataStream& ssKey) const;
 
+    size_t doEstimateSizes(const CDataStream& begin_key, const CDataStream& end_key) const;
+
+    void doCompactRange(const CDataStream& begin_key, const CDataStream& end_key) const;
 public:
     /**
      * @param[in] path        Location in the filesystem where leveldb data will be stored.
@@ -305,13 +308,9 @@ public:
         ssKey2.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey1 << key_begin;
         ssKey2 << key_end;
-        leveldb::Slice slKey1((const char*)ssKey1.data(), ssKey1.size());
-        leveldb::Slice slKey2((const char*)ssKey2.data(), ssKey2.size());
-        uint64_t size = 0;
-        leveldb::Range range(slKey1, slKey2);
-        pdb->GetApproximateSizes(&range, 1, &size);
-        return size;
-    }
+
+        return doEstimateSizes(ssKey1, ssKey2);
+     }
 
     /**
      * Compact a certain range of keys in the database.
@@ -324,9 +323,8 @@ public:
         ssKey2.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey1 << key_begin;
         ssKey2 << key_end;
-        leveldb::Slice slKey1((const char*)ssKey1.data(), ssKey1.size());
-        leveldb::Slice slKey2((const char*)ssKey2.data(), ssKey2.size());
-        pdb->CompactRange(&slKey1, &slKey2);
+
+        return doCompactRange(ssKey1, ssKey2);
     }
 };
 

@@ -221,6 +221,25 @@ bool CDBWrapper::doExists(const CDataStream& ssKey) const
     return doRawGet(ssKey, strValue);
 }
 
+size_t CDBWrapper::doEstimateSizes(const CDataStream& begin_key, const CDataStream& end_key) const
+{
+    leveldb::Slice slKey1((const char*)begin_key.data(), begin_key.size());
+    leveldb::Slice slKey2((const char*)end_key.data(), end_key.size());
+
+    uint64_t size = 0;
+    leveldb::Range range(slKey1, slKey2);
+    pdb->GetApproximateSizes(&range, 1, &size);
+    return size;
+}
+
+void CDBWrapper::doCompactRange(const CDataStream& begin_key, const CDataStream& end_key) const
+{
+    leveldb::Slice slKey1((const char*)begin_key.data(), begin_key.size());
+    leveldb::Slice slKey2((const char*)end_key.data(), end_key.size());
+
+    pdb->CompactRange(&slKey1, &slKey2);
+}
+
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 {
     const bool log_memory = LogAcceptCategory(BCLog::LEVELDB);
