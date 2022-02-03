@@ -121,6 +121,26 @@ private:
     const CDBWrapper &parent;
     leveldb::Iterator *piter;
 
+    void doSeek(const CDataStream& key)
+    {
+        leveldb::Slice slKey((const char*)key.data(), key.size());
+        piter->Seek(slKey);
+    }
+
+    CDataStream doGetKey()
+    {
+        leveldb::Slice slKey = piter->key();
+        return CDataStream{MakeByteSpan(slKey), SER_DISK, CLIENT_VERSION};
+    }
+
+    CDataStream doGetValue()
+    {
+        leveldb::Slice slValue = piter->value();
+        CDataStream ssValue{MakeByteSpan(slValue), SER_DISK, CLIENT_VERSION};
+        ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
+        return ssValue;
+    }
+
 public:
 
     /**
@@ -139,17 +159,15 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
-        piter->Seek(slKey);
+
+        doSeek(ssKey);
     }
 
     void Next();
 
     template<typename K> bool GetKey(K& key) {
-        leveldb::Slice slKey = piter->key();
         try {
-            CDataStream ssKey{MakeByteSpan(slKey), SER_DISK, CLIENT_VERSION};
-            ssKey >> key;
+            doGetKey() >> key;
         } catch (const std::exception&) {
             return false;
         }
@@ -157,11 +175,8 @@ public:
     }
 
     template<typename V> bool GetValue(V& value) {
-        leveldb::Slice slValue = piter->value();
         try {
-            CDataStream ssValue{MakeByteSpan(slValue), SER_DISK, CLIENT_VERSION};
-            ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
-            ssValue >> value;
+            doGetValue() >> value;
         } catch (const std::exception&) {
             return false;
         }
