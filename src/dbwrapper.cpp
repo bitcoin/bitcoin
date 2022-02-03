@@ -14,7 +14,36 @@
 #include <stdint.h>
 #include <algorithm>
 
-class CBitcoinLevelDBLogger : public leveldb::Logger {
+CDBIterator::CDBIterator(const CDBWrapper& _parent, leveldb::Iterator* _piter)
+    : parent(_parent), piter(_piter){};
+
+void CDBIterator::doSeek(const CDataStream& key)
+{
+    leveldb::Slice slKey((const char*)key.data(), key.size());
+    piter->Seek(slKey);
+}
+
+CDataStream CDBIterator::doGetKey()
+{
+    leveldb::Slice slKey = piter->key();
+    return CDataStream{MakeByteSpan(slKey), SER_DISK, CLIENT_VERSION};
+}
+
+CDataStream CDBIterator::doGetValue()
+{
+    leveldb::Slice slValue = piter->value();
+    CDataStream ssValue{MakeByteSpan(slValue), SER_DISK, CLIENT_VERSION};
+    ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
+    return ssValue;
+}
+
+unsigned int CDBIterator::GetValueSize()
+{
+    return piter->value().size();
+}
+
+class CBitcoinLevelDBLogger : public leveldb::Logger
+{
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code

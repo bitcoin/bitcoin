@@ -121,25 +121,9 @@ private:
     const CDBWrapper &parent;
     leveldb::Iterator *piter;
 
-    void doSeek(const CDataStream& key)
-    {
-        leveldb::Slice slKey((const char*)key.data(), key.size());
-        piter->Seek(slKey);
-    }
-
-    CDataStream doGetKey()
-    {
-        leveldb::Slice slKey = piter->key();
-        return CDataStream{MakeByteSpan(slKey), SER_DISK, CLIENT_VERSION};
-    }
-
-    CDataStream doGetValue()
-    {
-        leveldb::Slice slValue = piter->value();
-        CDataStream ssValue{MakeByteSpan(slValue), SER_DISK, CLIENT_VERSION};
-        ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
-        return ssValue;
-    }
+    void doSeek(const CDataStream& key);
+    CDataStream doGetKey();
+    CDataStream doGetValue();
 
 public:
 
@@ -147,8 +131,7 @@ public:
      * @param[in] _parent          Parent CDBWrapper instance.
      * @param[in] _piter           The original leveldb iterator.
      */
-    CDBIterator(const CDBWrapper &_parent, leveldb::Iterator *_piter) :
-        parent(_parent), piter(_piter) { };
+    CDBIterator(const CDBWrapper &_parent, leveldb::Iterator *_piter);
     ~CDBIterator();
 
     bool Valid() const;
@@ -183,10 +166,7 @@ public:
         return true;
     }
 
-    unsigned int GetValueSize() {
-        return piter->value().size();
-    }
-
+    unsigned int GetValueSize();
 };
 
 class CDBWrapper
