@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL - 1;
+    tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     hash = tx.GetHash();

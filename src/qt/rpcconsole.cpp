@@ -54,6 +54,8 @@
 #include <QTimer>
 #include <QVariant>
 
+#include <chrono>
+
 const int CONSOLE_HISTORY = 50;
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
 const QSize FONT_RANGE(4, 40);
@@ -1140,7 +1142,7 @@ void RPCConsole::on_sldGraphRange_valueChanged(int value)
 
 void RPCConsole::setTrafficGraphRange(int mins)
 {
-    ui->trafficGraph->setGraphRangeMins(mins);
+    ui->trafficGraph->setGraphRange(std::chrono::minutes{mins});
     ui->lblGraphRange->setText(GUIUtil::formatDurationStr(std::chrono::minutes{mins}));
 }
 
@@ -1215,6 +1217,9 @@ void RPCConsole::updateDetailWidget()
         }
         ui->peerHeight->setText(QString::number(stats->nodeStateStats.m_starting_height));
         ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStateStats.m_ping_wait));
+        ui->peerAddrRelayEnabled->setText(stats->nodeStateStats.m_addr_relay_enabled ? ts.yes : ts.no);
+        ui->peerAddrProcessed->setText(QString::number(stats->nodeStateStats.m_addr_processed));
+        ui->peerAddrRateLimited->setText(QString::number(stats->nodeStateStats.m_addr_rate_limited));
     }
 
     ui->peersTabRightPanel->show();

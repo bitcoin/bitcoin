@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <fs.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 
@@ -620,12 +621,12 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
                     pathDest /= fs::PathFromString(strFile);
 
                 try {
-                    if (fs::equivalent(pathSrc, pathDest)) {
+                    if (fs::exists(pathDest) && fs::equivalent(pathSrc, pathDest)) {
                         LogPrintf("cannot backup to wallet source file %s\n", fs::PathToString(pathDest));
                         return false;
                     }
 
-                    fs::copy_file(pathSrc, pathDest, fs::copy_option::overwrite_if_exists);
+                    fs::copy_file(pathSrc, pathDest, fs::copy_options::overwrite_existing);
                     LogPrintf("copied %s to %s\n", strFile, fs::PathToString(pathDest));
                     return true;
                 } catch (const fs::filesystem_error& e) {

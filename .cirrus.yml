@@ -188,7 +188,7 @@ task:
   name: '32-bit + dash [gui] [CentOS 8]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: centos:8
+    image: quay.io/centos/centos:stream8
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     PACKAGE_MANAGER_INSTALL: "yum install -y"

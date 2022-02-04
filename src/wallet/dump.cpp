@@ -4,8 +4,16 @@
 
 #include <wallet/dump.h>
 
+#include <fs.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
+
+#include <algorithm>
+#include <fstream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace wallet {
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
@@ -26,7 +34,7 @@ bool DumpWallet(CWallet& wallet, bilingual_str& error)
         error = strprintf(_("File %s already exists. If you are sure this is what you want, move it out of the way first."), fs::PathToString(path));
         return false;
     }
-    fsbridge::ofstream dump_file;
+    std::ofstream dump_file;
     dump_file.open(path);
     if (dump_file.fail()) {
         error = strprintf(_("Unable to open %s for writing"), fs::PathToString(path));
@@ -121,7 +129,7 @@ bool CreateFromDump(const std::string& name, const fs::path& wallet_path, biling
         error = strprintf(_("Dump file %s does not exist."), fs::PathToString(dump_path));
         return false;
     }
-    fsbridge::ifstream dump_file(dump_path);
+    std::ifstream dump_file{dump_path};
 
     // Compute the checksum
     CHashWriter hasher(0, 0);
