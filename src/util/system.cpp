@@ -399,6 +399,13 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return std::nullopt;
 }
 
+fs::path ArgsManager::GetPathArg(std::string pathlike_arg) const
+{
+    auto result = fs::PathFromString(GetArg(pathlike_arg, "")).lexically_normal();
+    // Remove trailing slash, if present.
+    return result.has_filename() ? result : result.parent_path();
+}
+
 const fs::path& ArgsManager::GetBlocksDirPath() const
 {
     LOCK(cs_args);
