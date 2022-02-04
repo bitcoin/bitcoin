@@ -26,6 +26,7 @@ public:
 };
 
 class CDBWrapper;
+class DBWrapperImpl;
 
 /** These should be considered an implementation detail of the specific database.
  */
@@ -46,7 +47,7 @@ const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch
 {
-    friend class CDBWrapper;
+    friend class DBWrapperImpl;
 
 private:
     const CDBWrapper &parent;
@@ -177,39 +178,6 @@ class CDBWrapper
 {
     friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
 private:
-    //! custom environment this database is using (may be nullptr in case of default environment)
-    leveldb::Env* penv;
-
-    //! database options used
-    leveldb::Options options;
-
-    //! options used when reading from the database
-    leveldb::ReadOptions readoptions;
-
-    //! options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
-
-    //! options used when writing to the database
-    leveldb::WriteOptions writeoptions;
-
-    //! options used when sync writing to the database
-    leveldb::WriteOptions syncoptions;
-
-    //! the database itself
-    leveldb::DB* pdb;
-
-    //! the name of this database
-    std::string m_name;
-
-    //! a key used for optional XOR-obfuscation of the database
-    std::vector<unsigned char> obfuscate_key;
-
-    //! the key under which the obfuscation key is stored
-    static const std::string OBFUSCATE_KEY_KEY;
-
-    //! the length of the obfuscate key in number of bytes
-    static const unsigned int OBFUSCATE_KEY_NUM_BYTES;
-
     std::vector<unsigned char> CreateObfuscateKey() const;
 
     // Removed from interface later when pimpl'd
@@ -222,6 +190,8 @@ private:
     size_t doEstimateSizes(const CDataStream& begin_key, const CDataStream& end_key) const;
 
     void doCompactRange(const CDataStream& begin_key, const CDataStream& end_key) const;
+protected:
+    const std::unique_ptr<DBWrapperImpl> m_impl;
 public:
     /**
      * @param[in] path        Location in the filesystem where leveldb data will be stored.

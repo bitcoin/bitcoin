@@ -114,8 +114,74 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     return options;
 }
 
-CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : m_name{fs::PathToString(path.stem())}
+class DBWrapperImpl
+{
+    friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
+private:
+   CDBWrapper& m_parent;
+
+    //! custom environment this database is using (may be nullptr in case of default environment)
+    leveldb::Env* penv;
+
+    //! database options used
+    leveldb::Options options;
+
+    //! options used when reading from the database
+    leveldb::ReadOptions readoptions;
+
+    //! options used when iterating over values of the database
+    leveldb::ReadOptions iteroptions;
+
+    //! options used when writing to the database
+    leveldb::WriteOptions writeoptions;
+
+    //! options used when sync writing to the database
+    leveldb::WriteOptions syncoptions;
+
+    //! the database itself
+    leveldb::DB* pdb;
+
+    //! the name of this database
+    std::string m_name;
+
+    //! a key used for optional XOR-obfuscation of the database
+    std::vector<unsigned char> obfuscate_key;
+
+    //! the key under which the obfuscation key is stored
+    static const std::string OBFUSCATE_KEY_KEY;
+
+    //! the length of the obfuscate key in number of bytes
+    static const unsigned int OBFUSCATE_KEY_NUM_BYTES;
+
+public:
+    DBWrapperImpl(CDBWrapper& parent, const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate);
+    ~DBWrapperImpl();
+
+    bool WriteBatch(CDBBatch& batch, bool fSync);
+
+    size_t DynamicMemoryUsage() const;
+
+    CDBIterator *NewIterator();
+
+    bool IsEmpty();
+
+    std::vector<unsigned char> CreateObfuscateKey() const;
+
+    // Removed from interface later when pimpl'd
+    bool doRawGet(const CDataStream& ssKey, std::string& strValue) const;
+
+    std::optional<CDataStream> doGet(const CDataStream& ssKey) const;
+
+    bool doExists(const CDataStream& ssKey) const;
+
+    size_t doEstimateSizes(const CDataStream& begin_key, const CDataStream& end_key) const;
+
+    void doCompactRange(const CDataStream& begin_key, const CDataStream& end_key) const;
+};
+
+DBWrapperImpl::DBWrapperImpl(CDBWrapper& parent, const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
+    : m_parent(parent),
+      m_name{fs::PathToString(path.stem())}
 {
     penv = nullptr;
     readoptions.verify_checksums = true;
@@ -153,7 +219,7 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     // The base-case obfuscation key, which is a noop.
     obfuscate_key = std::vector<unsigned char>(OBFUSCATE_KEY_NUM_BYTES, '\000');
 
-    bool key_exists = Read(OBFUSCATE_KEY_KEY, obfuscate_key);
+    bool key_exists = m_parent.Read(OBFUSCATE_KEY_KEY, obfuscate_key);
 
     if (!key_exists && obfuscate && IsEmpty()) {
         // Initialize non-degenerate obfuscation if it won't upset
@@ -161,7 +227,7 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         std::vector<unsigned char> new_key = CreateObfuscateKey();
 
         // Write `new_key` so we don't obfuscate the key with itself
-        Write(OBFUSCATE_KEY_KEY, new_key);
+        m_parent.Write(OBFUSCATE_KEY_KEY, new_key);
         obfuscate_key = new_key;
 
         LogPrintf("Wrote new obfuscate key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
@@ -170,7 +236,11 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     LogPrintf("Using obfuscation key for %s: %s\n", fs::PathToString(path), HexStr(obfuscate_key));
 }
 
-CDBWrapper::~CDBWrapper()
+CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
+    : m_impl(std::make_unique<DBWrapperImpl>(*this, path, nCacheSize, fMemory, fWipe, obfuscate))
+{}
+
+DBWrapperImpl::~DBWrapperImpl()
 {
     delete pdb;
     pdb = nullptr;
@@ -184,7 +254,14 @@ CDBWrapper::~CDBWrapper()
     options.env = nullptr;
 }
 
+CDBWrapper::~CDBWrapper() = default;
+
 bool CDBWrapper::doRawGet(const CDataStream& ssKey, std::string& strValue) const
+{
+    return m_impl->doRawGet(ssKey, strValue);
+}
+
+bool DBWrapperImpl::doRawGet(const CDataStream& ssKey, std::string& strValue) const
 {
     leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
 
@@ -200,6 +277,11 @@ bool CDBWrapper::doRawGet(const CDataStream& ssKey, std::string& strValue) const
 }
 
 std::optional<CDataStream> CDBWrapper::doGet(const CDataStream& ssKey) const
+{
+    return m_impl->doGet(ssKey);
+}
+
+std::optional<CDataStream> DBWrapperImpl::doGet(const CDataStream& ssKey) const
 {
     std::string strValue;
     if (!doRawGet(ssKey, strValue)) {
@@ -217,11 +299,21 @@ std::optional<CDataStream> CDBWrapper::doGet(const CDataStream& ssKey) const
 
 bool CDBWrapper::doExists(const CDataStream& ssKey) const
 {
+    return m_impl->doExists(ssKey);
+}
+
+bool DBWrapperImpl::doExists(const CDataStream& ssKey) const
+{
     std::string strValue;
     return doRawGet(ssKey, strValue);
 }
 
 size_t CDBWrapper::doEstimateSizes(const CDataStream& begin_key, const CDataStream& end_key) const
+{
+    return m_impl->doEstimateSizes(begin_key, end_key);
+}
+
+size_t DBWrapperImpl::doEstimateSizes(const CDataStream& begin_key, const CDataStream& end_key) const
 {
     leveldb::Slice slKey1((const char*)begin_key.data(), begin_key.size());
     leveldb::Slice slKey2((const char*)end_key.data(), end_key.size());
@@ -234,6 +326,11 @@ size_t CDBWrapper::doEstimateSizes(const CDataStream& begin_key, const CDataStre
 
 void CDBWrapper::doCompactRange(const CDataStream& begin_key, const CDataStream& end_key) const
 {
+    return m_impl->doCompactRange(begin_key, end_key);
+}
+
+void DBWrapperImpl::doCompactRange(const CDataStream& begin_key, const CDataStream& end_key) const
+{
     leveldb::Slice slKey1((const char*)begin_key.data(), begin_key.size());
     leveldb::Slice slKey2((const char*)end_key.data(), end_key.size());
 
@@ -241,6 +338,11 @@ void CDBWrapper::doCompactRange(const CDataStream& begin_key, const CDataStream&
 }
 
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
+{
+    return m_impl->WriteBatch(batch, fSync);
+}
+
+bool DBWrapperImpl::WriteBatch(CDBBatch& batch, bool fSync)
 {
     const bool log_memory = LogAcceptCategory(BCLog::LEVELDB);
     double mem_before = 0;
@@ -259,6 +361,11 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 
 size_t CDBWrapper::DynamicMemoryUsage() const
 {
+    return m_impl->DynamicMemoryUsage();
+}
+
+size_t DBWrapperImpl::DynamicMemoryUsage() const
+{
     std::string memory;
     std::optional<size_t> parsed;
     if (!pdb->GetProperty("leveldb.approximate-memory-usage", &memory) || !(parsed = ToIntegral<size_t>(memory))) {
@@ -270,16 +377,21 @@ size_t CDBWrapper::DynamicMemoryUsage() const
 
 CDBIterator* CDBWrapper::NewIterator()
 {
-    return new CDBIterator(*this, pdb->NewIterator(iteroptions));
+    return m_impl->NewIterator();
+}
+
+CDBIterator* DBWrapperImpl::NewIterator()
+{
+    return new CDBIterator(m_parent, pdb->NewIterator(iteroptions));
 }
 
 // Prefixed with null character to avoid collisions with other keys
 //
 // We must use a string constructor which specifies length so that we copy
 // past the null-terminator.
-const std::string CDBWrapper::OBFUSCATE_KEY_KEY("\000obfuscate_key", 14);
+const std::string DBWrapperImpl::OBFUSCATE_KEY_KEY("\000obfuscate_key", 14);
 
-const unsigned int CDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
+const unsigned int DBWrapperImpl::OBFUSCATE_KEY_NUM_BYTES = 8;
 
 /**
  * Returns a string (consisting of 8 random bytes) suitable for use as an
@@ -287,12 +399,22 @@ const unsigned int CDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
  */
 std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
 {
+    return m_impl->CreateObfuscateKey();
+}
+
+std::vector<unsigned char> DBWrapperImpl::CreateObfuscateKey() const
+{
     std::vector<uint8_t> ret(OBFUSCATE_KEY_NUM_BYTES);
     GetRandBytes(ret.data(), OBFUSCATE_KEY_NUM_BYTES);
     return ret;
 }
 
 bool CDBWrapper::IsEmpty()
+{
+    return m_impl->IsEmpty();
+}
+
+bool DBWrapperImpl::IsEmpty()
 {
     std::unique_ptr<CDBIterator> it(NewIterator());
     it->SeekToFirst();
@@ -318,7 +440,7 @@ void HandleError(const leveldb::Status& status)
 
 const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w)
 {
-    return w.obfuscate_key;
+    return w.m_impl->obfuscate_key;
 }
 
 } // namespace dbwrapper_private
