@@ -1833,7 +1833,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     RandAddEvent((uint32_t)id);
 }
 
-bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type)
+bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport = false)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     std::optional<int> max_connections;
@@ -1866,7 +1866,7 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     CSemaphoreGrant grant(*semOutbound, true);
     if (!grant) return false;
 
-    OpenNetworkConnection(CAddress(), false, std::move(grant), address.c_str(), conn_type, /*use_v2transport=*/false);
+    OpenNetworkConnection(CAddress(), false, std::move(grant), address.c_str(), conn_type, /*use_v2transport=*/use_v2transport);
     return true;
 }
 
