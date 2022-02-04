@@ -55,10 +55,11 @@
 #include <QTime>
 #include <QTimer>
 #include <QVariant>
-
+#include <chrono>
 // SYSCOIN
 // Repair parameters
 const QString REINDEX("-reindex");
+
 
 const int CONSOLE_HISTORY = 50;
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
@@ -1182,7 +1183,7 @@ void RPCConsole::on_sldGraphRange_valueChanged(int value)
 
 void RPCConsole::setTrafficGraphRange(int mins)
 {
-    ui->trafficGraph->setGraphRangeMins(mins);
+    ui->trafficGraph->setGraphRange(std::chrono::minutes{mins});
     ui->lblGraphRange->setText(GUIUtil::formatDurationStr(std::chrono::minutes{mins}));
 }
 
