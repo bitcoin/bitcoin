@@ -14,6 +14,15 @@
 #include <stdint.h>
 #include <algorithm>
 
+/** These should be considered an implementation detail of the specific database.
+ */
+namespace dbwrapper_private {
+
+/** Handle database error by throwing dbwrapper_error exception.
+ */
+void HandleError(const leveldb::Status& status);
+};
+
 class DBBatchImpl
 {
 private:

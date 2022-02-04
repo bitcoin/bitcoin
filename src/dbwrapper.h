@@ -32,10 +32,6 @@ class DBWrapperImpl;
  */
 namespace dbwrapper_private {
 
-/** Handle database error by throwing dbwrapper_error exception.
- */
-void HandleError(const leveldb::Status& status);
-
 /** Work around circular dependency, as well as for testing in dbwrapper_tests.
  * Database obfuscation should be considered an implementation detail of the
  * specific database.
