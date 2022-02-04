@@ -255,7 +255,7 @@ public:
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;
 
-    CDBIterator* NewIterator();
+    std::unique_ptr<CDBIterator> NewIterator();
 
     /**
      * Return true if the database managed by this class contains no entries.

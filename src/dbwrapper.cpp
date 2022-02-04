@@ -161,7 +161,7 @@ public:
 
     size_t DynamicMemoryUsage() const;
 
-    CDBIterator *NewIterator();
+    std::unique_ptr<CDBIterator> NewIterator();
 
     bool IsEmpty();
 
@@ -374,14 +374,14 @@ size_t DBWrapperImpl::DynamicMemoryUsage() const
     return parsed.value();
 }
 
-CDBIterator* CDBWrapper::NewIterator()
+std::unique_ptr<CDBIterator> CDBWrapper::NewIterator()
 {
     return m_impl->NewIterator();
 }
 
-CDBIterator* DBWrapperImpl::NewIterator()
+std::unique_ptr<CDBIterator> DBWrapperImpl::NewIterator()
 {
-    return new CDBIterator(m_parent, pdb->NewIterator(iteroptions));
+    return std::make_unique<CDBIterator>(m_parent, pdb->NewIterator(iteroptions));
 }
 
 // Prefixed with null character to avoid collisions with other keys

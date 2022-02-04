@@ -197,8 +197,8 @@ class CCoinsViewDBCursor: public CCoinsViewCursor
 public:
     // Prefer using CCoinsViewDB::Cursor() since we want to perform some
     // cache warmup on instantiation.
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256&hashBlockIn):
-        CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
+    CCoinsViewDBCursor(std::unique_ptr<CDBIterator> pcursorIn, const uint256&hashBlockIn):
+        CCoinsViewCursor(hashBlockIn), pcursor(std::move(pcursorIn)) {}
     ~CCoinsViewDBCursor() {}
 
     bool GetKey(COutPoint &key) const override;
