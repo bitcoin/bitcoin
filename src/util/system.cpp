@@ -443,6 +443,15 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
     } else {
         path = GetDefaultDataDir();
     }
+
+    if (fs::is_symlink(path)) {
+        path = fs::read_symlink(path);
+        if (!fs::is_directory(path)) {
+            path = "";
+            return path;
+        }
+    }
+
     if (net_specific)
         path /= fs::PathFromString(BaseParams().DataDir());
 
