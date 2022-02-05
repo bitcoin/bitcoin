@@ -253,7 +253,7 @@ fs::path StripRedundantLastElementsOfPath(const fs::path& path)
         result = result.parent_path();
     }
 
-    assert(fs::equivalent(result, path));
+    assert(fs::equivalent(result, path.lexically_normal()));
     return result;
 }
 } // namespace
