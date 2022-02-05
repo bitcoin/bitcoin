@@ -35,7 +35,7 @@ struct LogCategory {
 namespace BCLog {
     enum LogFlags : uint32_t {
         NONE        = 0,
-        NET         = (1 <<  0),
+        NETPEERS    = (1 <<  0),
         TOR         = (1 <<  1),
         MEMPOOL     = (1 <<  2),
         HTTP        = (1 <<  3),
@@ -62,6 +62,7 @@ namespace BCLog {
         LOCK        = (1 << 24),
         UTIL        = (1 << 25),
         BLOCKSTORE  = (1 << 26),
+        NETMESSAGES = (1 << 27),
         ALL         = ~(uint32_t)0,
     };
 

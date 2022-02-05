@@ -22,7 +22,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
     if (m_ban_db.Read(m_banned)) {
         SweepBanned(); // sweep out unused entries
 
-        LogPrint(BCLog::NET, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),
+        LogPrint(BCLog::NETMESSAGES, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),
                  GetTimeMillis() - n_start);
     } else {
         LogPrintf("Recreating the banlist database\n");
@@ -57,7 +57,7 @@ void BanMan::DumpBanlist()
         SetBannedSetDirty(true);
     }
 
-    LogPrint(BCLog::NET, "Flushed %d banned node addresses/subnets to disk  %dms\n", banmap.size(),
+    LogPrint(BCLog::NETMESSAGES, "Flushed %d banned node addresses/subnets to disk  %dms\n", banmap.size(),
              GetTimeMillis() - n_start);
 }
 
@@ -185,7 +185,7 @@ void BanMan::SweepBanned()
                 m_banned.erase(it++);
                 m_is_dirty = true;
                 notify_ui = true;
-                LogPrint(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
+                LogPrint(BCLog::NETMESSAGES, "Removed banned node address/subnet: %s\n", sub_net.ToString());
             } else
                 ++it;
         }

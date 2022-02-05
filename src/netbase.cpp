@@ -367,7 +367,7 @@ static std::string Socks5ErrorString(uint8_t err)
 bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& sock)
 {
     IntrRecvError recvr;
-    LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
+    LogPrint(BCLog::NETMESSAGES, "SOCKS5 connecting %s\n", strDest);
     if (strDest.size() > 255) {
         return error("Hostname too long");
     }
@@ -479,7 +479,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
     if ((recvr = InterruptibleRecv(pchRet3, 2, g_socks5_recv_timeout, sock)) != IntrRecvError::OK) {
         return error("Error reading from proxy");
     }
-    LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
+    LogPrint(BCLog::NETMESSAGES, "SOCKS5 connected %s\n", strDest);
     return true;
 }
 
@@ -534,7 +534,7 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
     if (manual_connection) {
         LogPrintf("%s\n", error_message);
     } else {
-        LogPrint(BCLog::NET, "%s\n", error_message);
+        LogPrint(BCLog::NETMESSAGES, "%s\n", error_message);
     }
 }
 
@@ -569,7 +569,7 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
                           NetworkErrorString(WSAGetLastError()));
                 return false;
             } else if (occurred == 0) {
-                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", addrConnect.ToString());
+                LogPrint(BCLog::NETMESSAGES, "connection attempt to %s timed out\n", addrConnect.ToString());
                 return false;
             }
 
