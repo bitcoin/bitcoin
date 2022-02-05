@@ -21,6 +21,8 @@ libsyscoin_zmq/libsyscoin_zmq.vcxproj
 bench_syscoin/bench_syscoin.vcxproj
 libtest_util/libtest_util.vcxproj
 
+/bitcoin_config.h
+
 */Win32
 libsyscoin_qt/QtGeneratedFiles/*
 test_syscoin-qt/QtGeneratedFiles/*
