@@ -27,7 +27,8 @@ from .authproxy import (
     serialization_fallback,
 )
 from .descriptors import descsum_create
-from .p2p import P2P_SUBVERSION
+from .messages import NODE_P2P_V2
+from .p2p import P2P_SERVICES, P2P_SUBVERSION
 from .util import (
     MAX_NODES,
     assert_equal,
@@ -646,13 +647,24 @@ class TestNode():
         """Add an inbound p2p connection to the node.
 
         This method adds the p2p connection to the self.p2ps list and also
-        returns the connection to the caller."""
+        returns the connection to the caller.
+
+        When self.use_v2transport is True, TestNode advertises NODE_P2P_V2 service flag
+
+        An inbound connection is made from TestNode <------ P2PConnection
+        - if TestNode doesn't advertise NODE_P2P_V2 service, P2PConnection sends version message and v1 P2P is followed
+        - if TestNode advertises NODE_P2P_V2 service, (and if P2PConnections supports v2 P2P)
+                P2PConnection sends ellswift bytes and v2 P2P is followed
+        """
         if 'dstport' not in kwargs:
             kwargs['dstport'] = p2p_port(self.index)
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
 
         p2p_conn.p2p_connected_to_node = True
+        if self.use_v2transport:
+            kwargs['services'] = kwargs.get('services', P2P_SERVICES) | NODE_P2P_V2
+        supports_v2_p2p = self.use_v2transport and supports_v2_p2p
         p2p_conn.peer_connect(**kwargs, send_version=send_version, net=self.chain, timeout_factor=self.timeout_factor, supports_v2_p2p=supports_v2_p2p)()
 
         self.p2ps.append(p2p_conn)
@@ -685,7 +697,7 @@ class TestNode():
 
         return p2p_conn
 
-    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, p2p_idx, connection_type="outbound-full-relay", supports_v2_p2p=False, **kwargs):
+    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, p2p_idx, connection_type="outbound-full-relay", supports_v2_p2p=False, advertise_v2_p2p=False, **kwargs):
         """Add an outbound p2p connection from node. Must be an
         "outbound-full-relay", "block-relay-only", "addr-fetch" or "feeler" connection.
 
@@ -695,14 +707,34 @@ class TestNode():
         p2p_idx must be different for simultaneously connected peers. When reusing it for the next peer
         after disconnecting the previous one, it is necessary to wait for the disconnect to finish to avoid
         a race condition.
+
+        Parameters:
+            supports_v2_p2p: whether p2p_conn supports v2 P2P or not
+            advertise_v2_p2p: whether p2p_conn is advertised to support v2 P2P or not
+
+        An outbound connection is made from TestNode -------> P2PConnection
+            - if P2PConnection doesn't advertise_v2_p2p, TestNode sends version message and v1 P2P is followed
+            - if P2PConnection both supports_v2_p2p and advertise_v2_p2p, TestNode sends ellswift bytes and v2 P2P is followed
+            - if P2PConnection doesn't supports_v2_p2p but advertise_v2_p2p,
+                TestNode sends ellswift bytes and P2PConnection disconnects,
+                TestNode reconnects by sending version message and v1 P2P is followed
         """
 
         def addconnection_callback(address, port):
             self.log.debug("Connecting to %s:%d %s" % (address, port, connection_type))
-            self.addconnection('%s:%d' % (address, port), connection_type)
+            self.addconnection('%s:%d' % (address, port), connection_type, advertise_v2_p2p)
 
         p2p_conn.p2p_connected_to_node = False
-        p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, supports_v2_p2p=supports_v2_p2p, reconnect=False, **kwargs)()
+        if advertise_v2_p2p:
+            kwargs['services'] = kwargs.get('services', P2P_SERVICES) | NODE_P2P_V2
+            assert self.use_v2transport  # only a v2 TestNode could make a v2 outbound connection
+
+        # if P2PConnection is advertised to support v2 P2P when it doesn't actually support v2 P2P,
+        # reconnection needs to be attempted using v1 P2P by sending version message
+        reconnect = advertise_v2_p2p and not supports_v2_p2p
+        # P2PConnection needs to be advertised to support v2 P2P so that ellswift bytes are sent instead of msg_version
+        supports_v2_p2p = supports_v2_p2p and advertise_v2_p2p
+        p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, supports_v2_p2p=supports_v2_p2p, reconnect=reconnect, **kwargs)()
 
         if connection_type == "feeler":
             # feeler connections are closed as soon as the node receives a `version` message
