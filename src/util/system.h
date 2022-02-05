@@ -265,14 +265,27 @@ protected:
     std::optional<const Command> GetCommand() const;
 
     /**
-     * Get a normalized path from a specified pathlike argument
+     * Get a normalized file path from a specified pathlike argument
+     *
+     * This function is meant to be used to retreive the path of a file.
+     *
+     * @param pathlike_arg Pathlike argument to get a file path from (e.g., "-pid" or "-debuglogfile")
+     * @param path_default Default value to use if argument is not present
+     * @return Normalized filename which is get from a specified pathlike argument
+     */
+    fs::path GetFileArg(std::string pathlike_arg, const fs::path& path_default = "") const;
+
+    /**
+     * Get a normalized directory path from a specified pathlike argument
      *
      * It is guaranteed that the returned path has no trailing slashes.
+     * This function is meant to be used to retreive the path of a directory.
      *
-     * @param pathlike_arg Pathlike argument to get a path from (e.g., "-datadir", "-blocksdir" or "-walletdir")
+     * @param pathlike_arg Pathlike argument to get a directory path from (e.g., "-datadir", "-blocksdir" or "-walletdir")
+     * @param path_default Default value to use if argument is not present
      * @return Normalized path which is get from a specified pathlike argument
      */
-    fs::path GetPathArg(std::string pathlike_arg) const;
+    fs::path GetPathArg(std::string pathlike_arg, const fs::path& path_default = "") const;
 
     /**
      * Get blocks directory path

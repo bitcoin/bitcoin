@@ -386,9 +386,19 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return std::nullopt;
 }
 
-fs::path ArgsManager::GetPathArg(std::string pathlike_arg) const
+fs::path ArgsManager::GetFileArg(std::string pathlike_arg, const fs::path& path_default) const
 {
-    auto result = fs::PathFromString(GetArg(pathlike_arg, "")).lexically_normal();
+    auto result = GetArg(pathlike_arg, "");
+    if (!result.empty()) {
+      return fs::PathFromString(result).lexically_normal();
+    } else {
+      return path_default;
+    }
+}
+
+fs::path ArgsManager::GetPathArg(std::string pathlike_arg, const fs::path& path_default) const
+{
+    auto result = GetFileArg(pathlike_arg, path_default);
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();
 }
