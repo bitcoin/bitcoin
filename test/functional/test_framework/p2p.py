@@ -82,6 +82,7 @@ from test_framework.util import (
 )
 from test_framework.v2_p2p import (
     EncryptedP2PState,
+    MSGTYPE_TO_SHORTID,
     SHORTID,
 )
 
@@ -386,15 +387,25 @@ class P2PConnection(asyncio.Protocol):
         """Build a serialized P2P message"""
         msgtype = message.msgtype
         data = message.serialize()
-        tmsg = self.magic_bytes
-        tmsg += msgtype
-        tmsg += b"\x00" * (12 - len(msgtype))
-        tmsg += struct.pack("<I", len(data))
-        th = sha256(data)
-        h = sha256(th)
-        tmsg += h[:4]
-        tmsg += data
-        return tmsg
+        if self.supports_v2_p2p:
+            if msgtype in SHORTID.values():
+                tmsg = MSGTYPE_TO_SHORTID.get(msgtype).to_bytes(1, 'big')
+            else:
+                tmsg = b"\x00"
+                tmsg += msgtype
+                tmsg += b"\x00" * (12 - len(msgtype))
+            tmsg += data
+            return self.v2_state.v2_enc_packet(tmsg)
+        else:
+            tmsg = self.magic_bytes
+            tmsg += msgtype
+            tmsg += b"\x00" * (12 - len(msgtype))
+            tmsg += struct.pack("<I", len(data))
+            th = sha256(data)
+            h = sha256(th)
+            tmsg += h[:4]
+            tmsg += data
+            return tmsg
 
     def _log_message(self, direction, msg):
         """Logs a message being sent or received over the connection."""
