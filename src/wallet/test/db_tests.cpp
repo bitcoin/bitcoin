@@ -2,14 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <memory>
-
 #include <boost/test/unit_test.hpp>
 
 #include <fs.h>
 #include <test/util/setup_common.h>
 #include <wallet/bdb.h>
 
+#include <fstream>
+#include <memory>
+#include <string>
 
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
@@ -26,7 +27,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_file)
     std::string test_name = "test_name.dat";
     const fs::path datadir = gArgs.GetDataDirNet();
     fs::path file_path = datadir / test_name;
-    fs::ofstream f(file_path);
+    std::ofstream f{file_path};
     f.close();
 
     std::string filename;

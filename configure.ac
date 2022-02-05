@@ -83,6 +83,9 @@ AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
 
+dnl check if additional link flags are required for std::filesystem
+CHECK_FILESYSTEM
+
 dnl Unless the user specified OBJCXX, force it to be the same as CXX. This ensures
 dnl that we get the same -std flags for both.
 m4_ifdef([AC_PROG_OBJCXX],[
@@ -1404,14 +1407,12 @@ if test "$use_boost" = "yes"; then
   if test "$want_boost" = "no"; then
     AC_MSG_ERROR([only libbitcoinconsensus can be built without Boost])
   fi
-  AX_BOOST_SYSTEM
-  AX_BOOST_FILESYSTEM
 
   if test "$suppress_external_warnings" != "no"; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
 
-  BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
+  BOOST_LIBS="$BOOST_LDFLAGS"
 fi
 
 if test "$use_external_signer" != "no"; then
