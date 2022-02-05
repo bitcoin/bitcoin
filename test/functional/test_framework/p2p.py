@@ -232,13 +232,62 @@ class P2PConnection(asyncio.Protocol):
         self.recvbuf = b""
         self.on_close()
 
+    # v2 handshake method
+    def v2_handshake(self):
+        """v2 handshake performed before P2P messages are exchanged (see BIP324). P2PConnection is the initiator
+        (in inbound connections to TestNode) and the responder (in outbound connections from TestNode).
+        Performed by:
+            * initiator using `initiate_v2_handshake()`, `complete_handshake()` and `authenticate_handshake()`
+            * responder using `respond_v2_handshake()`, `complete_handshake()` and `authenticate_handshake()`
+
+        `initiate_v2_handshake()` is immediately done by the initiator when the connection is established in
+        `connection_made()`. The rest of the initial v2 handshake functions are handled here.
+        """
+        if not self.v2_state.peer:
+            if not self.v2_state.initiating and not self.v2_state.sent_garbage:
+                # if the responder hasn't sent garbage yet, the responder is still reading ellswift bytes
+                # reads ellswift bytes till the first mismatch from 12 bytes V1_PREFIX
+                length, send_handshake_bytes = self.v2_state.respond_v2_handshake(BytesIO(self.recvbuf))
+                self.recvbuf = self.recvbuf[length:]
+                if send_handshake_bytes == -1:
+                    self.v2_state = None
+                    return
+                elif send_handshake_bytes:
+                    self.send_raw_message(send_handshake_bytes)
+                elif send_handshake_bytes == b"":
+                    return  # only after send_handshake_bytes are sent can `complete_handshake()` be done
+
+            # `complete_handshake()` reads the remaining ellswift bytes from recvbuf
+            # and sends response after deriving shared ECDH secret using received ellswift bytes
+            length, response = self.v2_state.complete_handshake(BytesIO(self.recvbuf))
+            self.recvbuf = self.recvbuf[length:]
+            if response:
+                self.send_raw_message(response)
+            else:
+                return  # only after response is sent can `authenticate_handshake()` be done
+
+        # `self.v2_state.peer` is instantiated only after shared ECDH secret/BIP324 derived keys and ciphers
+        # is derived in `complete_handshake()`.
+        # so `authenticate_handshake()` which uses the BIP324 derived ciphers gets called after `complete_handshake()`.
+        assert self.v2_state.peer
+        length, is_mac_auth = self.v2_state.authenticate_handshake(self.recvbuf)
+        if not is_mac_auth:
+            raise ValueError("invalid v2 mac tag in handshake authentication")
+        self.recvbuf = self.recvbuf[length:]
+        while self.v2_state.tried_v2_handshake and self.queue_messages:
+            message = self.queue_messages.pop(0)
+            self.send_message(message)
+
     # Socket read methods
 
     def data_received(self, t):
         """asyncio callback when data is read from the socket."""
         if len(t) > 0:
             self.recvbuf += t
-            self._on_data()
+            if self.supports_v2_p2p and not self.v2_state.tried_v2_handshake:
+                self.v2_handshake()
+            else:
+                self._on_data()
 
     def _on_data(self):
         """Try to read P2P messages from the recv buffer.
