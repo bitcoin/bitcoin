@@ -676,13 +676,13 @@ public:
     void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
-    bool IsIBD() const;
+    bool IsIBD() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Same as `IsIBD()` above, but also locks mutex cs_main during initial
      * block download. Use only for callers not already holding the lock.
      */
-    bool IsInitialBlockDownload() const;
+    bool IsInitialBlockDownload() const LOCKS_EXCLUDED(::cs_main);
 
     /** Find the last common block of this chain and a locator. */
     CBlockIndex* FindForkInGlobalIndex(const CBlockLocator& locator) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);

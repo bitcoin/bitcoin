@@ -1463,6 +1463,7 @@ void CChainState::InitCoinsCache(size_t cache_size_bytes)
 //
 bool CChainState::IsIBD() const
 {
+    AssertLockHeld(::cs_main);
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
     if (fImporting || fReindex)
@@ -1480,6 +1481,7 @@ bool CChainState::IsIBD() const
 
 bool CChainState::IsInitialBlockDownload() const
 {
+    AssertLockNotHeld(::cs_main);
     // Optimization: pre-test latch before taking the lock.
     if (m_cached_finished_ibd.load(std::memory_order_relaxed)) {
         return false;
