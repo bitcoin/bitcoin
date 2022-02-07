@@ -136,9 +136,7 @@ class SkipList {
   // Modified only by Insert().  Read racily by readers, but stale
   // values are ok.
   std::atomic<int> max_height_;  // Height of the entire list
-
-  // Read/written only by Insert().
-  Random rnd_;
+  
 };
 
 // Implementation details follow
@@ -240,10 +238,13 @@ inline void SkipList<Key, Comparator>::Iterator::SeekToLast() {
 
 template <typename Key, class Comparator>
 int SkipList<Key, Comparator>::RandomHeight() {
+  auto rnd = Random::GetTLSInstance();
   // Increase height with probability 1 in kBranching
   static const unsigned int kBranching = 4;
+  static const uint32_t kScaledInverseBranching = (Random::kMaxNext + 1) / kBranching;
+  assert(kScaledInverseBranching > 0);
   int height = 1;
-  while (height < kMaxHeight && ((rnd_.Next() % kBranching) == 0)) {
+  while (height < kMaxHeight && rnd->Next() < kScaledInverseBranching) {
     height++;
   }
   assert(height > 0);
