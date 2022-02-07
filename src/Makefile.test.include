@@ -139,6 +139,7 @@ BITCOIN_TESTS =\
   test/net_peer_eviction_tests.cpp \
   test/net_tests.cpp \
   test/netbase_tests.cpp \
+  test/orphanage_tests.cpp \
   test/pmt_tests.cpp \
   test/policyestimator_tests.cpp \
   test/pool_tests.cpp \
