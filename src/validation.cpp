@@ -1461,13 +1461,8 @@ void CChainState::InitCoinsCache(size_t cache_size_bytes)
 // `const` so that `CValidationInterface` clients (which are given a `const CChainState*`)
 // can call it.
 //
-bool CChainState::IsInitialBlockDownload() const
+bool CChainState::IsIBD() const
 {
-    // Optimization: pre-test latch before taking the lock.
-    if (m_cached_finished_ibd.load(std::memory_order_relaxed))
-        return false;
-
-    LOCK(cs_main);
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
     if (fImporting || fReindex)
@@ -1481,6 +1476,16 @@ bool CChainState::IsInitialBlockDownload() const
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     m_cached_finished_ibd.store(true, std::memory_order_relaxed);
     return false;
+}
+
+bool CChainState::IsInitialBlockDownload() const
+{
+    // Optimization: pre-test latch before taking the lock.
+    if (m_cached_finished_ibd.load(std::memory_order_relaxed)) {
+        return false;
+    }
+    LOCK(::cs_main);
+    return IsIBD();
 }
 
 static void AlertNotify(const std::string& strMessage)

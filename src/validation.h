@@ -676,6 +676,12 @@ public:
     void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
+    bool IsIBD() const;
+
+    /**
+     * Same as `IsIBD()` above, but also locks mutex cs_main during initial
+     * block download. Use only for callers not already holding the lock.
+     */
     bool IsInitialBlockDownload() const;
 
     /** Find the last common block of this chain and a locator. */
