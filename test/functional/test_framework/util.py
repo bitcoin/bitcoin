@@ -38,6 +38,7 @@ def assert_approx(v, vexp, vspan=0.00001):
 
 def assert_fee_amount(fee, tx_size, feerate_SYS_kvB):
     """Assert the fee is in range."""
+    assert isinstance(tx_size, int)
     target_fee = get_fee(tx_size, feerate_SYS_kvB)
     if fee < target_fee:
         raise AssertionError("Fee of %s SYS too low! (Should be %s SYS)" % (str(fee), str(target_fee)))
@@ -224,7 +225,13 @@ def str_to_b64str(string):
 
 
 def ceildiv(a, b):
-    """Divide 2 ints and round up to next int rather than round down"""
+    """
+    Divide 2 ints and round up to next int rather than round down
+    Implementation requires python integers, which have a // operator that does floor division.
+    Other types like decimal.Decimal whose // operator truncates towards 0 will not work.
+    """
+    assert isinstance(a, int)
+    assert isinstance(b, int)
     return -(-a // b)
 
 
@@ -232,7 +239,7 @@ def get_fee(tx_size, feerate_btc_kvb):
     """Calculate the fee in SYS given a feerate is SYS/kvB. Reflects CFeeRate::GetFee"""
     feerate_sat_kvb = int(feerate_btc_kvb * Decimal(1e8)) # Fee in sat/kvb as an int to avoid float precision errors
     target_fee_sat = ceildiv(feerate_sat_kvb * tx_size, 1000) # Round calculated fee up to nearest sat
-    return satoshi_round(target_fee_sat / Decimal(1e8)) # Truncate SYS result to nearest sat
+    return target_fee_sat / Decimal(1e8) # Return result in  SYS
 
 
 def satoshi_round(amount):
