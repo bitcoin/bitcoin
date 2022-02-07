@@ -16,6 +16,7 @@ from test_framework.util import (
     assert_fee_amount,
     assert_greater_than,
     assert_raises_rpc_error,
+    count_bytes,
 )
 from test_framework.wallet_util import bytes_to_wif
 
@@ -320,20 +321,20 @@ class WalletSendTest(BitcoinTestFramework):
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=7, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00007"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00007"))
 
         # "unset" and None are treated the same for estimate_mode
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=2, estimate_mode="unset", add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00002"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00002"))
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=4.531, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00004531"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00004531"))
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=3, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00003"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00003"))
 
         # Test that passing fee_rate as both an argument and an option raises.
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=1, fee_rate=1, add_to_wallet=False,
