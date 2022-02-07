@@ -60,7 +60,6 @@ unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
 implicit-integer-sign-change:addrman.h
 implicit-integer-sign-change:bech32.cpp
-implicit-integer-sign-change:coins.h
 implicit-integer-sign-change:compat/stdin.cpp
 implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
