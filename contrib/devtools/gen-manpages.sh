@@ -36,7 +36,7 @@ then
 fi
 
 # The autodetected version git tag can screw up manpage output a little bit
-read -r -a BTCVER <<< "$($BITCOINCLI --version | head -n1 | awk -F'[ -]' '{ print $6, $7 }')"
+read -r -a BTCVER <<< "$($BITCOINCLI --version | sed 's/^.* version \(v[0-9][0-9.]\+[0-9]\)\([^[:space:]]*\)$/\1 \2/g' | head -n1)"
 
 # Create a footer file with copyright content.
 # This gets autodetected fine for bitcoind if --version-string is not set,
@@ -46,8 +46,13 @@ $BITCOIND --version | sed -n '1!p' >> footer.h2m
 
 for cmd in $BITCOIND $BITCOINCLI $BITCOINTX $WALLET_TOOL $BITCOINUTIL $BITCOINQT; do
   cmdname="${cmd##*/}"
-  help2man -N --version-string="${BTCVER[0]}" --include=footer.h2m -o "${MANDIR}/${cmdname}.1" "${cmd}"
-  sed -i "s/\\\-${BTCVER[1]}//g" "${MANDIR}/${cmdname}.1"
+  manfile="${MANDIR}/${cmdname}.1"
+  help2man -N --version-string="${BTCVER[0]}" --include=footer.h2m -o "${manfile}" "${cmd}"
+
+  test -z "${BTCVER[1]}" && continue
+
+  awk -v A="${BTCVER[0]}${BTCVER[1]}" -v B="${BTCVER[0]}" '{ sub(A, B, $0); print $0 }' "${manfile}" >"${manfile}.new"
+  mv "${manfile}.new" "${manfile}"
 done
 
 rm -f footer.h2m
