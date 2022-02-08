@@ -139,6 +139,30 @@ def assert_pop_state_equal(nodes):
     is_same(lambda x: x.getblock(x.getbestblockhash()), "ALT tips")
 
 
+def sync_pop_mempools_atvs(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
+    """
+    Wait until everybody has the same ATVs data in their POP mempools
+    """
+    def test(s):
+        return s.count(s[0]) == len(rpc_connections)
+
+    stop_time = time.time() + timeout
+    while time.time() <= stop_time:
+        mpooldata = [r.getrawpopmempool() for r in rpc_connections]
+        atvs = [set(data['atvs']) for data in mpooldata]
+
+        if test(atvs):
+            if flush_scheduler:
+                for r in rpc_connections:
+                    r.syncwithvalidationinterfacequeue()
+            return
+        time.sleep(wait)
+    raise AssertionError("POP mempool ATVs sync timed out: \natvs: {}".format(
+        "".join("\n  {!r}".format(m) for m in atvs)
+    ))
+
+
+
 def sync_pop_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
     """
     Wait until everybody has the same POP data in their POP mempools

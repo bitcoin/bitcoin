@@ -9,7 +9,7 @@
 Test with multiple nodes, and multiple PoP endorsements, checking to make sure nodes stay in sync.
 """
 
-from test_framework.pop import endorse_block, sync_pop_mempools, mine_until_pop_active, get_keystone_interval
+from test_framework.pop import endorse_block, sync_pop_mempools, sync_pop_mempools_atvs, mine_until_pop_active, get_keystone_interval
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -95,7 +95,7 @@ class PoPSync(BitcoinTestFramework):
                 self.log.info("node1 endorsing block {} by miner {}: {}".format(height, addr1, node1_txid))
 
                 # wait until node[1] gets relayed pop tx
-                self.sync_all(self.nodes, timeout=60)
+                sync_pop_mempools_atvs(self.nodes, timeout=100)
                 self.log.info("transactions relayed")
 
                 # mine a block on node[1] with this pop tx

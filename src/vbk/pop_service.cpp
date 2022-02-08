@@ -17,7 +17,7 @@
 
 #ifdef WIN32
 #include <boost/thread/interruption.hpp>
-#endif //WIN32
+#endif // WIN32
 
 #include "pop_service.hpp"
 #include <utility>
@@ -31,23 +31,11 @@ namespace VeriBlock {
 
 static uint64_t popScoreComparisons = 0ULL;
 
-template <typename T>
-void onAcceptedToMempool(const T& t) {
-    assert(g_rpc_node);
-    assert(g_rpc_node->connman);
-    p2p::RelayPopPayload(g_rpc_node->connman.get(), t);
-}
-
 void InitPopContext(CDBWrapper& db)
 {
     auto payloads_provider = std::make_shared<PayloadsProvider>(db);
     auto block_provider = std::make_shared<BlockReader>(db);
     SetPop(payloads_provider, block_provider);
-
-    auto& app = GetPop();
-    app.getMemPool().onAccepted<altintegration::ATV>(onAcceptedToMempool<altintegration::ATV>);
-    app.getMemPool().onAccepted<altintegration::VTB>(onAcceptedToMempool<altintegration::VTB>);
-    app.getMemPool().onAccepted<altintegration::VbkBlock>(onAcceptedToMempool<altintegration::VbkBlock>);
 }
 
 CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
@@ -174,9 +162,9 @@ PoPRewards getPopRewards(const CBlockIndex& tip, const CChainParams& params) EXC
         arith_uint256 coeff(r.second);
         // 50% of multiplier towards POP.
         // we divide by COIN here because `coeff` is X * COIN, Multiplier is Y*COIN.
-        // so payout becomes = X*Y*COIN*COIN/2. 
+        // so payout becomes = X*Y*COIN*COIN/2.
         arith_uint256 payout = (coeff * VeriBlock::GetSubsidyMultiplier(tip.nHeight + 1, params) / 2) / COIN;
-        if(payout > 0) {
+        if (payout > 0) {
             CScript key = CScript(r.first.begin(), r.first.end());
             assert(payout <= std::numeric_limits<int64_t>::max() && "overflow!");
             result[key] = payout.GetLow64();
@@ -383,7 +371,8 @@ uint64_t getPopScoreComparisons() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 }
 
 
-CAmount GetSubsidyMultiplier(int nHeight, const CChainParams& params) {
+CAmount GetSubsidyMultiplier(int nHeight, const CChainParams& params)
+{
     // Offset halvings by the initial "non-halving" emissions which last 4183200 blocks
     int halvings = (nHeight - 4183200) / params.GetConsensus().nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
@@ -393,7 +382,7 @@ CAmount GetSubsidyMultiplier(int nHeight, const CChainParams& params) {
     // If none of the switches below are hit, this value will be used (which is the value
     // for the first halving period (so halvings=0)
     CAmount nSubsidy = 1504471080 * COIN / 1000000000;
-    
+
     if (nHeight < 64800) {
         nSubsidy = 7 * COIN; // First period, reward = 7.00
     } else if (nHeight < 136800) {
@@ -426,7 +415,7 @@ CAmount GetSubsidyMultiplier(int nHeight, const CChainParams& params) {
 
     // Subsidy is cut in half every 1,051,200 blocks which will occur approximately every 4 years.
     if (halvings > 0) {
-    	nSubsidy >>= halvings;
+        nSubsidy >>= halvings;
     }
 
     return nSubsidy;

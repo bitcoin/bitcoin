@@ -45,7 +45,8 @@ template <> inline int GetType<altintegration::VbkBlock>(){ return MSG_POP_VBK; 
 // clang-format on
 
 template <typename T>
-CInv PayloadToInv(const typename T::id_t& id) {
+CInv PayloadToInv(const typename T::id_t& id)
+{
     return CInv(GetType<T>(), IdToUint256<T>(id));
 }
 

@@ -64,14 +64,14 @@ class PopPayouts(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         self.log.info("connect node 1 and node 0")
 
-        self.sync_all(self.nodes, timeout=30)
+        self.sync_blocks(self.nodes, timeout=30)
         self.log.info("nodes[0,1] are in sync")
 
         assert_equal(self.get_best_block(1), self.get_best_block(0))
 
-        # mine a block on node[1] with these vbk blocks
-        tip_hash = self.nodes[1].generate(nblocks=1)[0]
-        tip = self.nodes[1].getblock(tip_hash)
+        # mine a block on node[0] with these vbk blocks
+        tip_hash = self.nodes[0].generate(nblocks=1)[0]
+        tip = self.nodes[0].getblock(tip_hash)
 
         assert len(tip['pop']['data']['vbkblocks']) == vbk_blocks_amount == len(vbk_blocks)
 
