@@ -778,20 +778,24 @@ void BitcoinGUI::createTrayIconMenu()
 
     QAction* send_action{nullptr};
     QAction* receive_action{nullptr};
+    QAction* sign_action{nullptr};
+    QAction* verify_action{nullptr};
     if (enableWallet) {
         send_action = trayIconMenu->addAction(sendCoinsAction->text(), sendCoinsAction, &QAction::trigger);
         receive_action = trayIconMenu->addAction(receiveCoinsAction->text(), receiveCoinsAction, &QAction::trigger);
         trayIconMenu->addSeparator();
-        trayIconMenu->addAction(signMessageAction);
-        trayIconMenu->addAction(verifyMessageAction);
+        sign_action = trayIconMenu->addAction(signMessageAction->text(), signMessageAction, &QAction::trigger);
+        verify_action = trayIconMenu->addAction(verifyMessageAction->text(), verifyMessageAction, &QAction::trigger);
         trayIconMenu->addSeparator();
     }
-    trayIconMenu->addAction(optionsAction);
-    trayIconMenu->addAction(openRPCConsoleAction);
+    QAction* options_action = trayIconMenu->addAction(optionsAction->text(), optionsAction, &QAction::trigger);
+    options_action->setMenuRole(QAction::PreferencesRole);
+    QAction* node_window_action = trayIconMenu->addAction(openRPCConsoleAction->text(), openRPCConsoleAction, &QAction::trigger);
+    QAction* quit_action{nullptr};
 #ifndef Q_OS_MAC
     // Note: On macOS, the Dock icon's menu already has Quit action.
     trayIconMenu->addSeparator();
-    trayIconMenu->addAction(quitAction);
+    quit_action = trayIconMenu->addAction(quitAction->text(), quitAction, &QAction::trigger);
 
     trayIcon->setContextMenu(trayIconMenu.get());
     connect(trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
@@ -814,7 +818,7 @@ void BitcoinGUI::createTrayIconMenu()
         // Using QSystemTrayIcon::Context is not reliable.
         // See https://bugreports.qt.io/browse/QTBUG-91697
         trayIconMenu.get(), &QMenu::aboutToShow,
-        [this, show_hide_action, send_action, receive_action] {
+        [this, show_hide_action, send_action, receive_action, sign_action, verify_action] {
             if (show_hide_action) show_hide_action->setText(
                 (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
                     tr("&Hide") :
@@ -822,6 +826,8 @@ void BitcoinGUI::createTrayIconMenu()
             if (enableWallet) {
                 send_action->setEnabled(sendCoinsAction->isEnabled());
                 receive_action->setEnabled(receiveCoinsAction->isEnabled());
+                sign_action->setEnabled(signMessageAction->isEnabled());
+                verify_action->setEnabled(verifyMessageAction->isEnabled());
             }
         });
 }
