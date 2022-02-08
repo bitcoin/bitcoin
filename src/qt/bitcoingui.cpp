@@ -1038,7 +1038,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     QAction* show_hide_action{nullptr};
 #ifndef Q_OS_MAC
     // Note: On macOS, the Dock icon is used to provide the tray's functionality.
-    show_hide_action = pmenu->addAction(tr("Show / &Hide"), this, &BitcoinGUI::toggleHidden);
+    show_hide_action = pmenu->addAction(QString(), this, &BitcoinGUI::toggleHidden);
     pmenu->addSeparator();
 #endif // Q_OS_MAC
 
@@ -1069,6 +1069,17 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     pmenu->addSeparator();
     pmenu->addAction(quitAction);
 #endif // Q_OS_MAC
+
+    connect(
+        // Using QSystemTrayIcon::Context is not reliable.
+        // See https://bugreports.qt.io/browse/QTBUG-91697
+        pmenu, &QMenu::aboutToShow,
+        [this, show_hide_action] {
+            if (show_hide_action) show_hide_action->setText(
+                (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
+                    tr("&Hide") :
+                    tr("S&how"));
+        });
 }
 
 void BitcoinGUI::optionsClicked()
