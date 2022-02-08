@@ -985,17 +985,13 @@ public:
     //! Unload block index and chain data before shutdown.
     void Unload() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Clear (deconstruct) chainstate data.
-    void Reset();
-
     //! Check to see if caches are out of balance and if so, call
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     ~ChainstateManager() {
         LOCK(::cs_main);
-        UnloadBlockIndex(/* mempool */ nullptr, *this);
-        Reset();
+        UnloadBlockIndex(/*mempool=*/nullptr, *this);
     }
 };
 

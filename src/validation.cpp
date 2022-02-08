@@ -5009,15 +5009,6 @@ void ChainstateManager::Unload()
     m_best_invalid = nullptr;
 }
 
-void ChainstateManager::Reset()
-{
-    LOCK(::cs_main);
-    m_ibd_chainstate.reset();
-    m_snapshot_chainstate.reset();
-    m_active_chainstate = nullptr;
-    m_snapshot_validated = false;
-}
-
 void ChainstateManager::MaybeRebalanceCaches()
 {
     if (m_ibd_chainstate && !m_snapshot_chainstate) {
