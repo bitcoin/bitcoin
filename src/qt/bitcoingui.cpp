@@ -818,16 +818,26 @@ void BitcoinGUI::createTrayIconMenu()
         // Using QSystemTrayIcon::Context is not reliable.
         // See https://bugreports.qt.io/browse/QTBUG-91697
         trayIconMenu.get(), &QMenu::aboutToShow,
-        [this, show_hide_action, send_action, receive_action, sign_action, verify_action] {
+        [this, show_hide_action, send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action] {
             if (show_hide_action) show_hide_action->setText(
                 (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
                     tr("&Hide") :
                     tr("S&how"));
-            if (enableWallet) {
-                send_action->setEnabled(sendCoinsAction->isEnabled());
-                receive_action->setEnabled(receiveCoinsAction->isEnabled());
-                sign_action->setEnabled(signMessageAction->isEnabled());
-                verify_action->setEnabled(verifyMessageAction->isEnabled());
+            if (QApplication::activeModalWidget()) {
+                for (QAction* a : trayIconMenu.get()->actions()) {
+                    a->setEnabled(false);
+                }
+            } else {
+                if (show_hide_action) show_hide_action->setEnabled(true);
+                if (enableWallet) {
+                    send_action->setEnabled(sendCoinsAction->isEnabled());
+                    receive_action->setEnabled(receiveCoinsAction->isEnabled());
+                    sign_action->setEnabled(signMessageAction->isEnabled());
+                    verify_action->setEnabled(verifyMessageAction->isEnabled());
+                }
+                options_action->setEnabled(optionsAction->isEnabled());
+                node_window_action->setEnabled(openRPCConsoleAction->isEnabled());
+                if (quit_action) quit_action->setEnabled(true);
             }
         });
 }
