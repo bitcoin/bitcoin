@@ -23,15 +23,51 @@
 #include <vector>
 
 namespace node {
+
 // Complete initialization of chainstates after the initial call has been made
 // to ChainstateManager::InitializeChainstate().
 static ChainstateLoadResult CompleteChainstateInitialization(
     ChainstateManager& chainman,
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
+    if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
+
+    // LoadBlockIndex will load m_have_pruned if we've ever removed a
+    // block file from disk.
+    // Note that it also sets fReindex global based on the disk flag!
+    // From here on, fReindex and options.reindex values may be different!
+    if (!chainman.LoadBlockIndex()) {
+        if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
+        return {ChainstateLoadStatus::FAILURE, _("Error loading block database")};
+    }
+
+    // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
+    // in the past, but is now trying to run unpruned.
+    if (chainman.m_blockman.m_have_pruned && !options.prune) {
+        return {ChainstateLoadStatus::FAILURE, _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain")};
+    }
+
+    if (!chainman.BlockIndex().empty() &&
+            !chainman.m_blockman.LookupBlockIndex(chainman.GetConsensus().hashGenesisBlock)) {
+        // If the loaded chain has a wrong genesis, bail out immediately
+        // (we're likely using a testnet datadir, or the other way around).
+        return {ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB, _("Incorrect or no genesis block found. Wrong datadir for network?")};
+    }
+
+    // At this point blocktree args are consistent with what's on disk.
+    // If we're not mid-reindex (based on disk + args), add a genesis block on disk
+    // (otherwise we use the one already on disk).
+    // This is called again in ThreadImport after the reindex completes.
+    if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock()) {
+        return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
+    }
+
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return options.reindex || options.reindex_chainstate || chainstate->CoinsTip().GetBestBlock().IsNull();
     };
+
+    assert(chainman.m_total_coinstip_cache > 0);
+    assert(chainman.m_total_coinsdb_cache > 0);
 
     // Conservative value which is arbitrarily chosen, as it will ultimately be changed
     // by a call to `chainman.MaybeRebalanceCaches()`. We just need to make sure
@@ -124,41 +160,46 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         }
     }
 
-    if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
-
-    // LoadBlockIndex will load m_have_pruned if we've ever removed a
-    // block file from disk.
-    // Note that it also sets fReindex global based on the disk flag!
-    // From here on, fReindex and options.reindex values may be different!
-    if (!chainman.LoadBlockIndex()) {
-        if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
-        return {ChainstateLoadStatus::FAILURE, _("Error loading block database")};
-    }
-
-    if (!chainman.BlockIndex().empty() &&
-            !chainman.m_blockman.LookupBlockIndex(chainman.GetConsensus().hashGenesisBlock)) {
-        // If the loaded chain has a wrong genesis, bail out immediately
-        // (we're likely using a testnet datadir, or the other way around).
-        return {ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB, _("Incorrect or no genesis block found. Wrong datadir for network?")};
-    }
-
-    // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
-    // in the past, but is now trying to run unpruned.
-    if (chainman.m_blockman.m_have_pruned && !options.prune) {
-        return {ChainstateLoadStatus::FAILURE, _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain")};
-    }
-
-    // At this point blocktree args are consistent with what's on disk.
-    // If we're not mid-reindex (based on disk + args), add a genesis block on disk
-    // (otherwise we use the one already on disk).
-    // This is called again in ThreadImport after the reindex completes.
-    if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock()) {
-        return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
-    }
-
     auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
     if (init_status != ChainstateLoadStatus::SUCCESS) {
         return {init_status, init_error};
+    }
+
+    // If a snapshot chainstate was fully validated by a background chainstate during
+    // the last run, detect it here and clean up the now-unneeded background
+    // chainstate. This is the expected case during snapshot completion, and
+    // not just a belt-and-suspenders.
+    auto snapshot_completion = chainman.MaybeCompleteSnapshotValidation();
+
+    if (snapshot_completion == SnapshotCompletionResult::SKIPPED) {
+        // do nothing; expected case
+    } else if (snapshot_completion == SnapshotCompletionResult::SUCCESS) {
+        LogPrintf("[snapshot] cleaning up unneeded background chainstate, then reinitializing\n");
+        if (!chainman.ValidatedSnapshotCleanup()) {
+            AbortNode("Background chainstate cleanup failed unexpectedly.");
+        }
+
+        // Because ValidatedSnapshotCleanup() has torn down chainstates with
+        // ChainstateManager::ResetChainstates(), reinitialize them here without
+        // duplicating the blockindex work above.
+        assert(chainman.GetAll().size() == 0);
+        assert(!chainman.IsSnapshotActive());
+        assert(!chainman.IsSnapshotValidated());
+
+        chainman.InitializeChainstate(options.mempool);
+
+        // A reload of the block index is required to recompute setBlockIndexCandidates
+        // for the fully validated chainstate.
+        chainman.ActiveChainstate().UnloadBlockIndex();
+
+        auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
+        if (init_status != ChainstateLoadStatus::SUCCESS) {
+            return {init_status, init_error};
+        }
+    } else {
+        return {ChainstateLoadStatus::FAILURE, _(
+           "UTXO snapshot failed to validate. "
+           "Restart to resume normal initial block download, or try loading a different snapshot.")};
     }
 
     return {ChainstateLoadStatus::SUCCESS, {}};
