@@ -805,15 +805,15 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 #else
             // Note: on macOS, the Dock icon is also used to provide menu functionality
             // similar to one for tray icon
+            dockIconMenu = new QMenu(this);
+            dockIconMenu->setAsDockMenu();
+            createIconMenu(dockIconMenu);
+
             MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
             connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, [this] {
                 showNormalIfMinimized();
                 activateWindow();
             });
-            dockIconMenu = new QMenu(this);
-            dockIconMenu->setAsDockMenu();
-
-            createIconMenu(dockIconMenu);
 #endif
         }
 
@@ -1044,7 +1044,8 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     // Note: On macOS, the Dock icon is used to provide the tray's functionality.
     trayIconMenu->addAction(toggleHideAction);
     trayIconMenu->addSeparator();
-#endif
+#endif // Q_OS_MAC
+
     if (enableWallet) {
         pmenu->addAction(sendCoinsMenuAction);
         pmenu->addAction(coinJoinCoinsMenuAction);
@@ -1067,10 +1068,11 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     if (enableWallet) {
         pmenu->addAction(showBackupsAction);
     }
-#ifndef Q_OS_MAC // This is built-in on macOS
+#ifndef Q_OS_MAC
+    // Note: On macOS, the Dock icon's menu already has Quit action.
     pmenu->addSeparator();
     pmenu->addAction(quitAction);
-#endif
+#endif // Q_OS_MAC
 }
 
 void BitcoinGUI::optionsClicked()
