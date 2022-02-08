@@ -177,6 +177,8 @@ static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
+/** Seed for the randomizer for the nonce field in version messages. SHA256("localhostnonce")[0:8] */
+static constexpr uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL;
 
 // Internal stuff
 namespace {
@@ -515,6 +517,8 @@ private:
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
+    bool CheckIncomingNonce(uint64_t nonce);
+
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
     PeerRef GetPeerRef(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -636,6 +640,10 @@ private:
     CNodeState* State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     uint32_t GetFetchFlags(const CNode& pfrom) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    Mutex m_version_nonces_mutex;
+    /** All nonce values in version messages that we've sent. */
+    std::map<NodeId, uint64_t> m_version_nonces GUARDED_BY(m_version_nonces_mutex);
 
     std::atomic<std::chrono::microseconds> m_next_inv_to_inbounds{0us};
 
@@ -1222,7 +1230,13 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     // peer.
     uint64_t my_services{pnode.GetLocalServices()};
     const int64_t nTime{count_seconds(GetTime<std::chrono::seconds>())};
-    uint64_t nonce = pnode.GetLocalNonce();
+    uint64_t nonce{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(pnode.GetId()).Finalize()};
+    // If this is an outbound connection, store the version nonce so we can check that
+    // we haven't connected to ourselves.
+    if (!pnode.IsInboundConn()) {
+        LOCK(m_version_nonces_mutex);
+        m_version_nonces.emplace_hint(m_version_nonces.end(), pnode.GetId(), nonce);
+    }
     const int nNodeStartingHeight{m_best_height};
     NodeId nodeid = pnode.GetId();
     CAddress addr = pnode.addr;
@@ -1294,6 +1308,13 @@ void PeerManagerImpl::InitializeNode(CNode *pnode)
     }
 }
 
+bool PeerManagerImpl::CheckIncomingNonce(uint64_t nonce)
+{
+    LOCK(m_version_nonces_mutex);
+    return std::all_of(m_version_nonces.begin(), m_version_nonces.end(),
+                       [&nonce](const auto& p) { return p.second != nonce; });
+}
+
 void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 {
     std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
@@ -1317,6 +1338,7 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
+    WITH_LOCK(m_version_nonces_mutex, m_version_nonces.erase(nodeid));
     int misbehavior{0};
     {
     LOCK(cs_main);
@@ -2709,7 +2731,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (!vRecv.empty())
             vRecv >> fRelay;
         // Disconnect if we connected to ourself
-        if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce))
+        if (pfrom.IsInboundConn() && !CheckIncomingNonce(nNonce))
         {
             LogPrintf("connected to self at %s, disconnecting\n", pfrom.addr.ToString());
             pfrom.fDisconnect = true;
@@ -2910,6 +2932,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // they may wish to request compact blocks from us
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
         }
+        WITH_LOCK(m_version_nonces_mutex, m_version_nonces.erase(pfrom.GetId()));
         pfrom.fSuccessfullyConnected = true;
         return;
     }
