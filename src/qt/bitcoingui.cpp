@@ -1081,19 +1081,33 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         // Using QSystemTrayIcon::Context is not reliable.
         // See https://bugreports.qt.io/browse/QTBUG-91697
         pmenu, &QMenu::aboutToShow,
-        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, repair_action, backups_action] {
+        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action, repair_action, backups_action, info_action, graph_action, peer_action, conf_action] {
             if (show_hide_action) show_hide_action->setText(
                 (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
                     tr("&Hide") :
                     tr("S&how"));
-            if (enableWallet) {
-                send_action->setEnabled(sendCoinsAction->isEnabled());
-                cj_send_action->setEnabled(coinJoinCoinsAction->isEnabled());
-                receive_action->setEnabled(receiveCoinsAction->isEnabled());
-                sign_action->setEnabled(signMessageAction->isEnabled());
-                verify_action->setEnabled(verifyMessageAction->isEnabled());
-                repair_action->setEnabled(openRepairAction->isEnabled());
-                backups_action->setEnabled(showBackupsAction->isEnabled());
+            if (QApplication::activeModalWidget()) {
+                for (QAction* a : trayIconMenu.get()->actions()) {
+                    a->setEnabled(false);
+                }
+            } else {
+                if (show_hide_action) show_hide_action->setEnabled(true);
+                if (enableWallet) {
+                    send_action->setEnabled(sendCoinsAction->isEnabled());
+                    cj_send_action->setEnabled(coinJoinCoinsAction->isEnabled());
+                    receive_action->setEnabled(receiveCoinsAction->isEnabled());
+                    sign_action->setEnabled(signMessageAction->isEnabled());
+                    verify_action->setEnabled(verifyMessageAction->isEnabled());
+                    repair_action->setEnabled(openRepairAction->isEnabled());
+                    backups_action->setEnabled(showBackupsAction->isEnabled());
+                }
+                options_action->setEnabled(optionsAction->isEnabled());
+                info_action->setEnabled(openInfoAction->isEnabled());
+                node_window_action->setEnabled(openRPCConsoleAction->isEnabled());
+                graph_action->setEnabled(openGraphAction->isEnabled());
+                peer_action->setEnabled(openPeersAction->isEnabled());
+                conf_action->setEnabled(openConfEditorAction->isEnabled());
+                if (quit_action) quit_action->setEnabled(true);
             }
         });
 }
