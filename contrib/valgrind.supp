@@ -13,8 +13,8 @@
 #
 # Note that suppressions may depend on OS and/or library versions.
 # Tested on:
-# * aarch64 (Ubuntu 20.04 system libs, without gui)
-# * x86_64  (Ubuntu 18.04 system libs, without gui)
+# * aarch64 (Ubuntu 22.04 system libs, clang, without gui)
+# * x86_64  (Ubuntu 22.04 system libs, clang, without gui)
 {
    Suppress libstdc++ warning - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65434
    Memcheck:Leak
@@ -113,12 +113,6 @@
    fun:GetCoin
 }
 {
-   Suppress wcsnrtombs glibc SSE4 warning (could be related: https://stroika.atlassian.net/browse/STK-626)
-   Memcheck:Addr16
-   fun:__wcsnlen_sse4_1
-   fun:wcsnrtombs
-}
-{
    Suppress boost warning
    Memcheck:Leak
    fun:_Znwm
@@ -127,17 +121,6 @@
    fun:_ZN5boost9unit_test9framework3runEmb
    fun:_ZN5boost9unit_test14unit_test_mainEPFbvEiPPc
    fun:main
-}
-{
-   Suppress boost still reachable memory warning
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:_Znwm
-   ...
-   fun:_M_construct_aux<char*>
-   fun:_M_construct<char*>
-   fun:basic_string
-   fun:path
 }
 {
    Suppress LogInstance still reachable memory warning
