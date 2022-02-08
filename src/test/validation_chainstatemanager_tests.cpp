@@ -185,7 +185,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         Chainstate& validation_chainstate = chainman.ActiveChainstate();
 
         // Snapshot should refuse to load at this height.
-        BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(m_node, m_path_root));
+        BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(this));
         BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash);
         BOOST_CHECK(!chainman.SnapshotBlockhash());
 
@@ -198,7 +198,7 @@ struct SnapshotTestSetup : TestChain100Setup {
 
         // Should not load malleated snapshots
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
                 // A UTXO is missing but count is correct
                 metadata.m_coins_count -= 1;
 
@@ -209,27 +209,27 @@ struct SnapshotTestSetup : TestChain100Setup {
                 auto_infile >> coin;
         }));
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
                 // Coins count is larger than coins in file
                 metadata.m_coins_count += 1;
         }));
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
                 // Coins count is smaller than coins in file
                 metadata.m_coins_count -= 1;
         }));
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
                 // Wrong hash
                 metadata.m_base_blockhash = uint256::ZERO;
         }));
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
                 // Wrong hash
                 metadata.m_base_blockhash = uint256::ONE;
         }));
 
-        BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(m_node, m_path_root));
+        BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(this));
 
         // Ensure our active chain is the snapshot chainstate.
         BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash->IsNull());
@@ -320,7 +320,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         }
 
         // Snapshot should refuse to load after one has already loaded.
-        BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(m_node, m_path_root));
+        BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(this));
 
         // Snapshot blockhash should be unchanged.
         BOOST_CHECK_EQUAL(
