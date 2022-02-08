@@ -118,8 +118,13 @@ if BUILD_BITCOIN_CHAINSTATE
 endif
 
 .PHONY: FORCE check-symbols check-security
+
+BITCOIN_KERNEL_H = \
+  kernel/timedata.h
+
 # bitcoin core #
 BITCOIN_CORE_H = \
+  $(BITCOIN_KERNEL_H) \
   addrdb.h \
   addrman.h \
   addrman_impl.h \
