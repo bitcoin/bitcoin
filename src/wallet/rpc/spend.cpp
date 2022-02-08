@@ -21,7 +21,8 @@
 
 
 namespace wallet {
-static void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, std::vector<CRecipient> &recipients) {
+static void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, std::vector<CRecipient> &recipients)
+{
     std::set<CTxDestination> destinations;
     int i = 0;
     for (const std::string& address: address_amounts.getKeys()) {
@@ -48,6 +49,28 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
 
         CRecipient recipient = {script_pub_key, amount, subtract_fee};
         recipients.push_back(recipient);
+    }
+}
+
+static void PreventOutdatedOptions(const UniValue& options)
+{
+    if (options.exists("feeRate")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use fee_rate (" + CURRENCY_ATOM + "/vB) instead of feeRate");
+    }
+    if (options.exists("changeAddress")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_address");
+    }
+    if (options.exists("changePosition")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position");
+    }
+    if (options.exists("includeWatching")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching");
+    }
+    if (options.exists("lockUnspents")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents");
+    }
+    if (options.exists("subtractFeeFromOutputs")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use subtract_fee_from_outputs");
     }
 }
 
@@ -1144,24 +1167,7 @@ RPCHelpMan send()
             if (!options["conf_target"].isNull() && (options["estimate_mode"].isNull() || (options["estimate_mode"].get_str() == "unset"))) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
             }
-            if (options.exists("feeRate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use fee_rate (" + CURRENCY_ATOM + "/vB) instead of feeRate");
-            }
-            if (options.exists("changeAddress")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_address");
-            }
-            if (options.exists("changePosition")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position");
-            }
-            if (options.exists("includeWatching")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching");
-            }
-            if (options.exists("lockUnspents")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents");
-            }
-            if (options.exists("subtractFeeFromOutputs")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Use subtract_fee_from_outputs");
-            }
+            PreventOutdatedOptions(options);
 
             const bool psbt_opt_in = options.exists("psbt") && options["psbt"].get_bool();
 
