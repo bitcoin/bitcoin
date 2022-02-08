@@ -15,7 +15,7 @@ AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
 
-lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
+lib_LTLIBRARIES =
 noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
@@ -895,6 +895,8 @@ bitcoin_chainstate-clientversion.$(OBJEXT): obj/build.h
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
+lib_LTLIBRARIES += $(LIBBITCOINCONSENSUS)
+
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
