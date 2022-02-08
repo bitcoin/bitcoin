@@ -567,6 +567,8 @@ private:
     void HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer, const std::vector<CBlockHeader>& headers);
     /** Return true if the headers connect to each other, false otherwise */
     bool CheckHeadersAreContinuous(const std::vector<CBlockHeader>& headers) const;
+    /** Request further headers from this peer from a given block header */
+    void FetchMoreHeaders(CNode& pfrom, const CBlockIndex *pindexLast, const Peer& peer);
 
     void SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlock& block, const BlockTransactionsRequest& req);
 
@@ -2255,6 +2257,25 @@ bool PeerManagerImpl::CheckHeadersAreContinuous(const std::vector<CBlockHeader>&
     return true;
 }
 
+/*
+ * Continue fetching headers from a given point.
+ * pindexLast should be the last header we learned from a peer in their prior
+ * headers message.
+ *
+ * This is used for headers sync with a peer; even if pindexLast is an ancestor
+ * of a known chain (such as our tip) we don't yet know where the peer's chain
+ * might fork from what we know, so we continue exactly from where the peer
+ * left off.
+ */
+void PeerManagerImpl::FetchMoreHeaders(CNode& pfrom, const CBlockIndex *pindexLast, const Peer& peer)
+{
+    const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
+
+    LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n",
+            pindexLast->nHeight, pfrom.GetId(), peer.m_starting_height);
+    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETHEADERS, m_chainman.ActiveChain().GetLocator(pindexLast), uint256()));
+}
+
 void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
                                             const std::vector<CBlockHeader>& headers,
                                             bool via_compact_block)
@@ -2309,6 +2330,12 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         }
     }
 
+    // Consider fetching more headers.
+    if (nCount == MAX_HEADERS_RESULTS) {
+        // Headers message had its maximum size; the peer may have more headers.
+        FetchMoreHeaders(pfrom, pindexLast, peer);
+    }
+
     {
         LOCK(cs_main);
         CNodeState *nodestate = State(pfrom.GetId());
@@ -2326,15 +2353,6 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
 
         if (received_new_header && pindexLast->nChainWork > m_chainman.ActiveChain().Tip()->nChainWork) {
             nodestate->m_last_block_announcement = GetTime();
-        }
-
-        if (nCount == MAX_HEADERS_RESULTS) {
-            // Headers message had its maximum size; the peer may have more headers.
-            // TODO: optimize: if pindexLast is an ancestor of m_chainman.ActiveChain().Tip or m_chainman.m_best_header, continue
-            // from there instead.
-            LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n",
-                                 pindexLast->nHeight, pfrom.GetId(), peer.m_starting_height);
-            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETHEADERS, m_chainman.ActiveChain().GetLocator(pindexLast), uint256()));
         }
 
         // If this set of headers is valid and ends in a block with at least as
