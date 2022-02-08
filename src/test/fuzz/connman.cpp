@@ -63,9 +63,6 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.AddNode(random_string);
             },
             [&] {
-                connman.CheckIncomingNonce(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
-            },
-            [&] {
                 connman.DisconnectNode(fuzzed_data_provider.ConsumeIntegral<NodeId>());
             },
             [&] {

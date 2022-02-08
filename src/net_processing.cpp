@@ -174,6 +174,8 @@ static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
+/** Seed for the randomizer for the nonce field in version messages. SHA256("localhostnonce")[0:8] */
+static constexpr uint64_t RANDOMIZER_ID_LOCALHOSTNONCE{0xd93e69e2bbfa5735ULL};
 
 // Internal stuff
 namespace {
@@ -501,10 +503,12 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
 
     /** Implement NetEventsInterface */
-    void InitializeNode(CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex);
+    void InitializeNode(CNode& node, ServiceFlags our_services) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_version_nonces_mutex);
+    void FinalizeNode(const CNode& node) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex, !m_version_nonces_mutex);
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, !m_version_nonces_mutex, g_msgproc_mutex);
     bool SendMessages(CNode* pto) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, g_msgproc_mutex);
 
@@ -521,7 +525,7 @@ public:
     void UnitTestMisbehaving(NodeId peer_id, int howmuch) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), howmuch, ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, !m_version_nonces_mutex, g_msgproc_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
 
 private:
@@ -533,6 +537,9 @@ private:
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    bool CheckIncomingNonce(uint64_t nonce)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_version_nonces_mutex);
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -675,7 +682,8 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Send a version message to a peer */
-    void PushNodeVersion(CNode& pnode, const Peer& peer);
+    void PushNodeVersion(CNode& pnode, const Peer& peer)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_version_nonces_mutex);
 
     /** Send a ping message every PING_INTERVAL or if requested via RPC. May
      *  mark the peer to be disconnected if a ping has timed out.
@@ -745,6 +753,10 @@ private:
     CNodeState* State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     uint32_t GetFetchFlags(const Peer& peer) const;
+
+    Mutex m_version_nonces_mutex;
+    /** All nonce values in version messages that we've sent. */
+    std::map<NodeId, uint64_t> m_version_nonces GUARDED_BY(m_version_nonces_mutex);
 
     std::atomic<std::chrono::microseconds> m_next_inv_to_inbounds{0us};
 
@@ -1411,7 +1423,13 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 {
     uint64_t my_services{peer.m_our_services};
     const int64_t nTime{count_seconds(GetTime<std::chrono::seconds>())};
-    uint64_t nonce = pnode.GetLocalNonce();
+    uint64_t nonce{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(pnode.GetId()).Finalize()};
+    // If this is an outbound connection, store the version nonce so we can check that
+    // we haven't connected to ourselves.
+    if (!pnode.IsInboundConn()) {
+        LOCK(m_version_nonces_mutex);
+        m_version_nonces.emplace_hint(m_version_nonces.end(), pnode.GetId(), nonce);
+    }
     const int nNodeStartingHeight{m_best_height};
     NodeId nodeid = pnode.GetId();
     CAddress addr = pnode.addr;
@@ -1484,6 +1502,13 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
     }
 }
 
+bool PeerManagerImpl::CheckIncomingNonce(uint64_t nonce)
+{
+    LOCK(m_version_nonces_mutex);
+    return std::all_of(m_version_nonces.begin(), m_version_nonces.end(),
+                       [&nonce](const auto& p) { return p.second != nonce; });
+}
+
 void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 {
     std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
@@ -1507,6 +1532,7 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
+    WITH_LOCK(m_version_nonces_mutex, m_version_nonces.erase(nodeid));
     int misbehavior{0};
     {
     LOCK(cs_main);
@@ -3338,7 +3364,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (!vRecv.empty())
             vRecv >> fRelay;
         // Disconnect if we connected to ourself
-        if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce))
+        if (pfrom.IsInboundConn() && !CheckIncomingNonce(nNonce))
         {
             LogPrintf("connected to self at %s, disconnecting\n", pfrom.addr.ToStringAddrPort());
             pfrom.fDisconnect = true;
@@ -3552,6 +3578,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                        tx_relay->m_next_inv_send_time == 0s));
         }
 
+        // Entries in `m_version_nonces` are only used to detect self-connects.
+        // At this point we can be sure that we did not connect to ourselves,
+        // so the entry is no longer needed.
+        WITH_LOCK(m_version_nonces_mutex, m_version_nonces.erase(pfrom.GetId()));
         pfrom.fSuccessfullyConnected = true;
         return;
     }

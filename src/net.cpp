@@ -105,7 +105,6 @@ static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 50;
 const std::string NET_MESSAGE_TYPE_OTHER = "*other*";
 
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
-static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // SHA256("localhostnonce")[0:8]
 static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256("addrcache")[0:8]
 //
 // Global state variables
@@ -421,16 +420,6 @@ bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
     return FindNode(static_cast<CNetAddr>(addr)) || FindNode(addr.ToStringAddrPort());
 }
 
-bool CConnman::CheckIncomingNonce(uint64_t nonce)
-{
-    LOCK(m_nodes_mutex);
-    for (const CNode* pnode : m_nodes) {
-        if (!pnode->fSuccessfullyConnected && !pnode->IsInboundConn() && pnode->GetLocalNonce() == nonce)
-            return false;
-    }
-    return true;
-}
-
 /** Get the bind address for a socket as CAddress */
 static CAddress GetBindAddress(const Sock& sock)
 {
@@ -572,7 +561,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
     // Add node
     NodeId id = GetNewNodeId();
-    uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
     if (!addr_bind.IsValid()) {
         addr_bind = GetBindAddress(*sock);
     }
@@ -580,7 +568,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              std::move(sock),
                              addrConnect,
                              CalculateKeyedNetGroup(addrConnect),
-                             nonce,
                              addr_bind,
                              pszDest ? pszDest : "",
                              conn_type,
@@ -1810,7 +1797,6 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     }
 
     NodeId id = GetNewNodeId();
-    uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
 
     ServiceFlags nodeServices = nLocalServices;
     if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::BloomFilter)) {
@@ -1822,7 +1808,6 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                              std::move(sock),
                              addr,
                              CalculateKeyedNetGroup(addr),
-                             nonce,
                              addr_bind,
                              /*addrNameIn=*/"",
                              ConnectionType::INBOUND,
@@ -3596,7 +3581,6 @@ CNode::CNode(NodeId idIn,
              std::shared_ptr<Sock> sock,
              const CAddress& addrIn,
              uint64_t nKeyedNetGroupIn,
-             uint64_t nLocalHostNonceIn,
              const CAddress& addrBindIn,
              const std::string& addrNameIn,
              ConnectionType conn_type_in,
@@ -3614,7 +3598,6 @@ CNode::CNode(NodeId idIn,
       nKeyedNetGroup{nKeyedNetGroupIn},
       m_conn_type{conn_type_in},
       id{idIn},
-      nLocalHostNonce{nLocalHostNonceIn},
       m_recv_flood_size{node_opts.recv_flood_size},
       m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
 {
