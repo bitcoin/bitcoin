@@ -1043,39 +1043,45 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     QAction* send_action{nullptr};
     QAction* cj_send_action{nullptr};
     QAction* receive_action{nullptr};
+    QAction* sign_action{nullptr};
+    QAction* verify_action{nullptr};
     if (enableWallet) {
         send_action = pmenu->addAction(sendCoinsAction->text(), sendCoinsAction, &QAction::trigger);
         cj_send_action = pmenu->addAction(coinJoinCoinsAction->text(), coinJoinCoinsAction, &QAction::trigger);
         receive_action = pmenu->addAction(receiveCoinsAction->text(), receiveCoinsAction, &QAction::trigger);
         pmenu->addSeparator();
-        pmenu->addAction(signMessageAction);
-        pmenu->addAction(verifyMessageAction);
+        sign_action = pmenu->addAction(signMessageAction->text(), signMessageAction, &QAction::trigger);
+        verify_action = pmenu->addAction(verifyMessageAction->text(), verifyMessageAction, &QAction::trigger);
         pmenu->addSeparator();
     }
-    pmenu->addAction(optionsAction);
-    pmenu->addAction(openInfoAction);
-    pmenu->addAction(openRPCConsoleAction);
-    pmenu->addAction(openGraphAction);
-    pmenu->addAction(openPeersAction);
+    QAction* options_action = pmenu->addAction(optionsAction->text(), optionsAction, &QAction::trigger);
+    options_action->setMenuRole(QAction::PreferencesRole);
+    QAction* info_action = pmenu->addAction(openInfoAction->text(), openInfoAction, &QAction::trigger);
+    QAction* node_window_action = pmenu->addAction(openRPCConsoleAction->text(), openRPCConsoleAction, &QAction::trigger);
+    QAction* graph_action = pmenu->addAction(openGraphAction->text(), openGraphAction, &QAction::trigger);
+    QAction* peer_action = pmenu->addAction(openPeersAction->text(), openPeersAction, &QAction::trigger);
+    QAction* repair_action{nullptr};
     if (enableWallet) {
-        pmenu->addAction(openRepairAction);
+        repair_action = pmenu->addAction(openRepairAction->text(), openRepairAction, &QAction::trigger);
     }
     pmenu->addSeparator();
-    pmenu->addAction(openConfEditorAction);
+    QAction* conf_action = pmenu->addAction(openConfEditorAction->text(), openConfEditorAction, &QAction::trigger);
+    QAction* backups_action{nullptr};
     if (enableWallet) {
-        pmenu->addAction(showBackupsAction);
+        backups_action = pmenu->addAction(showBackupsAction->text(), showBackupsAction, &QAction::trigger);
     }
+    QAction* quit_action{nullptr};
 #ifndef Q_OS_MAC
     // Note: On macOS, the Dock icon's menu already has Quit action.
     pmenu->addSeparator();
-    pmenu->addAction(quitAction);
+    quit_action = pmenu->addAction(quitAction->text(), quitAction, &QAction::trigger);
 #endif // Q_OS_MAC
 
     connect(
         // Using QSystemTrayIcon::Context is not reliable.
         // See https://bugreports.qt.io/browse/QTBUG-91697
         pmenu, &QMenu::aboutToShow,
-        [this, show_hide_action, send_action, cj_send_action, receive_action] {
+        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, repair_action, backups_action] {
             if (show_hide_action) show_hide_action->setText(
                 (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
                     tr("&Hide") :
@@ -1084,6 +1090,10 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
                 send_action->setEnabled(sendCoinsAction->isEnabled());
                 cj_send_action->setEnabled(coinJoinCoinsAction->isEnabled());
                 receive_action->setEnabled(receiveCoinsAction->isEnabled());
+                sign_action->setEnabled(signMessageAction->isEnabled());
+                verify_action->setEnabled(verifyMessageAction->isEnabled());
+                repair_action->setEnabled(openRepairAction->isEnabled());
+                backups_action->setEnabled(showBackupsAction->isEnabled());
             }
         });
 }
