@@ -463,6 +463,8 @@ private:
         const std::map<std::string, std::vector<util::SettingsValue>>& args) const;
 };
 
+void SetupDatadir(fs::path path);
+
 extern ArgsManager gArgs;
 
 /**
