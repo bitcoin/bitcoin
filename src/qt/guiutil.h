@@ -613,7 +613,7 @@ namespace GUIUtil
     /**
      * Shows a QDialog instance asynchronously, and deletes it on close.
      */
-    void ShowModalDialogAndDeleteOnClose(QDialog* dialog);
+    void ShowModalDialogAsynchronously(QDialog* dialog);
 
 } // namespace GUIUtil
 

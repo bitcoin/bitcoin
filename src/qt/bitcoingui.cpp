@@ -1123,7 +1123,7 @@ void BitcoinGUI::aboutClicked()
         return;
 
     auto dlg = new HelpMessageDialog(this, HelpMessageDialog::about);
-    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 
 void BitcoinGUI::showDebugWindow()
@@ -1385,7 +1385,7 @@ void BitcoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     connect(dlg, &OptionsDialog::appearanceChanged, [this]() {
         updateWidth();
     });
-    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg);
 
     updateCoinJoinVisibility();
 }
