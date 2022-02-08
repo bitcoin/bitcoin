@@ -143,8 +143,8 @@ private:
     QToolButton* governanceButton = nullptr;
     QAction* appToolBarLogoAction = nullptr;
     QAction* quitAction = nullptr;
-    QAction* sendCoinsMenuAction = nullptr;
-    QAction* coinJoinCoinsMenuAction = nullptr;
+    QAction* sendCoinsAction = nullptr;
+    QAction* coinJoinCoinsAction = nullptr;
     QAction* usedSendingAddressesAction = nullptr;
     QAction* usedReceivingAddressesAction = nullptr;
     QAction* signMessageAction = nullptr;
@@ -152,7 +152,7 @@ private:
     QAction* m_load_psbt_action = nullptr;
     QAction* m_load_psbt_clipboard_action = nullptr;
     QAction* aboutAction = nullptr;
-    QAction* receiveCoinsMenuAction = nullptr;
+    QAction* receiveCoinsAction = nullptr;
     QAction* optionsAction = nullptr;
     QAction* encryptWalletAction = nullptr;
     QAction* backupWalletAction = nullptr;

@@ -354,28 +354,26 @@ void BitcoinGUI::stopConnectingAnimation()
 
 void BitcoinGUI::createActions()
 {
-    sendCoinsMenuAction = new QAction(tr("&Send"), this);
-    sendCoinsMenuAction->setStatusTip(tr("Send coins to a Dash address"));
-    sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
-
+    sendCoinsAction = new QAction(tr("&Send"), this);
+    sendCoinsAction->setStatusTip(tr("Send coins to a Dash address"));
     QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
-    coinJoinCoinsMenuAction = new QAction(QString("&%1").arg(strCoinJoinName), this);
-    coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Dash address").arg(strCoinJoinName));
-    coinJoinCoinsMenuAction->setToolTip(coinJoinCoinsMenuAction->statusTip());
+    coinJoinCoinsAction = new QAction(QString("&%1").arg(strCoinJoinName), this);
+    coinJoinCoinsAction->setStatusTip(tr("Send %1 funds to a Dash address").arg(strCoinJoinName));
+    coinJoinCoinsAction->setToolTip(coinJoinCoinsAction->statusTip());
 
-    receiveCoinsMenuAction = new QAction(tr("&Receive"), this);
-    receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
-    receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
+    receiveCoinsAction = new QAction(tr("&Receive"), this);
+    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
+    receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
 
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
-    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(coinJoinCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(receiveCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
-    connect(coinJoinCoinsMenuAction, &QAction::triggered, [this]{ gotoCoinJoinCoinsPage(); });
-    connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
+    connect(sendCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(sendCoinsAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
+    connect(coinJoinCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(coinJoinCoinsAction, &QAction::triggered, [this]{ gotoCoinJoinCoinsPage(); });
+    connect(receiveCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(receiveCoinsAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
 #endif
 
     quitAction = new QAction(tr("E&xit"), this);
@@ -681,13 +679,13 @@ void BitcoinGUI::createToolBars()
         tabGroup->addButton(overviewButton);
 
         sendCoinsButton = new QToolButton(this);
-        sendCoinsButton->setText(sendCoinsMenuAction->text());
-        sendCoinsButton->setStatusTip(sendCoinsMenuAction->statusTip());
+        sendCoinsButton->setText(sendCoinsAction->text());
+        sendCoinsButton->setStatusTip(sendCoinsAction->statusTip());
         tabGroup->addButton(sendCoinsButton);
 
         receiveCoinsButton = new QToolButton(this);
-        receiveCoinsButton->setText(receiveCoinsMenuAction->text());
-        receiveCoinsButton->setStatusTip(receiveCoinsMenuAction->statusTip());
+        receiveCoinsButton->setText(receiveCoinsAction->text());
+        receiveCoinsButton->setStatusTip(receiveCoinsAction->statusTip());
         tabGroup->addButton(receiveCoinsButton);
 
         historyButton = new QToolButton(this);
@@ -696,8 +694,8 @@ void BitcoinGUI::createToolBars()
         tabGroup->addButton(historyButton);
 
         coinJoinCoinsButton = new QToolButton(this);
-        coinJoinCoinsButton->setText(coinJoinCoinsMenuAction->text());
-        coinJoinCoinsButton->setStatusTip(coinJoinCoinsMenuAction->statusTip());
+        coinJoinCoinsButton->setText(coinJoinCoinsAction->text());
+        coinJoinCoinsButton->setStatusTip(coinJoinCoinsAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
 
         QSettings settings;
@@ -999,13 +997,13 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     }
 #endif // ENABLE_WALLET
 
-    sendCoinsMenuAction->setEnabled(enabled);
+    sendCoinsAction->setEnabled(enabled);
 #ifdef ENABLE_WALLET
-    coinJoinCoinsMenuAction->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
+    coinJoinCoinsAction->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
 #else
-    coinJoinCoinsMenuAction->setEnabled(enabled);
+    coinJoinCoinsAction->setEnabled(enabled);
 #endif // ENABLE_WALLET
-    receiveCoinsMenuAction->setEnabled(enabled);
+    receiveCoinsAction->setEnabled(enabled);
 
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -1042,10 +1040,13 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     pmenu->addSeparator();
 #endif // Q_OS_MAC
 
+    QAction* send_action{nullptr};
+    QAction* cj_send_action{nullptr};
+    QAction* receive_action{nullptr};
     if (enableWallet) {
-        pmenu->addAction(sendCoinsMenuAction);
-        pmenu->addAction(coinJoinCoinsMenuAction);
-        pmenu->addAction(receiveCoinsMenuAction);
+        send_action = pmenu->addAction(sendCoinsAction->text(), sendCoinsAction, &QAction::trigger);
+        cj_send_action = pmenu->addAction(coinJoinCoinsAction->text(), coinJoinCoinsAction, &QAction::trigger);
+        receive_action = pmenu->addAction(receiveCoinsAction->text(), receiveCoinsAction, &QAction::trigger);
         pmenu->addSeparator();
         pmenu->addAction(signMessageAction);
         pmenu->addAction(verifyMessageAction);
@@ -1074,11 +1075,16 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         // Using QSystemTrayIcon::Context is not reliable.
         // See https://bugreports.qt.io/browse/QTBUG-91697
         pmenu, &QMenu::aboutToShow,
-        [this, show_hide_action] {
+        [this, show_hide_action, send_action, cj_send_action, receive_action] {
             if (show_hide_action) show_hide_action->setText(
                 (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
                     tr("&Hide") :
                     tr("S&how"));
+            if (enableWallet) {
+                send_action->setEnabled(sendCoinsAction->isEnabled());
+                cj_send_action->setEnabled(coinJoinCoinsAction->isEnabled());
+                receive_action->setEnabled(receiveCoinsAction->isEnabled());
+            }
         });
 }
 
@@ -1390,7 +1396,7 @@ void BitcoinGUI::updateCoinJoinVisibility()
         coinJoinCoinsButton->setVisible(fEnabled);
         GUIUtil::updateButtonGroupShortcuts(tabGroup);
     }
-    coinJoinCoinsMenuAction->setVisible(fEnabled);
+    coinJoinCoinsAction->setVisible(fEnabled);
     showCoinJoinHelpAction->setVisible(fEnabled);
     updateWidth();
 }
