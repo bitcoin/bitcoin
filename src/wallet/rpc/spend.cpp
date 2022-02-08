@@ -52,6 +52,28 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
     }
 }
 
+static void InterpretFeeEstimationInstructions(const UniValue& conf_target, const UniValue& estimate_mode, const UniValue& fee_rate, UniValue& options)
+{
+    if (options.exists("conf_target") || options.exists("estimate_mode")) {
+        if (!conf_target.isNull() || !estimate_mode.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Pass conf_target and estimate_mode either as arguments or in the options object, but not both");
+        }
+    } else {
+        options.pushKV("conf_target", conf_target);
+        options.pushKV("estimate_mode", estimate_mode);
+    }
+    if (options.exists("fee_rate")) {
+        if (!fee_rate.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Pass the fee_rate either as an argument, or in the options object, but not both");
+        }
+    } else {
+        options.pushKV("fee_rate", fee_rate);
+    }
+    if (!options["conf_target"].isNull() && (options["estimate_mode"].isNull() || (options["estimate_mode"].get_str() == "unset"))) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
+    }
+}
+
 static void PreventOutdatedOptions(const UniValue& options)
 {
     if (options.exists("feeRate")) {
@@ -1149,24 +1171,7 @@ RPCHelpMan send()
             if (!pwallet) return NullUniValue;
 
             UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4]};
-            if (options.exists("conf_target") || options.exists("estimate_mode")) {
-                if (!request.params[1].isNull() || !request.params[2].isNull()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Pass conf_target and estimate_mode either as arguments or in the options object, but not both");
-                }
-            } else {
-                options.pushKV("conf_target", request.params[1]);
-                options.pushKV("estimate_mode", request.params[2]);
-            }
-            if (options.exists("fee_rate")) {
-                if (!request.params[3].isNull()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Pass the fee_rate either as an argument, or in the options object, but not both");
-                }
-            } else {
-                options.pushKV("fee_rate", request.params[3]);
-            }
-            if (!options["conf_target"].isNull() && (options["estimate_mode"].isNull() || (options["estimate_mode"].get_str() == "unset"))) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
-            }
+            InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
             PreventOutdatedOptions(options);
 
             const bool psbt_opt_in = options.exists("psbt") && options["psbt"].get_bool();
