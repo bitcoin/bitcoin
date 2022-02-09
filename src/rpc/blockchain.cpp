@@ -784,8 +784,8 @@ static RPCHelpMan getblockfrompeer()
         "Subsequent calls for the same block and a new peer will cause the response from the previous peer to be ignored.\n"
         "\nReturns an empty JSON object if the request was successfully scheduled.",
         {
-            {"block_hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
-            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
+            {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for node IDs)"},
         },
         RPCResult{RPCResult::Type::OBJ_EMPTY, "", /*optional=*/ false, "", {}},
         RPCExamples{
@@ -798,7 +798,7 @@ static RPCHelpMan getblockfrompeer()
     ChainstateManager& chainman = EnsureChainman(node);
     PeerManager& peerman = EnsurePeerman(node);
 
-    const uint256& block_hash{ParseHashV(request.params[0], "block_hash")};
+    const uint256& block_hash{ParseHashV(request.params[0], "blockhash")};
     const NodeId peer_id{request.params[1].get_int64()};
 
     const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
