@@ -180,7 +180,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.banman.reset();
     m_node.addrman.reset();
     m_node.args = nullptr;
-    UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
+    WITH_LOCK(::cs_main, UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman));
     m_node.mempool.reset();
     m_node.scheduler.reset();
     m_node.chainman->Reset();

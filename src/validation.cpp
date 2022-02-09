@@ -4028,7 +4028,7 @@ void CChainState::UnloadBlockIndex() {
 // block index state
 void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
 {
-    LOCK(cs_main);
+    AssertLockHeld(::cs_main);
     chainman.Unload();
     pindexBestHeader = nullptr;
     if (mempool) mempool->clear();
