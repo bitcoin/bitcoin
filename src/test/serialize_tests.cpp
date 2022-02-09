@@ -215,51 +215,6 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 }
 
-BOOST_AUTO_TEST_CASE(insert_delete)
-{
-    constexpr auto B2I{[](std::byte b) { return std::to_integer<uint8_t>(b); }};
-
-    // Test inserting/deleting bytes.
-    CDataStream ss(SER_DISK, 0);
-    BOOST_CHECK_EQUAL(ss.size(), 0U);
-
-    ss.write(MakeByteSpan("\x00\x01\x02\xff").first(4));
-    BOOST_CHECK_EQUAL(ss.size(), 4U);
-
-    uint8_t c{11};
-
-    // Inserting at beginning/end/middle:
-    ss.insert(ss.begin(), std::byte{c});
-    BOOST_CHECK_EQUAL(ss.size(), 5U);
-    BOOST_CHECK_EQUAL(B2I(ss[0]), c);
-    BOOST_CHECK_EQUAL(B2I(ss[1]), 0);
-
-    ss.insert(ss.end(), std::byte{c});
-    BOOST_CHECK_EQUAL(ss.size(), 6U);
-    BOOST_CHECK_EQUAL(B2I(ss[4]), 0xff);
-    BOOST_CHECK_EQUAL(B2I(ss[5]), c);
-
-    ss.insert(ss.begin() + 2, std::byte{c});
-    BOOST_CHECK_EQUAL(ss.size(), 7U);
-    BOOST_CHECK_EQUAL(B2I(ss[2]), c);
-
-    // Delete at beginning/end/middle
-    ss.erase(ss.begin());
-    BOOST_CHECK_EQUAL(ss.size(), 6U);
-    BOOST_CHECK_EQUAL(B2I(ss[0]), 0);
-
-    ss.erase(ss.begin()+ss.size()-1);
-    BOOST_CHECK_EQUAL(ss.size(), 5U);
-    BOOST_CHECK_EQUAL(B2I(ss[4]), 0xff);
-
-    ss.erase(ss.begin()+1);
-    BOOST_CHECK_EQUAL(ss.size(), 4U);
-    BOOST_CHECK_EQUAL(B2I(ss[0]), 0);
-    BOOST_CHECK_EQUAL(B2I(ss[1]), 1);
-    BOOST_CHECK_EQUAL(B2I(ss[2]), 2);
-    BOOST_CHECK_EQUAL(B2I(ss[3]), 0xff);
-}
-
 BOOST_AUTO_TEST_CASE(class_methods)
 {
     int intval(100);
