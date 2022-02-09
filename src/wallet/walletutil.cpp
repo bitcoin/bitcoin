@@ -13,7 +13,7 @@ fs::path GetWalletDir()
     fs::path path;
 
     if (gArgs.IsArgSet("-walletdir")) {
-        path = fs::PathFromString(gArgs.GetArg("-walletdir", ""));
+        path = gArgs.GetPathArg("-walletdir");
         if (!fs::is_directory(path)) {
             // If the path specified doesn't exist, we return the deliberately
             // invalid empty string.

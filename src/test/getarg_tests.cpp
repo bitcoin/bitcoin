@@ -159,6 +159,98 @@ BOOST_AUTO_TEST_CASE(intarg)
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 0);
 }
 
+BOOST_AUTO_TEST_CASE(patharg)
+{
+    const auto dir = std::make_pair("-dir", ArgsManager::ALLOW_ANY);
+    SetupArgs({dir});
+    ResetArgs("");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), fs::path{});
+
+    const fs::path root_path{"/"};
+    ResetArgs("-dir=/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+    ResetArgs("-dir=/.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+    ResetArgs("-dir=/./");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+    ResetArgs("-dir=/.//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+#ifdef WIN32
+    const fs::path win_root_path{"C:\\"};
+    ResetArgs("-dir=C:\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\.\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\.\\\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+#endif
+
+    const fs::path absolute_path{"/home/user/.bitcoin"};
+    ResetArgs("-dir=/home/user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/root/../home/user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/./user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/./");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/.//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    const fs::path relative_path{"user/.bitcoin"};
+    ResetArgs("-dir=user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=somewhere/../user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/./.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/./");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/.//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+}
+
 BOOST_AUTO_TEST_CASE(doubledash)
 {
     const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
