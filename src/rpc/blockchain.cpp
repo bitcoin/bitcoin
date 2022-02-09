@@ -2703,11 +2703,31 @@ static RPCHelpMan getblockfilter()
  */
 static RPCHelpMan dumptxoutset()
 {
+    static const std::vector<std::pair<std::string, coinascii_cb_t>> ascii_types{
+        {"txid",         [](const COutPoint& k, const Coin& c) { return k.hash.GetHex(); }},
+        {"vout",         [](const COutPoint& k, const Coin& c) { return ToString(static_cast<int32_t>(k.n)); }},
+        {"value",        [](const COutPoint& k, const Coin& c) { return ToString(c.out.nValue); }},
+        {"coinbase",     [](const COutPoint& k, const Coin& c) { return ToString(c.fCoinBase); }},
+        {"height",       [](const COutPoint& k, const Coin& c) { return ToString(static_cast<uint32_t>(c.nHeight)); }},
+        {"scriptPubKey", [](const COutPoint& k, const Coin& c) { return HexStr(c.out.scriptPubKey); }},
+        // add any other desired items here
+    };
+
+    std::vector<RPCArg> ascii_args;
+    std::transform(std::begin(ascii_types), std::end(ascii_types), std::back_inserter(ascii_args),
+            [](const std::pair<std::string, coinascii_cb_t>& t) { return RPCArg{t.first, RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Info to write for a given UTXO"}; });
+
     return RPCHelpMan{
         "dumptxoutset",
-        "Write the serialized UTXO set to disk.",
+        "Write the UTXO set to disk.",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
+            {"format", RPCArg::Type::ARR, RPCArg::DefaultHint{"compact serialized format"},
+                                        "If no argument is provided, a compact binary serialized format is used; otherwise only requested items "
+                                        "available below are written in ASCII format (if an empty array is provided, all items are written in ASCII).",
+                                        ascii_args, "format"},
+            {"show_header", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to include the header line in non-serialized (ASCII) mode"},
+            {"separator", RPCArg::Type::STR, RPCArg::Default{","}, "Field separator to use in non-serialized (ASCII) mode"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -2721,10 +2741,33 @@ static RPCHelpMan dumptxoutset()
                 }
         },
         RPCExamples{
-            HelpExampleCli("dumptxoutset", "utxo.dat")
+            HelpExampleCli("dumptxoutset", "utxo.dat") +
+            HelpExampleCli("dumptxoutset", "utxo.dat '[]'") +
+            HelpExampleCli("dumptxoutset", "utxo.dat '[\"txid\", \"vout\"]' false ':'")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    // handle optional ASCII parameters
+    const bool is_human_readable = !request.params[1].isNull();
+    const bool show_header = request.params[2].isNull() || request.params[2].get_bool();
+    const auto separator = request.params[3].isNull() ? MakeByteSpan(",").first(1) : MakeByteSpan(request.params[3].get_str());
+    std::vector<std::pair<std::string, coinascii_cb_t>> requested;
+    if (is_human_readable) {
+        const auto& arr = request.params[1].get_array();
+        const std::unordered_map<std::string, coinascii_cb_t> ascii_map(std::begin(ascii_types), std::end(ascii_types));
+        for (size_t i = 0; i < arr.size(); ++i) {
+            const auto it = ascii_map.find(arr[i].get_str());
+            if (it == std::end(ascii_map))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "unable to find item '"+arr[i].get_str()+"'");
+
+            requested.push_back(*it);
+        }
+
+        // if nothing was found, shows everything by default
+        if (requested.size() == 0)
+            requested = ascii_types;
+    }
+
     const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
     // Write to a temporary path and then move into `path` on completion
@@ -2738,10 +2781,12 @@ static RPCHelpMan dumptxoutset()
             "move it out of the way first");
     }
 
-    FILE* file{fsbridge::fopen(temppath, "wb")};
+    FILE* file{fsbridge::fopen(temppath, !is_human_readable ? "wb" : "w")};
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
     NodeContext& node = EnsureAnyNodeContext(request.context);
     UniValue result = CreateUTXOSnapshot(
+        is_human_readable,
+        show_header, separator, requested,
         node, node.chainman->ActiveChainstate(), afile, path, temppath);
     fs::rename(temppath, path);
 
@@ -2752,6 +2797,10 @@ static RPCHelpMan dumptxoutset()
 }
 
 UniValue CreateUTXOSnapshot(
+    const bool is_human_readable,
+    const bool show_header,
+    const Span<const std::byte>& separator,
+    const std::vector<std::pair<std::string, coinascii_cb_t>>& requested,
     NodeContext& node,
     CChainState& chainstate,
     CAutoFile& afile,
@@ -2761,6 +2810,9 @@ UniValue CreateUTXOSnapshot(
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CCoinsStats stats{CoinStatsHashType::HASH_SERIALIZED};
     CBlockIndex* tip;
+
+    // used when human readable format is requested
+    const auto line_separator = MakeByteSpan("\n").first(1);
 
     {
         // We need to lock cs_main to ensure that the coinsdb isn't written to
@@ -2792,9 +2844,20 @@ UniValue CreateUTXOSnapshot(
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 
-    SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
+    if (!is_human_readable) {
+        SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
 
-    afile << metadata;
+        afile << metadata;
+    } else if (show_header) {
+        afile.write(MakeByteSpan("#(blockhash " + tip->GetBlockHash().ToString() + " ) "));
+        for (auto it = std::begin(requested); it != std::end(requested); ++it) {
+            if (it != std::begin(requested)) {
+                afile.write(separator);
+            }
+            afile.write(MakeByteSpan(it->first));
+        }
+        afile.write(line_separator);
+    }
 
     COutPoint key;
     Coin coin;
@@ -2804,8 +2867,17 @@ UniValue CreateUTXOSnapshot(
         if (iter % 5000 == 0) node.rpc_interruption_point();
         ++iter;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            afile << key;
-            afile << coin;
+            if (!is_human_readable) {
+                afile << key;
+                afile << coin;
+            } else {
+                for (auto it = std::begin(requested); it != std::end(requested); ++it) {
+                    if (it != std::begin(requested))
+                        afile.write(separator);
+                    afile.write(MakeByteSpan(it->second(key, coin)));
+                }
+                afile.write(line_separator);
+            }
         }
 
         pcursor->Next();
