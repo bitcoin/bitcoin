@@ -753,6 +753,15 @@ static RPCHelpMan syscoinstartgeth()
     if(!chainman.ActiveChainstate().RestartGethNode()) {
         throw JSONRPCError(RPC_MISC_ERROR, "Could not restart geth, see debug.log for more information...");
     }
+    // SYSCOIN do not re-validate eth txroots
+    fLoaded = false;
+    BlockValidationState state;
+    chainman.ActiveChainstate().ActivateBestChain(state);
+    fLoaded = true;
+
+    if (!state.IsValid()) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
+    }
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;

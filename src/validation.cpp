@@ -3347,6 +3347,7 @@ bool CChainState::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex
 }
 void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
+    AssertLockNotHeld(m_chainstate_mutex);
     if (!bestChainLockBlockIndex) {
         // we don't have the header/block, so we can't do anything right now
         return;
@@ -3637,16 +3638,6 @@ bool CChainState::ResetLastBlock() {
             }
 
             ResetBlockFailureFlags(pblockindex);
-        }
-        // SYSCOIN do not re-validate eth txroots
-        fLoaded = false;
-        BlockValidationState state;
-        ActivateBestChain(state);
-        fLoaded = true;
-
-        if (!state.IsValid()) {
-            LogPrintf("%s: Could not activate chain %s\n", __func__, state.ToString());
-            return false;
         }
     }
     return true;
