@@ -57,7 +57,6 @@ unsigned-integer-overflow:pubkey.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
-unsigned-integer-overflow:validation.cpp
 implicit-integer-sign-change:addrman.h
 implicit-integer-sign-change:bech32.cpp
 implicit-integer-sign-change:compat/stdin.cpp
