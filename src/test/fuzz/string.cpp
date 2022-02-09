@@ -145,7 +145,8 @@ FUZZ_TARGET(string)
     (void)CopyrightHolders(random_string_1);
     FeeEstimateMode fee_estimate_mode;
     (void)FeeModeFromString(random_string_1, fee_estimate_mode);
-    (void)FormatParagraph(random_string_1, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 1000), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 1000));
+    const auto width{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 1000)};
+    (void)FormatParagraph(random_string_1, width, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, width));
     (void)FormatSubVersion(random_string_1, fuzzed_data_provider.ConsumeIntegral<int>(), random_string_vector);
     (void)GetDescriptorChecksum(random_string_1);
     (void)HelpExampleCli(random_string_1, random_string_2);
