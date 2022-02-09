@@ -30,6 +30,9 @@ race:validation_chainstatemanager_tests
 deadlock:libdb
 race:libzmq
 
+# Race in headers only Boost Test
+race:std::__1::ios_base::flags
+
 # Intermittent issues
 # -------------------
 #
