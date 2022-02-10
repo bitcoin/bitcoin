@@ -384,6 +384,7 @@ bool ParseDouble(const std::string& str, double *out)
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
+    assert(width >= indent);
     std::stringstream out;
     size_t ptr = 0;
     size_t indented = 0;
