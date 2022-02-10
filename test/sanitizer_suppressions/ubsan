@@ -51,15 +51,12 @@ unsigned-integer-overflow:crypto/
 unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
-unsigned-integer-overflow:pubkey.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:txmempool.cpp
-unsigned-integer-overflow:util/strencodings.cpp
 implicit-integer-sign-change:bech32.cpp
 implicit-integer-sign-change:compat/stdin.cpp
 implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
-implicit-integer-sign-change:key.cpp
 implicit-integer-sign-change:policy/fees.cpp
 implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:script/bitcoinconsensus.cpp
