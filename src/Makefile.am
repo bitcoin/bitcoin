@@ -853,6 +853,10 @@ bitcoin_chainstate_LDADD = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV)
+
+# Required for obj/build.h to be generated first.
+# More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
+bitcoin_chainstate-clientversion.$(OBJEXT): obj/build.h
 #
 
 # bitcoinconsensus library #
