@@ -909,12 +909,15 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     TxValidationState& state = ws.m_state;
 
     CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
-    // It's possible that the replacement pays more fees than its direct conflicts but not more
-    // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
-    // replacement doesn't pay more fees than its direct conflicts, then we can be sure it's not
-    // more economically rational to mine. Before we go digging through the mempool for all
-    // transactions that would need to be removed (direct conflicts and all descendants), check
-    // that the replacement transaction pays more than its direct conflicts.
+    // The replacement transaction must have a higher feerate than its direct conflicts.
+    // - The motivation for this check is to ensure that the replacement transaction is preferable for
+    //   block-inclusion, compared to what would be removed from the mempool.
+    // - This logic predates ancestor feerate-based transaction selection, which is why it doesn't
+    //   consider feerates of descendants.
+    // - Note: Ancestor feerate-based transaction selection has made this comparison insufficient to
+    //   guarantee that this is incentive-compatible for miners, because it is possible for a
+    //   descendant transaction of a direct conflict to pay a higher feerate than the transaction that
+    //   might replace them, under these rules.
     if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
     }
