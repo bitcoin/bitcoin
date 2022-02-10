@@ -113,7 +113,7 @@ void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
     bool fBracketed = fHaveColon && (in[0] == '[' && in[colon - 1] == ']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
-    bool fMultiColon = fHaveColon && (in.find_last_of(':', colon - 1) != in.npos);
+    bool fMultiColon{fHaveColon && colon != 0 && (in.find_last_of(':', colon - 1) != in.npos)};
     if (fHaveColon && (colon == 0 || fBracketed || !fMultiColon)) {
         uint16_t n;
         if (ParseUInt16(in.substr(colon + 1), &n)) {
@@ -328,6 +328,7 @@ bool ParseUInt64(const std::string& str, uint64_t* out)
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
+    assert(width >= indent);
     std::stringstream out;
     size_t ptr = 0;
     size_t indented = 0;

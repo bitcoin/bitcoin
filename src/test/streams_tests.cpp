@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace std::string_literals;
+
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(streams_vector_writer)
@@ -162,46 +164,35 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
     std::vector<std::byte> in;
-    std::vector<char> expected_xor;
-    CDataStream ds(in, 0, 0);
 
     // Degenerate case
-    ds.Xor({0x00, 0x00});
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0x00, 0x00});
+        BOOST_CHECK_EQUAL(""s, ds.str());
+    }
 
     in.push_back(std::byte{0x0f});
     in.push_back(std::byte{0xf0});
-    expected_xor.push_back('\xf0');
-    expected_xor.push_back('\x0f');
 
     // Single character key
-
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-
-    ds.Xor({0xff});
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff});
+        BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
+    }
 
     // Multi character key
 
     in.clear();
-    expected_xor.clear();
     in.push_back(std::byte{0xf0});
     in.push_back(std::byte{0x0f});
-    expected_xor.push_back('\x0f');
-    expected_xor.push_back('\x00');
 
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-
-    ds.Xor({0xff, 0x0f});
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff, 0x0f});
+        BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file)

@@ -63,9 +63,9 @@ enum class FieldImpl {
 #endif
 };
 
+#ifdef HAVE_CLMUL
 static inline bool EnableClmul()
 {
-#ifdef HAVE_CLMUL
 #ifdef _MSC_VER
     int regs[4];
     __cpuid(regs, 1);
@@ -74,10 +74,8 @@ static inline bool EnableClmul()
     uint32_t eax, ebx, ecx, edx;
     return (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx & 0x2));
 #endif
-#else
-    return false;
-#endif
 }
+#endif
 
 Sketch* Construct(int bits, int impl)
 {
