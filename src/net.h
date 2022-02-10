@@ -347,6 +347,7 @@ class CNode
 {
     friend class CConnman;
     friend struct ConnmanTestMsg;
+    friend class ConnectionsInterfaceMock;
 
 public:
     const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
@@ -1187,6 +1188,7 @@ private:
 
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;
+    friend class ConnectionsInterfaceMock;
 };
 
 /** Dump binary message to file, with timestamp */
