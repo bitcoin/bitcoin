@@ -7,7 +7,6 @@
 #include <util/check.h>
 #include <util/system.h>
 
-#include <fstream>
 #include <string>
 
 #include <wallet/test/init_test_fixture.h>
@@ -36,7 +35,7 @@ InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainNam
     fs::create_directories(m_walletdir_path_cases["default"]);
     fs::create_directories(m_walletdir_path_cases["custom"]);
     fs::create_directories(m_walletdir_path_cases["relative"]);
-    std::ofstream f{m_walletdir_path_cases["file"]};
+    fsbridge::ofstream f{m_walletdir_path_cases["file"]};
     f.close();
 }
 

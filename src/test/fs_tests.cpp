@@ -9,7 +9,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
 #include <ios>
 #include <string>
 
@@ -49,37 +48,37 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
     fs::path tmpfile1 = tmpfolder / "fs_tests_₿_🏃";
     fs::path tmpfile2 = tmpfolder / "fs_tests_₿_🏃";
     {
-        std::ofstream file{tmpfile1};
+        fsbridge::ofstream file{tmpfile1};
         file << "bitcoin";
     }
     {
-        std::ifstream file{tmpfile2};
+        fsbridge::ifstream file{tmpfile2};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
     }
     {
-        std::ifstream file{tmpfile1, std::ios_base::in | std::ios_base::ate};
+        fsbridge::ifstream file{tmpfile1, std::ios_base::in | std::ios_base::ate};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "");
     }
     {
-        std::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::app};
+        fsbridge::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::app};
         file << "tests";
     }
     {
-        std::ifstream file{tmpfile1};
+        fsbridge::ifstream file{tmpfile1};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcointests");
     }
     {
-        std::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::trunc};
+        fsbridge::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::trunc};
         file << "bitcoin";
     }
     {
-        std::ifstream file{tmpfile1};
+        fsbridge::ifstream file{tmpfile1};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcoin");

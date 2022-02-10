@@ -8,7 +8,6 @@
 #include <tinyformat.h>
 #include <univalue.h>
 
-#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -69,7 +68,7 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     // Ok for file to not exist
     if (!fs::exists(path)) return true;
 
-    std::ifstream file;
+    fsbridge::ifstream file;
     file.open(path);
     if (!file.is_open()) {
       errors.emplace_back(strprintf("%s. Please check permissions.", fs::PathToString(path)));
@@ -112,7 +111,7 @@ bool WriteSettings(const fs::path& path,
     for (const auto& value : values) {
         out.__pushKV(value.first, value.second);
     }
-    std::ofstream file;
+    fsbridge::ofstream file;
     file.open(path);
     if (file.fail()) {
         errors.emplace_back(strprintf("Error: Unable to open settings file %s for writing", fs::PathToString(path)));

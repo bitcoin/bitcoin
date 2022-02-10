@@ -15,7 +15,6 @@
 #include <util/string.h>
 #include <util/system.h>
 
-#include <fstream>
 #include <map>
 #include <string>
 #include <system_error>
@@ -42,7 +41,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<std::string, u
 
 inline void WriteText(const fs::path& path, const std::string& text)
 {
-    std::ofstream file;
+    fsbridge::ofstream file;
     file.open(path);
     file << text;
 }

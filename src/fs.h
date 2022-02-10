@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <ios>
 #include <ostream>
@@ -50,11 +51,6 @@ public:
 
     // Disallow std::string conversion method to avoid locale-dependent encoding on windows.
     std::string string() const = delete;
-
-    // Required for path overloads in <fstream>.
-    // See https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=96e0367ead5d8dcac3bec2865582e76e2fbab190
-    path& make_preferred() { std::filesystem::path::make_preferred(); return *this; }
-    path filename() const { return std::filesystem::path::filename(); }
 };
 
 // Disallow implicit std::string conversion for absolute to avoid
@@ -178,6 +174,26 @@ namespace fsbridge {
     };
 
     std::string get_filesystem_error_message(const fs::filesystem_error& e);
+
+    struct ifstream : public std::ifstream {
+        ifstream() = default;
+        explicit ifstream(const fs::path& p, std::ios_base::openmode mode = std::ios_base::in)
+            : std::ifstream(fs::PathToString(p).c_str(), mode) {}
+        void open(const fs::path& p, std::ios_base::openmode mode = std::ios_base::in)
+        {
+            std::ifstream::open(fs::PathToString(p).c_str(), mode);
+        }
+    };
+
+    struct ofstream : public std::ofstream {
+        ofstream() = default;
+        explicit ofstream(const fs::path& p, std::ios_base::openmode mode = std::ios_base::out)
+            : std::ofstream(fs::PathToString(p).c_str(), mode) {}
+        void open(const fs::path& p, std::ios_base::openmode mode = std::ios_base::out)
+        {
+            std::ofstream::open(fs::PathToString(p).c_str(), mode);
+        }
+    };
 };
 
 // Disallow path operator<< formatting in tinyformat to avoid locale-dependent

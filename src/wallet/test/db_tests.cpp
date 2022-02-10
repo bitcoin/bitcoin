@@ -8,7 +8,6 @@
 #include <test/util/setup_common.h>
 #include <wallet/bdb.h>
 
-#include <fstream>
 #include <memory>
 #include <string>
 
@@ -27,7 +26,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_file)
     std::string test_name = "test_name.dat";
     const fs::path datadir = gArgs.GetDataDirNet();
     fs::path file_path = datadir / test_name;
-    std::ofstream f{file_path};
+    fsbridge::ofstream f{file_path};
     f.close();
 
     std::string filename;

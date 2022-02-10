@@ -69,7 +69,6 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <univalue.h>
 
-#include <fstream>
 #include <map>
 #include <memory>
 #include <optional>
@@ -152,7 +151,7 @@ bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
 }
 
 std::streampos GetFileSize(const char* path, std::streamsize max) {
-    std::ifstream file{path, std::ios::binary};
+    fsbridge::ifstream file{path, std::ios::binary};
     file.ignore(max);
     return file.gcount();
 }
@@ -900,7 +899,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
-    std::ifstream stream{GetConfigFile(confPath)};
+    fsbridge::ifstream stream{GetConfigFile(confPath)};
 
     // not ok to have a config file specified that cannot be opened
     if (IsArgSet("-conf") && !stream.good()) {
@@ -947,7 +946,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             const size_t default_includes = add_includes({});
 
             for (const std::string& conf_file_name : conf_file_names) {
-                std::ifstream conf_file_stream{GetConfigFile(conf_file_name)};
+                fsbridge::ifstream conf_file_stream{GetConfigFile(conf_file_name)};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;

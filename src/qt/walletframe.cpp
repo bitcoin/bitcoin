@@ -15,7 +15,6 @@
 #include <util/system.h>
 
 #include <cassert>
-#include <fstream>
 #include <string>
 
 #include <QApplication>
@@ -213,7 +212,7 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
             Q_EMIT message(tr("Error"), tr("PSBT file must be smaller than 100 MiB"), CClientUIInterface::MSG_ERROR);
             return;
         }
-        std::ifstream in{filename.toLocal8Bit().data(), std::ios::binary};
+        fsbridge::ifstream in{filename.toLocal8Bit().data(), std::ios::binary};
         data = std::string(std::istreambuf_iterator<char>{in}, {});
     }
 

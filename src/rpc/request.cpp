@@ -6,13 +6,11 @@
 #include <rpc/request.h>
 
 #include <fs.h>
-
 #include <random.h>
 #include <rpc/protocol.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 
-#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -88,7 +86,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     /** the umask determines what permissions are used to create this file -
      * these are set to 077 in init.cpp unless overridden with -sysperms.
      */
-    std::ofstream file;
+    fsbridge::ofstream file;
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
     if (!file.is_open()) {
@@ -112,7 +110,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
 bool GetAuthCookie(std::string *cookie_out)
 {
-    std::ifstream file;
+    fsbridge::ifstream file;
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
     file.open(filepath);

@@ -22,7 +22,6 @@
 #include <wallet/wallet.h>
 
 #include <cstdint>
-#include <fstream>
 #include <tuple>
 #include <string>
 
@@ -524,7 +523,7 @@ RPCHelpMan importwallet()
 
         EnsureWalletIsUnlocked(*pwallet);
 
-        std::ifstream file;
+        fsbridge::ifstream file;
         file.open(fs::u8path(request.params[0].get_str()), std::ios::in | std::ios::ate);
         if (!file.is_open()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
@@ -732,7 +731,7 @@ RPCHelpMan dumpwallet()
         throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
-    std::ofstream file;
+    fsbridge::ofstream file;
     file.open(filepath);
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");

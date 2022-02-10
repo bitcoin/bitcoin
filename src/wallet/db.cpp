@@ -9,7 +9,6 @@
 #include <wallet/db.h>
 
 #include <exception>
-#include <fstream>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -90,7 +89,7 @@ bool IsBDBFile(const fs::path& path)
     if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
     if (size < 4096) return false;
 
-    std::ifstream file{path, std::ios::binary};
+    fsbridge::ifstream file{path, std::ios::binary};
     if (!file.is_open()) return false;
 
     file.seekg(12, std::ios::beg); // Magic bytes start at offset 12
@@ -114,7 +113,7 @@ bool IsSQLiteFile(const fs::path& path)
     if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
     if (size < 512) return false;
 
-    std::ifstream file{path, std::ios::binary};
+    fsbridge::ifstream file{path, std::ios::binary};
     if (!file.is_open()) return false;
 
     // Magic is at beginning and is 16 bytes long
