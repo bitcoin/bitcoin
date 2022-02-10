@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <kernel/timedata.h>
+
 #include <addrdb.h>
 #include <banman.h>
 #include <chain.h>
@@ -35,7 +37,6 @@
 #include <shutdown.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
-#include <timedata.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>

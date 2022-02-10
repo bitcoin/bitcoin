@@ -6,10 +6,11 @@
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
+#include <kernel/timedata.h>
+
 #include <netaddress.h>
 #include <protocol.h>
 #include <streams.h>
-#include <timedata.h>
 
 #include <cstdint>
 #include <memory>

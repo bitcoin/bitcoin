@@ -5,6 +5,8 @@
 
 #include <validation.h>
 
+#include <kernel/timedata.h>
+
 #include <arith_uint256.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -38,7 +40,6 @@
 #include <script/sigcache.h>
 #include <shutdown.h>
 #include <signet.h>
-#include <timedata.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>

@@ -29,6 +29,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <timedata.h>
 #include <txmempool.h>
 #include <txorphanage.h>
 #include <txrequest.h>

@@ -6,6 +6,8 @@
 #include <addrman.h>
 #include <addrman_impl.h>
 
+#include <kernel/timedata.h>
+
 #include <hash.h>
 #include <logging.h>
 #include <logging/timer.h>
@@ -14,7 +16,6 @@
 #include <random.h>
 #include <serialize.h>
 #include <streams.h>
-#include <timedata.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>

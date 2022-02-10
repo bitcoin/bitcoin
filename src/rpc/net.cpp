@@ -4,6 +4,8 @@
 
 #include <rpc/server.h>
 
+#include <kernel/timedata.h>
+
 #include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
@@ -20,7 +22,6 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
-#include <timedata.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
