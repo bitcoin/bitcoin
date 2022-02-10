@@ -11,10 +11,11 @@
 //
 // It is part of the libbitcoinkernel project.
 
+#include <kernel/init/common.h>
+
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init/common.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <scheduler.h>
