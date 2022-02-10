@@ -1502,12 +1502,26 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
 void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
 {
     std::vector<CNode*> nodesToAskFor;
-    g_connman->ForEachNode([&](CNode* pnode) {
+    nodesToAskFor.reserve(4);
+
+    auto maybe_add_to_nodesToAskFor = [&nodesToAskFor, &txid](CNode* pnode) {
+        if (nodesToAskFor.size() >= 4) {
+            return;
+        }
         LOCK(pnode->cs_inventory);
         if (pnode->filterInventoryKnown.contains(txid)) {
             pnode->AddRef();
             nodesToAskFor.emplace_back(pnode);
         }
+    };
+
+    g_connman->ForEachNode([&](CNode* pnode) {
+        // Check masternodes first
+        if (pnode->m_masternode_connection) maybe_add_to_nodesToAskFor(pnode);
+    });
+    g_connman->ForEachNode([&](CNode* pnode) {
+        // Check non-masternodes next
+        if (!pnode->m_masternode_connection) maybe_add_to_nodesToAskFor(pnode);
     });
     {
         LOCK(cs_main);
