@@ -21,5 +21,5 @@ define $(package)_stage_cmds
   cp bin/dsymutil $($(package)_staging_prefix_dir)/bin/$(host)-dsymutil && \
   cp bin/llvm-config $($(package)_staging_prefix_dir)/bin/ && \
   cp lib/libLTO.so $($(package)_staging_prefix_dir)/lib/ && \
-  cp -rf lib/clang/$($(package)_version)/include/* $($(package)_staging_prefix_dir)/lib/clang/$($(package)_version)/include/
+  cp -r lib/clang/$($(package)_version)/include/* $($(package)_staging_prefix_dir)/lib/clang/$($(package)_version)/include/
 endef
