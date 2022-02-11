@@ -39,7 +39,7 @@ main_template: &MAIN_TEMPLATE
     # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
     cpu: 2
     greedy: true
-    memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+    memory: 12G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
@@ -63,7 +63,7 @@ task:
   container:
     image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
     cpu: 1
-    memory: 1G
+    memory: 2G
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   lint_script:
