@@ -28,7 +28,7 @@
 #include <functional>
 #include <iosfwd>
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+__attribute__ ((visibility("default"))) const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 int main(int argc, char* argv[])
 {
