@@ -286,7 +286,7 @@ task:
   brew_install_script:
     - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
-  osx_instance:
+  macos_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: monterey-xcode-13.2  # https://cirrus-ci.org/guide/macOS
   env:
