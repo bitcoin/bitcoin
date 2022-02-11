@@ -78,7 +78,6 @@
 #include <string>
 #include <system_error>
 #include <thread>
-#include <univalue.h>
 #include <typeinfo>
 // SYSCOIN only features
 bool fMasternodeMode = false;
