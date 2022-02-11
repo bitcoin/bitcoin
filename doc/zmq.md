@@ -104,14 +104,13 @@ The topics are:
 
 Where the 8-byte uints correspond to the mempool sequence number.
 
-`rawtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`rawtx`), the second part is the serialized transaction, and the last part is a sequence number (representing the message count to detect lost messages).
+`rawtx`: Notifies about all transactions, both when they are added to mempool or when a block has been disconnected. In the latter case only the transactions that were not in the mempool already are notified. This means a transaction could be published multiple times. First, when it enters the mempool and then again in a disconnected block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`rawtx`), the second part is the serialized transaction, and the last part is a sequence number (representing the message count to detect lost messages).
 
     | rawtx | <serialized transaction> | <uint32 sequence number in Little Endian>
 
-`hashtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`hashtx`), the second part is the 32-byte transaction hash, and the last part is a sequence number (representing the message count to detect lost messages).
+`hashtx`: Notifies about all transactions, both when they are added to mempool or when a block has been disconnected. In the latter case only the transactions that were not in the mempool already are notified. This means a transaction could be published multiple times. First, when it enters the mempool and then again in a disconnected block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`hashtx`), the second part is the 32-byte transaction hash, and the last part is a sequence number (representing the message count to detect lost messages).
 
     | hashtx | <32-byte transaction hash in Little Endian> | <uint32 sequence number in Little Endian>
-
 
 `rawblock`: Notifies when the chain tip is updated. Messages are ZMQ multipart messages with three parts. The first part is the topic (`rawblock`), the second part is the serialized block, and the last part is a sequence number (representing the message count to detect lost messages).
 
@@ -122,6 +121,8 @@ Where the 8-byte uints correspond to the mempool sequence number.
     | hashblock | <32-byte block hash in Little Endian> | <uint32 sequence number in Little Endian>
 
 **_NOTE:_**  Note that the 32-byte hashes are in Little Endian and not in the Big Endian format that the RPC interface and block explorers use to display transaction and block hashes.
+
+The secuence of topics when a chain reorganisation occur is the following: first arrives all block disconnections, then transactions not already in our mempool from the disconnected blocks are notified, and finally, the new blocks overriding the disconnected ones.
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
 [ZeroMQ API](http://api.zeromq.org/4-0:_start).
