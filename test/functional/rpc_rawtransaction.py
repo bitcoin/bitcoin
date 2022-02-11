@@ -100,10 +100,6 @@ class RawTransactionsTest(SyscoinTestFramework):
         rawTxSigned = self.nodes[1].signrawtransactionwithwallet(rawTx)
         txId = self.nodes[1].sendrawtransaction(rawTxSigned['hex'])
         self.generateblock(self.nodes[0], output=self.nodes[0].getnewaddress(), transactions=[rawTxSigned['hex']])
-        err_msg = (
-            "No such mempool transaction. Use -txindex or provide a block hash to enable"
-            " blockchain transaction queries. Use gettransaction for wallet transactions."
-        )
 
         for n in [0, 3]:
             self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex")
@@ -144,7 +140,7 @@ class RawTransactionsTest(SyscoinTestFramework):
             gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
             assert_equal(gottx['txid'], tx)
             assert_equal(gottx['in_active_chain'], True)
-  
+
             self.log.info("Test getrawtransaction with -txindex, without blockhash: 'in_active_chain' should be absent")
             gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True)
             assert_equal(gottx['txid'], tx)
