@@ -543,7 +543,7 @@ static UniValue quorum_selectquorum(const JSONRPCRequest& request)
     ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
 
     UniValue recoveryMembers(UniValue::VARR);
-    for (int i = 0; i < quorum->params.recoveryMembers; i++) {
+    for (size_t i = 0; i < size_t(quorum->params.recoveryMembers); i++) {
         auto dmn = llmq::quorumSigSharesManager->SelectMemberForRecovery(quorum, id, i);
         recoveryMembers.push_back(dmn->proTxHash.ToString());
     }

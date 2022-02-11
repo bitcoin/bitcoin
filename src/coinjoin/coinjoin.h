@@ -230,7 +230,7 @@ public:
     bool Relay(CConnman& connman);
 
     /// Check if a queue is too old or too far into the future
-    bool IsTimeOutOfBounds() const;
+    bool IsTimeOutOfBounds(int64_t current_time = GetAdjustedTime()) const;
 
     std::string ToString() const
     {

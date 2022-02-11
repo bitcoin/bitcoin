@@ -29,7 +29,7 @@ enum class MemPoolRemovalReason;
 
 namespace llmq {
 class CChainLockSig;
-class CInstantSendLock;
+struct CInstantSendLock;
 } // namespace llmq
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;

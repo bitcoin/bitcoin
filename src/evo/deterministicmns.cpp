@@ -230,9 +230,10 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
 
 std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int nCount) const
 {
-    if (nCount > GetValidMNsCount()) {
-        nCount = GetValidMNsCount();
+    if (nCount < 0 ) {
+        return {};
     }
+    nCount = std::min(nCount, int(GetValidMNsCount()));
 
     std::vector<CDeterministicMNCPtr> result;
     result.reserve(nCount);

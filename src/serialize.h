@@ -513,7 +513,7 @@ void ReadFixedVarIntsBitSet(Stream& s, std::vector<bool>& vec, size_t size)
             break;
         }
         int32_t idx = last + offset;
-        if (idx >= size) {
+        if (idx >= int32_t(size)) {
             throw std::ios_base::failure("out of bounds index");
         }
         if (last != -1 && idx <= last) {

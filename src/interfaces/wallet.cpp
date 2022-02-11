@@ -556,12 +556,12 @@ public:
     std::unique_ptr<Handler> handleInstantLockReceived(InstantLockReceivedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyISLockReceived.connect(
-            [fn, this]() { fn(); }));
+            [fn]() { fn(); }));
     }
     std::unique_ptr<Handler> handleChainLockReceived(ChainLockReceivedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyChainLockReceived.connect(
-            [fn, this](int chainLockHeight) { fn(chainLockHeight); }));
+            [fn](int chainLockHeight) { fn(chainLockHeight); }));
     }
     std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) override
     {

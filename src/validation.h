@@ -43,7 +43,7 @@ class CScriptCheck;
 class CBlockPolicyEstimator;
 class CTxMemPool;
 class CValidationState;
-class PrecomputedTransactionData;
+struct PrecomputedTransactionData;
 struct ChainTxData;
 
 struct DisconnectedBlockTransactions;

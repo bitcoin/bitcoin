@@ -31,7 +31,7 @@ enum class MemPoolRemovalReason;
 
 namespace llmq {
     class CChainLockSig;
-    class CInstantSendLock;
+    struct CInstantSendLock;
     class CRecoveredSig;
 } // namespace llmq
 

@@ -97,7 +97,7 @@ public:
             BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
-                if (nChangePosRet != -1 && n == nChangePosRet) {
+                if (nChangePosRet != -1 && int(n) == nChangePosRet) {
                     // Skip the change output to only return the requested coins
                     continue;
                 }

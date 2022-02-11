@@ -555,7 +555,7 @@ public:
         // This avoids internal use of std::copy and operator++ on the iterators and instead allows efficient memcpy/memmove
         if (std::is_trivially_constructible<T>::value) {
             auto s = e - b;
-            if (v.size() != s) {
+            if (v.size() != size_t(s)) {
                 v.resize(s);
             }
             if (!v.empty()) {

@@ -69,7 +69,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
     }
 
     auto members = CLLMQUtils::GetAllQuorumMembers(llmq_params, pQuorumBaseBlockIndex);
-    for (size_t i = members.size(); i < llmq_params.size; i++) {
+    for (size_t i = members.size(); i < size_t(llmq_params.size); i++) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("invalid validMembers bitset. bit %d should not be set\n", i);
             return false;
@@ -122,11 +122,11 @@ bool CFinalCommitment::VerifyNull() const
 
 bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
 {
-    if (signers.size() != params.size) {
+    if (signers.size() != size_t(params.size)) {
         LogPrintfFinalCommitment("invalid signers.size=%d\n", signers.size());
         return false;
     }
-    if (validMembers.size() != params.size) {
+    if (validMembers.size() != size_t(params.size)) {
         LogPrintfFinalCommitment("invalid signers.size=%d\n", signers.size());
         return false;
     }
@@ -144,7 +144,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-version");
     }
 
-    if (qcTx.nHeight != pindexPrev->nHeight + 1) {
+    if (qcTx.nHeight != uint32_t(pindexPrev->nHeight + 1)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
     }
 

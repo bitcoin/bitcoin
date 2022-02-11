@@ -13,7 +13,7 @@
 class CMasternodePayments;
 class CBlock;
 class CTransaction;
-class CMutableTransaction;
+struct CMutableTransaction;
 class CTxOut;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)

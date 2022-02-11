@@ -20,7 +20,7 @@ typedef std::shared_ptr<const CTransaction> CTransactionRef;
 
 namespace llmq {
     class CChainLockSig;
-    class CInstantSendLock;
+    struct CInstantSendLock;
     class CRecoveredSig;
 } // namespace llmq
 

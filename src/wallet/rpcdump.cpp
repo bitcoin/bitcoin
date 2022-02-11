@@ -821,7 +821,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
 
-    const uint32_t tip_height = locked_chain->getHeight().value_or(-1);
+    const int32_t tip_height = locked_chain->getHeight().value_or(std::numeric_limits<int32_t>::max());
 
     // Whether to perform rescan after import
     int nStartHeight = 0;

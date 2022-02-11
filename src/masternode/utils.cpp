@@ -31,7 +31,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
             nonMasternodeCount++;
         }
     });
-    if (nonMasternodeCount < connman.GetMaxOutboundNodeCount()) {
+    if (nonMasternodeCount < int(connman.GetMaxOutboundNodeCount())) {
         return;
     }
 

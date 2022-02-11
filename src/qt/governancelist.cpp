@@ -235,7 +235,7 @@ void ProposalModel::reconcile(const std::vector<const Proposal*>& proposals)
     std::vector<bool> keep_index(m_data.count(), false);
     for (const auto proposal : proposals) {
         bool found = false;
-        for (unsigned int i = 0; i < m_data.count(); ++i) {
+        for (int i = 0; i < m_data.count(); ++i) {
             if (m_data.at(i)->hash() == proposal->hash()) {
                 found = true;
                 keep_index.at(i) = true;

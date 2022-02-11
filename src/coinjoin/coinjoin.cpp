@@ -80,9 +80,10 @@ bool CCoinJoinQueue::Relay(CConnman& connman)
     return true;
 }
 
-bool CCoinJoinQueue::IsTimeOutOfBounds() const
+bool CCoinJoinQueue::IsTimeOutOfBounds(int64_t current_time) const
 {
-    return GetAdjustedTime() - nTime > COINJOIN_QUEUE_TIMEOUT || nTime - GetAdjustedTime() > COINJOIN_QUEUE_TIMEOUT;
+    return current_time - nTime > COINJOIN_QUEUE_TIMEOUT ||
+           nTime - current_time > COINJOIN_QUEUE_TIMEOUT;
 }
 
 uint256 CCoinJoinBroadcastTx::GetSignatureHash() const
@@ -129,7 +130,7 @@ bool CCoinJoinBroadcastTx::IsValidStructure() const
     if (tx->vin.size() != tx->vout.size()) {
         return false;
     }
-    if (tx->vin.size() < CCoinJoin::GetMinPoolParticipants()) {
+    if (tx->vin.size() < size_t(CCoinJoin::GetMinPoolParticipants())) {
         return false;
     }
     if (tx->vin.size() > CCoinJoin::GetMaxPoolParticipants() * COINJOIN_ENTRY_MAX_SIZE) {
@@ -167,8 +168,8 @@ void CCoinJoinBaseManager::CheckQueue()
     // check mixing queue objects for timeouts
     auto it = vecCoinJoinQueue.begin();
     while (it != vecCoinJoinQueue.end()) {
-        if ((*it).IsTimeOutOfBounds()) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoinBaseManager::%s -- Removing a queue (%s)\n", __func__, (*it).ToString());
+        if (it->IsTimeOutOfBounds()) {
+            LogPrint(BCLog::COINJOIN, "CCoinJoinBaseManager::%s -- Removing a queue (%s)\n", __func__, it->ToString());
             it = vecCoinJoinQueue.erase(it);
         } else {
             ++it;
@@ -348,7 +349,7 @@ bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
     {
         LOCK(cs_main);
         CValidationState validationState;
-        if (!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), nullptr /* pfMissingInputs */, false /* bypass_limits */, DEFAULT_MAX_RAW_TX_FEE /* nAbsurdFee */, true /* fDryRun */)) {
+        if (!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), /*pfMissingInputs=*/nullptr, /*bypass_limits=*/false, /*nAbsurdFee=*/DEFAULT_MAX_RAW_TX_FEE, /*test_accept=*/true)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }

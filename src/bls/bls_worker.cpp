@@ -87,7 +87,7 @@ bool CBLSWorker::GenerateContributions(int quorumThreshold, const BLSIdVector& i
     std::vector<std::future<bool>> futures;
     futures.reserve((quorumThreshold / batchSize + ids.size() / batchSize) + 2);
 
-    for (size_t i = 0; i < quorumThreshold; i += batchSize) {
+    for (size_t i = 0; i < size_t(quorumThreshold); i += batchSize) {
         size_t start = i;
         size_t count = std::min(batchSize, quorumThreshold - start);
         auto f = [&, start, count](int threadId) {
@@ -152,10 +152,10 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
                bool _parallel,
                ctpl::thread_pool& _workerPool,
                DoneCallback _doneCallback) :
+            inputVec(std::make_shared<std::vector<const T*>>(count)),
             parallel(_parallel),
             workerPool(_workerPool),
-            doneCallback(std::move(_doneCallback)),
-            inputVec(std::make_shared<std::vector<const T*>>(count))
+            doneCallback(std::move(_doneCallback))
     {
         for (size_t i = 0; i < count; i++) {
             (*inputVec)[i] = pointer(_inputVec[start + i]);
