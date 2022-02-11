@@ -11,10 +11,6 @@ import json
 import random
 import struct
 import time
-try:
-    import zmq
-finally:
-    pass
 
 from test_framework.test_framework import DashTestFramework
 from test_framework.mininode import P2PInterface
@@ -104,6 +100,7 @@ class DashZMQTest (DashTestFramework):
         # Check that dashd has been built with ZMQ enabled.
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
+        import zmq
 
         try:
             # Setup the ZMQ subscriber socket
@@ -232,6 +229,7 @@ class DashZMQTest (DashTestFramework):
         self.unsubscribe(chain_lock_publishers)
 
     def test_instantsend_publishers(self):
+        import zmq
         instantsend_publishers = [
             ZMQPublisher.hash_tx_lock,
             ZMQPublisher.raw_tx_lock,
