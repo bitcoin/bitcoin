@@ -12,12 +12,14 @@ When complete, it will have produced `Bitcoin-Core.dmg`.
 
 ### Step 1: Obtaining `Xcode.app`
 
+A free Apple Developer Account is required to proceed.
+
 Our current macOS SDK
 (`Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz`) can be
 extracted from
 [Xcode_12.2.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip).
 Alternatively, after logging in to your account go to 'Downloads', then 'More'
-and look for [`Xcode_12.2`](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip).
+and search for [`Xcode_12.2`](https://developer.apple.com/download/all/?q=Xcode%2012.2).
 An Apple ID and cookies enabled for the hostname are needed to download this.
 The `sha256sum` of the archive should be `28d352f8c14a43d9b8a082ac6338dc173cb153f964c6e8fb6ba389e5be528bd0`.
 
@@ -78,19 +80,9 @@ This version of `cctools` has been patched to use the current version of `clang`
 and its `libLTO.so` rather than those from `llvmgcc`, as it was originally done in `toolchain4`.
 
 To complicate things further, all builds must target an Apple SDK. These SDKs are free to
-download, but not redistributable. To obtain it, register for an Apple Developer Account,
-then download [Xcode_12.1](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
+download, but not redistributable. See the SDK Extraction notes above for how to obtain it.
 
-This file is many gigabytes in size, but most (but not all) of what we need is
-contained only in a single directory:
-
-```bash
-Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
-```
-
-See the SDK Extraction notes above for how to obtain it.
-
-The Guix process build 2 sets of files: Linux tools, then Apple binaries which are
+The Guix process builds 2 sets of files: Linux tools, then Apple binaries which are
 created using these tools. The build process has been designed to avoid including the
 SDK's files in Guix's outputs. All interim tarballs are fully deterministic and may be freely
 redistributed.
