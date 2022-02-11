@@ -800,6 +800,7 @@ bitcoin_util_LDADD = \
 # bitcoin-chainstate binary #
 bitcoin_chainstate_SOURCES = \
   bitcoin-chainstate.cpp \
+  kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
   blockfilter.cpp \
   chain.cpp \
