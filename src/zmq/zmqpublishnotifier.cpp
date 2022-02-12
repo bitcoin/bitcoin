@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,6 +22,8 @@
 #include <optional>
 #include <string>
 #include <utility>
+
+using node::ReadBlockFromDisk;
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -207,9 +209,10 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashblock %s to %s\n", hash.GetHex(), this->address);
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
+    uint8_t data[32];
+    for (unsigned int i = 0; i < 32; i++) {
         data[31 - i] = hash.begin()[i];
+    }
     return SendZmqMessage(MSG_HASHBLOCK, data, 32);
 }
 
@@ -217,9 +220,10 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashtx %s to %s\n", hash.GetHex(), this->address);
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
+    uint8_t data[32];
+    for (unsigned int i = 0; i < 32; i++) {
         data[31 - i] = hash.begin()[i];
+    }
     return SendZmqMessage(MSG_HASHTX, data, 32);
 }
 

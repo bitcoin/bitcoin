@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <random.h>
 #include <script/standard.h>
@@ -18,6 +18,8 @@
 #include <validationinterface.h>
 
 #include <thread>
+
+using node::BlockAssembler;
 
 namespace validation_block_tests {
 struct MinerTestingSetup : public RegTestingSetup {
@@ -222,7 +224,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
     auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
-        return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+        return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, /*force_processing=*/true, /*new_block=*/&ignored);
     };
 
     // Process all mined blocks
@@ -273,7 +275,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         {
             LOCK(cs_main);
             for (const auto& tx : txs) {
-                const MempoolAcceptResult result = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), *m_node.mempool, tx, false /* bypass_limits */);
+                const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(tx);
                 BOOST_REQUIRE(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
             }
         }

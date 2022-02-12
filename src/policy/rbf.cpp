@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +22,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 
     // If this transaction is not in our mempool, then we can't be sure
     // we will know about all its inputs.
-    if (!pool.exists(tx.GetHash())) {
+    if (!pool.exists(GenTxid::Txid(tx.GetHash()))) {
         return RBFTransactionState::UNKNOWN;
     }
 
@@ -98,7 +98,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
         if (!parents_of_conflicts.count(tx.vin[j].prevout.hash)) {
             // Rather than check the UTXO set - potentially expensive - it's cheaper to just check
             // if the new input refers to a tx that's in the mempool.
-            if (pool.exists(tx.vin[j].prevout.hash)) {
+            if (pool.exists(GenTxid::Txid(tx.vin[j].prevout.hash))) {
                 return strprintf("replacement %s adds unconfirmed input, idx %d",
                                  tx.GetHash().ToString(), j);
             }

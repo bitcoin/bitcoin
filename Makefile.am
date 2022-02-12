@@ -38,9 +38,7 @@ OSX_APP=Bitcoin-Qt.app
 OSX_VOLNAME = $(subst $(space),-,$(PACKAGE_NAME))
 OSX_DMG = $(OSX_VOLNAME).dmg
 OSX_TEMP_ISO = $(OSX_DMG:.dmg=).temp.iso
-OSX_BACKGROUND_SVG=background.svg
-OSX_BACKGROUND_IMAGE=background.tiff
-OSX_BACKGROUND_IMAGE_DPIS=36 72
+OSX_BACKGROUND_IMAGE=$(top_srcdir)/contrib/macdeploy/background.tiff
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
 OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
@@ -58,8 +56,7 @@ DIST_SHARE = \
 
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
            $(top_srcdir)/contrib/devtools/security-check.py \
-           $(top_srcdir)/contrib/devtools/utils.py \
-           $(top_srcdir)/contrib/devtools/pixie.py
+           $(top_srcdir)/contrib/devtools/utils.py
 
 WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \
@@ -67,7 +64,6 @@ WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
   $(top_srcdir)/doc/README_windows.txt
 
 OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_INSTALLER_ICONS) \
-  $(top_srcdir)/contrib/macdeploy/$(OSX_BACKGROUND_SVG) \
   $(top_srcdir)/contrib/macdeploy/detached-sig-apply.sh \
   $(top_srcdir)/contrib/macdeploy/detached-sig-create.sh
 
@@ -128,20 +124,13 @@ osx_volname:
 	echo $(OSX_VOLNAME) >$@
 
 if BUILD_DARWIN
-$(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING) $(OSX_BACKGROUND_IMAGE)
+$(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -dmg
-
-$(OSX_BACKGROUND_IMAGE).png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
-	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 36 -p 36 -o $@
-$(OSX_BACKGROUND_IMAGE)@2x.png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
-	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 72 -p 72 -o $@
-$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE).png $(OSX_BACKGROUND_IMAGE)@2x.png
-	tiffutil -cathidpicheck $^ -out $@
 
 deploydir: $(OSX_DMG)
 else !BUILD_DARWIN
 APP_DIST_DIR=$(top_builddir)/dist
-APP_DIST_EXTRAS=$(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE) $(APP_DIST_DIR)/.DS_Store $(APP_DIST_DIR)/Applications
+APP_DIST_EXTRAS=$(APP_DIST_DIR)/.background/background.tiff $(APP_DIST_DIR)/.DS_Store $(APP_DIST_DIR)/Applications
 
 $(APP_DIST_DIR)/Applications:
 	@rm -f $@
@@ -155,12 +144,9 @@ $(OSX_TEMP_ISO): $(APP_DIST_EXTRAS)
 $(OSX_DMG): $(OSX_TEMP_ISO)
 	$(DMG) dmg "$<" "$@"
 
-dpi%.$(OSX_BACKGROUND_IMAGE): contrib/macdeploy/$(OSX_BACKGROUND_SVG)
-	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d $* -p $* | $(IMAGEMAGICK_CONVERT) - $@
-OSX_BACKGROUND_IMAGE_DPIFILES := $(foreach dpi,$(OSX_BACKGROUND_IMAGE_DPIS),dpi$(dpi).$(OSX_BACKGROUND_IMAGE))
-$(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE_DPIFILES)
+$(APP_DIST_DIR)/.background/background.tiff:
 	$(MKDIR_P) $(@D)
-	$(TIFFCP) -c none $(OSX_BACKGROUND_IMAGE_DPIFILES) $@
+	cp $(OSX_BACKGROUND_IMAGE) $@
 
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	INSTALLNAMETOOL=$(INSTALLNAMETOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR)
@@ -207,6 +193,7 @@ LCOV_FILTER_PATTERN = \
 	-p "src/bench/" \
 	-p "src/univalue" \
 	-p "src/crypto/ctaes" \
+	-p "src/minisketch" \
 	-p "src/secp256k1" \
 	-p "depends"
 
@@ -336,6 +323,7 @@ EXTRA_DIST += \
     test/util/data/txcreatescript4.json \
     test/util/data/txcreatescript5.hex \
     test/util/data/txcreatescript6.hex \
+    test/util/data/txcreatesignsegwit1.hex \
     test/util/data/txcreatesignv1.hex \
     test/util/data/txcreatesignv1.json \
     test/util/data/txcreatesignv2.hex \
@@ -363,18 +351,18 @@ clean-docs:
 clean-local: clean-docs
 	rm -rf coverage_percent.txt test_bitcoin.coverage/ total.coverage/ fuzz.coverage/ test/tmp/ cache/ $(OSX_APP)
 	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache share/rpcauth/__pycache__
-	rm -rf osx_volname dist/ dpi36.background.tiff dpi72.background.tiff
+	rm -rf osx_volname dist/
 
 test-security-check:
 if TARGET_DARWIN
-	$(AM_V_at) CC='$(CC)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_MACHO
-	$(AM_V_at) CC='$(CC)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_MACHO
+	$(AM_V_at) CC='$(CC)' CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_MACHO
+	$(AM_V_at) CC='$(CC)' CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_MACHO
 endif
 if TARGET_WINDOWS
-	$(AM_V_at) CC='$(CC)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_PE
-	$(AM_V_at) CC='$(CC)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_PE
+	$(AM_V_at) CC='$(CC)' CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_PE
+	$(AM_V_at) CC='$(CC)' CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_PE
 endif
 if TARGET_LINUX
-	$(AM_V_at) CC='$(CC)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_ELF
-	$(AM_V_at) CC='$(CC)' CPPFILT='$(CPPFILT)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_ELF
+	$(AM_V_at) CC='$(CC)' CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_ELF
+	$(AM_V_at) CC='$(CC)' CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_ELF
 endif

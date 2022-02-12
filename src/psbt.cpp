@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,6 +31,13 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     }
     for (unsigned int i = 0; i < outputs.size(); ++i) {
         outputs[i].Merge(psbt.outputs[i]);
+    }
+    for (auto& xpub_pair : psbt.m_xpubs) {
+        if (m_xpubs.count(xpub_pair.first) == 0) {
+            m_xpubs[xpub_pair.first] = xpub_pair.second;
+        } else {
+            m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
+        }
     }
     unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
 
@@ -146,6 +153,10 @@ void PSBTInput::Merge(const PSBTInput& input)
     }
 
     partial_sigs.insert(input.partial_sigs.begin(), input.partial_sigs.end());
+    ripemd160_preimages.insert(input.ripemd160_preimages.begin(), input.ripemd160_preimages.end());
+    sha256_preimages.insert(input.sha256_preimages.begin(), input.sha256_preimages.end());
+    hash160_preimages.insert(input.hash160_preimages.begin(), input.hash160_preimages.end());
+    hash256_preimages.insert(input.hash256_preimages.begin(), input.hash256_preimages.end());
     hd_keypaths.insert(input.hd_keypaths.begin(), input.hd_keypaths.end());
     unknown.insert(input.unknown.begin(), input.unknown.end());
 
@@ -223,7 +234,7 @@ void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransactio
     // Construct a would-be spend of this output, to update sigdata with.
     // Note that ProduceSignature is used to fill in metadata (not actual signatures),
     // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
-    MutableTransactionSignatureCreator creator(&tx, /* index */ 0, out.nValue, SIGHASH_ALL);
+    MutableTransactionSignatureCreator creator(&tx, /*input_idx=*/0, out.nValue, SIGHASH_ALL);
     ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
 
     // Put redeem_script, witness_script, key paths, into PSBTOutput.
@@ -247,7 +258,7 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
     return txdata;
 }
 
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash, SignatureData* out_sigdata)
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
@@ -295,6 +306,10 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     }
     // Verify that a witness signature was produced in case one was required.
     if (require_witness_sig && !sigdata.witness) return false;
+
+    // If we are not finalizing, set sigdata.complete to false to not set the scriptWitness
+    if (!finalize && sigdata.complete) sigdata.complete = false;
+
     input.FromSignatureData(sigdata);
 
     // If we have a witness signature, put a witness UTXO.
@@ -324,7 +339,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     bool complete = true;
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL);
+        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true);
     }
 
     return complete;
@@ -384,7 +399,7 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
 
 bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data, std::string& error)
 {
-    CDataStream ss_data(MakeUCharSpan(tx_data), SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ss_data(MakeByteSpan(tx_data), SER_NETWORK, PROTOCOL_VERSION);
     try {
         ss_data >> psbt;
         if (!ss_data.empty()) {
@@ -396,4 +411,12 @@ bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data,
         return false;
     }
     return true;
+}
+
+uint32_t PartiallySignedTransaction::GetVersion() const
+{
+    if (m_version != std::nullopt) {
+        return *m_version;
+    }
+    return 0;
 }

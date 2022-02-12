@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
 static Mutex g_sqlite_mutex;
@@ -67,7 +68,7 @@ static void SetPragma(sqlite3* db, const std::string& key, const std::string& va
 }
 
 SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, bool mock)
-    : WalletDatabase(), m_mock(mock), m_dir_path(dir_path.string()), m_file_path(file_path.string())
+    : WalletDatabase(), m_mock(mock), m_dir_path(fs::PathToString(dir_path)), m_file_path(fs::PathToString(file_path))
 {
     {
         LOCK(g_sqlite_mutex);
@@ -206,7 +207,7 @@ void SQLiteDatabase::Open()
 
     if (m_db == nullptr) {
         if (!m_mock) {
-            TryCreateDirectories(m_dir_path);
+            TryCreateDirectories(fs::PathFromString(m_dir_path));
         }
         int ret = sqlite3_open_v2(m_file_path.c_str(), &m_db, flags, nullptr);
         if (ret != SQLITE_OK) {
@@ -228,7 +229,7 @@ void SQLiteDatabase::Open()
     // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
     int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
     if (ret != SQLITE_OK) {
-        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?\n");
+        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of " PACKAGE_NAME "?\n");
     }
     ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
     if (ret != SQLITE_OK) {
@@ -394,9 +395,9 @@ bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
         return false;
     }
     // Leftmost column in result is index 0
-    const char* data = reinterpret_cast<const char*>(sqlite3_column_blob(m_read_stmt, 0));
-    int data_size = sqlite3_column_bytes(m_read_stmt, 0);
-    value.write(data, data_size);
+    const std::byte* data{BytePtr(sqlite3_column_blob(m_read_stmt, 0))};
+    size_t data_size(sqlite3_column_bytes(m_read_stmt, 0));
+    value.write({data, data_size});
 
     sqlite3_clear_bindings(m_read_stmt);
     sqlite3_reset(m_read_stmt);
@@ -511,12 +512,12 @@ bool SQLiteBatch::ReadAtCursor(CDataStream& key, CDataStream& value, bool& compl
     }
 
     // Leftmost column in result is index 0
-    const char* key_data = reinterpret_cast<const char*>(sqlite3_column_blob(m_cursor_stmt, 0));
-    int key_data_size = sqlite3_column_bytes(m_cursor_stmt, 0);
-    key.write(key_data, key_data_size);
-    const char* value_data = reinterpret_cast<const char*>(sqlite3_column_blob(m_cursor_stmt, 1));
-    int value_data_size = sqlite3_column_bytes(m_cursor_stmt, 1);
-    value.write(value_data, value_data_size);
+    const std::byte* key_data{BytePtr(sqlite3_column_blob(m_cursor_stmt, 0))};
+    size_t key_data_size(sqlite3_column_bytes(m_cursor_stmt, 0));
+    key.write({key_data, key_data_size});
+    const std::byte* value_data{BytePtr(sqlite3_column_blob(m_cursor_stmt, 1))};
+    size_t value_data_size(sqlite3_column_bytes(m_cursor_stmt, 1));
+    value.write({value_data, value_data_size});
     return true;
 }
 
@@ -578,3 +579,4 @@ std::string SQLiteDatabaseVersion()
 {
     return std::string(sqlite3_libversion());
 }
+} // namespace wallet

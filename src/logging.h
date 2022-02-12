@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
 #include <list>
 #include <mutex>
 #include <string>
@@ -61,6 +62,7 @@ namespace BCLog {
         IPC         = (1 << 23),
         LOCK        = (1 << 24),
         UTIL        = (1 << 25),
+        BLOCKSTORE  = (1 << 26),
         ALL         = ~(uint32_t)0,
     };
 

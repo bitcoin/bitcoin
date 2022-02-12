@@ -7,7 +7,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <policy/policy.h>
 #include <script/standard.h>
 #include <txmempool.h>
@@ -23,6 +23,9 @@
 #include <memory>
 
 #include <boost/test/unit_test.hpp>
+
+using node::BlockAssembler;
+using node::CBlockTemplate;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
@@ -456,7 +459,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
-    tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL - 1;
+    tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     hash = tx.GetHash();

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,6 +22,7 @@
 #include <QApplication>
 #include <QObject>
 #include <QTest>
+#include <functional>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -34,10 +35,16 @@ Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#elif defined(QT_QPA_PLATFORM_ANDROID)
+Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 #endif
 #endif
 
+using node::NodeContext;
+
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
 
 // This is all you need to run all the tests
 int main(int argc, char* argv[])
@@ -52,9 +59,7 @@ int main(int argc, char* argv[])
         BasicTestingSetup dummy{CBaseChainParams::REGTEST};
     }
 
-    NodeContext node_context;
-    int unused_exit_status;
-    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node_context, argc, argv, unused_exit_status);
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
     gArgs.ForceSetArg("-listen", "0");
     gArgs.ForceSetArg("-listenonion", "0");
     gArgs.ForceSetArg("-discover", "0");
@@ -71,7 +76,7 @@ int main(int argc, char* argv[])
     #if defined(WIN32)
         if (getenv("QT_QPA_PLATFORM") == nullptr) _putenv_s("QT_QPA_PLATFORM", "minimal");
     #else
-        setenv("QT_QPA_PLATFORM", "minimal", /* overwrite */ 0);
+        setenv("QT_QPA_PLATFORM", "minimal", 0 /* overwrite */);
     #endif
 
     // Don't remove this, it's needed to access

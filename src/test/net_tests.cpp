@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -43,7 +43,6 @@ BOOST_AUTO_TEST_CASE(cnode_listen_port)
 
 BOOST_AUTO_TEST_CASE(cnode_simple_test)
 {
-    SOCKET hSocket = INVALID_SOCKET;
     NodeId id = 0;
 
     in_addr ipv4Addr;
@@ -52,12 +51,16 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     CAddress addr = CAddress(CService(ipv4Addr, 7777), NODE_NETWORK);
     std::string pszDest;
 
-    std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
-        /* nKeyedNetGroupIn = */ 0,
-        /* nLocalHostNonceIn = */ 0,
-        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY,
-        /* inbound_onion = */ false);
+    std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(id++,
+                                                            NODE_NETWORK,
+                                                            /*sock=*/nullptr,
+                                                            addr,
+                                                            /*nKeyedNetGroupIn=*/0,
+                                                            /*nLocalHostNonceIn=*/0,
+                                                            CAddress(),
+                                                            pszDest,
+                                                            ConnectionType::OUTBOUND_FULL_RELAY,
+                                                            /*inbound_onion=*/false);
     BOOST_CHECK(pnode1->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode1->IsManualConn() == false);
     BOOST_CHECK(pnode1->IsBlockOnlyConn() == false);
@@ -67,12 +70,16 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode1->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode1->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
-        /* nKeyedNetGroupIn = */ 1,
-        /* nLocalHostNonceIn = */ 1,
-        CAddress(), pszDest, ConnectionType::INBOUND,
-        /* inbound_onion = */ false);
+    std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(id++,
+                                                            NODE_NETWORK,
+                                                            /*sock=*/nullptr,
+                                                            addr,
+                                                            /*nKeyedNetGroupIn=*/1,
+                                                            /*nLocalHostNonceIn=*/1,
+                                                            CAddress(),
+                                                            pszDest,
+                                                            ConnectionType::INBOUND,
+                                                            /*inbound_onion=*/false);
     BOOST_CHECK(pnode2->IsFullOutboundConn() == false);
     BOOST_CHECK(pnode2->IsManualConn() == false);
     BOOST_CHECK(pnode2->IsBlockOnlyConn() == false);
@@ -82,12 +89,16 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode2->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode2->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
-        /* nKeyedNetGroupIn = */ 0,
-        /* nLocalHostNonceIn = */ 0,
-        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY,
-        /* inbound_onion = */ false);
+    std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(id++,
+                                                            NODE_NETWORK,
+                                                            /*sock=*/nullptr,
+                                                            addr,
+                                                            /*nKeyedNetGroupIn=*/0,
+                                                            /*nLocalHostNonceIn=*/0,
+                                                            CAddress(),
+                                                            pszDest,
+                                                            ConnectionType::OUTBOUND_FULL_RELAY,
+                                                            /*inbound_onion=*/false);
     BOOST_CHECK(pnode3->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode3->IsManualConn() == false);
     BOOST_CHECK(pnode3->IsBlockOnlyConn() == false);
@@ -97,12 +108,16 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode3->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode3->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
-        /* nKeyedNetGroupIn = */ 1,
-        /* nLocalHostNonceIn = */ 1,
-        CAddress(), pszDest, ConnectionType::INBOUND,
-        /* inbound_onion = */ true);
+    std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(id++,
+                                                            NODE_NETWORK,
+                                                            /*sock=*/nullptr,
+                                                            addr,
+                                                            /*nKeyedNetGroupIn=*/1,
+                                                            /*nLocalHostNonceIn=*/1,
+                                                            CAddress(),
+                                                            pszDest,
+                                                            ConnectionType::INBOUND,
+                                                            /*inbound_onion=*/true);
     BOOST_CHECK(pnode4->IsFullOutboundConn() == false);
     BOOST_CHECK(pnode4->IsManualConn() == false);
     BOOST_CHECK(pnode4->IsBlockOnlyConn() == false);
@@ -386,9 +401,9 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     s.SetVersion(s.GetVersion() | ADDRV2_FORMAT);
 
     // Valid IPv4.
-    s << MakeSpan(ParseHex("01"          // network type (IPv4)
-                           "04"          // address length
-                           "01020304")); // address
+    s << Span{ParseHex("01"          // network type (IPv4)
+                       "04"          // address length
+                       "01020304")}; // address
     s >> addr;
     BOOST_CHECK(addr.IsValid());
     BOOST_CHECK(addr.IsIPv4());
@@ -397,35 +412,35 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 
     // Invalid IPv4, valid length but address itself is shorter.
-    s << MakeSpan(ParseHex("01"      // network type (IPv4)
-                           "04"      // address length
-                           "0102")); // address
+    s << Span{ParseHex("01"      // network type (IPv4)
+                       "04"      // address length
+                       "0102")}; // address
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure, HasReason("end of data"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Invalid IPv4, with bogus length.
-    s << MakeSpan(ParseHex("01"          // network type (IPv4)
-                           "05"          // address length
-                           "01020304")); // address
+    s << Span{ParseHex("01"          // network type (IPv4)
+                       "05"          // address length
+                       "01020304")}; // address
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
                           HasReason("BIP155 IPv4 address with length 5 (should be 4)"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Invalid IPv4, with extreme length.
-    s << MakeSpan(ParseHex("01"          // network type (IPv4)
-                           "fd0102"      // address length (513 as CompactSize)
-                           "01020304")); // address
+    s << Span{ParseHex("01"          // network type (IPv4)
+                       "fd0102"      // address length (513 as CompactSize)
+                       "01020304")}; // address
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
                           HasReason("Address too long: 513 > 512"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Valid IPv6.
-    s << MakeSpan(ParseHex("02"                                  // network type (IPv6)
-                           "10"                                  // address length
-                           "0102030405060708090a0b0c0d0e0f10")); // address
+    s << Span{ParseHex("02"                                  // network type (IPv6)
+                       "10"                                  // address length
+                       "0102030405060708090a0b0c0d0e0f10")}; // address
     s >> addr;
     BOOST_CHECK(addr.IsValid());
     BOOST_CHECK(addr.IsIPv6());
@@ -434,10 +449,10 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 
     // Valid IPv6, contains embedded "internal".
-    s << MakeSpan(ParseHex(
+    s << Span{ParseHex(
         "02"                                  // network type (IPv6)
         "10"                                  // address length
-        "fd6b88c08724ca978112ca1bbdcafac2")); // address: 0xfd + sha256("bitcoin")[0:5] +
+        "fd6b88c08724ca978112ca1bbdcafac2")}; // address: 0xfd + sha256("bitcoin")[0:5] +
                                               // sha256(name)[0:10]
     s >> addr;
     BOOST_CHECK(addr.IsInternal());
@@ -446,44 +461,44 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 
     // Invalid IPv6, with bogus length.
-    s << MakeSpan(ParseHex("02"    // network type (IPv6)
-                           "04"    // address length
-                           "00")); // address
+    s << Span{ParseHex("02"    // network type (IPv6)
+                       "04"    // address length
+                       "00")}; // address
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
                           HasReason("BIP155 IPv6 address with length 4 (should be 16)"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Invalid IPv6, contains embedded IPv4.
-    s << MakeSpan(ParseHex("02"                                  // network type (IPv6)
-                           "10"                                  // address length
-                           "00000000000000000000ffff01020304")); // address
+    s << Span{ParseHex("02"                                  // network type (IPv6)
+                       "10"                                  // address length
+                       "00000000000000000000ffff01020304")}; // address
     s >> addr;
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
 
     // Invalid IPv6, contains embedded TORv2.
-    s << MakeSpan(ParseHex("02"                                  // network type (IPv6)
-                           "10"                                  // address length
-                           "fd87d87eeb430102030405060708090a")); // address
+    s << Span{ParseHex("02"                                  // network type (IPv6)
+                       "10"                                  // address length
+                       "fd87d87eeb430102030405060708090a")}; // address
     s >> addr;
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
 
     // TORv2, no longer supported.
-    s << MakeSpan(ParseHex("03"                      // network type (TORv2)
-                           "0a"                      // address length
-                           "f1f2f3f4f5f6f7f8f9fa")); // address
+    s << Span{ParseHex("03"                      // network type (TORv2)
+                       "0a"                      // address length
+                       "f1f2f3f4f5f6f7f8f9fa")}; // address
     s >> addr;
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
 
     // Valid TORv3.
-    s << MakeSpan(ParseHex("04"                               // network type (TORv3)
-                           "20"                               // address length
-                           "79bcc625184b05194975c28b66b66b04" // address
-                           "69f7f6556fb1ac3189a79b40dda32f1f"
-                           ));
+    s << Span{ParseHex("04"                               // network type (TORv3)
+                       "20"                               // address length
+                       "79bcc625184b05194975c28b66b66b04" // address
+                       "69f7f6556fb1ac3189a79b40dda32f1f"
+                       )};
     s >> addr;
     BOOST_CHECK(addr.IsValid());
     BOOST_CHECK(addr.IsTor());
@@ -493,20 +508,20 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 
     // Invalid TORv3, with bogus length.
-    s << MakeSpan(ParseHex("04" // network type (TORv3)
-                           "00" // address length
-                           "00" // address
-                           ));
+    s << Span{ParseHex("04" // network type (TORv3)
+                       "00" // address length
+                       "00" // address
+                       )};
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
                           HasReason("BIP155 TORv3 address with length 0 (should be 32)"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Valid I2P.
-    s << MakeSpan(ParseHex("05"                               // network type (I2P)
-                           "20"                               // address length
-                           "a2894dabaec08c0051a481a6dac88b64" // address
-                           "f98232ae42d4b6fd2fa81952dfe36a87"));
+    s << Span{ParseHex("05"                               // network type (I2P)
+                       "20"                               // address length
+                       "a2894dabaec08c0051a481a6dac88b64" // address
+                       "f98232ae42d4b6fd2fa81952dfe36a87")};
     s >> addr;
     BOOST_CHECK(addr.IsValid());
     BOOST_CHECK(addr.IsI2P());
@@ -516,20 +531,20 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 
     // Invalid I2P, with bogus length.
-    s << MakeSpan(ParseHex("05" // network type (I2P)
-                           "03" // address length
-                           "00" // address
-                           ));
+    s << Span{ParseHex("05" // network type (I2P)
+                       "03" // address length
+                       "00" // address
+                       )};
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
                           HasReason("BIP155 I2P address with length 3 (should be 32)"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Valid CJDNS.
-    s << MakeSpan(ParseHex("06"                               // network type (CJDNS)
-                           "10"                               // address length
-                           "fc000001000200030004000500060007" // address
-                           ));
+    s << Span{ParseHex("06"                               // network type (CJDNS)
+                       "10"                               // address length
+                       "fc000001000200030004000500060007" // address
+                       )};
     s >> addr;
     BOOST_CHECK(addr.IsValid());
     BOOST_CHECK(addr.IsCJDNS());
@@ -538,49 +553,49 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 
     // Invalid CJDNS, wrong prefix.
-    s << MakeSpan(ParseHex("06"                               // network type (CJDNS)
-                           "10"                               // address length
-                           "aa000001000200030004000500060007" // address
-                           ));
+    s << Span{ParseHex("06"                               // network type (CJDNS)
+                       "10"                               // address length
+                       "aa000001000200030004000500060007" // address
+                       )};
     s >> addr;
     BOOST_CHECK(addr.IsCJDNS());
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
 
     // Invalid CJDNS, with bogus length.
-    s << MakeSpan(ParseHex("06" // network type (CJDNS)
-                           "01" // address length
-                           "00" // address
-                           ));
+    s << Span{ParseHex("06" // network type (CJDNS)
+                       "01" // address length
+                       "00" // address
+                       )};
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
                           HasReason("BIP155 CJDNS address with length 1 (should be 16)"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Unknown, with extreme length.
-    s << MakeSpan(ParseHex("aa"             // network type (unknown)
-                           "fe00000002"     // address length (CompactSize's MAX_SIZE)
-                           "01020304050607" // address
-                           ));
+    s << Span{ParseHex("aa"             // network type (unknown)
+                       "fe00000002"     // address length (CompactSize's MAX_SIZE)
+                       "01020304050607" // address
+                       )};
     BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
                           HasReason("Address too long: 33554432 > 512"));
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
     // Unknown, with reasonable length.
-    s << MakeSpan(ParseHex("aa"       // network type (unknown)
-                           "04"       // address length
-                           "01020304" // address
-                           ));
+    s << Span{ParseHex("aa"       // network type (unknown)
+                       "04"       // address length
+                       "01020304" // address
+                       )};
     s >> addr;
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
 
     // Unknown, with zero length.
-    s << MakeSpan(ParseHex("aa" // network type (unknown)
-                           "00" // address length
-                           ""   // address
-                           ));
+    s << Span{ParseHex("aa" // network type (unknown)
+                       "00" // address length
+                       ""   // address
+                       )};
     s >> addr;
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
@@ -593,7 +608,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     // that a normal IPv4 address is among the entries, but if this address is
     // !IsRoutable the undefined behavior is easier to trigger deterministically
     {
-        LOCK(cs_mapLocalHost);
+        LOCK(g_maplocalhost_mutex);
         in_addr ipv4AddrLocal;
         ipv4AddrLocal.s_addr = 0x0100007f;
         CNetAddr addr = CNetAddr(ipv4AddrLocal);
@@ -607,7 +622,16 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     in_addr ipv4AddrPeer;
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress{}, /* pszDest */ std::string{}, ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
+    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(/*id=*/0,
+                                                           NODE_NETWORK,
+                                                           /*sock=*/nullptr,
+                                                           addr,
+                                                           /*nKeyedNetGroupIn=*/0,
+                                                           /*nLocalHostNonceIn=*/0,
+                                                           CAddress{},
+                                                           /*pszDest=*/std::string{},
+                                                           ConnectionType::OUTBOUND_FULL_RELAY,
+                                                           /*inbound_onion=*/false);
     pnode->fSuccessfullyConnected.store(true);
 
     // the peer claims to be reaching us via IPv6

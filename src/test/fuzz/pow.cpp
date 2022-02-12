@@ -9,6 +9,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/overflow.h>
 
 #include <cstdint>
 #include <optional>
@@ -27,7 +28,7 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
     std::vector<CBlockIndex> blocks;
     const uint32_t fixed_time = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     const uint32_t fixed_bits = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-    while (fuzzed_data_provider.remaining_bytes() > 0) {
+    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 10000) {
         const std::optional<CBlockHeader> block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider);
         if (!block_header) {
             continue;

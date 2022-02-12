@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the rawtransaction RPCs.
@@ -75,14 +75,11 @@ class RawTransactionsTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Prepare some coins for multiple *rawtransaction commands")
         self.generate(self.nodes[2], 1)
-        self.sync_all()
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
-        self.sync_all()
         for amount in [1.5, 1.0, 5.0]:
             self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), amount)
         self.sync_all()
         self.generate(self.nodes[0], 5)
-        self.sync_all()
 
         self.getrawtransaction_tests()
         self.createrawtransaction_tests()
@@ -98,31 +95,40 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         vout = find_vout_for_address(self.nodes[1], txid, addr)
         rawTx = self.nodes[1].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): 9.999})
         rawTxSigned = self.nodes[1].signrawtransactionwithwallet(rawTx)
         txId = self.nodes[1].sendrawtransaction(rawTxSigned['hex'])
-        self.generate(self.nodes[0], 1)
-        self.sync_all()
+        self.generateblock(self.nodes[0], output=self.nodes[0].getnewaddress(), transactions=[rawTxSigned['hex']])
+        err_msg = (
+            "No such mempool transaction. Use -txindex or provide a block hash to enable"
+            " blockchain transaction queries. Use gettransaction for wallet transactions."
+        )
 
         for n in [0, 3]:
             self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex")
-            # 1. valid parameters - only supply txid
-            assert_equal(self.nodes[n].getrawtransaction(txId), rawTxSigned['hex'])
 
-            # 2. valid parameters - supply txid and 0 for non-verbose
-            assert_equal(self.nodes[n].getrawtransaction(txId, 0), rawTxSigned['hex'])
+            if n == 0:
+                # With -txindex.
+                # 1. valid parameters - only supply txid
+                assert_equal(self.nodes[n].getrawtransaction(txId), rawTxSigned['hex'])
 
-            # 3. valid parameters - supply txid and False for non-verbose
-            assert_equal(self.nodes[n].getrawtransaction(txId, False), rawTxSigned['hex'])
+                # 2. valid parameters - supply txid and 0 for non-verbose
+                assert_equal(self.nodes[n].getrawtransaction(txId, 0), rawTxSigned['hex'])
 
-            # 4. valid parameters - supply txid and 1 for verbose.
-            # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
-            assert_equal(self.nodes[n].getrawtransaction(txId, 1)["hex"], rawTxSigned['hex'])
+                # 3. valid parameters - supply txid and False for non-verbose
+                assert_equal(self.nodes[n].getrawtransaction(txId, False), rawTxSigned['hex'])
 
-            # 5. valid parameters - supply txid and True for non-verbose
-            assert_equal(self.nodes[n].getrawtransaction(txId, True)["hex"], rawTxSigned['hex'])
+                # 4. valid parameters - supply txid and 1 for verbose.
+                # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
+                assert_equal(self.nodes[n].getrawtransaction(txId, 1)["hex"], rawTxSigned['hex'])
+
+                # 5. valid parameters - supply txid and True for non-verbose
+                assert_equal(self.nodes[n].getrawtransaction(txId, True)["hex"], rawTxSigned['hex'])
+            else:
+                # Without -txindex, expect to raise.
+                for verbose in [None, 0, False, 1, True]:
+                    assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txId, verbose)
 
             # 6. invalid parameters - supply txid and invalid boolean values (strings) for verbose
             for value in ["True", "False"]:
@@ -137,7 +143,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Make a tx by sending, then generate 2 blocks; block1 has the tx in it
         tx = self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         block1, block2 = self.generate(self.nodes[2], 2)
-        self.sync_all()
         for n in [0, 3]:
             self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex, with blockhash")
             # We should be able to get the raw transaction by providing the correct block
@@ -151,10 +156,6 @@ class RawTransactionsTest(BitcoinTestFramework):
                 assert 'in_active_chain' not in gottx
             else:
                 self.log.info("Test getrawtransaction without -txindex, without blockhash: expect the call to raise")
-                err_msg = (
-                    "No such mempool transaction. Use -txindex or provide a block hash to enable"
-                    " blockchain transaction queries. Use gettransaction for wallet transactions."
-                )
                 assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txid=tx, verbose=True)
             # We should not get the tx if we provide an unrelated block
             assert_raises_rpc_error(-5, "No such transaction found", self.nodes[n].getrawtransaction, txid=tx, blockhash=block2)
@@ -369,7 +370,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.log.info("Test sendrawtransaction/testmempoolaccept with tx already in the chain")
         self.generate(self.nodes[2], 1)
-        self.sync_blocks()
         for node in self.nodes:
             testres = node.testmempoolaccept([rawTxSigned['hex']])[0]
             assert_equal(testres['allowed'], False)
@@ -443,7 +443,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.sync_all()
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         # node2 has both keys of the 2of2 ms addr, tx should affect the balance
         assert_equal(self.nodes[2].getbalance(), bal + Decimal('1.20000000'))
 
@@ -465,7 +464,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         self.sync_all()
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # THIS IS AN INCOMPLETE FEATURE
         # NODE2 HAS TWO OF THREE KEYS AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
@@ -488,7 +486,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
         self.sync_all()
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         assert_equal(self.nodes[0].getbalance(), bal + Decimal('50.00000000') + Decimal('2.19000000'))  # block reward + tx
 
         # 2of2 test for combining transactions
@@ -508,7 +505,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx2 = self.nodes[0].decoderawtransaction(decTx['hex'])
         self.sync_all()
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         assert_equal(self.nodes[2].getbalance(), bal)  # the funds of a 2of2 multisig tx should not be marked as spendable
 
@@ -533,7 +529,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx2 = self.nodes[0].decoderawtransaction(rawTxComb)
         self.sync_all()
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         assert_equal(self.nodes[0].getbalance(), bal + Decimal('50.00000000') + Decimal('2.19000000'))  # block reward + tx
 
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,12 +25,13 @@
 #include <util/epochguard.h>
 #include <util/hasher.h>
 
-#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index_container.hpp>
 
 class CBlockIndex;
+class CChain;
 class CChainState;
 extern RecursiveMutex cs_main;
 
@@ -48,6 +49,11 @@ struct LockPoints {
     // values are still valid even after a reorg.
     CBlockIndex* maxInputBlock{nullptr};
 };
+
+/**
+ * Test whether the LockPoints height and time are still valid on the current chain
+ */
+bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 struct CompareIteratorByHash {
     // SFINAE for T where T is either a pointer type (e.g., a txiter) or a reference_wrapper<T>
@@ -157,58 +163,6 @@ public:
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
     mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
-};
-
-// Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
-struct update_descendant_state
-{
-    update_descendant_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount) :
-        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount)
-    {}
-
-    void operator() (CTxMemPoolEntry &e)
-        { e.UpdateDescendantState(modifySize, modifyFee, modifyCount); }
-
-    private:
-        int64_t modifySize;
-        CAmount modifyFee;
-        int64_t modifyCount;
-};
-
-struct update_ancestor_state
-{
-    update_ancestor_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount, int64_t _modifySigOpsCost) :
-        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount), modifySigOpsCost(_modifySigOpsCost)
-    {}
-
-    void operator() (CTxMemPoolEntry &e)
-        { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, modifySigOpsCost); }
-
-    private:
-        int64_t modifySize;
-        CAmount modifyFee;
-        int64_t modifyCount;
-        int64_t modifySigOpsCost;
-};
-
-struct update_fee_delta
-{
-    explicit update_fee_delta(int64_t _feeDelta) : feeDelta(_feeDelta) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateFeeDelta(feeDelta); }
-
-private:
-    int64_t feeDelta;
-};
-
-struct update_lock_points
-{
-    explicit update_lock_points(const LockPoints& _lp) : lp(_lp) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateLockPoints(lp); }
-
-private:
-    const LockPoints& lp;
 };
 
 // extracts a transaction hash from CTxMemPoolEntry or CTransactionRef
@@ -542,7 +496,7 @@ public:
      * By design, it is guaranteed that:
      *
      * 1. Locking both `cs_main` and `mempool.cs` will give a view of mempool
-     *    that is consistent with current chain tip (`::ChainActive()` and
+     *    that is consistent with current chain tip (`ActiveChain()` and
      *    `CoinsTip()`) and is fully populated. Fully populated means that if the
      *    current active chain is missing transactions that were present in a
      *    previously active chain, all the missing transactions will have been
@@ -622,7 +576,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(CChainState& active_chainstate) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
@@ -635,7 +589,14 @@ public:
     void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeForReorg(CChainState& active_chainstate, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    /** After reorg, filter the entries that would no longer be valid in the next block, and update
+     * the entries' cached LockPoints if needed.  The mempool does not have any knowledge of
+     * consensus rules. It just appplies the callable function and removes the ones for which it
+     * returns true.
+     * @param[in]   filter_final_and_mature   Predicate that checks the relevant validation rules
+     *                                        and updates an entry's LockPoints.
+     * */
+    void removeForReorg(CChain& chain, std::function<bool(txiter)> filter_final_and_mature) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -675,16 +636,25 @@ public:
      */
     void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** When adding transactions from a disconnected block back to the mempool,
-     *  new mempool entries may have children in the mempool (which is generally
-     *  not the case when otherwise adding transactions).
-     *  UpdateTransactionsFromBlock() will find child transactions and update the
-     *  descendant state for each transaction in vHashesToUpdate (excluding any
-     *  child transactions present in vHashesToUpdate, which are already accounted
-     *  for).  Note: vHashesToUpdate should be the set of transactions from the
-     *  disconnected block that have been accepted back into the mempool.
+    /** UpdateTransactionsFromBlock is called when adding transactions from a
+     * disconnected block back to the mempool, new mempool entries may have
+     * children in the mempool (which is generally not the case when otherwise
+     * adding transactions).
+     *  @post updated descendant state for descendants of each transaction in
+     *        vHashesToUpdate (excluding any child transactions present in
+     *        vHashesToUpdate, which are already accounted for). Updated state
+     *        includes add fee/size information for such descendants to the
+     *        parent and updated ancestor state to include the parent.
+     *
+     * @param[in] vHashesToUpdate          The set of txids from the
+     *     disconnected block that have been accepted back into the mempool.
+     * @param[in] ancestor_size_limit      The maximum allowed size in virtual
+     *     bytes of an entry and its ancestors
+     * @param[in] ancestor_count_limit     The maximum allowed number of
+     *     transactions including the entry and its ancestors.
      */
-    void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
+    void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate,
+            uint64_t ancestor_size_limit, uint64_t ancestor_count_limit) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
 
     /** Try to calculate all in-mempool ancestors of entry.
      *  (these are all calculated including the tx itself)
@@ -782,7 +752,6 @@ public:
         }
         return (mapTx.count(gtxid.GetHash()) != 0);
     }
-    bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
 
     CTransactionRef get(const uint256& hash) const;
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
@@ -790,7 +759,6 @@ public:
         AssertLockHeld(cs);
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
-    TxMempoolInfo info(const uint256& hash) const;
     TxMempoolInfo info(const GenTxid& gtxid) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
@@ -802,7 +770,7 @@ public:
         LOCK(cs);
         // Sanity check the transaction is in the mempool & insert into
         // unbroadcast set.
-        if (exists(txid)) m_unbroadcast_txids.insert(txid);
+        if (exists(GenTxid::Txid(txid))) m_unbroadcast_txids.insert(txid);
     };
 
     /** Removes a transaction from the unbroadcast set */
@@ -835,19 +803,38 @@ private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
      *  the descendants for a single transaction that has been added to the
      *  mempool but may have child transactions in the mempool, eg during a
-     *  chain reorg.  setExclude is the set of descendant transactions in the
-     *  mempool that must not be accounted for (because any descendants in
-     *  setExclude were added to the mempool after the transaction being
-     *  updated and hence their state is already reflected in the parent
-     *  state).
+     *  chain reorg.
      *
-     *  cachedDescendants will be updated with the descendants of the transaction
-     *  being updated, so that future invocations don't need to walk the
-     *  same transaction again, if encountered in another transaction chain.
+     * @pre CTxMemPool::m_children is correct for the given tx and all
+     *      descendants.
+     * @pre cachedDescendants is an accurate cache where each entry has all
+     *      descendants of the corresponding key, including those that should
+     *      be removed for violation of ancestor limits.
+     * @post if updateIt has any non-excluded descendants, cachedDescendants has
+     *       a new cache line for updateIt.
+     * @post descendants_to_remove has a new entry for any descendant which exceeded
+     *       ancestor limits relative to updateIt.
+     *
+     * @param[in] updateIt the entry to update for its descendants
+     * @param[in,out] cachedDescendants a cache where each line corresponds to all
+     *     descendants. It will be updated with the descendants of the transaction
+     *     being updated, so that future invocations don't need to walk the same
+     *     transaction again, if encountered in another transaction chain.
+     * @param[in] setExclude the set of descendant transactions in the mempool
+     *     that must not be accounted for (because any descendants in setExclude
+     *     were added to the mempool after the transaction being updated and hence
+     *     their state is already reflected in the parent state).
+     * @param[out] descendants_to_remove Populated with the txids of entries that
+     *     exceed ancestor limits. It's the responsibility of the caller to
+     *     removeRecursive them.
+     * @param[in] ancestor_size_limit the max number of ancestral bytes allowed
+     *     for any descendant
+     * @param[in] ancestor_count_limit the max number of ancestor transactions
+     *     allowed for any descendant
      */
-    void UpdateForDescendants(txiter updateIt,
-            cacheMap &cachedDescendants,
-            const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
+                              const std::set<uint256>& setExclude, std::set<uint256>& descendants_to_remove,
+                              uint64_t ancestor_size_limit, uint64_t ancestor_count_limit) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
     void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -144,6 +145,11 @@ BOOST_AUTO_TEST_CASE(intarg)
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 11), 0);
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 0);
 
+    // Check under-/overflow behavior.
+    ResetArgs("-foo=-9223372036854775809 -bar=9223372036854775808");
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 0), std::numeric_limits<int64_t>::min());
+    BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 0), std::numeric_limits<int64_t>::max());
+
     ResetArgs("-foo=11 -bar=12");
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 0), 11);
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 12);
@@ -151,6 +157,98 @@ BOOST_AUTO_TEST_CASE(intarg)
     ResetArgs("-foo=NaN -bar=NotANumber");
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-foo", 1), 0);
     BOOST_CHECK_EQUAL(m_local_args.GetIntArg("-bar", 11), 0);
+}
+
+BOOST_AUTO_TEST_CASE(patharg)
+{
+    const auto dir = std::make_pair("-dir", ArgsManager::ALLOW_ANY);
+    SetupArgs({dir});
+    ResetArgs("");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), fs::path{});
+
+    const fs::path root_path{"/"};
+    ResetArgs("-dir=/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+    ResetArgs("-dir=/.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+    ResetArgs("-dir=/./");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+    ResetArgs("-dir=/.//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), root_path);
+
+#ifdef WIN32
+    const fs::path win_root_path{"C:\\"};
+    ResetArgs("-dir=C:\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\.\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+
+    ResetArgs("-dir=C:\\.\\\\");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), win_root_path);
+#endif
+
+    const fs::path absolute_path{"/home/user/.bitcoin"};
+    ResetArgs("-dir=/home/user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/root/../home/user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/./user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/./");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    ResetArgs("-dir=/home/user/.bitcoin/.//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), absolute_path);
+
+    const fs::path relative_path{"user/.bitcoin"};
+    ResetArgs("-dir=user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=somewhere/../user/.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/./.bitcoin");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/.");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/./");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
+
+    ResetArgs("-dir=user/.bitcoin/.//");
+    BOOST_CHECK_EQUAL(m_local_args.GetPathArg("-dir"), relative_path);
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)
@@ -194,8 +292,8 @@ BOOST_AUTO_TEST_CASE(boolargno)
 
 BOOST_AUTO_TEST_CASE(logargs)
 {
-    const auto okaylog_bool = std::make_pair("-okaylog-bool", ArgsManager::ALLOW_BOOL);
-    const auto okaylog_negbool = std::make_pair("-okaylog-negbool", ArgsManager::ALLOW_BOOL);
+    const auto okaylog_bool = std::make_pair("-okaylog-bool", ArgsManager::ALLOW_ANY);
+    const auto okaylog_negbool = std::make_pair("-okaylog-negbool", ArgsManager::ALLOW_ANY);
     const auto okaylog = std::make_pair("-okaylog", ArgsManager::ALLOW_ANY);
     const auto dontlog = std::make_pair("-dontlog", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE);
     SetupArgs({okaylog_bool, okaylog_negbool, okaylog, dontlog});

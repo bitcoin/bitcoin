@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -870,7 +870,7 @@ void BitcoinGUI::showHelpMessageClicked()
 #ifdef ENABLE_WALLET
 void BitcoinGUI::openClicked()
 {
-    OpenURIDialog dlg(this);
+    OpenURIDialog dlg(platformStyle, this);
     if(dlg.exec())
     {
         Q_EMIT receivedURI(dlg.getURI());
@@ -1242,7 +1242,7 @@ void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmoun
     // On new transaction, make an info balloon
     QString msg = tr("Date: %1\n").arg(date) +
                   tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(unit, amount, true));
-    if (m_node.walletClient().getWallets().size() > 1 && !walletName.isEmpty()) {
+    if (m_node.walletLoader().getWallets().size() > 1 && !walletName.isEmpty()) {
         msg += tr("Wallet: %1\n").arg(walletName);
     }
     msg += tr("Type: %1\n").arg(type);
@@ -1304,8 +1304,6 @@ void BitcoinGUI::setHDStatus(bool privkeyDisabled, int hdEnabled)
     labelWalletHDStatusIcon->setThemedPixmap(privkeyDisabled ? QStringLiteral(":/icons/eye") : hdEnabled ? QStringLiteral(":/icons/hd_enabled") : QStringLiteral(":/icons/hd_disabled"), STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE);
     labelWalletHDStatusIcon->setToolTip(privkeyDisabled ? tr("Private key <b>disabled</b>") : hdEnabled ? tr("HD key generation is <b>enabled</b>") : tr("HD key generation is <b>disabled</b>"));
     labelWalletHDStatusIcon->show();
-    // eventually disable the QLabel to set its opacity to 50%
-    labelWalletHDStatusIcon->setEnabled(hdEnabled);
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)

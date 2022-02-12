@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiwallet.
@@ -11,6 +11,7 @@ from threading import Thread
 import os
 import shutil
 import stat
+import sys
 import time
 
 from test_framework.authproxy import JSONRPCException
@@ -141,7 +142,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # should raise rpc error if wallet path can't be created
         err_code = -4 if self.options.descriptors else -1
-        assert_raises_rpc_error(err_code, "boost::filesystem::create_directory:", self.nodes[0].createwallet, "w8/bad")
+        assert_raises_rpc_error(err_code, "filesystem error:" if sys.platform != 'win32' else "create_directories:", self.nodes[0].createwallet, "w8/bad")
 
         # check that all requested wallets were created
         self.stop_node(0)
@@ -185,7 +186,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet("w5")
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
-        self.generatetoaddress(node, nblocks=1, address=w5.getnewaddress())
+        self.generatetoaddress(node, nblocks=1, address=w5.getnewaddress(), sync_fun=self.no_op)
 
         # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
         os.rename(wallet_dir2, wallet_dir())
@@ -202,7 +203,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.restart_node(0, ['-nowallet', '-walletdir=' + competing_wallet_dir])
         self.nodes[0].createwallet(self.default_wallet_name)
         if self.options.descriptors:
-            exp_stderr = r"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?"
+            exp_stderr = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
         else:
             exp_stderr = r"Error: Error initializing wallet database environment \"\S+competing_walletdir\S*\"!"
         self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
@@ -217,7 +218,7 @@ class MultiWalletTest(BitcoinTestFramework):
         wallet_bad = wallet("bad")
 
         # check wallet names and balances
-        self.generatetoaddress(node, nblocks=1, address=wallets[0].getnewaddress())
+        self.generatetoaddress(node, nblocks=1, address=wallets[0].getnewaddress(), sync_fun=self.no_op)
         for wallet_name, wallet in zip(wallet_names, wallets):
             info = wallet.getwalletinfo()
             assert_equal(info['immature_balance'], 50 if wallet is wallets[0] else 0)
@@ -230,7 +231,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-19, "Wallet file not specified", node.getwalletinfo)
 
         w1, w2, w3, w4, *_ = wallets
-        self.generatetoaddress(node, nblocks=COINBASE_MATURITY + 1, address=w1.getnewaddress())
+        self.generatetoaddress(node, nblocks=COINBASE_MATURITY + 1, address=w1.getnewaddress(), sync_fun=self.no_op)
         assert_equal(w1.getbalance(), 100)
         assert_equal(w2.getbalance(), 0)
         assert_equal(w3.getbalance(), 0)
@@ -239,7 +240,7 @@ class MultiWalletTest(BitcoinTestFramework):
         w1.sendtoaddress(w2.getnewaddress(), 1)
         w1.sendtoaddress(w3.getnewaddress(), 2)
         w1.sendtoaddress(w4.getnewaddress(), 3)
-        self.generatetoaddress(node, nblocks=1, address=w1.getnewaddress())
+        self.generatetoaddress(node, nblocks=1, address=w1.getnewaddress(), sync_fun=self.no_op)
         assert_equal(w2.getbalance(), 1)
         assert_equal(w3.getbalance(), 2)
         assert_equal(w4.getbalance(), 3)
@@ -303,7 +304,7 @@ class MultiWalletTest(BitcoinTestFramework):
         # Fail to load duplicate wallets
         path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "w1", "wallet.dat")
         if self.options.descriptors:
-            assert_raises_rpc_error(-4, "Wallet file verification failed. SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?", self.nodes[0].loadwallet, wallet_names[0])
+            assert_raises_rpc_error(-4, f"Wallet file verification failed. SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?", self.nodes[0].loadwallet, wallet_names[0])
         else:
             assert_raises_rpc_error(-35, "Wallet file verification failed. Refusing to load database. Data file '{}' is already loaded.".format(path), self.nodes[0].loadwallet, wallet_names[0])
 

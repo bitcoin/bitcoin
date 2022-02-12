@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -70,25 +70,45 @@ public:
     uint32_t nSequence;
     CScriptWitness scriptWitness; //!< Only serialized through CTransaction
 
-    /* Setting nSequence to this value for every input in a transaction
-     * disables nLockTime. */
+    /**
+     * Setting nSequence to this value for every input in a transaction
+     * disables nLockTime/IsFinalTx().
+     * It fails OP_CHECKLOCKTIMEVERIFY/CheckLockTime() for any input that has
+     * it set (BIP 65).
+     * It has SEQUENCE_LOCKTIME_DISABLE_FLAG set (BIP 68/112).
+     */
     static const uint32_t SEQUENCE_FINAL = 0xffffffff;
+    /**
+     * This is the maximum sequence number that enables both nLockTime and
+     * OP_CHECKLOCKTIMEVERIFY (BIP 65).
+     * It has SEQUENCE_LOCKTIME_DISABLE_FLAG set (BIP 68/112).
+     */
+    static const uint32_t MAX_SEQUENCE_NONFINAL{SEQUENCE_FINAL - 1};
 
-    /* Below flags apply in the context of BIP 68*/
-    /* If this flag set, CTxIn::nSequence is NOT interpreted as a
-     * relative lock-time. */
+    // Below flags apply in the context of BIP 68. BIP 68 requires the tx
+    // version to be set to 2, or higher.
+    /**
+     * If this flag is set, CTxIn::nSequence is NOT interpreted as a
+     * relative lock-time.
+     * It skips SequenceLocks() for any input that has it set (BIP 68).
+     * It fails OP_CHECKSEQUENCEVERIFY/CheckSequence() for any input that has
+     * it set (BIP 112).
+     */
     static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1U << 31);
 
-    /* If CTxIn::nSequence encodes a relative lock-time and this flag
+    /**
+     * If CTxIn::nSequence encodes a relative lock-time and this flag
      * is set, the relative lock-time has units of 512 seconds,
      * otherwise it specifies blocks with a granularity of 1. */
     static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
 
-    /* If CTxIn::nSequence encodes a relative lock-time, this mask is
+    /**
+     * If CTxIn::nSequence encodes a relative lock-time, this mask is
      * applied to extract that lock-time from the sequence field. */
     static const uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
 
-    /* In order to use the same number of bits to encode roughly the
+    /**
+     * In order to use the same number of bits to encode roughly the
      * same wall-clock duration, and because blocks are naturally
      * limited to occur every 600s on average, the minimum granularity
      * for time-based relative lock-time is fixed at 512 seconds.
@@ -391,8 +411,11 @@ class GenTxid
 {
     bool m_is_wtxid;
     uint256 m_hash;
-public:
     GenTxid(bool is_wtxid, const uint256& hash) : m_is_wtxid(is_wtxid), m_hash(hash) {}
+
+public:
+    static GenTxid Txid(const uint256& hash) { return GenTxid{false, hash}; }
+    static GenTxid Wtxid(const uint256& hash) { return GenTxid{true, hash}; }
     bool IsWtxid() const { return m_is_wtxid; }
     const uint256& GetHash() const { return m_hash; }
     friend bool operator==(const GenTxid& a, const GenTxid& b) { return a.m_is_wtxid == b.m_is_wtxid && a.m_hash == b.m_hash; }

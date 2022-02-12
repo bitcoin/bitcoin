@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block processing."""
@@ -23,6 +23,7 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     MAX_BLOCK_WEIGHT,
+    SEQUENCE_FINAL,
     uint256_from_compact,
     uint256_from_str,
 )
@@ -50,8 +51,12 @@ from test_framework.script_util import (
     script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+)
 from data import invalid_txs
+
 
 #  Use this class for tests that require behavior other than normal p2p behavior.
 #  For now, it is used to serialize a bloated varint (b64).
@@ -612,7 +617,6 @@ class FullBlockTest(BitcoinTestFramework):
         b45.nBits = 0x207fffff
         b45.vtx.append(non_coinbase)
         b45.hashMerkleRoot = b45.calc_merkle_root()
-        b45.calc_sha256()
         b45.solve()
         self.block_heights[b45.sha256] = self.block_heights[self.tip.sha256] + 1
         self.tip = b45
@@ -802,7 +806,7 @@ class FullBlockTest(BitcoinTestFramework):
         b58 = self.next_block(58, spend=out[17])
         tx = CTransaction()
         assert len(out[17].vout) < 42
-        tx.vin.append(CTxIn(COutPoint(out[17].sha256, 42), CScript([OP_TRUE]), 0xffffffff))
+        tx.vin.append(CTxIn(COutPoint(out[17].sha256, 42), CScript([OP_TRUE]), SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, b""))
         tx.calc_sha256()
         b58 = self.update_block(58, [tx])
@@ -877,7 +881,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx.nLockTime = 0xffffffff  # this locktime is non-final
         tx.vin.append(CTxIn(COutPoint(out[18].sha256, 0)))  # don't set nSequence
         tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-        assert tx.vin[0].nSequence < 0xffffffff
+        assert_greater_than(SEQUENCE_FINAL, tx.vin[0].nSequence)
         tx.calc_sha256()
         b62 = self.update_block(62, [tx])
         self.send_blocks([b62], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)
@@ -1025,7 +1029,7 @@ class FullBlockTest(BitcoinTestFramework):
         bogus_tx = CTransaction()
         bogus_tx.sha256 = uint256_from_str(b"23c70ed7c0506e9178fc1a987f40a33946d4ad4c962b5ae3a52546da53af0c5c")
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(bogus_tx.sha256, 0), b"", 0xffffffff))
+        tx.vin.append(CTxIn(COutPoint(bogus_tx.sha256, 0), b"", SEQUENCE_FINAL))
         tx.vout.append(CTxOut(1, b""))
         b70 = self.update_block(70, [tx])
         self.send_blocks([b70], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
@@ -1362,11 +1366,10 @@ class FullBlockTest(BitcoinTestFramework):
         else:
             coinbase.vout[0].nValue += spend.vout[0].nValue - 1  # all but one satoshi to fees
             coinbase.rehash()
-            block = create_block(base_block_hash, coinbase, block_time, version=version)
             tx = self.create_tx(spend, 0, 1, script)  # spend 1 satoshi
             self.sign_tx(tx, spend)
-            self.add_transactions_to_block(block, [tx])
-            block.hashMerkleRoot = block.calc_merkle_root()
+            tx.rehash()
+            block = create_block(base_block_hash, coinbase, block_time, version=version, txlist=[tx])
         # Block is created. Find a valid nonce.
         block.solve()
         self.tip = block

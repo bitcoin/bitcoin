@@ -1,6 +1,10 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <httpserver.h>
 
@@ -597,7 +601,13 @@ CService HTTPRequest::GetPeer() const
         // evhttp retains ownership over returned address string
         const char* address = "";
         uint16_t port = 0;
+
+#ifdef HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
+        evhttp_connection_get_peer(con, &address, &port);
+#else
         evhttp_connection_get_peer(con, (char**)&address, &port);
+#endif // HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
+
         peer = LookupNumeric(address, port);
     }
     return peer;

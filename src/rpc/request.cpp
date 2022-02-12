@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,11 @@
 #include <rpc/protocol.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 /**
  * JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
@@ -70,7 +75,7 @@ static fs::path GetAuthCookieFile(bool temp=false)
     if (temp) {
         arg += ".tmp";
     }
-    return AbsPathForConfigVal(fs::path(arg));
+    return AbsPathForConfigVal(fs::PathFromString(arg));
 }
 
 bool GenerateAuthCookie(std::string *cookie_out)
@@ -83,11 +88,11 @@ bool GenerateAuthCookie(std::string *cookie_out)
     /** the umask determines what permissions are used to create this file -
      * these are set to 077 in init.cpp unless overridden with -sysperms.
      */
-    fsbridge::ofstream file;
+    std::ofstream file;
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
     if (!file.is_open()) {
-        LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath_tmp.string());
+        LogPrintf("Unable to open cookie authentication file %s for writing\n", fs::PathToString(filepath_tmp));
         return false;
     }
     file << cookie;
@@ -95,10 +100,10 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
     fs::path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
-        LogPrintf("Unable to rename cookie authentication file %s to %s\n", filepath_tmp.string(), filepath.string());
+        LogPrintf("Unable to rename cookie authentication file %s to %s\n", fs::PathToString(filepath_tmp), fs::PathToString(filepath));
         return false;
     }
-    LogPrintf("Generated RPC authentication cookie %s\n", filepath.string());
+    LogPrintf("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
 
     if (cookie_out)
         *cookie_out = cookie;
@@ -107,7 +112,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
 bool GetAuthCookie(std::string *cookie_out)
 {
-    fsbridge::ifstream file;
+    std::ifstream file;
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
     file.open(filepath);

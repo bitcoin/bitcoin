@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 
 #include <optional>
 
+namespace wallet {
 //! target minimum change amount
 static constexpr CAmount MIN_CHANGE{COIN / 100};
 //! final minimum change amount after paying for fees
@@ -187,6 +188,8 @@ struct OutputGroup
  * where excess = selected_effective_value - target
  * change_cost = effective_feerate * change_output_size + long_term_feerate * change_spend_size
  *
+ * Note this function is separate from SelectionResult for the tests.
+ *
  * @param[in] inputs The selected inputs
  * @param[in] change_cost The cost of creating change and spending it in the future.
  *                        Only used if there is change, in which case it must be positive.
@@ -197,18 +200,56 @@ struct OutputGroup
  */
 [[nodiscard]] CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
 
-bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
+struct SelectionResult
+{
+private:
+    /** Set of inputs selected by the algorithm to use in the transaction */
+    std::set<CInputCoin> m_selected_inputs;
+    /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
+    const CAmount m_target;
+    /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
+    bool m_use_effective{false};
+    /** The computed waste */
+    std::optional<CAmount> m_waste;
+
+public:
+    explicit SelectionResult(const CAmount target)
+        : m_target(target) {}
+
+    SelectionResult() = delete;
+
+    /** Get the sum of the input values */
+    [[nodiscard]] CAmount GetSelectedValue() const;
+
+    void Clear();
+
+    void AddInput(const OutputGroup& group);
+
+    /** Calculates and stores the waste for this selection via GetSelectionWaste */
+    void ComputeAndSetWaste(CAmount change_cost);
+    [[nodiscard]] CAmount GetWaste() const;
+
+    /** Get m_selected_inputs */
+    const std::set<CInputCoin>& GetInputSet() const;
+    /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
+    std::vector<CInputCoin> GetShuffledInputVector() const;
+
+    bool operator<(SelectionResult other) const;
+};
+
+std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change);
 
 /** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
  * outputs until the target is satisfied
  *
  * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
  * @param[in]  target_value The target value to select for
- * @returns If successful, a pair of set of outputs and total selected value, otherwise, std::nullopt
+ * @returns If successful, a SelectionResult, otherwise, std::nullopt
  */
-std::optional<std::pair<std::set<CInputCoin>, CAmount>> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value);
+std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value);
 
 // Original coin selection algorithm as a fallback
-bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_COINSELECTION_H

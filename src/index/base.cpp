@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,8 @@
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
 #include <warnings.h>
+
+using node::ReadBlockFromDisk;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
@@ -65,7 +67,7 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator);
+        m_best_block_index = m_chainstate->FindForkInGlobalIndex(locator);
     }
     m_synced = m_best_block_index.load() == active_chain.Tip();
     if (!m_synced) {
@@ -91,11 +93,14 @@ bool BaseIndex::Init()
             const CBlockIndex* block = active_chain.Tip();
             prune_violation = true;
             // check backwards from the tip if we have all block data until we reach the indexes bestblock
-            while (block_to_test && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+            while (block_to_test && block && (block->nStatus & BLOCK_HAVE_DATA)) {
                 if (block_to_test == block) {
                     prune_violation = false;
                     break;
                 }
+                // block->pprev must exist at this point, since block_to_test is part of the chain
+                // and thus must be encountered when going backwards from the tip
+                assert(block->pprev);
                 block = block->pprev;
             }
         }
@@ -321,7 +326,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 
     {
         // Skip the queue-draining stuff if we know we're caught up with
-        // ::ChainActive().Tip().
+        // m_chain.Tip().
         LOCK(cs_main);
         const CBlockIndex* chain_tip = m_chainstate->m_chain.Tip();
         const CBlockIndex* best_block_index = m_best_block_index.load();

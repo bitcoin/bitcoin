@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -103,4 +103,4 @@ template <typename T1, size_t PREFIX_LEN>
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // BITCOIN_UTIL_STRING_H

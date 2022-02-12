@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,6 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <node/context.h>
 #include <node/ui_interface.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>
@@ -42,11 +41,11 @@
 #endif // ENABLE_WALLET
 
 #include <boost/signals2/connection.hpp>
+#include <chrono>
 #include <memory>
 
 #include <QApplication>
 #include <QDebug>
-#include <QFontDatabase>
 #include <QLatin1String>
 #include <QLibraryInfo>
 #include <QLocale>
@@ -67,6 +66,8 @@ Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 Q_IMPORT_PLUGIN(QMacStylePlugin);
+#elif defined(QT_QPA_PLATFORM_ANDROID)
+Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 #endif
 #endif
 
@@ -75,6 +76,8 @@ Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(SynchronizationState)
 Q_DECLARE_METATYPE(uint256)
+
+using node::NodeContext;
 
 static void RegisterMetaTypes()
 {
@@ -155,10 +158,11 @@ static bool InitSettings()
 
     std::vector<std::string> errors;
     if (!gArgs.ReadSettingsFile(&errors)) {
-        bilingual_str error = _("Settings file could not be read");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
+        std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be read");
+        std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
+        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
 
-        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Reset | QMessageBox::Abort);
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Reset | QMessageBox::Abort);
         /*: Explanatory text shown on startup when the settings file cannot be read.
             Prompts user to make a choice between resetting or aborting. */
         messagebox.setInformativeText(QObject::tr("Do you want to reset settings to default values, or to abort without making changes?"));
@@ -177,10 +181,11 @@ static bool InitSettings()
 
     errors.clear();
     if (!gArgs.WriteSettingsFile(&errors)) {
-        bilingual_str error = _("Settings file could not be written");
-        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, MakeUnorderedList(errors))));
+        std::string error = QT_TRANSLATE_NOOP("bitcoin-core", "Settings file could not be written");
+        std::string error_translated = QCoreApplication::translate("bitcoin-core", error.c_str()).toStdString();
+        InitError(Untranslated(strprintf("%s:\n%s\n", error, MakeUnorderedList(errors))));
 
-        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Ok);
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error_translated)), QMessageBox::Ok);
         /*: Explanatory text shown on startup when the settings file could not be written.
             Prompts user to check that we have the ability to write to the file.
             Explains that the user has the option of running without a settings file.*/
@@ -273,7 +278,6 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     // We don't hold a direct pointer to the splash screen after creation, but the splash
     // screen will take care of deleting itself when finish() happens.
     m_splash->show();
-    connect(this, &BitcoinApplication::requestedInitialize, m_splash, &SplashScreen::handleLoadWallet);
     connect(this, &BitcoinApplication::splashFinished, m_splash, &SplashScreen::finish);
     connect(this, &BitcoinApplication::requestedShutdown, m_splash, &QWidget::close);
 }
@@ -409,10 +413,10 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
             connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
                 window->message(title, message, style);
             });
-            QTimer::singleShot(100, paymentServer, &PaymentServer::uiReady);
+            QTimer::singleShot(100ms, paymentServer, &PaymentServer::uiReady);
         }
 #endif
-        pollShutdownTimer->start(200);
+        pollShutdownTimer->start(SHUTDOWN_POLLING_DELAY);
     } else {
         Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
         requestShutdown();
@@ -463,9 +467,7 @@ int GuiMain(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
 
-    NodeContext node_context;
-    int unused_exit_status;
-    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node_context, argc, argv, unused_exit_status);
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
 
     SetupEnvironment();
     util::ThreadSetInternalName("main");
@@ -492,7 +494,7 @@ int GuiMain(int argc, char* argv[])
 #endif
 
     BitcoinApplication app;
-    QFontDatabase::addApplicationFont(":/fonts/monospace");
+    GUIUtil::LoadFont(QStringLiteral(":/fonts/monospace"));
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:

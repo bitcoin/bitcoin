@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test CSV soft fork activation.
@@ -104,7 +104,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def create_self_transfer_from_utxo(self, input_tx):
         utxo = self.miniwallet.get_utxo(txid=input_tx.rehash(), mark_as_spent=False)
-        tx = self.miniwallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo)['tx']
+        tx = self.miniwallet.create_self_transfer(utxo_to_spend=utxo)['tx']
         return tx
 
     def create_bip112special(self, input, txversion):
@@ -173,11 +173,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         return test_blocks
 
     def create_test_block(self, txs):
-        block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600)
-        block.nVersion = 4
-        block.vtx.extend(txs)
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
+        block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600, txlist=txs)
         block.solve()
         return block
 

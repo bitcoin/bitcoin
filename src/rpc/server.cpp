@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -239,7 +239,7 @@ static RPCHelpMan getrpcinfo()
     UniValue result(UniValue::VOBJ);
     result.pushKV("active_commands", active_commands);
 
-    const std::string path = LogInstance().m_file_path.string();
+    const std::string path = LogInstance().m_file_path.u8string();
     UniValue log_path(UniValue::VSTR, path);
     result.pushKV("logpath", log_path);
 

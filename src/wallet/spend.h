@@ -10,6 +10,7 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction */
 int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig = false);
 
@@ -101,29 +102,34 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) 
 std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<COutput>& outputs, const CoinSelectionParams& coin_sel_params, const CoinEligibilityFilter& filter, bool positive_only);
 
 /**
- * Shuffle and select coins until nTargetValue is reached while avoiding
- * small change; This method is stochastic for some inputs and upon
- * completion the coin set and corresponding actual target value is
- * assembled
- * param@[in]   coins           Set of UTXOs to consider. These will be categorized into
- *                              OutputGroups and filtered using eligibility_filter before
- *                              selecting coins.
- * param@[out]  setCoinsRet     Populated with the coins selected if successful.
- * param@[out]  nValueRet       Used to return the total value of selected coins.
+ * Attempt to find a valid input set that meets the provided eligibility filter and target.
+ * Multiple coin selection algorithms will be run and the input set that produces the least waste
+ * (according to the waste metric) will be chosen.
+ *
+ * param@[in]  wallet                 The wallet which provides solving data for the coins
+ * param@[in]  nTargetValue           The target value
+ * param@[in]  eligilibity_filter     A filter containing rules for which coins are allowed to be included in this selection
+ * param@[in]  coins                  The vector of coins available for selection prior to filtering
+ * param@[in]  coin_selection_params  Parameters for the coin selection
+ * returns                            If successful, a SelectionResult containing the input set
+ *                                    If failed, a nullopt
  */
-bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
-                        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params);
+std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
+                        const CoinSelectionParams& coin_selection_params);
 
 /**
- * Select a set of coins such that nValueRet >= nTargetValue and at least
+ * Select a set of coins such that nTargetValue is met and at least
  * all coins from coin_control are selected; never select unconfirmed coins if they are not ours
- * param@[out]  setCoinsRet         Populated with inputs including pre-selected inputs from
- *                                  coin_control and Coin Selection if successful.
- * param@[out]  nValueRet           Total value of selected coins including pre-selected ones
- *                                  from coin_control and Coin Selection if successful.
+ * param@[in]   wallet                 The wallet which provides data necessary to spend the selected coins
+ * param@[in]   vAvailableCoins        The vector of coins available to be spent
+ * param@[in]   nTargetValue           The target value
+ * param@[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
+ *                                     and whether to subtract the fee from the outputs.
+ * returns                             If successful, a SelectionResult containing the selected coins
+ *                                     If failed, a nullopt.
  */
-bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
-                 const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+                 const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
@@ -137,5 +143,6 @@ bool CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, 
  * calling CreateTransaction();
  */
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_SPEND_H

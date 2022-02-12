@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the send RPC command."""
@@ -16,6 +16,7 @@ from test_framework.util import (
     assert_fee_amount,
     assert_greater_than,
     assert_raises_rpc_error,
+    count_bytes,
 )
 from test_framework.wallet_util import bytes_to_wif
 
@@ -246,7 +247,6 @@ class WalletSendTest(BitcoinTestFramework):
 
         w0.sendtoaddress(a2_receive, 10) # fund w3
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
 
         if not self.options.descriptors:
             # w4 has private keys enabled, but only contains watch-only keys (from w2)
@@ -265,7 +265,6 @@ class WalletSendTest(BitcoinTestFramework):
 
             w0.sendtoaddress(a2_receive, 10) # fund w4
             self.generate(self.nodes[0], 1)
-            self.sync_blocks()
 
         self.log.info("Send to address...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1)
@@ -322,20 +321,20 @@ class WalletSendTest(BitcoinTestFramework):
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=7, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00007"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00007"))
 
         # "unset" and None are treated the same for estimate_mode
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=2, estimate_mode="unset", add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00002"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00002"))
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=4.531, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00004531"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00004531"))
 
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=3, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
-        assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00003"))
+        assert_fee_amount(fee, count_bytes(res["hex"]), Decimal("0.00003"))
 
         # Test that passing fee_rate as both an argument and an option raises.
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=1, fee_rate=1, add_to_wallet=False,
@@ -448,7 +447,6 @@ class WalletSendTest(BitcoinTestFramework):
         res = self.nodes[0].sendrawtransaction(hex)
         self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 1)
-        self.sync_all()
 
         self.log.info("Lock unspents...")
         utxo1 = w0.listunspent()[0]
@@ -503,7 +501,6 @@ class WalletSendTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(addr, 10)
         self.nodes[0].sendtoaddress(ext_wallet.getnewaddress(), 10)
         self.generate(self.nodes[0], 6)
-        self.sync_all()
         ext_utxo = ext_fund.listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error
@@ -521,6 +518,46 @@ class WalletSendTest(BitcoinTestFramework):
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
         self.nodes[0].finalizepsbt(signed["psbt"])
+
+        dec = self.nodes[0].decodepsbt(signed["psbt"])
+        for i, txin in enumerate(dec["tx"]["vin"]):
+            if txin["txid"] == ext_utxo["txid"] and txin["vout"] == ext_utxo["vout"]:
+                input_idx = i
+                break
+        psbt_in = dec["inputs"][input_idx]
+        # Calculate the input weight
+        # (prevout + sequence + length of scriptSig + 2 bytes buffer) * 4 + len of scriptwitness
+        len_scriptsig = len(psbt_in["final_scriptSig"]["hex"]) // 2 if "final_scriptSig" in psbt_in else 0
+        len_scriptwitness = len(psbt_in["final_scriptwitness"]["hex"]) // 2 if "final_scriptwitness" in psbt_in else 0
+        input_weight = ((41 + len_scriptsig + 2) * 4) + len_scriptwitness
+
+        # Input weight error conditions
+        assert_raises_rpc_error(
+            -8,
+            "Input weights should be specified in inputs rather than in options.",
+            ext_wallet.send,
+            outputs={self.nodes[0].getnewaddress(): 15},
+            options={"inputs": [ext_utxo], "input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 1000}]}
+        )
+
+        # Funding should also work when input weights are provided
+        res = self.test_send(
+            from_wallet=ext_wallet,
+            to_wallet=self.nodes[0],
+            amount=15,
+            inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": input_weight}],
+            add_inputs=True,
+            psbt=True,
+            include_watching=True,
+            fee_rate=10
+        )
+        signed = ext_wallet.walletprocesspsbt(res["psbt"])
+        signed = ext_fund.walletprocesspsbt(res["psbt"])
+        assert signed["complete"]
+        tx = self.nodes[0].finalizepsbt(signed["psbt"])
+        testres = self.nodes[0].testmempoolaccept([tx["hex"]])[0]
+        assert_equal(testres["allowed"], True)
+        assert_fee_amount(testres["fees"]["base"], testres["vsize"], Decimal(0.0001))
 
 if __name__ == '__main__':
     WalletSendTest().main()

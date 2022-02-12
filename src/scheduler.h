@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -119,9 +119,9 @@ class SingleThreadedSchedulerClient
 private:
     CScheduler* m_pscheduler;
 
-    RecursiveMutex m_cs_callbacks_pending;
-    std::list<std::function<void()>> m_callbacks_pending GUARDED_BY(m_cs_callbacks_pending);
-    bool m_are_callbacks_running GUARDED_BY(m_cs_callbacks_pending) = false;
+    Mutex m_callbacks_mutex;
+    std::list<std::function<void()>> m_callbacks_pending GUARDED_BY(m_callbacks_mutex);
+    bool m_are_callbacks_running GUARDED_BY(m_callbacks_mutex) = false;
 
     void MaybeScheduleProcessQueue();
     void ProcessQueue();
@@ -146,4 +146,4 @@ public:
     size_t CallbacksPending();
 };
 
-#endif
+#endif // BITCOIN_SCHEDULER_H

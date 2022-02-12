@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,8 +30,6 @@ public:
     enum Status {
         Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
         /// Normal (sent/received) transactions
-        OpenUntilDate,      /**< Transaction not yet final, waiting for date */
-        OpenUntilBlock,     /**< Transaction not yet final, waiting for block */
         Unconfirmed,        /**< Not yet mined into a block **/
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/

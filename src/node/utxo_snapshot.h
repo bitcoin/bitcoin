@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <uint256.h>
 #include <serialize.h>
 
+namespace node {
 //! Metadata describing a serialized version of a UTXO set from which an
 //! assumeutxo CChainState can be constructed.
 class SnapshotMetadata
@@ -32,5 +33,6 @@ public:
 
     SERIALIZE_METHODS(SnapshotMetadata, obj) { READWRITE(obj.m_base_blockhash, obj.m_coins_count); }
 };
+} // namespace node
 
 #endif // BITCOIN_NODE_UTXO_SNAPSHOT_H

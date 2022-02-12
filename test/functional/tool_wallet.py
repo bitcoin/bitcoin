@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-wallet."""
@@ -31,8 +31,8 @@ class ToolWalletTest(BitcoinTestFramework):
     def bitcoin_wallet_process(self, *args):
         binary = self.config["environment"]["BUILDDIR"] + '/src/bitcoin-wallet' + self.config["environment"]["EXEEXT"]
         default_args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain]
-        if self.options.descriptors and 'create' in args:
-            default_args.append('-descriptors')
+        if not self.options.descriptors and 'create' in args:
+            default_args.append('-legacy')
 
         return subprocess.Popen([binary] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
@@ -70,8 +70,8 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def get_expected_info_output(self, name="", transactions=0, keypool=2, address=0):
         wallet_name = self.default_wallet_name if name == "" else name
-        output_types = 3  # p2pkh, p2sh, segwit
         if self.options.descriptors:
+            output_types = 4  # p2pkh, p2sh, segwit, bech32m
             return textwrap.dedent('''\
                 Wallet info
                 ===========
@@ -85,6 +85,7 @@ class ToolWalletTest(BitcoinTestFramework):
                 Address Book: %d
             ''' % (wallet_name, keypool * output_types, transactions, address))
         else:
+            output_types = 3  # p2pkh, p2sh, segwit. Legacy wallets do not support bech32m.
             return textwrap.dedent('''\
                 Wallet info
                 ===========
@@ -193,7 +194,7 @@ class ToolWalletTest(BitcoinTestFramework):
         locked_dir = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets")
         error = 'Error initializing wallet database environment "{}"!'.format(locked_dir)
         if self.options.descriptors:
-            error = "SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?"
+            error = f"SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
         self.assert_raises_tool_error(
             error,
             '-wallet=' + self.default_wallet_name,
@@ -298,8 +299,8 @@ class ToolWalletTest(BitcoinTestFramework):
             assert_equal(1000, out['keypoolsize_hd_internal'])
             assert_equal(True, 'hdseedid' in out)
         else:
-            assert_equal(3000, out['keypoolsize'])
-            assert_equal(3000, out['keypoolsize_hd_internal'])
+            assert_equal(4000, out['keypoolsize'])
+            assert_equal(4000, out['keypoolsize_hd_internal'])
 
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
         assert_equal(timestamp_before, timestamp_after)
@@ -389,7 +390,11 @@ class ToolWalletTest(BitcoinTestFramework):
         bad_sum_wallet_dump = os.path.join(self.nodes[0].datadir, "wallet-bad_sum3.dump")
         dump_data["checksum"] = "2" * 10
         self.write_dump(dump_data, bad_sum_wallet_dump)
-        self.assert_raises_tool_error('Error: Dumpfile checksum does not match. Computed {}, expected {}{}'.format(checksum, "2" * 10, "0" * 54), '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
+        self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
+        assert not os.path.isdir(os.path.join(self.nodes[0].datadir, "regtest/wallets", "badload"))
+        dump_data["checksum"] = "3" * 66
+        self.write_dump(dump_data, bad_sum_wallet_dump)
+        self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
         assert not os.path.isdir(os.path.join(self.nodes[0].datadir, "regtest/wallets", "badload"))
 
 

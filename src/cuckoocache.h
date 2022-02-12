@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CUCKOOCACHE_H
 #define BITCOIN_CUCKOOCACHE_H
 
+#include <util/fastrange.h>
+
 #include <algorithm> // std::find
 #include <array>
 #include <atomic>
@@ -89,7 +91,7 @@ public:
      */
     inline void bit_set(uint32_t s)
     {
-        mem[s >> 3].fetch_or(1 << (s & 7), std::memory_order_relaxed);
+        mem[s >> 3].fetch_or(uint8_t(1 << (s & 7)), std::memory_order_relaxed);
     }
 
     /** bit_unset marks an entry as something that should not be overwritten.
@@ -100,7 +102,7 @@ public:
      */
     inline void bit_unset(uint32_t s)
     {
-        mem[s >> 3].fetch_and(~(1 << (s & 7)), std::memory_order_relaxed);
+        mem[s >> 3].fetch_and(uint8_t(~(1 << (s & 7))), std::memory_order_relaxed);
     }
 
     /** bit_is_set queries the table for discardability at `s`.
@@ -219,13 +221,8 @@ private:
      * One option would be to implement the same trick the compiler uses and compute the
      *  constants for exact division based on the size, as described in "{N}-bit Unsigned
      *  Division via {N}-bit Multiply-Add" by Arch D. Robison in 2005. But that code is
-     *  somewhat complicated and the result is still slower than other options:
-     *
-     * Instead we treat the 32-bit random number as a Q32 fixed-point number in the range
-     *  [0, 1) and simply multiply it by the size. Then we just shift the result down by
-     *  32-bits to get our bucket number. The result has non-uniformity the same as a
-     *  mod, but it is much faster to compute. More about this technique can be found at
-     *  https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/ .
+     *  somewhat complicated and the result is still slower than an even simpler option:
+     *  see the FastRange32 function in util/fastrange.h.
      *
      * The resulting non-uniformity is also more equally distributed which would be
      *  advantageous for something like linear probing, though it shouldn't matter
@@ -241,14 +238,14 @@ private:
      */
     inline std::array<uint32_t, 8> compute_hashes(const Element& e) const
     {
-        return {{(uint32_t)(((uint64_t)hash_function.template operator()<0>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<1>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<2>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<3>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<4>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<5>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<6>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<7>(e) * (uint64_t)size) >> 32)}};
+        return {{FastRange32(hash_function.template operator()<0>(e), size),
+                 FastRange32(hash_function.template operator()<1>(e), size),
+                 FastRange32(hash_function.template operator()<2>(e), size),
+                 FastRange32(hash_function.template operator()<3>(e), size),
+                 FastRange32(hash_function.template operator()<4>(e), size),
+                 FastRange32(hash_function.template operator()<5>(e), size),
+                 FastRange32(hash_function.template operator()<6>(e), size),
+                 FastRange32(hash_function.template operator()<7>(e), size)}};
     }
 
     /** invalid returns a special index that can never be inserted to

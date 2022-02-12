@@ -52,6 +52,20 @@ With the /notxdetails/ option JSON response will only contain the transaction ha
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
+#### Blockfilter Headers
+`GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+
+Given a block hash: returns <COUNT> amount of blockfilter headers in upward
+direction for the filter type <FILTERTYPE>.
+Returns empty if the block doesn't exist or it isn't in the active chain.
+
+#### Blockfilters
+`GET /rest/blockfilter/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>`
+
+Given a block hash: returns the block filter of the given block of type
+<FILTERTYPE>.
+Responds with 404 if the block doesn't exist.
+
 #### Blockhash by height
 `GET /rest/blockhashbyheight/<HEIGHT>.<bin|hex|json>`
 
@@ -94,6 +108,7 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
          "value" : 8.8687,
          "scriptPubKey" : {
             "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG",
+            "desc" : "addr(mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD)#gj9tznmy"
             "hex" : "76a9141c7cebb529b86a04c683dfa87be49de35bcf589e88ac",
             "type" : "pubkeyhash",
             "address" : "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,7 @@
 #include <wallet/wallet.h>
 
 #include <algorithm>
+#include <chrono>
 
 #include <QApplication>
 #include <QMessageBox>
@@ -27,6 +28,11 @@
 #include <QThread>
 #include <QTimer>
 #include <QWindow>
+
+using wallet::WALLET_FLAG_BLANK_WALLET;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+using wallet::WALLET_FLAG_EXTERNAL_SIGNER;
 
 WalletController::WalletController(ClientModel& client_model, const PlatformStyle* platform_style, QObject* parent)
     : QObject(parent)
@@ -37,7 +43,7 @@ WalletController::WalletController(ClientModel& client_model, const PlatformStyl
     , m_platform_style(platform_style)
     , m_options_model(client_model.getOptionsModel())
 {
-    m_handler_load_wallet = m_node.walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
+    m_handler_load_wallet = m_node.walletLoader().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
         getOrCreateWallet(std::move(wallet));
     });
 
@@ -61,7 +67,7 @@ std::map<std::string, bool> WalletController::listWalletDir() const
 {
     QMutexLocker locker(&m_mutex);
     std::map<std::string, bool> wallets;
-    for (const std::string& name : m_node.walletClient().listWalletDir()) {
+    for (const std::string& name : m_node.walletLoader().listWalletDir()) {
         wallets[name] = false;
     }
     for (WalletModel* wallet_model : m_wallets) {
@@ -254,12 +260,12 @@ void CreateWalletActivity::createWallet()
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
     }
 
-    QTimer::singleShot(500, worker(), [this, name, flags] {
-        std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);
+    QTimer::singleShot(500ms, worker(), [this, name, flags] {
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
-        QTimer::singleShot(500, this, &CreateWalletActivity::finish);
+        QTimer::singleShot(500ms, this, &CreateWalletActivity::finish);
     });
 }
 
@@ -280,9 +286,9 @@ void CreateWalletActivity::create()
 {
     m_create_wallet_dialog = new CreateWalletDialog(m_parent_widget);
 
-    std::vector<ExternalSigner> signers;
+    std::vector<std::unique_ptr<interfaces::ExternalSigner>> signers;
     try {
-        signers = node().externalSigners();
+        signers = node().listExternalSigners();
     } catch (const std::runtime_error& e) {
         QMessageBox::critical(nullptr, tr("Can't list signers"), e.what());
     }
@@ -336,7 +342,7 @@ void OpenWalletActivity::open(const std::string& path)
         tr("Opening Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, path] {
-        std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().loadWallet(path, m_error_message, m_warning_message);
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().loadWallet(path, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
@@ -359,7 +365,7 @@ void LoadWalletsActivity::load()
         tr("Loading wallets…"));
 
     QTimer::singleShot(0, worker(), [this] {
-        for (auto& wallet : node().walletClient().getWallets()) {
+        for (auto& wallet : node().walletLoader().getWallets()) {
             m_wallet_controller->getOrCreateWallet(std::move(wallet));
         }
 

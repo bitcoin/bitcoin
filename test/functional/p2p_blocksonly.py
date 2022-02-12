@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2020 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test p2p blocksonly mode & block-relay-only connections."""
@@ -102,7 +102,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
     def check_p2p_tx_violation(self):
         self.log.info('Check that txs from P2P are rejected and result in disconnect')
-        spendtx = self.miniwallet.create_self_transfer(from_node=self.nodes[0])
+        spendtx = self.miniwallet.create_self_transfer()
 
         with self.nodes[0].assert_debug_log(['transaction sent in violation of protocol peer=0']):
             self.nodes[0].p2ps[0].send_message(msg_tx(spendtx['tx']))

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,9 +20,18 @@
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
+#include <chrono>
+
 #include <QApplication>
 #include <QTimer>
 #include <QMessageBox>
+
+using wallet::AddWallet;
+using wallet::CWallet;
+using wallet::CreateMockWalletDatabase;
+using wallet::RemoveWallet;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WalletContext;
 
 namespace
 {
@@ -40,7 +49,7 @@ void EditAddressAndSubmit(
     dialog->findChild<QLineEdit*>("labelEdit")->setText(label);
     dialog->findChild<QValidatedLineEdit*>("addressEdit")->setText(address);
 
-    ConfirmMessage(&warning_text, 5);
+    ConfirmMessage(&warning_text, 5ms);
     dialog->accept();
     QCOMPARE(warning_text, expected_msg);
 }
@@ -60,12 +69,16 @@ void EditAddressAndSubmit(
 void TestAddAddressesToSendBook(interfaces::Node& node)
 {
     TestChain100Setup test;
-    auto wallet_client = interfaces::MakeWalletClient(*test.m_node.chain, *Assert(test.m_node.args));
-    test.m_node.wallet_client = wallet_client.get();
+    auto wallet_loader = interfaces::MakeWalletLoader(*test.m_node.chain, *Assert(test.m_node.args));
+    test.m_node.wallet_loader = wallet_loader.get();
     node.setContext(&test.m_node);
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", CreateMockWalletDatabase());
-    wallet->SetupLegacyScriptPubKeyMan();
+    const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", gArgs, CreateMockWalletDatabase());
     wallet->LoadWallet();
+    wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    {
+        LOCK(wallet->cs_wallet);
+        wallet->SetupDescriptorScriptPubKeyMans();
+    }
 
     auto build_address = [&wallet]() {
         CKey key;
@@ -111,7 +124,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     OptionsModel optionsModel;
     ClientModel clientModel(node, &optionsModel);
-    WalletContext& context = *node.walletClient().context();
+    WalletContext& context = *node.walletLoader().context();
     AddWallet(context, wallet);
     WalletModel walletModel(interfaces::MakeWallet(context, wallet), clientModel, platformStyle.get());
     RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);

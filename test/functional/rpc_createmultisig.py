@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
@@ -46,7 +46,6 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         self.log.info('Generating blocks ...')
         self.generate(node0, 149)
-        self.sync_all()
 
         self.moved = 0
         for self.nkeys in [3, 5]:
@@ -76,13 +75,19 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         for keys in itertools.permutations([pk0, pk1, pk2]):
             # Results should be the same as this legacy one
             legacy_addr = node0.createmultisig(2, keys, 'legacy')['address']
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'legacy')['address'])
+            result = wmulti0.addmultisigaddress(2, keys, '', 'legacy')
+            assert_equal(legacy_addr, result['address'])
+            assert 'warnings' not in result
 
             # Generate addresses with the segwit types. These should all make legacy addresses
-            assert_equal(legacy_addr, wmulti0.createmultisig(2, keys, 'bech32')['address'])
-            assert_equal(legacy_addr, wmulti0.createmultisig(2, keys, 'p2sh-segwit')['address'])
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'bech32')['address'])
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'p2sh-segwit')['address'])
+            for addr_type in ['bech32', 'p2sh-segwit']:
+                result = wmulti0.createmultisig(2, keys, addr_type)
+                assert_equal(legacy_addr, result['address'])
+                assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
+
+                result = wmulti0.addmultisigaddress(2, keys, '', addr_type)
+                assert_equal(legacy_addr, result['address'])
+                assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
 
         self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
@@ -117,7 +122,6 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
     def checkbalances(self):
         node0, node1, node2 = self.nodes
         self.generate(node0, COINBASE_MATURITY)
-        self.sync_all()
 
         bal0 = node0.getbalance()
         bal1 = node1.getbalance()

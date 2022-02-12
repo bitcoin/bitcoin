@@ -575,7 +575,7 @@ if config.dmg is not None:
     os.mkdir(os.path.dirname(bg_path))
     if verbose:
         print('background.tiff', "->", bg_path)
-    shutil.copy2('background.tiff', bg_path)
+    shutil.copy2('contrib/macdeploy/background.tiff', bg_path)
 
     os.symlink("/Applications", os.path.join(disk_root, "Applications"))
 

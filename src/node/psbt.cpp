@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 
 #include <numeric>
 
+namespace node {
 PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
 {
     // Go through each input and build status
@@ -105,7 +106,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             }
         );
         if (!MoneyRange(out_amt)) {
-            result.SetInvalid(strprintf("PSBT is not valid. Output amount invalid"));
+            result.SetInvalid("PSBT is not valid. Output amount invalid");
             return result;
         }
 
@@ -147,3 +148,4 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
 
     return result;
 }
+} // namespace node

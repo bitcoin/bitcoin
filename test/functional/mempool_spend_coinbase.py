@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test spending coinbase transactions.
@@ -40,7 +40,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         spend_mature_id = wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_mature)["txid"]
 
         # other coinbase should be too immature to spend
-        immature_tx = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_immature, mempool_valid=False)
+        immature_tx = wallet.create_self_transfer(utxo_to_spend=utxo_immature, mempool_valid=False)
         assert_raises_rpc_error(-26,
                                 "bad-txns-premature-spend-of-coinbase",
                                 lambda: self.nodes[0].sendrawtransaction(immature_tx['hex']))

@@ -1,8 +1,6 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include <memory>
 
 #include <boost/test/unit_test.hpp>
 
@@ -10,13 +8,17 @@
 #include <test/util/setup_common.h>
 #include <wallet/bdb.h>
 
+#include <fstream>
+#include <memory>
+#include <string>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
 static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, std::string& database_filename)
 {
     fs::path data_file = BDBDataFile(path);
-    database_filename = data_file.filename().string();
+    database_filename = fs::PathToString(data_file.filename());
     return GetBerkeleyEnv(data_file.parent_path());
 }
 
@@ -25,11 +27,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_file)
     std::string test_name = "test_name.dat";
     const fs::path datadir = gArgs.GetDataDirNet();
     fs::path file_path = datadir / test_name;
-#if BOOST_VERSION >= 107700
-    std::ofstream f(BOOST_FILESYSTEM_C_STR(file_path));
-#else
-    std::ofstream f(file_path.BOOST_FILESYSTEM_C_STR);
-#endif // BOOST_VERSION >= 107700
+    std::ofstream f{file_path};
     f.close();
 
     std::string filename;
@@ -81,3 +79,4 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

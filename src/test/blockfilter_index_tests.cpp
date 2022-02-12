@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <script/standard.h>
 #include <test/util/blockfilter.h>
@@ -15,6 +15,10 @@
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+
+using node::BlockAssembler;
+using node::CBlockTemplate;
+using node::IncrementExtraNonce;
 
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2020 The Bitcoin Core developers
+# Copyright (c) 2010-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin test framework primitive and message structures
@@ -40,6 +40,7 @@ COIN = 100000000  # 1 btc in satoshis
 MAX_MONEY = 21000000 * COIN
 
 BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
+SEQUENCE_FINAL = 0xffffffff  # Sequence number that disables nLockTime if set for every input of a tx
 
 MAX_PROTOCOL_MESSAGE_LENGTH = 4000000  # Maximum length of incoming protocol messages
 MAX_HEADERS_RESULTS = 2000  # Number of headers sent in one getheaders result
@@ -64,12 +65,14 @@ FILTER_TYPE_BASIC = 0
 
 WITNESS_SCALE_FACTOR = 4
 
-# Serialization/deserialization tools
+
 def sha256(s):
-    return hashlib.new('sha256', s).digest()
+    return hashlib.sha256(s).digest()
+
 
 def hash256(s):
     return sha256(sha256(s))
+
 
 def ser_compact_size(l):
     r = b""
@@ -506,7 +509,7 @@ class CTransaction:
 
     def __init__(self, tx=None):
         if tx is None:
-            self.nVersion = 1
+            self.nVersion = 2
             self.vin = []
             self.vout = []
             self.wit = CTxWitness()

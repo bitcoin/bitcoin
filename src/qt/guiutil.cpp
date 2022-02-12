@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 
 #include <base58.h>
 #include <chainparams.h>
+#include <fs.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <policy/policy.h>
@@ -20,6 +21,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #ifdef WIN32
 #ifndef NOMINMAX
@@ -65,6 +67,10 @@
 
 #include <cassert>
 #include <chrono>
+#include <exception>
+#include <fstream>
+#include <string>
+#include <vector>
 
 #if defined(Q_OS_MAC)
 
@@ -272,9 +278,15 @@ bool hasEntryData(const QAbstractItemView *view, int column, int role)
     return !selection.at(0).data(role).toString().isEmpty();
 }
 
+void LoadFont(const QString& file_name)
+{
+    const int id = QFontDatabase::addApplicationFont(file_name);
+    assert(id != -1);
+}
+
 QString getDefaultDataDirectory()
 {
-    return boostPathToQString(GetDefaultDataDir());
+    return PathToQString(GetDefaultDataDir());
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
@@ -411,7 +423,7 @@ void openDebugLogfile()
 
     /* Open debug.log with the associated application */
     if (fs::exists(pathDebug))
-        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
+        QDesktopServices::openUrl(QUrl::fromLocalFile(PathToQString(pathDebug)));
 }
 
 bool openBitcoinConf()
@@ -419,7 +431,7 @@ bool openBitcoinConf()
     fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
 
     /* Create the file */
-    fsbridge::ofstream configFile(pathConfig, std::ios_base::app);
+    std::ofstream configFile{pathConfig, std::ios_base::app};
 
     if (!configFile.good())
         return false;
@@ -427,11 +439,11 @@ bool openBitcoinConf()
     configFile.close();
 
     /* Open bitcoin.conf with the associated application */
-    bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(PathToQString(pathConfig)));
 #ifdef Q_OS_MAC
     // Workaround for macOS-specific behavior; see #15409.
     if (!res) {
-        res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", boostPathToQString(pathConfig)});
+        res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", PathToQString(pathConfig)});
     }
 #endif
 
@@ -579,7 +591,7 @@ fs::path static GetAutostartFilePath()
 
 bool GetStartOnSystemStartup()
 {
-    fsbridge::ifstream optionFile(GetAutostartFilePath());
+    std::ifstream optionFile{GetAutostartFilePath()};
     if (!optionFile.good())
         return false;
     // Scan through file for "Hidden=true":
@@ -610,7 +622,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
         fs::create_directories(GetAutostartDir());
 
-        fsbridge::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out | std::ios_base::trunc);
+        std::ofstream optionFile{GetAutostartFilePath(), std::ios_base::out | std::ios_base::trunc};
         if (!optionFile.good())
             return false;
         std::string chain = gArgs.GetChainName();
@@ -645,14 +657,14 @@ void setClipboard(const QString& str)
     }
 }
 
-fs::path qstringToBoostPath(const QString &path)
+fs::path QStringToPath(const QString &path)
 {
-    return fs::path(path.toStdString());
+    return fs::u8path(path.toStdString());
 }
 
-QString boostPathToQString(const fs::path &path)
+QString PathToQString(const fs::path &path)
 {
-    return QString::fromStdString(path.string());
+    return QString::fromStdString(path.u8string());
 }
 
 QString NetworkToQString(Network net)
@@ -699,8 +711,9 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     assert(false);
 }
 
-QString formatDurationStr(int secs)
+QString formatDurationStr(std::chrono::seconds dur)
 {
+    const auto secs = count_seconds(dur);
     QStringList strList;
     int days = secs / 86400;
     int hours = (secs % 86400) / 3600;

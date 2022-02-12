@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 #include <charconv>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <string>
 #include <vector>
@@ -27,6 +28,23 @@ enum SafeChars
     SAFE_CHARS_UA_COMMENT, //!< BIP-0014 subset
     SAFE_CHARS_FILENAME, //!< Chars allowed in filenames
     SAFE_CHARS_URI, //!< Chars allowed in URIs (RFC 3986)
+};
+
+/**
+ * Used by ParseByteUnits()
+ * Lowercase base 1000
+ * Uppercase base 1024
+*/
+enum class ByteUnit : uint64_t {
+    NOOP = 1ULL,
+    k = 1000ULL,
+    K = 1024ULL,
+    m = 1'000'000ULL,
+    M = 1ULL << 20,
+    g = 1'000'000'000ULL,
+    G = 1ULL << 30,
+    t = 1'000'000'000'000ULL,
+    T = 1ULL << 40,
 };
 
 /**
@@ -50,7 +68,8 @@ bool IsHexNumber(const std::string& str);
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid = nullptr);
 std::string DecodeBase64(const std::string& str, bool* pf_invalid = nullptr);
 std::string EncodeBase64(Span<const unsigned char> input);
-std::string EncodeBase64(const std::string& str);
+inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
+inline std::string EncodeBase64(const std::string& str) { return EncodeBase64(MakeUCharSpan(str)); }
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid = nullptr);
 std::string DecodeBase32(const std::string& str, bool* pf_invalid = nullptr);
 
@@ -72,11 +91,15 @@ void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
 
 // LocaleIndependentAtoi is provided for backwards compatibility reasons.
 //
-// New code should use the ParseInt64/ParseUInt64/ParseInt32/ParseUInt32 functions
+// New code should use ToIntegral or the ParseInt* functions
 // which provide parse error feedback.
 //
-// The goal of LocaleIndependentAtoi is to replicate the exact defined behaviour
-// of atoi and atoi64 as they behave under the "C" locale.
+// The goal of LocaleIndependentAtoi is to replicate the defined behaviour of
+// std::atoi as it behaves under the "C" locale, and remove some undefined
+// behavior. If the parsed value is bigger than the integer type's maximum
+// value, or smaller than the integer type's minimum value, std::atoi has
+// undefined behavior, while this function returns the maximum or minimum
+// values, respectively.
 template <typename T>
 T LocaleIndependentAtoi(const std::string& str)
 {
@@ -91,7 +114,15 @@ T LocaleIndependentAtoi(const std::string& str)
         s = s.substr(1);
     }
     auto [_, error_condition] = std::from_chars(s.data(), s.data() + s.size(), result);
-    if (error_condition != std::errc{}) {
+    if (error_condition == std::errc::result_out_of_range) {
+        if (s.length() >= 1 && s[0] == '-') {
+            // Saturate underflow, per strtoll's behavior.
+            return std::numeric_limits<T>::min();
+        } else {
+            // Saturate overflow, per strtoll's behavior.
+            return std::numeric_limits<T>::max();
+        }
+    } else if (error_condition != std::errc{}) {
         return 0;
     }
     return result;
@@ -125,7 +156,7 @@ constexpr inline bool IsSpace(char c) noexcept {
 /**
  * Convert string to integral type T. Leading whitespace, a leading +, or any
  * trailing character fail the parsing. The required format expressed as regex
- * is `-?[0-9]+`.
+ * is `-?[0-9]+`. The minus sign is only permitted for signed integer types.
  *
  * @returns std::nullopt if the entire string could not be parsed, or if the
  *   parsed value is not in the range representable by the type T.
@@ -189,6 +220,7 @@ std::optional<T> ToIntegral(const std::string& str)
  */
 std::string HexStr(const Span<const uint8_t> s);
 inline std::string HexStr(const Span<const char> s) { return HexStr(MakeUCharSpan(s)); }
+inline std::string HexStr(const Span<const std::byte> s) { return HexStr(MakeUCharSpan(s)); }
 
 /**
  * Format a paragraph of text to a fixed width, adding spaces for
@@ -207,7 +239,7 @@ bool TimingResistantEqual(const T& a, const T& b)
     if (b.size() == 0) return a.size() == 0;
     size_t accumulator = a.size() ^ b.size();
     for (size_t i = 0; i < a.size(); i++)
-        accumulator |= a[i] ^ b[i%b.size()];
+        accumulator |= size_t(a[i] ^ b[i%b.size()]);
     return accumulator == 0;
 }
 
@@ -304,5 +336,18 @@ std::string ToUpper(const std::string& str);
  * @returns         string with the first letter capitalized.
  */
 std::string Capitalize(std::string str);
+
+/**
+ * Parse a string with suffix unit [k|K|m|M|g|G|t|T].
+ * Must be a whole integer, fractions not allowed (0.5t), no whitespace or +-
+ * Lowercase units are 1000 base. Uppercase units are 1024 base.
+ * Examples: 2m,27M,19g,41T
+ *
+ * @param[in] str                  the string to convert into bytes
+ * @param[in] default_multiplier   if no unit is found in str use this unit
+ * @returns                        optional uint64_t bytes from str or nullopt
+ *                                 if ToIntegral is false, str is empty, trailing whitespace or overflow
+ */
+std::optional<uint64_t> ParseByteUnits(const std::string& str, ByteUnit default_multiplier);
 
 #endif // BITCOIN_UTIL_STRENCODINGS_H

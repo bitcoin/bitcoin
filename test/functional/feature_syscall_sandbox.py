@@ -14,7 +14,7 @@ class SyscallSandboxTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         if not self.is_syscall_sandbox_compiled():
             raise SkipTest("bitcoind has not been built with syscall sandbox enabled.")
-        if self.options.nosandbox:
+        if self.disable_syscall_sandbox:
             raise SkipTest("--nosandbox passed to test runner.")
 
     def run_test(self):

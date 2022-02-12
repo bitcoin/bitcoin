@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +28,9 @@ enum class RBFTransactionState;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+namespace node {
 struct NodeContext;
+} // namespace node
 
 namespace interfaces {
 
@@ -113,9 +115,6 @@ public:
     //! which will either be the original block used to create the locator,
     //! or one of its ancestors.
     virtual std::optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
-
-    //! Check if transaction will be final given chain height current time.
-    virtual bool checkFinalTx(const CTransaction& tx) = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
@@ -217,9 +216,6 @@ public:
     //! Check if shutdown requested.
     virtual bool shutdownRequested() = 0;
 
-    //! Get adjusted time.
-    virtual int64_t getAdjustedTime() = 0;
-
     //! Send init message.
     virtual void initMessage(const std::string& message) = 0;
 
@@ -287,9 +283,6 @@ public:
     //! to be prepared to handle this by ignoring notifications about unknown
     //! removed transactions and already added new transactions.
     virtual void requestMempoolTransactions(Notifications& notifications) = 0;
-
-    //! Check if Taproot has activated
-    virtual bool isTaprootActive() const = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
@@ -322,7 +315,7 @@ public:
 };
 
 //! Return implementation of Chain interface.
-std::unique_ptr<Chain> MakeChain(NodeContext& node);
+std::unique_ptr<Chain> MakeChain(node::NodeContext& node);
 
 } // namespace interfaces
 

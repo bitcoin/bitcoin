@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,15 +13,13 @@
 
 template <typename T>
 struct zero_after_free_allocator : public std::allocator<T> {
-    // MSVC8 default copy constructor is broken
-    typedef std::allocator<T> base;
-    typedef typename base::size_type size_type;
-    typedef typename base::difference_type difference_type;
-    typedef typename base::pointer pointer;
-    typedef typename base::const_pointer const_pointer;
-    typedef typename base::reference reference;
-    typedef typename base::const_reference const_reference;
-    typedef typename base::value_type value_type;
+    using base = std::allocator<T>;
+    using traits = std::allocator_traits<base>;
+    using size_type = typename traits::size_type;
+    using difference_type = typename traits::difference_type;
+    using pointer = typename traits::pointer;
+    using const_pointer = typename traits::const_pointer;
+    using value_type = typename traits::value_type;
     zero_after_free_allocator() noexcept {}
     zero_after_free_allocator(const zero_after_free_allocator& a) noexcept : base(a) {}
     template <typename U>
@@ -43,6 +41,6 @@ struct zero_after_free_allocator : public std::allocator<T> {
 };
 
 /** Byte-vector that clears its contents before deletion. */
-using SerializeData = std::vector<uint8_t, zero_after_free_allocator<uint8_t>>;
+using SerializeData = std::vector<std::byte, zero_after_free_allocator<std::byte>>;
 
 #endif // BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H

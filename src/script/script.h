@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,10 +51,10 @@ static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
 static constexpr unsigned int ANNEX_TAG = 0x50;
 
 // Validation weight per passing signature (Tapscript only, see BIP 342).
-static constexpr uint64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED = 50;
+static constexpr int64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED{50};
 
 // How much weight budget is added to the witness size (Tapscript only, see BIP 342).
-static constexpr uint64_t VALIDATION_WEIGHT_OFFSET = 50;
+static constexpr int64_t VALIDATION_WEIGHT_OFFSET{50};
 
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)

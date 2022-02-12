@@ -16,7 +16,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-const auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
+const auto NoMalleation = [](CAutoFile& file, node::SnapshotMetadata& meta){};
 
 /**
  * Create and activate a UTXO snapshot, optionally providing a function to
@@ -24,7 +24,7 @@ const auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
  */
 template<typename F = decltype(NoMalleation)>
 static bool
-CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleation = NoMalleation)
+CreateAndActivateUTXOSnapshot(node::NodeContext& node, const fs::path root, F malleation = NoMalleation)
 {
     // Write out a snapshot to the test's tempdir.
     //
@@ -34,20 +34,21 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
     FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
     CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
 
-    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), auto_outfile);
+    UniValue result = CreateUTXOSnapshot(
+        node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
     BOOST_TEST_MESSAGE(
-        "Wrote UTXO snapshot to " << snapshot_path.make_preferred().string() << ": " << result.write());
+        "Wrote UTXO snapshot to " << fs::PathToString(snapshot_path.make_preferred()) << ": " << result.write());
 
     // Read the written snapshot in and then activate it.
     //
     FILE* infile{fsbridge::fopen(snapshot_path, "rb")};
     CAutoFile auto_infile{infile, SER_DISK, CLIENT_VERSION};
-    SnapshotMetadata metadata;
+    node::SnapshotMetadata metadata;
     auto_infile >> metadata;
 
     malleation(auto_infile, metadata);
 
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory*/ true);
+    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory=*/true);
 }
 
 

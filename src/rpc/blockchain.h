@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,8 @@
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
 #include <consensus/amount.h>
+#include <core_io.h>
+#include <fs.h>
 #include <streams.h>
 #include <sync.h>
 
@@ -17,12 +19,12 @@ extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
-class CBlockPolicyEstimator;
 class CChainState;
 class CTxMemPool;
-class ChainstateManager;
 class UniValue;
+namespace node {
 struct NodeContext;
+} // namespace node
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 
@@ -38,7 +40,7 @@ double GetDifficulty(const CBlockIndex* blockindex);
 void RPCNotifyBlockChange(const CBlockIndex*);
 
 /** Block description to JSON */
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails = false) LOCKS_EXCLUDED(cs_main);
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, TxVerbosity verbosity) LOCKS_EXCLUDED(cs_main);
 
 /** Mempool information to JSON */
 UniValue MempoolInfoToJSON(const CTxMemPool& pool);
@@ -52,18 +54,15 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_weight);
 
-NodeContext& EnsureAnyNodeContext(const std::any& context);
-CTxMemPool& EnsureMemPool(const NodeContext& node);
-CTxMemPool& EnsureAnyMemPool(const std::any& context);
-ChainstateManager& EnsureChainman(const NodeContext& node);
-ChainstateManager& EnsureAnyChainman(const std::any& context);
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
-
 /**
  * Helper to create UTXO snapshots given a chainstate and a file handle.
  * @return a UniValue map containing metadata about the snapshot.
  */
-UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile);
+UniValue CreateUTXOSnapshot(
+    node::NodeContext& node,
+    CChainState& chainstate,
+    CAutoFile& afile,
+    const fs::path& path,
+    const fs::path& tmppath);
 
-#endif
+#endif // BITCOIN_RPC_BLOCKCHAIN_H

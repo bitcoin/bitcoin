@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1303,12 +1303,12 @@ public:
         it = itBegin;
         while (scriptCode.GetOp(it, opcode)) {
             if (opcode == OP_CODESEPARATOR) {
-                s.write((char*)&itBegin[0], it-itBegin-1);
+                s.write(AsBytes(Span{&itBegin[0], size_t(it - itBegin - 1)}));
                 itBegin = it;
             }
         }
         if (itBegin != scriptCode.end())
-            s.write((char*)&itBegin[0], it-itBegin);
+            s.write(AsBytes(Span{&itBegin[0], size_t(it - itBegin)}));
     }
 
     /** Serialize an input of txTo */
@@ -1483,7 +1483,7 @@ template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, 
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
-static const CHashWriter HASHER_TAPSIGHASH = TaggedHash("TapSighash");
+const CHashWriter HASHER_TAPSIGHASH = TaggedHash("TapSighash");
 const CHashWriter HASHER_TAPLEAF = TaggedHash("TapLeaf");
 const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
 
@@ -1500,7 +1500,7 @@ static bool HandleMissingData(MissingDataBehavior mdb)
 }
 
 template<typename T>
-bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache, MissingDataBehavior mdb)
+bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache, MissingDataBehavior mdb)
 {
     uint8_t ext_flag, key_version;
     switch (sigversion) {
@@ -1568,9 +1568,12 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
     // Data about the output (if only one).
     if (output_type == SIGHASH_SINGLE) {
         if (in_pos >= tx_to.vout.size()) return false;
-        CHashWriter sha_single_output(SER_GETHASH, 0);
-        sha_single_output << tx_to.vout[in_pos];
-        ss << sha_single_output.GetSHA256();
+        if (!execdata.m_output_hash) {
+            CHashWriter sha_single_output(SER_GETHASH, 0);
+            sha_single_output << tx_to.vout[in_pos];
+            execdata.m_output_hash = sha_single_output.GetSHA256();
+        }
+        ss << execdata.m_output_hash.value();
     }
 
     // Additional data for BIP 342 signatures
@@ -1692,7 +1695,7 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey_in, SigVersion sigversion, const ScriptExecutionData& execdata, ScriptError* serror) const
+bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey_in, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const
 {
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
     // Schnorr signatures have 32-byte public keys. The caller is responsible for enforcing this.
@@ -1858,7 +1861,7 @@ uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint25
     uint256 k = tapleaf_hash;
     for (int i = 0; i < path_len; ++i) {
         CHashWriter ss_branch{HASHER_TAPBRANCH};
-        Span<const unsigned char> node(control.data() + TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * i, TAPROOT_CONTROL_NODE_SIZE);
+        Span node{Span{control}.subspan(TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * i, TAPROOT_CONTROL_NODE_SIZE)};
         if (std::lexicographical_compare(k.begin(), k.end(), node.begin(), node.end())) {
             ss_branch << k << node;
         } else {
@@ -1874,7 +1877,7 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
     assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
     assert(program.size() >= uint256::size());
     //! The internal pubkey (x-only, so no Y coordinate parity).
-    const XOnlyPubKey p{Span<const unsigned char>{control.data() + 1, control.data() + TAPROOT_CONTROL_BASE_SIZE}};
+    const XOnlyPubKey p{Span{control}.subspan(1, TAPROOT_CONTROL_BASE_SIZE - 1)};
     //! The output pubkey (taken from the scriptPubKey).
     const XOnlyPubKey q{program};
     // Compute the Merkle root from the leaf and the provided path.
@@ -1886,7 +1889,7 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
 {
     CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
-    Span<const valtype> stack{witness.stack};
+    Span stack{witness.stack};
     ScriptExecutionData execdata;
 
     if (witversion == 0) {

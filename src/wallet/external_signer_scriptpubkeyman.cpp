@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+namespace wallet {
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> desc)
 {
     LOCK(cs_desc_man);
@@ -60,10 +61,10 @@ bool ExternalSignerScriptPubKeyMan::DisplayAddress(const CScript scriptPubKey, c
 }
 
 // If sign is true, transaction must previously have been filled
-TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
+TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (!sign) {
-        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed);
+        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed, finalize);
     }
 
     // Already complete if every input is now signed
@@ -79,6 +80,7 @@ TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransact
         tfm::format(std::cerr, "Failed to sign: %s\n", strFailReason);
         return TransactionError::EXTERNAL_SIGNER_FAILED;
     }
-    FinalizePSBT(psbt); // This won't work in a multisig setup
+    if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
     return TransactionError::OK;
 }
+} // namespace wallet

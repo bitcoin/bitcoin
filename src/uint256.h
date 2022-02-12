@@ -1,10 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
+
+#include <span.h>
 
 #include <assert.h>
 #include <cstring>
@@ -96,13 +98,13 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        s.write((char*)m_data, sizeof(m_data));
+        s.write(MakeByteSpan(m_data));
     }
 
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        s.read((char*)m_data, sizeof(m_data));
+        s.read(MakeWritableByteSpan(m_data));
     }
 };
 

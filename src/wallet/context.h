@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,12 +13,13 @@
 #include <vector>
 
 class ArgsManager;
-class CWallet;
 namespace interfaces {
 class Chain;
 class Wallet;
 } // namespace interfaces
 
+namespace wallet {
+class CWallet;
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
 //! WalletContext struct containing references to state shared between CWallet
@@ -34,6 +35,8 @@ using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wall
 struct WalletContext {
     interfaces::Chain* chain{nullptr};
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
+    // It is unsafe to lock this after locking a CWallet::cs_wallet mutex because
+    // this could introduce inconsistent lock ordering and cause deadlocks.
     Mutex wallets_mutex;
     std::vector<std::shared_ptr<CWallet>> wallets GUARDED_BY(wallets_mutex);
     std::list<LoadWalletFn> wallet_load_fns GUARDED_BY(wallets_mutex);
@@ -44,5 +47,6 @@ struct WalletContext {
     WalletContext();
     ~WalletContext();
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_CONTEXT_H

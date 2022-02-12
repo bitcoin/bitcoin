@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,6 +41,15 @@ public:
                                              BanMan* banman, ChainstateManager& chainman,
                                              CTxMemPool& pool, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
+
+    /**
+     * Attempt to manually fetch block from a given peer. We must already have the header.
+     *
+     * @param[in]  peer_id      The peer id
+     * @param[in]  block_index  The blockindex
+     * @returns std::nullopt if a request was successfully made, otherwise an error message
+     */
+    virtual std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) = 0;
 
     /** Begin running background tasks, should only be called once */
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;

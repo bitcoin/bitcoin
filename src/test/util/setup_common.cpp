@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,10 +13,12 @@
 #include <crypto/sha256.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <miner.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/miner.h>
 #include <noui.h>
+#include <node/blockstorage.h>
+#include <node/chainstate.h>
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
@@ -24,6 +26,7 @@
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
+#include <shutdown.h>
 #include <streams.h>
 #include <txdb.h>
 #include <util/strencodings.h>
@@ -39,6 +42,15 @@
 #include <walletinitinterface.h>
 
 #include <functional>
+#include <stdexcept>
+
+using node::BlockAssembler;
+using node::CalculateCacheSizes;
+using node::LoadChainstate;
+using node::RegenerateCommitments;
+using node::VerifyLoadedChainstate;
+using node::fPruneMode;
+using node::fReindex;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
@@ -77,7 +89,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
       m_args{}
 {
     m_node.args = &gArgs;
-    const std::vector<const char*> arguments = Cat(
+    std::vector<const char*> arguments = Cat(
         {
             "dummy",
             "-printtoconsole=0",
@@ -89,17 +101,21 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
             "-debugexclude=leveldb",
         },
         extra_args);
+    if (G_TEST_COMMAND_LINE_ARGUMENTS) {
+        arguments = Cat(arguments, G_TEST_COMMAND_LINE_ARGUMENTS());
+    }
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
-    m_args.ForceSetArg("-datadir", m_path_root.string());
-    gArgs.ForceSetArg("-datadir", m_path_root.string());
+    m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+    gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ClearPathCache();
     {
         SetupServerArgs(*m_node.args);
         std::string error;
-        const bool success{m_node.args->ParseParameters(arguments.size(), arguments.data(), error)};
-        assert(success);
-        assert(error.empty());
+        if (!m_node.args->ParseParameters(arguments.size(), arguments.data(), error)) {
+            m_node.args->ClearArgs();
+            throw std::runtime_error{error};
+        }
     }
     SelectParams(chainName);
     SeedInsecureRand();
@@ -143,8 +159,10 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     m_node.mempool = std::make_unique<CTxMemPool>(m_node.fee_estimator.get(), 1);
 
+    m_cache_sizes = CalculateCacheSizes(m_args);
+
     m_node.chainman = std::make_unique<ChainstateManager>();
-    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true);
+    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -177,22 +195,37 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(m_node.mempool.get());
-    m_node.chainman->ActiveChainstate().InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
-    assert(!m_node.chainman->ActiveChainstate().CanFlushToDisk());
-    m_node.chainman->ActiveChainstate().InitCoinsCache(1 << 23);
-    assert(m_node.chainman->ActiveChainstate().CanFlushToDisk());
-    if (!m_node.chainman->ActiveChainstate().LoadGenesisBlock()) {
-        throw std::runtime_error("LoadGenesisBlock failed.");
-    }
+    auto maybe_load_error = LoadChainstate(fReindex.load(),
+                                           *Assert(m_node.chainman.get()),
+                                           Assert(m_node.mempool.get()),
+                                           fPruneMode,
+                                           chainparams.GetConsensus(),
+                                           m_args.GetBoolArg("-reindex-chainstate", false),
+                                           m_cache_sizes.block_tree_db,
+                                           m_cache_sizes.coins_db,
+                                           m_cache_sizes.coins,
+                                           /*block_tree_db_in_memory=*/true,
+                                           /*coins_db_in_memory=*/true);
+    assert(!maybe_load_error.has_value());
+
+    auto maybe_verify_error = VerifyLoadedChainstate(
+        *Assert(m_node.chainman),
+        fReindex.load(),
+        m_args.GetBoolArg("-reindex-chainstate", false),
+        chainparams.GetConsensus(),
+        m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+        m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
+        /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime));
+    assert(!maybe_verify_error.has_value());
 
     BlockValidationState state;
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 
-    m_node.addrman = std::make_unique<AddrMan>(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    m_node.addrman = std::make_unique<AddrMan>(/*asmap=*/std::vector<bool>(),
+                                               /*deterministic=*/false,
+                                               m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman,
@@ -315,7 +348,7 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     // If submit=true, add transaction to the mempool.
     if (submit) {
         LOCK(cs_main);
-        const MempoolAcceptResult result = AcceptToMemoryPool(m_node.chainman->ActiveChainstate(), *m_node.mempool.get(), MakeTransactionRef(mempool_txn), /* bypass_limits */ false);
+        const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(MakeTransactionRef(mempool_txn));
         assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
     }
 

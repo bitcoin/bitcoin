@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Bitcoin Core developers
+// Copyright (c) 2014-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     CCoinsViewTest base;
     SimulationTest(&base, false);
 
-    CCoinsViewDB db_base{"test", /*nCacheSize*/ 1 << 23, /*fMemory*/ true, /*fWipe*/ false};
+    CCoinsViewDB db_base{"test", /*nCacheSize=*/1 << 23, /*fMemory=*/true, /*fWipe=*/false};
     SimulationTest(&db_base, true);
 }
 
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             tx.vout.resize(1);
             tx.vout[0].nValue = i; //Keep txs unique unless intended to duplicate
             tx.vout[0].scriptPubKey.assign(InsecureRand32() & 0x3F, 0); // Random sizes so we can test memory usage accounting
-            unsigned int height = InsecureRand32();
+            const int height{int(InsecureRand32() >> 1)};
             Coin old_coin;
 
             // 2/20 times create a new coinbase
@@ -393,11 +393,11 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             // Update the expected result to know about the new output coins
             assert(tx.vout.size() == 1);
             const COutPoint outpoint(tx.GetHash(), 0);
-            result[outpoint] = Coin(tx.vout[0], height, CTransaction(tx).IsCoinBase());
+            result[outpoint] = Coin{tx.vout[0], height, CTransaction{tx}.IsCoinBase()};
 
             // Call UpdateCoins on the top cache
             CTxUndo undo;
-            UpdateCoins(CTransaction(tx), *(stack.back()), undo, height);
+            UpdateCoins(CTransaction{tx}, *(stack.back()), undo, height);
 
             // Update the utxo set for future spends
             utxoset.insert(outpoint);

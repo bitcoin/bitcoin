@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,7 +63,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (rbf) {
             nSequence = MAX_BIP125_RBF_SEQUENCE; /* CTxIn::SEQUENCE_FINAL - 2 */
         } else if (rawTx.nLockTime) {
-            nSequence = CTxIn::SEQUENCE_FINAL - 1;
+            nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; /* CTxIn::SEQUENCE_FINAL - 1 */
         } else {
             nSequence = CTxIn::SEQUENCE_FINAL;
         }

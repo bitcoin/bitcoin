@@ -26,6 +26,10 @@
 #include <string>
 #include <vector>
 
+using node::CCoinsStats;
+using node::CoinStatsHashType;
+using node::GetUTXOStats;
+
 namespace {
 const TestingSetup* g_setup;
 const Coin EMPTY_COIN{};
@@ -51,7 +55,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
     COutPoint random_out_point;
     Coin random_coin;
     CMutableTransaction random_mutable_transaction;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -114,7 +118,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
             },
             [&] {
                 CCoinsMap coins_map;
-                while (fuzzed_data_provider.ConsumeBool()) {
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                     CCoinsCacheEntry coins_cache_entry;
                     coins_cache_entry.flags = fuzzed_data_provider.ConsumeIntegral<unsigned char>();
                     if (fuzzed_data_provider.ConsumeBool()) {
@@ -207,7 +211,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                     return;
                 }
                 bool expected_code_path = false;
-                const int height = fuzzed_data_provider.ConsumeIntegral<int>();
+                const int height{int(fuzzed_data_provider.ConsumeIntegral<uint32_t>() >> 1)};
                 const bool possible_overwrite = fuzzed_data_provider.ConsumeBool();
                 try {
                     AddCoins(coins_view_cache, transaction, height, possible_overwrite);
@@ -221,8 +225,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 assert(expected_code_path);
             },
             [&] {
-                (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache, false);
-                (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache, true);
+                (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
             },
             [&] {
                 TxValidationState state;
@@ -270,7 +273,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 CCoinsStats stats{CoinStatsHashType::HASH_SERIALIZED};
                 bool expected_code_path = false;
                 try {
-                    (void)GetUTXOStats(&coins_view_cache, WITH_LOCK(::cs_main, return std::ref(g_setup->m_node.chainman->m_blockman)), stats);
+                    (void)GetUTXOStats(&coins_view_cache, g_setup->m_node.chainman->m_blockman, stats);
                 } catch (const std::logic_error&) {
                     expected_code_path = true;
                 }

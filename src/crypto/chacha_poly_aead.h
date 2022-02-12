@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -117,8 +117,8 @@ static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
 class ChaCha20Poly1305AEAD
 {
 private:
-    ChaCha20 m_chacha_main;                                      // payload and poly1305 key-derivation cipher instance
-    ChaCha20 m_chacha_header;                                    // AAD cipher instance (encrypted length)
+    ChaCha20 m_chacha_header;                                    // AAD cipher instance (encrypted length) and poly1305 key-derivation cipher instance
+    ChaCha20 m_chacha_main;                                      // payload
     unsigned char m_aad_keystream_buffer[CHACHA20_ROUND_OUTPUT]; // aad keystream cache
     uint64_t m_cached_aad_seqnr;                                 // aad keystream cache hint
 

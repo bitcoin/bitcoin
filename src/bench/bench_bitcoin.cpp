@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 
 #include <clientversion.h>
 #include <crypto/sha256.h>
+#include <fs.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
@@ -24,8 +25,8 @@ static void SetupBenchArgs(ArgsManager& argsman)
 
     argsman.AddArg("-asymptote=<n1,n2,n3,...>", "Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-list", "List benchmarks without executing them", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
-    argsman.AddArg("-min_time=<milliseconds>", strprintf("Minimum runtime per benchmark, in milliseconds (default: %d)", DEFAULT_MIN_TIME_MS), ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+    argsman.AddArg("-list", "List benchmarks without executing them", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-min_time=<milliseconds>", strprintf("Minimum runtime per benchmark, in milliseconds (default: %d)", DEFAULT_MIN_TIME_MS), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-output_csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-output_json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
@@ -108,8 +109,8 @@ int main(int argc, char** argv)
     args.asymptote = parseAsymptote(argsman.GetArg("-asymptote", ""));
     args.is_list_only = argsman.GetBoolArg("-list", false);
     args.min_time = std::chrono::milliseconds(argsman.GetIntArg("-min_time", DEFAULT_MIN_TIME_MS));
-    args.output_csv = argsman.GetArg("-output_csv", "");
-    args.output_json = argsman.GetArg("-output_json", "");
+    args.output_csv = fs::PathFromString(argsman.GetArg("-output_csv", ""));
+    args.output_json = fs::PathFromString(argsman.GetArg("-output_json", ""));
     args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
 
     benchmark::BenchRunner::RunAll(args);
