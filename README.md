@@ -1,3 +1,195 @@
+
+        SHA256ROUND(f, g, h, a, b, c, d, e, 51, w3);
+        w4 = add4(SIGMA1_256(w2), w13, SIGMA0_256(w5), w4);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 52, w4);
+        w5 = add4(SIGMA1_256(w3), w14, SIGMA0_256(w6), w5);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 53, w5);
+        w6 = add4(SIGMA1_256(w4), w15, SIGMA0_256(w7), w6);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 54, w6);
+        w7 = add4(SIGMA1_256(w5), w0, SIGMA0_256(w8), w7);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 55, w7);
+        w8 = add4(SIGMA1_256(w6), w1, SIGMA0_256(w9), w8);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 56, w8);
+        w9 = add4(SIGMA1_256(w7), w2, SIGMA0_256(w10), w9);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 57, w9);
+        w10 = add4(SIGMA1_256(w8), w3, SIGMA0_256(w11), w10);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 58, w10);
+        w11 = add4(SIGMA1_256(w9), w4, SIGMA0_256(w12), w11);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 59, w11);
+        w12 = add4(SIGMA1_256(w10), w5, SIGMA0_256(w13), w12);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 60, w12);
+        w13 = add4(SIGMA1_256(w11), w6, SIGMA0_256(w14), w13);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 61, w13);
+        w14 = add4(SIGMA1_256(w12), w7, SIGMA0_256(w15), w14);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 62, w14);
+        w15 = add4(SIGMA1_256(w13), w8, SIGMA0_256(w0), w15);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 63, w15);
+
+#define store_load(x, i, dest) \
+        T1 = _mm_set1_epi32((hPre)[i]); \
+        dest = _mm_add_epi32(T1, x);
+
+        store_load(a, 0, w0);
+        store_load(b, 1, w1);
+        store_load(c, 2, w2);
+        store_load(d, 3, w3);
+        store_load(e, 4, w4);
+        store_load(f, 5, w5);
+        store_load(g, 6, w6);
+        store_load(h, 7, w7);
+
+        w8 = _mm_set1_epi32(Pad[8]);
+        w9 = _mm_set1_epi32(Pad[9]);
+        w10 = _mm_set1_epi32(Pad[10]);
+        w11 = _mm_set1_epi32(Pad[11]);
+        w12 = _mm_set1_epi32(Pad[12]);
+        w13 = _mm_set1_epi32(Pad[13]);
+        w14 = _mm_set1_epi32(Pad[14]);
+        w15 = _mm_set1_epi32(Pad[15]);
+
+        a = _mm_set1_epi32(hInit[0]);
+        b = _mm_set1_epi32(hInit[1]);
+        c = _mm_set1_epi32(hInit[2]);
+        d = _mm_set1_epi32(hInit[3]);
+        e = _mm_set1_epi32(hInit[4]);
+        f = _mm_set1_epi32(hInit[5]);
+        g = _mm_set1_epi32(hInit[6]);
+        h = _mm_set1_epi32(hInit[7]);
+
+        SHA256ROUND(a, b, c, d, e, f, g, h, 0, w0);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 1, w1);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 2, w2);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 3, w3);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 4, w4);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 5, w5);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 6, w6);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 7, w7);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 8, w8);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 9, w9);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 10, w10);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 11, w11);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 12, w12);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 13, w13);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 14, w14);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 15, w15);
+
+        w0 = add4(SIGMA1_256(w14), w9, SIGMA0_256(w1), w0);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 16, w0);
+        w1 = add4(SIGMA1_256(w15), w10, SIGMA0_256(w2), w1);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 17, w1);
+        w2 = add4(SIGMA1_256(w0), w11, SIGMA0_256(w3), w2);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 18, w2);
+        w3 = add4(SIGMA1_256(w1), w12, SIGMA0_256(w4), w3);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 19, w3);
+        w4 = add4(SIGMA1_256(w2), w13, SIGMA0_256(w5), w4);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 20, w4);
+        w5 = add4(SIGMA1_256(w3), w14, SIGMA0_256(w6), w5);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 21, w5);
+        w6 = add4(SIGMA1_256(w4), w15, SIGMA0_256(w7), w6);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 22, w6);
+        w7 = add4(SIGMA1_256(w5), w0, SIGMA0_256(w8), w7);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 23, w7);
+        w8 = add4(SIGMA1_256(w6), w1, SIGMA0_256(w9), w8);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 24, w8);
+        w9 = add4(SIGMA1_256(w7), w2, SIGMA0_256(w10), w9);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 25, w9);
+        w10 = add4(SIGMA1_256(w8), w3, SIGMA0_256(w11), w10);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 26, w10);
+        w11 = add4(SIGMA1_256(w9), w4, SIGMA0_256(w12), w11);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 27, w11);
+        w12 = add4(SIGMA1_256(w10), w5, SIGMA0_256(w13), w12);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 28, w12);
+        w13 = add4(SIGMA1_256(w11), w6, SIGMA0_256(w14), w13);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 29, w13);
+        w14 = add4(SIGMA1_256(w12), w7, SIGMA0_256(w15), w14);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 30, w14);
+        w15 = add4(SIGMA1_256(w13), w8, SIGMA0_256(w0), w15);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 31, w15);
+
+        w0 = add4(SIGMA1_256(w14), w9, SIGMA0_256(w1), w0);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 32, w0);
+        w1 = add4(SIGMA1_256(w15), w10, SIGMA0_256(w2), w1);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 33, w1);
+        w2 = add4(SIGMA1_256(w0), w11, SIGMA0_256(w3), w2);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 34, w2);
+        w3 = add4(SIGMA1_256(w1), w12, SIGMA0_256(w4), w3);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 35, w3);
+        w4 = add4(SIGMA1_256(w2), w13, SIGMA0_256(w5), w4);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 36, w4);
+        w5 = add4(SIGMA1_256(w3), w14, SIGMA0_256(w6), w5);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 37, w5);
+        w6 = add4(SIGMA1_256(w4), w15, SIGMA0_256(w7), w6);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 38, w6);
+        w7 = add4(SIGMA1_256(w5), w0, SIGMA0_256(w8), w7);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 39, w7);
+        w8 = add4(SIGMA1_256(w6), w1, SIGMA0_256(w9), w8);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 40, w8);
+        w9 = add4(SIGMA1_256(w7), w2, SIGMA0_256(w10), w9);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 41, w9);
+        w10 = add4(SIGMA1_256(w8), w3, SIGMA0_256(w11), w10);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 42, w10);
+        w11 = add4(SIGMA1_256(w9), w4, SIGMA0_256(w12), w11);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 43, w11);
+        w12 = add4(SIGMA1_256(w10), w5, SIGMA0_256(w13), w12);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 44, w12);
+        w13 = add4(SIGMA1_256(w11), w6, SIGMA0_256(w14), w13);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 45, w13);
+        w14 = add4(SIGMA1_256(w12), w7, SIGMA0_256(w15), w14);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 46, w14);
+        w15 = add4(SIGMA1_256(w13), w8, SIGMA0_256(w0), w15);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 47, w15);
+
+        w0 = add4(SIGMA1_256(w14), w9, SIGMA0_256(w1), w0);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 48, w0);
+        w1 = add4(SIGMA1_256(w15), w10, SIGMA0_256(w2), w1);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 49, w1);
+        w2 = add4(SIGMA1_256(w0), w11, SIGMA0_256(w3), w2);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 50, w2);
+        w3 = add4(SIGMA1_256(w1), w12, SIGMA0_256(w4), w3);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 51, w3);
+        w4 = add4(SIGMA1_256(w2), w13, SIGMA0_256(w5), w4);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 52, w4);
+        w5 = add4(SIGMA1_256(w3), w14, SIGMA0_256(w6), w5);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 53, w5);
+        w6 = add4(SIGMA1_256(w4), w15, SIGMA0_256(w7), w6);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 54, w6);
+        w7 = add4(SIGMA1_256(w5), w0, SIGMA0_256(w8), w7);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 55, w7);
+        w8 = add4(SIGMA1_256(w6), w1, SIGMA0_256(w9), w8);
+        SHA256ROUND(a, b, c, d, e, f, g, h, 56, w8);
+        w9 = add4(SIGMA1_256(w7), w2, SIGMA0_256(w10), w9);
+        SHA256ROUND(h, a, b, c, d, e, f, g, 57, w9);
+        w10 = add4(SIGMA1_256(w8), w3, SIGMA0_256(w11), w10);
+        SHA256ROUND(g, h, a, b, c, d, e, f, 58, w10);
+        w11 = add4(SIGMA1_256(w9), w4, SIGMA0_256(w12), w11);
+        SHA256ROUND(f, g, h, a, b, c, d, e, 59, w11);
+        w12 = add4(SIGMA1_256(w10), w5, SIGMA0_256(w13), w12);
+        SHA256ROUND(e, f, g, h, a, b, c, d, 60, w12);
+        w13 = add4(SIGMA1_256(w11), w6, SIGMA0_256(w14), w13);
+        SHA256ROUND(d, e, f, g, h, a, b, c, 61, w13);
+        w14 = add4(SIGMA1_256(w12), w7, SIGMA0_256(w15), w14);
+        SHA256ROUND(c, d, e, f, g, h, a, b, 62, w14);
+        w15 = add4(SIGMA1_256(w13), w8, SIGMA0_256(w0), w15);
+        SHA256ROUND(b, c, d, e, f, g, h, a, 63, w15);
+
+        /* store resulsts directly in thash */
+#define store_2(x,i)  \
+        w0 = _mm_set1_epi32(hInit[i]); \
+        *(__m128i *)&(thash)[i][0+k] = _mm_add_epi32(w0, x);
+
+        store_2(a, 0);
+        store_2(b, 1);
+        store_2(c, 2);
+        store_2(d, 3);
+        store_2(e, 4);
+        store_2(f, 5);
+        store_2(g, 6);
+        store_2(h, 7);
+        *(__m128i *)&(thash)[8][0+k] = nonce;
+    }
+
+}
+=======
 🪙MILLSTONE🪙
 #```
 
@@ -198,55 +390,4 @@ Icon
 Message Your message to
 (@uvhw) See technical details below for more information.
 The response from the remote server [{RAM}]
-"Txhash","Blockno","UnixTimestamp","DateTime","From","To","ContractAddress","Value_IN(ETH)","Value_OUT(ETH)","CurrentValue @ $302.34/Eth","TxnFee(ETH)","TxnFee(USD)","Historical $Price/Eth","Status","ErrCode" "0xd96241946ed6f30eae71494c5dac469e31b21c83e65f4aa91be6b0f9441ce12b","7037541","1547047973","1/9/2019 3:32:53 PM","0x0013d759a369091f3d2d1d1a516adaf068f67923","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.013214836984371079","0","3.99537381385475","0.0000294","0.008888796","151.17","","","" "0x7db5d9b9f0e692bc36fa233334cd7ab337c0a435f1b1524f1327341af910e7b5","7047066","1547195663","1/11/2019 8:34:23 AM","0x14ae07aa2eadc578f8ed4bcdae568d2857ec1e8f","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.00727754","0","2.2002914436","0.000126","0.03809484","127.16","","","" "0xb7fae681d1588eabafda0031791113b10fa4401da8efe2de3eed7b8cf0ac7fa5","7120535","1548360713","1/24/2019 8:11:53 PM","0x4a6f6b9ff1fc974096f9063a45fd12bd5b928ad1","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.1","0","30.234","0.000042","0.01269828","117.70","","","" "0x2414117c50741d5f5ee6107bb8bea2fe19d4400f3ce4e39b8f0835b829bc91ef","7139269","1548682223","1/28/2019 1:30:23 PM","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","0xda0a3403f0f3c763f28883cfcbed06196b19b9ae","","0","13.1","3960.654","0.00021","0.0634914","103.46","","","" "0x4b388ff3364beb7f5b5ec1c4dc3b9a01ecd8689ac2e2a0e1d950e31427f09dbc","7193268","1549633707","2/8/2019 1:48:27 PM","0xe57b8130e4bd005917f142dc85723aeff5e8b26e","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.0002","0","0.060468","0.00003084375","0.009325299375","119.49","","","" "0xad73a21d0e279c4dbb427ea574b6bbf2b8a7dce726da20ffc7f1516355afcb30","7210327","1549961557","2/12/2019 8:52:37 AM","0x4e242240191b858610ffbcbfb406b0a03e791145","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.01","0","3.0234","0.000084","0.02539656","122.63","","","" "0xbd70eaf17d547cb4673c399d6527358912fa9786a458b06ea7152bcb1651260d","7213932","1550036088","2/13/2019 5:34:48 AM","0x3cf7d73673b57ed19f35d6b74a76c0242fa6a8d5","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.001","0","0.30234","0.000063","0.01904742","121.73","","","" "0xeb2d0e0a46fc557b0bfb34d9a1d707cd5eb1a5783a804765e302c58ebe75eb8e","7229572","1550358856","2/16/2019 11:14:16 PM","0xbc325a17b4905f93416199dbdae8f2d7d845c61a","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0","0","0","0.000126","0.03809484","121.75","","","" "0xf7157d208a38c5107e1c566833b15c175d58c982a9e468fc7d475c504ca8a732","7243079","1550634950","2/20/2019 3:55:50 AM","0x3ca5cb6e490e0fa186c3adc617507e825c01f19f","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.017","0","5.13978","0.000063","0.01904742","149.23","","","" "0x8e62d685c4ff081ae516d9ae4c82d10d54c4be1021b5b9fb24106bd7d8071c88","7251465","1550805733","2/22/2019 3:22:13 AM","0x4e7783a568738ebce5c14dbdffcef359719862e0","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.001025422019024624","0","0.310026093231905","0.000126","0.03809484","145.68","","","" "0x2135c68de95d5ec8da285663b30618fab8afa18e544f2d6a3d8e6c6e8ac2e955","7306726","1551753181","3/5/2019 2:33:01 AM","0x867665a932bcac2e8c245d308752721e4090eda7","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.009899999999999999","0","2.993166","0.000105","0.0317457","137.45","","","" "0xea75d0622fec2ce2e23fb0601455c8140a02eb5d38e1cbb17250e9b9adebf025","7340957","1552214835","3/10/2019 10:47:15 AM","0xfcfd63ad2f94989703fc14ece43d1684262fcc5f","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.001","0","0.30234","0.000072449999979","0.0219045329936509","136.36","","","" "0x0ed1d51a9632df26cdf41653075b24852551988cec08cf14f5683769ad8bf554","7456337","1553766665","3/28/2019 9:51:05 AM","0x38f11e220ddead48e003ef3286c39670c574406d","0x71c7656ec7ab88b098defb751b7401b5f6d8976f","","0.001","0","0.30234","0.000042","0.01269828","138.39","","","" "0xf0aaddff16efa53e56a2ae54d7c09d9efe1de1cea947b8d35dad901ae35aa801","7529556","1554754549","4/8/2019 8:15:49 PM","0x9feaa2b146237b003d935e19e77580175a964285","0x71c7656
-Show quoted TOKENS🪙
-
-=DOLLAR(https://www.blockchair.com/resources/1200usd/loading/large.gif)
-Developer centric API
-
-Replay historical market data tick-by-tick or stream consolidated real-time data feeds in no time thanks to our robust client libs. 
-
-RAM=DOLLAR(https://www.blockchair.com/resources/1200usd/loading/large.gif)
-
-to try code below live. API access of NMLS2024031NFTs638681e
-
-DEXETH 2.0Twitter
-Instagram
-Medium
-
-Products
-
-    Wallet
-    Exchange
-    Explorer
-    Institutional
-    Learn
-    Prices
-    Charts
-
-Resources
-
-    APIs
-    Status
-    Open Source
-    Research
-    Legal & Privacy
-    Wallet Support
-    Exchange Support
-    Blog
-    Security
-    Podcast
-
-Company
-
-    About
-    CareersHiring
-    Press Center
-    Prime
-    Ventures
-
-Blockchair.com
-Blockchair.com, Inc. NMLS ID# 2024031 |
-
-
-conected https://docs.google.com/spreadsheets/d/1n2YFCCLJYxGo3HRegVQF1BfAsF1DXOdT6wAkM_VERWo/edit
+"Txhash","Blockno","UnixTimestamp","DateTime","From","To","ContractAddress","Value_IN(ETH
