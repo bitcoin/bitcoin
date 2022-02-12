@@ -72,14 +72,14 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File @abs_top_srcdir@/release/@SYSCOIN_GUI_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@SYSCOIN_GUI_NAME@@EXEEXT@
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File @abs_top_srcdir@/release/@SYSCOIN_DAEMON_NAME@@EXEEXT@
-    File @abs_top_srcdir@/release/@SYSCOIN_CLI_NAME@@EXEEXT@
-    File @abs_top_srcdir@/release/@SYSCOIN_TX_NAME@@EXEEXT@
-    File @abs_top_srcdir@/release/@SYSCOIN_WALLET_TOOL_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@SYSCOIN_DAEMON_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@SYSCOIN_CLI_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@SYSCOIN_TX_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@SYSCOIN_WALLET_TOOL_NAME@@EXEEXT@
     SetOutPath $INSTDIR\doc
     File /r /x Makefile* @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR
