@@ -21,7 +21,32 @@ License—Contract for the purpose of carrying out tasks with private property w
 
 ## The Call for Responsibility of Humans by Finally Working Together Worldwide:
 
-Since the Supreme Court Defined License as a Contract; it has created a world of hurt for the open-source community. Google, Apple, MS, Amazon, and all of the big corporations are submitting for hundreds of thousands of patents, and they consist overwhelmingly of open source/non-patentable works. While software is not restricted to anyone with this license, so crypto shall not be hindered, it will restrict universities from stealing their students' inventions and patenting them. It allows for the original authors to have three years of exclusive publishing rights for their research verbatim. Since this project is old, that time has expired. The original claim of authorship/ownership shall remain with the same people/teams as before. Those with malicious intent could have taken over the entire crypto market legally. That option is too late now as the fork of this software has spread to every MIT license and nullified while replacing it with the Public Resource License. The MIT licenses must be updated and replaced with this license as it has legal claim and authority to protect all MIT content. The claim of authorship remains with the discoverers, and authors: https://github.com/PublicResourceLicense/PublicResourceLicense/blob/main/prl%20license.txt
+Since the Supreme Court Defined License as a Contract; it has created a world of hurt for the open-source community. Google, Apple, MS, Amazon, and all of the big corporations are submitting for hundreds of thousands of patents, and they consist overwhelmingly of open source/non-patentable works. 
+
+While software is not restricted to anyone with this license, so crypto shall not be hindered, it will restrict universities from stealing their students' inventions and patenting them. It allows for the original authors to have three years of exclusive publishing rights for their research verbatim. Since this project is old, that time has expired. The original claim of authorship/ownership shall remain with the same people/teams as before. Those with malicious intent could have taken over the entire crypto market legally. That option is too late now as the fork of this software has spread to every MIT license and nullified while replacing it with the Public Resource License. 
+
+The MIT licenses must be updated and replaced with this license as it has legal claim and authority to protect all MIT content. The claim of authorship remains with the discoverers, and authors: https://github.com/PublicResourceLicense/PublicResourceLicense/blob/main/prl%20license.txt
+
+## My Refute to the Law Which Will Try to Say This License is Invalid:
+
+I authored this license strictly from contracts heldup by the U.S., namely the Veteran Affairs and Military Contracts. It appears most people have the idea that one little error cancels the entire license or contract. This is false according to verbiage within GOVERNMENT contracts. You can simply state that if anything is contradictory, then the outcome must be fair. Which is fair. 
+
+The Public Resource License defines itself as an individual document between two parties on behalf of humans and that every jurisdiction only has authority within their jurisdiction, and any license which becomes void or redefined does not affect any other Public Resource License.
+
+## In this case, the legal system states:
+"You aren't allowed to have exclusivity on research, plans of concepts, or math."
+ 
+### Response:
+
+Exclusivity is not permitted for compounds, elements, drugs, prescriptions, plants, business names, titles, characters, plants, seeds, medical techniques, software, programming, language, syntax, functions, syntax functions, and syntax expressions, yet Google, Microsoft, and Oracle have over 100,000 patents approved for software applications, the majority of which were created using open source software.
+
+The license for public resources is already due to expire and become part of the public domain once the abovementioned are likewise transferred to the public domain. Otherwise, there is no difference between what this license does and what has already been approved by the United States or any other government; therefore, if deemed invalid by law, the U.S. would be violating federal law to deny the public resource license, as Article IV of the Constitution provides that "the citizens of each State shall be entitled to all the privileges and immunities accorded to citizens in the several States;" additionally, the United States constitution prohibits the revocation of this license.
+
+The refusal of the license must result in the reinstatement or eradication of all patented pharmaceuticals, chemicals, title and name trademarks, software, and all other patents that were and are defined as non-patentable to be released into the public domain.
+
+The license itself was designed and modelled over a worldwide version of anti-trust laws, and fair competition. 
+
+__________________________________MIT LICENSE
 
 This repository is now sublicensed under the **Public Resource License:**
 
