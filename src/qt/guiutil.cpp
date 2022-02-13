@@ -79,6 +79,8 @@
 void ForceActivation();
 #endif
 
+using namespace std::chrono_literals;
+
 namespace GUIUtil {
 
 QString dateTimeStr(const QDateTime &date)
@@ -725,6 +727,16 @@ QString formatDurationStr(std::chrono::seconds dur)
     const auto s2{s.count()};
     if (s2 || str_list.empty()) str_list.append(QObject::tr("%1 s").arg(s2));
     return str_list.join(" ");
+}
+
+QString FormatPeerAge(std::chrono::seconds time_connected)
+{
+    const auto time_now{GetTime<std::chrono::seconds>()};
+    const auto age{time_now - time_connected};
+    if (age >= 24h) return QObject::tr("%1 d").arg(age / 24h);
+    if (age >= 1h) return QObject::tr("%1 h").arg(age / 1h);
+    if (age >= 1min) return QObject::tr("%1 m").arg(age / 1min);
+    return QObject::tr("%1 s").arg(age / 1s);
 }
 
 QString formatServicesStr(quint64 mask)

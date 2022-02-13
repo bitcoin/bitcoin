@@ -223,6 +223,9 @@ namespace GUIUtil
     /** Convert seconds into a QString with days, hours, mins, secs */
     QString formatDurationStr(std::chrono::seconds dur);
 
+    /** Convert peer connection time to a QString denominated in the most relevant unit. */
+    QString FormatPeerAge(std::chrono::seconds time_connected);
+
     /** Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
