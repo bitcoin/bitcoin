@@ -64,6 +64,7 @@ public:
 
     const CBlock& GenesisBlock() const { return genesis; }
     const CBlock& DevNetGenesisBlock() const { return devnetGenesis; }
+    int DevNetVersion() const { return devnetVersion; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
@@ -124,6 +125,7 @@ protected:
     std::string strNetworkID;
     CBlock genesis;
     CBlock devnetGenesis;
+    int devnetVersion;
     std::vector<SeedSpec6> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;

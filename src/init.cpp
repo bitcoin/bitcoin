@@ -1775,7 +1775,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
         // Add devnet name to user agent. This allows to disconnect nodes immediately if they don't belong to our own devnet
-        uacomments.push_back(strprintf("devnet.%s", gArgs.GetDevNetName()));
+        uacomments.push_back(strprintf("devnet.%d.%s", chainparams.DevNetVersion(), gArgs.GetDevNetName()));
     }
 
     for (const std::string& cmt : gArgs.GetArgs("-uacomment")) {
