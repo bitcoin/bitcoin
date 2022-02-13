@@ -96,7 +96,7 @@ Checkout the Syscoin Core version you'd like to build:
 pushd ./syscoin
 SIGNER='(your builder key, ie sidhujag, willyk, etc)'
 VERSION='(new version without v-prefix, e.g. 4.3.0)'
-git fetch "v${VERSION}"
+git fetch origin "v${VERSION}"
 git checkout "v${VERSION}"
 popd
 ```
