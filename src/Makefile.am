@@ -856,7 +856,7 @@ syscoin_bin_ldadd = \
   $(LIBSECP256K1) \
   $(LIBNEVM)
 
-syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+syscoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources) init/syscoind.cpp
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -887,7 +887,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
+syscoin_cli_LDADD += $(EVENT_LIBS)
 #
 
 # syscoin-tx binary #
@@ -913,9 +913,6 @@ syscoin_tx_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBNEVM)
-
-syscoin_tx_LDADD += $(BOOST_LIBS)
-  
 #
 
 # syscoin-wallet binary #
@@ -948,8 +945,6 @@ syscoin_util_LDADD = \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBSECP256K1)
-
-syscoin_util_LDADD += $(BOOST_LIBS)
 #
 
 # syscoinconsensus library #
