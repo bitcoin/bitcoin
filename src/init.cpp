@@ -1235,6 +1235,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
 
+    auto nListenPort = args.GetIntArg("-port", Params().GetDefaultPort());
+    if (nListenPort <= 0 || nListenPort > 65535) {
+        return InitError(strprintf(_("Invalid -port: %d"), nListenPort));
+    }
+
     fListen = args.GetBoolArg("-listen", DEFAULT_LISTEN);
     fDiscover = args.GetBoolArg("-discover", true);
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
