@@ -118,7 +118,7 @@ details.
 ### Build and attest to build outputs:
 
 Follow the relevant Guix README.md sections:
-- [Performing a build](/contrib/guix/README.md#performing-a-build)
+- [Building](/contrib/guix/README.md#building)
 - [Attesting to build outputs](/contrib/guix/README.md#attesting-to-build-outputs)
 
 ### Verify other builders' signatures to your own. (Optional)
