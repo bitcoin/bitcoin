@@ -1448,7 +1448,8 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
     }
-    if (!node.IsInboundConn()) {
+    if (!node.IsInboundConn() && !node.PreferV2Conn()) {
+        // Initializing a V1(pre-BIP324) node, so we can start the P2P protocol with a VERSION message
         InitP2P(node, peer->m_our_services);
     }
 }

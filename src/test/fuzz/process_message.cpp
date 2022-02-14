@@ -84,6 +84,13 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
 
     connman.AddTestNode(p2p_node);
+    if (p2p_node.PreferV2Conn()) {
+        InitTestV2P2P(fuzzed_data_provider, p2p_node, connman);
+        if (!p2p_node.IsInboundConn()) {
+            g_setup->m_node.peerman->InitP2P(p2p_node, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
+        }
+    }
+
     FillNode(fuzzed_data_provider, connman, p2p_node);
 
     const auto mock_time = ConsumeTime(fuzzed_data_provider);

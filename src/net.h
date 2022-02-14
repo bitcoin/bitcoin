@@ -23,6 +23,7 @@
 #include <node/connection_types.h>
 #include <policy/feerate.h>
 #include <protocol.h>
+#include <pubkey.h>
 #include <random.h>
 #include <span.h>
 #include <streams.h>
@@ -449,17 +450,28 @@ struct BIP324Session {
     std::array<std::byte, BIP324_GARBAGE_TERMINATOR_LEN> responder_garbage_terminator;
 };
 
+// struct for public members related to BIP324 connection state
+struct BIP324SharedState {
+    std::atomic_bool key_exchange_complete{false};
+    EllSwiftPubKey ellswift_pubkey;
+};
+
+// struct for private members related to BIP324 connection state
+struct BIP324NodeState {
+    CKey priv_key;
+};
+
 void DeriveBIP324Session(ECDHSecret&& ecdh_secret, BIP324Session& session);
 
 /** Information about a peer */
 class CNode
 {
     friend class CConnman;
-    friend struct ConnmanTestMsg;
+    friend class ConnmanTestMsg;
 
 public:
-    const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
-    const std::unique_ptr<const TransportSerializer> m_serializer;
+    std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
+    std::unique_ptr<const TransportSerializer> m_serializer;
 
     const NetPermissionFlags m_permission_flags;
 
@@ -523,6 +535,7 @@ public:
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
+    std::unique_ptr<BIP324SharedState> m_bip324_shared_state;
 
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
@@ -561,6 +574,11 @@ public:
 
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
+    }
+
+    bool PreferV2Conn() const
+    {
+        return m_prefer_p2p_v2;
     }
 
     bool ExpectServicesFromConn() const {
@@ -701,6 +719,9 @@ public:
         m_min_ping_time = std::min(m_min_ping_time.load(), ping_time);
     }
 
+    void InitV2P2P(const Span<const std::byte> initiator_ellswift, const Span<const std::byte> responder_ellswift, bool initiating);
+    void EnsureInitV2Key(bool initiating);
+
 private:
     const NodeId id;
     const uint64_t nLocalHostNonce;
@@ -708,6 +729,7 @@ private:
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
+    std::unique_ptr<BIP324NodeState> m_bip324_node_state;
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(m_addr_local_mutex);
@@ -845,8 +867,7 @@ public:
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
              bool network_active = true);
-
-    ~CConnman();
+    virtual ~CConnman();
 
     bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc);
 
@@ -862,12 +883,13 @@ public:
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex, !m_total_bytes_sent_mutex);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    void PushV2EllSwiftPubkey(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     using NodeFn = std::function<void(CNode*)>;
     void ForEachNode(const NodeFn& func)
@@ -938,7 +960,7 @@ public:
      *                          - Max total outbound connection capacity filled
      *                          - Max connection capacity for type is filled
      */
-    bool AddConnection(const std::string& address, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    bool AddConnection(const std::string& address, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex, !m_total_bytes_sent_mutex);
 
     size_t GetNodeCount(ConnectionDirection) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
@@ -1004,10 +1026,10 @@ private:
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
-    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex);
+    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_total_bytes_sent_mutex);
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
-    void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
-    void ThreadOpenConnections(std::vector<std::string> connect) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex);
+    void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex, !m_total_bytes_sent_mutex);
+    void ThreadOpenConnections(std::vector<std::string> connect) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_total_bytes_sent_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
     void AcceptConnection(const ListenSocket& hListenSocket);
@@ -1312,7 +1334,7 @@ private:
     };
 
     friend struct CConnmanTest;
-    friend struct ConnmanTestMsg;
+    friend class ConnmanTestMsg;
 };
 
 /** Dump binary message to file, with timestamp */

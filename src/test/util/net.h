@@ -14,12 +14,16 @@
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <map>
 #include <memory>
 #include <string>
 
-struct ConnmanTestMsg : public CConnman {
+
+class ConnmanTestMsg : public CConnman
+{
     using CConnman::CConnman;
 
+public:
     void SetPeerConnectTimeout(std::chrono::seconds timeout)
     {
         m_peer_connect_timeout = timeout;
@@ -52,6 +56,8 @@ struct ConnmanTestMsg : public CConnman {
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
+
+    std::map<NodeId, std::unique_ptr<V2TransportSerializer>> v2_serializers;
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{

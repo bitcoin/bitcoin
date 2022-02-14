@@ -50,6 +50,13 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
         CNode& p2p_node = *peers.back();
 
+        if (p2p_node.PreferV2Conn()) {
+            InitTestV2P2P(fuzzed_data_provider, p2p_node, connman);
+            if (!p2p_node.IsInboundConn()) {
+                g_setup->m_node.peerman->InitP2P(p2p_node, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
+            }
+        }
+
         FillNode(fuzzed_data_provider, connman, p2p_node);
 
         connman.AddTestNode(p2p_node);

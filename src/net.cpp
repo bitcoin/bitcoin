@@ -55,6 +55,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -703,8 +704,48 @@ void CNode::CopyStats(CNodeStats& stats)
 }
 #undef X
 
+void CNode::InitV2P2P(const Span<const std::byte> their_ellswift, const Span<const std::byte> our_ellswift, bool initiating)
+{
+    auto ecdh_secret = m_bip324_node_state->priv_key.ComputeBIP324ECDHSecret(their_ellswift,
+                                                                             our_ellswift,
+                                                                             initiating);
+
+    BIP324Session v2_keys;
+    DeriveBIP324Session(std::move(ecdh_secret.value()), v2_keys);
+
+    if (initiating) {
+        m_deserializer = std::make_unique<V2TransportDeserializer>(GetId(), v2_keys.responder_L, v2_keys.responder_P);
+        m_serializer = std::make_unique<V2TransportSerializer>(v2_keys.initiator_L, v2_keys.initiator_P);
+    } else {
+        m_deserializer = std::make_unique<V2TransportDeserializer>(GetId(), v2_keys.initiator_L, v2_keys.initiator_P);
+        m_serializer = std::make_unique<V2TransportSerializer>(v2_keys.responder_L, v2_keys.responder_P);
+    }
+}
+
+void CNode::EnsureInitV2Key(bool initiating)
+{
+    if (!m_bip324_node_state) {
+        m_bip324_node_state = std::make_unique<BIP324NodeState>();
+    }
+
+    if (!m_bip324_shared_state) {
+        m_bip324_shared_state = std::make_unique<BIP324SharedState>();
+    }
+
+    if (!m_bip324_node_state->priv_key.IsValid()) {
+        m_bip324_node_state->priv_key.MakeNewKey(true);
+        std::array<std::byte, 32> rnd32;
+        GetRandBytes({reinterpret_cast<unsigned char*>(rnd32.data()), 32});
+        m_bip324_shared_state->ellswift_pubkey = m_bip324_node_state->priv_key.EllSwiftEncode(rnd32);
+    }
+}
+
 bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 {
+    if (!m_deserializer) {
+        return false;
+    }
+
     complete = false;
     const auto time = GetTime<std::chrono::microseconds>();
     LOCK(cs_vRecv);
@@ -726,6 +767,16 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 
             if (disconnect) {
                 // v2 p2p incorrect MAC tag. Disconnect from peer.
+                return false;
+            }
+
+            // inbound clients that support BIP324 do not know whether the peer is trying
+            // to talk v1 or v2. if the first message is not VERSION, we reinterpret the
+            // bytes as v2 ellswift
+            if (gArgs.GetBoolArg("-v2transport", DEFAULT_V2_TRANSPORT) &&
+                !m_prefer_p2p_v2 && IsInboundConn() &&
+                mapRecvBytesPerMsgType.at(NetMsgType::VERSION) == 0 &&
+                msg.m_type != NetMsgType::VERSION) {
                 return false;
             }
 
@@ -1299,6 +1350,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
     std::optional<int> max_connections;
     switch (conn_type) {
     case ConnectionType::INBOUND:
@@ -1540,7 +1592,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
         {
             // typical socket buffer is 8K-64K
             uint8_t pchBuf[0x10000];
-            int nBytes = 0;
+            ssize_t nBytes = 0;
             {
                 LOCK(pnode->m_sock_mutex);
                 if (!pnode->m_sock) {
@@ -1551,10 +1603,36 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             if (nBytes > 0)
             {
                 bool notify = false;
-                if (!pnode->ReceiveMsgBytes({pchBuf, (size_t)nBytes}, notify)) {
-                    pnode->CloseSocketDisconnect();
+                size_t num_bytes = (size_t)nBytes;
+                if (!pnode->ReceiveMsgBytes({pchBuf, num_bytes}, notify)) {
+                    // when we cannot understand the received bytes, disconnect if:
+                    //   1. we don't support BIP324 v2, or
+                    //   2. v2 key exchange is complete, we should understand the bytes, or
+                    //   3. we've previously received a v1 (or v2) VERSION message from the peer
+                    //   4. the received bytes are not exactly the size of an ellswift encoding
+                    if (!gArgs.GetBoolArg("-v2transport", DEFAULT_V2_TRANSPORT) ||
+                        (pnode->m_bip324_shared_state &&
+                         pnode->m_bip324_shared_state->key_exchange_complete) ||
+                        pnode->nVersion != 0 ||
+                        num_bytes != ELLSWIFT_ENCODED_SIZE) {
+                        pnode->CloseSocketDisconnect();
+                    } else {
+                        pnode->EnsureInitV2Key(!pnode->IsInboundConn());
+
+                        pnode->InitV2P2P({AsBytePtr(pchBuf), num_bytes},
+                                         MakeByteSpan(pnode->m_bip324_shared_state->ellswift_pubkey),
+                                         !pnode->IsInboundConn());
+                        if (pnode->IsInboundConn()) {
+                            PushV2EllSwiftPubkey(pnode);
+                        } else {
+                            // Outbound peer has completed ECDH and can start the P2P protocol
+                            m_msgproc->InitP2P(*pnode, nLocalServices);
+                        }
+
+                        pnode->m_bip324_shared_state->key_exchange_complete = true;
+                    }
                 }
-                RecordBytesRecv(nBytes);
+                RecordBytesRecv(num_bytes);
                 if (notify) {
                     size_t nSizeAdded = 0;
                     for (const auto& msg : pnode->vRecvMsg) {
@@ -1764,6 +1842,7 @@ void CConnman::DumpAddresses()
 void CConnman::ProcessAddrFetch()
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
     std::string strDest;
     {
         LOCK(m_addr_fetches_mutex);
@@ -1846,6 +1925,7 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_OPEN_CONNECTION);
     FastRandomContext rng;
     // Connect to specific addresses
@@ -2197,6 +2277,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
 void CConnman::ThreadOpenAddedConnections()
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_ADD_CONNECTION);
     while (true)
     {
@@ -2232,6 +2313,7 @@ void CConnman::ThreadOpenAddedConnections()
 void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, ConnectionType conn_type)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
     assert(conn_type != ConnectionType::INBOUND);
 
     //
@@ -2258,6 +2340,9 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
 
+    if (pnode->PreferV2Conn()) {
+        PushV2EllSwiftPubkey(pnode);
+    }
     m_msgproc->InitializeNode(*pnode, nLocalServices);
     {
         LOCK(m_nodes_mutex);
@@ -3010,9 +3095,7 @@ CNode::CNode(NodeId idIn,
              ConnectionType conn_type_in,
              bool inbound_onion,
              CNodeOptions&& node_opts)
-    : m_deserializer{std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), idIn, SER_NETWORK, INIT_PROTO_VERSION))},
-      m_serializer{std::make_unique<V1TransportSerializer>(V1TransportSerializer())},
-      m_permission_flags{node_opts.permission_flags},
+    : m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},
       addr{addrIn},
@@ -3039,6 +3122,13 @@ CNode::CNode(NodeId idIn,
     } else {
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
+
+    if (PreferV2Conn()) {
+        EnsureInitV2Key(!IsInboundConn());
+    } else {
+        m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), id, SER_NETWORK, INIT_PROTO_VERSION));
+        m_serializer = std::make_unique<V1TransportSerializer>(V1TransportSerializer());
+    }
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)
@@ -3049,8 +3139,6 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
-    size_t nMessageSize = msg.data.size();
-    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
     if (gArgs.GetBoolArg("-capturemessages", false)) {
         CaptureMessage(pnode->addr, msg.m_type, msg.data, /*is_incoming=*/false);
     }
@@ -3064,11 +3152,18 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         msg.data.data()
     );
 
+    if (!pnode->m_serializer) {
+        return;
+    }
+
     // make sure we use the appropriate network transport format
     std::vector<unsigned char> serializedHeader;
     if (!pnode->m_serializer->prepareForTransport(msg, serializedHeader)) {
         return;
     }
+
+    size_t nMessageSize = msg.data.size();
+    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
 
     size_t nTotalSize = nMessageSize + serializedHeader.size();
 
@@ -3082,12 +3177,36 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         pnode->nSendSize += nTotalSize;
 
         if (pnode->nSendSize > nSendBufferMaxSize) pnode->fPauseSend = true;
-        pnode->vSendMsg.push_back(std::move(serializedHeader));
+
+        // The serializedHeader is empty for v2 p2p messages since all the bytes are in msg.data
+        if (!serializedHeader.empty()) pnode->vSendMsg.push_back(std::move(serializedHeader));
         if (nMessageSize) pnode->vSendMsg.push_back(std::move(msg.data));
 
         // If write queue empty, attempt "optimistic write"
         if (optimisticSend) nBytesSent = SocketSendData(*pnode);
     }
+    if (nBytesSent) RecordBytesSent(nBytesSent);
+}
+
+void CConnman::PushV2EllSwiftPubkey(CNode* pnode)
+{
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
+    std::vector<unsigned char> ellswift_bytes;
+    ellswift_bytes.resize(ELLSWIFT_ENCODED_SIZE);
+    memcpy(ellswift_bytes.data(),
+           pnode->m_bip324_shared_state->ellswift_pubkey.data(),
+           ELLSWIFT_ENCODED_SIZE);
+    size_t nBytesSent;
+    {
+        LOCK(pnode->cs_vSend);
+        pnode->nSendSize += ellswift_bytes.size();
+        pnode->vSendMsg.push_back(ellswift_bytes);
+        LogPrint(BCLog::NET, "sending 64 byte v2 p2p ellswift key to peer=%d\n", pnode->GetId());
+
+        // Send immediately.
+        nBytesSent = SocketSendData(*pnode);
+    }
+
     if (nBytesSent) RecordBytesSent(nBytesSent);
 }
 
