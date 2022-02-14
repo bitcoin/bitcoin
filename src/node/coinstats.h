@@ -41,8 +41,6 @@ struct CCoinsStats {
     //! The number of coins contained.
     uint64_t coins_count{0};
 
-    //! Signals if the coinstatsindex should be used (when available).
-    bool index_requested{true};
     //! Signals if the coinstatsindex was used to retrieve the statistics.
     bool index_used{false};
 
@@ -68,8 +66,16 @@ struct CCoinsStats {
     CAmount total_unspendables_unclaimed_rewards{0};
 };
 
-//! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView* view, node::BlockManager& blockman, CCoinsStats& stats, CoinStatsHashType hash_type, const std::function<void()>& interruption_point = {}, const CBlockIndex* pindex = nullptr);
+/**
+ * Calculate statistics about the unspent transaction output set
+ *
+ * @param[in] index_requested Signals if the coinstatsindex should be used (when available).
+ */
+bool GetUTXOStats(CCoinsView* view, node::BlockManager& blockman,
+                  CCoinsStats& stats, CoinStatsHashType hash_type,
+                  const std::function<void()>& interruption_point = {},
+                  const CBlockIndex* pindex = nullptr,
+                  bool index_requested = true);
 
 uint64_t GetBogoSize(const CScript& script_pub_key);
 
