@@ -1437,8 +1437,20 @@ if test "$use_external_signer" != "no"; then
       use_external_signer="no";
     ;;
     *)
-      use_external_signer="yes"
-      AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
+      AC_MSG_CHECKING([whether Boost.Process can be used])
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]])],
+        [have_boost_process="yes"],
+        [have_boost_process="no"])
+      AC_MSG_RESULT([$have_boost_process])
+      if test "$have_boost_process" == "yes"; then
+        use_external_signer="yes"
+        AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
+      else
+        if test "$use_external_signer" = "yes"; then
+          AC_MSG_ERROR([External signing is not supported for this Boost version])
+        fi
+        use_external_signer="no";
+      fi
     ;;
   esac
 fi
