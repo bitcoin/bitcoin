@@ -6,7 +6,7 @@
 // Written and placed in public domain by Jeffrey Walton.
 // Based on code from Intel, and by Sean Gulley for the miTLS project.
 
-#ifdef ENABLE_SHANI
+#ifdef ENABLE_X86_SHANI
 
 #include <stdint.h>
 #include <immintrin.h>
@@ -74,7 +74,7 @@ void inline  __attribute__((always_inline)) Save(unsigned char* out, __m128i s)
 }
 }
 
-namespace sha256_shani {
+namespace sha256_x86_shani {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 {
     __m128i m0, m1, m2, m3, s0, s1, so0, so1;
@@ -139,7 +139,7 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 }
 }
 
-namespace sha256d64_shani {
+namespace sha256d64_x86_shani {
 
 void Transform_2way(unsigned char* out, const unsigned char* in)
 {

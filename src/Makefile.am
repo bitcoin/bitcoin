@@ -76,9 +76,13 @@ if ENABLE_AVX2
 LIBBITCOIN_CRYPTO_AVX2 = crypto/libdash_crypto_avx2.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
 endif
-if ENABLE_SHANI
-LIBBITCOIN_CRYPTO_SHANI = crypto/libdash_crypto_shani.a
-LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
+if ENABLE_X86_SHANI
+LIBBITCOIN_CRYPTO_X86_SHANI = crypto/libdash_crypto_x86_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_X86_SHANI)
+endif
+if ENABLE_ARM_SHANI
+LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libdash_crypto_arm_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -575,11 +579,17 @@ crypto_libdash_crypto_base_a_SOURCES += \
   crypto/sph_skein.h \
   crypto/sph_types.h
 
-crypto_libdash_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libdash_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libdash_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libdash_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libdash_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+crypto_libdash_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libdash_crypto_x86_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libdash_crypto_x86_shani_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+crypto_libdash_crypto_x86_shani_a_CPPFLAGS += -DENABLE_X86_SHANI
+crypto_libdash_crypto_x86_shani_a_SOURCES = crypto/sha256_x86_shani.cpp
+
+crypto_libdash_crypto_arm_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libdash_crypto_arm_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libdash_crypto_arm_shani_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+crypto_libdash_crypto_arm_shani_a_CPPFLAGS += -DENABLE_ARM_SHANI
+crypto_libdash_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libdash_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
