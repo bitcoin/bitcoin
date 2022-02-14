@@ -59,9 +59,13 @@ if ENABLE_AVX2
 LIBSYSCOIN_CRYPTO_AVX2 = crypto/libsyscoin_crypto_avx2.a
 LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_AVX2)
 endif
-if ENABLE_SHANI
-LIBSYSCOIN_CRYPTO_SHANI = crypto/libsyscoin_crypto_shani.a
-LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_SHANI)
+if ENABLE_X86_SHANI
+LIBSYSCOIN_CRYPTO_X86_SHANI = crypto/libsyscoin_crypto_x86_shani.a
+LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_X86_SHANI)
+endif
+if ENABLE_ARM_SHANI
+LIBSYSCOIN_CRYPTO_ARM_SHANI = crypto/libsyscoin_crypto_arm_shani.a
+LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_ARM_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -678,11 +682,17 @@ crypto_libsyscoin_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
 crypto_libsyscoin_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
 crypto_libsyscoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
-crypto_libsyscoin_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libsyscoin_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libsyscoin_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libsyscoin_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libsyscoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+crypto_libsyscoin_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libsyscoin_crypto_x86_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libsyscoin_crypto_x86_shani_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+crypto_libsyscoin_crypto_x86_shani_a_CPPFLAGS += -DENABLE_X86_SHANI
+crypto_libsyscoin_crypto_x86_shani_a_SOURCES = crypto/sha256_x86_shani.cpp
+
+crypto_libsyscoin_crypto_arm_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libsyscoin_crypto_arm_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libsyscoin_crypto_arm_shani_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+crypto_libsyscoin_crypto_arm_shani_a_CPPFLAGS += -DENABLE_ARM_SHANI
+crypto_libsyscoin_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libsyscoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
