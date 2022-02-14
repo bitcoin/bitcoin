@@ -28,9 +28,6 @@ enum class CoinStatsHashType {
 };
 
 struct CCoinsStats {
-    //! Which hash type to use
-    const CoinStatsHashType m_hash_type;
-
     int nHeight{0};
     uint256 hashBlock{};
     uint64_t nTransactions{0};
@@ -69,12 +66,10 @@ struct CCoinsStats {
     CAmount total_unspendables_scripts{0};
     //! Total cumulative amount of coins lost due to unclaimed miner rewards up to and including this block
     CAmount total_unspendables_unclaimed_rewards{0};
-
-    CCoinsStats(CoinStatsHashType hash_type) : m_hash_type(hash_type) {}
 };
 
 //! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView* view, node::BlockManager& blockman, CCoinsStats& stats, const std::function<void()>& interruption_point = {}, const CBlockIndex* pindex = nullptr);
+bool GetUTXOStats(CCoinsView* view, node::BlockManager& blockman, CCoinsStats& stats, CoinStatsHashType hash_type, const std::function<void()>& interruption_point = {}, const CBlockIndex* pindex = nullptr);
 
 uint64_t GetBogoSize(const CScript& script_pub_key);
 
