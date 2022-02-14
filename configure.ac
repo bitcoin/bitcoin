@@ -1404,8 +1404,6 @@ if test "$use_boost" = "yes"; then
   if test "$suppress_external_warnings" != "no"; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
-
-  BOOST_LIBS="$BOOST_LDFLAGS"
 fi
 
 if test "$use_external_signer" != "no"; then
@@ -1468,30 +1466,6 @@ if test "$use_tests" = "yes"; then
 
   if test "$HEXDUMP" = ""; then
     AC_MSG_ERROR([hexdump is required for tests])
-  fi
-
-  if test "$use_boost" = "yes"; then
-
-    AX_BOOST_UNIT_TEST_FRAMEWORK
-
-    dnl Determine if -DBOOST_TEST_DYN_LINK is needed
-    AC_MSG_CHECKING([for dynamic linked boost test])
-    TEMP_LIBS="$LIBS"
-    LIBS="$LIBS $BOOST_LDFLAGS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
-    TEMP_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-    AC_LINK_IFELSE([AC_LANG_SOURCE([
-         #define BOOST_TEST_DYN_LINK
-         #define BOOST_TEST_MAIN
-          #include <boost/test/unit_test.hpp>
-
-         ])],
-      [AC_MSG_RESULT([yes])]
-      [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
-      [AC_MSG_RESULT([no])])
-    LIBS="$TEMP_LIBS"
-    CPPFLAGS="$TEMP_CPPFLAGS"
-
   fi
 fi
 
@@ -1866,7 +1840,6 @@ AC_SUBST(USE_BDB)
 AC_SUBST(ENABLE_EXTERNAL_SIGNER)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
-AC_SUBST(BOOST_LIBS)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
