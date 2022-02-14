@@ -28,7 +28,6 @@ unsigned-integer-overflow:chain.h
 unsigned-integer-overflow:coded_stream.h
 unsigned-integer-overflow:coins.cpp
 unsigned-integer-overflow:compressor.cpp
-unsigned-integer-overflow:core_write.cpp
 unsigned-integer-overflow:crypto/
 # unsigned-integer-overflow in FuzzedDataProvider's ConsumeIntegralInRange
 unsigned-integer-overflow:FuzzedDataProvider.h
