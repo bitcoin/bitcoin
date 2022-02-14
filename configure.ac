@@ -1951,8 +1951,8 @@ if test $enable_fuzz = "no"; then
     echo "  with test       = $use_tests"
 else
     echo "  with test       = not building test_bitcoin because fuzzing is enabled"
-    echo "    with fuzz     = $enable_fuzz"
 fi
+echo "  with fuzz binary = $enable_fuzz_binary"
 echo "  with bench      = $use_bench"
 echo "  with upnp       = $use_upnp"
 echo "  with natpmp     = $use_natpmp"
