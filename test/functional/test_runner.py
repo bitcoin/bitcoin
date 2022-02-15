@@ -169,6 +169,7 @@ BASE_SCRIPTS = [
     'interface_http.py',
     'interface_rpc.py',
     'interface_usdt_net.py',
+    'interface_usdt_utxocache.py',
     'rpc_psbt.py --legacy-wallet',
     'rpc_psbt.py --descriptors',
     'rpc_users.py',
