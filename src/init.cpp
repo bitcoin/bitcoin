@@ -1494,8 +1494,9 @@ bool AppInitParameterInteraction()
     }
 
     fRequireStandard = !gArgs.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
-    if (chainparams.RequireStandard() && !fRequireStandard)
+    if (!chainparams.IsTestChain() && !fRequireStandard) {
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
+    }
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
@@ -2130,7 +2131,9 @@ bool AppInitMain(InitInterfaces& interfaces)
                         break;
                     }
 
-                    ResetBlockFailureFlags(nullptr);
+                    if (gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
+                        ResetBlockFailureFlags(nullptr);
+                    }
                 }
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());

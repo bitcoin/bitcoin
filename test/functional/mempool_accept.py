@@ -38,7 +38,6 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.extra_args = [[
             '-txindex',
             '-reindex',  # Need reindex for txindex
-            '-acceptnonstdtxn=0',  # Try to mimic main-net
         ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):

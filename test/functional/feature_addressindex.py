@@ -136,7 +136,7 @@ class AddressIndexTest(BitcoinTestFramework):
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
-        tx.vout = [CTxOut(10, scriptPubKey), CTxOut(11, scriptPubKey)]
+        tx.vout = [CTxOut(10 * COIN, scriptPubKey), CTxOut(11 * COIN, scriptPubKey)]
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
@@ -152,7 +152,7 @@ class AddressIndexTest(BitcoinTestFramework):
         # Check that balances are correct
         self.log.info("Testing balances...")
         balance0 = self.nodes[1].getaddressbalance("93bVhahvUKmQu8gu9g3QnPPa2cxFK98pMB")
-        assert_equal(balance0["balance"], 45 * 100000000 + 21)
+        assert_equal(balance0["balance"], (45 + 21) * 100000000)
 
         # Check that balances are correct after spending
         self.log.info("Testing balances after spending...")
