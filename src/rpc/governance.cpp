@@ -736,47 +736,47 @@ static UniValue ListObjects(const std::string& strCachedSignal, const std::strin
 
     LOCK2(cs_main, governance.cs);
 
-    std::vector<const CGovernanceObject*> objs = governance.GetAllNewerThan(nStartTime);
+    std::vector<CGovernanceObject> objs = governance.GetAllNewerThan(nStartTime);
     governance.UpdateLastDiffTime(GetTime());
     // CREATE RESULTS FOR USER
 
-    for (const auto& pGovObj : objs) {
-        if (strCachedSignal == "valid" && !pGovObj->IsSetCachedValid()) continue;
-        if (strCachedSignal == "funding" && !pGovObj->IsSetCachedFunding()) continue;
-        if (strCachedSignal == "delete" && !pGovObj->IsSetCachedDelete()) continue;
-        if (strCachedSignal == "endorsed" && !pGovObj->IsSetCachedEndorsed()) continue;
+    for (const auto& govObj : objs) {
+        if (strCachedSignal == "valid" && !govObj.IsSetCachedValid()) continue;
+        if (strCachedSignal == "funding" && !govObj.IsSetCachedFunding()) continue;
+        if (strCachedSignal == "delete" && !govObj.IsSetCachedDelete()) continue;
+        if (strCachedSignal == "endorsed" && !govObj.IsSetCachedEndorsed()) continue;
 
-        if (strType == "proposals" && pGovObj->GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
-        if (strType == "triggers" && pGovObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) continue;
+        if (strType == "proposals" && govObj.GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
+        if (strType == "triggers" && govObj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) continue;
 
         UniValue bObj(UniValue::VOBJ);
-        bObj.pushKV("DataHex",  pGovObj->GetDataAsHexString());
-        bObj.pushKV("DataString",  pGovObj->GetDataAsPlainString());
-        bObj.pushKV("Hash",  pGovObj->GetHash().ToString());
-        bObj.pushKV("CollateralHash",  pGovObj->GetCollateralHash().ToString());
-        bObj.pushKV("ObjectType", pGovObj->GetObjectType());
-        bObj.pushKV("CreationTime", pGovObj->GetCreationTime());
-        const COutPoint& masternodeOutpoint = pGovObj->GetMasternodeOutpoint();
+        bObj.pushKV("DataHex",  govObj.GetDataAsHexString());
+        bObj.pushKV("DataString",  govObj.GetDataAsPlainString());
+        bObj.pushKV("Hash",  govObj.GetHash().ToString());
+        bObj.pushKV("CollateralHash",  govObj.GetCollateralHash().ToString());
+        bObj.pushKV("ObjectType", govObj.GetObjectType());
+        bObj.pushKV("CreationTime", govObj.GetCreationTime());
+        const COutPoint& masternodeOutpoint = govObj.GetMasternodeOutpoint();
         if (masternodeOutpoint != COutPoint()) {
             bObj.pushKV("SigningMasternode", masternodeOutpoint.ToStringShort());
         }
 
         // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
-        bObj.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("AbsoluteYesCount",  govObj.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("YesCount",  govObj.GetYesCount(VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("NoCount",  govObj.GetNoCount(VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("AbstainCount",  govObj.GetAbstainCount(VOTE_SIGNAL_FUNDING));
 
         // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
         std::string strError = "";
-        bObj.pushKV("fBlockchainValidity",  pGovObj->IsValidLocally(strError, false));
+        bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(strError, false));
         bObj.pushKV("IsValidReason",  strError.c_str());
-        bObj.pushKV("fCachedValid",  pGovObj->IsSetCachedValid());
-        bObj.pushKV("fCachedFunding",  pGovObj->IsSetCachedFunding());
-        bObj.pushKV("fCachedDelete",  pGovObj->IsSetCachedDelete());
-        bObj.pushKV("fCachedEndorsed",  pGovObj->IsSetCachedEndorsed());
+        bObj.pushKV("fCachedValid",  govObj.IsSetCachedValid());
+        bObj.pushKV("fCachedFunding",  govObj.IsSetCachedFunding());
+        bObj.pushKV("fCachedDelete",  govObj.IsSetCachedDelete());
+        bObj.pushKV("fCachedEndorsed",  govObj.IsSetCachedEndorsed());
 
-        objResult.pushKV(pGovObj->GetHash().ToString(), bObj);
+        objResult.pushKV(govObj.GetHash().ToString(), bObj);
     }
 
     return objResult;

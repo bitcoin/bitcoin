@@ -27,7 +27,7 @@ class Proposal : public QObject
 private:
     Q_OBJECT
 
-    const CGovernanceObject* pGovObj;
+    const CGovernanceObject govObj;
     QString m_title;
     QDateTime m_startDate;
     QDateTime m_endDate;
@@ -35,7 +35,7 @@ private:
     QString m_url;
 
 public:
-    explicit Proposal(const CGovernanceObject* p, QObject* parent = nullptr);
+    explicit Proposal(const CGovernanceObject _govObj, QObject* parent = nullptr);
     QString title() const;
     QString hash() const;
     QDateTime startDate() const;

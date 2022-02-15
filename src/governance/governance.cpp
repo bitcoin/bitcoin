@@ -505,11 +505,11 @@ std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& 
     return vecResult;
 }
 
-std::vector<const CGovernanceObject*> CGovernanceManager::GetAllNewerThan(int64_t nMoreThanTime) const
+std::vector<CGovernanceObject> CGovernanceManager::GetAllNewerThan(int64_t nMoreThanTime) const
 {
     LOCK(cs);
 
-    std::vector<const CGovernanceObject*> vGovObjs;
+    std::vector<CGovernanceObject> vGovObjs;
 
     for (const auto& objPair : mapObjects) {
         // IF THIS OBJECT IS OLDER THAN TIME, CONTINUE
@@ -518,8 +518,7 @@ std::vector<const CGovernanceObject*> CGovernanceManager::GetAllNewerThan(int64_
         }
 
         // ADD GOVERNANCE OBJECT TO LIST
-        const CGovernanceObject* pGovObj = &(objPair.second);
-        vGovObjs.push_back(pGovObj);
+        vGovObjs.push_back(objPair.second);
     }
 
     return vGovObjs;
