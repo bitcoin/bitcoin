@@ -64,6 +64,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 - [BIPS](bips.md)
 - [Dnsseed Policy](dnsseed-policy.md)
 - [Benchmarking](benchmarking.md)
+- [Internal Design Docs](design/)
 
 ### Resources
 * Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
@@ -71,7 +72,6 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [Assumeutxo design](assumeutxo.md)
 - [bitcoin.conf Configuration File](bitcoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)

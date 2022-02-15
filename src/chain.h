@@ -138,7 +138,7 @@ enum BlockStatus : uint32_t {
      * If set, this indicates that the block index entry is assumed-valid.
      * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
      * It almost certainly means that the block's full validation is pending
-     * on a background chainstate. See `doc/assumeutxo.md`.
+     * on a background chainstate. See `doc/design/assumeutxo.md`.
      */
     BLOCK_ASSUMED_VALID      =   256,
 };
