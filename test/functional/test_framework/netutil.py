@@ -144,7 +144,6 @@ def test_ipv6_local():
     '''
     Check for (local) IPv6 support.
     '''
-    import socket
     # By using SOCK_DGRAM this will not actually make a connection, but it will
     # fail if there is no route to IPv6 localhost.
     have_ipv6 = True
