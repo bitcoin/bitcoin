@@ -600,6 +600,7 @@ public:
         allowed_syscalls.insert(__NR_statfs);          // get filesystem statistics
         allowed_syscalls.insert(__NR_statx);           // get file status (extended)
         allowed_syscalls.insert(__NR_unlink);          // delete a name and possibly the file it refers to
+        allowed_syscalls.insert(__NR_unlinkat);        // delete relative to a directory file descriptor
     }
 
     void AllowFutex()
