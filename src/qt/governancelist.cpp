@@ -134,7 +134,7 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
         case Column::PAYMENT_AMOUNT:
             return proposal->paymentAmount();
         case Column::IS_ACTIVE:
-            return proposal->isActive() ? "Y" : "N";
+            return proposal->isActive() ? tr("Yes") : tr("No");
         case Column::VOTING_STATUS:
             return proposal->votingStatus(nAbsVoteReq);
         default:
@@ -174,19 +174,19 @@ QVariant ProposalModel::headerData(int section, Qt::Orientation orientation, int
     if (orientation != Qt::Horizontal || role != Qt::DisplayRole) return {};
     switch (section) {
     case Column::HASH:
-        return "Hash";
+        return tr("Hash");
     case Column::TITLE:
-        return "Title";
+        return tr("Title");
     case Column::START_DATE:
-        return "Start";
+        return tr("Start");
     case Column::END_DATE:
-        return "End";
+        return tr("End");
     case Column::PAYMENT_AMOUNT:
-        return "Amount";
+        return tr("Amount");
     case Column::IS_ACTIVE:
-        return "Active";
+        return tr("Active");
     case Column::VOTING_STATUS:
-        return "Status";
+        return tr("Status");
     default:
         return {};
     }

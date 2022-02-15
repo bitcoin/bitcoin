@@ -21,6 +21,34 @@ class GovernanceList;
 
 class CDeterministicMNList;
 class ClientModel;
+class ProposalModel;
+
+/** Governance Manager page widget */
+class GovernanceList : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit GovernanceList(QWidget* parent = nullptr);
+    ~GovernanceList() override;
+    void setClientModel(ClientModel* clientModel);
+
+private:
+    ClientModel* clientModel{nullptr};
+
+    std::unique_ptr<Ui::GovernanceList> ui;
+    ProposalModel* proposalModel;
+    QSortFilterProxyModel* proposalModelProxy;
+
+    QMenu* proposalContextMenu;
+    QTimer* timer;
+
+private Q_SLOTS:
+    void updateProposalList();
+    void updateProposalCount() const;
+    void showProposalContextMenu(const QPoint& pos);
+    void showAdditionalInfo(const QModelIndex& index);
+};
 
 class Proposal : public QObject
 {
@@ -53,6 +81,8 @@ public:
 
 class ProposalModel : public QAbstractTableModel
 {
+    Q_OBJECT
+
 private:
     QList<const Proposal*> m_data;
     int nAbsVoteReq = 0;
@@ -84,33 +114,5 @@ public:
 
     const Proposal* getProposalAt(const QModelIndex& index) const;
 };
-
-/** Governance Manager page widget */
-class GovernanceList : public QWidget
-{
-    Q_OBJECT
-
-public:
-    explicit GovernanceList(QWidget* parent = nullptr);
-    ~GovernanceList() override;
-    void setClientModel(ClientModel* clientModel);
-
-private:
-    ClientModel* clientModel{nullptr};
-
-    std::unique_ptr<Ui::GovernanceList> ui;
-    ProposalModel* proposalModel;
-    QSortFilterProxyModel* proposalModelProxy;
-
-    QMenu* proposalContextMenu;
-    QTimer* timer;
-
-private Q_SLOTS:
-    void updateProposalList();
-    void updateProposalCount() const;
-    void showProposalContextMenu(const QPoint& pos);
-    void showAdditionalInfo(const QModelIndex& index);
-};
-
 
 #endif // BITCOIN_QT_GOVERNANCELIST_H
