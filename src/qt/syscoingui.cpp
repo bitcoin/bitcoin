@@ -262,20 +262,12 @@ void SyscoinGUI::createActions()
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
-    sendCoinsMenuAction = new QAction(sendCoinsAction->text(), this);
-    sendCoinsMenuAction->setStatusTip(sendCoinsAction->statusTip());
-    sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
-
     receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
     receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and syscoin: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
     tabGroup->addAction(receiveCoinsAction);
-
-    receiveCoinsMenuAction = new QAction(receiveCoinsAction->text(), this);
-    receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
-    receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
     historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
@@ -308,12 +300,8 @@ void SyscoinGUI::createActions()
     connect(overviewAction, &QAction::triggered, this, &SyscoinGUI::gotoOverviewPage);
     connect(sendCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(sendCoinsAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
-    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
     connect(receiveCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(receiveCoinsAction, &QAction::triggered, this, &SyscoinGUI::gotoReceiveCoinsPage);
-    connect(receiveCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(receiveCoinsMenuAction, &QAction::triggered, this, &SyscoinGUI::gotoReceiveCoinsPage);
     connect(historyAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(historyAction, &QAction::triggered, this, &SyscoinGUI::gotoHistoryPage);
 #endif // ENABLE_WALLET
@@ -333,8 +321,6 @@ void SyscoinGUI::createActions()
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
-    toggleHideAction = new QAction(tr("&Show / Hide"), this);
-    toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
     encryptWalletAction = new QAction(tr("&Encrypt Wallet…"), this);
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
@@ -397,7 +383,6 @@ void SyscoinGUI::createActions()
     connect(aboutAction, &QAction::triggered, this, &SyscoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
     connect(optionsAction, &QAction::triggered, this, &SyscoinGUI::optionsClicked);
-    connect(toggleHideAction, &QAction::triggered, this, &SyscoinGUI::toggleHidden);
     connect(showHelpMessageAction, &QAction::triggered, this, &SyscoinGUI::showHelpMessageClicked);
     connect(openRPCConsoleAction, &QAction::triggered, this, &SyscoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
@@ -666,8 +651,6 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             trayIcon->setVisible(optionsModel->getShowTrayIcon());
         }
     } else {
-        // Disable possibility to show main window via action
-        toggleHideAction->setEnabled(false);
         if(trayIconMenu)
         {
             // Disable context menu on tray icon
@@ -791,9 +774,7 @@ void SyscoinGUI::setWalletActionsEnabled(bool enabled)
 {
     overviewAction->setEnabled(enabled);
     sendCoinsAction->setEnabled(enabled);
-    sendCoinsMenuAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
-    receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -823,58 +804,82 @@ void SyscoinGUI::createTrayIcon()
 void SyscoinGUI::createTrayIconMenu()
 {
 #ifndef Q_OS_MAC
-    // return if trayIcon is unset (only on non-macOSes)
-    if (!trayIcon)
-        return;
+    if (!trayIcon) return;
+#endif // Q_OS_MAC
 
-    trayIcon->setContextMenu(trayIconMenu.get());
-    connect(trayIcon, &QSystemTrayIcon::activated, this, &SyscoinGUI::trayIconActivated);
-#else
-    // Note: On macOS, the Dock icon is used to provide the tray's functionality.
-    MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-    connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, this, &SyscoinGUI::macosDockIconActivated);
-    trayIconMenu->setAsDockMenu();
-#endif
-
-    // Configuration of the tray icon (or Dock icon) menu
+    // Configuration of the tray icon (or Dock icon) menu.
+    QAction* show_hide_action{nullptr};
 #ifndef Q_OS_MAC
     // Note: On macOS, the Dock icon's menu already has Show / Hide action.
-    trayIconMenu->addAction(toggleHideAction);
+    show_hide_action = trayIconMenu->addAction(QString(), this, &SyscoinGUI::toggleHidden);
     trayIconMenu->addSeparator();
-#endif
-    if (enableWallet) {
-        trayIconMenu->addAction(sendCoinsMenuAction);
-        trayIconMenu->addAction(receiveCoinsMenuAction);
-        trayIconMenu->addSeparator();
-        trayIconMenu->addAction(signMessageAction);
-        trayIconMenu->addAction(verifyMessageAction);
-        trayIconMenu->addSeparator();
-    }
-    trayIconMenu->addAction(optionsAction);
-    trayIconMenu->addAction(openRPCConsoleAction);
-    trayIconMenu->addAction(openRepairAction);
-#ifndef Q_OS_MAC // This is built-in on macOS
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(quitAction);
-#endif
-}
+#endif // Q_OS_MAC
 
-#ifndef Q_OS_MAC
-void SyscoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
-{
-    if(reason == QSystemTrayIcon::Trigger)
-    {
-        // Click on system tray icon triggers show/hide of the main window
-        toggleHidden();
+    QAction* send_action{nullptr};
+    QAction* receive_action{nullptr};
+    QAction* sign_action{nullptr};
+    QAction* verify_action{nullptr};
+    if (enableWallet) {
+        send_action = trayIconMenu->addAction(sendCoinsAction->text(), sendCoinsAction, &QAction::trigger);
+        receive_action = trayIconMenu->addAction(receiveCoinsAction->text(), receiveCoinsAction, &QAction::trigger);
+        trayIconMenu->addSeparator();
+        sign_action = trayIconMenu->addAction(signMessageAction->text(), signMessageAction, &QAction::trigger);
+        verify_action = trayIconMenu->addAction(verifyMessageAction->text(), verifyMessageAction, &QAction::trigger);
+        trayIconMenu->addSeparator();
     }
-}
+    QAction* options_action = trayIconMenu->addAction(optionsAction->text(), optionsAction, &QAction::trigger);
+    options_action->setMenuRole(QAction::PreferencesRole);
+    QAction* node_window_action = trayIconMenu->addAction(openRPCConsoleAction->text(), openRPCConsoleAction, &QAction::trigger);
+    QAction* quit_action{nullptr};
+#ifndef Q_OS_MAC
+    // Note: On macOS, the Dock icon's menu already has Quit action.
+    trayIconMenu->addSeparator();
+    quit_action = trayIconMenu->addAction(quitAction->text(), quitAction, &QAction::trigger);
+
+    trayIcon->setContextMenu(trayIconMenu.get());
+    connect(trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
+        if (reason == QSystemTrayIcon::Trigger) {
+            // Click on system tray icon triggers show/hide of the main window
+            toggleHidden();
+        }
+    });
 #else
-void SyscoinGUI::macosDockIconActivated()
-{
-    show();
-    activateWindow();
+    // Note: On macOS, the Dock icon is used to provide the tray's functionality.
+    MacDockIconHandler* dockIconHandler = MacDockIconHandler::instance();
+    connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, [this] {
+        show();
+        activateWindow();
+    });
+    trayIconMenu->setAsDockMenu();
+#endif // Q_OS_MAC
+
+    connect(
+        // Using QSystemTrayIcon::Context is not reliable.
+        // See https://bugreports.qt.io/browse/QTBUG-91697
+        trayIconMenu.get(), &QMenu::aboutToShow,
+        [this, show_hide_action, send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action] {
+            if (show_hide_action) show_hide_action->setText(
+                (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
+                    tr("&Hide") :
+                    tr("S&how"));
+            if (QApplication::activeModalWidget()) {
+                for (QAction* a : trayIconMenu.get()->actions()) {
+                    a->setEnabled(false);
+                }
+            } else {
+                if (show_hide_action) show_hide_action->setEnabled(true);
+                if (enableWallet) {
+                    send_action->setEnabled(sendCoinsAction->isEnabled());
+                    receive_action->setEnabled(receiveCoinsAction->isEnabled());
+                    sign_action->setEnabled(signMessageAction->isEnabled());
+                    verify_action->setEnabled(verifyMessageAction->isEnabled());
+                }
+                options_action->setEnabled(optionsAction->isEnabled());
+                node_window_action->setEnabled(openRPCConsoleAction->isEnabled());
+                if (quit_action) quit_action->setEnabled(true);
+            }
+        });
 }
-#endif
 
 void SyscoinGUI::optionsClicked()
 {
@@ -887,7 +892,7 @@ void SyscoinGUI::aboutClicked()
         return;
 
     auto dlg = new HelpMessageDialog(this, /* about */ true);
-    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 
 void SyscoinGUI::showDebugWindow()
@@ -1046,7 +1051,7 @@ void SyscoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     connect(dlg, &OptionsDialog::quitOnReset, this, &SyscoinGUI::quitRequested);
     dlg->setCurrentTab(tab);
     dlg->setModel(clientModel->getOptionsModel());
-    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 
 void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state)

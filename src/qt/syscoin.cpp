@@ -266,7 +266,11 @@ void SyscoinApplication::createWindow(const NetworkStyle *networkStyle)
     connect(window, &SyscoinGUI::quitRequested, this, &SyscoinApplication::requestShutdown);
 
     pollShutdownTimer = new QTimer(window);
-    connect(pollShutdownTimer, &QTimer::timeout, window, &SyscoinGUI::detectShutdown);
+    connect(pollShutdownTimer, &QTimer::timeout, [this]{
+        if (!QApplication::activeModalWidget()) {
+            window->detectShutdown();
+        }
+    });
 }
 
 void SyscoinApplication::createSplashScreen(const NetworkStyle *networkStyle)

@@ -932,7 +932,7 @@ void SendCoinsDialog::coinControlButtonClicked()
 {
     auto dlg = new CoinControlDialog(*m_coin_control, model, platformStyle);
     connect(dlg, &QDialog::finished, this, &SendCoinsDialog::coinControlUpdateLabels);
-    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 
 // Coin Control: checkbox custom change address
