@@ -43,7 +43,7 @@ class PoPSync(BitcoinTestFramework):
             response = node.submitpopvbk(block.toVbkEncodingHex())
             assert response['accepted'], response
             self.log.info("VBK accepted to mempool")
-            sync_pop_mempools(self.nodes, timeout=30)
+            sync_pop_mempools(self.nodes, timeout=100)
 
             # VTB
             self.log.info("Submitting VTB")
