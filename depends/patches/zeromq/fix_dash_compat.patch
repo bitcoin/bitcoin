@@ -1,0 +1,71 @@
+commit 9a397666d28ca5f3c0d8233be3d39b2206555f45
+Author: Alain Kalker <a.c.kalker@gmail.com>
+Date:   Wed May 22 01:30:54 2019 +0200
+
+    acinclude.m4, configure.ac: Fix several non-portable uses of `test`
+    
+    Fixes #3517
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index 036a30a0..4f5ae3c2 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -1058,12 +1058,12 @@ AC_DEFUN([LIBZMQ_CHECK_POLLER], [{
+         [AS_HELP_STRING([--with-api-poller],
+         [choose zmq_poll(er)_* API polling system manually. Valid values are 'poll', 'select', or 'auto'. [default=auto]])])
+ 
+-    if test "x$with_poller" == "x"; then
++    if test "x$with_poller" = "x"; then
+         pollers=auto
+     else
+         pollers=$with_poller
+     fi
+-    if test "$pollers" == "auto"; then
++    if test "$pollers" = "auto"; then
+         # We search for pollers in this order
+         pollers="kqueue epoll devpoll pollset poll select"
+     fi
+@@ -1145,13 +1145,13 @@ AC_DEFUN([LIBZMQ_CHECK_POLLER], [{
+     if test $poller_found -eq 0; then
+         AC_MSG_ERROR([None of '$pollers' are valid pollers on this platform])
+     fi
+-    if test "x$with_api_poller" == "x"; then
++    if test "x$with_api_poller" = "x"; then
+         with_api_poller=auto
+     fi
+-	if test "x$with_api_poller" == "xauto"; then
+-		if test $poller == "select"; then
++	if test "x$with_api_poller" = "xauto"; then
++		if test $poller = "select"; then
+ 			api_poller=select
+-		elif test $poller == "wepoll"; then
++		elif test $poller = "wepoll"; then
+ 			api_poller=select
+ 		else		
+ 			api_poller=poll
+@@ -1159,10 +1159,10 @@ AC_DEFUN([LIBZMQ_CHECK_POLLER], [{
+ 	else
+ 		api_poller=$with_api_poller
+ 	fi
+-	if test "$api_poller" == "select"; then
++	if test "$api_poller" = "select"; then
+ 		AC_MSG_NOTICE([Using 'select' zmq_poll(er)_* API polling system])
+ 		AC_DEFINE(ZMQ_POLL_BASED_ON_SELECT, 1, [Use 'select' zmq_poll(er)_* API polling system])
+-	elif test "$api_poller" == "poll"; then
++	elif test "$api_poller" = "poll"; then
+ 		AC_MSG_NOTICE([Using 'poll' zmq_poll(er)_* API polling system])
+ 		AC_DEFINE(ZMQ_POLL_BASED_ON_POLL, 1, [Use 'poll' zmq_poll(er)_* API polling system])
+ 	else
+diff --git a/configure.ac b/configure.ac
+index 5c4e1e45..65bb4e0d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -143,7 +143,7 @@ AC_ARG_ENABLE(address-sanitizer, [AS_HELP_STRING([--enable-address-sanitizer=yes
+                   [Build with GCC Address Sanitizer instrumentation])],
+                   [ZMQ_ASAN="$enableval"])
+ 
+-if test "x${ZMQ_ASAN}" == "xyes"; then
++if test "x${ZMQ_ASAN}" = "xyes"; then
+     CFLAGS="${CFLAGS} -fsanitize=address"
+     CXXFLAGS="${CXXFLAGS} -fsanitize=address"
+ 
