@@ -360,9 +360,9 @@ bool CoinStatsIndex::Init()
     if (pindex) {
         DBVal entry;
         if (!LookUpOne(*m_db, pindex, entry)) {
-            return false;
+            return error("%s: Cannot read current %s state; index may be corrupted",
+                         __func__, GetName());
         }
-
         m_transaction_output_count = entry.transaction_output_count;
         m_bogo_size = entry.bogo_size;
         m_total_amount = entry.total_amount;
