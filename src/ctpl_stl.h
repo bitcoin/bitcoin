@@ -174,13 +174,14 @@ namespace ctpl {
             auto pck = std::make_shared<std::packaged_task<decltype(f(0, rest...))(int)>>(
                     std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Rest>(rest)...)
             );
+            auto fut = pck->get_future();
             auto _f = new std::function<void(int id)>([pck](int id) {
                 (*pck)(id);
             });
             this->q.push(_f);
             std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
-            return pck->get_future();
+            return fut;
         }
 
         // run the user's function that excepts argument int - id of the running thread. returned value is templatized
@@ -188,13 +189,14 @@ namespace ctpl {
         template<typename F>
         auto push(F && f) ->std::future<decltype(f(0))> {
             auto pck = std::make_shared<std::packaged_task<decltype(f(0))(int)>>(std::forward<F>(f));
+            auto fut = pck->get_future();
             auto _f = new std::function<void(int id)>([pck](int id) {
                 (*pck)(id);
             });
             this->q.push(_f);
             std::unique_lock<std::mutex> lock(this->mutex);
             this->cv.notify_one();
-            return pck->get_future();
+            return fut;
         }
 
 
