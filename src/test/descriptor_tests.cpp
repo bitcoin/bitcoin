@@ -12,6 +12,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <optional>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -123,6 +124,46 @@ std::set<std::pair<CPubKey, KeyOriginInfo>> GetKeyOriginData(const FlatSigningPr
         }
     }
     return ret;
+}
+
+/** ERE string matching a base58 character. */
+const std::string STR_BASE58CHAR = "[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]";
+/** ERE string matching origin info, or empty string. */
+const std::string STR_MAYBE_ORIGIN = "([[][0-9a-f]{8}(/[0-9]+['h]?)*])?";
+/** ERE string matching a compressed pubkey, an x-only pubkey, or an uncompressed pubkey. */
+const std::string STR_PUBKEY = "((02|03)?[a-f0-9]{64}|04[a-f0-9]{128})";
+/** ERE string matching a pubkey hash. */
+const std::string STR_PUBKEYHASH = "([a-f0-9]{40})";
+/** ERE string matching an xpub or xprv. */
+const std::string STR_XPUBPRV = "((xpub|xprv)" + STR_BASE58CHAR + "{74,108})";
+/** ERE string matching an xpub or xprv followed by optional derivation path. */
+const std::string STR_BIP32KEY = "(" + STR_XPUBPRV + "(/[0-9]+['h]?)*(/[*]['h]?)?)";
+/** ERE string matching a descriptor key expression. */
+const std::string STR_KEYEXPR = "(" + STR_MAYBE_ORIGIN + "(" + STR_PUBKEY + "|" + STR_PUBKEYHASH + "|" + STR_BIP32KEY + "))";
+
+/** Regular expression matching a descriptor key expression. */
+const std::regex KEY_RE("([(,])" + STR_KEYEXPR + "([),])", std::regex::extended);
+/** Regular expression matching the word "sortedmulti". */
+const std::regex SORTEDMULTI_RE("(^|[(,])sortedmulti[(]", std::regex::extended);
+
+/** Replace all key expressions in desc with "<KEY>", "sortedmulti" with "multi", and drop checksum. */
+std::string DropKeys(std::string desc)
+{
+    if (desc.size() >= 9 && *(desc.end()  - 9) == '#') {
+        // Drop checksum
+        desc = desc.substr(0, desc.size() - 9);
+    }
+    while (true) {
+        std::ostringstream ostr;
+        std::regex_replace(std::ostreambuf_iterator<char>(ostr), desc.begin(), desc.end(), KEY_RE, "$1<KEY>$14");
+        auto newdesc = ostr.str();
+        ostr.str("");
+        std::regex_replace(std::ostreambuf_iterator<char>(ostr), newdesc.begin(), newdesc.end(), SORTEDMULTI_RE, "$1multi(");
+        auto newdesc2 = ostr.str();
+        std::swap(desc, newdesc2);
+        if (newdesc2 == desc) break;
+    }
+    return desc;
 }
 
 void DoCheck(const std::string& prv, const std::string& pub, const std::string& norm_prv, const std::string& norm_pub, int flags, const std::vector<std::vector<std::string>>& scripts, const std::optional<OutputType>& type, const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY,
@@ -312,6 +353,9 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
 
                 /* Infer a descriptor from the generated script, and verify its solvability and that it roundtrips. */
                 auto inferred = InferDescriptor(spks[n], script_provider);
+                if (ref.size() == 1) {
+                    BOOST_CHECK_EQUAL(DropKeys(inferred->ToString()), DropKeys(pub));
+                }
                 BOOST_CHECK_EQUAL(inferred->IsSolvable(), !(flags & UNSOLVABLE));
                 std::vector<CScript> spks_inferred;
                 FlatSigningProvider provider_inferred;
