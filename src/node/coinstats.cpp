@@ -9,6 +9,7 @@
 #include <crypto/muhash.h>
 #include <hash.h>
 #include <index/coinstatsindex.h>
+#include <optional>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/overflow.h>
@@ -144,22 +145,31 @@ static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& 
     return true;
 }
 
-bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, CoinStatsHashType hash_type, const std::function<void()>& interruption_point, const CBlockIndex* pindex, bool index_requested)
+std::optional<CCoinsStats> GetUTXOStats(CCoinsView* view, BlockManager& blockman, CoinStatsHashType hash_type, const std::function<void()>& interruption_point, const CBlockIndex* pindex, bool index_requested)
 {
-    switch (hash_type) {
-    case(CoinStatsHashType::HASH_SERIALIZED): {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        return GetUTXOStats(view, blockman, stats, ss, interruption_point, pindex, hash_type, index_requested);
+    CCoinsStats stats{};
+
+    bool success = [&]() -> bool {
+        switch (hash_type) {
+        case(CoinStatsHashType::HASH_SERIALIZED): {
+            CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+            return GetUTXOStats(view, blockman, stats, ss, interruption_point, pindex, hash_type, index_requested);
+        }
+        case(CoinStatsHashType::MUHASH): {
+            MuHash3072 muhash;
+            return GetUTXOStats(view, blockman, stats, muhash, interruption_point, pindex, hash_type, index_requested);
+        }
+        case(CoinStatsHashType::NONE): {
+            return GetUTXOStats(view, blockman, stats, nullptr, interruption_point, pindex, hash_type, index_requested);
+        }
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    }();
+
+    if (!success) {
+        return std::nullopt;
     }
-    case(CoinStatsHashType::MUHASH): {
-        MuHash3072 muhash;
-        return GetUTXOStats(view, blockman, stats, muhash, interruption_point, pindex, hash_type, index_requested);
-    }
-    case(CoinStatsHashType::NONE): {
-        return GetUTXOStats(view, blockman, stats, nullptr, interruption_point, pindex, hash_type, index_requested);
-    }
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    return stats;
 }
 
 // The legacy hash serializes the hashBlock
