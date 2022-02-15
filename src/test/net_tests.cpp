@@ -928,7 +928,8 @@ void message_serialize_deserialize_test(bool v2, const std::vector<CSerializedNe
     }
     // run 100 times through all messages with the same cipher suite instances
     for (unsigned int i = 0; i < 100; i++) {
-        for (const CSerializedNetMsg& msg_orig : test_msgs) {
+        for (size_t msg_index = 0; msg_index < test_msgs.size(); msg_index++) {
+            const CSerializedNetMsg& msg_orig = test_msgs[msg_index];
             // bypass the copy protection
             CSerializedNetMsg msg;
             msg.data = msg_orig.data;
@@ -956,8 +957,10 @@ void message_serialize_deserialize_test(bool v2, const std::vector<CSerializedNe
             bool reject_message{true};
             bool disconnect{true};
             CNetMessage result{deserializer->GetMessage(GetTime<std::chrono::microseconds>(), reject_message, disconnect, {})};
-            BOOST_CHECK(!reject_message);
+            // The first v2 message is reject by V2TransportDeserializer as a placeholder for transport version messages
+            BOOST_CHECK(!v2 || (i == 0 && msg_index == 0) || !reject_message);
             BOOST_CHECK(!disconnect);
+            if (reject_message) continue;
             BOOST_CHECK_EQUAL(result.m_type, msg_orig.m_type);
             BOOST_CHECK_EQUAL(result.m_message_size, msg_orig.data.size());
             if (!msg_orig.data.empty()) {

@@ -5,6 +5,7 @@
 #include <consensus/consensus.h>
 #include <net.h>
 #include <net_processing.h>
+#include <netmessagemaker.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -52,6 +53,10 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
 
         if (p2p_node.PreferV2Conn()) {
             InitTestV2P2P(fuzzed_data_provider, p2p_node, connman);
+            const CNetMsgMaker mm{0};
+            // receive the transport version placeholder message
+            CSerializedNetMsg dummy{mm.Make(NetMsgType::VERSION)};
+            (void)connman.ReceiveMsgFrom(p2p_node, dummy);
             if (!p2p_node.IsInboundConn()) {
                 g_setup->m_node.peerman->InitP2P(p2p_node, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             }

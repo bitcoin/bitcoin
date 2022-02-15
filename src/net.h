@@ -354,6 +354,7 @@ private:
     CDataStream vRecv;          // received message data (encrypted length, encrypted contents and MAC tag)
     size_t m_hdr_pos = 0;       // read pos in header
     size_t m_data_pos = 0;      // read pos in data
+    bool m_processed_version_placeholder = false; // BIP324 transport version message has been received
 
 public:
     V2TransportDeserializer(const NodeId node_id,

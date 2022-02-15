@@ -984,7 +984,8 @@ CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds 
                                                 bool& disconnect,
                                                 Span<const std::byte> aad)
 {
-    const size_t min_contents_size = 1; // BIP324 1-byte message type id is the minimum contents
+    // BIP324 1-byte message type id is the minimum payload after the v2 transport version placeholder has been received
+    size_t min_contents_size = m_processed_version_placeholder ? 1 : 0;
 
     // Initialize out parameters
     reject_message = (vRecv.size() < V2_MIN_PACKET_LENGTH + min_contents_size);
@@ -1007,6 +1008,13 @@ CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds 
         // MAC check was successful
         vRecv.resize(m_contents_size);
         reject_message = reject_message || (BIP324HeaderFlags(BIP324_IGNORE & flags) != BIP324_NONE);
+
+        // The first message we receive is the BIP324 transport version placeholder message.
+        // Discard it for v2.0 clients.
+        if (!m_processed_version_placeholder) {
+            reject_message = true;
+            m_processed_version_placeholder = true;
+        }
 
         if (!reject_message) {
             uint8_t msg_type_id = NO_BIP324_SHORT_ID;
@@ -1059,33 +1067,37 @@ CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds 
     }
 
     Reset();
+
     return msg;
 }
 
 bool V2TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const
 {
-    size_t serialized_msg_type_size = 1; // short-IDs are 1 byte
-    uint8_t short_msg_type = GetShortIDFromMessageType(msg.m_type);
-    if (short_msg_type == NO_BIP324_SHORT_ID) {
-        // message type without an assigned short-ID
-        assert(msg.m_type.size() <= V2_LONG_MSG_TYPE_LEN);
-        // encode as NO_BIP324_SHORT_ID || 12-byte long id
-        serialized_msg_type_size += V2_LONG_MSG_TYPE_LEN;
+    // When dealing with a message other than the transport version placeholder message, serialize the command.
+    if (!msg.m_type.empty() || !msg.data.empty()) {
+        size_t serialized_msg_type_size = 1; // short-IDs are 1 byte
+        uint8_t short_msg_type = GetShortIDFromMessageType(msg.m_type);
+        if (short_msg_type == NO_BIP324_SHORT_ID) {
+            // message type without an assigned short-ID
+            assert(msg.m_type.size() <= V2_LONG_MSG_TYPE_LEN);
+            // encode as NO_BIP324_SHORT_ID || 12-byte long id
+            serialized_msg_type_size += V2_LONG_MSG_TYPE_LEN;
+        }
+
+        std::vector<unsigned char> msg_type_bytes(serialized_msg_type_size, 0);
+
+        // append the short-ID or the varstr of the msg type
+        msg_type_bytes[0] = short_msg_type;
+        if (short_msg_type == NO_BIP324_SHORT_ID) {
+            // append ASCII command string
+            memcpy(msg_type_bytes.data() + 1, msg.m_type.data(), msg.m_type.size());
+        }
+
+        // insert message type directly into the CSerializedNetMsg data buffer (insert at begin)
+        // TODO: if we refactor the BIP324CipherSuite::Crypt() function to allow separate buffers for
+        //       the message type and payload we could avoid a insert and thus a potential reallocation
+        msg.data.insert(msg.data.begin(), msg_type_bytes.begin(), msg_type_bytes.end());
     }
-
-    std::vector<unsigned char> msg_type_bytes(serialized_msg_type_size, 0);
-
-    // append the short-ID or the varstr of the msg type
-    msg_type_bytes[0] = short_msg_type;
-    if (short_msg_type == NO_BIP324_SHORT_ID) {
-        // append ASCII command string
-        memcpy(msg_type_bytes.data() + 1, msg.m_type.data(), msg.m_type.size());
-    }
-
-    // insert message type directly into the CSerializedNetMsg data buffer (insert at begin)
-    // TODO: if we refactor the BIP324CipherSuite::Crypt() function to allow separate buffers for
-    //       the message type and payload we could avoid a insert and thus a potential reallocation
-    msg.data.insert(msg.data.begin(), msg_type_bytes.begin(), msg_type_bytes.end());
 
     auto contents_size = msg.data.size();
     auto encrypted_pkt_size = V2_MIN_PACKET_LENGTH + contents_size;
@@ -1600,8 +1612,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                 }
                 nBytes = pnode->m_sock->Recv(pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
             }
-            if (nBytes > 0)
-            {
+            if (nBytes > 0) {
                 bool notify = false;
                 size_t num_bytes = (size_t)nBytes;
                 if (!pnode->ReceiveMsgBytes({pchBuf, num_bytes}, notify)) {
@@ -1614,22 +1625,34 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                         (pnode->m_bip324_shared_state &&
                          pnode->m_bip324_shared_state->key_exchange_complete) ||
                         pnode->nVersion != 0 ||
-                        num_bytes != ELLSWIFT_ENCODED_SIZE) {
+                        num_bytes < ELLSWIFT_ENCODED_SIZE) {
                         pnode->CloseSocketDisconnect();
                     } else {
                         pnode->EnsureInitV2Key(!pnode->IsInboundConn());
 
-                        pnode->InitV2P2P({AsBytePtr(pchBuf), num_bytes},
+                        pnode->InitV2P2P({AsBytePtr(pchBuf), ELLSWIFT_ENCODED_SIZE},
                                          MakeByteSpan(pnode->m_bip324_shared_state->ellswift_pubkey),
                                          !pnode->IsInboundConn());
                         if (pnode->IsInboundConn()) {
                             PushV2EllSwiftPubkey(pnode);
-                        } else {
+                        }
+
+                        // Send empty message for transport version placeholder
+                        CSerializedNetMsg msg;
+                        PushMessage(pnode, std::move(msg));
+
+                        if (!pnode->IsInboundConn()) {
                             // Outbound peer has completed ECDH and can start the P2P protocol
                             m_msgproc->InitP2P(*pnode, nLocalServices);
                         }
 
                         pnode->m_bip324_shared_state->key_exchange_complete = true;
+                        if (num_bytes > ELLSWIFT_ENCODED_SIZE &&
+                            !pnode->ReceiveMsgBytes(
+                                {pchBuf + ELLSWIFT_ENCODED_SIZE, (size_t)(nBytes - ELLSWIFT_ENCODED_SIZE)},
+                                notify)) {
+                            pnode->CloseSocketDisconnect();
+                        }
                     }
                 }
                 RecordBytesRecv(num_bytes);
@@ -1648,17 +1671,13 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                     }
                     WakeMessageHandler();
                 }
-            }
-            else if (nBytes == 0)
-            {
+            } else if (nBytes == 0) {
                 // socket closed gracefully
                 if (!pnode->fDisconnect) {
                     LogPrint(BCLog::NET, "socket closed for peer=%d\n", pnode->GetId());
                 }
                 pnode->CloseSocketDisconnect();
-            }
-            else if (nBytes < 0)
-            {
+            } else if (nBytes < 0) {
                 // error
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
@@ -2340,6 +2359,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
 
+    // Only the outbound peer knows that both sides support BIP324 transport
     if (pnode->PreferV2Conn()) {
         PushV2EllSwiftPubkey(pnode);
     }
