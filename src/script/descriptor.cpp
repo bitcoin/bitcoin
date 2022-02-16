@@ -178,7 +178,7 @@ public:
     virtual std::string ToString() const = 0;
 
     /** Get the descriptor string form including private data (if available in arg). */
-    virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
+    virtual std::string ToPrivateString(const SigningProvider& arg) const = 0;
 
     /** Get the descriptor string form with the xpub at the last hardened derivation */
     virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
@@ -209,12 +209,9 @@ public:
     bool IsRange() const override { return m_provider->IsRange(); }
     size_t GetSize() const override { return m_provider->GetSize(); }
     std::string ToString() const override { return "[" + OriginString() + "]" + m_provider->ToString(); }
-    bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
+    std::string ToPrivateString(const SigningProvider& arg) const override
     {
-        std::string sub;
-        if (!m_provider->ToPrivateString(arg, sub)) return false;
-        ret = "[" + OriginString() + "]" + std::move(sub);
-        return true;
+        return "[" + OriginString() + "]" + m_provider->ToPrivateString(arg);
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
@@ -256,7 +253,7 @@ public:
     bool IsRange() const override { return false; }
     size_t GetSize() const override { return m_pubkey.size(); }
     std::string ToString() const override { return m_xonly ? HexStr(m_pubkey).substr(2) : HexStr(m_pubkey); }
-    bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
+    std::string ToPrivateString(const SigningProvider& arg) const override
     {
         CKey key;
         if (m_xonly) {
@@ -267,9 +264,8 @@ public:
         } else {
             arg.GetKey(m_pubkey.GetID(), key);
         }
-        if (!key.IsValid()) return false;
-        ret = EncodeSecret(key);
-        return true;
+        if (!key.IsValid()) return ToString();
+        return EncodeSecret(key);
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
@@ -409,16 +405,16 @@ public:
         }
         return ret;
     }
-    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
+    std::string ToPrivateString(const SigningProvider& arg) const override
     {
         CExtKey key;
-        if (!GetExtKey(arg, key)) return false;
-        out = EncodeExtKey(key) + FormatHDKeypath(m_path);
+        if (!GetExtKey(arg, key)) return ToString();
+        std::string out = EncodeExtKey(key) + FormatHDKeypath(m_path);
         if (IsRange()) {
             out += "/*";
             if (m_derive == DeriveType::HARDENED) out += '\'';
         }
-        return true;
+        return out;
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache) const override
     {
@@ -576,7 +572,7 @@ public:
                     if (!pubkey->ToNormalizedString(*arg, tmp, cache)) return false;
                     break;
                 case StringType::PRIVATE:
-                    if (!pubkey->ToPrivateString(*arg, tmp)) return false;
+                    tmp = pubkey->ToPrivateString(*arg);
                     break;
                 case StringType::PUBLIC:
                     tmp = pubkey->ToString();
@@ -598,11 +594,11 @@ public:
         return AddChecksum(ret);
     }
 
-    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final
+    std::string ToPrivateString(const SigningProvider& arg) const final
     {
-        bool ret = ToStringHelper(&arg, out, StringType::PRIVATE);
-        out = AddChecksum(out);
-        return ret;
+        std::string out;
+        ToStringHelper(&arg, out, StringType::PRIVATE);
+        return AddChecksum(out);
     }
 
     bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache) const override final

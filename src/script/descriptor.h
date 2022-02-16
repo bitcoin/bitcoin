@@ -111,8 +111,8 @@ struct Descriptor {
     /** Whether this descriptor will return one scriptPubKey or multiple (aka is or is not combo) */
     virtual bool IsSingleType() const = 0;
 
-    /** Convert the descriptor to a private string. This fails if the provided provider does not have the relevant private keys. */
-    virtual bool ToPrivateString(const SigningProvider& provider, std::string& out) const = 0;
+    /** Convert the descriptor to a private string. For missing private keys the public key will be emitted. */
+    virtual std::string ToPrivateString(const SigningProvider& provider) const = 0;
 
     /** Convert the descriptor to a normalized string. Normalized descriptors have the xpub at the last hardened step. This fails if the provided provider does not have the private keys to derive that xpub. */
     virtual bool ToNormalizedString(const SigningProvider& provider, std::string& out, const DescriptorCache* cache = nullptr) const = 0;

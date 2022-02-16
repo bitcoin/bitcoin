@@ -103,7 +103,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
             'desc': descsum_create('wpkh(' + xpub_acc + ')'),
             'timestamp': 1296688602,
         }])
-        assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
+        assert_equal(watch_only_wallet.listdescriptors(True), watch_only_wallet.listdescriptors(False))
 
         self.log.info('Test non-active non-range combo descriptor')
         node.createwallet(wallet_name='w4', blank=True, descriptors=True)
