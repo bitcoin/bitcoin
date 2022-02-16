@@ -744,6 +744,9 @@ public:
     /** Initialize a peer (setup state, queue any initial messages) */
     virtual void InitializeNode(CNode& node, ServiceFlags our_services) = 0;
 
+    /** Initialize the P2P protocol with a peer */
+    virtual void InitP2P(CNode& pnode, ServiceFlags our_services) = 0;
+
     /** Handle removal of a peer (clear state) */
     virtual void FinalizeNode(const CNode& node) = 0;
 
@@ -949,7 +952,7 @@ public:
     //!
     //! The data returned by this is used in CNode construction,
     //! which is used to advertise which services we are offering
-    //! that peer during `net_processing.cpp:PushNodeVersion()`.
+    //! that peer during `net_processing.cpp:InitP2P()`.
     ServiceFlags GetLocalServices() const;
 
     uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);

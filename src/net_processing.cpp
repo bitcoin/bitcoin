@@ -510,6 +510,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     bool SendMessages(CNode* pto) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, g_msgproc_mutex);
+    void InitP2P(CNode& pnode, ServiceFlags our_services) override;
 
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
@@ -675,9 +676,6 @@ private:
      *  passed to TxRequestTracker. */
     void AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    /** Send a version message to a peer */
-    void PushNodeVersion(CNode& pnode, const Peer& peer);
 
     /** Send a ping message every PING_INTERVAL or if requested via RPC. May
      *  mark the peer to be disconnected if a ping has timed out.
@@ -1378,9 +1376,9 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
 
 } // namespace
 
-void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
+void PeerManagerImpl::InitP2P(CNode& pnode, ServiceFlags our_services)
 {
-    uint64_t my_services{peer.m_our_services};
+    uint64_t my_services{our_services};
     const int64_t nTime{count_seconds(GetTime<std::chrono::seconds>())};
     uint64_t nonce = pnode.GetLocalNonce();
     const int nNodeStartingHeight{m_best_height};
@@ -1451,7 +1449,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
     }
     if (!node.IsInboundConn()) {
-        PushNodeVersion(node, *peer);
+        InitP2P(node, peer->m_our_services);
     }
 }
 
@@ -3244,7 +3242,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Inbound peers send us their version message when they connect.
         // We send our version message in response.
         if (pfrom.IsInboundConn()) {
-            PushNodeVersion(pfrom, *peer);
+            InitP2P(pfrom, peer->m_our_services);
         }
 
         // Change version
