@@ -172,6 +172,7 @@ BITCOIN_CORE_H = \
   interfaces/node.h \
   interfaces/wallet.h \
   kernel/chainstatemanager_opts.h \
+  kernel/coinstats.h \
   key.h \
   key_io.h \
   logging.h \
