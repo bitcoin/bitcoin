@@ -13,8 +13,8 @@
 
 #include <chrono>
 
-using node::CCoinsStats;
-using node::CoinStatsHashType;
+using kernel::CCoinsStats;
+using kernel::CoinStatsHashType;
 
 BOOST_AUTO_TEST_SUITE(coinstatsindex_tests)
 

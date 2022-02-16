@@ -12,10 +12,10 @@
 #include <undo.h>
 #include <validation.h>
 
-using node::CCoinsStats;
-using node::GetBogoSize;
+using kernel::CCoinsStats;
+using kernel::GetBogoSize;
 using node::ReadBlockFromDisk;
-using node::TxOutSer;
+using kernel::TxOutSer;
 using node::UndoReadFromDisk;
 
 static constexpr uint8_t DB_BLOCK_HASH{'s'};

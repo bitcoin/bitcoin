@@ -28,8 +28,8 @@ namespace node {
  *
  * @param[in] index_requested Signals if the coinstatsindex should be used (when available).
  */
-std::optional<CCoinsStats> GetUTXOStats(CCoinsView* view, node::BlockManager& blockman,
-                                        CoinStatsHashType hash_type,
+std::optional<kernel::CCoinsStats> GetUTXOStats(CCoinsView* view, node::BlockManager& blockman,
+                                        kernel::CoinStatsHashType hash_type,
                                         const std::function<void()>& interruption_point = {},
                                         const CBlockIndex* pindex = nullptr,
                                         bool index_requested = true);

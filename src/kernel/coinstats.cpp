@@ -15,7 +15,7 @@
 
 #include <map>
 
-namespace node {
+namespace kernel {
 
 CCoinsStats::CCoinsStats(int block_height, const uint256& block_hash)
     : nHeight(block_height),
@@ -135,7 +135,7 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
     return true;
 }
 
-std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, BlockManager& blockman, const std::function<void()>& interruption_point)
+std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
     CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
     CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
@@ -184,4 +184,4 @@ static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
 }
 static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
 
-} // namespace node
+} // namespace kernel
