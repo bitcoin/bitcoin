@@ -83,6 +83,8 @@ std::optional<CCoinsStats> GetUTXOStats(CCoinsView* view, node::BlockManager& bl
 uint64_t GetBogoSize(const CScript& script_pub_key);
 
 CDataStream TxOutSer(const COutPoint& outpoint, const Coin& coin);
+
+std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, BlockManager& blockman, const std::function<void()>& interruption_point = {});
 } // namespace node
 
 #endif // BITCOIN_NODE_COINSTATS_H

@@ -357,6 +357,7 @@ libbitcoin_node_a_SOURCES = \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
+  kernel/coinstats.cpp \
   mapport.cpp \
   net.cpp \
   netgroup.cpp \
@@ -873,6 +874,7 @@ libbitcoinkernel_la_SOURCES = \
   index/base.cpp \
   index/coinstatsindex.cpp \
   init/common.cpp \
+  kernel/coinstats.cpp \
   key.cpp \
   logging.cpp \
   node/blockstorage.cpp \
