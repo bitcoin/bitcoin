@@ -64,6 +64,9 @@ struct CCoinsStats {
     CAmount total_unspendables_scripts{0};
     //! Total cumulative amount of coins lost due to unclaimed miner rewards up to and including this block
     CAmount total_unspendables_unclaimed_rewards{0};
+
+    CCoinsStats() = default;
+    CCoinsStats(int block_height, const uint256& block_hash);
 };
 
 /**
