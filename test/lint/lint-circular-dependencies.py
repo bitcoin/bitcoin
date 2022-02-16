@@ -21,7 +21,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel",
     "wallet/fees -> wallet/wallet -> wallet/fees",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
-    "node/coinstats -> validation -> node/coinstats",
+    "kernel/coinstats -> validation -> kernel/coinstats",
 )
 
 CODE_DIR = "src"

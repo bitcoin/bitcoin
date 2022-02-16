@@ -872,15 +872,12 @@ libbitcoinkernel_la_SOURCES = \
   flatfile.cpp \
   fs.cpp \
   hash.cpp \
-  index/base.cpp \
-  index/coinstatsindex.cpp \
   init/common.cpp \
   kernel/coinstats.cpp \
   key.cpp \
   logging.cpp \
   node/blockstorage.cpp \
   node/chainstate.cpp \
-  node/coinstats.cpp \
   node/ui_interface.cpp \
   policy/feerate.cpp \
   policy/fees.cpp \
