@@ -13,7 +13,13 @@ for b_name in {"${BASE_OUTDIR}/bin"/*,src/secp256k1/*tests,src/minisketch/test{,
         echo "Wrap $b ..."
         mv "$b" "${b}_orig"
         echo '#!/usr/bin/env bash' > "$b"
-        echo "( wine \"${b}_orig\" \"\$@\" ) || ( sleep 1 && wine \"${b}_orig\" \"\$@\" )" >> "$b"
+        if test "$(basename "$b")" = "test_bitcoin.exe"; then
+          # Using `script` allows to catch assertion error messages into logs.
+          echo "COMMAND=\"wine ${b}_orig \$@\"" >> "$b"
+          echo "( script --quiet --return --command \"\$COMMAND\" ) || ( sleep 1 && script --quiet --return --command \"\$COMMAND\" )" >> "$b"
+        else
+          echo "( wine \"${b}_orig\" \"\$@\" ) || ( sleep 1 && wine \"${b}_orig\" \"\$@\" )" >> "$b"
+        fi
         chmod +x "$b"
       fi
     done
