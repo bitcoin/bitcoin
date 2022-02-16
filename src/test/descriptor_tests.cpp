@@ -45,6 +45,7 @@ constexpr int SIGNABLE = 8; // We can sign with this descriptor (this is not tru
 constexpr int DERIVE_HARDENED = 16; // The final derivation is hardened, i.e. ends with *' or *h
 constexpr int MIXED_PUBKEYS = 32;
 constexpr int XONLY_KEYS = 64; // X-only pubkeys are in use (and thus inferring/caching may swap parity of pubkeys/keyids)
+constexpr int NO_KEYS = 128; // No keys are present at all in the descriptor
 
 /** Compare two descriptors. If only one of them has a checksum, the checksum is ignored. */
 bool EqualDescriptor(std::string a, std::string b)
@@ -89,6 +90,7 @@ static size_t CountXpubs(const std::string& desc)
 }
 
 const std::set<std::vector<uint32_t>> ONLY_EMPTY{{}};
+const std::set<std::vector<uint32_t>> NO_PATHS{};
 
 std::set<CPubKey> GetKeyData(const FlatSigningProvider& provider, int flags) {
     std::set<CPubKey> ret;
@@ -195,7 +197,7 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
     BOOST_CHECK(parse_pub->GetOutputType() == type);
 
     // Check private keys are extracted from the private version but not the public one.
-    BOOST_CHECK(keys_priv.keys.size());
+    BOOST_CHECK_EQUAL(keys_priv.keys.empty(), !!(flags & NO_KEYS));
     BOOST_CHECK(!keys_pub.keys.size());
 
     // Check that parse_priv and parse_pub work interchangeably: converting either
@@ -499,6 +501,13 @@ Check("sh(wsh(multi(20,KzoAz5CanayRKex3fSLQ2BwJpN7U52gZvxMyk78nDMHuqrUxuSJy,KwGN
     CheckUnparsable("sh(multi(2,[00000000/111'/222]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L/0))##ggssrxfy", "sh(multi(2,[00000000/111'/222]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0))##tjq09x4t", "Multiple '#' symbols"); // Error in checksum
 
     // Addr and raw tests
+    Check("raw(1337)", "raw(1337)", "raw(1337)", "raw(1337)", NO_KEYS | UNSOLVABLE, {{"1337"}}, std::nullopt, NO_PATHS);
+    Check("addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", "addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", "addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", "addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", NO_KEYS | UNSOLVABLE, {{"76a91419c84184d9473c2d52913c7468dc6743db09ea9688ac"}}, OutputType::LEGACY, NO_PATHS);
+    Check("addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", "addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", "addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", "addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", NO_KEYS | UNSOLVABLE, {{"a914e9c3dd0c07aac76179ebc76a6c78d4d67c6c160a87"}}, OutputType::LEGACY, NO_PATHS);
+    Check("addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", "addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", "addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", "addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", NO_KEYS | UNSOLVABLE, {{"00144160bb1870159a08724557f75c7bb665a3a132e0"}}, OutputType::BECH32, NO_PATHS);
+    Check("addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", "addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", "addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", "addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", NO_KEYS | UNSOLVABLE, {{"00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262"}}, OutputType::BECH32, NO_PATHS);
+    Check("addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", "addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", "addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", "addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", NO_KEYS | UNSOLVABLE, {{"5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6"}}, OutputType::BECH32M, NO_PATHS);
+    Check("addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", "addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", "addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", "addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", NO_KEYS | UNSOLVABLE, {{"5210751e76e8199196d454941c45d1b3a323"}}, OutputType::BECH32M, NO_PATHS);
     CheckUnparsable("", "addr(asdf)", "Address is not valid"); // Invalid address
     CheckUnparsable("", "raw(asdf)", "Raw script is not hex"); // Invalid script
     CheckUnparsable("", "raw(Ü)#00000000", "Invalid characters in payload"); // Invalid chars
