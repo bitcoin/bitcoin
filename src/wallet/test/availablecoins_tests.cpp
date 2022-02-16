@@ -98,7 +98,7 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, AvailableCoinsTestingSetup)
     BOOST_ASSERT(dest.HasRes());
     AddTx(CRecipient{{GetScriptForDestination(dest.GetObj())}, 4 * COIN, /*fSubtractFeeFromAmount=*/true});
     available_coins = AvailableCoins(*wallet);
-    BOOST_CHECK_EQUAL(available_coins.legacy.size(), 2U);
+    BOOST_CHECK_EQUAL(available_coins.legacy.size(), 1U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
