@@ -239,7 +239,7 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --f
 time-machine() {
     # shellcheck disable=SC2086
     guix time-machine --url=https://git.savannah.gnu.org/git/guix.git \
-                      --commit=1ef7a03a148cf5f83ab1820444f6bd50d8e732d1 \
+                      --commit=ae03f401381e956c4c41b4cf495cbde964fa43d0 \
                       --cores="$JOBS" \
                       --keep-failed \
                       --fallback \
