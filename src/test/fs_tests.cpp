@@ -118,4 +118,38 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
     }
 }
 
+BOOST_AUTO_TEST_CASE(rename)
+{
+    const fs::path tmpfolder{m_args.GetDataDirBase()};
+
+    const fs::path path1{GetUniquePath(tmpfolder)};
+    const fs::path path2{GetUniquePath(tmpfolder)};
+
+    const std::string path1_contents{"1111"};
+    const std::string path2_contents{"2222"};
+
+    {
+        std::ofstream file{path1};
+        file << path1_contents;
+    }
+
+    {
+        std::ofstream file{path2};
+        file << path2_contents;
+    }
+
+    // Rename path1 -> path2.
+    BOOST_CHECK(RenameOver(path1, path2));
+
+    BOOST_CHECK(!fs::exists(path1));
+
+    {
+        std::ifstream file{path2};
+        std::string contents;
+        file >> contents;
+        BOOST_CHECK_EQUAL(contents, path1_contents);
+    }
+    fs::remove(path2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
