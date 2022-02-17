@@ -167,12 +167,4 @@ FUZZ_TARGET_INIT(script, initialize_script)
             Assert(dest == GetScriptForDestination(tx_destination_2));
         }
     }
-
-    (void)FormatScript(script);
-    (void)ScriptToAsmStr(script, /*fAttemptSighashDecode=*/fuzzed_data_provider.ConsumeBool());
-
-    UniValue o1(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o1, /*include_hex=*/fuzzed_data_provider.ConsumeBool());
-    UniValue o3(UniValue::VOBJ);
-    ScriptToUniv(script, o3);
 }
