@@ -352,6 +352,7 @@ BASE_SCRIPTS = [
     'rpc_addresses_deprecation.py',
     'rpc_getpeerinfo_deprecation.py',
     'rpc_help.py',
+    'feature_dirsymlinks.py',
     'feature_help.py',
     'feature_blockfilterindex_prune.py'
     # Don't append tests at the end to avoid merge conflicts
