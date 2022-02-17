@@ -295,7 +295,7 @@ bool BlockManager::LoadBlockIndex(
             // them from the background chainstate's setBlockIndexCandidates set. This
             // does mean that some blocks which are not technically assumed-valid
             // (later blocks on a fork beginning before the first assumed-valid block)
-            // might not get added to the the background chainstate, but this is ok,
+            // might not get added to the background chainstate, but this is ok,
             // because they will still be attached to the active chainstate if they
             // actually contain more work.
             //
