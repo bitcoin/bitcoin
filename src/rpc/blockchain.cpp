@@ -19,11 +19,11 @@
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
+#include <kernel/coinstats.h>
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
-#include <node/coinstats.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/transaction.h>
@@ -55,7 +55,6 @@ using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 
 using node::BlockManager;
-using node::GetUTXOStats;
 using node::NodeContext;
 using node::ReadBlockFromDisk;
 using node::SnapshotMetadata;
@@ -807,6 +806,36 @@ CoinStatsHashType ParseHashType(const std::string& hash_type_input)
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("'%s' is not a valid hash_type", hash_type_input));
     }
+}
+
+/**
+ * Calculate statistics about the unspent transaction output set
+ *
+ * @param[in] index_requested Signals if the coinstatsindex should be used (when available).
+ */
+static std::optional<kernel::CCoinsStats> GetUTXOStats(CCoinsView* view, node::BlockManager& blockman,
+                                                       kernel::CoinStatsHashType hash_type,
+                                                       const std::function<void()>& interruption_point = {},
+                                                       const CBlockIndex* pindex = nullptr,
+                                                       bool index_requested = true)
+{
+    // Use CoinStatsIndex if it is requested and available and a hash_type of Muhash or None was requested
+    if ((hash_type == kernel::CoinStatsHashType::MUHASH || hash_type == kernel::CoinStatsHashType::NONE) && g_coin_stats_index && index_requested) {
+        if (pindex) {
+            return g_coin_stats_index->LookUpStats(pindex);
+        } else {
+            CBlockIndex* block_index = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
+            return g_coin_stats_index->LookUpStats(block_index);
+        }
+    }
+
+    // If the coinstats index isn't requested or is otherwise not usable, the
+    // pindex should either be null or equal to the view's best block. This is
+    // because without the coinstats index we can only get coinstats about the
+    // best block.
+    CHECK_NONFATAL(!pindex || pindex->GetBlockHash() == view->GetBestBlock());
+
+    return kernel::ComputeUTXOStats(hash_type, view, blockman, interruption_point);
 }
 
 static RPCHelpMan gettxoutsetinfo()
