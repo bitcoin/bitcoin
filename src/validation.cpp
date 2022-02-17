@@ -2236,7 +2236,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 {
     AssertLockHeld(cs_main);
     assert(pindex);
-    assert(*pindex->phashBlock == block.GetHash());
+
+    uint256 block_hash{block.GetHash()};
+    assert(*pindex->phashBlock == block_hash);
+
     int64_t nTimeStart = GetTimeMicros();
     // Check it again in case a previous version let a bad block in
     // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
@@ -2280,8 +2283,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
-    if (block.GetHash() == m_params.GetConsensus().hashGenesisBlock) {
-        if (!fJustCheck) {
+    if (block_hash == m_params.GetConsensus().hashGenesisBlock) {
+        if (!fJustCheck)
             view.SetBestBlock(pindex->GetBlockHash());
             // SYSCOIN
             evoDb->WriteBestBlock(pindex->GetBlockHash());
@@ -2517,12 +2520,12 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     evoDb->WriteBestBlock(pindex->GetBlockHash());
 
     TRACE6(validation, block_connected,
-        block.GetHash().data(),
+        block_hash.data(),
         pindex->nHeight,
         block.vtx.size(),
         nInputs,
         nSigOpsCost,
-        GetTimeMicros() - nTimeStart // in microseconds (µs)
+        nTime5 - nTimeStart // in microseconds (µs)
     );
 
     return true;
