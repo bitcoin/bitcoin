@@ -20,11 +20,6 @@ from collections import namedtuple
 
 settings = {}
 
-def hex_switchEndian(s):
-    """ Switches the endianness of a hex string (in pairs of hex chars) """
-    pairList = [s[i:i+2].encode() for i in range(0, len(s), 2)]
-    return b''.join(pairList[::-1]).decode()
-
 def calc_hash_str(blk_hdr):
     blk_hdr_hash = hashlib.sha256(hashlib.sha256(blk_hdr).digest()).digest()
     return blk_hdr_hash[::-1].hex()
@@ -43,7 +38,7 @@ def get_block_hashes(settings):
     for line in f:
         line = line.rstrip()
         if settings['rev_hash_bytes'] == 'true':
-            line = hex_switchEndian(line)
+            line = bytes.fromhex(line)[::-1].hex()
         blkindex.append(line)
 
     print("Read " + str(len(blkindex)) + " hashes")
