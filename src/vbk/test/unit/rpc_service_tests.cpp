@@ -139,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(getblock_finalized_test, E2eFixture)
     auto* tip = ChainActive().Tip();
     BOOST_CHECK(tip != nullptr);
 
-    auto finalityDistance = VeriBlock::GetPop().getAltBlockTree().getParams().getMaxReorgDistance();
+    auto finalityDistance = VeriBlock::GetPop().getAltBlockTree().getParams().getMaxReorgBlocks();
     auto settlementInterval = VeriBlock::GetPop().getAltBlockTree().getParams().preserveBlocksBehindFinal();
 
     for (size_t i = 0; i < (finalityDistance + settlementInterval + 5); ++i) {

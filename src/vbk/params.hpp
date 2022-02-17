@@ -37,7 +37,7 @@ struct AltChainParamsBTCSQ : public altintegration::AltChainParams {
         this->mMaxVTBsInAltBlock = 50;
         this->mMaxATVsInAltBlock = 100;
         this->mPreserveBlocksBehindFinal = mEndorsementSettlementInterval;
-        this->mMaxReorgDistance = std::numeric_limits<int>::max(); // disable finalization for now
+        this->mMaxReorgBlocks = std::numeric_limits<int>::max(); // disable finalization for now
 
         //! copying all parameters here to make sure that
         //! if anyone changes them in alt-int-cpp, they
@@ -103,7 +103,7 @@ struct AltChainParamsBTCSQRegTest : public AltChainParamsBTCSQ {
 
     explicit AltChainParamsBTCSQRegTest(const CBlock& genesis) : AltChainParamsBTCSQ(genesis)
     {
-        this->mMaxReorgDistance = 1000;
+        this->mMaxReorgBlocks = 1000;
         this->mMaxVbkBlocksInAltBlock = 200;
         this->mMaxVTBsInAltBlock = 200;
         this->mMaxATVsInAltBlock = 1000;
