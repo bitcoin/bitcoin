@@ -174,11 +174,8 @@ public:
     /** Get the size of the generated public key(s) in bytes (33 or 65). */
     virtual size_t GetSize() const = 0;
 
-    /** Get the descriptor string form. */
-    virtual std::string ToString() const = 0;
-
     /** Get the descriptor string form including private data (if available in arg). */
-    virtual std::string ToPrivateString(const SigningProvider& arg) const = 0;
+    virtual std::string ToString(const SigningProvider* arg) const = 0;
 
     /** Get the descriptor string form with the xpub at the last hardened derivation */
     virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
@@ -208,10 +205,9 @@ public:
     }
     bool IsRange() const override { return m_provider->IsRange(); }
     size_t GetSize() const override { return m_provider->GetSize(); }
-    std::string ToString() const override { return "[" + OriginString() + "]" + m_provider->ToString(); }
-    std::string ToPrivateString(const SigningProvider& arg) const override
+    std::string ToString(const SigningProvider* arg) const override
     {
-        return "[" + OriginString() + "]" + m_provider->ToPrivateString(arg);
+        return "[" + OriginString() + "]" + m_provider->ToString(arg);
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
@@ -252,20 +248,25 @@ public:
     }
     bool IsRange() const override { return false; }
     size_t GetSize() const override { return m_pubkey.size(); }
-    std::string ToString() const override { return m_xonly ? HexStr(m_pubkey).substr(2) : HexStr(m_pubkey); }
-    std::string ToPrivateString(const SigningProvider& arg) const override
+    std::string ToString(const SigningProvider* arg = nullptr) const override
     {
-        CKey key;
-        if (m_xonly) {
-            for (const auto& keyid : XOnlyPubKey(m_pubkey).GetKeyIDs()) {
-                arg.GetKey(keyid, key);
-                if (key.IsValid()) break;
+        if (arg != nullptr) {
+            CKey key;
+            if (m_xonly) {
+                for (const auto& keyid : XOnlyPubKey(m_pubkey).GetKeyIDs()) {
+                    arg->GetKey(keyid, key);
+                    if (key.IsValid()) break;
+                }
+            } else {
+                arg->GetKey(m_pubkey.GetID(), key);
             }
-        } else {
-            arg.GetKey(m_pubkey.GetID(), key);
+            if (key.IsValid()) return EncodeSecret(key);
         }
-        if (!key.IsValid()) return ToString();
-        return EncodeSecret(key);
+        if (m_xonly) {
+            return HexStr(XOnlyPubKey(m_pubkey));
+        } else {
+            return HexStr(m_pubkey);
+        }
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
@@ -396,20 +397,14 @@ public:
 
         return true;
     }
-    std::string ToString() const override
+    std::string ToString(const SigningProvider* arg = nullptr) const override
     {
-        std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path);
-        if (IsRange()) {
-            ret += "/*";
-            if (m_derive == DeriveType::HARDENED) ret += '\'';
+        std::string out = EncodeExtPubKey(m_root_extkey);
+        if (arg != nullptr) {
+            CExtKey key;
+            if (GetExtKey(*arg, key)) out = EncodeExtKey(key);
         }
-        return ret;
-    }
-    std::string ToPrivateString(const SigningProvider& arg) const override
-    {
-        CExtKey key;
-        if (!GetExtKey(arg, key)) return ToString();
-        std::string out = EncodeExtKey(key) + FormatHDKeypath(m_path);
+        out += FormatHDKeypath(m_path);
         if (IsRange()) {
             out += "/*";
             if (m_derive == DeriveType::HARDENED) out += '\'';
@@ -523,8 +518,7 @@ public:
 
     enum class StringType
     {
-        PUBLIC,
-        PRIVATE,
+        UNNORMALIZED,
         NORMALIZED,
     };
 
@@ -571,11 +565,8 @@ public:
                 case StringType::NORMALIZED:
                     if (!pubkey->ToNormalizedString(*arg, tmp, cache)) return false;
                     break;
-                case StringType::PRIVATE:
-                    tmp = pubkey->ToPrivateString(*arg);
-                    break;
-                case StringType::PUBLIC:
-                    tmp = pubkey->ToString();
+                case StringType::UNNORMALIZED:
+                    tmp = pubkey->ToString(arg);
                     break;
             }
             ret += std::move(tmp);
@@ -587,17 +578,10 @@ public:
         return true;
     }
 
-    std::string ToString() const final
-    {
-        std::string ret;
-        ToStringHelper(nullptr, ret, StringType::PUBLIC);
-        return AddChecksum(ret);
-    }
-
-    std::string ToPrivateString(const SigningProvider& arg) const final
+    std::string ToString(const SigningProvider* arg) const final
     {
         std::string out;
-        ToStringHelper(&arg, out, StringType::PRIVATE);
+        ToStringHelper(arg, out, StringType::UNNORMALIZED);
         return AddChecksum(out);
     }
 

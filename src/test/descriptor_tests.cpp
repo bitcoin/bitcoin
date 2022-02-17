@@ -163,10 +163,10 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
     // priv parsing should result back in the private version.
     BOOST_CHECK(EqualDescriptor(pub, parse_priv->ToString()));
     BOOST_CHECK(EqualDescriptor(pub, parse_pub->ToString()));
-    BOOST_CHECK(EqualDescriptor(pub, parse_priv->ToPrivateString(keys_pub)));
-    BOOST_CHECK(EqualDescriptor(pub, parse_pub->ToPrivateString(keys_pub)));
-    BOOST_CHECK(EqualDescriptor(prv, parse_priv->ToPrivateString(keys_priv)));
-    BOOST_CHECK(EqualDescriptor(prv, parse_pub->ToPrivateString(keys_priv)));
+    BOOST_CHECK(EqualDescriptor(pub, parse_priv->ToString(&keys_pub)));
+    BOOST_CHECK(EqualDescriptor(pub, parse_pub->ToString(&keys_pub)));
+    BOOST_CHECK(EqualDescriptor(prv, parse_priv->ToString(&keys_priv)));
+    BOOST_CHECK(EqualDescriptor(prv, parse_pub->ToString(&keys_priv)));
 
     // Check that private can produce the normalized descriptors
     std::string norm1;
