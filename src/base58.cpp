@@ -60,7 +60,7 @@ static const int8_t mapBase58[256] = {
             return false;
         int i = 0;
         for (std::vector<unsigned char>::reverse_iterator it = b256.rbegin(); (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i) {
-            carry += 58 * (*it);
+            carry = carry + 58 * (*it);
             *it = carry % 256;
             carry /= 256;
         }
@@ -102,7 +102,7 @@ std::string EncodeBase58(Span<const unsigned char> input)
         int i = 0;
         // Apply "b58 = b58 * 256 + ch".
         for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++) {
-            carry += 256 * (*it);
+            carry = carry + 256 * (*it);
             *it = carry % 58;
             carry /= 58;
         }
@@ -120,7 +120,7 @@ std::string EncodeBase58(Span<const unsigned char> input)
     str.reserve(zeroes + (b58.end() - it));
     str.assign(zeroes, '1');
     while (it != b58.end())
-        str += pszBase58[*(it++)];
+        str = str + pszBase58[*(it++)];
     return str;
 }
 
