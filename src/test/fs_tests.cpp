@@ -171,8 +171,14 @@ BOOST_AUTO_TEST_CASE(create_directories)
     BOOST_CHECK(fs::is_directory(symlink));
     BOOST_CHECK(!fs::create_directories(symlink));
 
-    fs::remove(symlink);
     fs::remove(dir);
+    BOOST_CHECK(!fs::exists(symlink));
+    BOOST_CHECK(fs::is_symlink(symlink));
+    BOOST_CHECK(!fs::is_directory(symlink));
+    // Next check is disabled due to a bug in libc++-11
+    // See https://github.com/bitcoin/bitcoin/pull/24432#issuecomment-1049060318
+    // BOOST_CHECK_THROW(fs::create_directories(symlink), fs::filesystem_error);
+    fs::remove(symlink);
 }
 #endif // __MINGW64__
 

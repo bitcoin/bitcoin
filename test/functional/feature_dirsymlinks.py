@@ -6,8 +6,11 @@
 """
 
 import os
+import shutil
+import sys
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
 
 
 def rename_and_link(*, from_name, to_name):
@@ -35,6 +38,18 @@ class SymlinkTest(BitcoinTestFramework):
         )
 
         self.start_node(0)
+        self.stop_node(0)
+
+        self.log.info("Symlink pointing to a deleted blocksdir raises an init error")
+        shutil.rmtree(dir_new_blocks)
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg="create_directories: " if sys.platform == "win32"
+            # Temporarily check empty string on non-Windows platforms to work
+            # around libc++ bug, affecting libc++-11 and lower.
+            # See https://github.com/bitcoin/bitcoin/pull/24432#issuecomment-1049060318
+            else "",
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
 
 
 if __name__ == "__main__":
