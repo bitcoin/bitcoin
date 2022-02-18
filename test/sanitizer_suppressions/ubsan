@@ -47,7 +47,6 @@ unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:common/bloom.cpp
 unsigned-integer-overflow:coins.cpp
 unsigned-integer-overflow:compressor.cpp
-unsigned-integer-overflow:core_write.cpp
 unsigned-integer-overflow:crypto/
 unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:policy/fees.cpp

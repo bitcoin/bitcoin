@@ -12,10 +12,8 @@ In the GUI, the `Create a new wallet` button is displayed on the main screen whe
 The following command, for example, creates a descriptor wallet. More information about this command may be found by running `bitcoin-cli help createwallet`.
 
 ```
-$ bitcoin-cli -named createwallet wallet_name="wallet-01" descriptors=true
+$ bitcoin-cli createwallet "wallet-01"
 ```
-
-The `descriptors` parameter can be omitted if the intention is to create a legacy wallet. For now, the default type is the legacy wallet, but that is expected to change in a future release.
 
 By default, wallets are created in the `wallets` folder of the data directory, which varies by operating system, as shown below. The user can change the default by using the `-datadir` or `-walletdir` initialization parameters.
 
@@ -54,7 +52,7 @@ Only the wallet's private key is encrypted. All other wallet information, such a
 The wallet's private key can also be encrypted in the `createwallet` command via the `passphrase` argument:
 
 ```
-$ bitcoin-cli -named createwallet wallet_name="wallet-01" descriptors=true passphrase="passphrase"
+$ bitcoin-cli -named createwallet wallet_name="wallet-01" passphrase="passphrase"
 ```
 
 Note that if the passphrase is lost, all the coins in the wallet will also be lost forever.

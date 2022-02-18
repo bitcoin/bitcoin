@@ -8,6 +8,7 @@ import io
 import requests
 import subprocess
 import sys
+import xml.etree.ElementTree
 
 DEFAULT_GLOBAL_FAUCET = 'https://signetfaucet.com/claim'
 DEFAULT_GLOBAL_CAPTCHA = 'https://signetfaucet.com/captcha'
@@ -88,20 +89,17 @@ def bitcoin_cli(rpc_command_and_params):
     try:
         return subprocess.check_output(argv).strip().decode()
     except FileNotFoundError:
-        print('The binary', args.cmd, 'could not be found.')
-        exit(1)
+        raise SystemExit(f"The binary {args.cmd} could not be found")
     except subprocess.CalledProcessError:
         cmdline = ' '.join(argv)
-        print(f'-----\nError while calling "{cmdline}" (see output above).')
-        exit(1)
+        raise SystemExit(f"-----\nError while calling {cmdline} (see output above).")
 
 
 if args.faucet.lower() == DEFAULT_GLOBAL_FAUCET:
     # Get the hash of the block at height 1 of the currently active signet chain
     curr_signet_hash = bitcoin_cli(['getblockhash', '1'])
     if curr_signet_hash != GLOBAL_FIRST_BLOCK_HASH:
-        print('The global faucet cannot be used with a custom Signet network. Please use the global signet or setup your custom faucet to use this functionality.\n')
-        exit(1)
+        raise SystemExit('The global faucet cannot be used with a custom Signet network. Please use the global signet or setup your custom faucet to use this functionality.\n')
 else:
     # For custom faucets, don't request captcha by default.
     if args.captcha == DEFAULT_GLOBAL_CAPTCHA:
@@ -120,28 +118,32 @@ session = requests.Session()
 if args.captcha != '': # Retrieve a captcha
     try:
         res = session.get(args.captcha)
-    except:
-        print('Unexpected error when contacting faucet:', sys.exc_info()[0])
-        exit(1)
+        res.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise SystemExit(f"Unexpected error when contacting faucet: {e}")
+
+    # Size limitation
+    svg = xml.etree.ElementTree.fromstring(res.content)
+    if svg.attrib.get('width') != '150' or svg.attrib.get('height') != '50':
+        raise SystemExit("Captcha size doesn't match expected dimensions 150x50")
 
     # Convert SVG image to PPM, and load it
     try:
-        rv = subprocess.run([args.imagemagick, '-', '-depth', '8', 'ppm:-'], input=res.content, check=True, capture_output=True)
+        rv = subprocess.run([args.imagemagick, 'svg:-', '-depth', '8', 'ppm:-'], input=res.content, check=True, capture_output=True)
     except FileNotFoundError:
-        print('The binary', args.imagemagick, 'could not be found. Please make sure ImageMagick (or a compatible fork) is installed and that the correct path is specified.')
-        exit(1)
+        raise SystemExit(f"The binary {args.imagemagick} could not be found. Please make sure ImageMagick (or a compatible fork) is installed and that the correct path is specified.")
+
     img = PPMImage(io.BytesIO(rv.stdout))
 
     # Terminal interaction
     print_image(img)
-    print('Enter captcha: ', end='')
-    data['captcha'] = input()
+    print(f"Captcha from URL {args.captcha}")
+    data['captcha'] = input('Enter captcha: ')
 
 try:
     res = session.post(args.faucet, data=data)
 except:
-    print('Unexpected error when contacting faucet:', sys.exc_info()[0])
-    exit(1)
+    raise SystemExit(f"Unexpected error when contacting faucet: {sys.exc_info()[0]}")
 
 # Display the output as per the returned status code
 if res:

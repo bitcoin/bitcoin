@@ -118,4 +118,62 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
     }
 }
 
+BOOST_AUTO_TEST_CASE(rename)
+{
+    const fs::path tmpfolder{m_args.GetDataDirBase()};
+
+    const fs::path path1{GetUniquePath(tmpfolder)};
+    const fs::path path2{GetUniquePath(tmpfolder)};
+
+    const std::string path1_contents{"1111"};
+    const std::string path2_contents{"2222"};
+
+    {
+        std::ofstream file{path1};
+        file << path1_contents;
+    }
+
+    {
+        std::ofstream file{path2};
+        file << path2_contents;
+    }
+
+    // Rename path1 -> path2.
+    BOOST_CHECK(RenameOver(path1, path2));
+
+    BOOST_CHECK(!fs::exists(path1));
+
+    {
+        std::ifstream file{path2};
+        std::string contents;
+        file >> contents;
+        BOOST_CHECK_EQUAL(contents, path1_contents);
+    }
+    fs::remove(path2);
+}
+
+#ifndef WIN32
+BOOST_AUTO_TEST_CASE(create_directories)
+{
+    // Test fs::create_directories workaround.
+    const fs::path tmpfolder{m_args.GetDataDirBase()};
+
+    const fs::path dir{GetUniquePath(tmpfolder)};
+    fs::create_directory(dir);
+    BOOST_CHECK(fs::exists(dir));
+    BOOST_CHECK(fs::is_directory(dir));
+    BOOST_CHECK(!fs::create_directories(dir));
+
+    const fs::path symlink{GetUniquePath(tmpfolder)};
+    fs::create_directory_symlink(dir, symlink);
+    BOOST_CHECK(fs::exists(symlink));
+    BOOST_CHECK(fs::is_symlink(symlink));
+    BOOST_CHECK(fs::is_directory(symlink));
+    BOOST_CHECK(!fs::create_directories(symlink));
+
+    fs::remove(symlink);
+    fs::remove(dir);
+}
+#endif // WIN32
+
 BOOST_AUTO_TEST_SUITE_END()

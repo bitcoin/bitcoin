@@ -77,6 +77,8 @@ full_build_os:=$(subst $(build_arch)-$(build_vendor)-,,$(build))
 build_os:=$(findstring linux,$(full_build_os))
 build_os+=$(findstring darwin,$(full_build_os))
 build_os+=$(findstring freebsd,$(full_build_os))
+build_os+=$(findstring netbsd,$(full_build_os))
+build_os+=$(findstring openbsd,$(full_build_os))
 build_os:=$(strip $(build_os))
 ifeq ($(build_os),)
 build_os=$(full_build_os)
@@ -88,6 +90,8 @@ full_host_os:=$(subst $(host_arch)-$(host_vendor)-,,$(canonical_host))
 host_os:=$(findstring linux,$(full_host_os))
 host_os+=$(findstring darwin,$(full_host_os))
 host_os+=$(findstring freebsd,$(full_host_os))
+host_os+=$(findstring netbsd,$(full_host_os))
+host_os+=$(findstring openbsd,$(full_host_os))
 host_os+=$(findstring mingw32,$(full_host_os))
 
 ifeq (android,$(findstring android,$(full_host_os)))
@@ -182,7 +186,7 @@ $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	mkdir -p $(@D)
 	echo copying packages: $^
 	echo to: $(@D)
-	cd $(@D); $(foreach package,$^, tar xf $($(package)_cached); )
+	cd $(@D); $(foreach package,$^, $(build_TAR) xf $($(package)_cached); )
 	touch $@
 
 # $PATH is not preserved between ./configure and make by convention. Its

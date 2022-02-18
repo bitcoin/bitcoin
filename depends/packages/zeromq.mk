@@ -13,6 +13,8 @@ define $(package)_set_vars
   $(package)_config_opts += --disable-Werror --disable-drafts --enable-option-checking
   $(package)_config_opts_linux=--with-pic
   $(package)_config_opts_freebsd=--with-pic
+  $(package)_config_opts_netbsd=--with-pic
+  $(package)_config_opts_openbsd=--with-pic
   $(package)_config_opts_android=--with-pic
   $(package)_cxxflags+=-std=c++17
 endef
