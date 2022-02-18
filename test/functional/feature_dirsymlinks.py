@@ -8,7 +8,7 @@
 import os
 import sys
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import SyscoinTestFramework, SkipTest
 
 
 def rename_and_link(*, from_name, to_name):
@@ -16,7 +16,7 @@ def rename_and_link(*, from_name, to_name):
     os.symlink(to_name, from_name)
     assert os.path.islink(from_name) and os.path.isdir(from_name)
 
-class SymlinkTest(BitcoinTestFramework):
+class SymlinkTest(SyscoinTestFramework):
     def skip_test_if_missing_module(self):
         if sys.platform == 'win32':
             raise SkipTest("Symlinks test skipped on Windows")
