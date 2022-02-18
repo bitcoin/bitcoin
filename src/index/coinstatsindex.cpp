@@ -14,8 +14,9 @@
 
 using kernel::CCoinsStats;
 using kernel::GetBogoSize;
-using node::ReadBlockFromDisk;
 using kernel::TxOutSer;
+
+using node::ReadBlockFromDisk;
 using node::UndoReadFromDisk;
 
 static constexpr uint8_t DB_BLOCK_HASH{'s'};
