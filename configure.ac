@@ -361,7 +361,9 @@ case $host in
 esac
 
 if test "$enable_debug" = "yes"; then
-  dnl Clear default -g -O2 flags
+  dnl If debugging is enabled, and the user hasn't overriden CXXFLAGS, clear
+  dnl them, to prevent autoconfs "-g -O2" being added. Otherwise we'd end up
+  dnl with "-O0 -g3 -g -O2".
   if test "$CXXFLAGS_overridden" = "no"; then
   CXXFLAGS=""
   fi
