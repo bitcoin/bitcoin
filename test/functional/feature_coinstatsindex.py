@@ -29,12 +29,16 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    get_datadir_path,
 )
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
 )
 
+
+import os
+import re
 
 class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -52,6 +56,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self._test_use_index_option()
         self._test_reorg_index()
         self._test_index_rejects_hash_serialized()
+        self._test_dumpcoinstats_rpc()
 
     def block_sanity_check(self, block_info):
         block_subsidy = 50
@@ -295,6 +300,50 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for use_index in {True, False, None}:
             assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=111, use_index=use_index)
+
+    def _test_dumpcoinstats_rpc(self):
+        self.log.info("Test dumpcoinstats RPC")
+
+        for cumulative in [True, False]:
+            if cumulative:
+                file = "ctest.csv"
+            else:
+                file = "test.csv"
+
+            path = os.path.join(get_datadir_path(self.options.tmpdir, 1), file)
+            self.nodes[1].dumpcoinstats(path, cumulative)
+
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = f.read().splitlines()
+
+                # Check header
+                if cumulative:
+                    head = "height,block_hash,timestamp,mediantime,version,total_txs,total_txouts,total_coinbase_amount,total_subsidy,total_amount_generated,total_unclaimed_rewards,total_amount_spent,total_new_outputs_ex_coinbase_amount,total_unspendable_scripts,total_unspendable_amount,total_genesis_block,total_bip30,total_chainwork,muhash,total_bogosize"
+                else:
+                    head = "height,block_hash,timestamp,mediantime,version,txs,txouts,coinbase_amount,subsidy,amount_generated,unclaimed_rewards,amount_spent,new_outputs_ex_coinbase_amount,unspendable_scripts,unspendable_amount,genesis_block,bip30,chainwork,muhash,bogosize"
+                assert_equal(lines[0], head)
+
+                # Check the first line, the genesis block
+                genesis = "0,0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206,1296688602,1296688602,1,1,0,0.00,50.00,0.00,0.00,0.00,0.00,0.00,50.00,50.00,0.00,0000000000000000000000000000000000000000000000000000000000000002,dd5ad2a105c2d29495f577245c357409002329b9f4d6182c0af3dc2f462555c8,0"
+                assert_equal(lines[1], genesis)
+
+                # Timestamp and MTP are non-deterministic
+                last_block = self.nodes[0].getblock(self.nodes[0].getblockhash(113))
+                time = str(last_block['time'])
+                mediantime = str(last_block['mediantime'])
+
+                # Check the last line, omitting non-deterministic values like timestamps, utxo set hash and chainwork
+                if cumulative:
+                    last = "113,,{},{},536870912,117,114,5640.010322,5700.00,5619.01,10.00,121.00,99.999678,20.99,80.99,50.00,0.00,,,9411".format(time, mediantime)
+                else:
+                    last = "113,,{},{},536870912,1,1,50.00,50.00,50.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,,,75".format(time, mediantime)
+
+                line = re.sub(r',[a-z0-9]{64}', ',', lines[-1])
+                assert_equal(line, last)
+
+        # The RPC does not override existing files
+        msg = "already exists"
+        assert_raises_rpc_error(-8, msg, self.nodes[1].dumpcoinstats, path)
 
 
 if __name__ == '__main__':
