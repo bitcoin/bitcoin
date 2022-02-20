@@ -359,7 +359,7 @@ esac
 if test "$enable_debug" = "yes"; then
   dnl Clear default -g -O2 flags
   if test "$CXXFLAGS_overridden" = "no"; then
-	CXXFLAGS=""
+  CXXFLAGS=""
   fi
 
   dnl Disable all optimizations
@@ -978,14 +978,14 @@ AC_CHECK_DECLS([setsid])
 AC_CHECK_DECLS([pipe2])
 
 AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
-		[#if HAVE_ENDIAN_H
+    [#if HAVE_ENDIAN_H
                  #include <endian.h>
                  #elif HAVE_SYS_ENDIAN_H
                  #include <sys/endian.h>
                  #endif])
 
 AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
-		[#if HAVE_BYTESWAP_H
+    [#if HAVE_BYTESWAP_H
                  #include <byteswap.h>
                  #endif])
 
