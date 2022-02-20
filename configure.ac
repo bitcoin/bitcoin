@@ -1438,9 +1438,13 @@ if test "$use_external_signer" != "no"; then
     ;;
     *)
       AC_MSG_CHECKING([whether Boost.Process can be used])
+      TEMP_LDFLAGS="$LDFLAGS"
+      dnl Boost 1.73 and older require the following workaround.
+      LDFLAGS="$LDFLAGS $PTHREAD_CFLAGS"
       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]])],
         [have_boost_process="yes"],
         [have_boost_process="no"])
+      LDFLAGS="$TEMP_LDFLAGS"
       AC_MSG_RESULT([$have_boost_process])
       if test "$have_boost_process" = "yes"; then
         use_external_signer="yes"
