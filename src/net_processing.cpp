@@ -679,6 +679,14 @@ private:
     std::chrono::microseconds NextInvToInbounds(std::chrono::microseconds now,
                                                 std::chrono::seconds average_interval);
 
+
+    // All of the following cache a recent block, and are protected by cs_most_recent_block
+    RecursiveMutex cs_most_recent_block;
+    std::shared_ptr<const CBlock> most_recent_block GUARDED_BY(cs_most_recent_block);
+    std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block GUARDED_BY(cs_most_recent_block);
+    uint256 most_recent_block_hash GUARDED_BY(cs_most_recent_block);
+    bool fWitnessesPresentInMostRecentCompactBlock GUARDED_BY(cs_most_recent_block){false};
+
     /** Have we requested this block from a peer */
     bool IsBlockRequested(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1612,13 +1620,6 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
     LOCK(m_recent_confirmed_transactions_mutex);
     m_recent_confirmed_transactions.reset();
 }
-
-// All of the following cache a recent block, and are protected by cs_most_recent_block
-static RecursiveMutex cs_most_recent_block;
-static std::shared_ptr<const CBlock> most_recent_block GUARDED_BY(cs_most_recent_block);
-static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block GUARDED_BY(cs_most_recent_block);
-static uint256 most_recent_block_hash GUARDED_BY(cs_most_recent_block);
-static bool fWitnessesPresentInMostRecentCompactBlock GUARDED_BY(cs_most_recent_block);
 
 /**
  * Maintain state about the best-seen block and fast-announce a compact block
