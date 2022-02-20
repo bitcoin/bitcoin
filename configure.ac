@@ -1442,7 +1442,7 @@ if test "$use_external_signer" != "no"; then
         [have_boost_process="yes"],
         [have_boost_process="no"])
       AC_MSG_RESULT([$have_boost_process])
-      if test "$have_boost_process" == "yes"; then
+      if test "$have_boost_process" = "yes"; then
         use_external_signer="yes"
         AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
       else
