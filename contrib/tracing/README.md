@@ -241,7 +241,7 @@ A BCC Python script to log the UTXO cache flushes. Based on the
 `utxocache:flush` tracepoint.
 
 ```bash
-$ python3 contrib/tracing/log_utxocache_flush.py ./src/bitcoind
+$ python3 contrib/tracing/log_utxocache_flush.py ./src/syscoind
 ```
 
 ```
