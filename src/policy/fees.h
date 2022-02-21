@@ -303,7 +303,7 @@ public:
     CAmount round(CAmount currentMinFee);
 
 private:
-    std::set<double> feeset;
+    const std::set<double> feeset;
     Mutex m_insecure_rand_mutex;
     FastRandomContext insecure_rand GUARDED_BY(m_insecure_rand_mutex);
 };

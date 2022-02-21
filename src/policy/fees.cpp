@@ -998,13 +998,24 @@ void CBlockPolicyEstimator::FlushUnconfirmed() {
     LogPrint(BCLog::ESTIMATEFEE, "Recorded %u unconfirmed txs from mempool in %gs\n", num_entries, (endclear - startclear)*0.000001);
 }
 
-FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
+static std::set<double> MakeFeeSet(const CFeeRate& minIncrementalFee,
+                                   double max_filter_fee_rate,
+                                   double fee_filter_spacing)
 {
-    CAmount minFeeLimit = std::max(CAmount(1), minIncrementalFee.GetFeePerK() / 2);
+    std::set<double> feeset;
+
+    const CAmount minFeeLimit{std::max(CAmount(1), minIncrementalFee.GetFeePerK() / 2)};
     feeset.insert(0);
-    for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_FILTER_FEERATE; bucketBoundary *= FEE_FILTER_SPACING) {
+    for (double bucketBoundary = minFeeLimit; bucketBoundary <= max_filter_fee_rate; bucketBoundary *= fee_filter_spacing) {
         feeset.insert(bucketBoundary);
     }
+
+    return feeset;
+}
+
+FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
+    : feeset{MakeFeeSet(minIncrementalFee, MAX_FILTER_FEERATE, FEE_FILTER_SPACING)}
+{
 }
 
 CAmount FeeFilterRounder::round(CAmount currentMinFee)
