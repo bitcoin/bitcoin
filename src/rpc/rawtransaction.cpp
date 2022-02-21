@@ -867,16 +867,6 @@ static RPCHelpMan decoderawtransaction()
     };
 }
 
-static std::string GetAllOutputTypes()
-{
-    std::vector<std::string> ret;
-    using U = std::underlying_type<TxoutType>::type;
-    for (U i = (U)TxoutType::NONSTANDARD; i <= (U)TxoutType::NULL_DATA; ++i) {
-        ret.emplace_back(GetTxnOutputType(static_cast<TxoutType>(i)));
-    }
-    return Join(ret, ", ");
-}
-
 static RPCHelpMan decodescript()
 {
     return RPCHelpMan{"decodescript",
