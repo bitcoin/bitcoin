@@ -1077,6 +1077,12 @@ private:
      */
     std::vector<CAddress> m_anchors;
 
+    /**
+    * Flag for checking if a connection with all peers from anchors.dat
+    * has been tried.
+    */
+    bool tried_connect_anchors{false};
+
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;
 

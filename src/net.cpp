@@ -1860,6 +1860,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
 
         if (delete_anchors_file) {
+            tried_connect_anchors = true;
             DeleteAnchorsFile(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         }
     }
@@ -2303,6 +2304,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
             m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
         } else if (m_anchors.empty()) {
+            tried_connect_anchors = true;
             DeleteAnchorsFile(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         }
         LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
@@ -2443,7 +2445,10 @@ void CConnman::StopNodes()
             if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
                 anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
             }
-            DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+
+            if (tried_connect_anchors) {
+                DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+            }
         }
     }
 
