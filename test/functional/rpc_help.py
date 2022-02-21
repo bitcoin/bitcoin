@@ -89,8 +89,7 @@ class HelpRpcTest(SyscoinTestFramework):
         node = self.nodes[0]
 
         # wrong argument count
-        # SYSCOIN
-        assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar', 'bar')
+        assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar')
 
         # invalid argument
         assert_raises_rpc_error(-1, 'JSON value is not a string as expected', node.help, 0)
@@ -100,13 +99,14 @@ class HelpRpcTest(SyscoinTestFramework):
 
         # command titles
         titles = [line[3:-3] for line in node.help().splitlines() if line.startswith('==')]
+
         # SYSCOIN
 
         components = [ 'Blockchain', 'Control', 'Evo' ]
         if self.is_wallet_compiled():
              components.append('Evowallet')
 
-        components.extend(['Generating','Governance'])
+        components.extend(['Governance'])
         if self.is_wallet_compiled():
              components.append('Governancewallet')
 
