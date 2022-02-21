@@ -6,13 +6,14 @@ Release Process
 ### Before every release candidate
 
 * Update translations see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
-* Update manpages, see [gen-manpages.sh](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`).
+* Update manpages (after rebuilding the binaries), see [gen-manpages.py](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagespy).
 
 ### Before every major and minor release
 
 * Update [bips.md](bips.md) to account for changes since the last release (don't forget to bump the version number on the first line).
 * Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_RC` to `0`).
+* Update manpages (see previous section)
 * Write release notes (see "Write the release notes" below).
 
 ### Before every major release
