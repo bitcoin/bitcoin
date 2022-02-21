@@ -23,6 +23,16 @@ const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 // SYSCOIN
 const std::string EXAMPLE_ADDRESS[2] = {"sys1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee"};
 
+std::string GetAllOutputTypes()
+{
+    std::vector<std::string> ret;
+    using U = std::underlying_type<TxoutType>::type;
+    for (U i = (U)TxoutType::NONSTANDARD; i <= (U)TxoutType::WITNESS_UNKNOWN; ++i) {
+        ret.emplace_back(GetTxnOutputType(static_cast<TxoutType>(i)));
+    }
+    return Join(ret, ", ");
+}
+
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValueType>& typesExpected,
                   bool fAllowNull)
