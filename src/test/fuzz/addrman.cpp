@@ -137,7 +137,7 @@ public:
      * - vvNew entries refer to the same addresses
      * - vvTried entries refer to the same addresses
      */
-    bool operator==(const AddrManDeterministic& other)
+    bool operator==(const AddrManDeterministic& other) const
     {
         LOCK2(m_impl->cs, other.m_impl->cs);
 
