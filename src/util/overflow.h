@@ -13,7 +13,7 @@ template <class T>
 [[nodiscard]] bool AdditionOverflow(const T i, const T j) noexcept
 {
     static_assert(std::is_integral<T>::value, "Integral required.");
-    if (std::numeric_limits<T>::is_signed) {
+    if constexpr (std::numeric_limits<T>::is_signed) {
         return (i > 0 && j > std::numeric_limits<T>::max() - i) ||
                (i < 0 && j < std::numeric_limits<T>::min() - i);
     }
@@ -25,6 +25,24 @@ template <class T>
 {
     if (AdditionOverflow(i, j)) {
         return std::nullopt;
+    }
+    return i + j;
+}
+
+template <class T>
+[[nodiscard]] T SaturatingAdd(const T i, const T j) noexcept
+{
+    if constexpr (std::numeric_limits<T>::is_signed) {
+        if (i > 0 && j > std::numeric_limits<T>::max() - i) {
+            return std::numeric_limits<T>::max();
+        }
+        if (i < 0 && j < std::numeric_limits<T>::min() - i) {
+            return std::numeric_limits<T>::min();
+        }
+    } else {
+        if (std::numeric_limits<T>::max() - i < j) {
+            return std::numeric_limits<T>::max();
+        }
     }
     return i + j;
 }
