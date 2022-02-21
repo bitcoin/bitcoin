@@ -128,6 +128,8 @@ class SendConfirmationDialog : public QMessageBox
 
 public:
     SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, bool enable_send = true, bool always_show_unsigned = true, QWidget* parent = nullptr);
+    /* Returns QMessageBox::Cancel, QMessageBox::Yes when "Send" is
+       clicked and QMessageBox::Save when "Create Unsigned" is clicked. */
     int exec() override;
 
 private Q_SLOTS:
