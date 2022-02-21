@@ -528,9 +528,26 @@ public:
                             /* m_package_submission */ true,
             };
         }
-        // No default ctor to avoid exposing details to clients and allowing the possibility of
+
+    private:
+        // Private ctor to avoid exposing details to clients and allowing the possibility of
         // mixing up the order of the arguments. Use static functions above instead.
-        ATMPArgs() = delete;
+        ATMPArgs(const CChainParams& chainparams,
+                 int64_t accept_time,
+                 bool bypass_limits,
+                 std::vector<COutPoint>& coins_to_uncache,
+                 bool test_accept,
+                 bool allow_bip125_replacement,
+                 bool package_submission)
+            : m_chainparams{chainparams},
+              m_accept_time{accept_time},
+              m_bypass_limits{bypass_limits},
+              m_coins_to_uncache{coins_to_uncache},
+              m_test_accept{test_accept},
+              m_allow_bip125_replacement{allow_bip125_replacement},
+              m_package_submission{package_submission}
+        {
+        }
     };
 
     // Single transaction acceptance
