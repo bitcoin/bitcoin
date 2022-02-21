@@ -847,7 +847,9 @@ static RPCHelpMan setnetworkactive()
 static RPCHelpMan getnodeaddresses()
 {
     return RPCHelpMan{"getnodeaddresses",
-                "\nReturn known addresses, which can potentially be used to find new nodes in the network.\n",
+                "Return known addresses, after filtering for quality and recency.\n"
+                "These can potentially be used to find new peers in the network.\n"
+                "The total number of addresses known to the node may be higher.",
                 {
                     {"count", RPCArg::Type::NUM, RPCArg::Default{1}, "The maximum number of addresses to return. Specify 0 to return all known addresses."},
                     {"network", RPCArg::Type::STR, RPCArg::DefaultHint{"all networks"}, "Return only addresses of the specified network. Can be one of: " + Join(GetNetworkNames(), ", ") + "."},
