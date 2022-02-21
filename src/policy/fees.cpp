@@ -1010,8 +1010,10 @@ FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
 CAmount FeeFilterRounder::round(CAmount currentMinFee)
 {
     std::set<double>::iterator it = feeset.lower_bound(currentMinFee);
-    if ((it != feeset.begin() && insecure_rand.rand32() % 3 != 0) || it == feeset.end()) {
-        it--;
+    if (it == feeset.end() ||
+        (it != feeset.begin() &&
+         WITH_LOCK(m_insecure_rand_mutex, return insecure_rand.rand32()) % 3 != 0)) {
+        --it;
     }
     return static_cast<CAmount>(*it);
 }
