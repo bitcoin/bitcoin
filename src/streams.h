@@ -9,6 +9,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
+#include <util/overflow.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -186,7 +187,7 @@ class CDataStream
 protected:
     using vector_type = SerializeData;
     vector_type vch;
-    unsigned int nReadPos{0};
+    vector_type::size_type m_read_pos{0};
 
     int nType;
     int nVersion;
@@ -229,37 +230,37 @@ public:
     //
     // Vector subset
     //
-    const_iterator begin() const                     { return vch.begin() + nReadPos; }
-    iterator begin()                                 { return vch.begin() + nReadPos; }
+    const_iterator begin() const                     { return vch.begin() + m_read_pos; }
+    iterator begin()                                 { return vch.begin() + m_read_pos; }
     const_iterator end() const                       { return vch.end(); }
     iterator end()                                   { return vch.end(); }
-    size_type size() const                           { return vch.size() - nReadPos; }
-    bool empty() const                               { return vch.size() == nReadPos; }
-    void resize(size_type n, value_type c = value_type{}) { vch.resize(n + nReadPos, c); }
-    void reserve(size_type n)                        { vch.reserve(n + nReadPos); }
-    const_reference operator[](size_type pos) const  { return vch[pos + nReadPos]; }
-    reference operator[](size_type pos)              { return vch[pos + nReadPos]; }
-    void clear()                                     { vch.clear(); nReadPos = 0; }
-    value_type* data()                               { return vch.data() + nReadPos; }
-    const value_type* data() const                   { return vch.data() + nReadPos; }
+    size_type size() const                           { return vch.size() - m_read_pos; }
+    bool empty() const                               { return vch.size() == m_read_pos; }
+    void resize(size_type n, value_type c = value_type{}) { vch.resize(n + m_read_pos, c); }
+    void reserve(size_type n)                        { vch.reserve(n + m_read_pos); }
+    const_reference operator[](size_type pos) const  { return vch[pos + m_read_pos]; }
+    reference operator[](size_type pos)              { return vch[pos + m_read_pos]; }
+    void clear()                                     { vch.clear(); m_read_pos = 0; }
+    value_type* data()                               { return vch.data() + m_read_pos; }
+    const value_type* data() const                   { return vch.data() + m_read_pos; }
 
     inline void Compact()
     {
-        vch.erase(vch.begin(), vch.begin() + nReadPos);
-        nReadPos = 0;
+        vch.erase(vch.begin(), vch.begin() + m_read_pos);
+        m_read_pos = 0;
     }
 
     bool Rewind(std::optional<size_type> n = std::nullopt)
     {
         // Total rewind if no size is passed
         if (!n) {
-            nReadPos = 0;
+            m_read_pos = 0;
             return true;
         }
         // Rewind by n characters if the buffer hasn't been compacted yet
-        if (*n > nReadPos)
+        if (*n > m_read_pos)
             return false;
-        nReadPos -= *n;
+        m_read_pos -= *n;
         return true;
     }
 
@@ -281,36 +282,32 @@ public:
         if (dst.size() == 0) return;
 
         // Read from the beginning of the buffer
-        unsigned int nReadPosNext = nReadPos + dst.size();
-        if (nReadPosNext > vch.size()) {
+        auto next_read_pos{CheckedAdd(m_read_pos, dst.size())};
+        if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
             throw std::ios_base::failure("CDataStream::read(): end of data");
         }
-        memcpy(dst.data(), &vch[nReadPos], dst.size());
-        if (nReadPosNext == vch.size())
-        {
-            nReadPos = 0;
+        memcpy(dst.data(), &vch[m_read_pos], dst.size());
+        if (next_read_pos.value() == vch.size()) {
+            m_read_pos = 0;
             vch.clear();
             return;
         }
-        nReadPos = nReadPosNext;
+        m_read_pos = next_read_pos.value();
     }
 
-    void ignore(int nSize)
+    void ignore(size_t num_ignore)
     {
         // Ignore from the beginning of the buffer
-        if (nSize < 0) {
-            throw std::ios_base::failure("CDataStream::ignore(): nSize negative");
+        auto next_read_pos{CheckedAdd(m_read_pos, num_ignore)};
+        if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
+            throw std::ios_base::failure("CDataStream::ignore(): end of data");
         }
-        unsigned int nReadPosNext = nReadPos + nSize;
-        if (nReadPosNext >= vch.size())
-        {
-            if (nReadPosNext > vch.size())
-                throw std::ios_base::failure("CDataStream::ignore(): end of data");
-            nReadPos = 0;
+        if (next_read_pos.value() == vch.size()) {
+            m_read_pos = 0;
             vch.clear();
             return;
         }
-        nReadPos = nReadPosNext;
+        m_read_pos = next_read_pos.value();
     }
 
     void write(Span<const value_type> src)
@@ -594,7 +591,7 @@ private:
 
     FILE *src;            //!< source file
     uint64_t nSrcPos;     //!< how many bytes have been read from source
-    uint64_t nReadPos;    //!< how many bytes have been read from this
+    uint64_t m_read_pos;    //!< how many bytes have been read from this
     uint64_t nReadLimit;  //!< up to which position we're allowed to read
     uint64_t nRewind;     //!< how many bytes we guarantee to rewind
     std::vector<std::byte> vchBuf; //!< the buffer
@@ -604,7 +601,7 @@ protected:
     bool Fill() {
         unsigned int pos = nSrcPos % vchBuf.size();
         unsigned int readNow = vchBuf.size() - pos;
-        unsigned int nAvail = vchBuf.size() - (nSrcPos - nReadPos) - nRewind;
+        unsigned int nAvail = vchBuf.size() - (nSrcPos - m_read_pos) - nRewind;
         if (nAvail < readNow)
             readNow = nAvail;
         if (readNow == 0)
@@ -619,7 +616,7 @@ protected:
 
 public:
     CBufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn)
-        : nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), nReadPos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
+        : nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), m_read_pos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
@@ -648,33 +645,33 @@ public:
 
     //! check whether we're at the end of the source file
     bool eof() const {
-        return nReadPos == nSrcPos && feof(src);
+        return m_read_pos == nSrcPos && feof(src);
     }
 
     //! read a number of bytes
     void read(Span<std::byte> dst)
     {
-        if (dst.size() + nReadPos > nReadLimit) {
+        if (dst.size() + m_read_pos > nReadLimit) {
             throw std::ios_base::failure("Read attempted past buffer limit");
         }
         while (dst.size() > 0) {
-            if (nReadPos == nSrcPos)
+            if (m_read_pos == nSrcPos)
                 Fill();
-            unsigned int pos = nReadPos % vchBuf.size();
+            unsigned int pos = m_read_pos % vchBuf.size();
             size_t nNow = dst.size();
             if (nNow + pos > vchBuf.size())
                 nNow = vchBuf.size() - pos;
-            if (nNow + nReadPos > nSrcPos)
-                nNow = nSrcPos - nReadPos;
+            if (nNow + m_read_pos > nSrcPos)
+                nNow = nSrcPos - m_read_pos;
             memcpy(dst.data(), &vchBuf[pos], nNow);
-            nReadPos += nNow;
+            m_read_pos += nNow;
             dst = dst.subspan(nNow);
         }
     }
 
     //! return the current reading position
     uint64_t GetPos() const {
-        return nReadPos;
+        return m_read_pos;
     }
 
     //! rewind to a given reading position
@@ -682,22 +679,22 @@ public:
         size_t bufsize = vchBuf.size();
         if (nPos + bufsize < nSrcPos) {
             // rewinding too far, rewind as far as possible
-            nReadPos = nSrcPos - bufsize;
+            m_read_pos = nSrcPos - bufsize;
             return false;
         }
         if (nPos > nSrcPos) {
             // can't go this far forward, go as far as possible
-            nReadPos = nSrcPos;
+            m_read_pos = nSrcPos;
             return false;
         }
-        nReadPos = nPos;
+        m_read_pos = nPos;
         return true;
     }
 
     //! prevent reading beyond a certain position
     //! no argument removes the limit
     bool SetLimit(uint64_t nPos = std::numeric_limits<uint64_t>::max()) {
-        if (nPos < nReadPos)
+        if (nPos < m_read_pos)
             return false;
         nReadLimit = nPos;
         return true;
@@ -714,12 +711,12 @@ public:
     void FindByte(uint8_t ch)
     {
         while (true) {
-            if (nReadPos == nSrcPos)
+            if (m_read_pos == nSrcPos)
                 Fill();
-            if (vchBuf[nReadPos % vchBuf.size()] == std::byte{ch}) {
+            if (vchBuf[m_read_pos % vchBuf.size()] == std::byte{ch}) {
                 break;
             }
-            nReadPos++;
+            m_read_pos++;
         }
     }
 };
