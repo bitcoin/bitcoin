@@ -447,6 +447,34 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
     } // msgBox.exec()
 }
 
+bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, CMutableTransaction& mtx, bool& complete) {
+    TransactionError err;
+    try {
+        err = model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/true, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
+    } catch (const std::runtime_error& e) {
+        QMessageBox::critical(nullptr, tr("Sign failed"), e.what());
+        return false;
+    }
+    if (err == TransactionError::EXTERNAL_SIGNER_NOT_FOUND) {
+        //: "External signer" means using devices such as hardware wallets.
+        QMessageBox::critical(nullptr, tr("External signer not found"), "External signer not found");
+        return false;
+    }
+    if (err == TransactionError::EXTERNAL_SIGNER_FAILED) {
+        //: "External signer" means using devices such as hardware wallets.
+        QMessageBox::critical(nullptr, tr("External signer failure"), "External signer failure");
+        return false;
+    }
+    if (err != TransactionError::OK) {
+        tfm::format(std::cerr, "Failed to sign PSBT");
+        processSendCoinsReturn(WalletModel::TransactionCreationFailed);
+        return false;
+    }
+    // fillPSBT does not always properly finalize
+    complete = FinalizeAndExtractPSBT(psbtx, mtx);
+    return true;
+}
+
 void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
 {
     if(!model || !model->getOptionsModel())
@@ -479,33 +507,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         assert(!complete);
         assert(err == TransactionError::OK);
         if (model->wallet().hasExternalSigner()) {
-            try {
-                err = model->wallet().fillPSBT(SIGHASH_ALL, true /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
-            } catch (const std::runtime_error& e) {
-                QMessageBox::critical(nullptr, tr("Sign failed"), e.what());
-                send_failure = true;
-                return;
-            }
-            if (err == TransactionError::EXTERNAL_SIGNER_NOT_FOUND) {
-                //: "External signer" means using devices such as hardware wallets.
-                QMessageBox::critical(nullptr, tr("External signer not found"), "External signer not found");
-                send_failure = true;
-                return;
-            }
-            if (err == TransactionError::EXTERNAL_SIGNER_FAILED) {
-                //: "External signer" means using devices such as hardware wallets.
-                QMessageBox::critical(nullptr, tr("External signer failure"), "External signer failure");
-                send_failure = true;
-                return;
-            }
-            if (err != TransactionError::OK) {
-                tfm::format(std::cerr, "Failed to sign PSBT");
-                processSendCoinsReturn(WalletModel::TransactionCreationFailed);
-                send_failure = true;
-                return;
-            }
-            // fillPSBT does not always properly finalize
-            complete = FinalizeAndExtractPSBT(psbtx, mtx);
+            send_failure = !signWithExternalSigner(psbtx, mtx, complete);
         }
 
         // Broadcast transaction if complete (even with an external signer this
