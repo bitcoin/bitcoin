@@ -261,8 +261,8 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 bool fReset,
                                                                 bool fReindexChainState,
                                                                 const Consensus::Params& consensus_params,
-                                                                unsigned int check_blocks,
-                                                                unsigned int check_level,
+                                                                int check_blocks,
+                                                                int check_level,
                                                                 std::function<int64_t()> get_unix_time_seconds,
                                                                 std::function<void(bool)> notify_bls_state)
 {
