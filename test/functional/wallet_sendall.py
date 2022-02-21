@@ -240,6 +240,30 @@ class SendallTest(BitcoinTestFramework):
             foreign_utxo["vout"]), self.wallet.sendall, recipients=[self.remainder_target],
             options={"inputs": [foreign_utxo]})
 
+    @cleanup
+    def sendall_fails_on_no_address(self):
+        self.log.info("Test sendall fails because no address is provided")
+        self.add_utxos([19, 2])
+
+        assert_raises_rpc_error(
+                -8,
+                "Must provide at least one address without a specified amount" ,
+                self.wallet.sendall,
+                []
+            )
+
+    @cleanup
+    def sendall_fails_on_specific_inputs_with_send_max(self):
+        self.log.info("Test sendall fails because send_max is used while specific inputs are provided")
+        self.add_utxos([15, 6])
+        utxo = self.wallet.listunspent()[0]
+
+        assert_raises_rpc_error(-8,
+            "Cannot combine send_max with specific inputs.",
+            self.wallet.sendall,
+            recipients=[self.remainder_target],
+            options={"inputs": [utxo], "send_max": True})
+
     def run_test(self):
         self.nodes[0].createwallet("activewallet")
         self.wallet = self.nodes[0].get_wallet_rpc("activewallet")
@@ -281,6 +305,12 @@ class SendallTest(BitcoinTestFramework):
 
         # Fails for the right reasons on missing or previously spent UTXOs
         self.sendall_fails_on_missing_input()
+
+        # Sendall fails when no address is provided
+        self.sendall_fails_on_no_address()
+
+        # Sendall fails when using send_max while specifying inputs
+        self.sendall_fails_on_specific_inputs_with_send_max()
 
 if __name__ == '__main__':
     SendallTest().main()
