@@ -69,7 +69,14 @@ class BlockchainTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.mine_chain()
         self._test_max_future_block_time()
-        self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1'])  # Set extra args with pruning after rescan is complete
+        self.restart_node(
+            0,
+            extra_args=[
+                "-stopatheight=207",
+                "-checkblocks=-1",  # Check all blocks
+                "-prune=1",  # Set pruning after rescan is complete
+            ],
+        )
 
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
