@@ -70,6 +70,8 @@ private:
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
 
+    // Copy PSBT to clipboard and offer to save it.
+    void presentPSBT(PartiallySignedTransaction& psbt);
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
     // Additional parameter msgArg can be used via .arg(msgArg).
