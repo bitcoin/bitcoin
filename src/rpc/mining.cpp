@@ -216,9 +216,9 @@ static RPCHelpMan generatetodescriptor()
 {
     return RPCHelpMan{
         "generatetodescriptor",
-        "\nMine blocks immediately to a specified descriptor (before the RPC call returns)\n",
+        "Mine to a specified descriptor and return the block hashes.",
         {
-            {"num_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
+            {"num_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor to send the newly generated coins to."},
             {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
         },
@@ -253,9 +253,9 @@ static RPCHelpMan generatetodescriptor()
 static RPCHelpMan generatetoaddress()
 {
     return RPCHelpMan{"generatetoaddress",
-        "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
+        "\nMine to a specified address and return the block hashes.\n",
         {
-            {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
+            {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated coins to."},
             {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
         },
@@ -293,7 +293,7 @@ static RPCHelpMan generatetoaddress()
 static RPCHelpMan generateblock()
 {
     return RPCHelpMan{"generateblock",
-        "\nMine a block with a set of ordered transactions immediately to a specified address or descriptor (before the RPC call returns)\n",
+        "Mine a set of ordered transactions to a specified address or descriptor and return the block hash.",
         {
             {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated coins to."},
             {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
@@ -1105,16 +1105,9 @@ static const CRPCCommand commands[] =
     { "mining",              &submitblock,             },
     { "mining",              &submitheader,            },
 
-#if ENABLE_MINER
-    { "generating",          &generatetoaddress,       },
-    { "generating",          &generatetodescriptor,    },
-    { "generating",          &generateblock,           },
-#else
-// Hidden as it isn't functional, just an error to let people know if miner isn't compiled
     { "hidden",              &generatetoaddress,       },
     { "hidden",              &generatetodescriptor,    },
     { "hidden",              &generateblock,           },
-#endif // ENABLE_MINER
 
     { "hidden",              &generate,                },
 };

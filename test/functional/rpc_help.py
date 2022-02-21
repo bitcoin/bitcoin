@@ -100,7 +100,7 @@ class HelpRpcTest(BitcoinTestFramework):
         # command titles
         titles = [line[3:-3] for line in node.help().splitlines() if line.startswith('==')]
 
-        components = ['Addressindex', 'Blockchain', 'Control', 'Dash', 'Evo', 'Generating', 'Mining', 'Network', 'Rawtransactions', 'Util']
+        components = ['Addressindex', 'Blockchain', 'Control', 'Dash', 'Evo', 'Mining', 'Network', 'Rawtransactions', 'Util']
 
         if self.is_wallet_compiled():
             components.append('Wallet')
