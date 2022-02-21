@@ -79,6 +79,15 @@ private:
     void minimizeFeeSection(bool fMinimize);
     // Format confirmation message
     bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text);
+    /* Sign PSBT using external signer.
+     *
+     * @param[in,out] psbtx the PSBT to sign
+     * @param[in,out] mtx needed to attempt to finalize
+     * @param[in,out] complete whether the PSBT is complete (a successfully signed multisig transaction may not be complete)
+     *
+     * @returns false if any failure occurred, which may include the user rejection of a transaction on the device.
+     */
+    bool signWithExternalSigner(PartiallySignedTransaction& psbt, CMutableTransaction& mtx, bool& complete);
     void updateFeeMinimizedLabel();
     void updateCoinControlState();
 
