@@ -176,10 +176,10 @@ task:
     QEMU_USER_CMD: ""  # Disable qemu and run the test natively
 
 task:
-  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [focal]'
+  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image: ubuntu:jammy
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
