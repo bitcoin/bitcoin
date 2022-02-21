@@ -485,7 +485,9 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     assert(m_current_transaction);
 
     const QString confirmation = tr("Confirm send coins");
-    auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, !model->wallet().privateKeysDisabled(), model->getOptionsModel()->getEnablePSBTControls(), this);
+    const bool enable_send{!model->wallet().privateKeysDisabled() || model->wallet().hasExternalSigner()};
+    const bool always_show_unsigned{model->getOptionsModel()->getEnablePSBTControls()};
+    auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, this);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
@@ -498,23 +500,50 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
 
     bool send_failure = false;
     if (retval == QMessageBox::Save) {
+        // "Create Unsigned" clicked
         CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        // Always fill without signing first. This prevents an external signer
-        // from being called prematurely and is not expensive.
-        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
+        // Fill without signing
+        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
         assert(!complete);
         assert(err == TransactionError::OK);
+
+        // Copy PSBT to clipboard and offer to save
+        presentPSBT(psbtx);
+    } else {
+        // "Send" clicked
+        assert(!model->wallet().privateKeysDisabled() || model->wallet().hasExternalSigner());
+        bool broadcast = true;
         if (model->wallet().hasExternalSigner()) {
+            CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
+            PartiallySignedTransaction psbtx(mtx);
+            bool complete = false;
+            // Always fill without signing first. This prevents an external signer
+            // from being called prematurely and is not expensive.
+            TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
+            assert(!complete);
+            assert(err == TransactionError::OK);
             send_failure = !signWithExternalSigner(psbtx, mtx, complete);
+            // Don't broadcast when user rejects it on the device or there's a failure:
+            broadcast = complete && !send_failure;
+            if (!send_failure) {
+                // A transaction signed with an external signer is not always complete,
+                // e.g. in a multisig wallet.
+                if (complete) {
+                    // Prepare transaction for broadcast transaction if complete
+                    const CTransactionRef tx = MakeTransactionRef(mtx);
+                    m_current_transaction->setWtx(tx);
+                } else {
+                    presentPSBT(psbtx);
+                }
+            }
         }
 
-        // Broadcast transaction if complete (even with an external signer this
-        // is not always the case, e.g. in a multisig wallet).
-        if (complete) {
-            const CTransactionRef tx = MakeTransactionRef(mtx);
-            m_current_transaction->setWtx(tx);
+        // Broadcast the transaction, unless an external signer was used and it
+        // failed, or more signatures are needed.
+        if (broadcast) {
+            // now send the prepared transaction
             WalletModel::SendCoinsReturn sendStatus = model->sendCoins(*m_current_transaction);
             // process sendStatus and on error generate message shown to user
             processSendCoinsReturn(sendStatus);
@@ -524,23 +553,6 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             } else {
                 send_failure = true;
             }
-            return;
-        }
-
-        // Copy PSBT to clipboard and offer to save
-        assert(!complete);
-        presentPSBT(psbtx);
-    } else {
-        assert(!model->wallet().privateKeysDisabled());
-        // now send the prepared transaction
-        WalletModel::SendCoinsReturn sendStatus = model->sendCoins(*m_current_transaction);
-        // process sendStatus and on error generate message shown to user
-        processSendCoinsReturn(sendStatus);
-
-        if (sendStatus.status == WalletModel::OK) {
-            Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
-        } else {
-            send_failure = true;
         }
     }
     if (!send_failure) {
