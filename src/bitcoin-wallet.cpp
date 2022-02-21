@@ -56,7 +56,7 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
             strUsage += "\n"
                     "dash-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
                     "By default dash-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
-                    "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n"
+                    "To change the target wallet, use the -datadir, -wallet and -regtest/-testnet arguments.\n\n"
                     "Usage:\n"
                     "  dash-wallet [options] <command>\n";
             strUsage += "\n" + args.GetHelpMessage();
