@@ -53,9 +53,6 @@ public:
        @{*/
     Status status;
     qint64 depth;
-    qint64 open_for; /**< Timestamp if status==OpenUntilDate, otherwise number
-                      of additional blocks that need to be mined before
-                      finalization */
     /**@}*/
 
     /** Current block hash (to know whether cached status is still valid) */
