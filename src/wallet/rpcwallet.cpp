@@ -2015,7 +2015,7 @@ static RPCHelpMan walletpassphrase()
         }
 
         if (strWalletPass.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
         }
 
         if (!pwallet->Unlock(strWalletPass, fForMixingOnly)) {
@@ -2087,7 +2087,7 @@ static RPCHelpMan walletpassphrasechange()
     strNewWalletPass = request.params[1].get_str().c_str();
 
     if (strOldWalletPass.empty() || strNewWalletPass.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
     }
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
@@ -2184,7 +2184,7 @@ static RPCHelpMan encryptwallet()
     strWalletPass = request.params[0].get_str().c_str();
 
     if (strWalletPass.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
     }
 
     if (!pwallet->EncryptWallet(strWalletPass)) {

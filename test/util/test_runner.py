@@ -93,7 +93,7 @@ def bctest(testDir, testObj, buildenv):
         try:
             outputData = open(os.path.join(testDir, outputFn), encoding="utf8").read()
         except:
-            logging.error("Output file " + outputFn + " can not be opened")
+            logging.error("Output file " + outputFn + " cannot be opened")
             raise
         if not outputData:
             logging.error("Output data missing for " + outputFn)

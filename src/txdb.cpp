@@ -40,7 +40,7 @@ std::optional<bilingual_str> CheckLegacyTxindex(CBlockTreeDB& block_tree_db)
 {
     CBlockLocator ignored{};
     if (block_tree_db.Read(DB_TXINDEX_BLOCK, ignored)) {
-        return _("The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.");
+        return _("The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.");
     }
     bool txindex_legacy_flag{false};
     block_tree_db.ReadFlag("txindex", txindex_legacy_flag);

@@ -715,7 +715,7 @@ public:
     const std::string strUnableToLocateCoinJoin1 = "Unable to locate enough non-denominated funds for this transaction.";
     const std::string strUnableToLocateCoinJoin2 = "Unable to locate enough mixed funds for this transaction. CoinJoin uses exact denominated amounts to send funds, you might simply need to mix some more coins.";
     const std::string strTransactionTooLarge = "Transaction too large";
-    const std::string strChangeIndexOutOfRange = "Change index out of range";
+    const std::string strChangeIndexOutOfRange = "Transaction change output index out of range";
     const std::string strExceededMaxTries = "Exceeded max tries.";
     const std::string strMaxFeeExceeded = "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)";
 
