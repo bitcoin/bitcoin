@@ -1438,9 +1438,14 @@ if test "$use_external_signer" != "no"; then
     ;;
     *)
       AC_MSG_CHECKING([whether Boost.Process can be used])
+      TEMP_CXXFLAGS="$CXXFLAGS"
+      dnl Boost 1.78 requires the following workaround.
+      dnl See: https://github.com/boostorg/process/issues/235
+      CXXFLAGS="$CXXFLAGS -Wno-narrowing"
       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]])],
         [have_boost_process="yes"],
         [have_boost_process="no"])
+      CXXFLAGS="$TEMP_CXXFLAGS"
       AC_MSG_RESULT([$have_boost_process])
       if test "$have_boost_process" == "yes"; then
         use_external_signer="yes"
