@@ -453,7 +453,7 @@ WId SyscoinApplication::getMainWinId() const
     return window->winId();
 }
 
-bool BitcoinApplication::event(QEvent* e)
+bool SyscoinApplication::event(QEvent* e)
 {
     if (e->type() == QEvent::Quit) {
         requestShutdown();
