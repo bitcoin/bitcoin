@@ -25,7 +25,7 @@ with open("suspicious_hosts.txt", mode="r", encoding="utf-8") as f:
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
-PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\d+)$")
+PATTERN_ONION = re.compile(r"^([a-z2-7]{56}\.onion):(\d+)$")
 PATTERN_AGENT = re.compile(
     r"^/Satoshi:("
     r"0.14.(0|1|2|3|99)|"
@@ -33,9 +33,11 @@ PATTERN_AGENT = re.compile(
     r"0.16.(0|1|2|3|99)|"
     r"0.17.(0|0.1|1|2|99)|"
     r"0.18.(0|1|99)|"
-    r"0.19.(0|1|99)|"
-    r"0.20.(0|1|99)|"
-    r"0.21.99"
+    r"0.19.(0|1|2|99)|"
+    r"0.20.(0|1|2|99)|"
+    r"0.21.(0|1|2|99)|"
+    r"22.(0|99)|"
+    r"23.99"
     r")")
 
 def parseline(line):
@@ -140,8 +142,8 @@ def lookup_asn(net, ip):
                    reversed(ipaddr.split('.'))) + prefix + '.asn.cymru.com',
                    'TXT').response.answer][0].split('\"')[1].split(' ')[0])
         return asn
-    except Exception:
-        sys.stderr.write('ERR: Could not resolve ASN for "' + ip + '"\n')
+    except Exception as e:
+        sys.stderr.write(f'ERR: Could not resolve ASN for "{ip}": {e}\n')
         return None
 
 # Based on Greg Maxwell's seed_filter.py
