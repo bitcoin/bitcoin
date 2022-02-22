@@ -98,6 +98,9 @@ Q_SIGNALS:
     void splashFinished();
     void windowShown(BitcoinGUI* window);
 
+protected:
+    bool event(QEvent* e) override;
+
 private:
     QThread *coreThread;
     interfaces::Node& m_node;
