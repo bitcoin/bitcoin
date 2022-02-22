@@ -231,10 +231,11 @@ task:
     MAKEJOBS: "-j4"  # Avoid excessive memory use
 
 task:
-  name: '[fuzzer,address,undefined,integer, no depends] [jammy]'
+  name: '[fuzzer,address,undefined,integer, no depends] [focal]'
+  only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_BASE_BRANCH == $CIRRUS_DEFAULT_BRANCH
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:jammy
+    image: ubuntu:focal
     cpu: 4  # Increase CPU and memory to avoid timeout
     memory: 16G
   env:
