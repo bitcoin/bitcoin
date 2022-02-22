@@ -380,7 +380,7 @@ static RPCHelpMan verifytxoutproof()
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
                     {
-                        {RPCResult::Type::STR_HEX, "txid", "The txid(s) which the proof commits to, or empty array if the proof can not be validated."},
+                        {RPCResult::Type::STR_HEX, "txid", "The txid(s) which the proof commits to, or empty array if the proof cannot be validated."},
                     }
                 },
                 RPCExamples{""},

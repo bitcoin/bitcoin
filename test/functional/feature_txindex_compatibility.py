@@ -78,7 +78,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
         self.stop_nodes()
 
-        self.log.info("Check migrated txindex can not be read by legacy node")
+        self.log.info("Check migrated txindex cannot be read by legacy node")
         err_msg = f": You need to rebuild the database using -reindex to change -txindex.{os.linesep}Please restart with -reindex or -reindex-chainstate to recover."
         shutil.rmtree(legacy_chain_dir)
         shutil.copytree(migrate_chain_dir, legacy_chain_dir)
