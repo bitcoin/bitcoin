@@ -84,6 +84,15 @@ To install, run the following from your terminal:
 brew install automake libtool boost pkg-config libevent
 ```
 
+Note: Boost 1.78 contains a regression, which breaks configuring with `--enable-external-signer`.
+See [#7714](https://github.com/bitcoin/bitcoin/issues/24413). If you need this functionality,
+either use [Depends](../depends/README.md) or install Boost 1.76 for now, as follows:
+
+``` bash
+brew install boost@1.76
+LDFLAGS="-L/usr/local/opt/boost@1.76/lib" CPPFLAGS="-I/usr/local/opt/boost@1.76/include" ./configure --enable-external-signer
+```
+
 ### 4. Clone Bitcoin repository
 
 `git` should already be installed by default on your system.
