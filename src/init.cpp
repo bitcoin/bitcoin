@@ -1420,8 +1420,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.chainman);
     int check_ratio = std::min<int>(std::max<int>(args.GetIntArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
 
-    bool fLoaded = false;
-    while (!fLoaded && !ShutdownRequested()) {
+    for (bool fLoaded = false; !fLoaded && !ShutdownRequested();) {
         node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), check_ratio);
 
         node.chainman = std::make_unique<ChainstateManager>();
