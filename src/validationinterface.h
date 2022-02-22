@@ -174,6 +174,7 @@ protected:
      * has been received and connected to the headers tree, though not validated yet */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
     friend class CMainSignals;
+    friend class ValidationInterfaceTest;
 };
 
 struct MainSignalsInstance;
