@@ -166,10 +166,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 00000000000000000008a89e854d57e5667df88f1cdef6fde2fbca1de5b639ad
-            /* nTime    */ 1626697539,
-            /* nTxCount */ 656509474,
-            /* dTxRate  */ 2.424920418708139,
+            // Data from RPC: getchaintxstats 4096 000000000000000000052d314a259755ca65944e68df6b12a067ea8f1f5a7091
+            /* nTime    */ 1645542140,
+            /* nTxCount */ 712531200,
+            /* dTxRate  */ 2.891036496010309,
         };
     }
 };
@@ -261,10 +261,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 0000000000004ae2f3896ca8ecd41c460a35bf6184e145d91558cece1c688a76
-            /* nTime    */ 1625727096,
-            /* nTxCount */ 60408943,
-            /* dTxRate  */ 0.08379062270367649,
+            // Data from RPC: getchaintxstats 4096 00000000d18cfe81cbeea665076807789bd8f831d557632e635bc6e3c003069e
+            /* nTime    */ 1645635119,
+            /* nTxCount */ 62226341,
+            /* dTxRate  */ 0.07717997442177152,
         };
     }
 };
@@ -291,10 +291,10 @@ public:
             m_assumed_blockchain_size = 1;
             m_assumed_chain_state_size = 0;
             chainTxData = ChainTxData{
-                // Data from RPC: getchaintxstats 4096 000000187d4440e5bff91488b700a140441e089a8aaea707414982460edbfe54
-                /* nTime    */ 1626696658,
-                /* nTxCount */ 387761,
-                /* dTxRate  */ 0.04035946932424404,
+                // Data from RPC: getchaintxstats 4096 0000003d9144c56ac110ae04a0c271a0acce2f14f426b39fdf0d938c96d2eb09
+                /* nTime    */ 1645631279,
+                /* nTxCount */ 1257429,
+                /* dTxRate  */ 0.1389638742514995,
             };
         } else {
             const auto signet_challenge = args.GetArgs("-signetchallenge");
