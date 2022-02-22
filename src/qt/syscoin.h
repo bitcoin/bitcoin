@@ -92,6 +92,9 @@ Q_SIGNALS:
     void splashFinished();
     void windowShown(SyscoinGUI* window);
 
+protected:
+    bool event(QEvent* e) override;
+
 private:
     std::optional<InitExecutor> m_executor;
     OptionsModel *optionsModel;
