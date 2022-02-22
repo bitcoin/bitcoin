@@ -301,13 +301,14 @@ Both variables are used as a guideline for how much space the user needs on thei
 Note that all values should be taken from a **fully synced** node and have an overhead of 5-10% added on top of its base value.
 
 To calculate `m_assumed_blockchain_size`:
-- For `mainnet` -> Take the size of the data directory, excluding `/regtest` and `/testnet3` directories.
+- For `mainnet` -> Take the size of the data directory, excluding the `/testnet3`, `/signet`, and `/regtest` directories.
 - For `testnet` -> Take the size of the `/testnet3` directory.
-
+- For `signet` -> Take the size of the `/signet` directory.
 
 To calculate `m_assumed_chain_state_size`:
 - For `mainnet` -> Take the size of the `/chainstate` directory.
 - For `testnet` -> Take the size of the `/testnet3/chainstate` directory.
+- For `signet` -> Take the size of the `/signet/chainstate` directory.
 
 Notes:
 - When taking the size for `m_assumed_blockchain_size`, there's no need to exclude the `/chainstate` directory since it's a guideline value and an overhead will be added anyway.
