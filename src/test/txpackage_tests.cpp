@@ -413,6 +413,17 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
 
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(ptx_child2->GetHash())));
         BOOST_CHECK(!m_node.mempool->exists(GenTxid::Wtxid(ptx_child2->GetWitnessHash())));
+
+        // Deduplication should work when wtxid != txid. Submit package with the already-in-mempool
+        // transactions again, which should not fail.
+        const auto submit_segwit_dedup = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                           {ptx_parent, ptx_child1}, /*test_accept=*/ false);
+        BOOST_CHECK_MESSAGE(submit_segwit_dedup.m_state.IsValid(),
+                            "Package validation unexpectedly failed: " << submit_segwit_dedup.m_state.GetRejectReason());
+        auto it_parent_dup = submit_segwit_dedup.m_tx_results.find(ptx_parent->GetWitnessHash());
+        auto it_child_dup = submit_segwit_dedup.m_tx_results.find(ptx_child1->GetWitnessHash());
+        BOOST_CHECK(it_parent_dup->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
+        BOOST_CHECK(it_child_dup->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
     }
 
     // Try submitting Package1{child2, grandchild} where child2 is same-txid-different-witness as
