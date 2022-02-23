@@ -7,8 +7,8 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <amount.h>
+#include <script/sign.h>
 #include <wallet/db.h>
-#include <hdchain.h>
 #include <key.h>
 
 #include <stdint.h>
@@ -31,6 +31,8 @@ static const bool DEFAULT_FLUSHWALLET = true;
 
 struct CBlockLocator;
 class CGovernanceObject;
+class CHDChain;
+class CHDPubKey;
 class CKeyPool;
 class CMasterKey;
 class CScript;
@@ -86,9 +88,13 @@ extern const std::string WATCHS;
 class CKeyMetadata
 {
 public:
-    static const int CURRENT_VERSION=1;
+    static const int VERSION_BASIC=1;
+    static const int VERSION_WITH_KEY_ORIGIN = 12;
+    static const int CURRENT_VERSION=VERSION_WITH_KEY_ORIGIN;
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
+    KeyOriginInfo key_origin; // Key origin info with path and fingerprint
+    bool has_key_origin = false; //< Whether the key_origin is useful
 
     CKeyMetadata()
     {
@@ -103,12 +109,17 @@ public:
     SERIALIZE_METHODS(CKeyMetadata, obj)
     {
         READWRITE(obj.nVersion, obj.nCreateTime);
+        if (obj.nVersion >= VERSION_WITH_KEY_ORIGIN) {
+            READWRITE(obj.key_origin, obj.has_key_origin);
+        }
     }
 
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
+        key_origin.clear();
+        has_key_origin = false;
     }
 };
 
@@ -166,8 +177,7 @@ public:
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(uint256 hash);
 
-    bool WriteKeyMeta(const CPubKey& vchPubKey, const CKeyMetadata &keyMeta);
-
+    bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);

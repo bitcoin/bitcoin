@@ -8,6 +8,9 @@
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#ifdef ENABLE_WALLET
+#include <wallet/walletdb.h>
+#endif
 
 bool CHDChain::SetNull()
 {
@@ -156,7 +159,7 @@ uint256 CHDChain::GetSeedHash()
     return Hash(vchSeed.begin(), vchSeed.end());
 }
 
-void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet)
+void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet, CKeyMetadata& metadata)
 {
     LOCK(cs);
     // Use BIP44 keypath scheme i.e. m / purpose' / coin_type' / account' / change / address_index
@@ -182,6 +185,18 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
     accountKey.Derive(changeKey, fInternal ? 1 : 0);
     // derive m/purpose'/coin_type'/account'/change/address_index
     changeKey.Derive(extKeyRet, nChildIndex);
+
+#ifdef ENABLE_WALLET
+    metadata.key_origin.path.push_back(44 | 0x80000000);
+    metadata.key_origin.path.push_back(Params().ExtCoinType() | 0x80000000);
+    metadata.key_origin.path.push_back(nAccountIndex | 0x80000000);
+    metadata.key_origin.path.push_back(fInternal ? 1 : 0);
+    metadata.key_origin.path.push_back(nChildIndex);
+
+    CKeyID master_id = masterKey.key.GetPubKey().GetID();
+    std::copy(master_id.begin(), master_id.begin() + 4, metadata.key_origin.fingerprint);
+    metadata.has_key_origin = true;
+#endif
 }
 
 void CHDChain::AddAccount()
