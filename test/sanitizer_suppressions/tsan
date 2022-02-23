@@ -33,9 +33,6 @@ race:CEvoDB::CommitRootTransaction
 race:CDeterministicMNManager:GetListForBlock
 deadlock:CConnman::ForEachNode
 
-# Race in headers only Boost Test
-race:std::__1::ios_base::flags
-
 # Intermittent issues
 # -------------------
 #
@@ -49,4 +46,4 @@ race:CZMQAbstractPublishNotifier::SendZmqMessage
 race:epoll_ctl
 
 # https://github.com/bitcoin/bitcoin/issues/23366
-race:std::__1::ios_base::width
+race:std::__1::ios_base::*
