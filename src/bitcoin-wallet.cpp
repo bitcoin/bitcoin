@@ -59,7 +59,10 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
     }
     if (argc < 2 || HelpRequested(args) || args.IsArgSet("-version")) {
         std::string strUsage = strprintf("%s dash-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
-        if (!args.IsArgSet("-version")) {
+
+        if (args.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
             strUsage += "\n"
                     "dash-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
                     "By default dash-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"

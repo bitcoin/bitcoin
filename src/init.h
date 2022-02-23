@@ -72,7 +72,4 @@ void PrepareShutdown(node::NodeContext& node);
  */
 void SetupServerArgs(ArgsManager& argsman);
 
-/** Returns licensing information (for -version) */
-std::string LicenseInfo();
-
 #endif // BITCOIN_INIT_H

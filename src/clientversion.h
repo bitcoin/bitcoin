@@ -41,6 +41,11 @@ std::string FormatVersion(int nVersion);
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 
+std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
+
+/** Returns licensing information (for -version) */
+std::string LicenseInfo();
+
 #endif // WINDRES_PREPROC
 
 #endif // BITCOIN_CLIENTVERSION_H
