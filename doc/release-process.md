@@ -28,14 +28,17 @@ Release Process
 #### Before branch-off
 
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
-* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
-* Update [`src/chainparams.cpp`](/src/chainparams.cpp) chainTxData with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC, see
-  [this pull request](https://github.com/bitcoin/bitcoin/pull/20263) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_final_block_hash>` with the `window_block_count` and `window_final_block_hash` from your output.
-* Update `src/chainparams.cpp` nMinimumChainWork and defaultAssumeValid (and the block height comment) with information from the `getblockheader` (and `getblockhash`) RPCs.
-  - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
-  - Testnet should be set some tens of thousands back from the tip due to reorgs there.
-  - This update should be reviewed with a reindex-chainstate with assumevalid=0 to catch any defect
-     that causes rejection of blocks in the past history.
+* Update the following variables in [`src/chainparams.cpp`](/src/chainparams.cpp):
+  - `m_assumed_blockchain_size` and `m_assumed_chain_state_size` with the current size plus some overhead (see
+    [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
+  - `chainTxData` with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC, see
+    [this pull request](https://github.com/bitcoin/bitcoin/pull/20263) for an example. Reviewers can verify the results by running
+    `getchaintxstats <window_block_count> <window_final_block_hash>` with the `window_block_count` and `window_final_block_hash` from your output.
+  - `nMinimumChainWork` and `defaultAssumeValid` (and the block height comment) with information from the `getblockheader` (and `getblockhash`) RPCs.
+    - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
+    - Testnet should be set some tens of thousands back from the tip due to reorgs there.
+    - This update should be reviewed with a reindex-chainstate with assumevalid=0 to catch any defect
+      that causes rejection of blocks in the past history.
 - Clear the release notes and move them to the wiki (see "Write the release notes" below).
 - Translations on Transifex
     - Create [a new resource](https://www.transifex.com/bitcoin/bitcoin/content/) named after the major version with the slug `[bitcoin.qt-translation-<RRR>x]`, where `RRR` is the major branch number padded with zeros. Use `src/qt/locale/bitcoin_en.xlf` to create it.
