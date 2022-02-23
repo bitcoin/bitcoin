@@ -27,7 +27,14 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
     int nonMasternodeCount = 0;
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->m_masternode_connection && !pnode->m_masternode_probe_connection) {
+        if (!pnode->fInbound &&
+            !pnode->fFeeler &&
+            !pnode->m_manual_connection &&
+            !pnode->m_masternode_connection &&
+            !pnode->m_masternode_probe_connection
+            ||
+            // treat unverified MNs as non-MNs here
+            pnode->GetVerifiedProRegTxHash().IsNull()) {
             nonMasternodeCount++;
         }
     });
@@ -38,10 +45,19 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
         // we're only disconnecting m_masternode_connection connections
         if (!pnode->m_masternode_connection) return;
-        // we're only disconnecting outbound connections
-        if (pnode->fInbound) return;
-        // we're not disconnecting LLMQ connections
-        if (connman.IsMasternodeQuorumNode(pnode)) return;
+        if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
+            // keep _verified_ LLMQ connections
+            if (connman.IsMasternodeQuorumNode(pnode)) {
+                return;
+            }
+            // keep _verified_ inbound connections
+            if (pnode->fInbound) {
+                return;
+            }
+        } else if (GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) {
+            // non-verified, give it some time to verify itself
+            return;
+        }
         // we're not disconnecting masternode probes for at least a few seconds
         if (pnode->m_masternode_probe_connection && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
 
