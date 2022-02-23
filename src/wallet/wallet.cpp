@@ -2693,6 +2693,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, PACKAGE_NAME);
             return nullptr;
         }
+        else if (nLoadWalletRet == DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED) {
+            error = strprintf(_("Error loading %s: External signer wallet being loaded without external signer support compiled"), walletFile);
+            return nullptr;
+        }
         else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
         {
             error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), PACKAGE_NAME);

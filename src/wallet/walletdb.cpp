@@ -788,7 +788,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 #ifndef ENABLE_EXTERNAL_SIGNER
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
             pwallet->WalletLogPrintf("Error: External signer wallet being loaded without external signer support compiled\n");
-            return DBErrors::TOO_NEW;
+            return DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED;
         }
 #endif
 
