@@ -100,7 +100,7 @@ dnl sets RPATH for any directories in the dynamic linker search path.
 dnl See more: https://wiki.debian.org/RpathIssue
 LT_PREREQ([1.5.2])
 dnl Libtool init checks.
-LT_INIT([pic-only])
+LT_INIT([pic-only win32-dll])
 
 dnl Check/return PATH for base programs.
 AC_PATH_TOOL([AR], [ar])
