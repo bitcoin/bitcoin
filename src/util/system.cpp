@@ -1405,18 +1405,6 @@ int GetNumCores()
     return std::thread::hardware_concurrency();
 }
 
-std::string CopyrightHolders(const std::string& strPrefix)
-{
-    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
-    std::string strCopyrightHolders = strPrefix + copyright_devs;
-
-    // Make sure Syscoin Core copyright is not removed by accident
-    if (copyright_devs.find("Syscoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Syscoin Core developers";
-    }
-    return strCopyrightHolders;
-}
-
 // Obtain the application startup time (used for uptime calculation)
 int64_t GetStartupTime()
 {

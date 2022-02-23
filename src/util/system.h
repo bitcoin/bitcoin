@@ -536,32 +536,6 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
 int GetNumCores();
 
 /**
- * .. and a wrapper that just calls func once
- */
-template <typename Callable> void TraceThread(const char* name,  Callable func)
-{
-    // SYSCOIN keep copy to work with dynamic thread names in LLMQ code
-    std::string strName = std::string(name);
-    util::ThreadRename(name);
-    try
-    {
-        LogPrintf("%s thread start\n", strName);
-        func();
-        LogPrintf("%s thread exit\n", strName);
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, strName.c_str());
-        throw;
-    }
-    catch (...) {
-        PrintExceptionContinue(nullptr, strName.c_str());
-        throw;
-    }
-}
-
-std::string CopyrightHolders(const std::string& strPrefix);
-
-/**
  * On platforms that support it, tell the kernel the calling thread is
  * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
  *
