@@ -189,7 +189,12 @@ in the body of the pull request to indicate tasks are pending.
 
 At this stage, one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
-to your fork until you have satisfied all feedback.
+to your fork.
+
+You are expected to reply to any review comments before your pull request is
+merged. You may update the code or reject the feedback if you do not agree with
+it, but you should express so in a reply. If there is outstanding feedback and
+you are not actively working on it, your pull request may be closed.
 
 Please refer to the [peer review](#peer-review) section below for more details.
 
