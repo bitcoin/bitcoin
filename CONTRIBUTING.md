@@ -12,8 +12,8 @@ revolves around a meritocracy where contributors earn trust from the developer
 community over time. Nevertheless, some hierarchy is necessary for practical
 purposes. As such, there are repository "maintainers" who are responsible for
 merging pull requests, as well as a "lead maintainer" who is responsible for the
-release cycle as well as overall merging, moderation and appointment of
-maintainers.
+[release cycle](/doc/release-process.md) as well as overall merging, moderation
+and appointment of maintainers.
 
 Getting Started
 ---------------
@@ -421,11 +421,6 @@ https://github.com/bitcoin/bitcoin/pull/16189).
 
 Also see the [backport.py script](
 https://github.com/bitcoin-core/bitcoin-maintainer-tools#backport).
-
-Release Policy
---------------
-
-The project leader is the release manager for each Bitcoin Core release.
 
 Copyright
 ---------
