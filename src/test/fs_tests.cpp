@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(rename)
     fs::remove(path2);
 }
 
-#ifndef WIN32
+#ifndef __MINGW64__ // no symlinks on mingw
 BOOST_AUTO_TEST_CASE(create_directories)
 {
     // Test fs::create_directories workaround.
@@ -174,6 +174,6 @@ BOOST_AUTO_TEST_CASE(create_directories)
     fs::remove(symlink);
     fs::remove(dir);
 }
-#endif // WIN32
+#endif // __MINGW64__
 
 BOOST_AUTO_TEST_SUITE_END()
