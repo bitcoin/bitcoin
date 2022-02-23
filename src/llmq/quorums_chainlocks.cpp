@@ -15,6 +15,7 @@
 #include <txmempool.h>
 #include <validation.h>
 #include <scheduler.h>
+#include <util/thread.h>
 namespace llmq
 {
 
@@ -41,7 +42,7 @@ CChainLocksHandler::CChainLocksHandler(CConnman& _connman, PeerManager& _peerman
 {
     scheduler = new CScheduler();
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new std::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
+    scheduler_thread = new std::thread(&util::TraceThread, "cl-schdlr", serviceLoop);
 }
 
 CChainLocksHandler::~CChainLocksHandler()
