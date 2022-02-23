@@ -415,7 +415,7 @@ private:
     void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable);
 
     /** Send `feefilter` message. */
-    void MaybeSendFeefilter(CNode& node, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void MaybeSendFeefilter(CNode& node, std::chrono::microseconds current_time);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -4500,8 +4500,6 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
 
 void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, std::chrono::microseconds current_time)
 {
-    AssertLockHeld(cs_main);
-
     if (m_ignore_incoming_txs) return;
     if (!pto.m_tx_relay) return;
     if (pto.GetCommonVersion() < FEEFILTER_VERSION) return;
@@ -5048,8 +5046,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
         if (!vGetData.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
-
-        MaybeSendFeefilter(*pto, current_time);
     } // release cs_main
+    MaybeSendFeefilter(*pto, current_time);
     return true;
 }
