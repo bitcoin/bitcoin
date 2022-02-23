@@ -672,6 +672,8 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing all objects to peer=%d\n", __func__, pnode->GetId());
 
+    bool fAllowScript = WITH_LOCK(cs_main, return VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+
     LOCK(cs);
 
     // all valid objects, no votes
@@ -688,19 +690,16 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
             continue;
         }
 
-        if (pnode->nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+        if (fAllowScript && pnode->nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
             // We know this proposal is valid locally, otherwise we would not store it.
             // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
             // because they won't accept it anyway and will simply ban us eventually.
-            bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
-            if (fAllowScript) {
-                CProposalValidator validator(govobj.GetDataAsHexString(), false /* no legacy format */, false /* but also no script */);
-                if (!validator.Validate(false /* ignore expiration */)) {
-                    // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
-                    LogPrintf("CGovernanceManager::%s -- not syncing p2sh govobj to older node: %s, peer=%d\n", __func__,
-                        strHash, pnode->GetId());
-                    continue;
-                }
+            CProposalValidator validator(govobj.GetDataAsHexString(), false /* no legacy format */, false /* but also no script */);
+            if (!validator.Validate(false /* ignore expiration */)) {
+                // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
+                LogPrintf("CGovernanceManager::%s -- not syncing p2sh govobj to older node: %s, peer=%d\n", __func__,
+                    strHash, pnode->GetId());
+                continue;
             }
         }
 
