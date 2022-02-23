@@ -6,9 +6,8 @@
 """
 
 import os
-import sys
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BitcoinTestFramework
 
 
 def rename_and_link(*, from_name, to_name):
@@ -16,24 +15,27 @@ def rename_and_link(*, from_name, to_name):
     os.symlink(to_name, from_name)
     assert os.path.islink(from_name) and os.path.isdir(from_name)
 
-class SymlinkTest(BitcoinTestFramework):
-    def skip_test_if_missing_module(self):
-        if sys.platform == 'win32':
-            raise SkipTest("Symlinks test skipped on Windows")
 
+class SymlinkTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
     def run_test(self):
+        dir_new_blocks = self.nodes[0].chain_path / "new_blocks"
+        dir_new_chainstate = self.nodes[0].chain_path / "new_chainstate"
         self.stop_node(0)
 
-        rename_and_link(from_name=os.path.join(self.nodes[0].datadir, self.chain, "blocks"),
-                        to_name=os.path.join(self.nodes[0].datadir, self.chain, "newblocks"))
-        rename_and_link(from_name=os.path.join(self.nodes[0].datadir, self.chain, "chainstate"),
-                        to_name=os.path.join(self.nodes[0].datadir, self.chain, "newchainstate"))
+        rename_and_link(
+            from_name=self.nodes[0].chain_path / "blocks",
+            to_name=dir_new_blocks,
+        )
+        rename_and_link(
+            from_name=self.nodes[0].chain_path / "chainstate",
+            to_name=dir_new_chainstate,
+        )
 
         self.start_node(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     SymlinkTest().main()
