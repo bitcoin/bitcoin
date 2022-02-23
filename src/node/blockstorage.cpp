@@ -300,6 +300,8 @@ void BlockManager::Unload()
     m_last_blockfile = 0;
     m_dirty_blockindex.clear();
     m_dirty_fileinfo.clear();
+
+    fHavePruned = false;
 }
 
 bool BlockManager::WriteBlockIndexDB()

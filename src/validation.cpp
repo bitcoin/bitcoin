@@ -4126,7 +4126,6 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
         warningcache[b].clear();
     }
-    chainman.m_blockman.fHavePruned = false;
 }
 
 bool ChainstateManager::LoadBlockIndex()
