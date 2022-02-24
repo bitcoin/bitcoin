@@ -31,7 +31,8 @@ Release Process
 * Update the following variables in [`src/chainparams.cpp`](/src/chainparams.cpp) for mainnet, testnet, and signet:
   - `m_assumed_blockchain_size` and `m_assumed_chain_state_size` with the current size plus some overhead (see
     [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
-  - `chainTxData` with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC, see
+  - `chainTxData` with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC with an
+    `nBlocks` of 4096 (28 days) and a `bestblockhash` of RPC `getbestblockhash`; see
     [this pull request](https://github.com/bitcoin/bitcoin/pull/20263) for an example. Reviewers can verify the results by running
     `getchaintxstats <window_block_count> <window_final_block_hash>` with the `window_block_count` and `window_final_block_hash` from your output.
   - `nMinimumChainWork` and `defaultAssumeValid` (and the block height comment) with information from the `getblockheader` (and `getblockhash`) RPCs.
