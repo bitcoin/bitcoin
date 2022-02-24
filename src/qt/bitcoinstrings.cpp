@@ -23,7 +23,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot provide specific connections and have addrman find outgoing "
-"connections at the same."),
+"connections at the same time."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot upgrade a non HD split wallet from version %i to version %i without "
 "upgrading to support pre-split keypool. Please use version %i or no version "
@@ -31,6 +31,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Distributed under the MIT software license, see the accompanying file %s or "
 "%s"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error loading %s: External signer wallet being loaded without external "
+"signer support compiled"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
