@@ -1175,7 +1175,8 @@ void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-llmqchainlocks")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(Params().GetLLMQ(consensus.llmqTypeChainLocks).name));
+    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(GetLLMQ(consensus.llmqTypeChainLocks).name));
+
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
         if (params.name == strLLMQType) {
@@ -1193,7 +1194,8 @@ void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-llmqinstantsend")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(Params().GetLLMQ(consensus.llmqTypeInstantSend).name));
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(GetLLMQ(consensus.llmqTypeInstantSend).name));
+
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
         if (params.name == strLLMQType) {
