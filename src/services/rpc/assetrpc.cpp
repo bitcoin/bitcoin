@@ -21,6 +21,7 @@
 #include <node/transaction.h>
 #include <rpc/server_util.h>
 #include <interfaces/node.h>
+#include <llmq/quorums_chainlocks.h>
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations = nullptr, bool forcelegacy = false);
@@ -704,6 +705,9 @@ static RPCHelpMan syscoingetspvproof()
     }  
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
     res.__pushKV("nevm_blockhash", evmBlock.nBlockHash.GetHex());
+    // SYSCOIN
+    if(llmq::chainLocksHandler)
+        res.__pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(pblockindex->nHeight, hashBlock));
     return res;
 },
     };
