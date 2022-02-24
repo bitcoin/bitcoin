@@ -517,7 +517,8 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
 
 void BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
-    LOCK(cs_LastBlockFile);
+    AssertLockHeld(cs_LastBlockFile);
+
     FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
     if (!UndoFileSeq().Flush(undo_pos_old, finalize)) {
         AbortNode("Flushing undo file to disk failed. This is likely the result of an I/O error.");
@@ -526,7 +527,8 @@ void BlockManager::FlushUndoFile(int block_file, bool finalize)
 
 void BlockManager::FlushBlockFile(bool fFinalize, bool finalize_undo)
 {
-    LOCK(cs_LastBlockFile);
+    AssertLockHeld(cs_LastBlockFile);
+
     FlatFilePos block_pos_old(m_last_blockfile, m_blockfile_info[m_last_blockfile].nSize);
     if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
         AbortNode("Flushing block file to disk failed. This is likely the result of an I/O error.");
@@ -640,9 +642,9 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
 
 bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
 {
-    pos.nFile = nFile;
+    AssertLockHeld(cs_LastBlockFile);
 
-    LOCK(cs_LastBlockFile);
+    pos.nFile = nFile;
 
     pos.nPos = m_blockfile_info[nFile].nUndoSize;
     m_blockfile_info[nFile].nUndoSize += nAddSize;
