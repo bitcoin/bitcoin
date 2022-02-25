@@ -12,8 +12,8 @@ revolves around a meritocracy where contributors earn trust from the developer
 community over time. Nevertheless, some hierarchy is necessary for practical
 purposes. As such, there are repository "maintainers" who are responsible for
 merging pull requests, as well as a "lead maintainer" who is responsible for the
-release cycle as well as overall merging, moderation and appointment of
-maintainers.
+[release cycle](/doc/release-process.md) as well as overall merging, moderation
+and appointment of maintainers.
 
 Getting Started
 ---------------
@@ -168,9 +168,14 @@ in the body of the pull request to indicate tasks are pending.
 
 At this stage, one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
-to your fork until you have satisfied all feedback.
+to your fork.
 
-Note: Code review is a burdensome but important part of the development process, and as such, certain types of pull requests are rejected. In general, if the **improvements** do not warrant the **review effort** required, the PR has a high chance of being rejected. It is up to the PR author to convince the reviewers that the changes warrant the review effort, and if reviewers are "Concept NACK'ing" the PR, the author may need to present arguments and/or do research backing their suggested changes.
+You are expected to reply to any review comments before your pull request is
+merged. You may update the code or reject the feedback if you do not agree with
+it, but you should express so in a reply. If there is outstanding feedback and
+you are not actively working on it, your pull request may be closed.
+
+Please refer to the [peer review](#peer-review) section below for more details.
 
 ### Squashing Commits
 
@@ -300,6 +305,14 @@ test out the patch set and opine on the technical merits of the patch. Project
 maintainers take into account the peer review when determining if there is
 consensus to merge a pull request (remember that discussions may have been
 spread out over GitHub, mailing list and IRC discussions).
+
+Code review is a burdensome but important part of the development process, and
+as such, certain types of pull requests are rejected. In general, if the
+**improvements** do not warrant the **review effort** required, the PR has a
+high chance of being rejected. It is up to the PR author to convince the
+reviewers that the changes warrant the review effort, and if reviewers are
+"Concept NACK'ing" the PR, the author may need to present arguments and/or do
+research backing their suggested changes.
 
 #### Conceptual Review
 
@@ -480,11 +493,6 @@ This will create a text file with all the original file's lines in descending or
 the contents onto the [Tracker](https://docs.google.com/spreadsheets/d/1DnKxat0S0H62CJOzXpKGPXTa8hgoVOjGYZzoClmGSB8/edit?usp=sharing).
 
 When pasting the contents, make sure to split the values into the cells so every line is not present under commit hash.
-
-Release Policy
---------------
-
-The project leader is the release manager for each Dash Core release.
 
 Copyright
 ---------
