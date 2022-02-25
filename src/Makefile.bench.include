@@ -44,6 +44,8 @@ bench_bench_dash_SOURCES = \
   bench/poly1305.cpp \
   bench/prevector.cpp \
   bench/string_cast.cpp \
+  test/lib/transaction_utils.cpp \
+  test/lib/transaction_utils.h \
   test/setup_common.cpp \
   test/setup_common.h \
   test/util.cpp \
