@@ -16,12 +16,23 @@ class MWEBBasicTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.log.info("Create all pre-MWEB blocks")
-        self.nodes[0].generate(431)
+        self.log.info("Create all but one pre-MWEB blocks")
+        self.nodes[0].generate(430)
 
         self.log.info("Pegin some coins")
         addr0 = self.nodes[0].getnewaddress(address_type='mweb')
-        self.nodes[0].sendtoaddress(addr0, 10)
+        pegin1_txid = self.nodes[0].sendtoaddress(addr0, 10)
+
+        self.log.info("Ensure pegin transaction was not accepted to mempool, and abandon it")
+        assert_equal(set(self.nodes[0].getrawmempool()), set())
+        self.nodes[0].abandontransaction(pegin1_txid)
+
+        self.log.info("Generate final pre-MWEB block and pegin, ensuring tx is accepted to mempool")
+        self.nodes[0].generate(1)
+        pegin2_txid = self.nodes[0].sendtoaddress(addr0, 10)
+        self.sync_all();
+        assert_equal(set(self.nodes[0].getrawmempool()), {pegin2_txid})
+        assert_equal(set(self.nodes[1].getrawmempool()), {pegin2_txid})
 
         self.log.info("Create some blocks - activate MWEB")
         self.nodes[0].generate(10)

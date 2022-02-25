@@ -49,6 +49,7 @@ public:
     // Getters
     //
     const BigInt<NUM_BYTES>& GetBigInt() const { return m_value; }
+    std::string ToHex() const noexcept { return m_value.ToHex(); }
     bool IsNull() const noexcept { return m_value.IsZero(); }
     const std::vector<uint8_t>& vec() const { return m_value.vec(); }
     std::array<uint8_t, 32> array() const noexcept { return m_value.ToArray(); }

@@ -4,10 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Random assortment of utility functions"""
 
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
-from test_framework.script_util import DUMMY_P2WPKH_SCRIPT
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, MWEBHeader
+from test_framework.util import satoshi_round
+from test_framework.script_util import DUMMY_P2WPKH_SCRIPT, hogaddr_script
 
 """Create a txout with a given amount and scriptPubKey
 
@@ -70,4 +69,27 @@ def get_hog_addr_txout(node):
     hogex_tx = best_block['tx'][-1] # TODO: Should validate that the tx is marked as a hogex tx
     hog_addr = hogex_tx['vout'][0]
 
-    return CTxOut(hog_addr['value'], hog_addr['scriptPubKey'])
+    return CTxOut(int(hog_addr['value'] * COIN), hog_addr['scriptPubKey'])
+
+def get_mweb_header_tip(node):
+    best_block = node.getblock(node.getbestblockhash(), 2)
+    if not 'mweb' in best_block:
+        return None
+
+    mweb_header = MWEBHeader()
+    mweb_header.from_json(best_block['mweb'])
+    return mweb_header
+
+def create_hogex(node, mweb_hash):
+    best_block = node.getblock(node.getbestblockhash(), 2)
+
+    hogex_tx = best_block['tx'][-1] # TODO: Should validate that the tx is marked as a hogex tx
+    hog_addr = hogex_tx['vout'][0]
+
+    tx = CTransaction()
+    tx.vin = [CTxIn(COutPoint(int(hogex_tx['txid'], 16), 0))]
+    tx.vout = [CTxOut(int(hog_addr['value'] * COIN), hogaddr_script(mweb_hash))]
+    tx.hogex = True
+    tx.rehash()
+
+    return tx

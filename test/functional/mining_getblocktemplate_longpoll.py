@@ -17,14 +17,14 @@ class LongpollThread(threading.Thread):
     def __init__(self, node):
         threading.Thread.__init__(self)
         # query current longpollid
-        template = node.getblocktemplate({'rules': ['segwit']})
+        template = node.getblocktemplate({'rules': ['mweb', 'segwit']})
         self.longpollid = template['longpollid']
         # create a new connection to the node, we can't use the same
         # connection from two threads
         self.node = get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
 
     def run(self):
-        self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['segwit']})
+        self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['mweb', 'segwit']})
 
 class GetBlockTemplateLPTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -35,9 +35,9 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.log.info("Test that longpollid doesn't change between successive getblocktemplate() invocations if nothing else happens")
         self.nodes[0].generate(10)
-        template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        template = self.nodes[0].getblocktemplate({'rules': ['mweb', 'segwit']})
         longpollid = template['longpollid']
-        template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        template2 = self.nodes[0].getblocktemplate({'rules': ['mweb', 'segwit']})
         assert template2['longpollid'] == longpollid
 
         self.log.info("Test that longpoll waits if we do nothing")

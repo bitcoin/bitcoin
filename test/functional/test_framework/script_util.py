@@ -68,6 +68,9 @@ def script_to_p2sh_p2wsh_script(script, main = False):
     p2shscript = CScript([OP_0, sha256(script)])
     return script_to_p2sh_script(p2shscript, main)
 
+def hogaddr_script(mweb_hash, main = False):
+    return program_to_witness_script(8, mweb_hash, main)
+
 def check_key(key):
     if isinstance(key, str):
         key = hex_str_to_bytes(key) # Assuming this is hex string

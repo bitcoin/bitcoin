@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(StealthAddresses)
     // Check generated MWEB keychain
     mw::Keychain::Ptr mweb_keychain = keyman.GetMWEBKeychain();
     BOOST_CHECK(mweb_keychain != nullptr);
-    BOOST_CHECK(mweb_keychain->GetSpendSecret().GetBigInt().ToHex() == "2396e5c33b07dfa2d9e70da1dcbdad0ad2399e5672ff2d4afbe3b20bccf3ba1b");
-    BOOST_CHECK(mweb_keychain->GetScanSecret().GetBigInt().ToHex() == "918271168655385e387907612ee09d755be50c4685528f9f53eabae380ecba97");
+    BOOST_CHECK(mweb_keychain->GetSpendSecret().ToHex() == "2396e5c33b07dfa2d9e70da1dcbdad0ad2399e5672ff2d4afbe3b20bccf3ba1b");
+    BOOST_CHECK(mweb_keychain->GetScanSecret().ToHex() == "918271168655385e387907612ee09d755be50c4685528f9f53eabae380ecba97");
 
     // Check "change" (idx=0) address is USED
     StealthAddress change_address = mweb_keychain->GetStealthAddress(0);
@@ -80,6 +80,7 @@ BOOST_AUTO_TEST_CASE(StealthAddresses)
 
     // Check first receive (idx=2) address is UNUSED
     StealthAddress receive_address = mweb_keychain->GetStealthAddress(2);
+    BOOST_CHECK(EncodeDestination(receive_address) == "ltcmweb1qq0yq03ewm830ugmkkvrvjmyyeslcpwk8ayd7k27qx63sryy6kx3ksqm3k6jd24ld3r5dp5lzx7rm7uyxfujf8sn7v4nlxeqwrcq6k6xxwqdc6tl3");
     BOOST_CHECK(keyman.IsMine(receive_address) == ISMINE_SPENDABLE);
     CPubKey receive_pubkey(receive_address.B().vec());
     BOOST_CHECK(keyman.GetAllReserveKeys().find(receive_pubkey.GetID()) != keyman.GetAllReserveKeys().end());

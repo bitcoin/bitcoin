@@ -576,6 +576,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return false; // state filled in by CheckTransaction
     }
 
+    // MWEB: Don't accept MWEB transactions before activation.
+    if (tx.HasMWEBTx() && !IsMWEBEnabled(::ChainActive().Tip(), args.m_chainparams.GetConsensus())) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "mweb-before-activation");
+    }
+
     // MWEB: Check MWEB tx
     if (!MWEB::Node::CheckTransaction(tx, state)) {
         return false; // state filled in by CheckTransaction
