@@ -44,10 +44,16 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].walletpassphrase, '', 1)
         assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
 
+        # Test that you cannot generate a new MWEB address
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.", self.nodes[0].getnewaddress, address_type='mweb')
+
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
         sig = self.nodes[0].signmessage(address, msg)
         assert self.nodes[0].verifymessage(address, sig, msg)
+
+        # Test that you can generate a new MWEB address
+        assert len(self.nodes[0].getnewaddress(address_type='mweb')) > 0
 
         # Check that the timeout is right
         time.sleep(3)

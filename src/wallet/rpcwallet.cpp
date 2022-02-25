@@ -271,6 +271,12 @@ static RPCHelpMan getnewaddress()
         }
     }
 
+    if (output_type == OutputType::MWEB) {
+        EnsureWalletIsUnlocked(pwallet);
+
+        // MW: TODO - Handle non-HD
+    }
+
     CTxDestination dest;
     std::string error;
     if (!pwallet->GetNewDestination(output_type, label, dest, error)) {

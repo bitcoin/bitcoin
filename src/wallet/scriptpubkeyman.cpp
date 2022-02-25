@@ -473,6 +473,10 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(const KeyPurpose purpose) const
     if (purpose == KeyPurpose::INTERNAL && m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) {
         keypool_has_keys = setInternalKeyPool.size() > 0;
     } else if (purpose == KeyPurpose::MWEB) {
+        if (!m_mwebKeychain) {
+            return false;
+        }
+
         keypool_has_keys = set_mweb_keypool.size() > 0;
     } else {
         keypool_has_keys = KeypoolCountExternalKeys() > 0;

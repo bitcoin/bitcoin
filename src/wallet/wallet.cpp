@@ -383,6 +383,13 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_key
             if (Unlock(_vMasterKey, accept_no_keys)) {
                 // Now that we've unlocked, upgrade the key metadata
                 UpgradeKeyMetadata();
+
+                // MWEB: Load MWEB keychain
+                auto mweb_spk_man = GetScriptPubKeyMan(OutputType::MWEB, false);
+                if (mweb_spk_man) {
+                    mweb_spk_man->LoadMWEBKeychain();
+                }
+
                 return true;
             }
         }
@@ -3984,6 +3991,12 @@ bool CWallet::Lock()
     {
         LOCK(cs_wallet);
         vMasterKey.clear();
+    }
+
+    // MWEB: Unload MWEB keychain
+    auto mweb_spk_man = GetScriptPubKeyMan(OutputType::MWEB, false);
+    if (mweb_spk_man) {
+        mweb_spk_man->UnloadMWEBKeychain();
     }
 
     NotifyStatusChanged(this);

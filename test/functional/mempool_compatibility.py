@@ -29,7 +29,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, versions=[
-            190100,  # oldest version with getmempoolinfo.loaded (used to avoid intermittent issues)
+            180100,  # oldest version with getmempoolinfo.loaded (used to avoid intermittent issues)
             None,
         ])
         self.start_nodes()

@@ -260,6 +260,7 @@ public:
 
     // Creates an MWEB KeyChain from the appropriate keychain paths.
     virtual bool LoadMWEBKeychain() { return false; }
+    void UnloadMWEBKeychain() { m_mwebKeychain.reset(); }
     const mw::Keychain::Ptr& GetMWEBKeychain() const noexcept { return m_mwebKeychain; }
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */

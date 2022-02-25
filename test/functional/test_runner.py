@@ -249,6 +249,7 @@ BASE_SCRIPTS = [
     'mweb_mining.py',
     'mweb_reorg.py',
     'mweb_pegout_all.py',
+    'mweb_wallet_prehd.py',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'wallet_resendwallettransactions.py --descriptors',

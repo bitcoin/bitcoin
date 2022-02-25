@@ -66,7 +66,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             160300,
-            150200,
+            150100,
         ])
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
