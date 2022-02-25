@@ -7,7 +7,7 @@
 #include <interfaces/node.h>
 #include <rpc/server.h>
 #include <qt/rpcconsole.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/system.h>
 

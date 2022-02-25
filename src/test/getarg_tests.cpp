@@ -4,7 +4,7 @@
 
 #include <util/strencodings.h>
 #include <util/system.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <string>
 #include <utility>

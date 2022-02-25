@@ -5,7 +5,7 @@
 #include <policy/policy.h>
 #include <script/interpreter.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
