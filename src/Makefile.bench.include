@@ -34,6 +34,7 @@ bench_bench_dash_SOURCES = \
   bench/gcs_filter.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/mempool_stress.cpp \
   bench/nanobench.h \
   bench/nanobench.cpp \
   bench/rpc_mempool.cpp \
