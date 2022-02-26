@@ -10,27 +10,44 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
+#include <logging.h>
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
+    LogPrintf(">>>> (pow.cpp) GetNextWorkRequired - nProofOfWorkLimit = %u, fPowAllowMinDifficultyBlocks = %s, nPowTargetSpacing = %u, getBlockTime = %u\n",
+              nProofOfWorkLimit, params.fPowAllowMinDifficultyBlocks, params.nPowTargetSpacing, pblock->GetBlockTime());
+
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
     {
+        LogPrintf(">>>> (pow.cpp) GetNextWorkRequired - DifficultyAdjustmentInterval\n");
+
+        // XXXX
+         if (params.fPowAllowMinDifficultyBlocks) {
+             LogPrintf(">>>> (pow.cpp) GetNextWorkRequired (default) - return nProofOfWorkLimit = %u\n", nProofOfWorkLimit);
+             return nProofOfWorkLimit;
+        }
+
         if (params.fPowAllowMinDifficultyBlocks)
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing * 2) {
+                LogPrintf(">>>> (pow.cpp) GetNextWorkRequired - return nProofOfWorkLimit = %u\n", nProofOfWorkLimit);
                 return nProofOfWorkLimit;
+            }
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
                 while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
+
+                LogPrintf(">>>> (pow.cpp) GetNextWorkRequired - return non-special-min-difficulty-rules-block = %u\n", pindex->nBits);
                 return pindex->nBits;
             }
         }
@@ -48,6 +65,8 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
+    LogPrintf(">>>> (pow.cpp) CalculateNextWorkRequired\n");
+
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
 
