@@ -527,6 +527,8 @@ crypto_libdash_crypto_base_a_SOURCES = \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
+  crypto/muhash.h \
+  crypto/muhash.cpp \
   crypto/poly1305.h \
   crypto/poly1305.cpp \
   crypto/pkcs5_pbkdf2_hmac_sha512.cpp \
