@@ -9,6 +9,7 @@ FUZZ_TARGETS = \
   test/fuzz/address_deserialize \
   test/fuzz/addrman_deserialize \
   test/fuzz/banentry_deserialize \
+  test/fuzz/bech32 \
   test/fuzz/block_deserialize \
   test/fuzz/block_file_info_deserialize \
   test/fuzz/block_filter_deserialize \
@@ -23,6 +24,7 @@ FUZZ_TARGETS = \
   test/fuzz/coins_deserialize \
   test/fuzz/descriptor_parse \
   test/fuzz/diskblockindex_deserialize \
+  test/fuzz/eval_script \
   test/fuzz/fee_rate_deserialize \
   test/fuzz/flat_file_pos_deserialize \
   test/fuzz/inv_deserialize \
@@ -77,19 +79,18 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 
 BITCOIN_TEST_SUITE = \
   test/main.cpp \
-  test/setup_common.h \
-  test/setup_common.cpp
+  $(TEST_UTIL_H)
 
 FUZZ_SUITE = \
-  test/setup_common.h \
-  test/setup_common.cpp \
   test/fuzz/fuzz.cpp \
-  test/fuzz/fuzz.h
+  test/fuzz/fuzz.h \
+  test/fuzz/FuzzedDataProvider.h
 
 FUZZ_SUITE_LD_COMMON = \
  $(LIBBITCOIN_SERVER) \
  $(LIBBITCOIN_COMMON) \
  $(LIBBITCOIN_UTIL) \
+ $(LIBTEST_UTIL) \
  $(LIBBITCOIN_CONSENSUS) \
  $(LIBBITCOIN_CRYPTO) \
  $(LIBBITCOIN_WALLET) \
@@ -219,7 +220,7 @@ endif
 
 test_test_dash_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_dash_LDADD =
+test_test_dash_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
 test_test_dash_LDADD += $(LIBBITCOIN_WALLET)
 endif
@@ -270,6 +271,12 @@ test_fuzz_banentry_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DB
 test_fuzz_banentry_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_banentry_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_banentry_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_bech32_SOURCES = $(FUZZ_SUITE) test/fuzz/bech32.cpp
+test_fuzz_bech32_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_bech32_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_bech32_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_bech32_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_txundo_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_txundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXUNDO_DESERIALIZE=1
@@ -342,6 +349,12 @@ test_fuzz_diskblockindex_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDE
 test_fuzz_diskblockindex_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_diskblockindex_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_diskblockindex_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_eval_script_SOURCES = $(FUZZ_SUITE) test/fuzz/eval_script.cpp
+test_fuzz_eval_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_eval_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_eval_script_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_eval_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_txoutcompressor_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1

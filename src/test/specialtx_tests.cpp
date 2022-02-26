@@ -11,7 +11,7 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <cstdint>
 #include <vector>

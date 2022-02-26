@@ -11,7 +11,7 @@
 #include <util/string.h>
 #include <util/moneystr.h>
 #include <util/time.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/vector.h>
 #include <util/spanparsing.h>
 

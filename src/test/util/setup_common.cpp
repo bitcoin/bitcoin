@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <banman.h>
 #include <chainparams.h>
@@ -166,7 +166,7 @@ TestingSetup::~TestingSetup()
     pblocktree.reset();
 }
 
-TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
+TestChainSetup::TestChainSetup(int blockCount)
 {
     // Make sure CreateAndProcessBlock() support building <deployment_name> blocks before activating it in these tests.
     //gArgs.ForceSetArg("-vbparams", strprintf("deployment_name:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));

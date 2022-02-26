@@ -12,7 +12,8 @@
 #include <script/sign.h>
 #include <util/strencodings.h>
 #include <rpc/util.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
+#include <test/util/transaction_utils.h>
 #include <streams.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
@@ -117,38 +118,6 @@ static ScriptError_t ParseScriptError(const std::string& name)
 
 BOOST_FIXTURE_TEST_SUITE(script_tests, BasicTestingSetup)
 
-CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey)
-{
-    CMutableTransaction txCredit;
-    txCredit.nVersion = 1;
-    txCredit.nLockTime = 0;
-    txCredit.vin.resize(1);
-    txCredit.vout.resize(1);
-    txCredit.vin[0].prevout.SetNull();
-    txCredit.vin[0].scriptSig = CScript() << CScriptNum(0) << CScriptNum(0);
-    txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txCredit.vout[0].scriptPubKey = scriptPubKey;
-    txCredit.vout[0].nValue = 0;
-
-    return txCredit;
-}
-
-CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CTransaction& txCredit)
-{
-    CMutableTransaction txSpend;
-    txSpend.nVersion = 1;
-    txSpend.nLockTime = 0;
-    txSpend.vin.resize(1);
-    txSpend.vout.resize(1);
-    txSpend.vin[0].prevout.hash = txCredit.GetHash();
-    txSpend.vin[0].prevout.n = 0;
-    txSpend.vin[0].scriptSig = scriptSig;
-    txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txSpend.vout[0].scriptPubKey = CScript();
-    txSpend.vout[0].nValue = 0;
-
-    return txSpend;
-}
 
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, const std::string& message, int scriptError)
 {

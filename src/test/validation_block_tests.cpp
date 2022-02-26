@@ -10,18 +10,14 @@
 #include <miner.h>
 #include <pow.h>
 #include <random.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <thread>
 
-struct RegtestingSetup : public TestingSetup {
-    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}
-};
-
-BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegtestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegTestingSetup)
 
 struct TestSubscriber : public CValidationInterface {
     uint256 m_expected_tip;

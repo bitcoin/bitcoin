@@ -13,7 +13,7 @@
 #include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #if USE_OPENSSL

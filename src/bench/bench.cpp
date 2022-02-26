@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 
 #include <chainparams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -51,7 +51,7 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& p : benchmarks()) {
-        TestingSetup test{CBaseChainParams::REGTEST};
+        RegTestingSetup test{};
         {
             assert(::ChainActive().Height() == 0);
         }

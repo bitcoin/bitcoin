@@ -32,8 +32,10 @@ bench_bench_dash_SOURCES = \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
   bench/gcs_filter.cpp \
+  bench/hashpadding.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/mempool_stress.cpp \
   bench/nanobench.h \
   bench/nanobench.cpp \
   bench/rpc_mempool.cpp \
@@ -44,8 +46,6 @@ bench_bench_dash_SOURCES = \
   bench/poly1305.cpp \
   bench/prevector.cpp \
   bench/string_cast.cpp \
-  test/setup_common.cpp \
-  test/setup_common.h \
   test/util.cpp \
   test/util.h
 
@@ -61,6 +61,7 @@ bench_bench_dash_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBTEST_UTIL) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
