@@ -28,8 +28,8 @@ namespace jurat {
 ///jurat keys
 const int N_JURAT_MIN_SIGS = 2;
 const int N_JURAT_KEYS = 2;
-const std::string judicialVerifierPubKeys[] = {"03b45b93cc13534ff960d236f8a5b57c4d1e6c559397420612840ae2167e6eded1",
-    "02c25b7cf4cb06fa97a718524954d3febd46edc45ced2d129f8e0e3bdc43b391e4"};
+const std::string judicialVerifierPubKeys[] = {"037dac4d0001fa2640f68f5af0d6f23964f0ac9a56cf8b91703f8da30493055120",
+    "029473db91710810978273b90eac3af481ceb3c42a02c8fce4bb5ff81cea62fce6"};
 
 ///declarations
 
