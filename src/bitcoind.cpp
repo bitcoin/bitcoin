@@ -126,9 +126,10 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     if (HelpRequested(args) || args.IsArgSet("-version")) {
         std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
 
-        if (!args.IsArgSet("-version")) {
-            strUsage += FormatParagraph(LicenseInfo()) + "\n"
-                "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n"
+        if (args.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
+            strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n"
                 "\n";
             strUsage += args.GetHelpMessage();
         }

@@ -915,12 +915,15 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     TxValidationState& state = ws.m_state;
 
     CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
-    // It's possible that the replacement pays more fees than its direct conflicts but not more
-    // than all conflicts (i.e. the direct conflicts have high-fee descendants). However, if the
-    // replacement doesn't pay more fees than its direct conflicts, then we can be sure it's not
-    // more economically rational to mine. Before we go digging through the mempool for all
-    // transactions that would need to be removed (direct conflicts and all descendants), check
-    // that the replacement transaction pays more than its direct conflicts.
+    // The replacement transaction must have a higher feerate than its direct conflicts.
+    // - The motivation for this check is to ensure that the replacement transaction is preferable for
+    //   block-inclusion, compared to what would be removed from the mempool.
+    // - This logic predates ancestor feerate-based transaction selection, which is why it doesn't
+    //   consider feerates of descendants.
+    // - Note: Ancestor feerate-based transaction selection has made this comparison insufficient to
+    //   guarantee that this is incentive-compatible for miners, because it is possible for a
+    //   descendant transaction of a direct conflict to pay a higher feerate than the transaction that
+    //   might replace them, under these rules.
     if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
     }
@@ -1318,7 +1321,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         // we know is that the inputs aren't available.
         if (m_pool.exists(GenTxid::Wtxid(wtxid))) {
             // Exact transaction already exists in the mempool.
-            auto iter = m_pool.GetIter(wtxid);
+            auto iter = m_pool.GetIter(txid);
             assert(iter != std::nullopt);
             results.emplace(wtxid, MempoolAcceptResult::MempoolTx(iter.value()->GetTxSize(), iter.value()->GetFee()));
         } else if (m_pool.exists(GenTxid::Txid(txid))) {
@@ -2074,7 +2077,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == m_params.GetConsensus().BIP34Hash));
 
     // TODO: Remove BIP30 checking from block height 1,983,702 on, once we have a
-    // consensus change that ensures coinbases at those heights can not
+    // consensus change that ensures coinbases at those heights cannot
     // duplicate earlier coinbases.
     if (fEnforceBIP30 || pindex->nHeight >= BIP34_IMPLIES_BIP30_LIMIT) {
         for (const auto& tx : block.vtx) {
@@ -2373,14 +2376,13 @@ bool CChainState::FlushStateToDisk(
                 return AbortNode(state, "Failed to write to coin database");
             nLastFlush = nNow;
             full_flush_completed = true;
+            TRACE5(utxocache, flush,
+                   (int64_t)(GetTimeMicros() - nNow.count()), // in microseconds (µs)
+                   (u_int32_t)mode,
+                   (u_int64_t)coins_count,
+                   (u_int64_t)coins_mem_usage,
+                   (bool)fFlushForPrune);
         }
-        TRACE6(utxocache, flush,
-               (int64_t)(GetTimeMicros() - nNow.count()), // in microseconds (µs)
-               (u_int32_t)mode,
-               (u_int64_t)coins_count,
-               (u_int64_t)coins_mem_usage,
-               (bool)fFlushForPrune,
-               (bool)fDoFullFlush);
     }
     if (full_flush_completed) {
         // Update best block in wallet (so we can detect restored wallets).

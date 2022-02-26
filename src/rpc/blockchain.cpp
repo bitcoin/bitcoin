@@ -1037,7 +1037,7 @@ static RPCHelpMan getblock()
                                             {RPCResult::Type::STR, "asm", "The asm"},
                                             {RPCResult::Type::STR, "hex", "The hex"},
                                             {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
-                                            {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                            {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                         }},
                                     }},
                                 }},
@@ -1417,7 +1417,7 @@ static RPCHelpMan verifychain()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int check_level(request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].get_int());
+    const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].get_int()};
     const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].get_int()};
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);

@@ -197,6 +197,15 @@ std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const A
         addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
         LogPrintf("Creating peers.dat because the file was not found (%s)\n", fs::quoted(fs::PathToString(path_addr)));
         DumpPeerAddresses(args, *addrman);
+    } catch (const InvalidAddrManVersionError&) {
+        if (!RenameOver(path_addr, (fs::path)path_addr + ".bak")) {
+            addrman = nullptr;
+            return strprintf(_("Failed to rename invalid peers.dat file. Please move or delete it and try again."));
+        }
+        // Addrman can be in an inconsistent state after failure, reset it
+        addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+        LogPrintf("Creating new peers.dat because the file version was not compatible (%s). Original backed up to peers.dat.bak\n", fs::quoted(fs::PathToString(path_addr)));
+        DumpPeerAddresses(args, *addrman);
     } catch (const std::exception& e) {
         addrman = nullptr;
         return strprintf(_("Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start."),

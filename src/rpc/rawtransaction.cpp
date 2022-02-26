@@ -380,7 +380,7 @@ static RPCHelpMan verifytxoutproof()
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
                     {
-                        {RPCResult::Type::STR_HEX, "txid", "The txid(s) which the proof commits to, or empty array if the proof can not be validated."},
+                        {RPCResult::Type::STR_HEX, "txid", "The txid(s) which the proof commits to, or empty array if the proof cannot be validated."},
                     }
                 },
                 RPCExamples{""},
@@ -540,16 +540,6 @@ static RPCHelpMan decoderawtransaction()
     return result;
 },
     };
-}
-
-static std::string GetAllOutputTypes()
-{
-    std::vector<std::string> ret;
-    using U = std::underlying_type<TxoutType>::type;
-    for (U i = (U)TxoutType::NONSTANDARD; i <= (U)TxoutType::WITNESS_UNKNOWN; ++i) {
-        ret.emplace_back(GetTxnOutputType(static_cast<TxoutType>(i)));
-    }
-    return Join(ret, ", ");
 }
 
 static RPCHelpMan decodescript()

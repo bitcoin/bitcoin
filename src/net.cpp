@@ -2620,7 +2620,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
         if (m_client_interface) {
             m_client_interface->ThreadSafeMessageBox(
-                _("Cannot provide specific connections and have addrman find outgoing connections at the same."),
+                _("Cannot provide specific connections and have addrman find outgoing connections at the same time."),
                 "", CClientUIInterface::MSG_ERROR);
         }
         return false;
@@ -3097,7 +3097,7 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
     // layer (processing) perspective.
     auto now = GetTime<std::chrono::microseconds>();
 
-    // Windows folder names can not include a colon
+    // Windows folder names cannot include a colon
     std::string clean_addr = addr.ToString();
     std::replace(clean_addr.begin(), clean_addr.end(), ':', '_');
 

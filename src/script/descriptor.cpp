@@ -259,7 +259,15 @@ public:
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         CKey key;
-        if (!arg.GetKey(m_pubkey.GetID(), key)) return false;
+        if (m_xonly) {
+            for (const auto& keyid : XOnlyPubKey(m_pubkey).GetKeyIDs()) {
+                arg.GetKey(keyid, key);
+                if (key.IsValid()) break;
+            }
+        } else {
+            arg.GetKey(m_pubkey.GetID(), key);
+        }
+        if (!key.IsValid()) return false;
         ret = EncodeSecret(key);
         return true;
     }
@@ -1253,7 +1261,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 {
     if (ctx == ParseScriptContext::P2TR && script.size() == 34 && script[0] == 32 && script[33] == OP_CHECKSIG) {
         XOnlyPubKey key{Span{script}.subspan(1, 32)};
-        return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider));
+        return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider), true);
     }
 
     std::vector<std::vector<unsigned char>> data;

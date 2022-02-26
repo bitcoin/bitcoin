@@ -76,7 +76,7 @@ year rather than two hyphenated years.
 If the file already has a copyright for `The Bitcoin Core developers`, the
 script will exit.
 
-gen-manpages.sh
+gen-manpages.py
 ===============
 
 A small script to automatically create manpages in ../../doc/man by running the release binaries with the -help option.
@@ -87,7 +87,7 @@ repostitory. To use this tool with out-of-tree builds set `BUILDDIR`. For
 example:
 
 ```bash
-BUILDDIR=$PWD/build contrib/devtools/gen-manpages.sh
+BUILDDIR=$PWD/build contrib/devtools/gen-manpages.py
 ```
 
 security-check.py and test-security-check.py

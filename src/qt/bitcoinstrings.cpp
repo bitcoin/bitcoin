@@ -23,7 +23,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot provide specific connections and have addrman find outgoing "
-"connections at the same."),
+"connections at the same time."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot upgrade a non HD split wallet from version %i to version %i without "
 "upgrading to support pre-split keypool. Please use version %i or no version "
@@ -31,6 +31,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Distributed under the MIT software license, see the accompanying file %s or "
 "%s"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error loading %s: External signer wallet being loaded without external "
+"signer support compiled"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
@@ -88,7 +91,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"The -txindex upgrade started by a previous version can not be completed. "
+"The -txindex upgrade started by a previous version cannot be completed. "
 "Restart with the previous version or run a full -reindex."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The block database contains a block which appears to be from the future. "
@@ -146,7 +149,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Cannot resolve -%s address: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot set -forcednsseed to true when setting -dnsseed to false."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot set -peerblockfilters without -blockfilterindex."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot write to data directory '%s'; check permissions."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Change index out of range"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Config setting for %s only applied on %s network when in [%s] section."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
@@ -234,6 +236,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "This is the minimum transaction fee you pay o
 QT_TRANSLATE_NOOP("bitcoin-core", "This is the transaction fee you will pay if you send a transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction amounts must not be negative"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Transaction change output index out of range"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction has too long of a mempool chain"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction must have at least one recipient"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction needs a change address, but we can't generate it."),
