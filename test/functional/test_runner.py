@@ -183,6 +183,7 @@ BASE_SCRIPTS = [
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
     'feature_txindex.py',
+    'feature_utxo_set_hash.py',
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'feature_versionbits_warning.py',

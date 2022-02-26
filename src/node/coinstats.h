@@ -15,6 +15,7 @@ class CCoinsView;
 
 enum class CoinStatsHashType {
     HASH_SERIALIZED,
+    MUHASH,
     NONE,
 };
 

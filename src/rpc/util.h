@@ -69,8 +69,6 @@ extern int64_t ParseInt64V(const UniValue& v, const std::string &strName);
 extern double ParseDoubleV(const UniValue& v, const std::string &strName);
 extern bool ParseBoolV(const UniValue& v, const std::string &strName);
 
-CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType default_type);
-
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
