@@ -17,7 +17,7 @@ Base build dependencies
 -----------------------
 
 ```bash
-brew install automake libtool pkg-config
+brew install automake libtool pkg-config libnatpmp
 ```
 
 If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG:
