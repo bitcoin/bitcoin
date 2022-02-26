@@ -1992,8 +1992,7 @@ bool CWallet::CanGenerateKeys()
     if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
         return false;
     }
-    // A wallet can generate keys if it has a non-null HD chain (IsHDEnabled) or it is a non-HD wallet (pre FEATURE_HD)
-    return IsHDEnabled() || nWalletVersion < FEATURE_HD;
+    return true;
 }
 
 bool CWallet::CanGetAddresses(bool internal)
