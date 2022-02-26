@@ -20,20 +20,7 @@
 
 namespace llmq
 {
-
-const std::string CLSIG_REQUESTID_PREFIX = "clsig";
-
 CChainLocksHandler* chainLocksHandler;
-
-bool CChainLockSig::IsNull() const
-{
-    return nHeight == -1 && blockHash == uint256();
-}
-
-std::string CChainLockSig::ToString() const
-{
-    return strprintf("CChainLockSig(nHeight=%d, blockHash=%s)", nHeight, blockHash.ToString());
-}
 
 CChainLocksHandler::CChainLocksHandler() :
     scheduler(std::make_unique<CScheduler>())

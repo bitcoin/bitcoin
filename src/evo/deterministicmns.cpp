@@ -3,10 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <evo/deterministicmns.h>
+#include <evo/dmnstate.h>
 #include <evo/specialtx.h>
 #include <evo/simplifiedmns.h>
 #include <llmq/commitment.h>
 #include <llmq/utils.h>
+#include <evo/providertx.h>
 
 #include <base58.h>
 #include <chainparams.h>
@@ -16,55 +18,16 @@
 #include <ui_interface.h>
 #include <validation.h>
 #include <validationinterface.h>
-
 #include <univalue.h>
+#include <messagesigner.h>
+#include <uint256.h>
+
+#include <memory>
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
 static const std::string DB_LIST_DIFF = "dmn_D";
 
 std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
-
-std::string CDeterministicMNState::ToString() const
-{
-    CTxDestination dest;
-    std::string payoutAddress = "unknown";
-    std::string operatorPayoutAddress = "none";
-    if (ExtractDestination(scriptPayout, dest)) {
-        payoutAddress = EncodeDestination(dest);
-    }
-    if (ExtractDestination(scriptOperatorPayout, dest)) {
-        operatorPayoutAddress = EncodeDestination(dest);
-    }
-
-    return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-        "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, addr=%s, payoutAddress=%s, operatorPayoutAddress=%s)",
-        nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight, nRevocationReason,
-        EncodeDestination(keyIDOwner), pubKeyOperator.Get().ToString(), EncodeDestination(keyIDVoting), addr.ToStringIPPort(false), payoutAddress, operatorPayoutAddress);
-}
-
-void CDeterministicMNState::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.pushKV("service", addr.ToStringIPPort(false));
-    obj.pushKV("registeredHeight", nRegisteredHeight);
-    obj.pushKV("lastPaidHeight", nLastPaidHeight);
-    obj.pushKV("PoSePenalty", nPoSePenalty);
-    obj.pushKV("PoSeRevivedHeight", nPoSeRevivedHeight);
-    obj.pushKV("PoSeBanHeight", nPoSeBanHeight);
-    obj.pushKV("revocationReason", nRevocationReason);
-    obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
-    obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
-
-    CTxDestination dest;
-    if (ExtractDestination(scriptPayout, dest)) {
-        obj.pushKV("payoutAddress", EncodeDestination(dest));
-    }
-    obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
-    if (ExtractDestination(scriptOperatorPayout, dest)) {
-        obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
-    }
-}
 
 uint64_t CDeterministicMN::GetInternalId() const
 {
@@ -1226,3 +1189,327 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
 
     return true;
 }
+
+// Seperate into new file?
+template <typename ProTx>
+static bool CheckService(const ProTx& proTx, CValidationState& state)
+{
+    if (!proTx.addr.IsValid()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
+    }
+    if (Params().RequireRoutableExternalIP() && !proTx.addr.IsRoutable()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
+    }
+
+    static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
+    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        if (proTx.addr.GetPort() != mainnetDefaultPort) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr-port");
+        }
+    } else if (proTx.addr.GetPort() == mainnetDefaultPort) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr-port");
+    }
+
+    if (!proTx.addr.IsIPv4()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
+    }
+
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
+{
+    std::string strError;
+    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
+    }
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
+{
+    std::string strError;
+    if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig, proTx.MakeSignString(), strError)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
+    }
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state)
+{
+    if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false);
+    }
+    return true;
+}
+
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+{
+    if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
+    CProRegTx ptx;
+    if (!GetTxPayload(tx, ptx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
+    }
+
+    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+        return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+    }
+
+    // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
+    // If any of both is set, it must be valid however
+    if (ptx.addr != CService() && !CheckService(ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    CTxDestination collateralTxDest;
+    const CKeyID *keyForPayloadSig = nullptr;
+    COutPoint collateralOutpoint;
+
+    if (!ptx.collateralOutpoint.hash.IsNull()) {
+        Coin coin;
+        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 1000 * COIN) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
+        }
+
+        if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-dest");
+        }
+
+        // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
+        // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
+        keyForPayloadSig = boost::get<CKeyID>(&collateralTxDest);
+        if (!keyForPayloadSig) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-pkh");
+        }
+
+        collateralOutpoint = ptx.collateralOutpoint;
+    } else {
+        if (ptx.collateralOutpoint.n >= tx.vout.size()) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
+        }
+        if (tx.vout[ptx.collateralOutpoint.n].nValue != 1000 * COIN) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
+        }
+
+        if (!ExtractDestination(tx.vout[ptx.collateralOutpoint.n].scriptPubKey, collateralTxDest)) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-dest");
+        }
+
+        collateralOutpoint = COutPoint(tx.GetHash(), ptx.collateralOutpoint.n);
+    }
+
+    // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+    // this check applies to internal and external collateral, but internal collaterals are not necessarily a P2PKH
+    if (collateralTxDest == CTxDestination(ptx.keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-reuse");
+    }
+
+    if (pindexPrev) {
+        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+
+        // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
+        if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->collateralOutpoint != collateralOutpoint) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-addr");
+        }
+
+        // never allow duplicate keys, even if this ProTx would replace an existing MN
+        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-key");
+        }
+
+        if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
+            if (ptx.keyIDOwner != ptx.keyIDVoting) {
+                return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-not-same");
+            }
+        }
+    }
+
+    if (auto maybe_err = CheckInputsHash(tx, ptx); maybe_err.did_err) {
+        return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+    }
+
+    if (keyForPayloadSig) {
+        // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
+        if (!CheckStringSig(ptx, *keyForPayloadSig, state)) {
+            // pass the state returned by the function above
+            return false;
+        }
+    } else {
+        // collateral is part of this ProRegTx, so we know the collateral is owned by the issuer
+        if (!ptx.vchSig.empty()) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig");
+        }
+    }
+
+    return true;
+}
+
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
+    CProUpServTx ptx;
+    if (!GetTxPayload(tx, ptx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
+    }
+
+    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+        return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+    }
+
+    if (!CheckService(ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    if (pindexPrev) {
+        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        auto mn = mnList.GetMN(ptx.proTxHash);
+        if (!mn) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
+        }
+
+        // don't allow updating to addresses already used by other MNs
+        if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->proTxHash != ptx.proTxHash) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-addr");
+        }
+
+        if (ptx.scriptOperatorPayout != CScript()) {
+            if (mn->nOperatorReward == 0) {
+                // don't allow setting operator reward payee in case no operatorReward was set
+                return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-payee");
+            }
+            if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash() && !ptx.scriptOperatorPayout.IsPayToScriptHash()) {
+                return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-payee");
+            }
+        }
+
+        // we can only check the signature if pindexPrev != nullptr and the MN is known
+        if (auto maybe_err = CheckInputsHash(tx, ptx); maybe_err.did_err) {
+            return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+        }
+        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
+            // pass the state returned by the function above
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+{
+    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
+    CProUpRegTx ptx;
+    if (!GetTxPayload(tx, ptx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
+    }
+
+    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+        return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+    }
+
+    CTxDestination payoutDest;
+    if (!ExtractDestination(ptx.scriptPayout, payoutDest)) {
+        // should not happen as we checked script types before
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-dest");
+    }
+
+    if (pindexPrev) {
+        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        auto dmn = mnList.GetMN(ptx.proTxHash);
+        if (!dmn) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
+        }
+
+        // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
+        if (payoutDest == CTxDestination(dmn->pdmnState->keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-reuse");
+        }
+
+        Coin coin;
+        if (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent()) {
+            // this should never happen (there would be no dmn otherwise)
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
+        }
+
+        // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+        CTxDestination collateralTxDest;
+        if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral-dest");
+        }
+        if (collateralTxDest == CTxDestination(dmn->pdmnState->keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-reuse");
+        }
+
+        if (mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
+            auto otherDmn = mnList.GetUniquePropertyMN(ptx.pubKeyOperator);
+            if (ptx.proTxHash != otherDmn->proTxHash) {
+                return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-key");
+            }
+        }
+
+        if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
+            if (dmn->pdmnState->keyIDOwner != ptx.keyIDVoting) {
+                return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-not-same");
+            }
+        }
+
+        if (auto maybe_err = CheckInputsHash(tx, ptx); maybe_err.did_err) {
+            return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+        }
+        if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state)) {
+            // pass the state returned by the function above
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
+    CProUpRevTx ptx;
+    if (!GetTxPayload(tx, ptx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
+    }
+
+    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+        return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+    }
+
+    if (pindexPrev) {
+        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        auto dmn = mnList.GetMN(ptx.proTxHash);
+        if (!dmn)
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
+
+        if (auto maybe_err = CheckInputsHash(tx, ptx); maybe_err.did_err) {
+            return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
+        }
+        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
+            // pass the state returned by the function above
+            return false;
+        }
+    }
+
+    return true;
+}
+//end
+

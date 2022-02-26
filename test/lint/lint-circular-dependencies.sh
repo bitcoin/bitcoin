@@ -30,7 +30,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     # Dash
     "coinjoin/server -> net_processing -> coinjoin/server"
     "evo/cbtx -> evo/simplifiedmns -> evo/cbtx"
-    "evo/deterministicmns -> evo/providertx -> evo/deterministicmns"
     "evo/deterministicmns -> evo/simplifiedmns -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/commitment -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/utils -> evo/deterministicmns"

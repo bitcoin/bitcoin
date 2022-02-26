@@ -6,6 +6,7 @@
 #define BITCOIN_EVO_PROVIDERTX_H
 
 #include <bls/bls.h>
+#include <evo/specialtx.h>
 #include <primitives/transaction.h>
 
 #include <key_io.h>
@@ -16,6 +17,15 @@
 class CBlockIndex;
 class CCoinsViewCache;
 class CValidationState;
+
+struct maybe_error{
+    bool did_err{false};
+    int ban_amount{0};
+    std::string_view error_str;
+
+    constexpr maybe_error() = default;
+    constexpr maybe_error(int amount, std::string_view err): did_err(true), ban_amount(amount), error_str(err) {};
+};
 
 class CProRegTx
 {
@@ -81,6 +91,8 @@ public:
 
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
+
+    maybe_error IsTriviallyValid() const;
 };
 
 class CProUpServTx
@@ -118,6 +130,8 @@ public:
         }
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
+
+    maybe_error IsTriviallyValid() const;
 };
 
 class CProUpRegTx
@@ -166,6 +180,8 @@ public:
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
+
+    maybe_error IsTriviallyValid() const;
 };
 
 class CProUpRevTx
@@ -207,12 +223,19 @@ public:
         obj.pushKV("reason", (int)nReason);
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
+
+    maybe_error IsTriviallyValid() const;
 };
 
+template <typename ProTx>
+static maybe_error CheckInputsHash(const CTransaction& tx, const ProTx& proTx)
+{
+    if (uint256 inputsHash = CalcTxInputsHash(tx); inputsHash != proTx.inputsHash) {
+        return {100, "bad-protx-inputs-hash"};
+    }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+    return {};
+}
+
 
 #endif // BITCOIN_EVO_PROVIDERTX_H

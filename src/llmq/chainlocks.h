@@ -5,7 +5,8 @@
 #ifndef BITCOIN_LLMQ_CHAINLOCKS_H
 #define BITCOIN_LLMQ_CHAINLOCKS_H
 
-#include <bls/bls.h>
+#include <llmq/clsig.h>
+
 #include <crypto/common.h>
 #include <llmq/signing.h>
 #include <net.h>
@@ -23,25 +24,6 @@ class CScheduler;
 
 namespace llmq
 {
-
-extern const std::string CLSIG_REQUESTID_PREFIX;
-
-class CChainLockSig
-{
-public:
-    int32_t nHeight{-1};
-    uint256 blockHash;
-    CBLSSignature sig;
-
-public:
-    SERIALIZE_METHODS(CChainLockSig, obj)
-    {
-        READWRITE(obj.nHeight, obj.blockHash, obj.sig);
-    }
-
-    bool IsNull() const;
-    std::string ToString() const;
-};
 
 class CChainLocksHandler : public CRecoveredSigsListener
 {

@@ -167,6 +167,7 @@ BITCOIN_CORE_H = \
   cxxtimer.hpp \
   evo/cbtx.h \
   evo/deterministicmns.h \
+  evo/dmnstate.h \
   evo/evodb.h \
   evo/mnauth.h \
   evo/mnhftx.h \
@@ -207,6 +208,7 @@ BITCOIN_CORE_H = \
   llmq/blockprocessor.h \
   llmq/commitment.h \
   llmq/chainlocks.h \
+  llmq/clsig.h \
   llmq/debug.h \
   llmq/dkgsessionhandler.h \
   llmq/dkgsessionmgr.h \
@@ -357,6 +359,7 @@ libdash_server_a_SOURCES = \
   dsnotificationinterface.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
+  evo/dmnstate.cpp \
   evo/evodb.cpp \
   evo/mnauth.cpp \
   evo/mnhftx.cpp \
@@ -384,6 +387,7 @@ libdash_server_a_SOURCES = \
   llmq/blockprocessor.cpp \
   llmq/commitment.cpp \
   llmq/chainlocks.cpp \
+  llmq/clsig.cpp \
   llmq/debug.cpp \
   llmq/dkgsessionhandler.cpp \
   llmq/dkgsessionmgr.cpp \
