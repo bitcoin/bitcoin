@@ -20,6 +20,7 @@ FUZZERS_MISSING_CORPORA = [
     "block_file_info_deserialize",
     "block_filter_deserialize",
     "block_header_and_short_txids_deserialize",
+    "decode_tx",
     "fee_rate_deserialize",
     "flat_file_pos_deserialize",
     "hex",
