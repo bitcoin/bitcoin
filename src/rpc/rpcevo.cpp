@@ -315,7 +315,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSub
     return sendrawtransaction(sendRequest).get_str();
 }
 
-static void protx_register_fund_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void protx_register_fund_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx register_fund",
         "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
@@ -323,7 +323,7 @@ static void protx_register_fund_help(const JSONRPCRequest& request, CWallet* con
         "masternode.\n"
         "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
         "is fully deployed.\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             GetRpcArg("collateralAddress"),
             GetRpcArg("ipAndPort"),
@@ -347,13 +347,13 @@ static void protx_register_fund_help(const JSONRPCRequest& request, CWallet* con
     }.Check(request);
 }
 
-static void protx_register_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void protx_register_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx register",
         "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
         "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
         "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
@@ -409,13 +409,13 @@ static void protx_register_prepare_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static void protx_register_submit_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void protx_register_submit_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx register_submit",
         "\nCombines the unsigned ProTx and a signature of the signMessage, signs all inputs\n"
         "which were added to cover fees and submits the resulting transaction to the network.\n"
         "Note: See \"help protx register_prepare\" for more info about creating a ProTx and a message to sign.\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             {"tx", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The serialized unsigned ProTx in hex format."},
             {"sig", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature signed with the collateral key. Must be in base64 format."},
@@ -441,9 +441,9 @@ static UniValue protx_register(const JSONRPCRequest& request)
     bool isPrepareRegister = request.params[0].get_str() == "register_prepare";
 
     if (isFundRegister && (request.fHelp || (request.params.size() < 8 || request.params.size() > 10))) {
-        protx_register_fund_help(request, pwallet);
+        protx_register_fund_help(request);
     } else if (isExternalRegister && (request.fHelp || (request.params.size() < 9 || request.params.size() > 11))) {
-        protx_register_help(request, pwallet);
+        protx_register_help(request);
     } else if (isPrepareRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10))) {
         protx_register_prepare_help(request);
     }
@@ -598,7 +598,7 @@ static UniValue protx_register_submit(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || request.params.size() != 3) {
-        protx_register_submit_help(request, pwallet);
+        protx_register_submit_help(request);
     }
 
     EnsureWalletIsUnlocked(pwallet);
@@ -624,13 +624,13 @@ static UniValue protx_register_submit(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
-static void protx_update_service_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void protx_update_service_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx update_service",
         "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
         "of a masternode.\n"
         "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             GetRpcArg("proTxHash"),
             GetRpcArg("ipAndPort"),
@@ -654,7 +654,7 @@ static UniValue protx_update_service(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || (request.params.size() < 4 || request.params.size() > 6))
-        protx_update_service_help(request, pwallet);
+        protx_update_service_help(request);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -721,13 +721,13 @@ static UniValue protx_update_service(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
-static void protx_update_registrar_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void protx_update_registrar_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx update_registrar",
         "\nCreates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
         "address of the masternode specified by \"proTxHash\".\n"
         "The owner key of the masternode must be known to your wallet.\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             GetRpcArg("proTxHash"),
             GetRpcArg("operatorPubKey_update"),
@@ -751,7 +751,7 @@ static UniValue protx_update_registrar(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6)) {
-        protx_update_registrar_help(request, pwallet);
+        protx_update_registrar_help(request);
     }
 
     EnsureWalletIsUnlocked(pwallet);
@@ -811,14 +811,14 @@ static UniValue protx_update_registrar(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
-static void protx_revoke_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void protx_revoke_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"protx revoke",
         "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
         "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
         "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
         "to the masternode owner.\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             GetRpcArg("proTxHash"),
             GetRpcArg("operatorKey"),
@@ -841,7 +841,7 @@ static UniValue protx_revoke(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || (request.params.size() < 3 || request.params.size() > 5)) {
-        protx_revoke_help(request, pwallet);
+        protx_revoke_help(request);
     }
 
     EnsureWalletIsUnlocked(pwallet);

@@ -31,7 +31,7 @@ void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
-std::string HelpRequiringPassphrase(CWallet *);
+std::string HelpRequiringPassphrase();
 void EnsureWalletIsUnlocked(CWallet *);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);

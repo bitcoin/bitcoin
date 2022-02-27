@@ -129,11 +129,11 @@ static UniValue gobject_check(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-static void gobject_prepare_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void gobject_prepare_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject prepare",
         "Prepare governance object by signing and creating tx\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             {"parent-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the parent object, \"0\" is root"},
             {"revision", RPCArg::Type::NUM, RPCArg::Optional::NO, "object revision in the system"},
@@ -155,7 +155,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8))
-        gobject_prepare_help(request, pwallet);
+        gobject_prepare_help(request);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -255,11 +255,11 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     return tx->GetHash().ToString();
 }
 
-static void gobject_list_prepared_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void gobject_list_prepared_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject list-prepared",
         "Returns a list of governance objects prepared by this wallet with \"gobject prepare\" sorted by their creation time.\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             {"count", RPCArg::Type::NUM, /* default */ "10", "Maximum number of objects to return."},
         },
@@ -275,7 +275,7 @@ static UniValue gobject_list_prepared(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || (request.params.size() > 2)) {
-        gobject_list_prepared_help(request, pwallet);
+        gobject_list_prepared_help(request);
     }
 
     EnsureWalletIsUnlocked(pwallet);
@@ -595,11 +595,11 @@ static UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
 }
 
 #ifdef ENABLE_WALLET
-static void gobject_vote_many_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void gobject_vote_many_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject vote-many",
         "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the governance object"},
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "vote, possible values: [funding|valid|delete|endorsed]"},
@@ -617,7 +617,7 @@ static UniValue gobject_vote_many(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || request.params.size() != 4)
-        gobject_vote_many_help(request, pwallet);
+        gobject_vote_many_help(request);
 
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
@@ -650,11 +650,11 @@ static UniValue gobject_vote_many(const JSONRPCRequest& request)
     return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 
-static void gobject_vote_alias_help(const JSONRPCRequest& request, CWallet* const pwallet)
+static void gobject_vote_alias_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject vote-alias",
         "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
-        + HelpRequiringPassphrase(pwallet) + "\n",
+        + HelpRequiringPassphrase() + "\n",
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the governance object"},
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "vote, possible values: [funding|valid|delete|endorsed]"},
@@ -673,7 +673,7 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     if (request.fHelp || request.params.size() != 5)
-        gobject_vote_alias_help(request, pwallet);
+        gobject_vote_alias_help(request);
 
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
