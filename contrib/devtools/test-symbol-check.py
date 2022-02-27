@@ -6,6 +6,7 @@
 Test script for symbol-check.py
 '''
 import os
+import re
 import subprocess
 from typing import List
 import unittest
@@ -59,9 +60,10 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-lm']),
-                (1, executable + ': symbol nextup from unsupported version GLIBC_2.24(3)\n' +
-                    executable + ': failed IMPORTED_SYMBOLS'))
+        result = call_symbol_check(cc, source, executable, ['-lm'])
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0], 1)
+        self.assertTrue(re.match(rf'^{executable}: symbol nextup from unsupported version GLIBC_2\.24\(\d+\)\n{executable}: failed IMPORTED_SYMBOLS', result[1]))
 
         # -lutil is part of the libc6 package so a safe bet that it's installed
         # it's also out of context enough that it's unlikely to ever become a real dependency
