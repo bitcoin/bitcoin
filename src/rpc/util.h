@@ -6,12 +6,13 @@
 #define BITCOIN_RPC_UTIL_H
 
 #include <node/transaction.h>
-#include <pubkey.h>
 #include <protocol.h>
+#include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <script/standard.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <string>
@@ -143,7 +144,7 @@ struct RPCArg {
           m_oneline_description{oneline_description},
           m_type_str{type_str}
     {
-        assert(type != Type::ARR && type != Type::OBJ);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ);
     }
 
     RPCArg(
@@ -162,7 +163,7 @@ struct RPCArg {
           m_oneline_description{oneline_description},
           m_type_str{type_str}
     {
-        assert(type == Type::ARR || type == Type::OBJ);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ);
     }
 
     bool IsOptional() const;
@@ -191,14 +192,14 @@ struct RPCResult {
     explicit RPCResult(std::string result)
         : m_cond{}, m_result{std::move(result)}
     {
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_result.empty());
     }
 
     RPCResult(std::string cond, std::string result)
         : m_cond{std::move(cond)}, m_result{std::move(result)}
     {
-        assert(!m_cond.empty());
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_cond.empty());
+        CHECK_NONFATAL(!m_result.empty());
     }
 };
 
