@@ -1239,8 +1239,8 @@ static void bls_generate_help(const JSONRPCRequest& request)
         {},
         RPCResult{
     "{\n"
-    "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-    "  \"public\": \"xxxx\",        (string) BLS public key\n"
+    "  \"secret\" : \"xxxx\",        (string) BLS secret key\n"
+    "  \"public\" : \"xxxx\",        (string) BLS public key\n"
     "}\n"
         },
         RPCExamples{
@@ -1273,8 +1273,8 @@ static void bls_fromsecret_help(const JSONRPCRequest& request)
         },
         RPCResult{
     "{\n"
-    "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-    "  \"public\": \"xxxx\",        (string) BLS public key\n"
+    "  \"secret\" : \"xxxx\",        (string) BLS secret key\n"
+    "  \"public\" : \"xxxx\",        (string) BLS public key\n"
     "}\n"
         },
         RPCExamples{

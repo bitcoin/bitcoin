@@ -912,9 +912,9 @@ UniValue dumphdinfo(const JSONRPCRequest& request)
                 {},
                 RPCResult{
             "{\n"
-            "  \"hdseed\": \"seed\",                    (string) The HD seed (bip32, in hex)\n"
-            "  \"mnemonic\": \"words\",                 (string) The mnemonic for this HD wallet (bip39, english words) \n"
-            "  \"mnemonicpassphrase\": \"passphrase\",  (string) The mnemonic passphrase for this HD wallet (bip39)\n"
+            "  \"hdseed\" : \"seed\",                    (string) The HD seed (bip32, in hex)\n"
+            "  \"mnemonic\" : \"words\",                 (string) The mnemonic for this HD wallet (bip39, english words) \n"
+            "  \"mnemonicpassphrase\" : \"passphrase\",  (string) The mnemonic passphrase for this HD wallet (bip39)\n"
             "}\n"
                 },
                 RPCExamples{
@@ -966,7 +966,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{                           (json object)\n"
-            "  \"keys\" : {            (int) The number of keys contained in the wallet dump\n"
+            "  \"keys\" : {            (numeric) The number of keys contained in the wallet dump\n"
             "  \"filename\" : {        (string) The filename with full absolute path\n"
             "  \"warning\" : {         (string) A warning about not sharing the wallet dump with anyone\n"
             "}\n"

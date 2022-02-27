@@ -1167,11 +1167,11 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
                 {},
                 RPCResult{
             "{\n"
-            "  \"governanceminquorum\": xxxxx,           (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
-            "  \"proposalfee\": xxx.xx,                  (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
-            "  \"superblockcycle\": xxxxx,               (numeric) the number of blocks between superblocks\n"
-            "  \"lastsuperblock\": xxxxx,                (numeric) the block number of the last superblock\n"
-            "  \"nextsuperblock\": xxxxx,                (numeric) the block number of the next superblock\n"
+            "  \"governanceminquorum\" : xxxxx,           (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
+            "  \"proposalfee\" : xxx.xx,                  (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
+            "  \"superblockcycle\" : xxxxx,               (numeric) the number of blocks between superblocks\n"
+            "  \"lastsuperblock\" : xxxxx,                (numeric) the block number of the last superblock\n"
+            "  \"nextsuperblock\" : xxxxx,                (numeric) the block number of the next superblock\n"
             "}\n"
                 },
                 RPCExamples{

@@ -255,8 +255,8 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
-            "  \"redeemScript\":\"script\"       (string) The string value of the hex-encoded redemption script.\n"
+            "  \"address\" : \"multisigaddress\",  (string) The value of the new multisig address.\n"
+            "  \"redeemScript\" : \"script\"       (string) The string value of the hex-encoded redemption script.\n"
             "}\n"
                 },
                 RPCExamples{
@@ -354,7 +354,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
                     {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
                 },
                 RPCResult{
-            "\"address\"        (array) A json array of the derived addresses\n"
+            "\"address\"        (json array) A json array of the derived addresses\n"
             "     [\n"
             "       ...\n"
             "     ]\n"
@@ -900,10 +900,10 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"balance\": xxxxx,              (numeric) The current total balance in duffs\n"
-            "  \"balance_immature\": xxxxx,     (numeric) The current immature balance in duffs\n"
-            "  \"balance_spendable\": xxxxx,    (numeric) The current spendable balance in duffs\n"
-            "  \"received\": xxxxx              (numeric) The total number of duffs received (including change)\n"
+            "  \"balance\" : xxxxx,              (numeric) The current total balance in duffs\n"
+            "  \"balance_immature\" : xxxxx,     (numeric) The current immature balance in duffs\n"
+            "  \"balance_spendable\" : xxxxx,    (numeric) The current spendable balance in duffs\n"
+            "  \"received\" : xxxxx              (numeric) The total number of duffs received (including change)\n"
             "}\n"
                 },
                 RPCExamples{
@@ -1138,13 +1138,13 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
                 {
                     RPCResult{"mode \"stats\"",
             "{\n"
-            "  \"locked\": {               (json object) Information about locked memory manager\n"
-            "    \"used\": xxxxx,          (numeric) Number of bytes used\n"
-            "    \"free\": xxxxx,          (numeric) Number of bytes available in current arenas\n"
-            "    \"total\": xxxxxxx,       (numeric) Total number of bytes managed\n"
-            "    \"locked\": xxxxxx,       (numeric) Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk.\n"
-            "    \"chunks_used\": xxxxx,   (numeric) Number allocated chunks\n"
-            "    \"chunks_free\": xxxxx,   (numeric) Number unused chunks\n"
+            "  \"locked\" : {               (json object) Information about locked memory manager\n"
+            "    \"used\" : xxxxx,          (numeric) Number of bytes used\n"
+            "    \"free\" : xxxxx,          (numeric) Number of bytes available in current arenas\n"
+            "    \"total\" : xxxxxxx,       (numeric) Total number of bytes managed\n"
+            "    \"locked\" : xxxxxx,       (numeric) Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk.\n"
+            "    \"chunks_used\" : xxxxx,   (numeric) Number allocated chunks\n"
+            "    \"chunks_free\" : xxxxx,   (numeric) Number unused chunks\n"
             "  }\n"
             "}\n"
                     },
@@ -1221,7 +1221,7 @@ static UniValue logging(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{                   (json object where keys are the logging categories, and values indicates its status\n"
-            "  \"category\": true|false,  (bool) if being debug logged or not. false:inactive, true:active\n"
+            "  \"category\" : true|false,  (boolean) if being debug logged or not. false:inactive, true:active\n"
             "  ...\n"
             "}\n"
                 },
