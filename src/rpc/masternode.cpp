@@ -25,40 +25,39 @@
 
 static UniValue masternodelist(const JSONRPCRequest& request);
 
-static void masternode_list_help()
+static void masternode_list_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            RPCHelpMan{"masternodelist",
-                "Get a list of masternodes in different modes. This call is identical to 'masternode list' call.\n"
-                "Available modes:\n"
-                "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
-                "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
-                "                   (can be additionally filtered, partial match)\n"
-                "  info           - Print info in format 'status payee IP'\n"
-                "                   (can be additionally filtered, partial match)\n"
-                "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
-                "  lastpaidblock  - Print the last block height a node was paid on the network\n"
-                "  lastpaidtime   - Print the last time a node was paid on the network\n"
-                "  owneraddress   - Print the masternode owner Dash address\n"
-                "  payee          - Print the masternode payout Dash address (can be additionally filtered,\n"
-                "                   partial match)\n"
-                "  pubKeyOperator - Print the masternode operator public key\n"
-                "  status         - Print masternode status: ENABLED / POSE_BANNED\n"
-                "                   (can be additionally filtered, partial match)\n"
-                "  votingaddress  - Print the masternode voting Dash address\n",
-                {
-                    {"mode", RPCArg::Type::STR, /* default */ "json", "The mode to run list in"},
-                    {"filter", RPCArg::Type::STR, /* default */ "", "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
-                },
-                RPCResults{},
-                RPCExamples{""},
-            }.ToString());
+    RPCHelpMan{"masternodelist",
+        "Get a list of masternodes in different modes. This call is identical to 'masternode list' call.\n"
+        "Available modes:\n"
+        "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
+        "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
+        "                   (can be additionally filtered, partial match)\n"
+        "  info           - Print info in format 'status payee IP'\n"
+        "                   (can be additionally filtered, partial match)\n"
+        "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
+        "  lastpaidblock  - Print the last block height a node was paid on the network\n"
+        "  lastpaidtime   - Print the last time a node was paid on the network\n"
+        "  owneraddress   - Print the masternode owner Dash address\n"
+        "  payee          - Print the masternode payout Dash address (can be additionally filtered,\n"
+        "                   partial match)\n"
+        "  pubKeyOperator - Print the masternode operator public key\n"
+        "  status         - Print masternode status: ENABLED / POSE_BANNED\n"
+        "                   (can be additionally filtered, partial match)\n"
+        "  votingaddress  - Print the masternode voting Dash address\n",
+        {
+            {"mode", RPCArg::Type::STR, /* default */ "json", "The mode to run list in"},
+            {"filter", RPCArg::Type::STR, /* default */ "", "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
+        },
+        RPCResults{},
+        RPCExamples{""},
+    }.Check(request);
 }
 
 static UniValue masternode_list(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        masternode_list_help();
+        masternode_list_help(request);
     JSONRPCRequest newRequest = request;
     newRequest.params.setArray();
     // forward params but skip "list"
@@ -68,23 +67,22 @@ static UniValue masternode_list(const JSONRPCRequest& request)
     return masternodelist(newRequest);
 }
 
-static void masternode_connect_help()
+static void masternode_connect_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"masternode connect",
-            "Connect to given masternode\n",
-            {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the masternode to connect"},
-            },
-            RPCResults{},
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode connect",
+        "Connect to given masternode\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the masternode to connect"},
+        },
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_connect(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2)
-        masternode_connect_help();
+        masternode_connect_help(request);
 
     std::string strAddress = request.params[1].get_str();
 
@@ -100,21 +98,20 @@ static UniValue masternode_connect(const JSONRPCRequest& request)
     return "successfully connected";
 }
 
-static void masternode_count_help()
+static void masternode_count_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"masternode count",
-            "Get information about number of masternodes.\n",
-            {},
-            RPCResults{},
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode count",
+        "Get information about number of masternodes.\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_count(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
-        masternode_count_help();
+        masternode_count_help(request);
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
     int total = mnList.GetAllMNsCount();
@@ -148,62 +145,59 @@ static UniValue GetNextMasternodeForPayment(int heightShift)
     return obj;
 }
 
-static void masternode_winner_help()
+static void masternode_winner_help(const JSONRPCRequest& request)
 {
     if (!IsDeprecatedRPCEnabled("masternode_winner")) {
         throw std::runtime_error("DEPRECATED: set -deprecatedrpc=masternode_winner to enable it");
     }
 
-    throw std::runtime_error(
-        RPCHelpMan{"masternode winner",
-            "Print info on next masternode winner to vote for\n",
-            {},
-            RPCResults{},
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode winner",
+        "Print info on next masternode winner to vote for\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_winner(const JSONRPCRequest& request)
 {
     if (request.fHelp || !IsDeprecatedRPCEnabled("masternode_winner"))
-        masternode_winner_help();
+        masternode_winner_help(request);
 
     return GetNextMasternodeForPayment(10);
 }
 
-static void masternode_current_help()
+static void masternode_current_help(const JSONRPCRequest& request)
 {
     if (!IsDeprecatedRPCEnabled("masternode_current")) {
         throw std::runtime_error("DEPRECATED: set -deprecatedrpc=masternode_current to enable it");
     }
 
-    throw std::runtime_error(
-        RPCHelpMan{"masternode current",
-            "Print info on current masternode winner to be paid the next block (calculated locally)\n",
-            {},
-            RPCResults{},
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode current",
+        "Print info on current masternode winner to be paid the next block (calculated locally)\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_current(const JSONRPCRequest& request)
 {
     if (request.fHelp || !IsDeprecatedRPCEnabled("masternode_current"))
-        masternode_current_help();
+        masternode_current_help(request);
 
     return GetNextMasternodeForPayment(1);
 }
 
 #ifdef ENABLE_WALLET
-static void masternode_outputs_help()
+static void masternode_outputs_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"masternode outputs",
-            "Print masternode compatible outputs\n",
-            {},
-            RPCResults{},
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode outputs",
+        "Print masternode compatible outputs\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_outputs(const JSONRPCRequest& request)
@@ -214,7 +208,7 @@ static UniValue masternode_outputs(const JSONRPCRequest& request)
         return NullUniValue;
 
     if (request.fHelp)
-        masternode_outputs_help();
+        masternode_outputs_help(request);
 
 
     // Find possible candidates
@@ -236,21 +230,20 @@ static UniValue masternode_outputs(const JSONRPCRequest& request)
 
 #endif // ENABLE_WALLET
 
-static void masternode_status_help()
+static void masternode_status_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"masternode status",
-            "Print masternode status information\n",
-            {},
-            RPCResults{},
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode status",
+        "Print masternode status information\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_status(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        masternode_status_help();
+        masternode_status_help(request);
 
     if (!fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
@@ -316,24 +309,23 @@ static std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterminis
     return strPayments;
 }
 
-static void masternode_winners_help()
+static void masternode_winners_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"masternode winners",
-            "Print list of masternode winners\n",
-            {
-                {"count", RPCArg::Type::NUM, /* default */ "", "number of last winners to return"},
-                {"filter", RPCArg::Type::STR, /* default */ "", "filter for returned winners"},
-            },
-            RPCResults{},
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode winners",
+        "Print list of masternode winners\n",
+        {
+            {"count", RPCArg::Type::NUM, /* default */ "", "number of last winners to return"},
+            {"filter", RPCArg::Type::STR, /* default */ "", "filter for returned winners"},
+        },
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_winners(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3)
-        masternode_winners_help();
+        masternode_winners_help(request);
 
     const CBlockIndex* pindexTip{nullptr};
     {
@@ -375,45 +367,44 @@ static UniValue masternode_winners(const JSONRPCRequest& request)
 
     return obj;
 }
-static void masternode_payments_help()
+static void masternode_payments_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"masternode payments",
-            "\nReturns an array of deterministic masternodes and their payments for the specified block\n",
-            {
-                {"blockhash", RPCArg::Type::STR_HEX, /* default */ "tip", "The hash of the starting block"},
-                {"count", RPCArg::Type::NUM, /* default */ "1", "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
-            },
-            RPCResult {
-        "  [                                  (array) Blocks\n"
-        "    {\n"
-        "       \"height\" : n,                 (numeric) The height of the block\n"
-        "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
-        "       \"amount\": n                   (numeric) Amount received in this block by all masternodes\n"
-        "       \"masternodes\": [              (array) Masternodes that received payments in this block\n"
-        "          {\n"
-        "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
-        "             \"amount\": n             (numeric) Amount received by this masternode\n"
-        "             \"payees\": [             (array) Payees who received a share of this payment\n"
-        "                {\n"
-        "                  \"address\" : \"xxx\", (string) Payee address\n"
-        "                  \"script\" : \"xxx\",  (string) Payee scriptPubKey\n"
-        "                  \"amount\": n        (numeric) Amount received by this payee\n"
-        "                },...\n"
-        "             ]\n"
-        "          },...\n"
-        "       ]\n"
-        "    },...\n"
-        "  ]"
-            },
-            RPCExamples{""}
-        }.ToString());
+    RPCHelpMan{"masternode payments",
+        "\nReturns an array of deterministic masternodes and their payments for the specified block\n",
+        {
+            {"blockhash", RPCArg::Type::STR_HEX, /* default */ "tip", "The hash of the starting block"},
+            {"count", RPCArg::Type::NUM, /* default */ "1", "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
+        },
+        RPCResult {
+    "  [                                  (array) Blocks\n"
+    "    {\n"
+    "       \"height\" : n,                 (numeric) The height of the block\n"
+    "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
+    "       \"amount\": n                   (numeric) Amount received in this block by all masternodes\n"
+    "       \"masternodes\": [              (array) Masternodes that received payments in this block\n"
+    "          {\n"
+    "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
+    "             \"amount\": n             (numeric) Amount received by this masternode\n"
+    "             \"payees\": [             (array) Payees who received a share of this payment\n"
+    "                {\n"
+    "                  \"address\" : \"xxx\", (string) Payee address\n"
+    "                  \"script\" : \"xxx\",  (string) Payee scriptPubKey\n"
+    "                  \"amount\": n        (numeric) Amount received by this payee\n"
+    "                },...\n"
+    "             ]\n"
+    "          },...\n"
+    "       ]\n"
+    "    },...\n"
+    "  ]"
+        },
+        RPCExamples{""}
+    }.Check(request);
 }
 
 static UniValue masternode_payments(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3) {
-        masternode_payments_help();
+        masternode_payments_help(request);
     }
 
     CBlockIndex* pindex{nullptr};
@@ -522,26 +513,25 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
 
 [[ noreturn ]] static void masternode_help()
 {
-    throw std::runtime_error(
-        RPCHelpMan{"masternode",
-            "Set of commands to execute masternode related actions\n"
-            "\nAvailable commands:\n"
-            "  count        - Get information about number of masternodes\n"
-            "  current      - DEPRECATED Print info on current masternode winner to be paid the next block (calculated locally)\n"
+    RPCHelpMan{"masternode",
+        "Set of commands to execute masternode related actions\n"
+        "\nAvailable commands:\n"
+        "  count        - Get information about number of masternodes\n"
+        "  current      - DEPRECATED Print info on current masternode winner to be paid the next block (calculated locally)\n"
 #ifdef ENABLE_WALLET
-            "  outputs      - Print masternode compatible outputs\n"
+        "  outputs      - Print masternode compatible outputs\n"
 #endif // ENABLE_WALLET
-            "  status       - Print masternode status information\n"
-            "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
-            "  payments     - Return information about masternode payments in a mined block\n"
-            "  winner       - DEPRECATED Print info on next masternode winner to vote for\n"
-            "  winners      - Print list of masternode winners\n",
-            {
-                {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
-            },
-            RPCResults{},
-            RPCExamples{""},
-        }.ToString());
+        "  status       - Print masternode status information\n"
+        "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
+        "  payments     - Return information about masternode payments in a mined block\n"
+        "  winner       - DEPRECATED Print info on next masternode winner to vote for\n"
+        "  winners      - Print list of masternode winners\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+        },
+        RPCResults{},
+        RPCExamples{""},
+    }.Throw();
 }
 
 static UniValue masternode(const JSONRPCRequest& request)
@@ -597,7 +587,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
                 strMode != "payee" && strMode != "pubkeyoperator" &&
                 strMode != "status"))
     {
-        masternode_list_help();
+        masternode_list_help(request);
     }
 
     UniValue obj(UniValue::VOBJ);

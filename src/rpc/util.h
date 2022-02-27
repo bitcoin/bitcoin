@@ -254,6 +254,10 @@ public:
         }
     }
 
+    [[ noreturn ]] inline void Throw() const {
+        throw std::runtime_error(ToString());
+    }
+
 private:
     const std::string m_name;
     const std::string m_description;
