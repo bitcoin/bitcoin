@@ -12,7 +12,7 @@
 #include <keystore.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
-#include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/strencodings.h>
