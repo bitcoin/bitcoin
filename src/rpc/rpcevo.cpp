@@ -175,7 +175,7 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
 template<typename SpecialTxPayload>
 static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
-    assert(pwallet != nullptr);
+    CHECK_NONFATAL(pwallet != nullptr);
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -242,7 +242,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         // CreateTransaction added a change output, so we don't need the dummy txout anymore.
         // Removing it results in slight overpayment of fees, but we ignore this for now (as it's a very low amount).
         auto it = std::find(tx.vout.begin(), tx.vout.end(), dummyTxOut);
-        assert(it != tx.vout.end());
+        CHECK_NONFATAL(it != tx.vout.end());
         tx.vout.erase(it);
     }
 }
@@ -549,7 +549,7 @@ static UniValue protx_register(const JSONRPCRequest& request)
                 break;
             }
         }
-        assert(collateralIndex != (uint32_t) -1);
+        CHECK_NONFATAL(collateralIndex != (uint32_t) -1);
         ptx.collateralOutpoint.n = collateralIndex;
 
         SetTxPayload(tx, ptx);

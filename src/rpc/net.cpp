@@ -557,7 +557,7 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
                 strSocketEvents = "kqueue";
                 break;
             default:
-                assert(false);
+                CHECK_NONFATAL(false);
         }
         obj.pushKV("socketevents", strSocketEvents);
     }

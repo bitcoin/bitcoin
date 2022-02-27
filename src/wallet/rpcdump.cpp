@@ -151,7 +151,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
 
         CPubKey pubkey = key.GetPubKey();
-        assert(key.VerifyPubKey(pubkey));
+        CHECK_NONFATAL(key.VerifyPubKey(pubkey));
         CKeyID vchAddress = pubkey.GetID();
         {
             pwallet->MarkDirty();
@@ -636,7 +636,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             std::string label = std::get<3>(key_tuple);
 
             CPubKey pubkey = key.GetPubKey();
-            assert(key.VerifyPubKey(pubkey));
+            CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
             if (pwallet->HaveKey(keyid)) {
                 pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
@@ -762,7 +762,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
                 continue;
             }
             CPubKey pubkey = key.GetPubKey();
-            assert(key.VerifyPubKey(pubkey));
+            CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
             if (pwallet->HaveKey(keyid)) {
                 pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
@@ -794,7 +794,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
                 continue;
             }
             CPubKey pubkey = key.GetPubKey();
-            assert(key.VerifyPubKey(pubkey));
+            CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
             if (pwallet->HaveKey(keyid)) {
                 pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
@@ -1133,7 +1133,7 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
     }
     case TX_SCRIPTHASH: {
         if (script_ctx == ScriptContext::P2SH) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Trying to nest P2SH inside another P2SH");
-        assert(script_ctx == ScriptContext::TOP);
+        CHECK_NONFATAL(script_ctx == ScriptContext::TOP);
         CScriptID id = CScriptID(uint160(solverdata[0]));
         auto subscript = std::move(import_data.redeemscript); // Remove redeemscript from import_data to check for superfluous script later.
         if (!subscript) return "missing redeemscript";
