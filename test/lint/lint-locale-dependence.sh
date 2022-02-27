@@ -17,6 +17,7 @@ KNOWN_VIOLATIONS=(
     "src/rpc/masternode.cpp.*atoi"
     "src/statsd_client.cpp:.*snprintf"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
+    "src/test/fuzz/parse_numbers.cpp:.*atoi"
     "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
     "src/util/strencodings.cpp:.*atoi"
