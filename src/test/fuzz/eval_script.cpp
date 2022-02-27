@@ -30,7 +30,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
     }();
     const CScript script(script_bytes.begin(), script_bytes.end());
-    for (const auto sig_version : {SigVersion::BASE, SigVersion::WITNESS_V0}) {
+    for (const auto sig_version : {SigVersion::BASE}) {
         std::vector<std::vector<unsigned char>> stack;
         (void)EvalScript(stack, script, flags, BaseSignatureChecker(), sig_version, nullptr);
     }
