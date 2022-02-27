@@ -151,9 +151,8 @@ static void gobject_prepare_help(const JSONRPCRequest& request, CWallet* const p
 static UniValue gobject_prepare(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8))
         gobject_prepare_help(request, pwallet);
@@ -272,9 +271,8 @@ static void gobject_list_prepared_help(const JSONRPCRequest& request, CWallet* c
 static UniValue gobject_list_prepared(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || (request.params.size() > 2)) {
         gobject_list_prepared_help(request, pwallet);
@@ -615,9 +613,8 @@ static void gobject_vote_many_help(const JSONRPCRequest& request, CWallet* const
 static UniValue gobject_vote_many(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_many_help(request, pwallet);
@@ -672,9 +669,8 @@ static void gobject_vote_alias_help(const JSONRPCRequest& request, CWallet* cons
 static UniValue gobject_vote_alias(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || request.params.size() != 5)
         gobject_vote_alias_help(request, pwallet);

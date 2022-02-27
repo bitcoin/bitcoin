@@ -433,9 +433,8 @@ static void protx_register_submit_help(const JSONRPCRequest& request, CWallet* c
 static UniValue protx_register(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     bool isExternalRegister = request.params[0].get_str() == "register";
     bool isFundRegister = request.params[0].get_str() == "register_fund";
@@ -595,9 +594,8 @@ static UniValue protx_register(const JSONRPCRequest& request)
 static UniValue protx_register_submit(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || request.params.size() != 3) {
         protx_register_submit_help(request, pwallet);
@@ -652,9 +650,8 @@ static void protx_update_service_help(const JSONRPCRequest& request, CWallet* co
 static UniValue protx_update_service(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || (request.params.size() < 4 || request.params.size() > 6))
         protx_update_service_help(request, pwallet);
@@ -750,9 +747,8 @@ static void protx_update_registrar_help(const JSONRPCRequest& request, CWallet* 
 static UniValue protx_update_registrar(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6)) {
         protx_update_registrar_help(request, pwallet);
@@ -841,9 +837,8 @@ static void protx_revoke_help(const JSONRPCRequest& request, CWallet* const pwal
 static UniValue protx_revoke(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp || (request.params.size() < 3 || request.params.size() > 5)) {
         protx_revoke_help(request, pwallet);

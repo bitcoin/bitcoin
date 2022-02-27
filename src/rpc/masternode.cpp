@@ -203,9 +203,8 @@ static void masternode_outputs_help(const JSONRPCRequest& request)
 static UniValue masternode_outputs(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
 
     if (request.fHelp)
         masternode_outputs_help(request);
