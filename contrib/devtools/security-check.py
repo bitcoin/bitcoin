@@ -111,6 +111,14 @@ def check_ELF_separate_code(binary):
                 return False
     return True
 
+def control_flow_instruction_for(binary):
+    assert lief.ARCHITECTURES.X86 == binary.abstract.header.architecture
+    if binary.abstract.header.is_32:
+        return [243, 15, 30, 251]  # endbr32
+    if binary.abstract.header.is_64:
+        return [243, 15, 30, 250]  # endbr64
+    raise RuntimeError('unknown control flow instruction')
+
 def check_ELF_control_flow(binary) -> bool:
     '''
     Check for control flow instrumentation
@@ -118,7 +126,7 @@ def check_ELF_control_flow(binary) -> bool:
     main = binary.get_function_address('main')
     content = binary.get_content_from_virtual_address(main, 4, lief.Binary.VA_TYPES.AUTO)
 
-    if content == [243, 15, 30, 250]: # endbr64
+    if content == control_flow_instruction_for(binary):
         return True
     return False
 
@@ -147,7 +155,7 @@ def check_PE_control_flow(binary) -> bool:
 
     content = binary.get_content_from_virtual_address(virtual_address, 4, lief.Binary.VA_TYPES.VA)
 
-    if content == [243, 15, 30, 250]: # endbr64
+    if content == control_flow_instruction_for(binary):
         return True
     return False
 
@@ -189,7 +197,7 @@ def check_MACHO_control_flow(binary) -> bool:
     '''
     content = binary.get_content_from_virtual_address(binary.entrypoint, 4, lief.Binary.VA_TYPES.AUTO)
 
-    if content == [243, 15, 30, 250]: # endbr64
+    if content == control_flow_instruction_for(binary):
         return True
     return False
 
