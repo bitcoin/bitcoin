@@ -28,7 +28,7 @@ Release Process
 #### Before branch-off
 
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
-* Update the following variables in [`src/chainparams.cpp`](/src/chainparams.cpp):
+* Update the following variables in [`src/chainparams.cpp`](/src/chainparams.cpp) for mainnet, testnet, and signet:
   - `m_assumed_blockchain_size` and `m_assumed_chain_state_size` with the current size plus some overhead (see
     [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
   - `chainTxData` with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC, see
