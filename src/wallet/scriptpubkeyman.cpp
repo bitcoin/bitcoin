@@ -469,6 +469,12 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
 bool LegacyScriptPubKeyMan::Upgrade(int prev_version, int new_version, bilingual_str& error)
 {
     LOCK(cs_KeyStore);
+
+    if (m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        // Nothing to do here if private keys are not enabled
+        return true;
+    }
+
     bool hd_upgrade = false;
     bool split_upgrade = false;
     if (IsFeatureSupported(new_version, FEATURE_HD) && !IsHDEnabled()) {
