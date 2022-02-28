@@ -359,7 +359,7 @@ esac
 if test "$enable_debug" = "yes"; then
   dnl Clear default -g -O2 flags
   if test "$CXXFLAGS_overridden" = "no"; then
-	CXXFLAGS=""
+  CXXFLAGS=""
   fi
 
   dnl Disable all optimizations
@@ -978,14 +978,14 @@ AC_CHECK_DECLS([setsid])
 AC_CHECK_DECLS([pipe2])
 
 AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
-		[#if HAVE_ENDIAN_H
+    [#if HAVE_ENDIAN_H
                  #include <endian.h>
                  #elif HAVE_SYS_ENDIAN_H
                  #include <sys/endian.h>
                  #endif])
 
 AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
-		[#if HAVE_BYTESWAP_H
+    [#if HAVE_BYTESWAP_H
                  #include <byteswap.h>
                  #endif])
 
@@ -1438,11 +1438,15 @@ if test "$use_external_signer" != "no"; then
     ;;
     *)
       AC_MSG_CHECKING([whether Boost.Process can be used])
+      TEMP_LDFLAGS="$LDFLAGS"
+      dnl Boost 1.73 and older require the following workaround.
+      LDFLAGS="$LDFLAGS $PTHREAD_CFLAGS"
       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]])],
         [have_boost_process="yes"],
         [have_boost_process="no"])
+      LDFLAGS="$TEMP_LDFLAGS"
       AC_MSG_RESULT([$have_boost_process])
-      if test "$have_boost_process" == "yes"; then
+      if test "$have_boost_process" = "yes"; then
         use_external_signer="yes"
         AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
       else
