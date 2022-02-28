@@ -14,7 +14,7 @@ if [ -n "$ANDROID_TOOLS_URL" ]; then
   exit 0
 fi
 
-SYSCOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
+SYSCOIN_CONFIG_ALL="--enable-external-signer --enable-suppress-external-warnings --disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
 if [ -z "$NO_WERROR" ]; then
   SYSCOIN_CONFIG_ALL="${SYSCOIN_CONFIG_ALL} --enable-werror"
 fi
