@@ -1,44 +1,52 @@
-<TS version="2.1" language="uz@Latn">
+<TS version="2.1" language="sw">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Manzil yoki yorliqni tahrirlash uchun oʻng tugmani bosing</translation>
+        <translation type="unfinished">Bonyeza kitufe cha kulia kufanya mabadiliko kwenye anuani au lebo</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Yangi manzil yaratish</translation>
+        <translation type="unfinished">Fungua anuani mpya</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Yangi</translation>
+        <translation type="unfinished">&amp;Mpya</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation type="unfinished">Nakili anwani iliyochaguliwa sasa kwenye ubao wa kunakili wa mfumo</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Nusxalash</translation>
+        <translation type="unfinished">&amp;nakili</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">Yo&amp;pish</translation>
+        <translation type="unfinished">C&amp;Funga</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation type="unfinished">Futa anwani iliyochaguliwa sasa kutoka kwenye orodha</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;O'chirish</translation>
+        <translation type="unfinished">&amp;Futa</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Manzillarni nusxalash</translation>
+        <source>Sending addresses</source>
+        <translation type="unfinished">Kutuma anuani</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation type="unfinished">Kupokea anuani</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation type="unfinished">Manzil</translation>
+        <translation type="unfinished">Anuani</translation>
     </message>
     </context>
 <context>
@@ -120,14 +128,7 @@
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Manzil</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
+        <translation type="unfinished">Anuani</translation>
     </message>
     </context>
 <context>
@@ -151,21 +152,10 @@
     </message>
     </context>
 <context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
-    </message>
-    </context>
-<context>
     <name>TransactionView</name>
     <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation type="unfinished">Manzil</translation>
+        <translation type="unfinished">Anuani</translation>
     </message>
     </context>
 </TS>

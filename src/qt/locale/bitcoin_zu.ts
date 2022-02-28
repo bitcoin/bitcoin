@@ -1,282 +1,195 @@
-<TS language="zu" version="2.1">
+<TS version="2.1" language="zu">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation>Qhafaza kwesokudla ukuze uhlele ikheli noma ilebula</translation>
-    </message>
-    <message>
-        <source>Create a new address</source>
-        <translation>Dala ikheli elisha</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopisha ikheli elikhethwe njengamanje ebhodini lokunameka lesistimu</translation>
-    </message>
-    <message>
-        <source>Delete the currently selected address from the list</source>
-        <translation>Susa ikheli elikhethwe njengamanje ohlwini</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>Faka ikheli noma ilebula ukusesha</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Khiphela idatha kuthebhu yamanje kufayela</translation>
-    </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation>Khetha ikheli ozothumela kulo izinhlamvu zemali</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>Khetha ikheli ukuthola izinhlamvu zemali nge</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>Kuthunyelwa amakheli</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>Ukuthola amakheli</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Lawa amakheli akho e-Bitcoin okuthumela izinkokhelo. Njalo hlola inani nekheli elitholwayo ngaphambi kokuthumela izinhlamvu zemali.</translation>
-    </message>
-    <message>
-        <source>Export Address List</source>
-        <translation>Thumela Ikheli Langaphandle</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Ifayela elihlukaniswe ngokhefana (* .csv)</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Ukuthekelisa kwehlulekile</translation>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Ifayela elehlukaniswe ngo khefana.</translation>
     </message>
     </context>
 <context>
-    <name>AddressTableModel</name>
+    <name>BitcoinApplication</name>
     <message>
-        <source>Label</source>
-        <translation>Ilebuli</translation>
+        <source>Internal error</source>
+        <translation type="unfinished">Iphutha langaphakathi.</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Ikheli</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(akukho ilebula)</translation>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Sekwenzeke iphutha ngaphakathi. %1kuzozama ukuqhubeka ngokuphepha. Leli iphutha ebelingalindelekanga elingabikwa njengoba kuchaziwe ngezansi.</translation>
     </message>
 </context>
 <context>
-    <name>AskPassphraseDialog</name>
+    <name>QObject</name>
     <message>
-        <source>Passphrase Dialog</source>
-        <translation>I-Passphrase Dialog</translation>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1Ingakatholakali ngokuphepha okwamanje.</translation>
     </message>
     <message>
-        <source>Enter passphrase</source>
-        <translation>Faka umushwana wokungena</translation>
+        <source>Internal</source>
+        <translation type="unfinished">Okwangaphakathi</translation>
     </message>
-    <message>
-        <source>New passphrase</source>
-        <translation>Umushwana omusha wokungena</translation>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>Repeat new passphrase</source>
-        <translation>Phinda umushwana omusha wokungena</translation>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>Show passphrase</source>
-        <translation>Khombisa umushwana wokungena</translation>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>Encrypt wallet</source>
-        <translation>Bethela isikhwama</translation>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Lokhu kusebenza kudinga umushwana wakho wokungena wesikhwama ukuvula isikhwama.</translation>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Vula isikhwama semali</translation>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Lo msebenzi udinga umushwana wakho wokungena wesikhwama ukukhipha isikhwama esikhwameni.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Ukhiphe isikhwama semali</translation>
-    </message>
-    <message>
-        <source>Change passphrase</source>
-        <translation>Shintsha umushwana wokungena</translation>
-    </message>
-    <message>
-        <source>Confirm wallet encryption</source>
-        <translation>Qinisekisa ukubethelwa kwe-wallet</translation>
-    </message>
-    <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Isexwayiso: Uma ubhala ngemfihlo isikhwama sakho futhi ulahlekelwe umushwana wakho wokungena, uzokwazi
-Lahla YONKE IBITCOIN YAKHO!</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Uqinisekile ukuthi ufisa ukubhala ngemfihlo isikhwama sakho?</translation>
-    </message>
-    <message>
-        <source>Wallet encrypted</source>
-        <translation>Kufakwe i-Wallet</translation>
-    </message>
-    </context>
-<context>
-    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
-    </context>
-<context>
-    <name>CoinControlDialog</name>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Ongakukhetha...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;Shintsha Umushwana wokungena...</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">Sayina &amp;umlayezo...</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;Qinisekisa umlayezo...</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Vala isikhwama semali.</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Yakha isikhwama semali.</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">Ukuxhumana no ntanga.</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">Chofa ukuveza ezinye izenzo.</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">Khubaza umsebenzi we nethiwekhi</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Akukwazi ukwenza uhlu lwabasayini.</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
-<context>
-    <name>EditAddressDialog</name>
-    </context>
-<context>
-    <name>FreespaceChecker</name>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">Umusayini wa ngaphandle</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
-    </context>
-<context>
-    <name>ModalOverlay</name>
-    </context>
-<context>
-    <name>OpenURIDialog</name>
-    </context>
-<context>
-    <name>OpenWalletActivity</name>
-    </context>
-<context>
-    <name>OptionsDialog</name>
-    </context>
-<context>
-    <name>OverviewPage</name>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
-    <name>PaymentServer</name>
+    <message>
+        <source>(of %1 GB needed)</source>
+        <translation type="unfinished">(ku %1 GB odingakalayo)</translation>
+    </message>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
-<context>
-    <name>QObject</name>
-    </context>
-<context>
-    <name>QRImageWidget</name>
-    </context>
-<context>
-    <name>RPCConsole</name>
-    </context>
-<context>
-    <name>ReceiveCoinsDialog</name>
-    </context>
-<context>
-    <name>ReceiveRequestDialog</name>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
     <message>
-        <source>Label</source>
-        <translation>Ilebuli</translation>
+        <source>Peer</source>
+        <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
+        <translation type="unfinished">Untanga</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    </context>
-<context>
-    <name>SendCoinsEntry</name>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    </context>
-<context>
-    <name>SignVerifyMessageDialog</name>
-    </context>
-<context>
-    <name>TrafficGraphWidget</name>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>TransactionDesc</name>
-    </context>
-<context>
-    <name>TransactionDescDialog</name>
-    </context>
-<context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Ilebuli</translation>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Ifayela elihlukaniswe ngokhefana (* .csv)</translation>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Ifayela elehlukaniswe ngo khefana.</translation>
     </message>
-    <message>
-        <source>Label</source>
-        <translation>Ilebuli</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Ikheli</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Ukuthekelisa kwehlulekile</translation>
-    </message>
-    </context>
-<context>
-    <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletController</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
-    </context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Khipha idatha kuthebhu yamanje kufayela</translation>
-    </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
     </context>
 </TS>
