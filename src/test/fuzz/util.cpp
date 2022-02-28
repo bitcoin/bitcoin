@@ -566,7 +566,7 @@ ssize_t FuzzedFileProvider::write(void* cookie, const char* buf, size_t size)
     SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
     const ssize_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<ssize_t>(0, size);
     if (AdditionOverflow(fuzzed_file->m_offset, (int64_t)n)) {
-        return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+        return 0;
     }
     fuzzed_file->m_offset += n;
     return n;
