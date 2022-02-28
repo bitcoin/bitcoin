@@ -157,11 +157,10 @@ class P2PConnection(asyncio.Protocol):
 
         if net == "devnet":
             devnet_name = "devnet1"  # see initialize_datadir()
-            devnet_version = 1
             if self.uacomment is None:
-                self.strSubVer = MY_SUBVERSION % ("(devnet.%d.devnet-%s)" % (devnet_version, devnet_name)).encode()
+                self.strSubVer = MY_SUBVERSION % ("(devnet.devnet-%s)" % devnet_name).encode()
             else:
-                self.strSubVer = MY_SUBVERSION % ("(devnet.%d.devnet-%s,%s)" % (devnet_version, devnet_name, self.uacomment)).encode()
+                self.strSubVer = MY_SUBVERSION % ("(devnet.devnet-%s,%s)" % (devnet_name, self.uacomment)).encode()
         elif self.uacomment is not None:
             self.strSubVer = MY_SUBVERSION % ("(%s)" % self.uacomment).encode()
         else:
