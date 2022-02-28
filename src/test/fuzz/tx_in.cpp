@@ -25,8 +25,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         return;
     }
 
-    (void)GetTransactionInputWeight(tx_in);
-    (void)GetVirtualTransactionInputSize(tx_in);
     (void)RecursiveDynamicUsage(tx_in);
 
     (void)tx_in.ToString();
