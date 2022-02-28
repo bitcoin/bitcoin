@@ -9,7 +9,11 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
-//
+
+#include "global.h"
+
+class cDynHash;
+
 class CDynProgram {
 
 public:

@@ -40,6 +40,7 @@ CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
 CNFTManager* g_nftMgr;
 CWebServer* g_webServer;
+unsigned char* g_hashBlock;
 
 bool IS_TESTNET;
 

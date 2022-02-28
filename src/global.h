@@ -6,3 +6,4 @@ extern class CDynEngine* g_dynEngine;
 extern class CContractManager* g_contractMgr;
 extern class CNFTManager* g_nftMgr;
 extern bool IS_TESTNET;
+extern unsigned char* g_hashBlock;

@@ -270,6 +270,17 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             }
         }
 
+         else if (tokens[0] == "SUMBLOCK") {
+            //this calc can be optimized, although the performance gain is minimal
+            uint64_t row = (iResult[0] + iResult[1] + iResult[2] + iResult[3]) % 3072;
+            uint64_t col = (iResult[4] + iResult[5] + iResult[6] + iResult[7]) % 32768;
+            uint64_t index = row * 32768 + col;
+            const uint64_t hashBlockSize = 1024ULL * 1024ULL * 3072ULL;
+            for (int i = 0; i < 256; i++)
+                iResult[i % 8] += g_hashBlock[(index + i) % hashBlockSize];
+        }
+
+
         line_ptr++;
 
 
