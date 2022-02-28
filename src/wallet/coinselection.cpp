@@ -87,7 +87,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     CAmount best_waste = MAX_MONEY;
 
     // Depth First search loop for choosing the UTXOs
-    for (size_t i = 0, utxo_pool_index = 0; i < TOTAL_TRIES; ++i, ++utxo_pool_index) {
+    for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
         // Conditions for starting a backtrack
         bool backtrack = false;
         if (curr_value + curr_available_value < selection_target ||                // Cannot possibly reach target with the amount remaining in the curr_available_value.
