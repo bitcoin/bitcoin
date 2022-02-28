@@ -301,7 +301,7 @@ Both variables are used as a guideline for how much space the user needs on thei
 Note that all values should be taken from a **fully synced** node and have an overhead of 5-10% added on top of its base value.
 
 To calculate `m_assumed_blockchain_size`, take the size in GiB of these directories:
-- For `mainnet` -> the data directory, excluding the `/testnet3`, `/signet`, and `/regtest` directories
+- For `mainnet` -> the data directory, excluding the `/testnet3`, `/signet`, and `/regtest` directories and any overly large files, e.g. a huge `debug.log`
 - For `testnet` -> `/testnet3`
 - For `signet` -> `/signet`
 
