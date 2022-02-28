@@ -37,7 +37,14 @@ LIEF_ELF_ARCH_RISCV = lief.ELF.ARCH(243)
 # See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
 
 MAX_VERSIONS = {
-'GCC':       (4,8,0),
+'GCC': {
+    lief.ELF.ARCH.i386:   (7,0,0),  # requires Debian 10, Ubuntu 18.04
+    lief.ELF.ARCH.x86_64: (4,8,0),
+    lief.ELF.ARCH.ARM:    (4,8,0),
+    lief.ELF.ARCH.AARCH64:(4,8,0),
+    lief.ELF.ARCH.PPC64:  (4,8,0),
+    LIEF_ELF_ARCH_RISCV:  (4,8,0),
+},
 'GLIBC': {
     lief.ELF.ARCH.i386:   (2,18),
     lief.ELF.ARCH.x86_64: (2,18),
