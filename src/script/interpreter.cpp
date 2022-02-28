@@ -1437,16 +1437,28 @@ uint256 GetOutputsHash(const T& txTo)
 } // namespace
 
 template <class T>
-PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
+void PrecomputedTransactionData::Init(const T& txTo)
 {
+    assert(!m_ready);
+
     hashPrevouts = GetPrevoutHash(txTo);
     hashSequence = GetSequenceHash(txTo);
     hashOutputs = GetOutputsHash(txTo);
+
+    m_ready = true;
+}
+
+template <class T>
+PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
+{
+    Init(txTo);
 }
 
 // explicit instantiation
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
+template void PrecomputedTransactionData::Init(const CTransaction& txTo);
+template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo);
 
 template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
