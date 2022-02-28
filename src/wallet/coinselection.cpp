@@ -71,7 +71,8 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
     for (const OutputGroup& utxo : utxo_pool) {
-        // Assert that this utxo is not negative. It should never be negative, effective value calculation should have removed it
+        // Assert that this utxo is not negative. It should never be negative,
+        // effective value calculation should have removed it
         assert(utxo.GetSelectionAmount() > 0);
         curr_available_value += utxo.GetSelectionAmount();
     }
@@ -90,8 +91,8 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
         // Conditions for starting a backtrack
         bool backtrack = false;
-        if (curr_value + curr_available_value < selection_target ||                // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > selection_target + cost_of_change ||    // Selected value is out of range, go back and try other branch
+        if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
+            curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && (utxo_pool.at(0).fee - utxo_pool.at(0).long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
@@ -111,13 +112,12 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
             backtrack = true;
         }
 
-        // Backtracking, moving backwards
-        if (backtrack) {
+        if (backtrack) { // Backtracking, moving backwards
             if (curr_selection.empty()) { // We have walked back to the first utxo and no branch is untraversed. All solutions searched
                 break;
             }
 
-            // Walk backwards to find the last included UTXO that still needs to have its omission branch traversed.
+            // Add omitted UTXOs back to lookahead before traversing the omission branch of last included UTXO.
             for (--utxo_pool_index; utxo_pool_index > curr_selection.back(); --utxo_pool_index) {
                 curr_available_value += utxo_pool.at(utxo_pool_index).GetSelectionAmount();
             }
@@ -134,11 +134,11 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
             // Remove this utxo from the curr_available_value utxo amount
             curr_available_value -= utxo.GetSelectionAmount();
 
-            // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded. Since the ratio of fee to
-            // long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
             if (curr_selection.empty() ||
                 // The previous index is included and therefore not relevant for exclusion shortcut
                 (utxo_pool_index - 1) == curr_selection.back() ||
+                // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded.
+                // Since the ratio of fee to long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
                 utxo.GetSelectionAmount() != utxo_pool.at(utxo_pool_index - 1).GetSelectionAmount() ||
                 utxo.fee != utxo_pool.at(utxo_pool_index - 1).fee)
             {
