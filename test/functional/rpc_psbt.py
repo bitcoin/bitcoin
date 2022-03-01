@@ -10,6 +10,10 @@ from itertools import product
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
+from test_framework.messages import (
+    ser_compact_size,
+    WITNESS_SCALE_FACTOR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -655,10 +659,11 @@ class PSBTTest(BitcoinTestFramework):
                 break
         psbt_in = dec["inputs"][input_idx]
         # Calculate the input weight
-        # (prevout + sequence + length of scriptSig + 2 bytes buffer) * 4 + len of scriptwitness
+        # (prevout + sequence + length of scriptSig + scriptsig + 1 byte buffer) * WITNESS_SCALE_FACTOR + num scriptWitness stack items + (length of stack item + stack item) * N stack items + 1 byte buffer
         len_scriptsig = len(psbt_in["final_scriptSig"]["hex"]) // 2 if "final_scriptSig" in psbt_in else 0
-        len_scriptwitness = len(psbt_in["final_scriptwitness"]["hex"]) // 2 if "final_scriptwitness" in psbt_in else 0
-        input_weight = ((41 + len_scriptsig + 2) * 4) + len_scriptwitness
+        len_scriptsig += len(ser_compact_size(len_scriptsig)) + 1
+        len_scriptwitness = (sum([(len(x) // 2) + len(ser_compact_size(len(x) // 2)) for x in psbt_in["final_scriptwitness"]]) + len(psbt_in["final_scriptwitness"]) + 1) if "final_scriptwitness" in psbt_in else 0
+        input_weight = ((40 + len_scriptsig) * WITNESS_SCALE_FACTOR) + len_scriptwitness
         low_input_weight = input_weight // 2
         high_input_weight = input_weight * 2
 
