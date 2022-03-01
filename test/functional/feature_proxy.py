@@ -30,6 +30,8 @@ addnode connect to generic DNS name
 addnode connect to a CJDNS address
 
 - Test getnetworkinfo for each node
+
+- Test passing invalid -proxy
 """
 
 import socket
@@ -303,6 +305,13 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n4['onion']['reachable'], True)
         assert_equal(n4['i2p']['reachable'], False)
         assert_equal(n4['cjdns']['reachable'], True)
+
+        self.stop_node(1)
+
+        self.log.info("Test passing invalid -proxy raises expected init error")
+        self.nodes[1].extra_args = ["-proxy=abc:def"]
+        msg = "Error: Invalid -proxy address or hostname: 'abc:def'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
 
 if __name__ == '__main__':
