@@ -27,7 +27,7 @@ class CNodeStats;
 class Coin;
 class RPCTimerInterface;
 class UniValue;
-class proxyType;
+class Proxy;
 // SYSCOIN
 class CDeterministicMNList;
 enum class SynchronizationState;
@@ -125,7 +125,7 @@ public:
     virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
 
     //! Get proxy.
-    virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
+    virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
 
     //! Get number of connections.
     virtual size_t getNodeCount(ConnectionDirection flags) = 0;
