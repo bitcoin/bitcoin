@@ -14,6 +14,7 @@
 #include <attributes.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <kernel/chainstatemanager_opts.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <fs.h>
@@ -853,7 +854,10 @@ private:
     friend CChainState;
 
 public:
-    explicit ChainstateManager(const CChainParams& chainparams) : m_chainparams{chainparams} { }
+    using Options = ChainstateManagerOpts;
+
+    explicit ChainstateManager(const Options& opts)
+        : m_chainparams(opts.chainparams) {};
 
     const CChainParams& GetParams() const { return m_chainparams; }
     const Consensus::Params& GetConsensus() const { return m_chainparams.GetConsensus(); }

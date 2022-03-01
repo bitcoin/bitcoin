@@ -22,8 +22,11 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, TestingSetup)
 //!
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
-    const CChainParams& chainparams = Params();
-    ChainstateManager manager(chainparams);
+    const ChainstateManager::Options chainman_opts{
+        Params(),
+    };
+    ChainstateManager manager{chainman_opts};
+
     WITH_LOCK(::cs_main, manager.m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true));
     CTxMemPool mempool;
 
