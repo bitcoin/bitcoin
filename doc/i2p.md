@@ -67,11 +67,7 @@ logging` for more information.
 
 Make outgoing connections only to I2P addresses. Incoming connections are not
 affected by this option. It can be specified multiple times to allow multiple
-network types, e.g. onlynet=ipv4, onlynet=ipv6, onlynet=onion, onlynet=i2p.
-
-Warning: if you use -onlynet with values other than onion, and the -onion or
--proxy option is set, then outgoing onion connections will still be made; use
--noonion or -onion=0 to disable outbound onion connections in this case.
+network types, e.g. onlynet=onion, onlynet=i2p.
 
 I2P support was added to Bitcoin Core in version 22.0 and there may be fewer I2P
 peers than Tor or IP ones. Therefore, using I2P alone without other networks may
