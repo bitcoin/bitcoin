@@ -633,7 +633,7 @@ RPCHelpMan listunspent()
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
     {
-        CCoinControl cctl;
+        CCoinControl cctl(gArgs.GetBoolArg("-avoidpartialspends", wallet::DEFAULT_AVOIDPARTIALSPENDS));
         cctl.m_avoid_address_reuse = false;
         cctl.m_min_depth = nMinDepth;
         cctl.m_max_depth = nMaxDepth;

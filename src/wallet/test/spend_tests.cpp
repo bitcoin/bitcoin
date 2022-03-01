@@ -25,13 +25,13 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // be uneconomical to add and spend the output), and make sure it pays the
     // leftover input amount which would have been change to the recipient
     // instead of the miner.
-    auto check_tx = [&wallet](CAmount leftover_input_amount) {
+    auto check_tx = [&wallet, this](CAmount leftover_input_amount) {
         CRecipient recipient{GetScriptForRawPubKey({}), 50 * COIN - leftover_input_amount, true /* subtract fee */};
         CTransactionRef tx;
         CAmount fee;
         int change_pos = -1;
         bilingual_str error;
-        CCoinControl coin_control;
+        CCoinControl coin_control(m_args.GetBoolArg("-avoidpartialspends", wallet::DEFAULT_AVOIDPARTIALSPENDS));
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output

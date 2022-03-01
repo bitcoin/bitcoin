@@ -62,7 +62,9 @@ public:
     //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
     FlatSigningProvider m_external_provider;
 
-    CCoinControl();
+    explicit CCoinControl(bool avoid_partial_spends)
+      : m_avoid_partial_spends{avoid_partial_spends}
+    {}
 
     bool HasSelected() const
     {

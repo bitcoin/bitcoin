@@ -524,7 +524,7 @@ public:
         CAmount fee;
         int changePos = -1;
         bilingual_str error;
-        CCoinControl dummy;
+        CCoinControl dummy(m_args.GetBoolArg("-avoidpartialspends", wallet::DEFAULT_AVOIDPARTIALSPENDS));
         FeeCalculation fee_calc_out;
         {
             BOOST_CHECK(CreateTransaction(*wallet, {recipient}, tx, fee, changePos, error, dummy, fee_calc_out));

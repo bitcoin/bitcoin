@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(coins, *wallet, 5 * CENT, 6 * 24, false, 0, true);
         add_coin(coins, *wallet, 3 * CENT, 6 * 24, false, 0, true);
         add_coin(coins, *wallet, 2 * CENT, 6 * 24, false, 0, true);
-        CCoinControl coin_control;
+        CCoinControl coin_control(m_args.GetBoolArg("-avoidpartialspends", wallet::DEFAULT_AVOIDPARTIALSPENDS));
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(coins.at(0).outpoint);
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
@@ -726,7 +726,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
             /*tx_noinputs_size=*/ 0,
             /*avoid_partial=*/ false,
         };
-        CCoinControl cc;
+        CCoinControl cc(m_args.GetBoolArg("-avoidpartialspends", wallet::DEFAULT_AVOIDPARTIALSPENDS));
         const auto result = SelectCoins(*wallet, coins, target, cc, cs_params);
         BOOST_CHECK(result);
         BOOST_CHECK_GE(result->GetSelectedValue(), target);

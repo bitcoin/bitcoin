@@ -471,7 +471,7 @@ void WalletModel::UnlockContext::CopyFrom(UnlockContext&& rhs)
 
 bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
 {
-    CCoinControl coin_control;
+    CCoinControl coin_control(gArgs.GetBoolArg("-avoidpartialspends", wallet::DEFAULT_AVOIDPARTIALSPENDS));
     coin_control.m_signal_bip125_rbf = true;
     std::vector<bilingual_str> errors;
     CAmount old_fee;
