@@ -583,5 +583,6 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
+    gArgs.SelectConfigNetwork(network);
     globalChainParams = CreateChainParams(gArgs, network);
 }
