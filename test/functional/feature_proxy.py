@@ -32,6 +32,7 @@ addnode connect to a CJDNS address
 - Test getnetworkinfo for each node
 
 - Test passing invalid -proxy
+- Test passing invalid -onion
 """
 
 import socket
@@ -311,6 +312,11 @@ class ProxyTest(BitcoinTestFramework):
         self.log.info("Test passing invalid -proxy raises expected init error")
         self.nodes[1].extra_args = ["-proxy=abc:def"]
         msg = "Error: Invalid -proxy address or hostname: 'abc:def'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing invalid -onion raises expected init error")
+        self.nodes[1].extra_args = ["-onion=xyz:abc"]
+        msg = "Error: Invalid -onion address or hostname: 'xyz:abc'"
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
 
