@@ -300,6 +300,8 @@ bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
 bool BlockManager::WriteBlockIndexDB()
 {
     AssertLockHeld(::cs_main);
+    AssertLockHeld(cs_LastBlockFile);
+
     std::vector<std::pair<int, const CBlockFileInfo*>> vFiles;
     vFiles.reserve(m_dirty_fileinfo.size());
     for (std::set<int>::iterator it = m_dirty_fileinfo.begin(); it != m_dirty_fileinfo.end();) {
@@ -324,6 +326,7 @@ bool BlockManager::LoadBlockIndexDB()
         return false;
     }
 
+    LOCK(cs_LastBlockFile);
     // Load block file info
     m_block_tree_db->ReadLastBlockFile(m_last_blockfile);
     m_blockfile_info.resize(m_last_blockfile + 1);
@@ -514,6 +517,7 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
 
 void BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
+    LOCK(cs_LastBlockFile);
     FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
     if (!UndoFileSeq().Flush(undo_pos_old, finalize)) {
         AbortNode("Flushing undo file to disk failed. This is likely the result of an I/O error.");
@@ -684,6 +688,8 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     AssertLockHeld(::cs_main);
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull()) {
+        LOCK(cs_LastBlockFile);
+
         FlatFilePos _pos;
         if (!FindUndoPos(state, pindex->nFile, _pos, ::GetSerializeSize(blockundo, CLIENT_VERSION) + 40)) {
             return error("ConnectBlock(): FindUndoPos failed");

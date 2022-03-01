@@ -116,13 +116,13 @@ private:
     void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd);
 
     RecursiveMutex cs_LastBlockFile;
-    std::vector<CBlockFileInfo> m_blockfile_info;
-    int m_last_blockfile = 0;
+    std::vector<CBlockFileInfo> m_blockfile_info GUARDED_BY(cs_LastBlockFile);
+    int m_last_blockfile GUARDED_BY(cs_LastBlockFile) = 0;
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
      *  or if we allocate more file space when we're in prune mode
      */
-    bool m_check_for_pruning = false;
+    bool m_check_for_pruning GUARDED_BY(cs_LastBlockFile) = false;
 
     /** Dirty block index entries. */
     std::set<CBlockIndex*> m_dirty_blockindex;
@@ -151,7 +151,7 @@ public:
 
     std::unique_ptr<CBlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
-    bool WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main, cs_LastBlockFile);
     bool LoadBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     CBlockIndex* AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

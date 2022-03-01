@@ -2477,7 +2477,10 @@ void CChainState::ForceFlushStateToDisk()
 void CChainState::PruneAndFlush()
 {
     BlockValidationState state;
-    m_blockman.m_check_for_pruning = true;
+    {
+        LOCK(m_blockman.cs_LastBlockFile);
+        m_blockman.m_check_for_pruning = true;
+    }
     if (!this->FlushStateToDisk(state, FlushStateMode::NONE)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
