@@ -33,6 +33,7 @@ addnode connect to a CJDNS address
 
 - Test passing invalid -proxy
 - Test passing invalid -onion
+- Test passing -onlynet=onion without -proxy or -onion
 """
 
 import socket
@@ -317,6 +318,15 @@ class ProxyTest(BitcoinTestFramework):
         self.log.info("Test passing invalid -onion raises expected init error")
         self.nodes[1].extra_args = ["-onion=xyz:abc"]
         msg = "Error: Invalid -onion address or hostname: 'xyz:abc'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        msg = (
+            "Error: Outbound connections restricted to Tor (-onlynet=onion) but "
+            "the proxy for reaching the Tor network is not provided (no -proxy= "
+            "and no -onion= given) or it is explicitly forbidden (-onion=0)"
+        )
+        self.log.info("Test passing -onlynet=onion without -proxy or -onion raises expected init error")
+        self.nodes[1].extra_args = ["-onlynet=onion"]
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
 
