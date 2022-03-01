@@ -49,8 +49,12 @@ WalletTxOut MakeWalletTxOut(CWallet& wallet,
 
     if (output.IsMWEB()) {
         mw::Coin coin;
-        if (wallet.GetCoin(output.ToMWEB(), coin)) {
-            result.address = wallet.GetMWWallet()->GetStealthAddress(coin.address_index);
+        if (wallet.GetCoin(output.ToMWEB(), coin) && coin.IsMine()) {
+            StealthAddress addr;
+            if (wallet.GetMWWallet()->GetStealthAddress(coin, addr)) {
+                result.address = addr;
+            }
+
             result.nValue = coin.amount;
         }
     } else {
@@ -538,9 +542,9 @@ public:
         RemoveWallet(m_wallet, false /* load_on_start */);
     }
     bool isLegacy() override { return m_wallet->IsLegacy(); }
-    StealthAddress getPeginAddress() override
+    bool getPeginAddress(StealthAddress& pegin_address) override
     {
-        return m_wallet->GetMWWallet()->GetStealthAddress(mw::PEGIN_INDEX);
+        return m_wallet->GetMWWallet()->GetStealthAddress(mw::PEGIN_INDEX, pegin_address);
     }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {

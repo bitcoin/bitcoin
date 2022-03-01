@@ -283,8 +283,8 @@ public:
     //! Return whether is a legacy wallet
     virtual bool isLegacy() = 0;
 
-    // Get MWEB wallet.
-    virtual StealthAddress getPeginAddress() = 0;
+    // Get pegin address from MWEB wallet.
+    virtual bool getPeginAddress(StealthAddress& pegin_address) = 0;
 
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
