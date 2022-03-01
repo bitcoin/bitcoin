@@ -1,110 +1,91 @@
-<TS version="2.1" language="mr_IN">
+<TS version="2.1" language="no">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">पत्ता किंवा लेबल संपादित करण्यासाठी उजवे बटण क्लिक करा.</translation>
+        <translation type="unfinished">Høyreklikk for å redigere addressen eller etikketen </translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">एक नवीन पत्ता तयार करा</translation>
+        <translation type="unfinished">Lag en ny adresse</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;नवा</translation>
+        <translation type="unfinished">&amp;Ny
+</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">सध्याचा निवडलेला पत्ता सिस्टीम क्लिपबोर्डावर कॉपी करा</translation>
+        <translation type="unfinished">Kopier den valgte adressen til systemutklippstavlen</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;कॉपी</translation>
+        <translation type="unfinished">&amp;Kopier</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">&amp;बंद करा</translation>
+        <translation type="unfinished">C&amp;Tap</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">सध्याचा निवडलेला पत्ता यादीमधून काढून टाका</translation>
+        <translation type="unfinished">Slett den valgte adressen fra listen </translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">शोधण्यासाठी पत्ता किंवा लेबल दाखल करा</translation>
+        <translation type="unfinished">Tast inn adressen eller etiketten for å søke</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">सध्याच्या टॅबमधील डेटा एका फाईलमध्ये एक्स्पोर्ट करा</translation>
+        <translation type="unfinished">Eksporter dataen i gjeldende fane til en fil </translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;एक्स्पोर्ट</translation>
+        <translation type="unfinished">&amp;Eksporter</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;काढून टाका</translation>
+        <translation type="unfinished">&amp;Slett</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">ज्या पत्त्यावर नाणी पाठवायची आहेत तो निवडा</translation>
+        <translation type="unfinished">Velg adressen du vil sende mynter til </translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">ज्या पत्त्यावर नाणी प्राप्त करायची आहेत तो</translation>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation type="unfinished">&amp;निवडा</translation>
+        <translation type="unfinished">Velg adressen du vil motta mynter med </translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">प्रेषक पत्ते</translation>
+        <translation type="unfinished">Sender adresser </translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">स्वीकृती पत्ते</translation>
+        <translation type="unfinished">Mottar adresser </translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">पैसे पाठविण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत. नाणी पाठविण्यापूर्वी नेहमी रक्कम आणि प्राप्त होणारा पत्ता तपासून पहा.</translation>
+        <translation type="unfinished">Dette er dine Bitcoin adresser for å sende betalinger.Alltid sjekk mengden og mottaker adressen før du sender mynter.  </translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;पत्ता कॉपी करा</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Label</source>
-        <translation type="unfinished">शिक्का कॉपी करा</translation>
-    </message>
-    <message>
-        <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;संपादित</translation>
+        <translation type="unfinished">&amp;Koper adresse</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">पत्त्याची निर्यात करा</translation>
+        <translation type="unfinished">Eksporter adresse liste</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">निर्यात अयशस्वी</translation>
+        <translation type="unfinished">Eksportering feilet </translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
-        <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation type="unfinished">पत्ता</translation>
+        <translation type="unfinished">Adresse </translation>
     </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message numerus="yes">
@@ -169,13 +150,6 @@
     </message>
     </context>
 <context>
-    <name>CoinControlDialog</name>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
-    </message>
-    </context>
-<context>
     <name>Intro</name>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
@@ -191,18 +165,7 @@
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">पत्ता</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
+        <translation type="unfinished">Adresse </translation>
     </message>
     </context>
 <context>
@@ -214,11 +177,7 @@
             <numerusform />
         </translation>
     </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -230,40 +189,25 @@
     </message>
     </context>
 <context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(लेबल नाही)</translation>
-    </message>
-    </context>
-<context>
     <name>TransactionView</name>
     <message>
-        <source>Label</source>
-        <translation type="unfinished">लेबल</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation type="unfinished">पत्ता</translation>
+        <translation type="unfinished">Adresse </translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">निर्यात अयशस्वी</translation>
+        <translation type="unfinished">Eksportering feilet </translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;एक्स्पोर्ट</translation>
+        <translation type="unfinished">&amp;Eksporter</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">सध्याच्या टॅबमधील डेटा एका फाईलमध्ये एक्स्पोर्ट करा</translation>
+        <translation type="unfinished">Eksporter dataen i gjeldende fane til en fil </translation>
     </message>
     </context>
 </TS>

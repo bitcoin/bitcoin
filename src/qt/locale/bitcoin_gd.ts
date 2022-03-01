@@ -1,44 +1,36 @@
-<TS version="2.1" language="uz@Latn">
+<TS version="2.1" language="gd">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Manzil yoki yorliqni tahrirlash uchun oʻng tugmani bosing</translation>
+        <translation type="unfinished">Dèan briogadh deas airson seòladh no bileag a dheasachadh</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Yangi manzil yaratish</translation>
+        <translation type="unfinished">Cruthaich seòladh ùr</translation>
     </message>
     <message>
-        <source>&amp;New</source>
-        <translation type="unfinished">&amp;Yangi</translation>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation type="unfinished">Dèan lethbhreac den t-seòladh a chaidh a thaghadh an-dràsta gu cairt-bhòrd an t-siostaim</translation>
     </message>
     <message>
-        <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Nusxalash</translation>
+        <source>Delete the currently selected address from the list</source>
+        <translation type="unfinished">Thoir às an seòladh a chaidh a thaghadh an-dràsta bhon liosta</translation>
     </message>
     <message>
-        <source>C&amp;lose</source>
-        <translation type="unfinished">Yo&amp;pish</translation>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">Tagh an seòladh airson buinn a chuir thuige</translation>
     </message>
     <message>
-        <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;O'chirish</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Manzillarni nusxalash</translation>
+        <source>Sending addresses</source>
+        <translation type="unfinished">A ’cur sheòlaidhean</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation type="unfinished">Manzil</translation>
+        <translation type="unfinished">Seòladh</translation>
     </message>
     </context>
 <context>
@@ -48,11 +40,15 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
+            <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
+            <numerusform />
+            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -62,11 +58,15 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
+            <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
+            <numerusform />
+            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -76,11 +76,15 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
+            <numerusform />
+            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
+            <numerusform />
+            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -93,7 +97,21 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
+            <numerusform />
+            <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Mearachd</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished">Rabhadh</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished">Fiosrachadh</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -101,7 +119,23 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
+            <numerusform />
+            <numerusform />
         </translation>
+    </message>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet Name</source>
+        <translation type="unfinished">Ainm Wallet</translation>
+    </message>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation type="unfinished">ainm</translation>
     </message>
     </context>
 <context>
@@ -112,7 +146,34 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
+            <numerusform />
+            <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Mearachd</translation>
+    </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">Fhoirm</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Mearachd</translation>
+    </message>
+    </context>
+<context>
+    <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">Fhoirm</translation>
     </message>
     </context>
 <context>
@@ -120,14 +181,7 @@
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Manzil</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
+        <translation type="unfinished">Seòladh</translation>
     </message>
     </context>
 <context>
@@ -135,6 +189,8 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
+            <numerusform />
+            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -147,25 +203,23 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
+            <numerusform />
+            <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>Label</source>
-        <translation type="unfinished">Yorliq</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation type="unfinished">Manzil</translation>
+        <translation type="unfinished">Seòladh</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Mearachd</translation>
     </message>
     </context>
 </TS>
