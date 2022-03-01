@@ -99,7 +99,7 @@ bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption(const ArgsManager& args);
-fs::path GetConfigFile(const std::string& confPath);
+fs::path GetConfigFile(const ArgsManager& args, const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -122,11 +122,12 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
  * Most paths passed as configuration arguments are treated as relative to
  * the datadir if they are not absolute.
  *
+ * @param args The current set of command line args
  * @param path The path to be conditionally prefixed with datadir.
  * @param net_specific Use network specific datadir variant
  * @return The normalized path.
  */
-fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
+fs::path AbsPathForConfigVal(const ArgsManager& args, const fs::path& path, bool net_specific = true);
 
 inline bool IsSwitchChar(char c)
 {
