@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <index/base.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/ui_interface.h>
 #include <shutdown.h>
