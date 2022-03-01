@@ -395,6 +395,13 @@ std::string HelpMessageGroup(const std::string& message);
  */
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
+/**
+ * Set the arguments for chainparams
+ * @see chainparamsbase.h
+ */
+void SetupChainParamsBaseOptions(ArgsManager& argsman);
+
+
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption(const ArgsManager& args);
 fs::path GetConfigFile(const ArgsManager& args, const std::string& confPath);
