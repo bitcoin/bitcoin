@@ -48,10 +48,10 @@ outgoing connections, but more is possible.
     -seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
                     other P2P nodes.
 
-    -onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
-                    connections are not affected by this option. This option can be
-                    specified multiple times to allow multiple network types, e.g.
-                    onlynet=onion, onlynet=i2p.
+    -onlynet=onion  Make automatic outbound connections only to .onion addresses.
+                    Inbound and manual connections are not affected by this option.
+                    It can be specified multiple times to allow multiple networks,
+                    e.g. onlynet=onion, onlynet=i2p.
 
 An example how to start the client if the Tor proxy is running on local host on
 port 9050 and only allows .onion nodes to connect:
