@@ -34,6 +34,7 @@ addnode connect to a CJDNS address
 - Test passing invalid -proxy
 - Test passing invalid -onion
 - Test passing -onlynet=onion without -proxy or -onion
+- Test passing -onlynet=onion with -onion=0 and with -noonion
 """
 
 import socket
@@ -328,6 +329,11 @@ class ProxyTest(BitcoinTestFramework):
         self.log.info("Test passing -onlynet=onion without -proxy or -onion raises expected init error")
         self.nodes[1].extra_args = ["-onlynet=onion"]
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing -onlynet=onion with -onion=0/-noonion raises expected init error")
+        for arg in ["-onion=0", "-noonion"]:
+            self.nodes[1].extra_args = ["-onlynet=onion", arg]
+            self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
 
 if __name__ == '__main__':
