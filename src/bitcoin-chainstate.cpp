@@ -72,6 +72,7 @@ int main(int argc, char* argv[])
     // SETUP: Chainstate
     const ChainstateManager::Options chainman_opts{
         chainparams,
+        static_cast<int64_t(*)()>(GetTime),
     };
     ChainstateManager chainman{chainman_opts};
 

@@ -10,6 +10,7 @@
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <script/standard.h>
+#include <timedata.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/strencodings.h>

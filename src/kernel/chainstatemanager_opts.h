@@ -17,6 +17,7 @@ class CChainParams;
  */
 struct ChainstateManagerOpts {
     const CChainParams& chainparams;
+    const std::function<int64_t()> adjusted_time_callback{nullptr};
 };
 
 #endif // BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
