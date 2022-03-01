@@ -60,6 +60,7 @@ bool Keychain::RewindOutput(const Output& output, mw::Coin& coin) const
     coin.blind = boost::make_optional(mask.GetRawBlind());
     coin.amount = value;
     coin.output_id = output.GetOutputID();
+    coin.address = wallet_addr;
 
     return true;
 }

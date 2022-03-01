@@ -37,9 +37,11 @@ public:
         const mw::Hash& output_id,
         mw::Coin& coin
     );
-    StealthAddress GetStealthAddress(const uint32_t index) const;
+    bool GetStealthAddress(const mw::Coin& coin, StealthAddress& address) const;
+    bool GetStealthAddress(const uint32_t index, StealthAddress& address) const;
 
     void LoadToWallet(const mw::Coin& coin);
+    void SaveToWallet(const std::vector<mw::Coin>& coins);
 
 private:
     mw::Keychain::Ptr GetKeychain() const;

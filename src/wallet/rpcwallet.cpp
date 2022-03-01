@@ -1099,10 +1099,10 @@ static UniValue ListReceived(const CWallet* const pwallet, const UniValue& param
         if (nDepth < nMinDepth)
             continue;
 
-        for (const CTxOut& txout : wtx.tx->vout)
+        for (const CTxOutput& txout : wtx.tx->GetOutputs())
         {
             CTxDestination address;
-            if (!ExtractDestination(txout.scriptPubKey, address))
+            if (!pwallet->ExtractOutputDestination(txout, address))
                 continue;
 
             if (has_filtered_address && !(filtered_address == address)) {
@@ -1114,7 +1114,7 @@ static UniValue ListReceived(const CWallet* const pwallet, const UniValue& param
                 continue;
 
             tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
+            item.nAmount += pwallet->GetValue(txout);
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)

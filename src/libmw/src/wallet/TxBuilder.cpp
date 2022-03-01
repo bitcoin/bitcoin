@@ -10,7 +10,8 @@ mw::Transaction::CPtr TxBuilder::BuildTx(
     const std::vector<mw::Recipient>& recipients,
     const std::vector<PegOutCoin>& pegouts,
     const boost::optional<CAmount>& pegin_amount,
-    const CAmount fee)
+    const CAmount fee,
+    std::vector<mw::Coin>& output_coins)
 {
     CAmount pegout_total = std::accumulate(
         pegouts.cbegin(), pegouts.cend(), (CAmount)0,
@@ -40,6 +41,7 @@ mw::Transaction::CPtr TxBuilder::BuildTx(
 
     // Create outputs
     TxBuilder::Outputs outputs = CreateOutputs(recipients);
+    output_coins = outputs.coins;
 
     // Total kernel offset is split between raw kernel_offset and the kernel's blinding factor.
     // sum(output.blind) - sum(input.blind) = kernel_offset + sum(kernel.blind)
@@ -119,28 +121,36 @@ TxBuilder::Outputs TxBuilder::CreateOutputs(const std::vector<mw::Recipient>& re
     Blinds output_blinds;
     Blinds output_keys;
     std::vector<Output> outputs;
-    std::transform(
-        recipients.cbegin(), recipients.cend(), std::back_inserter(outputs),
-        [&output_blinds, &output_keys](const mw::Recipient& recipient) {
-            BlindingFactor blind;
-            SecretKey ephemeral_key = SecretKey::Random();
-            Output output = Output::Create(
-                &blind,
-                ephemeral_key,
-                recipient.address,
-                recipient.amount
-            );
+    std::vector<mw::Coin> coins;
 
-            output_blinds.Add(blind);
-            output_keys.Add(ephemeral_key);
-            return output;
-        }
-    );
+    for (const mw::Recipient& recipient : recipients) {
+        BlindingFactor raw_blind;
+        SecretKey ephemeral_key = SecretKey::Random();
+        Output output = Output::Create(
+            &raw_blind,
+            ephemeral_key,
+            recipient.address,
+            recipient.amount
+        );
+
+        output_blinds.Add(Pedersen::BlindSwitch(raw_blind, recipient.amount));
+        output_keys.Add(ephemeral_key);
+        outputs.push_back(output);
+
+        mw::Coin coin;
+        coin.blind = raw_blind;
+        coin.amount = recipient.amount;
+        coin.output_id = output.GetOutputID();
+        coin.sender_key = ephemeral_key;
+        coin.address = recipient.address;
+        coins.push_back(coin);
+    }
 
     return TxBuilder::Outputs{
         output_blinds.Total(),
         SecretKey(output_keys.Total().data()),
-        std::move(outputs)
+        std::move(outputs),
+        std::move(coins)
     };
 }
 

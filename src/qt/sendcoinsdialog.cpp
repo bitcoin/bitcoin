@@ -275,7 +275,12 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     // Reserve pegout keys and set pegout addresses
     for (SendCoinsRecipient& rcp : recipients) {
         if (rcp.type == SendCoinsRecipient::MWEB_PEGIN) {
-            rcp.address = QString::fromStdString(EncodeDestination(model->wallet().getPeginAddress()));
+            StealthAddress pegin_address;
+            if (!model->wallet().getPeginAddress(pegin_address)) {
+                fNewRecipientAllowed = true;
+                return false;
+            }
+            rcp.address = QString::fromStdString(EncodeDestination(pegin_address));
         } else if (rcp.type == SendCoinsRecipient::MWEB_PEGOUT) {
             CTxDestination dest;
             auto reserved_dest = model->wallet().reserveNewDestination(dest);
@@ -1015,8 +1020,10 @@ void SendCoinsDialog::mwebPegInButtonClicked(bool checked)
     ui->pushButtonMWEBPegOut->setChecked(false);
 
     SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
-    if (checked) {
-        entry->setPegInAddress(EncodeDestination(model->wallet().getPeginAddress()));
+
+    StealthAddress pegin_address;
+    if (checked && model->wallet().getPeginAddress(pegin_address)) {
+        entry->setPegInAddress(EncodeDestination(pegin_address));
     } else {
         entry->setPegInAddress("");
     }

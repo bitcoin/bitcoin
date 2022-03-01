@@ -1351,7 +1351,7 @@ isminetype CWallet::IsMine(const CTxInput& input) const
     AssertLockHeld(cs_wallet);
     if (input.IsMWEB()) {
         mw::Coin coin;
-        return GetCoin(input.ToMWEB(), coin) ? ISMINE_SPENDABLE : ISMINE_NO;
+        return GetCoin(input.ToMWEB(), coin) && coin.IsMine() ? ISMINE_SPENDABLE : ISMINE_NO;
     }
 
     const CWalletTx* prev = FindPrevTx(input);
@@ -1372,7 +1372,7 @@ CAmount CWallet::GetDebit(const CTxInput& input, const isminefilter& filter) con
         LOCK(cs_wallet);
         if (input.IsMWEB()) {
             mw::Coin coin;
-            if ((filter & ISMINE_SPENDABLE) && GetCoin(input.ToMWEB(), coin)) {
+            if ((filter & ISMINE_SPENDABLE) && GetCoin(input.ToMWEB(), coin) && coin.IsMine()) {
                 return coin.amount;
             }
 
@@ -1397,7 +1397,7 @@ isminetype CWallet::IsMine(const CTxOutput& output) const
     AssertLockHeld(cs_wallet);
     if (output.IsMWEB()) {
         mw::Coin coin;
-        return GetCoin(output.ToMWEB(), coin) ? ISMINE_SPENDABLE : ISMINE_NO;
+        return GetCoin(output.ToMWEB(), coin) && coin.IsMine() ? ISMINE_SPENDABLE : ISMINE_NO;
     }
 
     return IsMine(DestinationAddr(output.GetScriptPubKey()));
@@ -1433,7 +1433,7 @@ bool CWallet::IsChange(const CTxOutput& output) const
     if (output.IsMWEB()) {
         mw::Coin coin;
         if (GetCoin(output.ToMWEB(), coin)) {
-            return coin.address_index == mw::CHANGE_INDEX;
+            return coin.IsChange();
         }
 
         return false;
@@ -1494,7 +1494,7 @@ bool CWallet::IsFromMe(const CTransaction& tx) const
 CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
 {
     CAmount nDebit = 0;
-    for (const CTxIn& txin : tx.vin)
+    for (const CTxInput& txin : tx.GetInputs())
     {
         nDebit += GetDebit(txin, filter);
         if (!MoneyRange(nDebit))
@@ -2061,7 +2061,7 @@ CAmount CWalletTx::GetCachableAmount(AmountType type, const isminefilter& filter
 {
     auto& amount = m_amounts[type];
     if (recalculate || !amount.m_cached[filter]) {
-        amount.Set(filter, type == DEBIT ? pwallet->GetDebit(*tx, filter) : pwallet->GetCredit(*tx, filter));
+        amount.Set(filter, type == DEBIT ? pwallet->GetDebit(*tx, filter) : pwallet->GetCredit(*tx, filter)); // MW: TODO - Need to support partial mweb info
         m_is_cache_empty = false;
     }
     return amount.m_value[filter];
@@ -2456,7 +2456,11 @@ void CWallet::AvailableCoins(std::vector<COutputCoin>& vCoins, bool fOnlySafe, c
                     continue;
                 }
 
-                StealthAddress address = mweb_wallet->GetStealthAddress(coin.address_index);
+                StealthAddress address;
+                if (!mweb_wallet->GetStealthAddress(coin, address)) {
+                    continue;
+                }
+
                 vCoins.push_back(MWOutput{coin, nDepth, address, &wtx});
             } else {
                 size_t i = boost::get<COutPoint>(output.GetIndex()).n;
@@ -2511,7 +2515,7 @@ std::map<CTxDestination, std::vector<COutputCoin>> CWallet::ListCoins() const
                 if (ExtractOutputDestination(FindNonChangeParentOutput(*wtx->tx, output_idx), address)) {
                     if (output_idx.type() == typeid(mw::Hash)) {
                         mw::Coin coin;
-                        if (GetCoin(boost::get<mw::Hash>(output_idx), coin)) {
+                        if (GetCoin(boost::get<mw::Hash>(output_idx), coin) && coin.IsMine()) {
                             result[address].emplace_back(MWOutput{coin, depth, boost::get<StealthAddress>(address), wtx});
                         }
                     } else {
@@ -2618,7 +2622,7 @@ bool CWallet::SelectCoins(const std::vector<COutputCoin>& vAvailableCoins, const
     {
         if (idx.type() == typeid(mw::Hash)) {
             mw::Coin mweb_coin;
-            if (!GetCoin(boost::get<mw::Hash>(idx), mweb_coin)) {
+            if (!GetCoin(boost::get<mw::Hash>(idx), mweb_coin) || !mweb_coin.IsMine()) {
                 return false;
             }
 
@@ -4331,7 +4335,12 @@ bool CWallet::ExtractOutputDestination(const CTxOutput& output, CTxDestination& 
             return false;
         }
 
-        dest = mweb_wallet->GetStealthAddress(coin.address_index);
+        StealthAddress address;
+        if (!mweb_wallet->GetStealthAddress(coin, address)) {
+            return false;
+        }
+
+        dest = address;
         return true;
     } else {
         return ExtractDestination(output.GetScriptPubKey(), dest);
@@ -4346,7 +4355,13 @@ bool CWallet::ExtractDestinationScript(const CTxOutput& output, DestinationAddr&
             return false;
         }
 
-        dest = mweb_wallet->GetStealthAddress(coin.address_index);
+        StealthAddress address;
+        if (!mweb_wallet->GetStealthAddress(coin, address)) {
+            return false;
+        }
+
+        dest = address;
+        return true;
     } else {
         dest = DestinationAddr(output.GetScriptPubKey());
     }

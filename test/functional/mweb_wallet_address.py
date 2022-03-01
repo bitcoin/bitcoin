@@ -30,7 +30,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class MWEBWalletPreHDTest(BitcoinTestFramework):
+class MWEBWalletAddressTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -56,8 +56,13 @@ class MWEBWalletPreHDTest(BitcoinTestFramework):
 
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
-
+        
     def run_test(self):
+        self.test_prehd_wallet()
+        # TODO: self.test_blank_wallet()
+        # TODO: self.test_keys_disabled()
+
+    def test_prehd_wallet(self):
         self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
 
         node_master = self.nodes[0]
@@ -82,4 +87,4 @@ class MWEBWalletPreHDTest(BitcoinTestFramework):
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", node_master.getnewaddress, address_type='mweb')
 
 if __name__ == '__main__':
-    MWEBWalletPreHDTest().main()
+    MWEBWalletAddressTest().main()

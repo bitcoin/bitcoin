@@ -21,6 +21,7 @@ class TxBuilder
         BlindingFactor total_blind;
         SecretKey total_key;
         std::vector<Output> outputs;
+        std::vector<mw::Coin> coins;
     };
 
 public:
@@ -29,7 +30,8 @@ public:
         const std::vector<mw::Recipient>& recipients,
         const std::vector<PegOutCoin>& pegouts,
         const boost::optional<CAmount>& pegin_amount,
-        const CAmount fee
+        const CAmount fee,
+        std::vector<mw::Coin>& output_coins
     );
 
 private:

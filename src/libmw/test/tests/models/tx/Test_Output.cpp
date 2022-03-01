@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(Create)
         receiver_subaddr,
         amount
     );
-    Commitment expected_commit = Commitment::Blinded(blind, amount);
+    Commitment expected_commit = Commitment::Switch(blind, amount);
 
     // Verify bulletproof
     ProofData proof_data = output.BuildProofData();

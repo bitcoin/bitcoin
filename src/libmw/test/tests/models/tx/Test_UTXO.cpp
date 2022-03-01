@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(TxUTXO)
         StealthAddress::Random(),
         amount
     );
-    Commitment commit = Commitment::Blinded(blind, amount);
+    Commitment commit = Commitment::Switch(blind, amount);
 
     int32_t blockHeight = 20;
     mmr::LeafIndex leafIndex = mmr::LeafIndex::At(5);

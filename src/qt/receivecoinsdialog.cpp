@@ -184,11 +184,15 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
             tr("Could not unlock wallet."),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
-    case AddressTableModel::EditStatus::KEY_GENERATION_FAILURE:
-        QMessageBox::critical(this, windowTitle(),
-            tr("Could not generate new %1 address").arg(QString::fromStdString(FormatOutputType(address_type))),
-            QMessageBox::Ok, QMessageBox::Ok);
+    case AddressTableModel::EditStatus::KEY_GENERATION_FAILURE: {
+        QString message = tr("Could not generate new %1 address.").arg(QString::fromStdString(FormatOutputType(address_type)));
+        if (address_type == OutputType::MWEB) {
+            message += tr("\nTry upgrading your wallet.");
+        }
+
+        QMessageBox::critical(this, windowTitle(), message, QMessageBox::Ok, QMessageBox::Ok);
         break;
+    }
     // These aren't valid return values for our action
     case AddressTableModel::EditStatus::INVALID_ADDRESS:
     case AddressTableModel::EditStatus::DUPLICATE_ADDRESS:

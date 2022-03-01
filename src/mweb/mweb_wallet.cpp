@@ -23,7 +23,7 @@ std::vector<mw::Coin> Wallet::RewindOutputs(const CTransaction& tx)
 bool Wallet::RewindOutput(const boost::variant<mw::Block::CPtr, mw::Transaction::CPtr>& parent,
         const mw::Hash& output_id, mw::Coin& coin)
 {
-    if (GetCoin(output_id, coin)) {
+    if (GetCoin(output_id, coin) && coin.IsMine()) {
         return true;
     }
 
@@ -61,19 +61,43 @@ bool Wallet::RewindOutput(const boost::variant<mw::Block::CPtr, mw::Transaction:
 
 bool Wallet::IsChange(const StealthAddress& address) const
 {
-    return IsSupported() && address == GetStealthAddress(mw::CHANGE_INDEX);
+    StealthAddress change_addr;
+    return GetStealthAddress(mw::CHANGE_INDEX, change_addr) && change_addr == address;
 }
 
-StealthAddress Wallet::GetStealthAddress(const uint32_t index) const
+bool Wallet::GetStealthAddress(const mw::Coin& coin, StealthAddress& address) const
+{
+    if (coin.HasAddress()) {
+        address = *coin.address;
+        return true;
+    }
+
+    return GetStealthAddress(coin.address_index, address);
+}
+
+bool Wallet::GetStealthAddress(const uint32_t index, StealthAddress& address) const
 {
     mw::Keychain::Ptr keychain = GetKeychain();
-    assert(keychain != nullptr);
-    return keychain->GetStealthAddress(index);
+    if (!keychain || index == mw::UNKNOWN_INDEX) {
+        return false;
+    }
+
+    address = keychain->GetStealthAddress(index);
+    return true;
 }
 
 void Wallet::LoadToWallet(const mw::Coin& coin)
 {
     m_coins[coin.output_id] = coin;
+}
+
+void Wallet::SaveToWallet(const std::vector<mw::Coin>& coins)
+{
+    WalletBatch batch(m_pWallet->GetDatabase());
+    for (const mw::Coin& coin : coins) {
+        m_coins[coin.output_id] = coin;
+        batch.WriteMWEBCoin(coin);
+    }
 }
 
 bool Wallet::GetCoin(const mw::Hash& output_id, mw::Coin& coin) const

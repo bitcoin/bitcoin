@@ -180,7 +180,12 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             switch (rcp.type) {
             case SendCoinsRecipient::MWEB_PEGIN: {
                 coin_control_copy.fPegIn = true;
-                receiver = m_wallet->getPeginAddress();
+                StealthAddress pegin_address;
+                if (!m_wallet->getPeginAddress(pegin_address)) {
+                    return TransactionCreationFailed;
+                }
+
+                receiver = pegin_address;
                 break;
             }
             case SendCoinsRecipient::MWEB_PEGOUT: {

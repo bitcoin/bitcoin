@@ -75,7 +75,7 @@ Output Output::Create(
     Signature signature = Schnorr::Sign(sender_privkey.data(), sig_message);
 
     if (blind_out != nullptr) {
-        *blind_out = blind;
+        *blind_out = mask.GetRawBlind();
     }
 
     return Output{

@@ -4,6 +4,7 @@
 #include <mw/models/tx/Output.h>
 #include <mw/models/wallet/StealthAddress.h>
 #include <mw/crypto/Bulletproofs.h>
+#include <mw/crypto/Pedersen.h>
 
 TEST_NAMESPACE
 
@@ -18,10 +19,11 @@ public:
         const StealthAddress& receiver_addr,
         const uint64_t amount)
     {
-        BlindingFactor blinding_factor;
-        Output output = Output::Create(&blinding_factor, sender_privkey, receiver_addr, amount);
+        BlindingFactor raw_blind;
+        Output output = Output::Create(&raw_blind, sender_privkey, receiver_addr, amount);
+        BlindingFactor blind_switch = Pedersen::BlindSwitch(raw_blind, amount);
 
-        return TxOutput{ std::move(blinding_factor), amount, std::move(output) };
+        return TxOutput{std::move(blind_switch), amount, std::move(output)};
     }
 
     const BlindingFactor& GetBlind() const noexcept { return m_blindingFactor; }

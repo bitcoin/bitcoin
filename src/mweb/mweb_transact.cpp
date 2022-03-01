@@ -88,18 +88,29 @@ bool Transact::CreateTx(
         if (change_amount < 0) {
             return false;
         }
-        StealthAddress change_address = mweb_wallet->GetStealthAddress(mw::CHANGE_INDEX);
+        StealthAddress change_address;
+        if (!mweb_wallet->GetStealthAddress(mw::CHANGE_INDEX, change_address)) {
+            return false;
+        }
+
         receivers.push_back(mw::Recipient{change_amount, change_address});
     }
 
     // Create transaction
     std::vector<mw::Coin> input_coins = GetInputCoins(selected_coins);
+    std::vector<mw::Coin> output_coins;
     transaction.mweb_tx = TxBuilder::BuildTx(
         input_coins,
         receivers,
         pegouts,
         pegin_amount,
-        mweb_fee);
+        mweb_fee,
+        output_coins
+    );
+
+    if (!output_coins.empty()) {
+        mweb_wallet->SaveToWallet(output_coins);
+    }
 
     // Update pegin output
     auto pegins = transaction.mweb_tx.GetPegIns();
