@@ -3971,7 +3971,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Optimistically try to reconstruct anyway since we might be
                 // able to without any round trips.
                 PartiallyDownloadedBlock tempBlock(&m_mempool);
-                ReadStatus status = tempBlock.InitData(cmpctblock, vExtraTxnForCompact);
+                ReadStatus status = tempBlock.InitData(cmpctblock, vExtraTxnForCompact, cmpctblock.vchNEVMBlockData);
                 if (status != READ_STATUS_OK) {
                     // TODO: don't ignore failures
                     return;
