@@ -67,6 +67,7 @@ from test_framework.messages import (
     msg_version,
     MSG_WTX,
     msg_wtxidrelay,
+    NODE_MWEB,
     NODE_NETWORK,
     NODE_WITNESS,
     sha256,
@@ -308,8 +309,8 @@ class P2PInterface(P2PConnection):
         self.nServices = 0
 
         self.support_addrv2 = support_addrv2
-
-    def peer_connect(self, *args, services=NODE_NETWORK|NODE_WITNESS, send_version=True, **kwargs):
+        
+    def peer_connect(self, *args, services=NODE_NETWORK|NODE_WITNESS|NODE_MWEB, send_version=True, **kwargs):
         create_conn = super().peer_connect(*args, **kwargs)
 
         if send_version:

@@ -10,7 +10,7 @@ Version 2 compact blocks are post-segwit (wtxids)
 import random
 
 from test_framework.blocktools import create_block, NORMAL_GBT_REQUEST_PARAMS, add_witness_commitment
-from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, HeaderAndShortIDs, msg_no_witness_block, msg_no_witness_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, msg_block, msg_blocktxn, MSG_BLOCK, MSG_CMPCT_BLOCK, MSG_WITNESS_FLAG, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ser_uint256, ToHex
+from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, HeaderAndShortIDs, msg_no_witness_block, msg_no_witness_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, msg_block, msg_blocktxn, MSG_BLOCK, MSG_CMPCT_BLOCK, MSG_MWEB_FLAG, MSG_WITNESS_FLAG, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ser_uint256, ToHex
 from test_framework.p2p import p2p_lock, P2PInterface
 from test_framework.script import CScript, OP_TRUE, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
@@ -222,7 +222,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         if old_node is not None:
             # Verify that a peer using an older protocol version can receive
             # announcements from this node.
-            old_node.send_and_ping(msg_sendcmpct(announce=True, version=preferred_version-1))
+            old_node.send_and_ping(msg_sendcmpct(announce=True, version=1))
             # Header sync
             old_node.request_headers_and_sync(locator=[tip])
             check_announcement_of_new_block(node, old_node, lambda p: "cmpctblock" in p.last_message)
@@ -238,7 +238,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # This index will be too high
         prefilled_txn = PrefilledTransaction(1, block.vtx[0])
         cmpct_block.prefilled_txn = [prefilled_txn]
-        self.segwit_node.send_await_disconnect(msg_cmpctblock(cmpct_block))
+        self.segwit_node.send_await_disconnect(msg_cmpctblock(header_and_shortids=cmpct_block, version=3))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
     # Compare the generated shortids to what we expect based on BIP 152, given
@@ -320,7 +320,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
             # And this checks the witness
             wtxid = entry.tx.calc_sha256(True)
-            if version == 2:
+            if version >= 2:
                 assert_equal(wtxid, block.vtx[entry.index].calc_sha256(True))
             else:
                 # Shouldn't have received a witness
@@ -341,7 +341,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 header_and_shortids.prefilled_txn.pop(0)
             else:
                 tx_hash = block.vtx[index].sha256
-                if version == 2:
+                if version >= 2:
                     tx_hash = block.vtx[index].calc_sha256(True)
                 shortid = calculate_shortid(k0, k1, tx_hash)
                 assert_equal(shortid, header_and_shortids.shortids[0])
@@ -377,10 +377,10 @@ class CompactBlocksTest(BitcoinTestFramework):
             comp_block.nonce = 0
             [k0, k1] = comp_block.get_siphash_keys()
             coinbase_hash = block.vtx[0].sha256
-            if version == 2:
+            if version >= 2:
                 coinbase_hash = block.vtx[0].calc_sha256(True)
             comp_block.shortids = [calculate_shortid(k0, k1, coinbase_hash)]
-            test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
+            test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p(), version))
             assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
             # Expect a getblocktxn message.
             with p2p_lock:
@@ -389,7 +389,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert_equal(absolute_indexes, [0])  # should be a coinbase request
 
             # Send the coinbase, and verify that the tip advances.
-            if version == 2:
+            if version >= 2:
                 msg = msg_blocktxn()
             else:
                 msg = msg_no_witness_blocktxn()
@@ -420,10 +420,9 @@ class CompactBlocksTest(BitcoinTestFramework):
     def test_getblocktxn_requests(self, test_node):
         version = test_node.cmpct_version
         node = self.nodes[0]
-        with_witness = (version == 2)
 
         def test_getblocktxn_response(compact_block, peer, expected_result):
-            msg = msg_cmpctblock(compact_block.to_p2p())
+            msg = msg_cmpctblock(compact_block.to_p2p(), version)
             peer.send_and_ping(msg)
             with p2p_lock:
                 assert "getblocktxn" in peer.last_message
@@ -441,12 +440,12 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_with_transactions(node, utxo, 5)
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
         comp_block = HeaderAndShortIDs()
-        comp_block.initialize_from_block(block, use_witness=with_witness)
+        comp_block.initialize_from_block(block, version=version)
 
         test_getblocktxn_response(comp_block, test_node, [1, 2, 3, 4, 5])
 
         msg_bt = msg_no_witness_blocktxn()
-        if with_witness:
+        if version >= 2:
             msg_bt = msg_blocktxn()  # serialize with witnesses
         msg_bt.block_transactions = BlockTransactions(block.sha256, block.vtx[1:])
         test_tip_after_message(node, test_node, msg_bt, block.sha256)
@@ -456,7 +455,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
 
         # Now try interspersing the prefilled transactions
-        comp_block.initialize_from_block(block, prefill_list=[0, 1, 5], use_witness=with_witness)
+        comp_block.initialize_from_block(block, prefill_list=[0, 1, 5], version=version)
         test_getblocktxn_response(comp_block, test_node, [2, 3, 4])
         msg_bt.block_transactions = BlockTransactions(block.sha256, block.vtx[2:5])
         test_tip_after_message(node, test_node, msg_bt, block.sha256)
@@ -470,7 +469,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Prefill 4 out of the 6 transactions, and verify that only the one
         # that was not in the mempool is requested.
-        comp_block.initialize_from_block(block, prefill_list=[0, 2, 3, 4], use_witness=with_witness)
+        comp_block.initialize_from_block(block, prefill_list=[0, 2, 3, 4], version=version)
         test_getblocktxn_response(comp_block, test_node, [5])
 
         msg_bt.block_transactions = BlockTransactions(block.sha256, [block.vtx[5]])
@@ -494,8 +493,8 @@ class CompactBlocksTest(BitcoinTestFramework):
             test_node.last_message.pop("getblocktxn", None)
 
         # Send compact block
-        comp_block.initialize_from_block(block, prefill_list=[0], use_witness=with_witness)
-        test_tip_after_message(node, test_node, msg_cmpctblock(comp_block.to_p2p()), block.sha256)
+        comp_block.initialize_from_block(block, prefill_list=[0], version=version)
+        test_tip_after_message(node, test_node, msg_cmpctblock(comp_block.to_p2p(), version), block.sha256)
         with p2p_lock:
             # Shouldn't have gotten a request for any transaction
             assert "getblocktxn" not in test_node.last_message
@@ -520,8 +519,8 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Send compact block
         comp_block = HeaderAndShortIDs()
-        comp_block.initialize_from_block(block, prefill_list=[0], use_witness=(version == 2))
-        test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
+        comp_block.initialize_from_block(block, prefill_list=[0], version=version)
+        test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p(), version))
         absolute_indexes = []
         with p2p_lock:
             assert "getblocktxn" in test_node.last_message
@@ -537,7 +536,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # verifying that the block isn't marked bad permanently. This is good
         # enough for now.
         msg = msg_no_witness_blocktxn()
-        if version == 2:
+        if version >= 2:
             msg = msg_blocktxn()
         msg.block_transactions = BlockTransactions(block.sha256, [block.vtx[5]] + block.vtx[7:])
         test_node.send_and_ping(msg)
@@ -548,10 +547,11 @@ class CompactBlocksTest(BitcoinTestFramework):
         # We should receive a getdata request
         test_node.wait_for_getdata([block.sha256], timeout=10)
         assert test_node.last_message["getdata"].inv[0].type == MSG_BLOCK or \
-               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG
+               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG or \
+               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG | MSG_MWEB_FLAG
 
         # Deliver the block
-        if version == 2:
+        if version >= 2:
             test_node.send_and_ping(msg_block(block))
         else:
             test_node.send_and_ping(msg_no_witness_block(block))
@@ -607,6 +607,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert "blocktxn" not in test_node.last_message
 
     def test_compactblocks_not_at_tip(self, test_node):
+        version = test_node.cmpct_version
         node = self.nodes[0]
         # Test that requesting old compactblocks doesn't work.
         MAX_CMPCTBLOCK_DEPTH = 5
@@ -641,7 +642,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         comp_block = HeaderAndShortIDs()
         comp_block.initialize_from_block(block)
-        test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
+        test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p(), version))
 
         tips = node.getchaintips()
         found = False
@@ -683,7 +684,8 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     # Test that we don't get disconnected if we relay a compact block with valid header,
     # but invalid transactions.
-    def test_invalid_tx_in_compactblock(self, test_node, use_segwit=True):
+    def test_invalid_tx_in_compactblock(self, test_node):
+        version = test_node.cmpct_version
         node = self.nodes[0]
         assert len(self.utxos)
         utxo = self.utxos[0]
@@ -691,7 +693,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_with_transactions(node, utxo, 5)
         del block.vtx[3]
         block.hashMerkleRoot = block.calc_merkle_root()
-        if use_segwit:
+        if version >= 2:
             # If we're testing with segwit, also drop the coinbase witness,
             # but include the witness commitment.
             add_witness_commitment(block)
@@ -701,8 +703,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Now send the compact block with all transactions prefilled, and
         # verify that we don't get disconnected.
         comp_block = HeaderAndShortIDs()
-        comp_block.initialize_from_block(block, prefill_list=[0, 1, 2, 3, 4], use_witness=use_segwit)
-        msg = msg_cmpctblock(comp_block.to_p2p())
+        comp_block.initialize_from_block(block, prefill_list=[0, 1, 2, 3, 4], version=version)
+        msg = msg_cmpctblock(comp_block.to_p2p(), version)
         test_node.send_and_ping(msg)
 
         # Check that the tip didn't advance
@@ -718,6 +720,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         peer.send_and_ping(msg_sendcmpct(announce=True, version=peer.cmpct_version))
 
     def test_compactblock_reconstruction_multiple_peers(self, stalling_peer, delivery_peer):
+        version = min(stalling_peer.cmpct_version, delivery_peer.cmpct_version)
         node = self.nodes[0]
         assert len(self.utxos)
 
@@ -727,7 +730,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
             cmpct_block = HeaderAndShortIDs()
             cmpct_block.initialize_from_block(block)
-            msg = msg_cmpctblock(cmpct_block.to_p2p())
+            msg = msg_cmpctblock(cmpct_block.to_p2p(), version)
             peer.send_and_ping(msg)
             with p2p_lock:
                 assert "getblocktxn" in peer.last_message
@@ -742,7 +745,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         for tx in block.vtx[1:]:
             assert tx.hash in mempool
 
-        delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
+        delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p(), version))
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
@@ -756,9 +759,8 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         cmpct_block.prefilled_txn[0].tx.wit.vtxinwit = [CTxInWitness()]
         cmpct_block.prefilled_txn[0].tx.wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(0)]
-
-        cmpct_block.use_witness = True
-        delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
+        
+        delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p(), version))
         assert int(node.getbestblockhash(), 16) != block.sha256
 
         msg = msg_no_witness_blocktxn()
@@ -772,9 +774,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
 
         # Setup the p2p connections
-        self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
+        self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=3))
         self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=1), services=NODE_NETWORK)
-        self.additional_segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
+        self.additional_segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=3))
 
         # We will need UTXOs to construct transactions in later tests.
         self.make_utxos()

@@ -23,7 +23,6 @@ class MWEBPegoutAllTest(BitcoinTestFramework):
         
         total_balance = self.nodes[0].getbalance()
         pegout_txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=total_balance, subtractfeefromamount=True)
-        pegout_tx = self.nodes[0].gettransaction(txid=pegout_txid, verbose=True)
         assert_equal(len(self.nodes[0].getrawmempool()), 1)
         self.nodes[0].generate(1)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)

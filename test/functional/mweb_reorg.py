@@ -31,6 +31,7 @@ class MWEBReorgTest(BitcoinTestFramework):
 
     def run_test(self):
         self.basic_reorg_test()
+        self.multiple_blocks_reorg_test()
 
     def basic_reorg_test(self):
         self.log.info("Create all pre-MWEB blocks")
@@ -59,6 +60,27 @@ class MWEBReorgTest(BitcoinTestFramework):
         block0b_txs = self.nodes[1].getblock(block0b_hash, 2)['tx']
         assert_equal(len(block0b_txs), 3)
         assert_equal(block0b_txs[1]['txid'], pegin_tx1_id)
+
+        self.nodes[1].generate(5)
+        self.sync_blocks()
+
+    def multiple_blocks_reorg_test(self):
+        node0 = self.nodes[0]
+        node1 = self.nodes[1]
+
+        # Make sure nodes are in sync
+        node0.generate(10)
+        self.sync_all()
+
+        # disconnect the nodes and mine separate forks
+        self.disconnect_nodes(0, 1)
+        node0.generate(5)
+        node1.generate(5)
+        
+        # reconnect the nodes and have node0 mine 1 block, forcing a reorg on node1
+        self.connect_nodes(0, 1)
+        node0.generate(1)
+        self.sync_blocks()
 
 
 if __name__ == '__main__':

@@ -30,6 +30,8 @@ from test_framework.messages import (
     MSG_WTX,
     NODE_NETWORK,
     NODE_WITNESS,
+    msg_no_mweb_block,
+    msg_no_mweb_tx,
     msg_no_witness_block,
     msg_getdata,
     msg_headers,
@@ -56,7 +58,7 @@ from test_framework.script import (
     OP_0,
     OP_1,
     OP_2,
-    OP_8,
+    OP_9,
     OP_16,
     OP_2DROP,
     OP_CHECKMULTISIG,
@@ -130,7 +132,7 @@ def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=No
     - use the getrawmempool rpc to check for acceptance."""
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
-        p2p.send_and_ping(msg_tx(tx) if with_witness else msg_no_witness_tx(tx))
+        p2p.send_and_ping(msg_no_mweb_tx(tx) if with_witness else msg_no_witness_tx(tx))
         assert_equal(tx.hash in node.getrawmempool(), accepted)
 
 
@@ -141,7 +143,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
     - use the getbestblockhash rpc to check for acceptance."""
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
-        p2p.send_and_ping(msg_block(block) if with_witness else msg_no_witness_block(block))
+        p2p.send_and_ping(msg_no_mweb_block(block) if with_witness else msg_no_witness_block(block))
         assert_equal(node.getbestblockhash() == block.hash, accepted)
 
 
@@ -221,9 +223,9 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1", "-mempoolreplacement=1", "-vbparams=mweb:0:0"],
-            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT), "-mempoolreplacement=1", "-vbparams=mweb:0:0"],
-            ["-acceptnonstdtxn=1", "-segwitheight=-1", "-mempoolreplacement=1", "-vbparams=mweb:0:0"],
+            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1", "-mempoolreplacement=1", "-vbparams=mweb:-2:0", "-par=1"],
+            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT), "-mempoolreplacement=1", "-vbparams=mweb:-2:0"],
+            ["-acceptnonstdtxn=1", "-segwitheight=-1", "-mempoolreplacement=1", "-vbparams=mweb:-2:0"],
         ]
         self.supports_cli = False
 
@@ -1401,13 +1403,9 @@ class SegWitTest(BitcoinTestFramework):
         witness_hash = sha256(witness_program)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
         for version in list(range(OP_1, OP_16 + 1)) + [OP_0]:
-            # MWEB: We no longer allow version byte of 8 for segwit outputs except for first output (HogAddr) of HogEx txs.
-            #if version == OP_8:
-            #    continue
-
             # First try to spend to a future version segwit script_pubkey.
-            if version == OP_1:
-                # Don't use 32-byte v1 witness (used by Taproot; see BIP 341)
+            if version == OP_1 or version == OP_9:
+                # Don't use 32-byte v1 witness (used by Taproot; see BIP 341) or v9 witness (used by MWEB)
                 script_pubkey = CScript([CScriptOp(version), witness_hash + b'\x00'])
             else:
                 script_pubkey = CScript([CScriptOp(version), witness_hash])

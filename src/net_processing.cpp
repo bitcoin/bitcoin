@@ -1808,9 +1808,10 @@ static uint32_t GetFetchFlags(const CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(cs_ma
     uint32_t nFetchFlags = 0;
     if ((pfrom.GetLocalServices() & NODE_WITNESS) && State(pfrom.GetId())->fHaveWitness) {
         nFetchFlags |= MSG_WITNESS_FLAG;
-    }
-    if ((pfrom.GetLocalServices() & NODE_MWEB) && State(pfrom.GetId())->fHaveMWEB) {
-        nFetchFlags |= MSG_MWEB_FLAG;
+
+        if ((pfrom.GetLocalServices() & NODE_MWEB) && State(pfrom.GetId())->fHaveMWEB) {
+            nFetchFlags |= MSG_MWEB_FLAG;
+        }
     }
     return nFetchFlags;
 }
