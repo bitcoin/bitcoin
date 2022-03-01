@@ -7,6 +7,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
+#include <util/args.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/wallet.h>

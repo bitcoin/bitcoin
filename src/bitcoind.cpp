@@ -17,6 +17,7 @@
 #include <node/ui_interface.h>
 #include <noui.h>
 #include <shutdown.h>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>

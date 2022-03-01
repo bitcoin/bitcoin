@@ -8,6 +8,7 @@
 #include <fs.h>
 #include <interfaces/chain.h>
 #include <scheduler.h>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/string.h>
 #include <util/system.h>

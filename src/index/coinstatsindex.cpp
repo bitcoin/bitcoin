@@ -11,7 +11,7 @@
 #include <serialize.h>
 #include <txdb.h>
 #include <undo.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <validation.h>
 
 using node::CCoinsStats;

@@ -11,7 +11,9 @@
 #include <leveldb/cache.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
+#include <logging.h>
 #include <memenv.h>
+#include <util/args.h>
 #include <stdint.h>
 #include <algorithm>
 

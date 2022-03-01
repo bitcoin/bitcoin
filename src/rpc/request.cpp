@@ -9,6 +9,7 @@
 
 #include <random.h>
 #include <rpc/protocol.h>
+#include <util/args.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 

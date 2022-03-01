@@ -19,8 +19,9 @@
 #include <node/chainstate.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <util/thread.h>
+#include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
 

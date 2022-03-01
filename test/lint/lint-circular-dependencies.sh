@@ -9,7 +9,8 @@
 export LC_ALL=C
 
 EXPECTED_CIRCULAR_DEPENDENCIES=(
-    "chainparamsbase -> util/system -> chainparamsbase"
+    "chainparamsbase -> util/args -> chainparamsbase"
+    "chainparamsbase -> util/args -> util/system -> chainparamsbase"
     "node/blockstorage -> validation -> node/blockstorage"
     "index/blockfilterindex -> node/blockstorage -> validation -> index/blockfilterindex"
     "index/base -> validation -> index/blockfilterindex -> index/base"

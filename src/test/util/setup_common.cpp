@@ -30,6 +30,7 @@
 #include <streams.h>
 #include <test/util/net.h>
 #include <txdb.h>
+#include <util/args.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/thread.h>

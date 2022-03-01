@@ -8,6 +8,7 @@
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
+#include <util/args.h>
 
 #include <set>
 

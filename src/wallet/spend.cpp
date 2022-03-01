@@ -8,6 +8,7 @@
 #include <policy/policy.h>
 #include <script/signingprovider.h>
 #include <util/check.h>
+#include <util/args.h>
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>

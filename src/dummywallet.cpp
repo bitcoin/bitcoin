@@ -2,10 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/system.h>
+#include <logging.h>
+#include <util/args.h>
 #include <walletinitinterface.h>
-
-class ArgsManager;
 
 namespace interfaces {
 class Chain;

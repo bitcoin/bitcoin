@@ -13,6 +13,7 @@
 #include <test/util/setup_common.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <util/args.h>
 
 using node::SnapshotMetadata;
 

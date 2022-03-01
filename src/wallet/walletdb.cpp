@@ -7,6 +7,7 @@
 
 #include <fs.h>
 #include <key_io.h>
+#include <logging.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>

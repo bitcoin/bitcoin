@@ -15,6 +15,7 @@
 #include <random.h>
 #include <stdexcept>
 #include <txmempool.h>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/string.h>
 #include <util/vector.h>

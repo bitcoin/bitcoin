@@ -6,6 +6,7 @@
 
 #include <fs.h>
 #include <test/util/setup_common.h>
+#include <util/args.h>
 #include <wallet/bdb.h>
 
 #include <fstream>

@@ -37,8 +37,8 @@
 #include <txmempool.h>
 #include <undo.h>
 #include <univalue.h>
+#include <util/args.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>

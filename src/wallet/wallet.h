@@ -10,6 +10,7 @@
 #include <fs.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <psbt.h>
@@ -17,7 +18,6 @@
 #include <util/message.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/ui_change_type.h>
 #include <validationinterface.h>
 #include <wallet/crypter.h>
@@ -43,6 +43,7 @@
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
+class ArgsManager;
 class CScript;
 enum class FeeEstimateMode;
 struct FeeCalculation;

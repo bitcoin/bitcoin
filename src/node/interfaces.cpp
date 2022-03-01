@@ -40,7 +40,7 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>

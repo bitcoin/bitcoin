@@ -25,6 +25,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <txmempool.h>
+#include <util/args.h>
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/error.h>

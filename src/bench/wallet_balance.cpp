@@ -11,6 +11,7 @@
 #include <validationinterface.h>
 #include <wallet/receive.h>
 #include <wallet/wallet.h>
+#include <util/args.h>
 
 #include <optional>
 

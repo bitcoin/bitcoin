@@ -23,7 +23,7 @@
 #include <key_io.h>
 #include <node/ui_interface.h>
 #include <psbt.h>
-#include <util/system.h> // for GetBoolArg
+#include <util/args.h> // for GetBoolArg
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient

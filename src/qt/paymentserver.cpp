@@ -17,7 +17,7 @@
 #include <key_io.h>
 #include <node/ui_interface.h>
 #include <policy/policy.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <wallet/wallet.h>
 
 #include <cstdlib>

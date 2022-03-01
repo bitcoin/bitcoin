@@ -14,6 +14,7 @@
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
 #include <test/util/setup_common.h>
+#include <util/args.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/test/addressbooktests.h>

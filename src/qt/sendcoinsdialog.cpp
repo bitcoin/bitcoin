@@ -28,6 +28,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
+#include <util/args.h>
 
 #include <array>
 #include <chrono>

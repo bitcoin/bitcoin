@@ -6,6 +6,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <logging.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <rpc/server.h>

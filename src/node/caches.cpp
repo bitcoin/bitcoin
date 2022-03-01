@@ -5,7 +5,7 @@
 #include <node/caches.h>
 
 #include <txdb.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <validation.h>
 
 namespace node {

@@ -14,7 +14,7 @@
 
 #include <clientversion.h>
 #include <init.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <util/strencodings.h>
 
 #include <stdio.h>

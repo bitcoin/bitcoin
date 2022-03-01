@@ -15,7 +15,7 @@
 #include <script/standard.h>
 #include <sync.h>
 #include <util/bip32.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/rpc/util.h>

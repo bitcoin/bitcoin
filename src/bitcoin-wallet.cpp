@@ -14,6 +14,7 @@
 #include <logging.h>
 #include <pubkey.h>
 #include <tinyformat.h>
+#include <util/args.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>

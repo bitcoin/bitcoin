@@ -8,7 +8,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <threadinterrupt.h>
-#include <util/system.h>
+#include <util/args.h>
 
 #include <boost/test/unit_test.hpp>
 
