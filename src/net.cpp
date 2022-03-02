@@ -2120,12 +2120,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 continue;
             }
 
-            // Do not allow non-default ports, unless after 50 invalid
-            // addresses selected already. This is to prevent malicious peers
-            // from advertising themselves as a service on another host and
-            // port, causing a DoS attack as nodes around the network attempt
-            // to connect to it fruitlessly.
-            if (addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && nTries < 50) {
+            // Do not connect to bad ports, unless 50 invalid addresses have been selected already.
+            if (nTries < 50 && (addr.IsIPv4() || addr.IsIPv6()) && IsBadPort(addr.GetPort())) {
                 continue;
             }
 
