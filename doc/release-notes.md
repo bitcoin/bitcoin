@@ -1,3 +1,11 @@
+PLEASE EDIT ON THE WIKI !!!!!
+
+⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+
+https://github.com/bitcoin-core/bitcoin-devwiki/wiki/23.0-Release-Notes-draft/_history
+
+⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️
+
 *After branching off for a major version release of Bitcoin Core, use this
 template to create the initial release notes draft.*
 
