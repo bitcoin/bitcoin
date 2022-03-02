@@ -576,4 +576,24 @@ BOOST_AUTO_TEST_CASE(caddress_unserialize_v2)
     BOOST_CHECK(fixture_addresses == addresses_unserialized);
 }
 
+BOOST_AUTO_TEST_CASE(isbadport)
+{
+    BOOST_CHECK(IsBadPort(1));
+    BOOST_CHECK(IsBadPort(22));
+    BOOST_CHECK(IsBadPort(6000));
+
+    BOOST_CHECK(!IsBadPort(80));
+    BOOST_CHECK(!IsBadPort(443));
+    BOOST_CHECK(!IsBadPort(8333));
+
+    // Check all ports, there must be 80 bad ports in total.
+    size_t total_bad_ports{0};
+    for (uint16_t port = std::numeric_limits<uint16_t>::max(); port > 0; --port) {
+        if (IsBadPort(port)) {
+            ++total_bad_ports;
+        }
+    }
+    BOOST_CHECK_EQUAL(total_bad_ports, 80);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
