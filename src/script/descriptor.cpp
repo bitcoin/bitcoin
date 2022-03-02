@@ -1043,13 +1043,19 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     bool sorted_multi = false;
     if (Func("pk", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx, out, error);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = strprintf("pk(): %s", error);
+            return nullptr;
+        }
         ++key_exp_index;
         return std::make_unique<PKDescriptor>(std::move(pubkey), ctx == ParseScriptContext::P2TR);
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && Func("pkh", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx, out, error);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = strprintf("pkh(): %s", error);
+            return nullptr;
+        }
         ++key_exp_index;
         return std::make_unique<PKHDescriptor>(std::move(pubkey));
     } else if (Func("pkh", expr)) {
@@ -1058,7 +1064,10 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx, out, error);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = strprintf("combo(): %s", error);
+            return nullptr;
+        }
         ++key_exp_index;
         return std::make_unique<ComboDescriptor>(std::move(pubkey));
     } else if (Func("combo", expr)) {
@@ -1081,7 +1090,10 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
             }
             auto arg = Expr(expr);
             auto pk = ParsePubkey(key_exp_index, arg, ctx, out, error);
-            if (!pk) return nullptr;
+            if (!pk) {
+                error = strprintf("Multi: %s", error);
+                return nullptr;
+            }
             script_size += pk->GetSize() + 1;
             providers.emplace_back(std::move(pk));
             key_exp_index++;
@@ -1116,7 +1128,10 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wpkh", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ParseScriptContext::P2WPKH, out, error);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = strprintf("wpkh(): %s", error);
+            return nullptr;
+        }
         key_exp_index++;
         return std::make_unique<WPKHDescriptor>(std::move(pubkey));
     } else if (Func("wpkh", expr)) {
@@ -1153,7 +1168,10 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     if (ctx == ParseScriptContext::TOP && Func("tr", expr)) {
         auto arg = Expr(expr);
         auto internal_key = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
-        if (!internal_key) return nullptr;
+        if (!internal_key) {
+            error = strprintf("tr(): %s", error);
+            return nullptr;
+        }
         ++key_exp_index;
         std::vector<std::unique_ptr<DescriptorImpl>> subscripts; //!< list of script subexpressions
         std::vector<int> depths; //!< depth in the tree of each subexpression (same length subscripts)
