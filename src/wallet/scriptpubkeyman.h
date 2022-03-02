@@ -355,6 +355,7 @@ private:
      */
     bool TopUpInactiveHDChain(const CKeyID seed_id, int64_t index, bool internal);
 
+    bool TopUpChain(CHDChain& chain, unsigned int size);
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
