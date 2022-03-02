@@ -584,8 +584,8 @@ void CChainLocksHandler::TrySignChainTip()
     }
 
     const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.ActiveTip());
-
-    if (!pindex || !pindex->pprev) {
+    CBlockIndex* pindexWalkback = WITH_LOCK(cs_main, return chainman.ActiveTip());
+    if (!pindex || !pindex->pprev || !pindexWalkback) {
         return;
     }
     const uint256 msgHash = pindex->GetBlockHash();
@@ -621,12 +621,26 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
         mapSignedRequestIds.clear();
-        auto it = mapAttemptSignedRequestIds.find(nHeight);
-        // check to make sure we haven't signed any conflicting blocks at this height, first-come-first-serve
-        if (it != mapAttemptSignedRequestIds.end() && msgHash != it->second) {
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
-            return;
+        for(int i =0; i<MAX_WALKBACK_ANCESTORY_CONSISTENCY_BLOCKS;i++) {
+            if(!pindexWalkback){
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- Invalid index!%s\n", __func__, nHeight, msgHash.ToString());
+                return;
+            }
+            const int& nIndexHeight = pindexWalkback->nHeight;
+            const uint256& nIndexHash = pindexWalkback->GetBlockHash();
+            auto it = mapAttemptSignedRequestIds.find(nIndexHeight);
+            // check to make sure we haven't signed any conflicting blocks at this height, first-come-first-serve
+            if (it != mapAttemptSignedRequestIds.end() && nIndexHash != it->second) {
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
+                return;
+            }
+            // if we are chainlocked here we can stop and not look back any further
+            if(HasChainLock(nIndexHeight, nIndexHash)) {
+                break;
+            }
+            pindexWalkback = pindexWalkback->pprev;
         }
+
     }
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, msgHash.ToString(), nHeight);
