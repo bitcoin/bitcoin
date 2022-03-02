@@ -49,7 +49,7 @@ WalletTxOut MakeWalletTxOut(CWallet& wallet,
 
     if (output.IsMWEB()) {
         mw::Coin coin;
-        if (wallet.GetCoin(output.ToMWEB(), coin) && coin.IsMine()) {
+        if (wallet.GetCoin(output.ToMWEB(), coin)) {
             StealthAddress addr;
             if (wallet.GetMWWallet()->GetStealthAddress(coin, addr)) {
                 result.address = addr;
