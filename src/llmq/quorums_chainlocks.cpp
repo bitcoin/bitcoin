@@ -621,9 +621,9 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
         mapSignedRequestIds.clear();
-        for(int i =0; i<MAX_WALKBACK_ANCESTORY_CONSISTENCY_BLOCKS;i++) {
+        for(int i =0; i<MAX_WALKBACK_ANCESTRY_CONSISTENCY_BLOCKS;i++) {
             if(!pindexWalkback){
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- Invalid index!%s\n", __func__, nHeight, msgHash.ToString());
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- Invalid index!%s\n", __func__, msgHash.ToString());
                 return;
             }
             const int& nIndexHeight = pindexWalkback->nHeight;

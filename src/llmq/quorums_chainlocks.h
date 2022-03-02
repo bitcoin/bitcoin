@@ -51,8 +51,8 @@ class CChainLocksHandler : public CRecoveredSigsListener
 {
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
-    // walk back up to this many blocks (less if any chainlock exists) to ensure signing attempts and indexing attempting to be signed match ancestory
-    static const int64_t MAX_WALKBACK_ANCESTORY_CONSISTENCY_BLOCKS = 20;
+    // walk back up to this many blocks (less if any chainlock exists) to ensure signing attempts and indexing attempting to be signed match ancestry
+    static const int64_t MAX_WALKBACK_ANCESTRY_CONSISTENCY_BLOCKS = 20;
 
 
 private:
