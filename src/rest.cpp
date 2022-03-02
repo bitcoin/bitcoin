@@ -283,8 +283,8 @@ static bool rest_block(const std::any& context,
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     CBlock block;
-    CBlockIndex* pblockindex = nullptr;
-    CBlockIndex* tip = nullptr;
+    const CBlockIndex* pblockindex = nullptr;
+    const CBlockIndex* tip = nullptr;
     {
         ChainstateManager* maybe_chainman = GetChainman(context, req);
         if (!maybe_chainman) return false;
