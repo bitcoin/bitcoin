@@ -20,7 +20,7 @@ LENGTH_SIZE = 4
 MSGTYPE_SIZE = 12
 
 def mini_parser(dat_file):
-    """Parse a data file created by CaptureMessage.
+    """Parse a data file created by CaptureMessageToFile.
 
     From the data file we'll only check the structure.
 
