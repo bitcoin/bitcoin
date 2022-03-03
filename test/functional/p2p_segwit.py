@@ -371,6 +371,10 @@ class SegWitTest(BitcoinTestFramework):
         block1 = self.build_next_block()
         block1.solve()
 
+        # Send an empty headers message, to clear out any prior getheaders
+        # messages that our peer may be waiting for us on.
+        self.test_node.send_message(msg_headers())
+
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block1, True)
