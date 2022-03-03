@@ -203,8 +203,7 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
         return nullptr;
     }
 
-    // Return existing or create new
-    auto [mi, inserted] = m_block_index.try_emplace(hash);
+    const auto [mi, inserted]{m_block_index.try_emplace(hash)};
     CBlockIndex* pindex = &(*mi).second;
     if (inserted) {
         pindex->phashBlock = &((*mi).first);
@@ -224,8 +223,7 @@ bool BlockManager::LoadBlockIndex(
     std::vector<std::pair<int, CBlockIndex*>> vSortedByHeight;
     vSortedByHeight.reserve(m_block_index.size());
     for (auto& [_, block_index] : m_block_index) {
-        CBlockIndex* pindex = &block_index;
-        vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
+        vSortedByHeight.push_back(std::make_pair(block_index.nHeight, &block_index));
     }
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
 
@@ -382,9 +380,8 @@ bool BlockManager::LoadBlockIndexDB(ChainstateManager& chainman)
     LogPrintf("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
     for (const auto& [_, block_index] : m_block_index) {
-        const CBlockIndex* pindex = &block_index;
-        if (pindex->nStatus & BLOCK_HAVE_DATA) {
-            setBlkDataFiles.insert(pindex->nFile);
+        if (block_index.nStatus & BLOCK_HAVE_DATA) {
+            setBlkDataFiles.insert(block_index.nFile);
         }
     }
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++) {
