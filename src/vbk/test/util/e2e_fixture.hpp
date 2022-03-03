@@ -38,7 +38,11 @@ struct TestLogger : public altintegration::Logger {
 
 struct E2eFixture : public TestChain100Setup {
     CScript cbKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    MockMiner popminer;
+    altintegration::AltChainParamsRegTest alt_params{};
+    altintegration::VbkChainParamsRegTest vbk_params{};
+    altintegration::BtcChainParamsRegTest btc_params{};
+    MockMiner popminer{
+        alt_params, vbk_params, btc_params};
     altintegration::ValidationState state;
     altintegration::PopContext* pop;
     std::vector<uint8_t> defaultPayoutInfo = {1, 2, 3, 4, 5};
@@ -230,4 +234,4 @@ struct E2eFixture : public TestChain100Setup {
     }
 };
 
-#endif //BITCOIN_SRC_VBK_TEST_UTIL_E2E_FIXTURE_HPP
+#endif // BITCOIN_SRC_VBK_TEST_UTIL_E2E_FIXTURE_HPP
