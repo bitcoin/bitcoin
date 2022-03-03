@@ -40,7 +40,7 @@ int64_t GetAdjustedTime()
 #define SYSCOIN_TIMEDATA_MAX_SAMPLES 200
 
 static std::set<CNetAddr> g_sources;
-static CMedianFilter<int64_t> g_time_offsets{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+static CMedianFilter<int64_t> g_time_offsets{SYSCOIN_TIMEDATA_MAX_SAMPLES, 0};
 static bool g_warning_emitted;
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
@@ -115,6 +115,6 @@ void TestOnlyResetTimeData()
     LOCK(g_timeoffset_mutex);
     nTimeOffset = 0;
     g_sources.clear();
-    g_time_offsets = CMedianFilter<int64_t>{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+    g_time_offsets = CMedianFilter<int64_t>{SYSCOIN_TIMEDATA_MAX_SAMPLES, 0};
     g_warning_emitted = false;
 }
