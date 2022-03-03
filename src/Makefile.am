@@ -121,6 +121,10 @@ if BUILD_SYSCOIN_UTIL
   bin_PROGRAMS += syscoin-util
 endif
 
+if BUILD_SYSCOIN_CHAINSTATE
+  bin_PROGRAMS += syscoin-chainstate
+endif
+
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
@@ -955,6 +959,95 @@ syscoin_util_LDADD = \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBSECP256K1)
+#
+
+# syscoin-chainstate binary #
+syscoin_chainstate_SOURCES = \
+  syscoin-chainstate.cpp \
+  arith_uint256.cpp \
+  blockfilter.cpp \
+  chain.cpp \
+  chainparamsbase.cpp \
+  chainparams.cpp \
+  clientversion.cpp \
+  coins.cpp \
+  compat/glibcxx_sanity.cpp \
+  consensus/merkle.cpp \
+  consensus/tx_check.cpp \
+  consensus/tx_verify.cpp \
+  core_read.cpp \
+  dbwrapper.cpp \
+  deploymentinfo.cpp \
+  deploymentstatus.cpp \
+  flatfile.cpp \
+  fs.cpp \
+  hash.cpp \
+  index/base.cpp \
+  index/blockfilterindex.cpp \
+  index/coinstatsindex.cpp \
+  init/common.cpp \
+  key.cpp \
+  logging.cpp \
+  netaddress.cpp \
+  node/blockstorage.cpp \
+  node/chainstate.cpp \
+  node/coinstats.cpp \
+  node/ui_interface.cpp \
+  policy/feerate.cpp \
+  policy/fees.cpp \
+  policy/packages.cpp \
+  policy/policy.cpp \
+  policy/rbf.cpp \
+  policy/settings.cpp \
+  pow.cpp \
+  primitives/block.cpp \
+  primitives/transaction.cpp \
+  pubkey.cpp \
+  random.cpp \
+  randomenv.cpp \
+  scheduler.cpp \
+  script/interpreter.cpp \
+  script/script.cpp \
+  script/script_error.cpp \
+  script/sigcache.cpp \
+  script/standard.cpp \
+  shutdown.cpp \
+  signet.cpp \
+  support/cleanse.cpp \
+  support/lockedpool.cpp \
+  sync.cpp \
+  threadinterrupt.cpp \
+  timedata.cpp \
+  txdb.cpp \
+  txmempool.cpp \
+  uint256.cpp \
+  util/asmap.cpp \
+  util/bytevectorhash.cpp \
+  util/getuniquepath.cpp \
+  util/hasher.cpp \
+  util/moneystr.cpp \
+  util/rbf.cpp \
+  util/serfloat.cpp \
+  util/settings.cpp \
+  util/strencodings.cpp \
+  util/syscall_sandbox.cpp \
+  util/system.cpp \
+  util/thread.cpp \
+  util/threadnames.cpp \
+  util/time.cpp \
+  util/tokenpipe.cpp \
+  validation.cpp \
+  validationinterface.cpp \
+  versionbits.cpp \
+  warnings.cpp
+syscoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+syscoin_chainstate_LDADD = $(syscoin_bin_ldadd)
+
+# Required for obj/build.h to be generated first.
+# More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
+syscoin_chainstate-clientversion.$(OBJEXT): obj/build.h
 #
 
 # syscoinconsensus library #

@@ -24,6 +24,7 @@ SYSCOIN_GUI_NAME=syscoin-qt
 SYSCOIN_CLI_NAME=syscoin-cli
 SYSCOIN_TX_NAME=syscoin-tx
 SYSCOIN_UTIL_NAME=syscoin-util
+SYSCOIN_CHAINSTATE_NAME=syscoin-chainstate
 SYSCOIN_WALLET_TOOL_NAME=syscoin-wallet
 dnl Multi Process
 SYSCOIN_MP_NODE_NAME=syscoin-node
@@ -666,6 +667,12 @@ AC_ARG_ENABLE([util-util],
   [build_syscoin_util=$enableval],
   [build_syscoin_util=$build_syscoin_utils])
 
+AC_ARG_ENABLE([experimental-util-chainstate],
+  [AS_HELP_STRING([--enable-experimental-util-chainstate],
+  [build experimental syscoin-chainstate executable (default=no)])],
+  [build_syscoin_chainstate=$enableval],
+  [build_syscoin_chainstate=no])
+
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
   [build libraries (default=yes)])],
@@ -1290,6 +1297,7 @@ if test "$enable_fuzz" = "yes"; then
   build_syscoin_cli=no
   build_syscoin_tx=no
   build_syscoin_util=no
+  build_syscoin_chainstate=no
   build_syscoin_wallet=no
   build_syscoind=no
   build_syscoin_libs=no
@@ -1660,6 +1668,10 @@ AC_MSG_CHECKING([whether to build syscoin-util])
 AM_CONDITIONAL([BUILD_SYSCOIN_UTIL], [test $build_syscoin_util = "yes"])
 AC_MSG_RESULT($build_syscoin_util)
 
+AC_MSG_CHECKING([whether to build experimental syscoin-chainstate])
+AM_CONDITIONAL([BUILD_SYSCOIN_CHAINSTATE], [test $build_syscoin_chainstate = "yes"])
+AC_MSG_RESULT($build_syscoin_chainstate)
+
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_SYSCOIN_LIBS], [test $build_syscoin_libs = "yes"])
 if test "$build_syscoin_libs" = "yes"; then
@@ -1887,6 +1899,7 @@ AC_SUBST(SYSCOIN_GUI_NAME)
 AC_SUBST(SYSCOIN_CLI_NAME)
 AC_SUBST(SYSCOIN_TX_NAME)
 AC_SUBST(SYSCOIN_UTIL_NAME)
+AC_SUBST(SYSCOIN_CHAINSTATE_NAME)
 AC_SUBST(SYSCOIN_WALLET_TOOL_NAME)
 AC_SUBST(SYSCOIN_MP_NODE_NAME)
 AC_SUBST(SYSCOIN_MP_GUI_NAME)
