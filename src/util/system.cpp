@@ -104,7 +104,7 @@ static Mutex cs_dir_locks;
  */
 static std::map<std::string, std::unique_ptr<fsbridge::FileLock>> dir_locks GUARDED_BY(cs_dir_locks);
 
-bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only)
+bool LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only)
 {
     LOCK(cs_dir_locks);
     fs::path pathLockFile = directory / lockfile_name;
@@ -128,7 +128,7 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     return true;
 }
 
-void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name)
+void UnlockDirectory(const fs::path& directory, const fs::path& lockfile_name)
 {
     LOCK(cs_dir_locks);
     dir_locks.erase(fs::PathToString(directory / lockfile_name));
