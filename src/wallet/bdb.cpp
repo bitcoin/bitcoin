@@ -291,11 +291,10 @@ BerkeleyBatch::SafeDbt::operator Dbt*()
     return &m_dbt;
 }
 
-bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& errorStr)
+bool BerkeleyDatabase::Verify(std::string& errorStr)
 {
-    std::string walletFile;
-    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
+    fs::path file_path = walletDir / strFile;
 
     LogPrintf("Using BerkeleyDB version %s\n", BerkeleyDatabaseVersion());
     LogPrintf("Using wallet %s\n", file_path.string());
@@ -305,19 +304,10 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& er
         return false;
     }
 
-    return true;
-}
-
-bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::string& errorStr)
-{
-    std::string walletFile;
-    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
-    fs::path walletDir = env->Directory();
-
-    if (fs::exists(walletDir / walletFile))
+    if (fs::exists(file_path))
     {
-        if (!env->Verify(walletFile)) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup."), walletFile);
+        if (!env->Verify(strFile)) {
+            errorStr = strprintf(_("%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup."), file_path);
             return false;
         }
     }
@@ -494,13 +484,11 @@ void BerkeleyEnvironment::ReloadDbEnv()
     Open(true);
 }
 
-bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
+bool BerkeleyDatabase::Rewrite(const char* pszSkip)
 {
-    if (database.IsDummy()) {
+    if (IsDummy()) {
         return true;
     }
-    BerkeleyEnvironment *env = database.env.get();
-    const std::string& strFile = database.strFile;
     while (true) {
         {
             LOCK(cs_db);
@@ -514,7 +502,7 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
                 LogPrintf("BerkeleyBatch::Rewrite: Rewriting %s...\n", strFile);
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
-                    BerkeleyBatch db(database, "r");
+                    BerkeleyBatch db(*this, "r");
                     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
@@ -624,14 +612,12 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
     }
 }
 
-bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
+bool BerkeleyDatabase::PeriodicFlush()
 {
-    if (database.IsDummy()) {
+    if (IsDummy()) {
         return true;
     }
     bool ret = false;
-    BerkeleyEnvironment *env = database.env.get();
-    const std::string& strFile = database.strFile;
     TRY_LOCK(cs_db, lockDb);
     if (lockDb)
     {
@@ -664,11 +650,6 @@ bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
     }
 
     return ret;
-}
-
-bool BerkeleyDatabase::Rewrite(const char* pszSkip)
-{
-    return BerkeleyBatch::Rewrite(*this, pszSkip);
 }
 
 bool BerkeleyDatabase::Backup(const std::string& strDest)

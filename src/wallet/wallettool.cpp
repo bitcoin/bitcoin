@@ -114,7 +114,7 @@ static bool SalvageWallet(const fs::path& path)
     // Initialize the environment before recovery
     std::string error_string;
     try {
-        WalletBatch::VerifyEnvironment(path, error_string);
+        database->Verify(error_string);
     } catch (const fs::filesystem_error& e) {
         error_string = strprintf("Error loading wallet. %s", fsbridge::get_filesystem_error_message(e));
     }
@@ -140,11 +140,6 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
     } else if (command == "info" || command == "salvage") {
         if (!fs::exists(path)) {
             tfm::format(std::cerr, "Error: no wallet file at %s\n", name);
-            return false;
-        }
-        std::string error;
-        if (!WalletBatch::VerifyEnvironment(path, error)) {
-            tfm::format(std::cerr, "Error loading %s. Is wallet being used by other process?\n", name);
             return false;
         }
 

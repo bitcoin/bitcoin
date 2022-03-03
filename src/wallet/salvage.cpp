@@ -20,6 +20,11 @@ bool RecoverDatabaseFile(const fs::path& file_path)
     std::string filename;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
 
+    if (!env->Open(true /* retry */)) {
+        tfm::format(std::cerr, "Error initializing wallet database environment %s!", env->Directory());
+        return false;
+    }
+
     // Recovery procedure:
     // move wallet file to walletfilename.timestamp.bak
     // Call Salvage with fAggressive=true to
