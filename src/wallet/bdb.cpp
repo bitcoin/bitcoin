@@ -338,9 +338,6 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
     fFlushOnClose = fFlushOnCloseIn;
     env = database.env.get();
-    if (database.IsDummy()) {
-        return;
-    }
     const std::string &strFilename = database.strFile;
 
     bool fCreate = strchr(pszMode, 'c') != nullptr;
@@ -496,9 +493,6 @@ void BerkeleyEnvironment::ReloadDbEnv()
 
 bool BerkeleyDatabase::Rewrite(const char* pszSkip)
 {
-    if (IsDummy()) {
-        return true;
-    }
     while (true) {
         {
             LOCK(cs_db);
@@ -624,9 +618,6 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
 
 bool BerkeleyDatabase::PeriodicFlush()
 {
-    if (IsDummy()) {
-        return true;
-    }
     bool ret = false;
     TRY_LOCK(cs_db, lockDb);
     if (lockDb)
@@ -664,9 +655,6 @@ bool BerkeleyDatabase::PeriodicFlush()
 
 bool BerkeleyDatabase::Backup(const std::string& strDest) const
 {
-    if (IsDummy()) {
-        return false;
-    }
     while (true)
     {
         {
@@ -705,23 +693,17 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
 
 void BerkeleyDatabase::Flush()
 {
-    if (!IsDummy()) {
-        env->Flush(false);
-    }
+    env->Flush(false);
 }
 
 void BerkeleyDatabase::Close()
 {
-    if (!IsDummy()) {
-        env->Flush(true);
-    }
+    env->Flush(true);
 }
 
 void BerkeleyDatabase::ReloadDbEnv()
 {
-    if (!IsDummy()) {
-        env->ReloadDbEnv();
-    }
+    env->ReloadDbEnv();
 }
 
 bool BerkeleyBatch::StartCursor()
@@ -819,7 +801,7 @@ bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
 bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
 {
     if (!pdb)
-        return true;
+        return false;
     if (fReadOnly)
         assert(!"Write called on database in read-only mode");
 

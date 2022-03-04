@@ -100,10 +100,7 @@ class BerkeleyDatabase : public WalletDatabase
 {
     friend class BerkeleyBatch;
 public:
-    /** Create dummy DB handle */
-    BerkeleyDatabase() : WalletDatabase(), env(nullptr)
-    {
-    }
+    BerkeleyDatabase() = delete;
 
     /** Create DB handle to real database */
     BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, std::string filename) :
@@ -169,12 +166,6 @@ public:
 
 private:
     std::string strFile;
-
-    /** Return whether this database handle is a dummy for testing.
-     * Only to be used at a low level, application should ideally not care
-     * about this.
-     */
-    bool IsDummy() { return env == nullptr; }
 };
 
 /** RAII class that provides access to a Berkeley database */
