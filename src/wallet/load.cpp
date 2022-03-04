@@ -96,14 +96,14 @@ void FlushWallets()
             it->second->ResetPool();
             it->second->StopMixing();
         }
-        pwallet->Flush(false);
+        pwallet->Flush();
     }
 }
 
 void StopWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
-        pwallet->Flush(true);
+        pwallet->Close();
     }
 }
 
