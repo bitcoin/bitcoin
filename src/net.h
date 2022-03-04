@@ -406,6 +406,47 @@ public:
     void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const override;
 };
 
+/**
+ * Interface for message handling
+ */
+class NetEventsInterface
+{
+public:
+    /** Initialize a peer (setup state, queue any initial messages) */
+    virtual void InitializeNode(CNode* pnode) = 0;
+
+    /** Handle removal of a peer (clear state) */
+    virtual void FinalizeNode(const CNode& node) = 0;
+
+    /**
+    * Process protocol messages received from a given node
+    *
+    * @param[in]   pnode           The node which we have received messages from.
+    * @param[in]   interrupt       Interrupt condition for processing threads
+    * @return                      True if there is more work to be done
+    */
+    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_mutex_msgproc_thread) = 0;
+
+    /**
+    * Send queued protocol messages to a given node.
+    *
+    * @param[in]   pnode           The node which we are sending messages to.
+    * @return                      True if there is more work to be done
+    */
+    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_mutex_msgproc_thread) = 0;
+
+    /** Mutex for anything that assumes it is only accessed from a single,
+     * dedicated message processing thread */
+    static Mutex g_mutex_msgproc_thread;
+
+protected:
+    /**
+     * Protected destructor so that instances can only be deleted by derived classes.
+     * If that restriction is no longer desired, this should be made public and virtual.
+     */
+    ~NetEventsInterface() = default;
+};
+
 /** Information about a peer */
 class CNode
 {
@@ -685,47 +726,6 @@ private:
 
     mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
     mapMsgTypeSize mapRecvBytesPerMsgType GUARDED_BY(cs_vRecv);
-};
-
-/**
- * Interface for message handling
- */
-class NetEventsInterface
-{
-public:
-    /** Initialize a peer (setup state, queue any initial messages) */
-    virtual void InitializeNode(CNode* pnode) = 0;
-
-    /** Handle removal of a peer (clear state) */
-    virtual void FinalizeNode(const CNode& node) = 0;
-
-    /**
-    * Process protocol messages received from a given node
-    *
-    * @param[in]   pnode           The node which we have received messages from.
-    * @param[in]   interrupt       Interrupt condition for processing threads
-    * @return                      True if there is more work to be done
-    */
-    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_mutex_msgproc_thread) = 0;
-
-    /**
-    * Send queued protocol messages to a given node.
-    *
-    * @param[in]   pnode           The node which we are sending messages to.
-    * @return                      True if there is more work to be done
-    */
-    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_mutex_msgproc_thread) = 0;
-
-    /** Mutex for anything that assumes it is only accessed from a single,
-     * dedicated message processing thread */
-    static Mutex g_mutex_msgproc_thread;
-
-protected:
-    /**
-     * Protected destructor so that instances can only be deleted by derived classes.
-     * If that restriction is no longer desired, this should be made public and virtual.
-     */
-    ~NetEventsInterface() = default;
 };
 
 class CConnman
