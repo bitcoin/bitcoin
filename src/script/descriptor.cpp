@@ -802,6 +802,30 @@ public:
     bool IsSingleType() const final { return true; }
 };
 
+/** A parsed (sorted)multi_a(...) descriptor. Always uses x-only pubkeys. */
+class MultiADescriptor final : public DescriptorImpl
+{
+    const int m_threshold;
+    const bool m_sorted;
+protected:
+    std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript>, FlatSigningProvider&) const override {
+        CScript ret;
+        std::vector<XOnlyPubKey> xkeys;
+        for (const auto& key : keys) xkeys.emplace_back(key);
+        if (m_sorted) std::sort(xkeys.begin(), xkeys.end());
+        ret << ToByteVector(xkeys[0]) << OP_CHECKSIG;
+        for (size_t i = 1; i < keys.size(); ++i) {
+            ret << ToByteVector(xkeys[i]) << OP_CHECKSIGADD;
+        }
+        ret << m_threshold << OP_NUMEQUAL;
+        return Vector(std::move(ret));
+    }
+public:
+    MultiADescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), sorted ? "sortedmulti_a" : "multi_a"), m_threshold(threshold), m_sorted(sorted) {}
+    bool IsSingleType() const final { return true; }
+};
+
 /** A parsed sh(...) descriptor. */
 class SHDescriptor final : public DescriptorImpl
 {
@@ -1040,7 +1064,6 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     using namespace spanparsing;
 
     auto expr = Expr(sp);
-    bool sorted_multi = false;
     if (Func("pk", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx, out, error);
         if (!pubkey) return nullptr;
@@ -1065,7 +1088,12 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "Can only have combo() at top level";
         return nullptr;
     }
-    if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && ((sorted_multi = Func("sortedmulti", expr)) || Func("multi", expr))) {
+    const bool multi = Func("multi", expr);
+    const bool sortedmulti = !multi && Func("sortedmulti", expr);
+    const bool multi_a = !(multi || sortedmulti) && Func("multi_a", expr);
+    const bool sortedmulti_a = !(multi || sortedmulti || multi_a) && Func("sortedmulti_a", expr);
+    if (((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && (multi || sortedmulti)) ||
+        (ctx == ParseScriptContext::P2TR && (multi_a || sortedmulti_a))) {
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::unique_ptr<PubkeyProvider>> providers;
@@ -1086,8 +1114,11 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
             providers.emplace_back(std::move(pk));
             key_exp_index++;
         }
-        if (providers.empty() || providers.size() > MAX_PUBKEYS_PER_MULTISIG) {
+        if ((multi || sortedmulti) && (providers.empty() || providers.size() > MAX_PUBKEYS_PER_MULTISIG)) {
             error = strprintf("Cannot have %u keys in multisig; must have between 1 and %d keys, inclusive", providers.size(), MAX_PUBKEYS_PER_MULTISIG);
+            return nullptr;
+        } else if ((multi_a || sortedmulti_a) && (providers.empty() || providers.size() > MAX_PUBKEYS_PER_MULTI_A)) {
+            error = strprintf("Cannot have %u keys in multi_a; must have between 1 and %d keys, inclusive", providers.size(), MAX_PUBKEYS_PER_MULTI_A);
             return nullptr;
         } else if (thres < 1) {
             error = strprintf("Multisig threshold cannot be %d, must be at least 1", thres);
@@ -1109,9 +1140,16 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
                 return nullptr;
             }
         }
-        return std::make_unique<MultisigDescriptor>(thres, std::move(providers), sorted_multi);
-    } else if (Func("sortedmulti", expr) || Func("multi", expr)) {
+        if (multi || sortedmulti) {
+            return std::make_unique<MultisigDescriptor>(thres, std::move(providers), sortedmulti);
+        } else {
+            return std::make_unique<MultiADescriptor>(thres, std::move(providers), sortedmulti_a);
+        }
+    } else if (multi || sortedmulti) {
         error = "Can only have multi/sortedmulti at top level, in sh(), or in wsh()";
+        return nullptr;
+    } else if (multi_a || sortedmulti_a) {
+        error = "Can only have multi_a/sortedmulti_a inside tr()";
         return nullptr;
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wpkh", expr)) {
@@ -1257,11 +1295,31 @@ std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseS
     return key_provider;
 }
 
+std::unique_ptr<DescriptorImpl> InferMultiA(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
+{
+    auto match = MatchMultiA(script);
+    if (!match) return {};
+    std::vector<std::unique_ptr<PubkeyProvider>> keys;
+    keys.reserve(match->second.size());
+    for (const auto keyspan : match->second) {
+        if (keyspan.size() != 32) return {};
+        auto key = InferXOnlyPubkey(XOnlyPubKey{keyspan}, ctx, provider);
+        if (!key) return {};
+        keys.push_back(std::move(key));
+    }
+    return std::make_unique<MultiADescriptor>(match->first, std::move(keys));
+}
+
 std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
 {
     if (ctx == ParseScriptContext::P2TR && script.size() == 34 && script[0] == 32 && script[33] == OP_CHECKSIG) {
         XOnlyPubKey key{Span{script}.subspan(1, 32)};
         return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider), true);
+    }
+
+    if (ctx == ParseScriptContext::P2TR) {
+        auto ret = InferMultiA(script, ctx, provider);
+        if (ret) return ret;
     }
 
     std::vector<std::vector<unsigned char>> data;
