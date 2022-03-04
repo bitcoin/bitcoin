@@ -29,6 +29,9 @@ static const int MAX_OPS_PER_SCRIPT = 201;
 // Maximum number of public keys per multisig
 static const int MAX_PUBKEYS_PER_MULTISIG = 20;
 
+/** The limit of keys in OP_CHECKSIGADD-based scripts. It is due to the stack limit in BIP342. */
+static constexpr unsigned int MAX_PUBKEYS_PER_MULTI_A = 999;
+
 // Maximum script length in bytes
 static const int MAX_SCRIPT_SIZE = 10000;
 
