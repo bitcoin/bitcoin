@@ -325,13 +325,13 @@ public:
 class TransportSerializer {
 public:
     // prepare message for transport (header construction, error-correction computation, payload encryption, etc.)
-    virtual void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) = 0;
+    virtual void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const = 0;
     virtual ~TransportSerializer() {}
 };
 
-class V1TransportSerializer  : public TransportSerializer {
+class V1TransportSerializer : public TransportSerializer {
 public:
-    void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) override;
+    void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const override;
 };
 
 /** Information about a peer */
@@ -342,7 +342,7 @@ class CNode
 
 public:
     std::unique_ptr<TransportDeserializer> m_deserializer;
-    std::unique_ptr<TransportSerializer> m_serializer;
+    std::unique_ptr<const TransportSerializer> m_serializer;
 
     NetPermissionFlags m_permissionFlags{NetPermissionFlags::None};
 

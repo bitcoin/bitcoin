@@ -797,7 +797,8 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
     return msg;
 }
 
-void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) {
+void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const
+{
     // create dbl-sha256 checksum
     uint256 hash = Hash(msg.data);
 
