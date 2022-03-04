@@ -218,6 +218,8 @@ struct RPCResult {
     const bool m_optional;
     const std::string m_description;
     const std::string m_cond;
+    const bool m_legacy;                  //!< Used for legacy support
+    const std::string m_result;           //!< Used for legacy support
 
     RPCResult(
         const std::string cond,
@@ -231,12 +233,43 @@ struct RPCResult {
           m_inner{std::move(inner)},
           m_optional{optional},
           m_description{std::move(description)},
-          m_cond{std::move(cond)}
+          m_cond{std::move(cond)},
+          m_result{},
+          m_legacy{false}
     {
         CHECK_NONFATAL(!m_cond.empty());
         const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
         CHECK_NONFATAL(inner_needed != inner.empty());
     }
+
+    // start legacy support logic
+    RPCResult(std::string cond, std::string result)
+        : m_type{Type::NONE},
+          m_key_name{},
+          m_inner{},
+          m_optional{false},
+          m_description{},
+          m_cond{std::move(cond)},
+          m_result{std::move(result)},
+          m_legacy{true}
+    {
+        CHECK_NONFATAL(!m_cond.empty());
+        CHECK_NONFATAL(!m_result.empty());
+    }
+
+    RPCResult(std::string result)
+        : m_type{Type::NONE},
+          m_key_name{},
+          m_inner{},
+          m_optional{false},
+          m_description{},
+          m_cond{},
+          m_result{std::move(result)},
+          m_legacy{true}
+    {
+        CHECK_NONFATAL(!m_result.empty());
+    }
+    // end legacy support logic
 
     RPCResult(
         const std::string cond,
@@ -257,7 +290,9 @@ struct RPCResult {
           m_inner{std::move(inner)},
           m_optional{optional},
           m_description{std::move(description)},
-          m_cond{}
+          m_cond{},
+          m_result{},
+          m_legacy{false}
     {
         const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
         CHECK_NONFATAL(inner_needed != inner.empty());

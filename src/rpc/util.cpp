@@ -410,9 +410,13 @@ std::string RPCResults::ToDescriptionString() const
         } else {
             result += "\nResult (" + r.m_cond + "):\n";
         }
-        Sections sections;
-        r.ToSections(sections);
-        result += sections.ToString();
+        if (r.m_legacy) {
+            result += r.m_result;
+        } else {
+            Sections sections;
+            r.ToSections(sections);
+            result += sections.ToString();
+        }
     }
     return result;
 }
