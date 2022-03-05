@@ -54,7 +54,6 @@ const char fontSizeSettingsKey[] = "consoleFontSize";
 const TrafficGraphData::GraphRange INITIAL_TRAFFIC_GRAPH_SETTING = TrafficGraphData::Range_30m;
 
 // Repair parameters
-const QString SALVAGEWALLET("-salvagewallet");
 const QString RESCAN1("-rescan=1");
 const QString RESCAN2("-rescan=2");
 const QString ZAPTXES1("-zapwallettxes=1 -persistmempool=0");
@@ -491,9 +490,6 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     ui->WalletSelectorLabel->setVisible(false);
 
     // Wallet Repair Buttons
-    // connect(ui->btn_salvagewallet, &QPushButton::clicked, this, &RPCConsole::walletSalvage);
-    // Disable salvage option in GUI, it's way too powerful and can lead to funds loss
-    ui->btn_salvagewallet->setEnabled(false);
     // Disable wallet repair options that require a wallet (enable them later when a wallet is added)
     ui->btn_rescan1->setEnabled(false);
     ui->btn_rescan2->setEnabled(false);
@@ -810,12 +806,6 @@ void RPCConsole::setFontSize(int newSize)
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 
-/** Restart wallet with "-salvagewallet" */
-void RPCConsole::walletSalvage()
-{
-    buildParameterlist(SALVAGEWALLET);
-}
-
 /** Restart wallet with "-rescan=1" */
 void RPCConsole::walletRescan1()
 {
@@ -860,7 +850,6 @@ void RPCConsole::buildParameterlist(QString arg)
     args.removeFirst();
 
     // Remove existing repair-options
-    args.removeAll(SALVAGEWALLET);
     args.removeAll(RESCAN1);
     args.removeAll(RESCAN2);
     args.removeAll(ZAPTXES1);

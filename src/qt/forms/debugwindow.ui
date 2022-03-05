@@ -1419,30 +1419,11 @@
       </layout>
      </widget>
      <widget class="QWidget" name="pageRepair">
-      <widget class="QPushButton" name="btn_salvagewallet">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>100</y>
-         <width>301</width>
-         <height>23</height>
-        </rect>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>180</width>
-         <height>23</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Salvage wallet</string>
-       </property>
-      </widget>
       <widget class="QPushButton" name="btn_rescan1">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>150</y>
+         <y>100</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1461,7 +1442,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>200</y>
+         <y>150</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1480,7 +1461,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>250</y>
+         <y>200</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1499,7 +1480,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>300</y>
+         <y>250</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1518,7 +1499,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>350</y>
+         <y>300</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1549,27 +1530,11 @@
         <bool>true</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="label_repair_salvage">
-       <property name="geometry">
-        <rect>
-         <x>330</x>
-         <y>90</y>
-         <width>411</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
       <widget class="QLabel" name="label_repair_rescan1">
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>140</y>
+         <y>90</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1585,7 +1550,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>190</y>
+         <y>140</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1601,7 +1566,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>240</y>
+         <y>190</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1617,7 +1582,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>290</y>
+         <y>240</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1633,7 +1598,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>340</y>
+         <y>290</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1665,7 +1630,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>400</y>
+         <y>350</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1678,7 +1643,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>390</y>
+         <y>340</y>
          <width>411</width>
          <height>41</height>
         </rect>
