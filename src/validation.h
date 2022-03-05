@@ -15,8 +15,8 @@
 #include <coins.h>
 #include <crypto/common.h> // for ReadLE64
 #include <fs.h>
-#include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <policy/feerate.h>
+#include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
 #include <sync.h>
 #include <txdb.h>
@@ -123,8 +123,6 @@ extern CBlockPolicyEstimator feeEstimator;
 extern CTxMemPool mempool;
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 typedef std::unordered_multimap<uint256, CBlockIndex*, BlockHasher> PrevBlockMap;
-extern uint64_t nLastBlockTx;
-extern uint64_t nLastBlockSize;
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;

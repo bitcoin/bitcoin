@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
@@ -18,6 +18,9 @@ from .util import assert_equal, hex_str_to_bytes
 from io import BytesIO
 
 MAX_BLOCK_SIGOPS = 20000
+
+# Genesis block time (regtest)
+TIME_GENESIS_BLOCK = 1417713337
 
 def create_block(hashprev, coinbase, ntime=None):
     """Create a block (with regtest difficulty)."""

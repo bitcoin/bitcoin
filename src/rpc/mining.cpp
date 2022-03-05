@@ -199,36 +199,36 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
 
 static UniValue getmininginfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0)
+    if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
             RPCHelpMan{"getmininginfo",
                 "\nReturns a json object containing mining-related information.",
                 {},
                 RPCResult{
-            "{\n"
-            "  \"blocks\": nnn,             (numeric) The current block\n"
-            "  \"currentblocksize\": nnn,   (numeric) The last block size\n"
-            "  \"currentblocktx\": nnn,     (numeric) The last block transaction\n"
-            "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
-            "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
-            "  \"pooledtx\": n              (numeric) The size of the mempool\n"
-            "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
-            "  \"warnings\": \"...\"          (string) any network and blockchain warnings\n"
-            "}\n"
+                    "{\n"
+                    "  \"blocks\": nnn,             (numeric) The current block\n"
+                    "  \"currentblocksize\": nnn,   (numeric, optional) The block size of the last assembled block (only present if a block was ever assembled)\n"
+                    "  \"currentblocktx\": nnn,     (numeric, optional) The number of block transactions of the last assembled block (only present if a block was ever assembled)\n"
+                    "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
+                    "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
+                    "  \"pooledtx\": n              (numeric) The size of the mempool\n"
+                    "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
+                    "  \"warnings\": \"...\"          (string) any network and blockchain warnings\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("getmininginfo", "")
             + HelpExampleRpc("getmininginfo", "")
                 },
             }.ToString());
-
+    }
 
     LOCK(cs_main);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("blocks",           (int)::ChainActive().Height());
-    obj.pushKV("currentblocksize", (uint64_t)nLastBlockSize);
-    obj.pushKV("currentblocktx",   (uint64_t)nLastBlockTx);
+    if (BlockAssembler::m_last_block_size) obj.pushKV("currentblocksize", *BlockAssembler::m_last_block_size);
+    if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("difficulty",       (double)GetDifficulty(::ChainActive().Tip()));
     obj.pushKV("networkhashps",    getnetworkhashps(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
