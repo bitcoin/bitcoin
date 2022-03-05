@@ -193,6 +193,7 @@ protected:
 
     mutable CCriticalSection cs_args;
     std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
+    std::map<std::string, std::vector<std::string>> m_command_line_args GUARDED_BY(cs_args);
     std::map<std::string, std::vector<std::string>> m_config_args GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
@@ -224,6 +225,11 @@ public:
      * Log warnings for unrecognized section names in the config file.
      */
     const std::list<SectionInfo> GetUnrecognizedSections() const;
+
+    /**
+     * Return the map of all the args passed via cmd line
+     */
+    const std::map<std::string, std::vector<std::string>> GetCommandLineArgs() const;
 
     /**
      * Return a vector of strings of the given argument
