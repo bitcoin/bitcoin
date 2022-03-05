@@ -265,7 +265,7 @@ protected:
 
     [[nodiscard]] bool ParseParameters(int argc, const char* const argv[], std::string& error);
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
-
+    const std::map<std::string, std::vector<util::SettingsValue>> GetCommandLineArgs() const;
     /**
      * Log warnings for options in m_section_only_args when
      * they are specified in the default section but not overridden

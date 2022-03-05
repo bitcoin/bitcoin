@@ -390,7 +390,11 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     }
     return true;
 }
-
+const std::map<std::string, std::vector<util::SettingsValue>> ArgsManager::GetCommandLineArgs() const
+{
+    LOCK(cs_args);
+    return m_settings.command_line_options;
+}
 std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
 {
     LOCK(cs_args);
