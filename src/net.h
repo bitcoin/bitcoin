@@ -76,12 +76,6 @@ static const int MAX_ADDNODE_CONNECTIONS = 8;
 static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
-/** -upnp default */
-#ifdef USE_UPNP
-static const bool DEFAULT_UPNP = USE_UPNP;
-#else
-static const bool DEFAULT_UPNP = false;
-#endif
 /** The maximum number of peer connections to maintain.
  *  Masternodes are forced to accept at least this many connections
  */
@@ -668,9 +662,6 @@ private:
 extern std::unique_ptr<CConnman> g_connman;
 extern std::unique_ptr<BanMan> g_banman;
 void Discover();
-void StartMapPort();
-void InterruptMapPort();
-void StopMapPort();
 unsigned short GetListenPort();
 
 struct CombinerAll
@@ -712,7 +703,7 @@ enum
     LOCAL_NONE,   // unknown
     LOCAL_IF,     // address a local interface listens on
     LOCAL_BIND,   // address explicit bound to
-    LOCAL_UPNP,   // address reported by UPnP
+    LOCAL_MAPPED, // address reported by UPnP or NAT-PMP
     LOCAL_MANUAL, // address explicitly specified (-externalip=)
 
     LOCAL_MAX

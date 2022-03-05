@@ -92,7 +92,7 @@ as well, use `discover` instead:
 
 	./dashd ... -discover
 
-and open port 9999 on your firewall (or use -upnp).
+and open port 9999 on your firewall (or use port mapping, i.e., `-upnp` or `-natpmp`).
 
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:

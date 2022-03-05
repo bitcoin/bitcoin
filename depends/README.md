@@ -89,6 +89,8 @@ The following can be set when running make: `make FOO=bar`
 <dd>Don't download/build/cache libs needed to enable the wallet</dd>
 <dt>NO_UPNP</dt>
 <dd>Don't download/build/cache packages needed for enabling upnp</dd>
+<dt>NO_NATPMP</dt>
+<dd>Don't download/build/cache packages needed for enabling NAT-PMP</dd>
 <dt>DEBUG</dt>
 <dd>disable some optimizations and enable more runtime checking</dd>
 <dt>PROTOBUF</dt>
