@@ -504,6 +504,12 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     connect(ui->btn_upgradewallet, &QPushButton::clicked, this, &RPCConsole::walletUpgrade);
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
+#ifdef ENABLE_WALLET
+    std::string walletPath = GetDataDir().string();
+    walletPath += QDir::separator().toLatin1() + gArgs.GetArg("-wallet", "wallet.dat");
+    ui->wallet_path->setText(QString::fromStdString(walletPath));
+#endif
+
     // Register RPC timer interface
     rpcTimerInterface = new QtRPCTimerInterface();
     // avoid accidentally overwriting an existing, non QTThread
