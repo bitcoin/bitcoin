@@ -69,7 +69,11 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Invalid command: help', 'help')
         self.assert_raises_tool_error('Error: two methods provided (info and create). Only one method should be provided.', 'info', 'create')
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
-        self.assert_raises_tool_error('Error loading wallet.dat. Is wallet being used by other process?', '-wallet=wallet.dat', 'info')
+        self.assert_raises_tool_error(
+            'Error loading wallet.dat. Is wallet being used by another process?',
+            '-wallet=wallet.dat',
+            'info',
+        )
         self.assert_raises_tool_error('Error: no wallet file at nonexistent.dat', '-wallet=nonexistent.dat', 'info')
 
     def test_tool_wallet_info(self):
@@ -210,6 +214,14 @@ class ToolWalletTest(BitcoinTestFramework):
         assert_equal(shasum_after, shasum_before)
         self.log.debug('Wallet file shasum unchanged\n')
 
+    def test_salvage(self):
+        # TODO: Check salvage actually salvages and doesn't break things. https://github.com/bitcoin/bitcoin/issues/7463
+        self.log.info('Check salvage')
+        self.start_node(0, ['-wallet=salvage'])
+        self.stop_node(0)
+
+        self.assert_tool_output('', '-wallet=salvage', 'salvage')
+
     def run_test(self):
         self.wallet_path = os.path.join(self.nodes[0].datadir, 'regtest', 'wallets', 'wallet.dat')
         self.test_invalid_tool_commands_and_args()
@@ -218,7 +230,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_tool_wallet_info_after_transaction()
         self.test_tool_wallet_create_on_existing_wallet()
         self.test_getwalletinfo_on_different_wallet()
-
+        self.test_salvage()
 
 if __name__ == '__main__':
     ToolWalletTest().main()

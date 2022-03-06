@@ -2897,7 +2897,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
     }
 
     // Wallet::Verify will check if we're trying to create a wallet with a duplication name.
-    if (!CWallet::Verify(*g_rpc_interfaces->chain, location, false, error, warning)) {
+    if (!CWallet::Verify(*g_rpc_interfaces->chain, location, error, warning)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
     }
 

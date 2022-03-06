@@ -313,6 +313,7 @@ BITCOIN_CORE_H = \
   versionbits.h \
   versionbitsinfo.h \
   walletinitinterface.h \
+  wallet/bdb.h \
   wallet/coincontrol.h \
   wallet/crypter.h \
   wallet/db.h \
@@ -320,6 +321,7 @@ BITCOIN_CORE_H = \
   wallet/load.h \
   wallet/psbtwallet.h \
   wallet/rpcwallet.h \
+  wallet/salvage.h \
   wallet/wallet.h \
   wallet/walletdb.h \
   wallet/wallettool.h \
@@ -471,6 +473,7 @@ libdash_wallet_a_SOURCES = \
   coinjoin/options.cpp \
   coinjoin/util.cpp \
   interfaces/wallet.cpp \
+  wallet/bdb.cpp \
   wallet/coincontrol.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
@@ -479,6 +482,7 @@ libdash_wallet_a_SOURCES = \
   wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
+  wallet/salvage.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \

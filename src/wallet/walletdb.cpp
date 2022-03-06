@@ -158,8 +158,8 @@ bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
 
 bool WalletBatch::ReadBestBlock(CBlockLocator& locator)
 {
-    if (m_batch.Read(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) return true;
-    return m_batch.Read(DBKeys::BESTBLOCK_NOMERKLE, locator);
+    if (m_batch->Read(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) return true;
+    return m_batch->Read(DBKeys::BESTBLOCK_NOMERKLE, locator);
 }
 
 bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
@@ -169,7 +169,7 @@ bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
 
 bool WalletBatch::ReadPool(int64_t nPool, CKeyPool& keypool)
 {
-    return m_batch.Read(std::make_pair(DBKeys::POOL, nPool), keypool);
+    return m_batch->Read(std::make_pair(DBKeys::POOL, nPool), keypool);
 }
 
 bool WalletBatch::WritePool(int64_t nPool, const CKeyPool& keypool)
@@ -190,7 +190,7 @@ bool WalletBatch::WriteMinVersion(int nVersion)
 bool WalletBatch::ReadCoinJoinSalt(uint256& salt, bool fLegacy)
 {
     // TODO: Remove legacy checks after few major releases
-    return m_batch.Read(std::string(fLegacy ? DBKeys::PRIVATESEND_SALT : DBKeys::COINJOIN_SALT), salt);
+    return m_batch->Read(std::string(fLegacy ? DBKeys::PRIVATESEND_SALT : DBKeys::COINJOIN_SALT), salt);
 }
 
 bool WalletBatch::WriteCoinJoinSalt(const uint256& salt)
@@ -489,6 +489,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
     return true;
 }
 
+bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr)
+{
+    CWalletScanState dummy_wss;
+    LOCK(pwallet->cs_wallet);
+    return ReadKeyValue(pwallet, ssKey, ssValue, dummy_wss, strType, strErr);
+}
+
 bool WalletBatch::IsKeyType(const std::string& strType)
 {
     return (strType == DBKeys::KEY ||
@@ -507,15 +514,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     LOCK(pwallet->cs_wallet);
     try {
         int nMinVersion = 0;
-        if (m_batch.Read(DBKeys::MINVERSION, nMinVersion)) {
+        if (m_batch->Read(DBKeys::MINVERSION, nMinVersion)) {
             if (nMinVersion > FEATURE_LATEST)
                 return DBErrors::TOO_NEW;
             pwallet->LoadMinVersion(nMinVersion);
         }
 
         // Get cursor
-        Dbc* pcursor = m_batch.GetCursor();
-        if (!pcursor)
+        if (!m_batch->StartCursor())
         {
             pwallet->WalletLogPrintf("Error getting wallet database cursor\n");
             return DBErrors::CORRUPT;
@@ -526,11 +532,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue);
-            if (ret == DB_NOTFOUND)
+            bool complete;
+            bool ret = m_batch->ReadAtCursor(ssKey, ssValue, complete);
+            if (complete) {
                 break;
-            else if (ret != 0)
+            }
+            else if (!ret)
             {
+                m_batch->CloseCursor();
                 pwallet->WalletLogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
@@ -557,7 +566,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             if (!strErr.empty())
                 pwallet->WalletLogPrintf("%s\n", strErr);
         }
-        pcursor->close();
 
         // Store initial external keypool size since we mostly use external keys in mixing
         pwallet->nKeysLeftSinceAutoBackup = pwallet->KeypoolCountExternalKeys();
@@ -565,6 +573,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
+    m_batch->CloseCursor();
 
     if (fNoncriticalErrors && result == DBErrors::LOAD_OK)
         result = DBErrors::NONCRITICAL_ERROR;
@@ -576,7 +585,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     // Last client version to open this wallet, was previously the file version number
     int last_client = CLIENT_VERSION;
-    m_batch.Read(DBKeys::VERSION, last_client);
+    m_batch->Read(DBKeys::VERSION, last_client);
 
     int wallet_version = pwallet->GetVersion();
     pwallet->WalletLogPrintf("Wallet File Version = %d\n", wallet_version > 0 ? wallet_version : last_client);
@@ -597,7 +606,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         return DBErrors::NEED_REWRITE;
 
     if (last_client < CLIENT_VERSION) // Update
-        m_batch.Write(DBKeys::VERSION, CLIENT_VERSION);
+        m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
 
     if (wss.fAnyUnordered)
         result = pwallet->ReorderTransactions();
@@ -619,14 +628,13 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
 
     try {
         int nMinVersion = 0;
-        if (m_batch.Read(DBKeys::MINVERSION, nMinVersion)) {
+        if (m_batch->Read(DBKeys::MINVERSION, nMinVersion)) {
             if (nMinVersion > FEATURE_LATEST)
                 return DBErrors::TOO_NEW;
         }
 
         // Get cursor
-        Dbc* pcursor = m_batch.GetCursor();
-        if (!pcursor)
+        if (!m_batch->StartCursor())
         {
             LogPrintf("Error getting wallet database cursor\n");
             return DBErrors::CORRUPT;
@@ -637,11 +645,12 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue);
-            if (ret == DB_NOTFOUND)
+            bool complete;
+            bool ret = m_batch->ReadAtCursor(ssKey, ssValue, complete);
+            if (complete) {
                 break;
-            else if (ret != 0)
-            {
+            } else if (!ret) {
+                m_batch->CloseCursor();
                 LogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
@@ -659,10 +668,10 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
                 vWtx.push_back(wtx);
             }
         }
-        pcursor->close();
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
+    m_batch->CloseCursor();
 
     return result;
 }
@@ -743,63 +752,13 @@ void MaybeCompactWalletDB()
         }
 
         if (dbh.nLastFlushed != nUpdateCounter && GetTime() - dbh.nLastWalletUpdate >= 2) {
-            if (BerkeleyBatch::PeriodicFlush(dbh)) {
+            if (dbh.PeriodicFlush()) {
                 dbh.nLastFlushed = nUpdateCounter;
             }
         }
     }
 
     fOneThread = false;
-}
-
-//
-// Try to (very carefully!) recover wallet file if there is a problem.
-//
-bool WalletBatch::Recover(const fs::path& wallet_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename)
-{
-    return BerkeleyBatch::Recover(wallet_path, callbackDataIn, recoverKVcallback, out_backup_filename);
-}
-
-bool WalletBatch::Recover(const fs::path& wallet_path, std::string& out_backup_filename)
-{
-    // recover without a key filter callback
-    // results in recovering all record types
-    return WalletBatch::Recover(wallet_path, nullptr, nullptr, out_backup_filename);
-}
-
-bool WalletBatch::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDataStream ssValue)
-{
-    CWallet *dummyWallet = reinterpret_cast<CWallet*>(callbackData);
-    CWalletScanState dummyWss;
-    std::string strType, strErr;
-    bool fReadOK;
-    {
-        // Required in LoadKeyMetadata():
-        LOCK(dummyWallet->cs_wallet);
-        fReadOK = ReadKeyValue(dummyWallet, ssKey, ssValue,
-                               dummyWss, strType, strErr);
-    }
-    if (!IsKeyType(strType) && strType != DBKeys::HDCHAIN) {
-        return false;
-    }
-
-    if (!fReadOK)
-    {
-        LogPrintf("WARNING: WalletBatch::Recover skipping %s: %s\n", strType, strErr);
-        return false;
-    }
-
-    return true;
-}
-
-bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, std::string& errorStr)
-{
-    return BerkeleyBatch::VerifyEnvironment(wallet_path, errorStr);
-}
-
-bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, std::string& warningStr, std::string& errorStr)
-{
-    return BerkeleyBatch::VerifyDatabaseFile(wallet_path, warningStr, errorStr, WalletBatch::Recover);
 }
 
 bool WalletBatch::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
@@ -842,15 +801,39 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 
 bool WalletBatch::TxnBegin()
 {
-    return m_batch.TxnBegin();
+    return m_batch->TxnBegin();
 }
 
 bool WalletBatch::TxnCommit()
 {
-    return m_batch.TxnCommit();
+    return m_batch->TxnCommit();
 }
 
 bool WalletBatch::TxnAbort()
 {
-    return m_batch.TxnAbort();
+    return m_batch->TxnAbort();
+}
+
+bool IsWalletLoaded(const fs::path& wallet_path)
+{
+    return IsBDBWalletLoaded(wallet_path);
+}
+
+/** Return object for accessing database at specified path. */
+std::unique_ptr<WalletDatabase> CreateWalletDatabase(const fs::path& path)
+{
+    std::string filename;
+    return MakeUnique<BerkeleyDatabase>(GetWalletEnv(path, filename), std::move(filename));
+}
+
+/** Return object for accessing dummy database with no read/write capabilities. */
+std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
+{
+    return MakeUnique<DummyDatabase>();
+}
+
+/** Return object for accessing temporary in-memory database. */
+std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
+{
+    return MakeUnique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
 }
