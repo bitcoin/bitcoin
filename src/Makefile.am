@@ -319,6 +319,7 @@ BITCOIN_CORE_H = \
   wallet/load.h \
   wallet/psbtwallet.h \
   wallet/rpcwallet.h \
+  wallet/salvage.h \
   wallet/wallet.h \
   wallet/walletdb.h \
   wallet/wallettool.h \
@@ -477,6 +478,7 @@ libdash_wallet_a_SOURCES = \
   wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
+  wallet/salvage.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
