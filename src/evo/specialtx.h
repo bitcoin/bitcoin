@@ -27,12 +27,14 @@ inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)
 template <typename T>
 inline bool GetTxPayload(const CMutableTransaction& tx, T& obj)
 {
-    return GetTxPayload(tx.vExtraPayload, obj);
+    ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE);
+    return tx.nType == obj.SPECIALTX_TYPE && GetTxPayload(tx.vExtraPayload, obj);
 }
 template <typename T>
 inline bool GetTxPayload(const CTransaction& tx, T& obj)
 {
-    return GetTxPayload(tx.vExtraPayload, obj);
+    ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE);
+    return tx.nType == obj.SPECIALTX_TYPE && GetTxPayload(tx.vExtraPayload, obj);
 }
 
 template <typename T>

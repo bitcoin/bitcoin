@@ -106,6 +106,7 @@ using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 class CFinalCommitmentTxPayload
 {
 public:
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_QUORUM_COMMITMENT;
     static constexpr uint16_t CURRENT_VERSION = 1;
 
 public:

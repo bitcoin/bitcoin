@@ -17,6 +17,7 @@ class CValidationState;
 class CCbTx
 {
 public:
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_COINBASE;
     static constexpr uint16_t CURRENT_VERSION = 2;
 
     uint16_t nVersion{CURRENT_VERSION};

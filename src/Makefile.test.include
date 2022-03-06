@@ -69,6 +69,8 @@ JSON_TEST_FILES = \
   test/data/proposals_invalid.json \
   test/data/script_tests.json \
   test/data/sighash.json \
+  test/data/trivially_invalid.json \
+  test/data/trivially_valid.json \
   test/data/tx_invalid.json \
   test/data/tx_valid.json
 
@@ -144,6 +146,7 @@ BITCOIN_TESTS =\
   test/dynamic_activation_thresholds_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
+  test/evo_trivialvalidation.cpp \
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \

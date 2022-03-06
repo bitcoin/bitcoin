@@ -30,6 +30,7 @@ struct maybe_error{
 class CProRegTx
 {
 public:
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_REGISTER;
     static constexpr uint16_t CURRENT_VERSION = 1;
 
     uint16_t nVersion{CURRENT_VERSION};                    // message version
@@ -98,6 +99,7 @@ public:
 class CProUpServTx
 {
 public:
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_SERVICE;
     static constexpr uint16_t CURRENT_VERSION = 1;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
@@ -137,6 +139,7 @@ public:
 class CProUpRegTx
 {
 public:
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
     static constexpr uint16_t CURRENT_VERSION = 1;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
@@ -187,6 +190,7 @@ public:
 class CProUpRevTx
 {
 public:
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REVOKE;
     static constexpr uint16_t CURRENT_VERSION = 1;
 
     // these are just informational and do not have any effect on the revocation

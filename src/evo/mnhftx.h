@@ -48,6 +48,7 @@ public:
 class MNHFTxPayload
 {
 public:
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_MNHF_SIGNAL;
     static constexpr uint16_t CURRENT_VERSION = 1;
 
     uint16_t nVersion{CURRENT_VERSION};
