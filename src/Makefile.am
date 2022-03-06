@@ -1043,7 +1043,7 @@ syscoin_chainstate_SOURCES = \
 syscoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-syscoin_chainstate_LDADD = $(syscoin_bin_ldadd)
+syscoin_chainstate_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
