@@ -15,15 +15,15 @@
 //! Entry point for BitcoinApplication tests.
 void OptionTests::optionTests()
 {
-    // Test regression https://github.com/bitcoin/bitcoin/issues/24457. Check
-    // if setting an integer prune value causes an exception to be thrown in
-    // the OptionsModel constructor.
+    // Test regression https://github.com/bitcoin/bitcoin/issues/24457. Ensure
+    // that setting integer prune value doesn't cause an exception to be thrown
+    // in the OptionsModel constructor
     gArgs.LockSettings([&](util::Settings& settings) {
         settings.forced_settings.erase("prune");
         settings.rw_settings["prune"] = 3814;
     });
     gArgs.WriteSettingsFile();
-    QVERIFY_EXCEPTION_THROWN(OptionsModel{}, std::runtime_error);
+    OptionsModel{};
     gArgs.LockSettings([&](util::Settings& settings) {
         settings.rw_settings.erase("prune");
     });
