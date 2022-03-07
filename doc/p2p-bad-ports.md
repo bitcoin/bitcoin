@@ -1,6 +1,6 @@
-When Bitcoin Core automatically opens outgoing P2P connections it chooses
+When Bitcoin Core automatically opens outgoing P2P connections, it chooses
 a peer (address and port) from its list of potential peers. This list is
-populated with unchecked data, gossiped over the P2P network by other peers.
+populated with unchecked data gossiped over the P2P network by other peers.
 
 A malicious actor may gossip an address:port where no Bitcoin node is listening,
 or one where a service is listening that is not related to the Bitcoin network.
@@ -17,7 +17,7 @@ authentication are unlikely to be considered a malicious action,
 e.g. port 80 (http).
 
 Below is a list of "bad" ports which Bitcoin Core avoids when choosing a peer to
-connect to. If a node is listening on such a port, it will likely receive less
+connect to. If a node is listening on such a port, it will likely receive fewer
 incoming connections.
 
     1:     tcpmux
