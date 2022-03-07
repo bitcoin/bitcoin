@@ -245,6 +245,24 @@ BOOST_AUTO_TEST_CASE(patharg)
 
     ResetArgs(local_args, "-dir=user/.bitcoin/.//");
     BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+
+    // Check negated and default argument handling. Specifying an empty argument
+    // is the same as not specifying the argument. This is convenient for
+    // scripting so later command line arguments can override earlier command
+    // line arguments or bitcoin.conf values. Currently the -dir= case cannot be
+    // distinguished from -dir case with no assignment, but #16545 would add the
+    // ability to distinguish these in the future (and treat the no-assign case
+    // like an imperative command or an error).
+    ResetArgs(local_args, "");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    ResetArgs(local_args, "-dir=override");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"override"});
+    ResetArgs(local_args, "-dir=");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    ResetArgs(local_args, "-dir");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    ResetArgs(local_args, "-nodir");
+    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{""});
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)
