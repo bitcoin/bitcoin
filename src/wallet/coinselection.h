@@ -17,6 +17,14 @@ namespace wallet {
 static constexpr CAmount MIN_CHANGE{COIN / 100};
 //! final minimum change amount after paying for fees
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
+//! lower bound for randomly-chosen target change amount
+static constexpr CAmount CHANGE_LOWER{50000};
+//! upper bound for randomly-chosen target change amount
+static constexpr CAmount CHANGE_UPPER{1000000};
+// Ensure that any randomly generated change targets are less than or equal to before.
+// Otherwise, tests may fail if funds are not enough to cover change.
+static_assert(CHANGE_UPPER <= MIN_CHANGE);
+static_assert(CHANGE_LOWER <= MIN_FINAL_CHANGE);
 
 /** A UTXO under consideration for use in funding a new transaction. */
 class COutput
@@ -99,6 +107,8 @@ struct CoinSelectionParams {
     CAmount m_min_change_target{MIN_CHANGE};
     /** Cost of creating the change output. */
     CAmount m_change_fee{0};
+    /** The pre-determined minimum value to target when funding a change output. */
+    CAmount m_change_target{0};
     /** Cost of creating the change output + cost of spending the change output in the future. */
     CAmount m_cost_of_change{0};
     /** The targeted feerate of the transaction being built. */
@@ -222,6 +232,21 @@ struct OutputGroup
  * @return The waste
  */
 [[nodiscard]] CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
+
+
+/** Chooose a random change target for each transaction to make it harder to fingerprint the Core
+ * wallet based on the change output values of transactions it creates.
+ * The random value is between 50ksat and min(2 * payment_value, 1milsat)
+ * When payment_value <= 25ksat, the value is just 50ksat.
+ *
+ * Making change amounts similar to the payment value may help disguise which output(s) are payments
+ * are which ones are change. Using double the payment value may increase the number of inputs
+ * needed (and thus be more expensive in fees), but breaks analysis techniques which assume the
+ * coins selected are just sufficient to cover the payment amount ("unnecessary input" heuristic).
+ *
+ * @param[in]   payment_value   Average payment value of the transaction output(s).
+ */
+[[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng);
 
 struct SelectionResult
 {

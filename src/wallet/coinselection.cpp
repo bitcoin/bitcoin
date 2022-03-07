@@ -398,6 +398,17 @@ CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, 
     return waste;
 }
 
+CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng)
+{
+    if (payment_value <= CHANGE_LOWER / 2) {
+        return CHANGE_LOWER;
+    } else {
+        // random value between 50ksat and min (payment_value * 2, 1milsat)
+        const auto upper_bound = std::min(payment_value * 2, CHANGE_UPPER);
+        return rng.randrange(upper_bound - CHANGE_LOWER) + CHANGE_LOWER;
+    }
+}
+
 void SelectionResult::ComputeAndSetWaste(CAmount change_cost)
 {
     m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
