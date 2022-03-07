@@ -1038,7 +1038,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
 
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
         if (fExisted && !fUpdate) return false;
-        if (fExisted || IsMine(tx) || IsFromMe(tx))
+        if (fExisted || IsMine(tx) || IsFromMe(tx, boost::none))
         {
             /* Check if any keys in the wallet keypool that were supposed to be unused
              * have appeared in a new transaction. If so, remove those keys from the keypool.
@@ -1053,6 +1053,13 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
                     for (const auto& spk_man_pair : m_spk_managers) {
                         spk_man_pair.second->MarkUnusedAddresses(dest);
                     }
+                }
+            }
+
+            // Loop through pegout scripts
+            for (const PegOutCoin& pegout : tx.mweb_tx.GetPegOuts()) {
+                for (const auto& spk_man_pair : m_spk_managers) {
+                    spk_man_pair.second->MarkUnusedAddresses(DestinationAddr{pegout.GetScriptPubKey()});
                 }
             }
 
@@ -1483,15 +1490,22 @@ bool CWallet::IsMine(const CTransaction& tx) const
     for (const CTxOutput& txout : tx.GetOutputs())
         if (IsMine(txout))
             return true;
+
+    for (const PegOutCoin& pegout : tx.mweb_tx.GetPegOuts()) {
+        if (IsMine(DestinationAddr{pegout.GetScriptPubKey()})) {
+            return true;
+        }
+    }
+
     return false;
 }
 
-bool CWallet::IsFromMe(const CTransaction& tx) const
+bool CWallet::IsFromMe(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info) const
 {
-    return (GetDebit(tx, ISMINE_ALL) > 0);
+    return (GetDebit(tx, mweb_wtx_info, ISMINE_ALL) > 0);
 }
 
-CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
+CAmount CWallet::GetDebit(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info, const isminefilter& filter) const
 {
     CAmount nDebit = 0;
     for (const CTxInput& txin : tx.GetInputs())
@@ -1500,6 +1514,13 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) co
         if (!MoneyRange(nDebit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
+
+    if (mweb_wtx_info && mweb_wtx_info->spent_input) {
+        nDebit += GetDebit(CTxInput{*mweb_wtx_info->spent_input}, filter);
+        if (!MoneyRange(nDebit))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    }
+    
     return nDebit;
 }
 
@@ -1515,7 +1536,7 @@ bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) co
     return true;
 }
 
-CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) const
+CAmount CWallet::GetCredit(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info, const isminefilter& filter) const
 {
     CAmount nCredit = 0;
     for (const CTxOutput& txout : tx.GetOutputs())
@@ -1524,10 +1545,37 @@ CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) c
         if (!MoneyRange(nCredit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
+
+    if (mweb_wtx_info && mweb_wtx_info->received_coin) {
+        nCredit += GetCredit(CTxOutput{mweb_wtx_info->received_coin->output_id}, filter);
+        if (!MoneyRange(nCredit))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    }
+
+    bool has_my_inputs = false;
+    for (const CTxInput& txin : tx.GetInputs()) {
+        LOCK(cs_wallet);
+        if (IsMine(txin)) {
+            has_my_inputs = true;
+            break;
+        }
+    }
+
+    if (!has_my_inputs) {
+        for (const PegOutCoin& pegout : tx.mweb_tx.GetPegOuts()) {
+            LOCK(cs_wallet);
+            if (IsMine(DestinationAddr(pegout.GetScriptPubKey()))) {
+                nCredit += pegout.GetAmount();
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error(std::string(__func__) + ": value out of range");
+            }
+        }
+    }
+
     return nCredit;
 }
 
-CAmount CWallet::GetChange(const CTransaction& tx) const
+CAmount CWallet::GetChange(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info) const
 {
     LOCK(cs_wallet);
     CAmount nChange = 0;
@@ -1537,6 +1585,23 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
         if (!MoneyRange(nChange))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
+
+    if (mweb_wtx_info && mweb_wtx_info->received_coin) {
+        nChange += GetChange(CTxOutput{mweb_wtx_info->received_coin->output_id});
+        if (!MoneyRange(nChange))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    }
+
+    for (const PegOutCoin& pegout : tx.mweb_tx.GetPegOuts()) {
+        LOCK(cs_wallet);
+        if (IsChange(DestinationAddr{pegout.GetScriptPubKey()})) {
+            nChange += pegout.GetAmount();
+            if (!MoneyRange(nChange))
+                throw std::runtime_error(std::string(__func__) + ": value out of range");
+        
+        }
+    }
+
     return nChange;
 }
 
@@ -2061,7 +2126,7 @@ CAmount CWalletTx::GetCachableAmount(AmountType type, const isminefilter& filter
 {
     auto& amount = m_amounts[type];
     if (recalculate || !amount.m_cached[filter]) {
-        amount.Set(filter, type == DEBIT ? pwallet->GetDebit(*tx, filter) : pwallet->GetCredit(*tx, filter)); // MW: TODO - Need to support partial mweb info
+        amount.Set(filter, (type == DEBIT) ? pwallet->GetDebit(*tx, mweb_wtx_info, filter) : pwallet->GetCredit(*tx, mweb_wtx_info, filter));
         m_is_cache_empty = false;
     }
     return amount.m_value[filter];
@@ -2069,7 +2134,7 @@ CAmount CWalletTx::GetCachableAmount(AmountType type, const isminefilter& filter
 
 CAmount CWalletTx::GetDebit(const isminefilter& filter) const
 {
-    if (tx->GetInputs().empty())
+    if (GetInputs().empty())
         return 0;
 
     CAmount debit = 0;
@@ -2156,7 +2221,7 @@ CAmount CWalletTx::GetChange() const
 {
     if (fChangeCached)
         return nChangeCached;
-    nChangeCached = pwallet->GetChange(*tx);
+    nChangeCached = pwallet->GetChange(*tx, mweb_wtx_info);
     fChangeCached = true;
     return nChangeCached;
 }
@@ -2173,6 +2238,10 @@ CAmount CWalletTx::GetFee(const isminefilter& filter) const
             if (!IsPegInOutput(output)) {
                 nValueOut += pwallet->GetValue(output);
             }
+        }
+
+        for (const PegOutCoin& pegout : tx->mweb_tx.GetPegOuts()) {
+            nValueOut += pegout.GetAmount();
         }
 
         nFee = nDebit - nValueOut;
@@ -3911,8 +3980,7 @@ int CWalletTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase() && !IsHogEx())
         return 0;
-    int chain_depth = GetDepthInMainChain();
-    assert(chain_depth >= 0); // coinbase tx should not be conflicted
+    int chain_depth = std::max(0, GetDepthInMainChain());
     if (IsCoinBase()) {
         return std::max(0, (COINBASE_MATURITY + 1) - chain_depth);
     } else {

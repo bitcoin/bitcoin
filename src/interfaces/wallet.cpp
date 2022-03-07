@@ -97,6 +97,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     result.time = wtx.GetTxTime();
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
+    result.is_hogex = wtx.IsHogEx();
     result.wtx_hash = wtx.GetHash();
 
     //
@@ -132,6 +133,11 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
         result.txout_is_mine.emplace_back(wallet.IsMine(txout));
         result.txout_address_is_mine.emplace_back(is_address_mine(txout));
         result.outputs.push_back(MakeWalletTxOut(wallet, wtx, txout));
+    }
+
+    result.pegouts = wtx.tx->mweb_tx.GetPegOuts();
+    for (const PegOutCoin& pegout : result.pegouts) {
+        result.pegout_is_mine.emplace_back(wallet.IsMine(DestinationAddr(pegout.GetScriptPubKey())));
     }
 
     return result;

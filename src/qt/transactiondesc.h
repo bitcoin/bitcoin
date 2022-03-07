@@ -15,6 +15,7 @@ class Node;
 class Wallet;
 struct WalletTx;
 struct WalletTxStatus;
+using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 }
 
 /** Provide a human-readable extended HTML description of a transaction.
@@ -30,6 +31,11 @@ private:
     TransactionDesc() {}
 
     static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks);
+
+    static QString toHTML_Addresses(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, TransactionRecord* rec);
+    static QString toHTML_Amounts(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, int unit);
+    static QString toHTML_OrderForm(const interfaces::WalletOrderForm& orderForm);
+    static QString toHTML_Debug(interfaces::Node& node, interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, TransactionRecord* rec, int unit);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONDESC_H

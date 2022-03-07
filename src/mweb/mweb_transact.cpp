@@ -99,14 +99,19 @@ bool Transact::CreateTx(
     // Create transaction
     std::vector<mw::Coin> input_coins = GetInputCoins(selected_coins);
     std::vector<mw::Coin> output_coins;
-    transaction.mweb_tx = TxBuilder::BuildTx(
-        input_coins,
-        receivers,
-        pegouts,
-        pegin_amount,
-        mweb_fee,
-        output_coins
-    );
+
+    try {
+        transaction.mweb_tx = TxBuilder::BuildTx(
+            input_coins,
+            receivers,
+            pegouts,
+            pegin_amount,
+            mweb_fee,
+            output_coins
+        );
+    } catch (std::exception&) {
+        return false;
+    }
 
     if (!output_coins.empty()) {
         mweb_wallet->SaveToWallet(output_coins);

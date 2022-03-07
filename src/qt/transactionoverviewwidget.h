@@ -33,7 +33,7 @@ protected:
     {
         Q_UNUSED(event);
         QSizePolicy sp = sizePolicy();
-        sp.setHorizontalPolicy(QSizePolicy::Minimum);
+        sp.setHorizontalPolicy(QSizePolicy::Preferred);
         setSizePolicy(sp);
     }
 };

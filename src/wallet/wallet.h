@@ -1164,12 +1164,12 @@ public:
     CAmount GetChange(const CTxOutput& output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsMine(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /** should probably be renamed to IsRelevantToMe */
-    bool IsFromMe(const CTransaction& tx) const;
-    CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    bool IsFromMe(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info) const;
+    CAmount GetDebit(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info, const isminefilter& filter) const;
     /** Returns whether all of the inputs match the filter */
     bool IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const;
-    CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
-    CAmount GetChange(const CTransaction& tx) const;
+    CAmount GetCredit(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info, const isminefilter& filter) const;
+    CAmount GetChange(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info) const;
     void chainStateFlushed(const CBlockLocator& loc) override;
 
     DBErrors LoadWallet(bool& fFirstRunRet);

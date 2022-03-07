@@ -35,7 +35,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     uint256 hash = wtx.wtx_hash;
     std::map<std::string, std::string> mapValue = wtx.value_map;
 
-    if (nNet > 0 || wtx.is_coinbase)
+    if (nNet > 0 || wtx.is_coinbase || wtx.is_hogex)
     {
         //
         // Credit
@@ -89,13 +89,24 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             if(fAllToMe > mine) fAllToMe = mine;
         }
 
+        // MWEB: Check pegouts for fAllToMe
+        for (const isminetype mine : wtx.pegout_is_mine) {
+            if (mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if (fAllToMe > mine) fAllToMe = mine;
+        }
+
         if (fAllFromMe && fAllToMe)
         {
             // Payment to self
             std::string address;
             for (auto it = wtx.outputs.begin(); it != wtx.outputs.end(); ++it) {
-                if (it != wtx.outputs.begin()) address += ", ";
+                if (!address.empty()) address += ", ";
                 address += it->address.Encode();
+            }
+
+            for (auto it = wtx.pegouts.begin(); it != wtx.pegouts.end(); ++it) {
+                if (!address.empty()) address += ", ";
+                address += DestinationAddr(it->GetScriptPubKey()).Encode();
             }
 
             CAmount nChange = wtx.change;
@@ -147,6 +158,33 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
 
                 parts.append(sub);
             }
+
+            for (unsigned int nPegout = 0; nPegout < wtx.pegouts.size(); nPegout++) {
+                const PegOutCoin& pegout = wtx.pegouts[nPegout];
+                TransactionRecord sub(hash, nTime);
+                sub.idx = wtx.outputs.size() + nPegout;
+                sub.involvesWatchAddress = involvesWatchAddress;
+
+                if (wtx.pegout_is_mine[nPegout]) {
+                    // Ignore parts sent to self, as this is usually the change
+                    // from a transaction sent back to our own address.
+                    continue;
+                }
+                
+                // Sent to Bitcoin Address
+                sub.type = TransactionRecord::SendToAddress;
+                sub.address = DestinationAddr(pegout.GetScriptPubKey()).Encode();
+
+                CAmount nValue = pegout.GetAmount();
+                /* Add fee to first output */
+                if (nTxFee > 0) {
+                    nValue += nTxFee;
+                    nTxFee = 0;
+                }
+                sub.debit = -nValue;
+
+                parts.append(sub);
+            }
         }
         else
         {
@@ -175,6 +213,10 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
     status.depth = wtx.depth_in_main_chain;
     status.m_cur_block_hash = block_hash;
 
+    if (wtx.is_in_main_chain) {
+        status.matures_in = wtx.blocks_to_maturity;
+    }
+
     const bool up_to_date = ((int64_t)QDateTime::currentMSecsSinceEpoch() / 1000 - block_time < MAX_BLOCK_TIME_GAP);
     if (up_to_date && !wtx.is_final) {
         if (wtx.lock_time < LOCKTIME_THRESHOLD) {
@@ -194,11 +236,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
         {
             status.status = TransactionStatus::Immature;
 
-            if (wtx.is_in_main_chain)
-            {
-                status.matures_in = wtx.blocks_to_maturity;
-            }
-            else
+            if (!wtx.is_in_main_chain)
             {
                 status.status = TransactionStatus::NotAccepted;
             }

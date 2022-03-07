@@ -251,13 +251,13 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             UniValue kern(UniValue::VOBJ);
             kern.pushKV("kernel_id", kernel.GetKernelID().ToHex());
 
-            kern.pushKV("fee", kernel.GetFee());
-            kern.pushKV("pegin", kernel.GetPegIn());
+            kern.pushKV("fee", ValueFromAmount(kernel.GetFee()));
+            kern.pushKV("pegin", ValueFromAmount(kernel.GetPegIn()));
 
             UniValue pegouts(UniValue::VARR);
             for (const PegOutCoin& pegout : kernel.GetPegOuts()) {
                 UniValue uni_pegout(UniValue::VOBJ);
-                uni_pegout.pushKV("value", pegout.GetAmount());
+                uni_pegout.pushKV("value", ValueFromAmount(pegout.GetAmount()));
 
                 UniValue p(UniValue::VOBJ);
                 ScriptPubKeyToUniv(pegout.GetScriptPubKey(), p, true);

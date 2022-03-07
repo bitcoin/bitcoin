@@ -403,6 +403,7 @@ struct WalletTx
     std::vector<isminetype> txin_is_mine;
     std::vector<isminetype> txout_is_mine;
     std::vector<isminetype> txout_address_is_mine;
+    std::vector<isminetype> pegout_is_mine;
     CAmount credit;
     CAmount debit;
     CAmount change;
@@ -410,9 +411,11 @@ struct WalletTx
     int64_t time;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
+    bool is_hogex;
     uint256 wtx_hash;
     std::vector<CTxInput> inputs;
     std::vector<WalletTxOut> outputs;
+    std::vector<PegOutCoin> pegouts;
 };
 
 //! Updated transaction status.

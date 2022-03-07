@@ -25,7 +25,7 @@ mw::Transaction::CPtr TxBuilder::BuildTx(
 
     // Get input coins
     LOG_INFO_F(
-        "Creating Txs: Inputs({}), pegins({}), pegouts({}), recipient_total({}), fee({})",
+        "Creating Tx: Inputs({}), pegins({}), pegouts({}), recipient_total({}), fee({})",
         TotalAmount(input_coins),
         pegin_amount.value_or(0),
         pegout_total,
