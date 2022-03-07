@@ -267,8 +267,9 @@ epilogue:
         }
     }
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-
-    UnloadBlockIndex(nullptr, chainman);
-
+    {
+        LOCK(cs_main);
+        UnloadBlockIndex(nullptr, chainman);
+    }
     init::UnsetGlobals();
 }

@@ -15,7 +15,6 @@
 #include <chain.h>
 #include <consensus/amount.h>
 #include <fs.h>
-#include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <script/script_error.h>
