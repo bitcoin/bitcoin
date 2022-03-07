@@ -57,6 +57,11 @@ public:
     path filename() const { return std::filesystem::path::filename(); }
 };
 
+static inline path u8path(const std::string& utf8_str)
+{
+    return std::filesystem::u8path(utf8_str);
+}
+
 // Disallow implicit std::string conversion for absolute to avoid
 // locale-dependent encoding on windows.
 static inline path absolute(const path& p)
@@ -116,8 +121,8 @@ static inline std::string PathToString(const path& path)
     // use here, because these methods encode the path using C++'s narrow
     // multibyte encoding, which on Windows corresponds to the current "code
     // page", which is unpredictable and typically not able to represent all
-    // valid paths. So std::filesystem::path::u8string() and
-    // std::filesystem::u8path() functions are used instead on Windows. On
+    // valid paths. So fs::path::u8string() and
+    // fs::u8path() functions are used instead on Windows. On
     // POSIX, u8string/u8path functions are not safe to use because paths are
     // not always valid UTF-8, so plain string methods which do not transform
     // the path there are used.
