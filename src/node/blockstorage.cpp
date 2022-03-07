@@ -37,11 +37,18 @@ static FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
 
-CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
+CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash)
+{
+    AssertLockHeld(cs_main);
+    BlockMap::iterator it = m_block_index.find(hash);
+    return it == m_block_index.end() ? nullptr : &it->second;
+}
+
+const CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
 {
     AssertLockHeld(cs_main);
     BlockMap::const_iterator it = m_block_index.find(hash);
-    return it == m_block_index.end() ? nullptr : it->second;
+    return it == m_block_index.end() ? nullptr : &it->second;
 }
 // SYSCOIN
 std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> BlockManager::LookupBlockIndexPrev(const uint256& hash)
@@ -55,23 +62,21 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum Block
     assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks allowed
     AssertLockHeld(cs_main);
 
-    // Check for duplicate
-    uint256 hash = block.GetHash();
-    BlockMap::iterator it = m_block_index.find(hash);
-    if (it != m_block_index.end())
-        return it->second;
-    // Construct new block index object
-    CBlockIndex* pindexNew = new CBlockIndex(block);
+    auto [mi, inserted] = m_block_index.try_emplace(block.GetHash(), block);
+    if (!inserted) {
+        return &mi->second;
+    }
+    CBlockIndex* pindexNew = &(*mi).second;
+
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
     pindexNew->nSequenceId = 0;
-    BlockMap::iterator mi = m_block_index.insert(std::make_pair(hash, pindexNew)).first;
+
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
-    if (miPrev != m_block_index.end())
-    {
-        pindexNew->pprev = (*miPrev).second;
+    if (miPrev != m_block_index.end()) {
+        pindexNew->pprev = &(*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
     }
@@ -100,8 +105,8 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
     AssertLockHeld(cs_main);
     LOCK(cs_LastBlockFile);
 
-    for (const auto& entry : m_block_index) {
-        CBlockIndex* pindex = entry.second;
+    for (auto& entry : m_block_index) {
+        CBlockIndex* pindex = &entry.second;
         if (pindex->nFile == fileNumber) {
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
             pindex->nStatus &= ~BLOCK_HAVE_UNDO;
@@ -219,18 +224,13 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
         return nullptr;
     }
 
-    // Return existing
-    BlockMap::iterator mi = m_block_index.find(hash);
-    if (mi != m_block_index.end()) {
-        return (*mi).second;
+    // Return existing or create new
+    auto [mi, inserted] = m_block_index.try_emplace(hash);
+    CBlockIndex* pindex = &(*mi).second;
+    if (inserted) {
+        pindex->phashBlock = &((*mi).first);
     }
-
-    // Create new
-    CBlockIndex* pindexNew = new CBlockIndex();
-    mi = m_block_index.insert(std::make_pair(hash, pindexNew)).first;
-    pindexNew->phashBlock = &((*mi).first);
-
-    return pindexNew;
+    return pindex;
 }
 
 bool BlockManager::LoadBlockIndex(
@@ -244,8 +244,8 @@ bool BlockManager::LoadBlockIndex(
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*>> vSortedByHeight;
     vSortedByHeight.reserve(m_block_index.size());
-    for (const std::pair<const uint256, CBlockIndex*>& item : m_block_index) {
-        CBlockIndex* pindex = item.second;
+    for (auto& [_, block_index] : m_block_index) {
+        CBlockIndex* pindex = &block_index;
         vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
         // SYSCOIN build mapPrevBlockIndex
         if (pindex->pprev) {
@@ -353,9 +353,6 @@ void BlockManager::Unload()
 {
     m_blocks_unlinked.clear();
 
-    for (const BlockMap::value_type& entry : m_block_index) {
-        delete entry.second;
-    }
     m_block_index.clear();
     // SYSCOIN
     m_prev_block_index.clear();
@@ -413,8 +410,8 @@ bool BlockManager::LoadBlockIndexDB(ChainstateManager& chainman)
     // Check presence of blk files
     LogPrintf("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
-    for (const std::pair<const uint256, CBlockIndex*>& item : m_block_index) {
-        CBlockIndex* pindex = item.second;
+    for (const auto& [_, block_index] : m_block_index) {
+        const CBlockIndex* pindex = &block_index;
         if (pindex->nStatus & BLOCK_HAVE_DATA) {
             setBlkDataFiles.insert(pindex->nFile);
         }
