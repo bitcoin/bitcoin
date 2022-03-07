@@ -10,6 +10,7 @@ FUZZ_TARGETS = \
   test/fuzz/addrman_deserialize \
   test/fuzz/banentry_deserialize \
   test/fuzz/bech32 \
+  test/fuzz/block \
   test/fuzz/block_deserialize \
   test/fuzz/block_file_info_deserialize \
   test/fuzz/block_filter_deserialize \
@@ -27,6 +28,7 @@ FUZZ_TARGETS = \
   test/fuzz/eval_script \
   test/fuzz/fee_rate_deserialize \
   test/fuzz/flat_file_pos_deserialize \
+  test/fuzz/integer \
   test/fuzz/inv_deserialize \
   test/fuzz/key_origin_info_deserialize \
   test/fuzz/merkle_block_deserialize \
@@ -239,6 +241,12 @@ test_test_dash_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_FUZZ
+test_fuzz_block_SOURCES = $(FUZZ_SUITE) test/fuzz/block.cpp
+test_fuzz_block_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_block_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_block_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_block_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
 test_fuzz_block_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCK_DESERIALIZE=1
 test_fuzz_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -358,6 +366,12 @@ test_fuzz_eval_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_eval_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_eval_script_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_eval_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_integer_SOURCES = $(FUZZ_SUITE) test/fuzz/integer.cpp
+test_fuzz_integer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_integer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_integer_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_integer_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_txoutcompressor_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1
