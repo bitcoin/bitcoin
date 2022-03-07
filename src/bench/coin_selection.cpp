@@ -19,6 +19,7 @@ using wallet::CWalletTx;
 using wallet::CoinEligibilityFilter;
 using wallet::CoinSelectionParams;
 using wallet::CreateDummyWalletDatabase;
+using wallet::MIN_CHANGE;
 using wallet::OutputGroup;
 using wallet::SelectCoinsBnB;
 using wallet::TxStateInactive;
@@ -66,6 +67,7 @@ static void CoinSelection(benchmark::Bench& bench)
         rand,
         /* change_output_size= */ 34,
         /* change_spend_size= */ 148,
+        /*min_change_target=*/ MIN_CHANGE,
         /* effective_feerate= */ CFeeRate(0),
         /* long_term_feerate= */ CFeeRate(0),
         /* discard_feerate= */ CFeeRate(0),
