@@ -22,7 +22,7 @@ bool VerifyWallets(interfaces::Chain& chain)
         fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
         boost::system::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
-        fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error);
+        fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error).remove_trailing_separator();
         if (error || !fs::exists(wallet_dir)) {
             chain.initError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.string()));
             return false;
