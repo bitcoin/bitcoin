@@ -1331,7 +1331,7 @@ else
   SYSCOIN_QT_INIT
 
   dnl sets $syscoin_enable_qt, $syscoin_enable_qt_test, $syscoin_enable_qt_dbus
-  SYSCOIN_QT_CONFIGURE([5.9.5])
+  SYSCOIN_QT_CONFIGURE([5.11.3])
 
   dnl Keep a copy of the original $QT_INCLUDES and use it when invoking qt's moc
   QT_INCLUDES_UNSUPPRESSED=$QT_INCLUDES
