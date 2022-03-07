@@ -208,19 +208,6 @@ class WalletTaprootTest(BitcoinTestFramework):
         pass
 
     @staticmethod
-    def rand_keys(n):
-        ret = []
-        idxes = set()
-        for _ in range(n):
-            while True:
-                i = random.randrange(len(KEYS))
-                if not i in idxes:
-                    break
-            idxes.add(i)
-            ret.append(KEYS[i])
-        return ret
-
-    @staticmethod
     def make_desc(pattern, privmap, keys, pub_only = False):
         pat = pattern.replace("$H", H_POINT)
         for i in range(len(privmap)):
@@ -332,7 +319,7 @@ class WalletTaprootTest(BitcoinTestFramework):
 
     def do_test(self, comment, pattern, privmap, treefn):
         nkeys = len(privmap)
-        keys = self.rand_keys(nkeys * 4)
+        keys = random.sample(KEYS, nkeys * 4)
         self.do_test_addr(comment, pattern, privmap, treefn, keys[0:nkeys])
         self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
         self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
