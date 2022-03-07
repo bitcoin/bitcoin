@@ -429,10 +429,10 @@ class WalletTaprootTest(BitcoinTestFramework):
             lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2], True)])
         )
         self.do_test(
-            "tr(H,multi_a(1,XPUB,XPRV))",
-            "tr($H,multi_a(1,$1/*,$2/*))",
+            "tr(H,{H,multi_a(1,XPUB,XPRV)})",
+            "tr($H,{pk($H),multi_a(1,$1/*,$2/*)})",
             [False, True],
-            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2])])
+            lambda k1, k2: (key(H_POINT), [pk(H_POINT), [multi_a(1, [k1, k2])]])
         )
         self.do_test(
             "tr(H,sortedmulti_a(1,XPUB,XPRV,XPRV))",
