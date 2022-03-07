@@ -7,6 +7,7 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <txdb.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/strencodings.h>
@@ -108,7 +109,12 @@ static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
 //
 // During the process, booleans are kept to make sure that the randomized
 // operation hits all branches.
-BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
+//
+// If fake_best_block is true, assign a random uint256 to mock the recording
+// of best block on flush. This is necessary when using CCoinsViewDB as the base,
+// otherwise we'll hit an assertion in BatchWrite.
+//
+void SimulationTest(CCoinsView* base, bool fake_best_block)
 {
     // Various coverage trackers.
     bool removed_all_caches = false;
@@ -125,9 +131,8 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     std::map<COutPoint, Coin> result;
 
     // The cache stack.
-    CCoinsViewTest base; // A CCoinsViewTest at the bottom.
     std::vector<CCoinsViewCacheTest*> stack; // A stack of CCoinsViewCaches on top.
-    stack.push_back(new CCoinsViewCacheTest(&base)); // Start with one cache.
+    stack.push_back(new CCoinsViewCacheTest(base)); // Start with one cache.
 
     // Use a limited set of random transaction ids, so we do test overwriting entries.
     std::vector<uint256> txids;
@@ -210,6 +215,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
             // Every 100 iterations, flush an intermediate cache
             if (stack.size() > 1 && InsecureRandBool() == 0) {
                 unsigned int flushIndex = InsecureRandRange(stack.size() - 1);
+                if (fake_best_block) stack[flushIndex]->SetBestBlock(InsecureRand256());
                 BOOST_CHECK(stack[flushIndex]->Flush());
             }
         }
@@ -217,13 +223,14 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && InsecureRandBool() == 0) {
                 //Remove the top cache
+                if (fake_best_block) stack.back()->SetBestBlock(InsecureRand256());
                 BOOST_CHECK(stack.back()->Flush());
                 delete stack.back();
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && InsecureRandBool())) {
                 //Add a new cache
-                CCoinsView* tip = &base;
+                CCoinsView* tip = base;
                 if (stack.size() > 0) {
                     tip = stack.back();
                 } else {
@@ -253,6 +260,16 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     BOOST_CHECK(found_an_entry);
     BOOST_CHECK(missed_an_entry);
     BOOST_CHECK(uncached_an_entry);
+}
+
+// Run the above simulation for multiple base types.
+BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
+{
+    CCoinsViewTest base;
+    SimulationTest(&base, false);
+
+    CCoinsViewDB db_base{"test", /*nCacheSize*/ 1 << 23, /*fMemory*/ true, /*fWipe*/ false};
+    SimulationTest(&db_base, true);
 }
 
 // Store of all necessary tx and undo data for next test
