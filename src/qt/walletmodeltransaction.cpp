@@ -41,9 +41,10 @@ void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
     fee = newFee;
 }
 
-void WalletModelTransaction::reassignAmounts(int nChangePosRet)
+void WalletModelTransaction::reassignAmounts(interfaces::Wallet& wallet, int nChangePosRet)
 {
-    const CTransaction* walletTransaction = wtx.get();
+    std::vector<CTxOutput> outputs = wtx->GetOutputs();
+
     int i = 0;
     for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
@@ -51,7 +52,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
         {
             if (i == nChangePosRet)
                 i++;
-            rcp.amount = walletTransaction->vout[i].nValue;
+            rcp.amount = wallet.getValue(outputs[i]);
             i++;
         }
     }
