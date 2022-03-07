@@ -4070,7 +4070,7 @@ void CChainState::UnloadBlockIndex()
 // block index state
 void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
 {
-    LOCK(cs_main);
+    AssertLockHeld(::cs_main);
     chainman.Unload();
     pindexBestHeader = nullptr;
     if (mempool) mempool->clear();
@@ -5054,15 +5054,6 @@ void ChainstateManager::Unload()
     m_failed_blocks.clear();
     m_blockman.Unload();
     m_best_invalid = nullptr;
-}
-
-void ChainstateManager::Reset()
-{
-    LOCK(::cs_main);
-    m_ibd_chainstate.reset();
-    m_snapshot_chainstate.reset();
-    m_active_chainstate = nullptr;
-    m_snapshot_validated = false;
 }
 
 void ChainstateManager::MaybeRebalanceCaches()
