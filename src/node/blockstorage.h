@@ -14,8 +14,6 @@
 #include <atomic>
 #include <cstdint>
 #include <vector>
-// SYSCOIN
-#include <chain.h>
 
 extern RecursiveMutex cs_main;
 
