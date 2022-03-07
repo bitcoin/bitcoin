@@ -108,8 +108,7 @@ class ImportWithLabel(BitcoinTestFramework):
                      address4,
                      iswatchonly=True,
                      ismine=False,
-                     label=label4_addr,
-                     embedded=None)
+                     label=label4_addr)
 
         self.log.info(
             "Import the watch-only address's private key without a "
@@ -119,11 +118,6 @@ class ImportWithLabel(BitcoinTestFramework):
         )
         priv_key4 = self.nodes[0].dumpprivkey(address4)
         self.nodes[1].importprivkey(priv_key4)
-        embedded_addr = self.nodes[1].getaddressinfo(address4)['embedded']['address']
-
-        test_address(self.nodes[1],
-                     embedded_addr,
-                     label="")
         test_address(self.nodes[1],
                      address4,
                      label=label4_addr)
