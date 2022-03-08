@@ -37,6 +37,13 @@ git clone https://github.com/bitcoin-core/apple-sdk-tools.git
 python3 apple-sdk-tools/extract_xcode.py -f Xcode_12.2.xip | cpio -d -i
 ```
 
+If in running the above command, you encounter a Python error 
+```py
+ModuleNotFoundError: No module named '_lzma'
+```
+you may have to install `liblzma` headers (e.g. `sudo apt install lzma liblzma-dev`)
+and reinstall Python.
+
 On macOS the process is more straightforward:
 
 ```bash
