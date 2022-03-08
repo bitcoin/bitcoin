@@ -78,7 +78,6 @@ implicit-integer-sign-change:util/strencodings.h
 implicit-integer-sign-change:validation.cpp
 implicit-signed-integer-truncation,implicit-integer-sign-change:chain.h
 implicit-signed-integer-truncation,implicit-integer-sign-change:test/skiplist_tests.cpp
-implicit-signed-integer-truncation:addrman.cpp
 implicit-signed-integer-truncation:addrman.h
 implicit-signed-integer-truncation:chain.h
 implicit-signed-integer-truncation:crypto/
