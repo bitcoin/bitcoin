@@ -1040,9 +1040,10 @@ syscoin_chainstate_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   warnings.cpp
-syscoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
-syscoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+
+syscoin_chainstate_CPPFLAGS = $(syscoin_bin_cppflags)
+syscoin_chainstate_CXXFLAGS = $(syscoin_bin_cxxflags)
+syscoin_chainstate_LDFLAGS = $(syscoin_bin_ldflags)
 syscoin_chainstate_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
 
 # Required for obj/build.h to be generated first.
