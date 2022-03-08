@@ -485,7 +485,7 @@ and endian independent.")
     (license license:expat)))
 
 (define-public python-signapple
-  (let ((commit "b084cbbf44d5330448ffce0c7d118f75781b64bd"))
+  (let ((commit "9f42f3c8295d4107ee7a22e523ec17449a936f43"))
     (package
       (name "python-signapple")
       (version (git-version "0.1" "1" commit))
@@ -498,7 +498,7 @@ and endian independent.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "0k7inccl2mzac3wq4asbr0kl8s4cghm8982z54kfascqg45shv01"))))
+           "0j1sqi0g8k2z5y56iayh5pw9yyq1r6ry3q5zy0cdy2sispiwvdnp"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
