@@ -256,7 +256,7 @@ epilogue:
     }
     GetMainSignals().UnregisterBackgroundSignalScheduler();
 
-    UnloadBlockIndex(nullptr, chainman);
+    WITH_LOCK(::cs_main, UnloadBlockIndex(nullptr, chainman));
 
     init::UnsetGlobals();
 }
