@@ -164,5 +164,10 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info('Using a passphrase with private keys disabled returns error')
         assert_raises_rpc_error(-4, 'Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.', self.nodes[0].createwallet, wallet_name='w9', disable_private_keys=True, passphrase='thisisapassphrase')
 
+        if self.is_bdb_compiled():
+            self.log.info("Test legacy wallet deprecation")
+            res = self.nodes[0].createwallet(wallet_name="legacy_w0", descriptors=False, passphrase=None)
+            assert_equal(res["warning"], "Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.")
+
 if __name__ == '__main__':
     CreateWalletTest().main()
