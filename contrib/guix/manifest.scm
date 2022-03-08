@@ -352,7 +352,7 @@ thus should be able to compile on most platforms where these exist.")
              #t)))))))
 
 (define-public python-certvalidator
-  (let ((commit "e5bdb4bfcaa09fa0af355eb8867d00dfeecba08c"))
+  (let ((commit "a145bf25eb75a9f014b3e7678826132efbba6213"))
     (package
       (name "python-certvalidator")
       (version (git-version "0.1" "1" commit))
@@ -365,7 +365,7 @@ thus should be able to compile on most platforms where these exist.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "18pvxkvpkfkzgvfylv0kx65pmxfcv1hpsg03cip93krfvrrl4c75"))))
+           "1qw2k7xis53179lpqdqyylbcmp76lj7sagp883wmxg5i7chhc96k"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
@@ -398,11 +398,6 @@ thus should be able to compile on most platforms where these exist.")
                                  line)))
                (substitute* "tests/test_validate.py"
                  (("^(.*)def test_revocation_mode_hard" line indent)
-                  (string-append indent
-                                 "@unittest.skip(\"Disabled by Guix\")\n"
-                                 line)))
-               (substitute* "tests/test_validate.py"
-                 (("^(.*)def test_revocation_mode_soft" line indent)
                   (string-append indent
                                  "@unittest.skip(\"Disabled by Guix\")\n"
                                  line)))
