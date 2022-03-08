@@ -68,6 +68,17 @@ class AddrmanTest(BitcoinTestFramework):
             self.start_node(0, extra_args=["-checkaddrman=1"])
         assert_equal(self.nodes[0].getnodeaddresses(), [])
 
+        self.log.info("Check that addrman with negative lowest_compatible cannot be read")
+        self.stop_node(0)
+        write_addrman(peers_dat, lowest_compatible=-32)
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=init_error(
+                "Corrupted addrman database: The compat value \\(0\\) is lower "
+                "than the expected minimum value 32.: (.+)"
+            ),
+            match=ErrorMatch.FULL_REGEX,
+        )
+
         self.log.info("Check that addrman from future is overwritten with new addrman")
         self.stop_node(0)
         write_addrman(peers_dat, lowest_compatible=111)

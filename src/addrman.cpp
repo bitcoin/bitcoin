@@ -246,12 +246,18 @@ void AddrManImpl::Unserialize(Stream& s_)
 
     uint8_t compat;
     s >> compat;
+    if (compat < INCOMPATIBILITY_BASE) {
+        throw std::ios_base::failure(strprintf(
+            "Corrupted addrman database: The compat value (%u) "
+            "is lower than the expected minimum value %u.",
+            compat, INCOMPATIBILITY_BASE));
+    }
     const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
     if (lowest_compatible > FILE_FORMAT) {
         throw InvalidAddrManVersionError(strprintf(
             "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
             "but the maximum supported by this version of %s is %u.",
-            uint8_t{format}, uint8_t{lowest_compatible}, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
+            uint8_t{format}, lowest_compatible, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
     }
 
     s >> nKey;
