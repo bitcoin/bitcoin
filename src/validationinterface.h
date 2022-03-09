@@ -193,6 +193,7 @@ protected:
     virtual void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) {}
     virtual void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {}
     virtual void NotifyNEVMComms(const std::string& commMessage, bool &bResponse) {}
+    friend class ValidationInterfaceTest;
 };
 
 struct MainSignalsInstance;
