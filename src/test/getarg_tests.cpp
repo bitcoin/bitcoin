@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/util/setup_common.h>
+#include <univalue.h>
+#include <util/settings.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
@@ -39,6 +41,116 @@ void SetupArgs(ArgsManager& local_args, const std::vector<std::pair<std::string,
     for (const auto& arg : args) {
         local_args.AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
     }
+}
+
+// Test behavior of GetArg functions when string, integer, and boolean types
+// are specified in the settings.json file. GetArg functions are convenience
+// functions. The GetSetting method can always be used instead of GetArg
+// methods to retrieve original values, and there's not always an objective
+// answer to what GetArg behavior is best in every case. This test makes sure
+// there's test coverage for whatever the current behavior is, so it's not
+// broken or changed unintentionally.
+BOOST_AUTO_TEST_CASE(setting_args)
+{
+    ArgsManager args;
+    SetupArgs(args, {{"-foo", ArgsManager::ALLOW_ANY}});
+
+    auto set_foo = [&](const util::SettingsValue& value) {
+      args.LockSettings([&](util::Settings& settings) {
+        settings.rw_settings["foo"] = value;
+      });
+    };
+
+    set_foo("str");
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"str\"");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "str");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+
+    set_foo("99");
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"99\"");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "99");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 99);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+
+    set_foo("3.25");
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"3.25\"");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "3.25");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 3);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+
+    set_foo("0");
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"0\"");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+
+    set_foo("");
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"\"");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+
+    set_foo(99);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "99");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "99");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 99);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+
+    set_foo(3.25);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "3.25");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "3.25");
+    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+
+    set_foo(0);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "0");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+
+    set_foo(true);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "true");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "1");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 1);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+
+    set_foo(false);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "false");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+
+    set_foo(UniValue::VOBJ);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "{}");
+    BOOST_CHECK_THROW(args.GetArg("foo", "default"), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+
+    set_foo(UniValue::VARR);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "[]");
+    BOOST_CHECK_THROW(args.GetArg("foo", "default"), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+
+    set_foo(UniValue::VNULL);
+    BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "null");
+    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "default");
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 100);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
