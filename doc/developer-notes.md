@@ -962,7 +962,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(...)
 
 ```C++
 // validation.h
-class CChainState
+class Chainstate
 {
 protected:
     ...
@@ -983,7 +983,7 @@ public:
 }
 
 // validation.cpp
-bool CChainState::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
+bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);

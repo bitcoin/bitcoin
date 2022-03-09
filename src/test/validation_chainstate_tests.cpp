@@ -18,7 +18,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, ChainTestingSetup)
 
-//! Test resizing coins-related CChainState caches during runtime.
+//! Test resizing coins-related Chainstate caches during runtime.
 //!
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         return outp;
     };
 
-    CChainState& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool));
+    Chainstate& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool));
     c1.InitCoinsDB(
         /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
@@ -106,8 +106,8 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 
     BOOST_CHECK_EQUAL(chainman.GetAll().size(), 2);
 
-    CChainState& background_cs{*[&] {
-        for (CChainState* cs : chainman.GetAll()) {
+    Chainstate& background_cs{*[&] {
+        for (Chainstate* cs : chainman.GetAll()) {
             if (cs != &chainman.ActiveChainstate()) {
                 return cs;
             }

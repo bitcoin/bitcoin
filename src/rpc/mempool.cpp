@@ -168,7 +168,7 @@ static RPCHelpMan testmempoolaccept()
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
             ChainstateManager& chainman = EnsureChainman(node);
-            CChainState& chainstate = chainman.ActiveChainstate();
+            Chainstate& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
                 if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true);
@@ -810,7 +810,7 @@ static RPCHelpMan submitpackage()
 
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
-            CChainState& chainstate = EnsureChainman(node).ActiveChainstate();
+            Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();
             const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false));
 
             // First catch any errors.
