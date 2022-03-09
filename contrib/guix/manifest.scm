@@ -535,7 +535,7 @@ inspecting signatures in Mach-O binaries.")
                                            "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
                                            "glibc-2.24-no-build-time-cxx-header-run.patch"))))))
 
-(define-public glibc-2.27/bitcoin-patched
+(define-public glibc-2.27/syscoin-patched
   (package
     (inherit glibc-2.31)
     (version "2.27")
@@ -588,24 +588,30 @@ inspecting signatures in Mach-O binaries.")
         ;; Git
         git
         ;; Tests
-        lief
-        ;; Native gcc 7 toolchain
-        gcc-toolchain-7
-        (list gcc-toolchain-7 "static"))
+        lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list zip
+           (list ;; Native GCC 10 toolchain
+                 gcc-toolchain-10
+                 (list gcc-toolchain-10 "static")
+                 zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (cond ((string-contains target "riscv64-")
+           (list ;; Native GCC 7 toolchain
+                 gcc-toolchain-7
+                 (list gcc-toolchain-7 "static")
+                 (cond ((string-contains target "riscv64-")
                         (make-syscoin-cross-toolchain target
                                                       #:base-libc glibc-2.27/syscoin-patched
                                                       #:base-kernel-headers linux-libre-headers-4.19))
                        (else
                         (make-syscoin-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils cmake xorriso python-signapple))
+           (list ;; Native GCC 10 toolchain
+                 gcc-toolchain-10
+                 (list gcc-toolchain-10 "static")
+                 clang-toolchain-10 binutils cmake xorriso python-signapple))
           (else '())))))
