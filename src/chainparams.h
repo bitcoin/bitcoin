@@ -13,8 +13,10 @@
 #include <protocol.h>
 #include <util/hash_type.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 typedef std::map<int, uint256> MapCheckpoints;
@@ -129,6 +131,24 @@ public:
     struct SigNetOptions {
         std::optional<std::vector<uint8_t>> challenge{};
         std::optional<std::vector<std::string>> seeds{};
+    };
+
+    /**
+     * VersionBitsParameters holds activation parameters
+     */
+    struct VersionBitsParameters {
+        int64_t start_time;
+        int64_t timeout;
+        int min_activation_height;
+    };
+
+    /**
+     * RegTestOptions holds configurations for creating a regtest CChainParams.
+     */
+    struct RegTestOptions {
+        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+        std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+        bool fastprune{false};
     };
 
 protected:
