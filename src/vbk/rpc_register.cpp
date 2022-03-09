@@ -479,6 +479,7 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
         .Check(request);
 
     EnsurePopEnabled();
+    LOCK(cs_main);
 
     int verbosity = 0;
     if (!request.params[0].isNull()) {

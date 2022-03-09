@@ -10,6 +10,8 @@
 #include <vbk/pop_common.hpp>
 #include <veriblock/pop.hpp>
 
+extern CCriticalSection cs_main;
+
 namespace VeriBlock {
 
 constexpr const char DB_VBK_PREFIX = '^';
@@ -44,6 +46,7 @@ struct PayloadsProvider : public altintegration::PayloadsStorage {
     template <typename pop_t>
     bool getPayloads(char dbPrefix, const typename pop_t::id_t& id, pop_t& out, altintegration::ValidationState& state)
     {
+        AssertLockHeld(cs_main);
         auto& mempool = GetPop().getMemPool();
         const auto* memval = mempool.template get<pop_t>(id);
         if (memval != nullptr) {

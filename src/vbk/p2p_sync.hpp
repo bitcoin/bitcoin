@@ -84,6 +84,7 @@ bool ProcessPopPayload(CNode* pfrom, CConnman* connman, CDataStream& vRecv, F on
     // we use that structure in this function onInv().
     onInv(inv);
 
+    AssertLockHeld(cs_main);
     auto& mp = VeriBlock::GetPop().getMemPool();
     altintegration::ValidationState state;
     auto result = mp.submit(data, state);

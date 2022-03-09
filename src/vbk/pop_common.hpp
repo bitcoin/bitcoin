@@ -8,7 +8,7 @@
 
 #include <uint256.h>
 #include <veriblock/pop.hpp>
-
+#include "sync.h"
 
 class CBlockIndex;
 
