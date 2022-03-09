@@ -122,6 +122,15 @@ public:
     const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
 
     const ChainTxData& TxData() const { return chainTxData; }
+
+    /**
+     * SigNetOptions holds configurations for creating a signet CChainParams.
+     */
+    struct SigNetOptions {
+        std::optional<std::vector<uint8_t>> challenge{};
+        std::optional<std::vector<std::string>> seeds{};
+    };
+
 protected:
     CChainParams() {}
 
