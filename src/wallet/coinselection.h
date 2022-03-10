@@ -13,18 +13,10 @@
 #include <optional>
 
 namespace wallet {
-//! target minimum change amount
-static constexpr CAmount MIN_CHANGE{COIN / 100};
-//! final minimum change amount after paying for fees
-static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 //! lower bound for randomly-chosen target change amount
 static constexpr CAmount CHANGE_LOWER{50000};
 //! upper bound for randomly-chosen target change amount
 static constexpr CAmount CHANGE_UPPER{1000000};
-// Ensure that any randomly generated change targets are less than or equal to before.
-// Otherwise, tests may fail if funds are not enough to cover change.
-static_assert(CHANGE_UPPER <= MIN_CHANGE);
-static_assert(CHANGE_LOWER <= MIN_FINAL_CHANGE);
 
 /** A UTXO under consideration for use in funding a new transaction. */
 class COutput
@@ -104,7 +96,7 @@ struct CoinSelectionParams {
     size_t change_spend_size = 0;
     /** Mininmum change to target in Knapsack solver: select coins to cover the payment and
      * at least this value of change. */
-    CAmount m_min_change_target{MIN_CHANGE};
+    CAmount m_min_change_target{0};
     /** Cost of creating the change output. */
     CAmount m_change_fee{0};
     /** The pre-determined minimum value to target when funding a change output. */
