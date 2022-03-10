@@ -37,6 +37,7 @@ from test_framework.p2p import (
     P2PInterface,
 )
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
 
 
 class DisableTxTest(BitcoinTestFramework):
@@ -166,6 +167,22 @@ class DisableTxTest(BitcoinTestFramework):
         peer.send_message(msg_feefilter())
         peer.wait_for_disconnect()
 
+    def peerinfo_includes_disabletx_test(self):
+        self.log.info('Check that getpeerinfo() returns the disabletx status on a connection')
+
+        peer = self.nodes[0].add_p2p_connection(P2PInterface(disabletx=True))
+        peer.sync_with_ping()
+
+        assert_equal(self.nodes[0].getpeerinfo()[0]['disabletx_received'], True)
+        peer.peer_disconnect()
+        peer.wait_for_disconnect()
+
+        peer = self.nodes[0].add_p2p_connection(P2PInterface(disabletx=False))
+        peer.sync_with_ping()
+        assert_equal(self.nodes[0].getpeerinfo()[0]['disabletx_received'], False)
+        peer.peer_disconnect()
+        peer.wait_for_disconnect()
+
     def run_test(self):
         self.tip_hash = int(self.generate(self.nodes[0], 1)[0], 16)
 
@@ -180,6 +197,7 @@ class DisableTxTest(BitcoinTestFramework):
         self.mempool_after_disabletx_test()
         self.notfound_after_disabletx_test()
         self.feefilter_after_disabletx_test()
+        self.peerinfo_includes_disabletx_test()
 
 
 if __name__ == '__main__':
