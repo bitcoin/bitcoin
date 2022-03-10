@@ -19,7 +19,8 @@ enum class EConsensusError
     MMR_MISMATCH,
     UTXO_MISSING,
     UTXO_MISMATCH,
-    NOT_SORTED
+    NOT_SORTED,
+    BAD_STATE
 };
 
 class ValidationException : public LTCException
@@ -67,6 +68,8 @@ private:
                 return "UTXO_MISMATCH";
             case EConsensusError::NOT_SORTED:
                 return "NOT_SORTED";
+            case EConsensusError::BAD_STATE:
+                return "BAD_STATE";
         }
 
         return "UNKNOWN";

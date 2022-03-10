@@ -67,6 +67,16 @@ bool CCoinsViewDB::HaveCoin(const OutputIndex& index) const {
     }
 }
 
+bool CCoinsViewDB::GetMWEBCoin(const mw::Hash& output_id, Output& coin) const {
+    UTXO::CPtr pUTXO = GetMWEBView()->GetUTXO(output_id);
+    if (pUTXO != nullptr) {
+        coin = pUTXO->GetOutput();
+        return true;
+    }
+
+    return false;
+}
+
 uint256 CCoinsViewDB::GetBestBlock() const {
     uint256 hashBestChain;
     if (!m_db->Read(DB_BEST_BLOCK, hashBestChain))

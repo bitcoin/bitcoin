@@ -100,8 +100,11 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         assert tx3_id in node1.getrawmempool()
 
         self.log.info("Mine next block so node2 sees the transactions")
-        node0.generate(1)
+        node0.generate(2)
         self.sync_all()
+        
+        assert tx2_id not in node1.getrawmempool()
+        assert tx3_id not in node1.getrawmempool()
 
         self.log.info("Verify node2's wallet receives the first pegout transaction")
         n2_addr_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr)
@@ -113,7 +116,7 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         n2_addr2_coins = node2.listreceivedbyaddress(minconf=0)
         self.log.info(n2_addr2_coins)
         assert_equal(len(n2_addr2_coins), 1)
-        assert n2_addr2_coins['amount'] < 5 and n2_addr2_coins['amount'] > 4.9
+        assert n2_addr2_coins[0]['amount'] < 5 and n2_addr2_coins[0]['amount'] > 4.9
         assert_equal(n2_addr2_coins[0]['confirmations'], 1)
         
         n2_balances = node2.getbalances()['mine']

@@ -36,6 +36,7 @@ bool CCoinsViewBacked::BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock,
 CCoinsViewCursor *CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 mw::ICoinsView::Ptr CCoinsViewBacked::GetMWEBView() const { return base->GetMWEBView(); }
+bool CCoinsViewBacked::GetMWEBCoin(const mw::Hash& output_id, Output& coin) const { return base->GetMWEBCoin(output_id, coin); }
 
 SaltedOutpointHasher::SaltedOutpointHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
 
@@ -148,20 +149,44 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
 
 bool CCoinsViewCache::HaveCoin(const OutputIndex& index) const {
     if (index.type() == typeid(mw::Hash)) {
-        return GetMWEBView()->HasCoin(boost::get<mw::Hash>(index));
+        const mw::Hash& output_id = boost::get<mw::Hash>(index);
+        if (GetMWEBCacheView()->HasCoinInCache(output_id)) {
+            return true;
+        }
+
+        if (GetMWEBCacheView()->HasSpendInCache(output_id)) {
+            return false;
+        }
+
+        return base->HaveCoin(index);
     } else {
         CCoinsMap::const_iterator it = FetchCoin(boost::get<COutPoint>(index));
         return (it != cacheCoins.end() && !it->second.coin.IsSpent());
     }
 }
 
+bool CCoinsViewCache::GetMWEBCoin(const mw::Hash& output_id, Output& coin) const {
+    if (GetMWEBCacheView()->HasCoinInCache(output_id)) {
+        std::vector<UTXO::CPtr> utxos = GetMWEBCacheView()->GetUTXOs(output_id);
+        assert(!utxos.empty());
+        coin = utxos.front()->GetOutput();
+        return true;
+    }
+
+    if (GetMWEBCacheView()->HasSpendInCache(output_id)) {
+        return false;
+    }
+
+    return base->GetMWEBCoin(output_id, coin);
+}
+
 bool CCoinsViewCache::HaveCoinInCache(const OutputIndex& index) const {
-    if (index.type() == typeid(mw::Hash)) {
-        return GetMWEBView()->HasCoinInCache(boost::get<mw::Hash>(index));
-    } else {
+    if (index.type() == typeid(COutPoint)) {
         CCoinsMap::const_iterator it = cacheCoins.find(boost::get<COutPoint>(index));
         return (it != cacheCoins.end() && !it->second.coin.IsSpent());
     }
+
+    return false;
 }
 
 uint256 CCoinsViewCache::GetBestBlock() const {

@@ -66,6 +66,7 @@ public:
     CDBWrapper* GetDB() noexcept { return m_db.get(); }
     void SetMWEBView(const mw::ICoinsView::Ptr& view) { mweb_view = view; }
     mw::ICoinsView::Ptr GetMWEBView() const final { return mweb_view; }
+    bool GetMWEBCoin(const mw::Hash& output_id, Output& coin) const final;
 
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();

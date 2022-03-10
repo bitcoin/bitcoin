@@ -30,8 +30,8 @@ BOOST_AUTO_TEST_CASE(ReorgChain)
     pCachedView->ApplyBlock(block1.GetBlock());
 
     const auto& block1_tx1_output1 = block1_tx1.GetOutputs()[0];
-    BOOST_REQUIRE(pDBView->GetUTXOs(block1_tx1_output1.GetOutputID()).empty());
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block1_tx1_output1.GetOutputID()).size() == 1);
+    BOOST_REQUIRE(pDBView->GetUTXO(block1_tx1_output1.GetOutputID()) == nullptr);
+    BOOST_REQUIRE(pCachedView->GetUTXO(block1_tx1_output1.GetOutputID()) != nullptr);
 
     ///////////////////////
     // Mine Block 2
@@ -42,15 +42,15 @@ BOOST_AUTO_TEST_CASE(ReorgChain)
     mw::BlockUndo::CPtr undoBlock2 = pCachedView->ApplyBlock(block2.GetBlock());
 
     const auto& block2_tx1_output1 = block2_tx1.GetOutputs()[0];
-    BOOST_REQUIRE(pDBView->GetUTXOs(block2_tx1_output1.GetOutputID()).empty());
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block2_tx1_output1.GetOutputID()).size() == 1);
+    BOOST_REQUIRE(pDBView->GetUTXO(block2_tx1_output1.GetOutputID()) == nullptr);
+    BOOST_REQUIRE(pCachedView->GetUTXO(block2_tx1_output1.GetOutputID()) != nullptr);
 
     ///////////////////////
     // Disconnect Block 2
     ///////////////////////
     pCachedView->UndoBlock(undoBlock2);
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block1_tx1_output1.GetOutputID()).size() == 1);
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block2_tx1_output1.GetOutputID()).empty());
+    BOOST_REQUIRE(pCachedView->GetUTXO(block1_tx1_output1.GetOutputID()) != nullptr);
+    BOOST_REQUIRE(pCachedView->GetUTXO(block2_tx1_output1.GetOutputID()) == nullptr);
     miner.Rewind(1);
 
     ///////////////////////
@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(ReorgChain)
     pCachedView->ApplyBlock(block3.GetBlock());
 
     const auto& block3_tx1_output1 = block3_tx1.GetOutputs()[0];
-    BOOST_REQUIRE(pDBView->GetUTXOs(block3_tx1_output1.GetOutputID()).empty());
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block3_tx1_output1.GetOutputID()).size() == 1);
+    BOOST_REQUIRE(pDBView->GetUTXO(block3_tx1_output1.GetOutputID()) == nullptr);
+    BOOST_REQUIRE(pCachedView->GetUTXO(block3_tx1_output1.GetOutputID()) != nullptr);
 
     ///////////////////////
     // Flush View
@@ -72,12 +72,12 @@ BOOST_AUTO_TEST_CASE(ReorgChain)
     pCachedView->Flush(pBatch);
     pBatch->Commit();
 
-    BOOST_REQUIRE(pDBView->GetUTXOs(block1_tx1_output1.GetOutputID()).size() == 1);
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block1_tx1_output1.GetOutputID()).size() == 1);
-    BOOST_REQUIRE(pDBView->GetUTXOs(block2_tx1_output1.GetOutputID()).empty());
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block2_tx1_output1.GetOutputID()).empty());
-    BOOST_REQUIRE(pDBView->GetUTXOs(block3_tx1_output1.GetOutputID()).size() == 1);
-    BOOST_REQUIRE(pCachedView->GetUTXOs(block3_tx1_output1.GetOutputID()).size() == 1);
+    BOOST_REQUIRE(pDBView->GetUTXO(block1_tx1_output1.GetOutputID()) != nullptr);
+    BOOST_REQUIRE(pCachedView->GetUTXO(block1_tx1_output1.GetOutputID()) != nullptr);
+    BOOST_REQUIRE(pDBView->GetUTXO(block2_tx1_output1.GetOutputID()) == nullptr);
+    BOOST_REQUIRE(pCachedView->GetUTXO(block2_tx1_output1.GetOutputID()) == nullptr);
+    BOOST_REQUIRE(pDBView->GetUTXO(block3_tx1_output1.GetOutputID()) != nullptr);
+    BOOST_REQUIRE(pCachedView->GetUTXO(block3_tx1_output1.GetOutputID()) != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

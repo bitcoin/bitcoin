@@ -16,21 +16,22 @@ CoinsViewCache::CoinsViewCache(const ICoinsView::Ptr& pBase)
       m_pOutputPMMR(std::make_unique<PMMRCache>(pBase->GetOutputPMMR())),
       m_pUpdates(std::make_shared<CoinsViewUpdates>()) {}
 
-std::vector<UTXO::CPtr> CoinsViewCache::GetUTXOs(const mw::Hash& output_id) const noexcept
+UTXO::CPtr CoinsViewCache::GetUTXO(const mw::Hash& output_id) const noexcept
 {
-    std::vector<UTXO::CPtr> utxos = m_pBase->GetUTXOs(output_id);
+    UTXO::CPtr pUTXO = m_pBase->GetUTXO(output_id);
 
     std::vector<CoinAction> actions = m_pUpdates->GetActions(output_id);
     for (const CoinAction& action : actions) {
         if (action.pUTXO != nullptr) {
-            utxos.push_back(action.pUTXO);
+            // MW: TODO - Don't allow having more than one UTXO with output_id at a time
+            pUTXO = action.pUTXO;
         } else {
-            assert(!utxos.empty());
-            utxos.pop_back();
+            assert(pUTXO != nullptr);
+            pUTXO = nullptr;
         }
     }
 
-    return utxos;
+    return pUTXO;
 }
 
 mw::BlockUndo::CPtr CoinsViewCache::ApplyBlock(const mw::Block::CPtr& pBlock)
@@ -70,6 +71,25 @@ mw::BlockUndo::CPtr CoinsViewCache::ApplyBlock(const mw::Block::CPtr& pBlock)
     }
 
     return std::make_shared<mw::BlockUndo>(pPreviousHeader, std::move(coinsSpent), std::move(coinsAdded));
+}
+
+static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
+
+void CoinsViewCache::AddTx(const mw::Transaction::CPtr& pTx)
+{
+    std::for_each(
+        pTx->GetInputs().cbegin(), pTx->GetInputs().cend(),
+        [this](const Input& input) {
+            SpendUTXO(input.GetOutputID());
+        }
+    );
+
+    std::for_each(
+        pTx->GetOutputs().cbegin(), pTx->GetOutputs().cend(),
+        [this](const Output& output) {
+            AddUTXO(MEMPOOL_HEIGHT, output);
+        }
+    );
 }
 
 void CoinsViewCache::UndoBlock(const mw::BlockUndo::CPtr& pUndo)
@@ -164,7 +184,17 @@ bool CoinsViewCache::HasCoinInCache(const mw::Hash& output_id) const noexcept
 {
     std::vector<CoinAction> actions = m_pUpdates->GetActions(output_id);
     if (!actions.empty()) {
-        return actions.back().pUTXO != nullptr;
+        return !actions.back().IsSpend();
+    }
+
+    return false;
+}
+
+bool CoinsViewCache::HasSpendInCache(const mw::Hash& output_id) const noexcept
+{
+    std::vector<CoinAction> actions = m_pUpdates->GetActions(output_id);
+    if (!actions.empty()) {
+        return actions.back().IsSpend();
     }
 
     return false;
@@ -182,24 +212,25 @@ void CoinsViewCache::AddUTXO(const uint64_t header_height, const Output& output)
 
 UTXO CoinsViewCache::SpendUTXO(const mw::Hash& output_id)
 {
-    std::vector<UTXO::CPtr> utxos = GetUTXOs(output_id);
-    if (utxos.empty() || !m_pLeafSet->Contains(utxos.back()->GetLeafIndex())) {
+    UTXO::CPtr pUTXO = GetUTXO(output_id);
+    if (pUTXO == nullptr || !m_pLeafSet->Contains(pUTXO->GetLeafIndex())) {
         ThrowValidation(EConsensusError::UTXO_MISSING);
     }
 
-    m_pLeafSet->Remove(utxos.back()->GetLeafIndex());
+    m_pLeafSet->Remove(pUTXO->GetLeafIndex());
     m_pUpdates->SpendUTXO(output_id);
 
-    return *utxos.back();
+    return *pUTXO;
 }
 
 void CoinsViewCache::WriteBatch(const std::unique_ptr<mw::DBBatch>&, const CoinsViewUpdates& updates, const mw::Header::CPtr& pHeader)
 {
     SetBestHeader(pHeader);
-
+     
     for (const auto& actions : updates.GetActions()) {
         const mw::Hash& output_id = actions.first;
         for (const auto& action : actions.second) {
+            // MW: TODO - This is probably a good place to make sure there's no duplicate outputs
             if (action.IsSpend()) {
                 m_pUpdates->SpendUTXO(output_id);
             } else {

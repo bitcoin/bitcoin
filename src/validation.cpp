@@ -1504,6 +1504,10 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
     }
     // add outputs
     AddCoins(inputs, tx, nHeight);
+
+    if (!tx.mweb_tx.IsNull()) {
+        inputs.GetMWEBCacheView()->AddTx(tx.mweb_tx.m_transaction);
+    }
 }
 
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)

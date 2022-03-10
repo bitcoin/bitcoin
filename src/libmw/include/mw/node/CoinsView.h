@@ -40,7 +40,7 @@ public:
     virtual bool IsCache() const noexcept = 0;
 
     // Virtual functions
-    virtual std::vector<UTXO::CPtr> GetUTXOs(const mw::Hash& output_id) const = 0;
+    virtual UTXO::CPtr GetUTXO(const mw::Hash& output_id) const = 0;
     virtual void WriteBatch(
         const mw::DBBatch::UPtr& pBatch,
         const CoinsViewUpdates& updates,
@@ -55,7 +55,7 @@ public:
     /// </summary>
     /// <param name="output_id">The output ID of the UTXO to look for.</param>
     /// <returns>True if there's a matching unspent coin. Otherwise, false.</returns>
-    bool HasCoin(const mw::Hash& output_id) const noexcept { return !GetUTXOs(output_id).empty(); }
+    bool HasCoin(const mw::Hash& output_id) const noexcept { return GetUTXO(output_id) != nullptr; }
 
     /// <summary>
     /// Checks if there's a unspent coin with a matching commitment in the view that has not been flushed to the parent.
@@ -85,7 +85,7 @@ public:
 
     bool IsCache() const noexcept final { return true; }
 
-    std::vector<UTXO::CPtr> GetUTXOs(const mw::Hash& output_id) const noexcept final;
+    UTXO::CPtr GetUTXO(const mw::Hash& output_id) const noexcept final;
 
     /// <summary>
     /// Validates and connects the block to the end of the chain.
@@ -95,6 +95,8 @@ public:
     /// <param name="pBlock">The block to connect. Must not be null.</param>
     /// <throws>ValidationException if consensus rules are not met.</throws>
     mw::BlockUndo::CPtr ApplyBlock(const mw::Block::CPtr& pBlock);
+
+    void AddTx(const mw::Transaction::CPtr& pTx);
 
     /// <summary>
     /// Removes a block from the end of the chain.
@@ -119,6 +121,7 @@ public:
     mw::Block::Ptr BuildNextBlock(const uint64_t height, const std::vector<mw::Transaction::CPtr>& transactions);
 
     bool HasCoinInCache(const mw::Hash& output_id) const noexcept final;
+    bool HasSpendInCache(const mw::Hash& output_id) const noexcept;
 
     ILeafSet::Ptr GetLeafSet() const noexcept final { return m_pLeafSet; }
     IMMR::Ptr GetOutputPMMR() const noexcept final { return m_pOutputPMMR; }
@@ -148,7 +151,7 @@ public:
 
     bool IsCache() const noexcept final { return false; }
 
-    std::vector<UTXO::CPtr> GetUTXOs(const mw::Hash& output_id) const final;
+    UTXO::CPtr GetUTXO(const mw::Hash& output_id) const final;
     void WriteBatch(
         const mw::DBBatch::UPtr& pBatch,
         const CoinsViewUpdates& updates,
@@ -174,7 +177,7 @@ private:
     void AddUTXO(CoinDB& coinDB, const Output& output);
     void AddUTXO(CoinDB& coinDB, const UTXO::CPtr& pUTXO);
     void SpendUTXO(CoinDB& coinDB, const mw::Hash& output_id);
-    std::vector<UTXO::CPtr> GetUTXOs(const CoinDB& coinDB, const mw::Hash& output_id) const;
+    UTXO::CPtr GetUTXO(const CoinDB& coinDB, const mw::Hash& output_id) const;
 
     LeafSet::Ptr m_pLeafSet;
     PMMR::Ptr m_pOutputPMMR;

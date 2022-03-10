@@ -165,8 +165,8 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         // Get parents of this transaction that are in the mempool
         // GetMemPoolParents() is only valid for entries in the mempool, so we
         // iterate mapTx to find parents.
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            Optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
+        for (const CTxInput& txin : tx.GetInputs()) {
+            Optional<txiter> piter = GetIter(txin);
             if (piter) {
                 staged_ancestors.insert(**piter);
                 if (staged_ancestors.size() + 1 > limitAncestorCount) {
@@ -721,21 +721,22 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         innerUsage += memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());
         bool fDependsWait = false;
         CTxMemPoolEntry::Parents setParentCheck;
-        for (const CTxIn &txin : tx.vin) {
+        for (const CTxInput& input : tx.GetInputs()) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
-            if (it2 != mapTx.end()) {
-                const CTransaction& tx2 = it2->GetTx();
-                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+            auto opt_it2 = GetIter(input);
+            if (opt_it2) {
+                auto it2 = *opt_it2;
+                //const CTransaction& tx2 = it2->GetTx();
+                //assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull()); // MW: TODO -
                 fDependsWait = true;
                 setParentCheck.insert(*it2);
             } else {
-                assert(pcoins->HaveCoin(txin.prevout));
+                assert(pcoins->HaveCoin(input.GetIndex()));
             }
             // Check whether its inputs are marked in mapNextTx.
-            auto it3 = mapNextTx.find(txin.prevout);
+            auto it3 = mapNextTx.find(input.GetIndex());
             assert(it3 != mapNextTx.end());
-            assert(it3->first == OutputIndex(txin.prevout));
+            assert(it3->first == input.GetIndex());
             assert(it3->second == &tx);
             i++;
         }
@@ -967,6 +968,21 @@ Optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
 {
     auto it = mapTx.find(txid);
     if (it != mapTx.end()) return it;
+
+    return Optional<txiter>{};
+}
+
+Optional<CTxMemPool::txiter> CTxMemPool::GetIter(const CTxInput& input) const
+{
+    if (input.IsMWEB()) {
+        auto iter = mapTxOutputs_MWEB.find(input.ToMWEB());
+        if (iter != mapTxOutputs_MWEB.end()) {
+            return GetIter(iter->second->GetHash());
+        }
+    } else {
+        return GetIter(input.GetTxIn().prevout.hash);
+    }
+
     return Optional<txiter>{};
 }
 
@@ -1011,6 +1027,50 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
         }
     }
     return base->GetCoin(outpoint, coin);
+}
+
+bool CCoinsViewMemPool::HaveCoin(const OutputIndex& index) const 
+{
+    if (index.type() == typeid(mw::Hash)) {
+        LogPrintf("Checking mempool\n");
+        if (mempool.mapNextTx.find(index) != mempool.mapNextTx.end()) {
+            LogPrintf("Spend found in mempool!\n");
+            return false;
+        }
+
+        auto iter = mempool.mapTxOutputs_MWEB.find(boost::get<mw::Hash>(index));
+        if (iter != mempool.mapTxOutputs_MWEB.end()) {
+            LogPrintf("Coin in mempool!\n");
+            assert(mempool.mapTx.count(iter->second->GetHash()) > 0);
+            return true;
+        }
+
+        return GetMWEBView()->HasCoin(boost::get<mw::Hash>(index));
+    } else {
+        return base->HaveCoin(index);
+    }
+}
+
+bool CCoinsViewMemPool::GetMWEBCoin(const mw::Hash& output_id, Output& coin) const
+{
+    if (mempool.mapNextTx.find(output_id) != mempool.mapNextTx.end()) {
+        return false;
+    }
+
+    auto iter = mempool.mapTxOutputs_MWEB.find(output_id);
+    if (iter != mempool.mapTxOutputs_MWEB.end()) {
+        //assert(mempool.mapTx.count(iter->second->GetHash()) > 0);
+        //assert(!iter->second->mweb_tx.IsNull());
+        return iter->second->mweb_tx.GetOutput(output_id, coin);
+    }
+
+    UTXO::CPtr pUTXO = GetMWEBView()->GetUTXO(output_id);
+    if (pUTXO) {
+        coin = pUTXO->GetOutput();
+        return true;
+    }
+
+    return false;
 }
 
 size_t CTxMemPool::DynamicMemoryUsage() const {

@@ -26,20 +26,20 @@ CoinsViewDB::Ptr CoinsViewDB::Open(
     return std::shared_ptr<CoinsViewDB>(pView);
 }
 
-std::vector<UTXO::CPtr> CoinsViewDB::GetUTXOs(const mw::Hash& output_id) const
+UTXO::CPtr CoinsViewDB::GetUTXO(const mw::Hash& output_id) const
 {
     CoinDB coinDB(GetDatabase().get(), nullptr);
-    return GetUTXOs(coinDB, output_id);
+    return GetUTXO(coinDB, output_id);
 }
 
-std::vector<UTXO::CPtr> CoinsViewDB::GetUTXOs(const CoinDB& coinDB, const mw::Hash& output_id) const
+UTXO::CPtr CoinsViewDB::GetUTXO(const CoinDB& coinDB, const mw::Hash& output_id) const
 {
     std::vector<uint8_t> value;
 
     auto utxos_by_hash = coinDB.GetUTXOs({output_id});
     auto iter = utxos_by_hash.find(output_id);
     if (iter != utxos_by_hash.cend()) {
-        return { iter->second };
+        return iter->second;
     }
 
     return {};
@@ -55,16 +55,13 @@ void CoinsViewDB::AddUTXO(CoinDB& coinDB, const Output& output)
 
 void CoinsViewDB::AddUTXO(CoinDB& coinDB, const UTXO::CPtr& pUTXO)
 {
-    std::vector<UTXO::CPtr> utxos = GetUTXOs(coinDB, pUTXO->GetOutputID());
-    utxos.push_back(pUTXO);
-
     coinDB.AddUTXOs(std::vector<UTXO::CPtr>{ pUTXO });
 }
 
 void CoinsViewDB::SpendUTXO(CoinDB& coinDB, const mw::Hash& output_id)
 {
-    std::vector<UTXO::CPtr> utxos = GetUTXOs(coinDB, output_id);
-    if (utxos.empty()) {
+    UTXO::CPtr pUTXO = GetUTXO(coinDB, output_id);
+    if (pUTXO == nullptr) {
 		ThrowValidation(EConsensusError::UTXO_MISSING);
     }
 

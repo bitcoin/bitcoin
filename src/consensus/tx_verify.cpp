@@ -214,13 +214,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     // MWEB
     if (tx.HasMWEBTx()) {
         for (const Input& input : tx.mweb_tx.m_transaction->GetInputs()) {
-            auto utxos = inputs.GetMWEBView()->GetUTXOs(input.GetOutputID());
-            if (utxos.empty()) {
+            Output utxo;
+            if (!inputs.GetMWEBCoin(input.GetOutputID(), utxo)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-missing",
                     strprintf("%s: MWEB inputs missing", __func__));
             }
 
-            const Output& utxo = utxos.front()->GetOutput();
             if (utxo.GetReceiverPubKey() != input.GetOutputPubKey() || utxo.GetCommitment() != input.GetCommitment()) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-input-mismatch",
                                      strprintf("%s: MWEB input doesn't match UTXO", __func__));

@@ -683,6 +683,9 @@ public:
     /** Returns an iterator to the given hash, if found */
     Optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    /** Returns an iterator to the transaction the input spends from, if found */
+    Optional<txiter> GetIter(const CTxInput& input) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     /** Translate a set of hashes into a set of pool iterators to avoid repeated lookups */
     setEntries GetIterSet(const std::set<uint256>& hashes) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -940,6 +943,8 @@ protected:
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoin(const OutputIndex& index) const override;
+    bool GetMWEBCoin(const mw::Hash& output_id, Output& coin) const override;
 };
 
 /**

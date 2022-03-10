@@ -222,6 +222,8 @@ public:
     virtual size_t EstimateSize() const { return 0; }
 
     virtual mw::ICoinsView::Ptr GetMWEBView() const { return nullptr; }
+    
+    virtual bool GetMWEBCoin(const mw::Hash& output_id, Output& coin) const { return false; }
 };
 
 
@@ -242,6 +244,7 @@ public:
     CCoinsViewCursor *Cursor() const override;
     size_t EstimateSize() const override;
     mw::ICoinsView::Ptr GetMWEBView() const override;
+    bool GetMWEBCoin(const mw::Hash& output_id, Output& coin) const override;
 };
 
 
@@ -282,6 +285,8 @@ public:
 
     mw::ICoinsView::Ptr GetMWEBView() const final { return mweb_view; }
     mw::CoinsViewCache::Ptr GetMWEBCacheView() const { return mweb_view; }
+
+    bool GetMWEBCoin(const mw::Hash& output_id, Output& coin) const final;
 
     /**
      * Check if we have the given utxo already loaded in this cache.

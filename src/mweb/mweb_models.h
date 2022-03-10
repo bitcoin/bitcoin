@@ -195,6 +195,22 @@ struct Tx {
         return IsNull() ? 0 : m_transaction->GetLockHeight();
     }
 
+    bool GetOutput(const mw::Hash& output_id, Output& output) const noexcept
+    {
+        if (IsNull()) {
+            return false;
+        }
+
+        for (const Output& o : m_transaction->GetOutputs()) {
+            if (o.GetOutputID() == output_id) {
+                output = o;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     SERIALIZE_METHODS(Tx, obj)
     {
         READWRITE(WrapOptionalPtr(obj.m_transaction));

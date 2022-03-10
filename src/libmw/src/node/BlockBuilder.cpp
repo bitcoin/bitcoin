@@ -62,7 +62,7 @@ bool BlockBuilder::AddTransaction(const Transaction::CPtr& pTransaction, const s
 
     // Make sure all inputs are available.
     for (const Input& input : pTransaction->GetInputs()) {
-        if (m_pCoinsView->GetUTXOs(input.GetOutputID()).empty()) {
+        if (!m_pCoinsView->HasCoin(input.GetOutputID())) {
             LOG_ERROR_F("Input {} not found on chain", input.GetOutputID());
             return false;
         }
@@ -70,7 +70,7 @@ bool BlockBuilder::AddTransaction(const Transaction::CPtr& pTransaction, const s
 
     // Make sure no duplicate outputs already on chain.
     for (const Output& output : pTransaction->GetOutputs()) {
-        if (!m_pCoinsView->GetUTXOs(output.GetOutputID()).empty()) {
+        if (m_pCoinsView->HasCoin(output.GetOutputID())) {
             LOG_ERROR_F("Output {} already on chain", output.GetOutputID());
             return false;
         }
