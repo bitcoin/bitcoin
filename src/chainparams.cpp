@@ -582,20 +582,40 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
+std::unique_ptr<const CChainParams> CChainParams::SigNet(const SigNetOptions& options)
+{
+    return std::make_unique<const SigNetParams>(options);
+}
+
+std::unique_ptr<const CChainParams> CChainParams::RegTest(const RegTestOptions& options)
+{
+    return std::make_unique<const CRegTestParams>(options);
+}
+
+std::unique_ptr<const CChainParams> CChainParams::Main()
+{
+    return std::make_unique<const CMainParams>();
+}
+
+std::unique_ptr<const CChainParams> CChainParams::TestNet()
+{
+    return std::make_unique<const CTestNetParams>();
+}
+
 std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN) {
-        return std::unique_ptr<CChainParams>(new CMainParams());
+        return CChainParams::Main();
     } else if (chain == CBaseChainParams::TESTNET) {
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return CChainParams::TestNet();
     } else if (chain == CBaseChainParams::SIGNET) {
         auto opts = CChainParams::SigNetOptions{};
         ReadSigNetArgs(args, opts);
-        return std::make_unique<const SigNetParams>(opts);
+        return CChainParams::SigNet(opts);
     } else if (chain == CBaseChainParams::REGTEST) {
         auto opts = CChainParams::RegTestOptions{};
         ReadRegTestArgs(args, opts);
-        return std::make_unique<const CRegTestParams>(opts);
+        return CChainParams::RegTest(opts);
     }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
