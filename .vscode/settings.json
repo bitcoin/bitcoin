@@ -86,6 +86,8 @@
         "unordered_set": "cpp",
         "utility": "cpp",
         "variant": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "hash_map": "cpp",
+        "*.ipp": "cpp"
     }
 }

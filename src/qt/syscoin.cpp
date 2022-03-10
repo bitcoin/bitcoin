@@ -587,7 +587,7 @@ int GuiMain(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 #ifdef ENABLE_WALLET
-    // Parse URIs on command line -- this can affect Params()
+    // Parse URIs on command line
     PaymentServer::ipcParseCommandLine(argc, argv);
 #endif
 
