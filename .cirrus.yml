@@ -130,6 +130,7 @@ task:
     reupload_on_changes: true
     fingerprint_script:
       - echo %CI_VCPKG_TAG%
+      - type build_msvc\vcpkg.json
       - msbuild -version
     populate_script:
       - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
