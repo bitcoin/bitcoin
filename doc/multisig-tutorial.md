@@ -29,7 +29,7 @@ These three wallets should not be used directly for privacy reasons (public key 
 ```bash
 for ((n=1;n<=3;n++))
 do
- ./src/bitcoin-cli -signet -named createwallet wallet_name="participant_${n}" descriptors=true
+ ./src/bitcoin-cli -signet createwallet "participant_${n}"
 done
 ```
 
@@ -109,7 +109,7 @@ Then import the descriptors created in the previous step using the `importdescri
 After that, `getwalletinfo` can be used to check if the wallet was created successfully.
 
 ```bash
-./src/bitcoin-cli -signet -named createwallet wallet_name="multisig_wallet_01" disable_private_keys=true blank=true descriptors=true
+./src/bitcoin-cli -signet -named createwallet wallet_name="multisig_wallet_01" disable_private_keys=true blank=true
 
 ./src/bitcoin-cli  -signet -rpcwallet="multisig_wallet_01" importdescriptors "$multisig_desc"
 
