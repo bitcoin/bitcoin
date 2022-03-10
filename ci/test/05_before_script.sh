@@ -36,13 +36,6 @@ if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
   CI_EXEC "yes | ${ANDROID_HOME}/cmdline-tools/tools/bin/sdkmanager --install \"build-tools;${ANDROID_BUILD_TOOLS_VERSION}\" \"platform-tools\" \"platforms;android-${ANDROID_API_LEVEL}\" \"ndk;${ANDROID_NDK_VERSION}\""
 fi
 
-if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  # Use BDB compiled using install_db4.sh script to work around linking issue when using BDB
-  # from depends. See https://github.com/bitcoin/bitcoin/pull/18288#discussion_r433189350 for
-  # details.
-  CI_EXEC "contrib/install_db4.sh \$(pwd) --enable-umrw CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
-fi
-
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $DOCKER_NAME_TAG == *centos* ]]; then
     # CentOS has problems building the depends if the config shell is not explicitly set
