@@ -167,9 +167,9 @@ bool CCoinsViewCache::HaveCoin(const OutputIndex& index) const {
 
 bool CCoinsViewCache::GetMWEBCoin(const mw::Hash& output_id, Output& coin) const {
     if (GetMWEBCacheView()->HasCoinInCache(output_id)) {
-        std::vector<UTXO::CPtr> utxos = GetMWEBCacheView()->GetUTXOs(output_id);
-        assert(!utxos.empty());
-        coin = utxos.front()->GetOutput();
+        UTXO::CPtr utxo = GetMWEBCacheView()->GetUTXO(output_id);
+        assert(utxo != nullptr);
+        coin = utxo->GetOutput();
         return true;
     }
 
