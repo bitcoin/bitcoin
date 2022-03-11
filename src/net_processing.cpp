@@ -31,6 +31,7 @@
 #include <util/strencodings.h>
 #include <util/validation.h>
 
+#include <list>
 #include <memory>
 
 #include <spork.h>
@@ -298,6 +299,8 @@ struct CNodeState {
     bool fPreferredDownload;
     //! Whether this peer wants invs or headers (when possible) for block announcements.
     bool fPreferHeaders;
+    //! Whether this peer wants invs or compressed headers (when possible) for block announcements.
+    bool fPreferHeadersCompressed;
     //! Whether this peer wants invs or cmpctblocks (when possible) for block announcements.
     bool fPreferHeaderAndIDs;
     //! Whether this peer will send us cmpctblocks if we request them
@@ -418,6 +421,7 @@ struct CNodeState {
         nBlocksInFlightValidHeaders = 0;
         fPreferredDownload = false;
         fPreferHeaders = false;
+        fPreferHeadersCompressed = false;
         fPreferHeaderAndIDs = false;
         fProvidesHeaderAndIDs = false;
         fSupportsDesiredCmpctVersion = false;
@@ -1868,10 +1872,12 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         //   nUnconnectingHeaders gets reset back to 0.
         if (!LookupBlockIndex(headers[0].hashPrevBlock) && nCount < MAX_BLOCKS_TO_ANNOUNCE) {
             nodestate->nUnconnectingHeaders++;
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexBestHeader), uint256()));
-            LogPrint(BCLog::NET, "received header %s: missing prev block %s, sending getheaders (%d) to end (peer=%d, nUnconnectingHeaders=%d)\n",
+            std::string strCommand = (pfrom->nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+            connman->PushMessage(pfrom, msgMaker.Make(strCommand, ::ChainActive().GetLocator(pindexBestHeader), uint256()));
+            LogPrint(BCLog::NET, "received header %s: missing prev block %s, sending %s (%d) to end (peer=%d, nUnconnectingHeaders=%d)\n",
                     headers[0].GetHash().ToString(),
                     headers[0].hashPrevBlock.ToString(),
+                    strCommand,
                     pindexBestHeader->nHeight,
                     pfrom->GetId(), nodestate->nUnconnectingHeaders);
             // Set hashLastUnknownBlock for this peer, so that if we
@@ -1973,8 +1979,9 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
             // Headers message had its maximum size; the peer may have more headers.
             // TODO: optimize: if pindexLast is an ancestor of ::ChainActive().Tip or pindexBestHeader, continue
             // from there instead.
-            LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->GetId(), pfrom->nStartingHeight);
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexLast), uint256()));
+            std::string strCommand = (pfrom->nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+            LogPrint(BCLog::NET, "more %s (%d) to end to peer=%d (startheight:%d)\n", strCommand, pindexLast->nHeight, pfrom->GetId(), pfrom->nStartingHeight);
+            connman->PushMessage(pfrom, msgMaker.Make(strCommand, ::ChainActive().GetLocator(pindexLast), uint256()));
         }
 
         bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
@@ -2640,7 +2647,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // We send this to non-NODE NETWORK peers as well, because even
         // non-NODE NETWORK peers can announce blocks (such as pruning
         // nodes)
-        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDHEADERS));
+        connman->PushMessage(pfrom, msgMaker.Make((pfrom->nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::SENDHEADERS2 : NetMsgType::SENDHEADERS));
 
         if (pfrom->CanRelay()) {
             // Tell our peer we are willing to provide version-1 cmpctblocks
@@ -2762,7 +2769,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-     if (strCommand == NetMsgType::SENDCMPCT) {
+    if (strCommand == NetMsgType::SENDHEADERS2) {
+        LOCK(cs_main);
+        State(pfrom->GetId())->fPreferHeadersCompressed = true;
+        return true;
+    }
+
+    if (strCommand == NetMsgType::SENDCMPCT) {
         bool fAnnounceUsingCMPCTBLOCK = false;
         uint64_t nCMPCTBLOCKVersion = 1;
         vRecv >> fAnnounceUsingCMPCTBLOCK >> nCMPCTBLOCKVersion;
@@ -2851,8 +2864,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // fell back to inv we probably have a reorg which we should get the headers for first,
                     // we now only provide a getheaders response here. When we receive the headers, we will
                     // then ask for the blocks we need.
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexBestHeader), inv.hash));
-                    LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
+                    std::string strCommand = (pfrom->nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+                    connman->PushMessage(pfrom, msgMaker.Make(strCommand, ::ChainActive().GetLocator(pindexBestHeader), inv.hash));
+                    LogPrint(BCLog::NET, "%s (%d) %s to peer=%d\n", strCommand, pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->GetId());
                 }
             }
             else
@@ -3016,20 +3030,20 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if (strCommand == NetMsgType::GETHEADERS) {
+    if (strCommand == NetMsgType::GETHEADERS || strCommand == NetMsgType::GETHEADERS2) {
         CBlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
 
         if (locator.vHave.size() > MAX_LOCATOR_SZ) {
-            LogPrint(BCLog::NET, "getheaders locator size %lld > %d, disconnect peer=%d\n", locator.vHave.size(), MAX_LOCATOR_SZ, pfrom->GetId());
+            LogPrint(BCLog::NET, "%s locator size %lld > %d, disconnect peer=%d\n", strCommand, locator.vHave.size(), MAX_LOCATOR_SZ, pfrom->GetId());
             pfrom->fDisconnect = true;
             return true;
         }
 
         LOCK(cs_main);
         if (::ChainstateActive().IsInitialBlockDownload() && !pfrom->HasPermission(PF_NOBAN)) {
-            LogPrint(BCLog::NET, "Ignoring getheaders from peer=%d because node is in initial block download\n", pfrom->GetId());
+            LogPrint(BCLog::NET, "Ignoring %s from peer=%d because node is in initial block download\n", strCommand, pfrom->GetId());
             return true;
         }
 
@@ -3056,30 +3070,46 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 pindex = ::ChainActive().Next(pindex);
         }
 
-        // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
-        std::vector<CBlock> vHeaders;
-        int nLimit = MAX_HEADERS_RESULTS;
-        LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom->GetId());
-        for (; pindex; pindex = ::ChainActive().Next(pindex))
-        {
-            vHeaders.push_back(pindex->GetBlockHeader());
-            if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
-                break;
+        const auto send_headers = [&hashStop, &pindex, &nodestate, &connman, &pfrom, &msgMaker](auto msg_type, auto& v_headers, auto callback) {
+            int nLimit = MAX_HEADERS_RESULTS;
+            for (; pindex; pindex = ::ChainActive().Next(pindex)) {
+                v_headers.push_back(callback(pindex));
+
+                if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
+                    break;
+            }
+            // pindex can be nullptr either if we sent ::ChainActive().Tip() OR
+            // if our peer has ::ChainActive().Tip() (and thus we are sending an empty
+            // headers message). In both cases it's safe to update
+            // pindexBestHeaderSent to be our tip.
+            //
+            // It is important that we simply reset the BestHeaderSent value here,
+            // and not max(BestHeaderSent, newHeaderSent). We might have announced
+            // the currently-being-connected tip using a compact block, which
+            // resulted in the peer sending a headers request, which we respond to
+            // without the new block. By resetting the BestHeaderSent, we ensure we
+            // will re-announce the new block via headers (or compact blocks again)
+            // in the SendMessages logic.
+            nodestate->pindexBestHeaderSent = pindex ? pindex : ::ChainActive().Tip();
+            connman->PushMessage(pfrom, msgMaker.Make(msg_type, v_headers));
+        };
+
+        LogPrint(BCLog::NET, "%s %d to %s from peer=%d\n", strCommand, (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom->GetId());
+        if (strCommand == NetMsgType::GETHEADERS) {
+            // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
+            std::vector<CBlock> v_headers;
+            send_headers(NetMsgType::HEADERS, v_headers, [](const auto block_pindex) { return block_pindex->GetBlockHeader(); });
+        } else if (strCommand == NetMsgType::GETHEADERS2) {
+            // Keeps track of the last 7 unique version blocks
+            std::list<int32_t> last_unique_versions;
+            std::vector<CompressibleBlockHeader> v_headers;
+
+            send_headers(NetMsgType::HEADERS2, v_headers, [&v_headers, &last_unique_versions](const auto block_pindex) {
+                CompressibleBlockHeader compressible_header{block_pindex->GetBlockHeader()};
+                if (!v_headers.empty()) compressible_header.Compress(v_headers, last_unique_versions); // first block is always uncompressed
+                return compressible_header;
+            });
         }
-        // pindex can be nullptr either if we sent ::ChainActive().Tip() OR
-        // if our peer has ::ChainActive().Tip() (and thus we are sending an empty
-        // headers message). In both cases it's safe to update
-        // pindexBestHeaderSent to be our tip.
-        //
-        // It is important that we simply reset the BestHeaderSent value here,
-        // and not max(BestHeaderSent, newHeaderSent). We might have announced
-        // the currently-being-connected tip using a compact block, which
-        // resulted in the peer sending a headers request, which we respond to
-        // without the new block. By resetting the BestHeaderSent, we ensure we
-        // will re-announce the new block via headers (or compact blocks again)
-        // in the SendMessages logic.
-        nodestate->pindexBestHeaderSent = pindex ? pindex : ::ChainActive().Tip();
-        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
         return true;
     }
 
@@ -3318,7 +3348,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!LookupBlockIndex(cmpctblock.header.hashPrevBlock)) {
             // Doesn't connect (or is genesis), instead of DoSing in AcceptBlockHeader, request deeper headers
             if (!::ChainstateActive().IsInitialBlockDownload())
-                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexBestHeader), uint256()));
+                connman->PushMessage(pfrom, msgMaker.Make((pfrom->nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexBestHeader), uint256()));
             return true;
         }
 
@@ -3601,8 +3631,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if (strCommand == NetMsgType::HEADERS)
-    {
+    if (strCommand == NetMsgType::HEADERS || strCommand == NetMsgType::HEADERS2) {
         // Ignore headers received while importing
         if (fImporting || fReindex) {
             LogPrint(BCLog::NET, "Unexpected headers message received from peer %d\n", pfrom->GetId());
@@ -3618,10 +3647,21 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             Misbehaving(pfrom->GetId(), 20, strprintf("headers message size = %u", nCount));
             return false;
         }
-        headers.resize(nCount);
-        for (unsigned int n = 0; n < nCount; n++) {
-            vRecv >> headers[n];
-            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+
+        if (strCommand == NetMsgType::HEADERS) {
+            headers.resize(nCount);
+            for (unsigned int n = 0; n < nCount; n++) {
+                vRecv >> headers[n];
+                ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            }
+        } else if (strCommand == NetMsgType::HEADERS2) {
+            std::list<int32_t> last_unique_versions;
+            for (unsigned int n = 0; n < nCount; n++) {
+                CompressibleBlockHeader block_header_compressed;
+                vRecv >> block_header_compressed;
+                block_header_compressed.Uncompress(headers, last_unique_versions);
+                headers.push_back(block_header_compressed);
+            }
         }
 
         // Headers received via a HEADERS message should be valid, and reflect
@@ -4149,8 +4189,13 @@ void PeerLogicValidation::ConsiderEviction(CNode *pto, int64_t time_in_seconds)
                 pto->fDisconnect = true;
             } else {
                 assert(state.m_chain_sync.m_work_header);
-                LogPrint(BCLog::NET, "sending getheaders to outbound peer=%d to verify chain work (current best known block:%s, benchmark blockhash: %s)\n", pto->GetId(), state.pindexBestKnownBlock != nullptr ? state.pindexBestKnownBlock->GetBlockHash().ToString() : "<none>", state.m_chain_sync.m_work_header->GetBlockHash().ToString());
-                connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(state.m_chain_sync.m_work_header->pprev), uint256()));
+                std::string strCommand = (pto->nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+                LogPrint(BCLog::NET, "sending %s to outbound peer=%d to verify chain work (current best known block:%s, benchmark blockhash: %s)\n",
+                        strCommand,
+                        pto->GetId(),
+                        state.pindexBestKnownBlock != nullptr ? state.pindexBestKnownBlock->GetBlockHash().ToString() : "<none>",
+                        state.m_chain_sync.m_work_header->GetBlockHash().ToString());
+                connman->PushMessage(pto, msgMaker.Make(strCommand, ::ChainActive().GetLocator(state.m_chain_sync.m_work_header->pprev), uint256()));
                 state.m_chain_sync.m_sent_getheaders = true;
                 constexpr int64_t HEADERS_RESPONSE_TIME = 120; // 2 minutes
                 // Bump the timeout to allow a response, which could clear the timeout
@@ -4375,8 +4420,9 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                    got back an empty response.  */
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
-                LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
-                connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexStart), uint256()));
+                std::string strCommand = (pto->nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+                LogPrint(BCLog::NET, "initial %s (%d) to peer=%d (startheight:%d)\n", strCommand, pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
+                connman->PushMessage(pto, msgMaker.Make(strCommand, ::ChainActive().GetLocator(pindexStart), uint256()));
             }
         }
 
@@ -4393,7 +4439,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             // add all to the inv queue.
             LOCK(pto->cs_inventory);
             std::vector<CBlock> vHeaders;
-            bool fRevertToInv = ((!state.fPreferHeaders &&
+            bool fRevertToInv = ((!state.fPreferHeaders && !state.fPreferHeadersCompressed &&
                                  (!state.fPreferHeaderAndIDs || pto->vBlockHashesToAnnounce.size() > 1)) ||
                                  pto->vBlockHashesToAnnounce.size() > MAX_BLOCKS_TO_ANNOUNCE);
             const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
@@ -4477,6 +4523,20 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         CBlockHeaderAndShortTxIDs cmpctblock(block);
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::CMPCTBLOCK, cmpctblock));
                     }
+                    state.pindexBestHeaderSent = pBestIndex;
+                } else if (state.fPreferHeadersCompressed) {
+                    std::vector<CompressibleBlockHeader> vHeadersCompressed;
+                    std::list<int32_t> last_unique_versions;
+
+                    // Save other headers compressed
+                    std::for_each(vHeaders.cbegin(), vHeaders.cend(), [&vHeadersCompressed, &last_unique_versions](const auto& block) {
+                        CompressibleBlockHeader compressible_header{block.GetBlockHeader()};
+                        compressible_header.Compress(vHeadersCompressed, last_unique_versions);
+                        vHeadersCompressed.push_back(compressible_header);
+                    });
+
+                    // Push message to peer
+                    connman->PushMessage(pto, msgMaker.Make(NetMsgType::HEADERS2, vHeadersCompressed));
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (state.fPreferHeaders) {
                     if (vHeaders.size() > 1) {

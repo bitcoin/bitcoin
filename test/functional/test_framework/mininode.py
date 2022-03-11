@@ -25,7 +25,9 @@ import threading
 
 from test_framework.messages import (
     CBlockHeader,
+    CompressibleBlockHeader,
     MIN_VERSION_SUPPORTED,
+    NODE_HEADERS_COMPRESSED,
     msg_addr,
     msg_addrv2,
     msg_block,
@@ -40,8 +42,10 @@ from test_framework.messages import (
     msg_getblocktxn,
     msg_getdata,
     msg_getheaders,
+    msg_getheaders2,
     msg_getmnlistd,
     msg_headers,
+    msg_headers2,
     msg_inv,
     msg_islock,
     msg_isdlock,
@@ -56,6 +60,7 @@ from test_framework.messages import (
     msg_sendaddrv2,
     msg_sendcmpct,
     msg_sendheaders,
+    msg_sendheaders2,
     msg_tx,
     msg_verack,
     msg_version,
@@ -85,7 +90,9 @@ MESSAGEMAP = {
     b"getblocktxn": msg_getblocktxn,
     b"getdata": msg_getdata,
     b"getheaders": msg_getheaders,
+    b"getheaders2": msg_getheaders2,
     b"headers": msg_headers,
+    b"headers2": msg_headers2,
     b"inv": msg_inv,
     b"mempool": msg_mempool,
     b"ping": msg_ping,
@@ -94,6 +101,7 @@ MESSAGEMAP = {
     b"sendaddrv2": msg_sendaddrv2,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
+    b"sendheaders2": msg_sendheaders2,
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
@@ -330,7 +338,7 @@ class P2PInterface(P2PConnection):
 
         self.support_addrv2 = support_addrv2
 
-    def peer_connect(self, *args, services=NODE_NETWORK, send_version=True, **kwargs):
+    def peer_connect(self, *args, services=NODE_NETWORK | NODE_HEADERS_COMPRESSED, send_version=True, **kwargs):
         create_conn = super().peer_connect(*args, **kwargs)
 
         if send_version:
@@ -386,7 +394,9 @@ class P2PInterface(P2PConnection):
     def on_getblocktxn(self, message): pass
     def on_getdata(self, message): pass
     def on_getheaders(self, message): pass
+    def on_getheaders2(self, message): pass
     def on_headers(self, message): pass
+    def on_headers2(self, message): pass
     def on_mempool(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass
@@ -394,6 +404,7 @@ class P2PInterface(P2PConnection):
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
+    def on_sendheaders2(self, message): pass
     def on_tx(self, message): pass
 
     def on_inv(self, message):
@@ -485,7 +496,8 @@ class P2PInterface(P2PConnection):
 
         def test_function():
             assert self.is_connected
-            return self.last_message.get("getheaders")
+            return self.last_message.get("getheaders2") if self.nServices & NODE_HEADERS_COMPRESSED \
+                else self.last_message.get("getheaders")
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
@@ -582,11 +594,7 @@ class P2PDataStore(P2PInterface):
             else:
                 logger.debug('getdata message type {} received.'.format(hex(inv.type)))
 
-    def on_getheaders(self, message):
-        """Search back through our block store for the locator, and reply with a headers message if found."""
-
-        locator, hash_stop = message.locator, message.hashstop
-
+    def _compute_requested_block_headers(self, locator, hash_stop):
         # Assume that the most recent block added is the tip
         if not self.block_store:
             return
@@ -609,6 +617,23 @@ class P2PDataStore(P2PInterface):
 
         # Truncate the list if there are too many headers
         headers_list = headers_list[:-maxheaders - 1:-1]
+
+        return headers_list
+
+    def on_getheaders2(self, message):
+        """Search back through our block store for the locator, and reply with a compressed headers message if found."""
+
+        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop)
+        compressible_headers_list = [CompressibleBlockHeader(h) for h in headers_list] if headers_list else None
+        response = msg_headers2(compressible_headers_list)
+
+        if response is not None:
+            self.send_message(response)
+
+    def on_getheaders(self, message):
+        """Search back through our block store for the locator, and reply with a headers message if found."""
+
+        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop)
         response = msg_headers(headers_list)
 
         if response is not None:

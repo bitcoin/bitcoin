@@ -48,6 +48,7 @@ NODE_GETUTXO = (1 << 1)
 NODE_BLOOM = (1 << 2)
 NODE_COMPACT_FILTERS = (1 << 6)
 NODE_NETWORK_LIMITED = (1 << 10)
+NODE_HEADERS_COMPRESSED = (1 << 11)
 
 FILTER_TYPE_BASIC = 0
 
@@ -629,6 +630,177 @@ class CBlock(CBlockHeader):
         return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
                % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
                   time.ctime(self.nTime), self.nBits, self.nNonce, repr(self.vtx))
+
+
+class CompressibleBlockHeader:
+    __slots__ = ("bitfield", "timeOffset", "nVersion", "hashPrevBlock", "hashMerkleRoot", "nTime", "nBits", "nNonce",
+                 "hash", "sha256")
+
+    FLAG_VERSION_BIT_0 = 1 << 0
+    FLAG_VERSION_BIT_1 = 1 << 1
+    FLAG_VERSION_BIT_2 = 1 << 2
+    FLAG_PREV_BLOCK_HASH = 1 << 3
+    FLAG_TIMESTAMP = 1 << 4
+    FLAG_NBITS = 1 << 5
+
+    BITMASK_VERSION = FLAG_VERSION_BIT_0 | FLAG_VERSION_BIT_1 | FLAG_VERSION_BIT_2
+
+    def __init__(self, header=None):
+        if header is None:
+            self.set_null()
+        else:
+            self.bitfield = 0
+            self.timeOffset = 0
+            self.nVersion = header.nVersion
+            self.hashPrevBlock = header.hashPrevBlock
+            self.hashMerkleRoot = header.hashMerkleRoot
+            self.nTime = header.nTime
+            self.nBits = header.nBits
+            self.nNonce = header.nNonce
+            self.hash = None
+            self.sha256 = None
+            self.calc_sha256()
+
+    def set_null(self):
+        self.bitfield = 0
+        self.timeOffset = 0
+        self.nVersion = 0
+        self.hashPrevBlock = 0
+        self.hashMerkleRoot = 0
+        self.nTime = 0
+        self.nBits = 0
+        self.nNonce = 0
+        self.hash = None
+        self.sha256 = None
+
+    def deserialize(self, f):
+        self.bitfield = struct.unpack("<B", f.read(1))[0]
+        if self.bitfield & self.BITMASK_VERSION == 0:
+            self.nVersion = struct.unpack("<i", f.read(4))[0]
+        if self.bitfield & self.FLAG_PREV_BLOCK_HASH:
+            self.hashPrevBlock = deser_uint256(f)
+        self.hashMerkleRoot = deser_uint256(f)
+        if self.bitfield & self.FLAG_TIMESTAMP:
+            self.nTime = struct.unpack("<I", f.read(4))[0]
+        else:
+            self.timeOffset = struct.unpack("<h", f.read(2))[0]
+        if self.bitfield & self.FLAG_NBITS:
+            self.nBits = struct.unpack("<I", f.read(4))[0]
+        self.nNonce = struct.unpack("<I", f.read(4))[0]
+        self.rehash()
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.bitfield)
+        if not self.bitfield & self.BITMASK_VERSION:
+            r += struct.pack("<i", self.nVersion)
+        if self.bitfield & self.FLAG_PREV_BLOCK_HASH:
+            r += ser_uint256(self.hashPrevBlock)
+        r += ser_uint256(self.hashMerkleRoot)
+        r += struct.pack("<I", self.nTime) if self.bitfield & self.FLAG_TIMESTAMP else struct.pack("<h", self.timeOffset)
+        if self.bitfield & self.FLAG_NBITS:
+            r += struct.pack("<I", self.nBits)
+        r += struct.pack("<I", self.nNonce)
+        return r
+
+    def calc_sha256(self):
+        if self.sha256 is None:
+            r = b""
+            r += struct.pack("<i", self.nVersion)
+            r += ser_uint256(self.hashPrevBlock)
+            r += ser_uint256(self.hashMerkleRoot)
+            r += struct.pack("<I", self.nTime)
+            r += struct.pack("<I", self.nBits)
+            r += struct.pack("<I", self.nNonce)
+            self.sha256 = uint256_from_str(dashhash(r))
+            self.hash = int(encode(dashhash(r)[::-1], 'hex_codec'), 16)
+
+    def rehash(self):
+        self.sha256 = None
+        self.calc_sha256()
+        return self.sha256
+
+    def __repr__(self):
+        return "BlockHeaderCompressed(bitfield=%064x, nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s " \
+               "nBits=%08x nNonce=%08x timeOffset=%i)" % \
+               (self.bitfield, self.nVersion, self.hashPrevBlock, self.hashMerkleRoot, time.ctime(self.nTime), self.nBits, self.nNonce, self.timeOffset)
+
+    def __save_version_as_most_recent(self, last_unique_versions):
+        last_unique_versions.insert(0, self.nVersion)
+
+        # Evict the oldest version
+        if len(last_unique_versions) > 7:
+            last_unique_versions.pop()
+
+    @staticmethod
+    def __mark_version_as_most_recent(last_unique_versions, version_idx):
+        # Move version to the front of the list
+        last_unique_versions.insert(0, last_unique_versions.pop(version_idx))
+
+    def compress(self, last_blocks, last_unique_versions):
+        if not last_blocks:
+            # First block, everything must be uncompressed
+            self.bitfield &= (~CompressibleBlockHeader.BITMASK_VERSION)
+            self.bitfield |= CompressibleBlockHeader.FLAG_PREV_BLOCK_HASH
+            self.bitfield |= CompressibleBlockHeader.FLAG_TIMESTAMP
+            self.bitfield |= CompressibleBlockHeader.FLAG_NBITS
+            self.__save_version_as_most_recent(last_unique_versions)
+            return
+
+        # Compress version
+        try:
+            version_idx = last_unique_versions.index(self.nVersion)
+            version_offset = len(last_unique_versions) - version_idx
+            self.bitfield &= (~CompressibleBlockHeader.BITMASK_VERSION)
+            self.bitfield |= (version_offset & CompressibleBlockHeader.BITMASK_VERSION)
+            self.__mark_version_as_most_recent(last_unique_versions, version_idx)
+        except ValueError:
+            self.__save_version_as_most_recent(last_unique_versions)
+
+        # We have the previous block
+        last_block = last_blocks[-1]
+
+        # Compress time
+        self.timeOffset = self.nTime - last_block.nTime
+        if self.timeOffset > 32767 or self.timeOffset < -32768:
+            # Time diff overflows, we have to send it as 4 bytes (uncompressed)
+            self.bitfield |= CompressibleBlockHeader.FLAG_TIMESTAMP
+
+        # If nBits doesn't match previous block, we have to send it
+        if self.nBits != last_block.nBits:
+            self.bitfield |= CompressibleBlockHeader.FLAG_NBITS
+
+    def uncompress(self, last_compressed_blocks, last_unique_versions):
+        if not last_compressed_blocks:
+            # First block header is always uncompressed
+            self.__save_version_as_most_recent(last_unique_versions)
+            return
+
+        previous_block = last_compressed_blocks[-1]
+
+        # Uncompress version
+        version_idx = self.bitfield & self.BITMASK_VERSION
+        if version_idx != 0:
+            if version_idx <= len(last_unique_versions):
+                self.nVersion = last_unique_versions[version_idx - 1]
+                self.__mark_version_as_most_recent(last_unique_versions, version_idx - 1)
+        else:
+            self.__save_version_as_most_recent(last_unique_versions)
+
+        # Uncompress prev block hash
+        if not self.bitfield & self.FLAG_PREV_BLOCK_HASH:
+            self.hashPrevBlock = previous_block.hash
+
+        # Uncompress time
+        if not self.bitfield & self.FLAG_TIMESTAMP:
+            self.nTime = previous_block.nTime + self.timeOffset
+
+        # Uncompress time bits
+        if not self.bitfield & self.FLAG_NBITS:
+            self.nBits = previous_block.nBits
+
+        self.rehash()
+
 
 class PrefilledTransaction:
     __slots__ = ("index", "tx")
@@ -1492,6 +1664,23 @@ class msg_sendheaders:
         return "msg_sendheaders()"
 
 
+class msg_sendheaders2:
+    __slots__ = ()
+    command = b"sendheaders2"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_sendheaders2()"
+
+
 # getheaders message has
 # number of entries
 # vector of hashes
@@ -1520,6 +1709,31 @@ class msg_getheaders:
                % (repr(self.locator), self.hashstop)
 
 
+# same as msg_getheaders, but to request the headers compressed
+class msg_getheaders2:
+    __slots__ = ("hashstop", "locator",)
+    command = b"getheaders2"
+
+    def __init__(self):
+        self.locator = CBlockLocator()
+        self.hashstop = 0
+
+    def deserialize(self, f):
+        self.locator = CBlockLocator()
+        self.locator.deserialize(f)
+        self.hashstop = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += self.locator.serialize()
+        r += ser_uint256(self.hashstop)
+        return r
+
+    def __repr__(self):
+        return "msg_getheaders2(locator=%s, stop=%064x)" \
+               % (repr(self.locator), self.hashstop)
+
+
 # headers message has
 # <count> <vector of block headers>
 class msg_headers:
@@ -1541,6 +1755,31 @@ class msg_headers:
 
     def __repr__(self):
         return "msg_headers(headers=%s)" % repr(self.headers)
+
+
+# headers message has
+# <count> <vector of compressed block headers>
+class msg_headers2:
+    __slots__ = ("headers",)
+    command = b"headers2"
+
+    def __init__(self, headers=None):
+        self.headers = headers if headers is not None else []
+
+    def deserialize(self, f):
+        self.headers = deser_vector(f, CompressibleBlockHeader)
+        last_unique_versions = []
+        for idx in range(len(self.headers)):
+            self.headers[idx].uncompress(self.headers[:idx], last_unique_versions)
+
+    def serialize(self):
+        last_unique_versions = []
+        for idx in range(len(self.headers)):
+            self.headers[idx].compress(self.headers[:idx], last_unique_versions)
+        return ser_vector(self.headers)
+
+    def __repr__(self):
+        return "msg_headers2(headers=%s)" % repr(self.headers)
 
 
 class msg_reject:
