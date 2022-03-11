@@ -23,7 +23,7 @@ UTXO::CPtr CoinsViewCache::GetUTXO(const mw::Hash& output_id) const noexcept
     std::vector<CoinAction> actions = m_pUpdates->GetActions(output_id);
     for (const CoinAction& action : actions) {
         if (action.pUTXO != nullptr) {
-            // MW: TODO - Don't allow having more than one UTXO with output_id at a time
+            assert(pUTXO == nullptr);
             pUTXO = action.pUTXO;
         } else {
             assert(pUTXO != nullptr);
@@ -44,21 +44,21 @@ mw::BlockUndo::CPtr CoinsViewCache::ApplyBlock(const mw::Block::CPtr& pBlock)
     BlindingFactor prev_offset = pPreviousHeader != nullptr ? pPreviousHeader->GetKernelOffset() : BlindingFactor();
     KernelSumValidator::ValidateForBlock(pBlock->GetTxBody(), pBlock->GetKernelOffset(), prev_offset);
 
-    std::vector<UTXO> coinsSpent;
-    std::for_each(
-        pBlock->GetInputs().cbegin(), pBlock->GetInputs().cend(),
-        [this, &coinsSpent](const Input& input) {
-            UTXO spentUTXO = SpendUTXO(input.GetOutputID());
-            coinsSpent.push_back(std::move(spentUTXO));
-        }
-    );
-
     std::vector<mw::Hash> coinsAdded;
     std::for_each(
         pBlock->GetOutputs().cbegin(), pBlock->GetOutputs().cend(),
         [this, &pBlock, &coinsAdded](const Output& output) {
             AddUTXO(pBlock->GetHeight(), output);
             coinsAdded.push_back(output.GetOutputID());
+        }
+    );
+
+    std::vector<UTXO> coinsSpent;
+    std::for_each(
+        pBlock->GetInputs().cbegin(), pBlock->GetInputs().cend(),
+        [this, &coinsSpent](const Input& input) {
+            UTXO spentUTXO = SpendUTXO(input.GetOutputID());
+            coinsSpent.push_back(std::move(spentUTXO));
         }
     );
 
@@ -202,10 +202,15 @@ bool CoinsViewCache::HasSpendInCache(const mw::Hash& output_id) const noexcept
 
 void CoinsViewCache::AddUTXO(const uint64_t header_height, const Output& output)
 {
+    UTXO::CPtr pUTXO = GetUTXO(output.GetOutputID());
+    if (pUTXO != nullptr) {// && m_pLeafSet->Contains(pUTXO->GetLeafIndex())) {
+        ThrowValidation(EConsensusError::DUPLICATES);
+    }
+
     mmr::LeafIndex leafIdx = m_pOutputPMMR->Add(output.GetOutputID());
     m_pLeafSet->Add(leafIdx);
 
-    auto pUTXO = std::make_shared<UTXO>(header_height, std::move(leafIdx), output);
+    pUTXO = std::make_shared<UTXO>(header_height, std::move(leafIdx), output);
 
     m_pUpdates->AddUTXO(pUTXO);
 }

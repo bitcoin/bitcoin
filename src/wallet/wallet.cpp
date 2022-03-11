@@ -1975,6 +1975,25 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             }
 
             if (!block.mweb_block.IsNull()) {
+                // MW: TODO - Pegouts?
+                mw::Coin mweb_coin;
+                for (const mw::Hash& output_id : block.mweb_block.GetOutputIDs()) {
+                    if (mweb_wallet->RewindOutput(block.mweb_block.m_block, output_id, mweb_coin)) {
+                        const CWalletTx* wtx = FindWalletTx(mweb_coin.output_id);
+                        if (wtx) {
+                            // MW: TODO - Update height
+                        } else {
+                            AddToWallet(
+                                MakeTransactionRef(),
+                                boost::make_optional<MWEB::WalletTxInfo>(mweb_coin),
+                                {CWalletTx::Status::CONFIRMED, block_height, block_hash, 0},
+                                nullptr,
+                                false
+                            );
+                        }
+                    }
+                }
+
                 for (const mw::Hash& spent_id : block.mweb_block.GetSpentIDs()) {
                     if (IsMine(CTxInput(spent_id))) {
                         // MW: TODO - Check for zapped transactions with matching spent IDs
@@ -1990,20 +2009,6 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                         if (prev != nullptr) {
                             prev->MarkDirty();
                         }
-                    }
-                }
-
-                mw::Coin mweb_coin;
-                for (const mw::Hash& output_id : block.mweb_block.GetOutputIDs()) {
-                    if (mweb_wallet->RewindOutput(block.mweb_block.m_block, output_id, mweb_coin)) {
-                        // MW: TODO - Check for zapped transactions with matching output IDs
-                        AddToWallet(
-                            MakeTransactionRef(),
-                            boost::make_optional<MWEB::WalletTxInfo>(mweb_coin),
-                            {CWalletTx::Status::CONFIRMED, block_height, block_hash, 0},
-                            nullptr,
-                            false
-                        );
                     }
                 }
             }
