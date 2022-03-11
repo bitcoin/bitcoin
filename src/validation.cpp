@@ -22,6 +22,7 @@
 #include <flatfile.h>
 #include <fs.h>
 #include <hash.h>
+#include <kernel/chainparams.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <logging/timer.h>
