@@ -25,6 +25,7 @@
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <util/designator.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>
@@ -1101,12 +1102,20 @@ bool CConnman::AttemptToEvictConnection()
                 continue;
             if (node->fDisconnect)
                 continue;
-            NodeEvictionCandidate candidate = {node->GetId(), node->m_connected, node->m_min_ping_time,
-                                               node->m_last_block_time, node->m_last_tx_time,
-                                               HasAllDesirableServiceFlags(node->nServices),
-                                               node->m_relays_txs.load(), node->m_bloom_filter_loaded.load(),
-                                               node->nKeyedNetGroup, node->m_prefer_evict, node->addr.IsLocal(),
-                                               node->ConnectedThroughNetwork()};
+            NodeEvictionCandidate candidate{
+                Desig(id) node->GetId(),
+                Desig(m_connected) node->m_connected,
+                Desig(m_min_ping_time) node->m_min_ping_time,
+                Desig(m_last_block_time) node->m_last_block_time,
+                Desig(m_last_tx_time) node->m_last_tx_time,
+                Desig(fRelevantServices) HasAllDesirableServiceFlags(node->nServices),
+                Desig(m_relay_txs) node->m_relays_txs.load(),
+                Desig(fBloomFilter) node->m_bloom_filter_loaded.load(),
+                Desig(nKeyedNetGroup) node->nKeyedNetGroup,
+                Desig(prefer_evict) node->m_prefer_evict,
+                Desig(m_is_local) node->addr.IsLocal(),
+                Desig(m_network) node->ConnectedThroughNetwork(),
+            };
             vEvictionCandidates.push_back(candidate);
         }
     }
