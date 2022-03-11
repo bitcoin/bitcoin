@@ -373,7 +373,6 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     std::vector<OutputGroup> positive_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, true /* positive_only */);
     positive_groups.clear(); // Cleared to skip BnB and SRD as they're unaware of mixed coins
     if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
-        bnb_result->ComputeAndSetWaste(CAmount(0));
         results.push_back(*bnb_result);
     }
 
