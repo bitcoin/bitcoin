@@ -29,14 +29,38 @@ struct TxSize {
 TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control = nullptr);
 TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const CCoinControl* coin_control = nullptr) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 
+/**
+ * COutputs available for spending, stored by OutputType.
+ * This struct is really just a wrapper around OutputType vectors with a convenient
+ * method for concatenating and returning all COutputs as one vector.
+ *
+ * clear(), size() methods are implemented so that one can interact with
+ * the CoinsResult struct as if it were a vector
+ */
 struct CoinsResult {
-    std::vector<COutput> coins;
-    // Sum of all the coins amounts
+    /** Vectors for each OutputType */
+    std::vector<COutput> legacy;
+    std::vector<COutput> P2SH_segwit;
+    std::vector<COutput> bech32;
+    std::vector<COutput> bech32m;
+
+    /** Other is a catch-all for anything that doesn't match the known OutputTypes */
+    std::vector<COutput> other;
+
+    /** Concatenate and return all COutputs as one vector */
+    std::vector<COutput> all() const;
+
+    /** The following methods are provided so that CoinsResult can mimic a vector,
+     * i.e., methods can work with individual OutputType vectors or on the entire object */
+    uint64_t size() const;
+    void clear();
+
+    /** Sum of all available coins */
     CAmount total_amount{0};
 };
+
 /**
- * Return vector of available COutputs.
- * By default, returns only the spendable coins.
+ * Populate the CoinsResult struct with vectors of available COutputs, organized by OutputType.
  */
 CoinsResult AvailableCoins(const CWallet& wallet,
                            const CCoinControl* coinControl = nullptr,
