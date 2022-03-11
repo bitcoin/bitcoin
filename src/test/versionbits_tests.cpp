@@ -275,6 +275,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
         nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE)
     {
         BOOST_CHECK_EQUAL(min_activation_height, 0);
+        BOOST_CHECK_EQUAL(nTimeout, Consensus::BIP9Deployment::NO_TIMEOUT);
         return;
     }
 
