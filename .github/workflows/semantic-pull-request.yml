@@ -28,6 +28,7 @@ jobs:
             perf
             test
             build
+            guix
             ci
             chore
             revert

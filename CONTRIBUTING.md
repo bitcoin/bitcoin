@@ -131,6 +131,7 @@ include:
   - *utils* for changes to the utils and libraries
   - *wallet* for changes to the wallet code
   - *zmq* for changes to the ZMQ APIs
+  - *guix* for changes to the GUIX reproducible builds
 
 Examples:
 
