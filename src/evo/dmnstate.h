@@ -20,9 +20,6 @@ class UniValue;
 
 class CDeterministicMNState;
 
-using CDeterministicMNStatePtr = std::shared_ptr<CDeterministicMNState>;
-using CDeterministicMNStateCPtr = std::shared_ptr<const CDeterministicMNState>;
-
 namespace llmq
 {
     class CFinalCommitment;
@@ -131,8 +128,6 @@ public:
     std::string ToString() const;
     void ToJson(UniValue& obj) const;
 };
-using CDeterministicMNStatePtr = std::shared_ptr<CDeterministicMNState>;
-using CDeterministicMNStateCPtr = std::shared_ptr<const CDeterministicMNState>;
 
 class CDeterministicMNStateDiff
 {
