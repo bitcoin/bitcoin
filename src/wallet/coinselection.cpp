@@ -163,6 +163,8 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
             result.AddInput(utxo_pool.at(i));
         }
     }
+    result.ComputeAndSetWaste(CAmount{0});
+    assert(best_waste == result.GetWaste());
 
     return result;
 }
