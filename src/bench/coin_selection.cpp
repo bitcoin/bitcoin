@@ -54,10 +54,10 @@ static void CoinSelection(benchmark::Bench& bench)
     addCoin(3 * COIN, wallet, wtxs);
 
     // Create coins
-    std::vector<COutput> coins;
+    wallet::CoinsResult available_coins;
     for (const auto& wtx : wtxs) {
         const auto txout = wtx->tx->vout.at(0);
-        coins.emplace_back(COutPoint(wtx->GetHash(), 0), txout, /*depth=*/6 * 24, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/true, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/ 0);
+        available_coins.legacy.emplace_back(COutPoint(wtx->GetHash(), 0), txout, /*depth=*/6 * 24, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/true, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/ 0);
     }
     const CoinEligibilityFilter filter_standard(1, 6, 0);
     FastRandomContext rand{};
@@ -73,7 +73,7 @@ static void CoinSelection(benchmark::Bench& bench)
         /*avoid_partial=*/ false,
     };
     bench.run([&] {
-        auto result = AttemptSelection(wallet, 1003 * COIN, filter_standard, coins, coin_selection_params);
+        auto result = AttemptSelection(wallet, 1003 * COIN, filter_standard, available_coins, coin_selection_params, /*allow_mixed_output_types=*/true);
         assert(result);
         assert(result->GetSelectedValue() == 1003 * COIN);
         assert(result->GetInputSet().size() == 2);
