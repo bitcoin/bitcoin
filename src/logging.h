@@ -61,37 +61,39 @@ struct LogCategory {
 
 namespace BCLog {
     enum LogFlags : uint32_t {
-        NONE        = 0,
-        NET         = (1 <<  0),
-        TOR         = (1 <<  1),
-        MEMPOOL     = (1 <<  2),
-        HTTP        = (1 <<  3),
-        BENCH       = (1 <<  4),
-        ZMQ         = (1 <<  5),
-        WALLETDB    = (1 <<  6),
-        RPC         = (1 <<  7),
-        ESTIMATEFEE = (1 <<  8),
-        ADDRMAN     = (1 <<  9),
-        SELECTCOINS = (1 << 10),
-        REINDEX     = (1 << 11),
-        CMPCTBLOCK  = (1 << 12),
-        RAND        = (1 << 13),
-        PRUNE       = (1 << 14),
-        PROXY       = (1 << 15),
-        MEMPOOLREJ  = (1 << 16),
-        LIBEVENT    = (1 << 17),
-        COINDB      = (1 << 18),
-        QT          = (1 << 19),
-        LEVELDB     = (1 << 20),
-        VALIDATION  = (1 << 21),
-        I2P         = (1 << 22),
-        IPC         = (1 << 23),
+        NONE                       = 0,
+        NET                        = (1 <<  0),
+        TOR                        = (1 <<  1),
+        MEMPOOL                    = (1 <<  2),
+        HTTP                       = (1 <<  3),
+        BENCH                      = (1 <<  4),
+        ZMQ                        = (1 <<  5),
+        WALLETDB                   = (1 <<  6),
+        RPC                        = (1 <<  7),
+        ESTIMATEFEE                = (1 <<  8),
+        ADDRMAN                    = (1 <<  9),
+        SELECTCOINS                = (1 << 10),
+        REINDEX                    = (1 << 11),
+        CMPCTBLOCK                 = (1 << 12),
+        RAND                       = (1 << 13),
+        PRUNE                      = (1 << 14),
+        PROXY                      = (1 << 15),
+        MEMPOOLREJ                 = (1 << 16),
+        LIBEVENT                   = (1 << 17),
+        COINDB                     = (1 << 18),
+        QT                         = (1 << 19),
+        LEVELDB                    = (1 << 20),
+        VALIDATION                 = (1 << 21),
+        I2P                        = (1 << 22),
+        IPC                        = (1 << 23),
 #ifdef DEBUG_LOCKCONTENTION
-        LOCK        = (1 << 24),
+        LOCK                       = (1 << 24),
 #endif
-        UTIL        = (1 << 25),
-        BLOCKSTORE  = (1 << 26),
-        ALL         = ~(uint32_t)0,
+        UTIL                       = (1 << 25),
+        BLOCKSTORE                 = (1 << 26),
+        UNCONDITIONAL_RATE_LIMITED = (1 << 27),
+        UNCONDITIONAL_ALWAYS       = (1 << 28),
+        ALL                        = ~(uint32_t)0,
     };
     enum class Level {
         Debug = 0,
@@ -100,6 +102,8 @@ namespace BCLog {
         Warning = 3,
         Error = 4,
     };
+
+    static constexpr LogFlags DEFAULT_LOG_FLAGS{UNCONDITIONAL_RATE_LIMITED | UNCONDITIONAL_ALWAYS};
 
     //! Fixed window rate limiter for logging.
     class LogRateLimiter
@@ -155,7 +159,7 @@ namespace BCLog {
         std::atomic_bool m_started_new_line{true};
 
         /** Log categories bitfield. */
-        std::atomic<uint32_t> m_categories{0};
+        std::atomic<uint32_t> m_categories{DEFAULT_LOG_FLAGS};
 
         std::string LogTimestampStr(const std::string& str);
 
@@ -264,10 +268,15 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 
 #define LogPrintLevel_(category, level, ...) LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
 
-#define LogPrintf(...) LogPrintLevel_(BCLog::LogFlags::NONE, BCLog::Level::None, __VA_ARGS__)
+// Unconditional logging. Uses basic rate limiting to mitigate disk filling attacks.
+#define LogPrintf(...) LogPrintLevel_(BCLog::LogFlags::UNCONDITIONAL_RATE_LIMITED, BCLog::Level::None, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
+//
+// Note that conditional logging is performed WITHOUT rate limiting. Users
+// specifying -debug are assumed to be developers or power users who are aware
+// that -debug may cause excessive disk usage due to logging.
 #define LogPrint(category, ...)                                        \
     do {                                                               \
         if (LogAcceptCategory((category))) {                           \

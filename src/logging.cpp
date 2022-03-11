@@ -123,7 +123,7 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return m_categories == BCLog::NONE;
+    return m_categories == DEFAULT_LOG_FLAGS;
 }
 
 struct CLogCategoryDesc {
@@ -164,6 +164,8 @@ const CLogCategoryDesc LogCategories[] =
 #endif
     {BCLog::UTIL, "util"},
     {BCLog::BLOCKSTORE, "blockstorage"},
+    {BCLog::UNCONDITIONAL_RATE_LIMITED, "uncond_rate_limited"},
+    {BCLog::UNCONDITIONAL_ALWAYS, "uncond_always"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
@@ -262,6 +264,10 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "util";
     case BCLog::LogFlags::BLOCKSTORE:
         return "blockstorage";
+    case BCLog::LogFlags::UNCONDITIONAL_RATE_LIMITED:
+        return "uncond_rate_limited";
+    case BCLog::LogFlags::UNCONDITIONAL_ALWAYS:
+        return "uncond_always";
     case BCLog::LogFlags::ALL:
         return "all";
     }
@@ -340,14 +346,15 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
 
-    if ((category != LogFlags::NONE || level != Level::None) && m_started_new_line) {
+    const bool print_category{category != LogFlags::NONE && category != LogFlags::UNCONDITIONAL_ALWAYS && category != LogFlags::UNCONDITIONAL_RATE_LIMITED};
+    if ((print_category || level != Level::None) && m_started_new_line) {
         std::string s{"["};
 
-        if (category != LogFlags::NONE) {
+        if (print_category) {
             s += LogCategoryToStr(category);
         }
 
-        if (category != LogFlags::NONE && level != Level::None) {
+        if (print_category && level != Level::None) {
             // Only add separator if both flag and level are not NONE
             s += ":";
         }
