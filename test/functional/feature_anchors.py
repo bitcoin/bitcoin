@@ -78,6 +78,25 @@ class AnchorsTest(BitcoinTestFramework):
         self.log.info("When node starts, check if anchors.dat doesn't exist anymore")
         self.wait_until(lambda: not os.path.exists(node_anchors_path))
 
+        self.log.info(f"Add {BLOCK_RELAY_CONNECTIONS} block-relay-only connections to node")
+        for i in range(BLOCK_RELAY_CONNECTIONS):
+            self.log.debug(f"block-relay-only: {i}")
+            self.nodes[0].add_outbound_p2p_connection(
+                P2PInterface(), p2p_idx=i, connection_type="block-relay-only"
+            )
+
+        self.stop_node(0)
+
+        self.log.info("Stop node unclearly before connecting to anchors peers")
+        with self.nodes[0].wait_for_debug_log([b'init message: Starting network threads']):
+            self.nodes[0].start()
+        self.nodes[0].process.terminate()
+        self.nodes[0].process.wait()
+
+        self.log.info("Test if anchors.dat has been preserved")
+        self.start_node(0)
+        self.wait_until(lambda: os.path.exists(node_anchors_path))
+
 
 if __name__ == "__main__":
     AnchorsTest().main()
