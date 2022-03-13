@@ -141,9 +141,11 @@ class BIP68Test(BitcoinTestFramework):
             import random
             random.shuffle(addresses)
             num_outputs = random.randint(1, max_outputs)
-            outputs = {}
-            for i in range(num_outputs):
-                outputs[addresses[i]] = random.randint(1, 20)*0.01
+            outputs = {
+                addresses[i]: random.randint(1, 20) * 0.01
+                for i in range(num_outputs)
+            }
+
             self.nodes[0].sendmany("", outputs)
             self.generate(self.nodes[0], 1)
 

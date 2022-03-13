@@ -117,19 +117,26 @@ int trace_outbound_message(struct pt_regs *ctx) {
 
 
 def print_message(event, inbound):
-    print(f"%s %s msg '%s' from peer %d (%s, %s) with %d bytes: %s" %
-          (
-              f"Warning: incomplete message (only %d out of %d bytes)!" % (
-                  len(event.msg), event.msg_size) if len(event.msg) < event.msg_size else "",
-              "inbound" if inbound else "outbound",
-              event.msg_type.decode("utf-8"),
-              event.peer_id,
-              event.peer_conn_type.decode("utf-8"),
-              event.peer_addr.decode("utf-8"),
-              event.msg_size,
-              bytes(event.msg[:event.msg_size]).hex(),
-          )
-          )
+    print(
+        (
+            "%s %s msg '%s' from peer %d (%s, %s) with %d bytes: %s"
+            % (
+                (
+                    "Warning: incomplete message (only %d out of %d bytes)!"
+                    % (len(event.msg), event.msg_size)
+                )
+                if len(event.msg) < event.msg_size
+                else "",
+                "inbound" if inbound else "outbound",
+                event.msg_type.decode("utf-8"),
+                event.peer_id,
+                event.peer_conn_type.decode("utf-8"),
+                event.peer_addr.decode("utf-8"),
+                event.msg_size,
+                bytes(event.msg[: event.msg_size]).hex(),
+            )
+        )
+    )
 
 
 def main(bitcoind_path):

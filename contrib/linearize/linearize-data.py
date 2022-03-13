@@ -40,9 +40,7 @@ def bufreverse(in_buf):
     return b''.join(out_words)
 
 def wordreverse(in_buf):
-    out_words = []
-    for i in range(0, len(in_buf), 4):
-        out_words.append(in_buf[i:i+4])
+    out_words = [in_buf[i:i+4] for i in range(0, len(in_buf), 4)]
     out_words.reverse()
     return b''.join(out_words)
 
@@ -53,16 +51,13 @@ def calc_hdr_hash(blk_hdr):
 
     hash2 = hashlib.sha256()
     hash2.update(hash1_o)
-    hash2_o = hash2.digest()
-
-    return hash2_o
+    return hash2.digest()
 
 def calc_hash_str(blk_hdr):
     hash = calc_hdr_hash(blk_hdr)
     hash = bufreverse(hash)
     hash = wordreverse(hash)
-    hash_str = hash.hex()
-    return hash_str
+    return hash.hex()
 
 def get_blk_dt(blk_hdr):
     members = struct.unpack("<I", blk_hdr[68:68+4])
@@ -81,16 +76,13 @@ def get_block_hashes(settings):
             line = hex_switchEndian(line)
         blkindex.append(line)
 
-    print("Read " + str(len(blkindex)) + " hashes")
+    print(f"Read {len(blkindex)} hashes")
 
     return blkindex
 
 # The block map shouldn't give or receive byte-reversed hashes.
 def mkblockmap(blkindex):
-    blkmap = {}
-    for height,hash in enumerate(blkindex):
-        blkmap[hash] = height
-    return blkmap
+    return {hash: height for height,hash in enumerate(blkindex)}
 
 # This gets the first block file ID that exists from the input block
 # file directory.
@@ -110,11 +102,7 @@ def getFirstBlockFileId(block_dir_path):
     firstBlkFilePath = min(blkFnList)
     firstBlkFn = os.path.basename(firstBlkFilePath)
 
-    # now, the string should be ['b','l','k','N','N','N','N','N','.','d','a','t']
-    # So get the ID by choosing:              3   4   5   6   7
-    # The ID is not necessarily 0 if this is a pruned node.
-    blkId = int(firstBlkFn[3:8])
-    return blkId
+    return int(firstBlkFn[3:8])
 
 # Block header and extent on disk
 BlockExtent = namedtuple('BlockExtent', ['fn', 'offset', 'inhdr', 'blkhdr', 'size'])
@@ -182,7 +170,7 @@ class BlockDataCopier:
                 self.outFname = self.settings['output_file']
             else:
                 self.outFname = os.path.join(self.settings['output'], "blk%05d.dat" % self.outFn)
-            print("Output file " + self.outFname)
+            print(f"Output file {self.outFname}")
             self.outF = open(self.outFname, "wb")
 
         self.outF.write(inhdr)
@@ -223,7 +211,7 @@ class BlockDataCopier:
         while self.blkCountOut < len(self.blkindex):
             if not self.inF:
                 fname = self.inFileName(self.inFn)
-                print("Input file " + fname)
+                print(f"Input file {fname}")
                 try:
                     self.inF = open(fname, "rb")
                 except IOError:
@@ -251,11 +239,11 @@ class BlockDataCopier:
             inExtent = BlockExtent(self.inFn, self.inF.tell(), inhdr, blk_hdr, inLen)
 
             self.hash_str = calc_hash_str(blk_hdr)
-            if not self.hash_str in blkmap:
+            if self.hash_str not in blkmap:
                 # Because blocks can be written to files out-of-order as of 0.10, the script
                 # may encounter blocks it doesn't know about. Treat as debug output.
                 if settings['debug_output'] == 'true':
-                    print("Skipping unknown block " + self.hash_str)
+                    print(f"Skipping unknown block {self.hash_str}")
                 self.inF.seek(inLen, os.SEEK_CUR)
                 continue
 
@@ -289,20 +277,18 @@ if __name__ == '__main__':
         print("Usage: linearize-data.py CONFIG-FILE")
         sys.exit(1)
 
-    f = open(sys.argv[1], encoding="utf8")
-    for line in f:
-        # skip comment lines
-        m = re.search(r'^\s*#', line)
-        if m:
-            continue
+    with open(sys.argv[1], encoding="utf8") as f:
+        for line in f:
+            # skip comment lines
+            m = re.search(r'^\s*#', line)
+            if m:
+                continue
 
-        # parse key=value lines
-        m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
-        if m is None:
-            continue
-        settings[m.group(1)] = m.group(2)
-    f.close()
-
+            # parse key=value lines
+            m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
+            if m is None:
+                continue
+            settings[m.group(1)] = m.group(2)
     # Force hash byte format setting to be lowercase to make comparisons easier.
     # Also place upfront in case any settings need to know about it.
     if 'rev_hash_bytes' not in settings:
@@ -343,7 +329,7 @@ if __name__ == '__main__':
     blkmap = mkblockmap(blkindex)
 
     # Block hash map won't be byte-reversed. Neither should the genesis hash.
-    if not settings['genesis'] in blkmap:
+    if settings['genesis'] not in blkmap:
         print("Genesis block not found in hashlist")
     else:
         BlockDataCopier(settings, blkindex, blkmap).run()

@@ -45,16 +45,16 @@ class BIP155Network(Enum):
 def name_to_bip155(addr):
     '''Convert address string to BIP155 (networkID, addr) tuple.'''
     if addr.endswith('.onion'):
-        vchAddr = b32decode(addr[0:-6], True)
+        vchAddr = b32decode(addr[:-6], True)
         if len(vchAddr) == 35:
             assert vchAddr[34] == 3
             return (BIP155Network.TORV3, vchAddr[:32])
         elif len(vchAddr) == 10:
             return (BIP155Network.TORV2, vchAddr)
         else:
-            raise ValueError('Invalid onion %s' % vchAddr)
+            raise ValueError(f'Invalid onion {vchAddr}')
     elif addr.endswith('.b32.i2p'):
-        vchAddr = b32decode(addr[0:-8] + '====', True)
+        vchAddr = b32decode(addr[:-8] + '====', True)
         if len(vchAddr) == 32:
             return (BIP155Network.I2P, vchAddr)
         else:
@@ -67,7 +67,7 @@ def name_to_bip155(addr):
         addr = addr.split(':')
         for i,comp in enumerate(addr):
             if comp == '':
-                if i == 0 or i == (len(addr)-1): # skip empty component at beginning or end
+                if i in [0, len(addr) - 1]: # skip empty component at beginning or end
                     continue
                 x += 1 # :: skips to suffix
                 assert(x < 2)
@@ -86,12 +86,11 @@ def name_to_bip155(addr):
         else:
             return (BIP155Network.IPV6, addr_bytes)
     else:
-        raise ValueError('Could not parse address %s' % addr)
+        raise ValueError(f'Could not parse address {addr}')
 
 def parse_spec(s):
     '''Convert endpoint string to BIP155 (networkID, addr, port) tuple.'''
-    match = re.match(r'\[([0-9a-fA-F:]+)\](?::([0-9]+))?$', s)
-    if match: # ipv6
+    if match := re.match(r'\[([0-9a-fA-F:]+)\](?::([0-9]+))?$', s):
         host = match.group(1)
         port = match.group(2)
     elif s.count(':') > 1: # ipv6, no port
@@ -100,29 +99,21 @@ def parse_spec(s):
     else:
         (host,_,port) = s.partition(':')
 
-    if not port:
-        port = 0
-    else:
-        port = int(port)
-
+    port = int(port) if port else 0
     host = name_to_bip155(host)
 
-    if host[0] == BIP155Network.TORV2:
-        return None  # TORV2 is no longer supported, so we ignore it
-    else:
-        return host + (port, )
+    return None if host[0] == BIP155Network.TORV2 else host + (port, )
 
 def ser_compact_size(l):
     r = b""
     if l < 253:
-        r = struct.pack("B", l)
+        return struct.pack("B", l)
     elif l < 0x10000:
-        r = struct.pack("<BH", 253, l)
+        return struct.pack("<BH", 253, l)
     elif l < 0x100000000:
-        r = struct.pack("<BI", 254, l)
+        return struct.pack("<BI", 254, l)
     else:
-        r = struct.pack("<BQ", 255, l)
-    return r
+        return struct.pack("<BQ", 255, l)
 
 def bip155_serialize(spec):
     '''
@@ -140,7 +131,7 @@ def process_nodes(g, f, structname):
     for line in f:
         comment = line.find('#')
         if comment != -1:
-            line = line[0:comment]
+            line = line[:comment]
         line = line.strip()
         if not line:
             continue
@@ -155,7 +146,7 @@ def process_nodes(g, f, structname):
 
 def main():
     if len(sys.argv)<2:
-        print(('Usage: %s <path_to_nodes_txt>' % sys.argv[0]), file=sys.stderr)
+        print(f'Usage: {sys.argv[0]} <path_to_nodes_txt>', file=sys.stderr)
         sys.exit(1)
     g = sys.stdout
     indir = sys.argv[1]

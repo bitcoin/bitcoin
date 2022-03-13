@@ -296,7 +296,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                 miner.prioritisetransaction(txid=txid, fee_delta=-COIN)
             self.generate(miner, 1)
             # RBF the low-fee transactions
-            while len(utxos_to_respend) > 0:
+            while utxos_to_respend:
                 u = utxos_to_respend.pop(0)
                 send_tx(node, u, high_feerate)
 

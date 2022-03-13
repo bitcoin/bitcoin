@@ -51,7 +51,7 @@ class UTXOSetHashTest(BitcoinTestFramework):
 
             for tx in block.vtx:
                 for n, tx_out in enumerate(tx.vout):
-                    coinbase = 1 if not tx.vin[0].prevout.hash else 0
+                    coinbase = 0 if tx.vin[0].prevout.hash else 1
 
                     # Skip witness commitment
                     if (coinbase and n > 0):

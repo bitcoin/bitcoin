@@ -108,9 +108,13 @@ def main():
         content = ''
         for source_filename, object_filename in value:
             content += '    <ClCompile Include="..\\..\\src\\' + source_filename + '">\n'
-            content += '      <ObjectFileName>$(IntDir)' + object_filename + '</ObjectFileName>\n'
+            content += (
+                f'      <ObjectFileName>$(IntDir){object_filename}'
+                + '</ObjectFileName>\n'
+            )
+
             content += '    </ClCompile>\n'
-        with open(vcxproj_filename + '.in', 'r', encoding='utf-8') as vcxproj_in_file:
+        with open(f'{vcxproj_filename}.in', 'r', encoding='utf-8') as vcxproj_in_file:
             with open(vcxproj_filename, 'w', encoding='utf-8') as vcxproj_file:
                 vcxproj_file.write(vcxproj_in_file.read().replace(
                     '@SOURCE_FILES@\n', content))

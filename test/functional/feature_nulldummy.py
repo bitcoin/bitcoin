@@ -73,9 +73,10 @@ class NULLDUMMYTest(BitcoinTestFramework):
             wmulti.importaddress(self.wit_ms_address)
 
         self.coinbase_blocks = self.generate(self.nodes[0], 2)  # block height = 2
-        coinbase_txid = []
-        for i in self.coinbase_blocks:
-            coinbase_txid.append(self.nodes[0].getblock(i)['tx'][0])
+        coinbase_txid = [
+            self.nodes[0].getblock(i)['tx'][0] for i in self.coinbase_blocks
+        ]
+
         self.generate(self.nodes[0], COINBASE_MATURITY)  # block height = COINBASE_MATURITY + 2
         self.lastblockhash = self.nodes[0].getbestblockhash()
         self.lastblockheight = COINBASE_MATURITY + 2

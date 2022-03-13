@@ -175,10 +175,7 @@ def override(expr, **kwargs):
 def default_hashtype(ctx):
     """Default expression for "hashtype": SIGHASH_DEFAULT for taproot, SIGHASH_ALL otherwise."""
     mode = get(ctx, "mode")
-    if mode == "taproot":
-        return SIGHASH_DEFAULT
-    else:
-        return SIGHASH_ALL
+    return SIGHASH_DEFAULT if mode == "taproot" else SIGHASH_ALL
 
 def default_tapleaf(ctx):
     """Default expression for "tapleaf": looking up leaf in tap[2]."""
@@ -218,13 +215,12 @@ def default_sigmsg(ctx):
         # BIP341 signature hash
         utxos = get(ctx, "utxos")
         annex = get(ctx, "annex")
-        if get(ctx, "leaf") is not None:
-            codeseppos = get(ctx, "codeseppos")
-            leaf_ver = get(ctx, "leafversion")
-            script = get(ctx, "script_taproot")
-            return TaprootSignatureMsg(tx, utxos, hashtype, idx, scriptpath=True, script=script, leaf_ver=leaf_ver, codeseparator_pos=codeseppos, annex=annex)
-        else:
+        if get(ctx, "leaf") is None:
             return TaprootSignatureMsg(tx, utxos, hashtype, idx, scriptpath=False, annex=annex)
+        codeseppos = get(ctx, "codeseppos")
+        leaf_ver = get(ctx, "leafversion")
+        script = get(ctx, "script_taproot")
+        return TaprootSignatureMsg(tx, utxos, hashtype, idx, scriptpath=True, script=script, leaf_ver=leaf_ver, codeseparator_pos=codeseppos, annex=annex)
     elif mode == "witv0":
         # BIP143 signature hash
         scriptcode = get(ctx, "scriptcode")
@@ -242,25 +238,17 @@ def default_sighash(ctx):
     if mode == "taproot":
         return TaggedHash("TapSighash", msg)
     else:
-        if msg is None:
-            return (1).to_bytes(32, 'little')
-        else:
-            return hash256(msg)
+        return (1).to_bytes(32, 'little') if msg is None else hash256(msg)
 
 def default_tweak(ctx):
     """Default expression for "tweak": None if a leaf is specified, tap[0] otherwise."""
-    if get(ctx, "leaf") is None:
-        return get(ctx, "tap").tweak
-    return None
+    return get(ctx, "tap").tweak if get(ctx, "leaf") is None else None
 
 def default_key_tweaked(ctx):
     """Default expression for "key_tweaked": key if tweak is None, tweaked with it otherwise."""
     key = get(ctx, "key")
     tweak = get(ctx, "tweak")
-    if tweak is None:
-        return key
-    else:
-        return tweak_add_privkey(key, tweak)
+    return key if tweak is None else tweak_add_privkey(key, tweak)
 
 def default_signature(ctx):
     """Default expression for "signature": BIP340 signature or ECDSA signature depending on mode."""
@@ -270,9 +258,12 @@ def default_signature(ctx):
         key = get(ctx, "key_tweaked")
         flip_r = get(ctx, "flag_flip_r")
         flip_p = get(ctx, "flag_flip_p")
-        aux = bytes([0] * 32)
-        if not deterministic:
-            aux = random.getrandbits(256).to_bytes(32, 'big')
+        aux = (
+            bytes([0] * 32)
+            if deterministic
+            else random.getrandbits(256).to_bytes(32, 'big')
+        )
+
         return sign_schnorr(key, sighash, flip_r=flip_r, flip_p=flip_p, aux=aux)
     else:
         key = get(ctx, "key")
@@ -292,7 +283,7 @@ def default_hashtype_actual(ctx):
 
 def default_bytes_hashtype(ctx):
     """Default expression for "bytes_hashtype": bytes([hashtype_actual]) if not 0, b"" otherwise."""
-    return bytes([x for x in [get(ctx, "hashtype_actual")] if x != 0])
+    return bytes(x for x in [get(ctx, "hashtype_actual")] if x != 0)
 
 def default_sign(ctx):
     """Default expression for "sign": concatenation of signature and bytes_hashtype."""
@@ -305,9 +296,7 @@ def default_inputs_keypath(ctx):
 def default_witness_taproot(ctx):
     """Default expression for "witness_taproot", consisting of inputs, script, control block, and annex as needed."""
     annex = get(ctx, "annex")
-    suffix_annex = []
-    if annex is not None:
-        suffix_annex = [annex]
+    suffix_annex = [annex] if annex is not None else []
     if get(ctx, "leaf") is None:
         return get(ctx, "inputs_keypath") + suffix_annex
     else:
@@ -317,10 +306,7 @@ def default_witness_witv0(ctx):
     """Default expression for "witness_witv0", consisting of inputs and witness script, as needed."""
     script = get(ctx, "script_witv0")
     inputs = get(ctx, "inputs")
-    if script is None:
-        return inputs
-    else:
-        return inputs + [script]
+    return inputs if script is None else inputs + [script]
 
 def default_witness(ctx):
     """Default expression for "witness", delegating to "witness_taproot" or "witness_witv0" as needed."""
@@ -334,10 +320,8 @@ def default_witness(ctx):
 
 def default_scriptsig(ctx):
     """Default expression for "scriptsig", consisting of inputs and redeemscript, as needed."""
-    scriptsig = []
     mode = get(ctx, "mode")
-    if mode == "legacy":
-        scriptsig = get(ctx, "inputs")
+    scriptsig = get(ctx, "inputs") if mode == "legacy" else []
     redeemscript = get(ctx, "script_p2sh")
     if redeemscript is not None:
         scriptsig += [bytes(redeemscript)]
@@ -442,10 +426,7 @@ def spend(tx, idx, utxos, **kwargs):
 
     def to_script(elem):
         """If fed a CScript, return it; if fed bytes, return a CScript that pushes it."""
-        if isinstance(elem, CScript):
-            return elem
-        else:
-            return CScript([elem])
+        return elem if isinstance(elem, CScript) else CScript([elem])
 
     scriptsig_list = flatten(get(ctx, "scriptsig"))
     scriptsig = CScript(b"".join(bytes(to_script(elem)) for elem in scriptsig_list))
@@ -554,9 +535,8 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
     def sat_fn(tx, idx, utxos, valid):
         if valid:
             return spend(tx, idx, utxos, **conf)
-        else:
-            assert failure is not None
-            return spend(tx, idx, utxos, **{**conf, **failure})
+        assert failure is not None
+        return spend(tx, idx, utxos, **{**conf, **failure})
 
     return Spender(script=spk, comment=comment, is_standard=standard, sat_function=sat_fn, err_msg=err_msg, sigops_weight=sigops_weight, no_fail=failure is None, need_vin_vout_mismatch=need_vin_vout_mismatch)
 
@@ -580,7 +560,7 @@ def random_checksig_style(pubkey):
 
 def random_bytes(n):
     """Return a random bytes object of length n."""
-    return bytes(random.getrandbits(8) for i in range(n))
+    return bytes(random.getrandbits(8) for _ in range(n))
 
 def bitflipper(expr):
     """Return a callable that evaluates expr and returns it with a random bitflip."""
@@ -783,9 +763,9 @@ def spenders_taproot_active():
                     prog = spk[2:]
                     assert len(prog) == 32
                     if witlen < 32:
-                        prog = prog[0:witlen]
+                        prog = prog[:witlen]
                     elif witlen > 32:
-                        prog += bytes([0 for _ in range(witlen - 32)])
+                        prog += bytes(0 for _ in range(witlen - 32))
                     return CScript([CScriptOp.encode_op_n(witver), prog])
                 scripts = [("s0", CScript([pubs[0], OP_CHECKSIG])), ("dummy", CScript([OP_RETURN]))]
                 tap = taproot_construct(pubs[1], scripts)
@@ -1287,7 +1267,10 @@ class TaprootTest(BitcoinTestFramework):
         if err_msg is not None:
             assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
         if accept:
-            assert node.getbestblockhash() == block.hash, "Failed to accept: %s (response: %s)" % (msg, block_response)
+            assert (
+                node.getbestblockhash() == block.hash
+            ), f"Failed to accept: {msg} (response: {block_response})"
+
             self.tip = block.sha256
             self.lastblockhash = block.hash
             self.lastblocktime += 1
