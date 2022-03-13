@@ -270,13 +270,13 @@ static void gobject_list_prepared_help(const JSONRPCRequest& request)
 
 static UniValue gobject_list_prepared(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
     if (request.fHelp || (request.params.size() > 2)) {
         gobject_list_prepared_help(request);
     }
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -612,12 +612,12 @@ static void gobject_vote_many_help(const JSONRPCRequest& request)
 
 static UniValue gobject_vote_many(const JSONRPCRequest& request)
 {
+    if (request.fHelp || request.params.size() != 4)
+        gobject_vote_many_help(request);
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-
-    if (request.fHelp || request.params.size() != 4)
-        gobject_vote_many_help(request);
 
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
@@ -668,12 +668,12 @@ static void gobject_vote_alias_help(const JSONRPCRequest& request)
 
 static UniValue gobject_vote_alias(const JSONRPCRequest& request)
 {
+    if (request.fHelp || request.params.size() != 5)
+        gobject_vote_alias_help(request);
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-
-    if (request.fHelp || request.params.size() != 5)
-        gobject_vote_alias_help(request);
 
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
