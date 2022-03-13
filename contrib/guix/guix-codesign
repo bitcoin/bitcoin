@@ -155,7 +155,7 @@ unsigned_tarball_for_host() {
             echo "$(outdir_for_host "$1")/${DISTNAME}-win-unsigned.tar.gz"
             ;;
         *darwin*)
-            echo "$(outdir_for_host "$1")/${DISTNAME}-osx-unsigned.tar.gz"
+            echo "$(outdir_for_host "$1")/${DISTNAME}-${1}-unsigned.tar.gz"
             ;;
         *)
             exit 1
