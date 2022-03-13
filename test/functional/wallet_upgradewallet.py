@@ -341,12 +341,12 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         if self.is_sqlite_compiled():
             self.log.info("Checking that descriptor wallets do nothing, successfully")
-            self.nodes[0].createwallet(wallet_name="desc_upgrade", descriptors=True)
+            self.nodes[0].createwallet(wallet_name="desc_upgrade")
             desc_wallet = self.nodes[0].get_wallet_rpc("desc_upgrade")
             self.test_upgradewallet(desc_wallet, previous_version=169900, expected_version=169900)
 
             self.log.info("Checking that descriptor wallets without privkeys do nothing, successfully")
-            self.nodes[0].createwallet(wallet_name="desc_upgrade_nopriv", descriptors=True, disable_private_keys=True)
+            self.nodes[0].createwallet(wallet_name="desc_upgrade_nopriv", disable_private_keys=True)
             desc_wallet = self.nodes[0].get_wallet_rpc("desc_upgrade_nopriv")
             self.test_upgradewallet(desc_wallet, previous_version=169900, expected_version=169900)
 

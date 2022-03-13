@@ -62,14 +62,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info('Setting up wallets')
-        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
         w0 = self.nodes[0].get_wallet_rpc('w0')
 
-        self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True)
         w1 = self.nodes[1].get_wallet_rpc('w1')
         assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
 
-        self.nodes[1].createwallet(wallet_name="wpriv", disable_private_keys=False, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wpriv", disable_private_keys=False, blank=True)
         wpriv = self.nodes[1].get_wallet_rpc("wpriv")
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
 
@@ -412,7 +412,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         # Make sure that we can use import and use multisig as addresses
         self.log.info('Test that multisigs can be imported, signed for, and getnewaddress\'d')
-        self.nodes[1].createwallet(wallet_name="wmulti_priv", disable_private_keys=False, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_priv", disable_private_keys=False, blank=True)
         wmulti_priv = self.nodes[1].get_wallet_rpc("wmulti_priv")
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 0)
 
@@ -456,7 +456,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(len(decoded['vin'][0]['txinwitness']), 4)
         self.generate(self.nodes[0], 6)
 
-        self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True)
         wmulti_pub = self.nodes[1].get_wallet_rpc("wmulti_pub")
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 0)
 
@@ -499,7 +499,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.nodes[1].loadwallet('wmulti_pub')
 
         self.log.info("Multisig with distributed keys")
-        self.nodes[1].createwallet(wallet_name="wmulti_priv1", descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_priv1")
         wmulti_priv1 = self.nodes[1].get_wallet_rpc("wmulti_priv1")
         res = wmulti_priv1.importdescriptors([
         {
@@ -522,7 +522,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(res[1]['success'], True)
         assert_equal(res[1]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
 
-        self.nodes[1].createwallet(wallet_name='wmulti_priv2', blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name='wmulti_priv2', blank=True)
         wmulti_priv2 = self.nodes[1].get_wallet_rpc('wmulti_priv2')
         res = wmulti_priv2.importdescriptors([
         {
@@ -553,7 +553,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(tx_signed_2['hex'])
 
         self.log.info("We can create and use a huge multisig under P2WSH")
-        self.nodes[1].createwallet(wallet_name='wmulti_priv_big', blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name='wmulti_priv_big', blank=True)
         wmulti_priv_big = self.nodes[1].get_wallet_rpc('wmulti_priv_big')
         xkey = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/*"
         xkey_int = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/1/*"
@@ -589,7 +589,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.log.info("Under P2SH, multisig are standard with up to 15 "
                       "compressed keys")
         self.nodes[1].createwallet(wallet_name='multi_priv_big_legacy',
-                                   blank=True, descriptors=True)
+                                   blank=True)
         multi_priv_big = self.nodes[1].get_wallet_rpc('multi_priv_big_legacy')
         res = multi_priv_big.importdescriptors([
         {
@@ -618,7 +618,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         decoded = multi_priv_big.gettransaction(txid=txid, verbose=True)['decoded']
 
         self.log.info("Amending multisig with new private keys")
-        self.nodes[1].createwallet(wallet_name="wmulti_priv3", descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_priv3")
         wmulti_priv3 = self.nodes[1].get_wallet_rpc("wmulti_priv3")
         res = wmulti_priv3.importdescriptors([
             {

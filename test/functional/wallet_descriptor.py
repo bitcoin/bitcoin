@@ -35,7 +35,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
-        self.nodes[0].createwallet(wallet_name="desc1", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="desc1")
 
         # A descriptor wallet should have 100 addresses * 4 types = 400 keys
         self.log.info("Checking wallet info")
@@ -79,7 +79,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         assert_equal(addr_info['hdkeypath'], 'm/84\'/1\'/0\'/1/0')
 
         # Make a wallet to receive coins at
-        self.nodes[0].createwallet(wallet_name="desc2", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="desc2")
         recv_wrpc = self.nodes[0].get_wallet_rpc("desc2")
         send_wrpc = self.nodes[0].get_wallet_rpc("desc1")
 
@@ -143,19 +143,19 @@ class WalletDescriptorTest(BitcoinTestFramework):
         enc_rpc.getnewaddress() # Makes sure that we can get a new address from a born encrypted wallet
 
         self.log.info("Test blank descriptor wallets")
-        self.nodes[0].createwallet(wallet_name='desc_blank', blank=True, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_blank', blank=True)
         blank_rpc = self.nodes[0].get_wallet_rpc('desc_blank')
         assert_raises_rpc_error(-4, 'This wallet has no available keys', blank_rpc.getnewaddress)
 
         self.log.info("Test descriptor wallet with disabled private keys")
-        self.nodes[0].createwallet(wallet_name='desc_no_priv', disable_private_keys=True, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_no_priv', disable_private_keys=True)
         nopriv_rpc = self.nodes[0].get_wallet_rpc('desc_no_priv')
         assert_raises_rpc_error(-4, 'This wallet has no available keys', nopriv_rpc.getnewaddress)
 
         self.log.info("Test descriptor exports")
-        self.nodes[0].createwallet(wallet_name='desc_export', descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_export')
         exp_rpc = self.nodes[0].get_wallet_rpc('desc_export')
-        self.nodes[0].createwallet(wallet_name='desc_import', disable_private_keys=True, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_import', disable_private_keys=True)
         imp_rpc = self.nodes[0].get_wallet_rpc('desc_import')
 
         addr_types = [('legacy', False, 'pkh(', '44\'/1\'/0\'', -13),

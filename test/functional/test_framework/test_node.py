@@ -735,7 +735,7 @@ class TestNodeCLI():
             return cli_stdout.rstrip("\n")
 
 class RPCOverloadWrapper():
-    def __init__(self, rpc, cli=False, descriptors=False):
+    def __init__(self, rpc, cli=False, descriptors=True):
         self.rpc = rpc
         self.is_cli = cli
         self.descriptors = descriptors

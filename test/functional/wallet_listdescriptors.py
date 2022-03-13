@@ -36,11 +36,11 @@ class ListDescriptorsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, 'listdescriptors is not available for non-descriptor wallets', node.listdescriptors)
 
         self.log.info('Test the command for empty descriptors wallet.')
-        node.createwallet(wallet_name='w2', blank=True, descriptors=True)
+        node.createwallet(wallet_name='w2', blank=True)
         assert_equal(0, len(node.get_wallet_rpc('w2').listdescriptors()['descriptors']))
 
         self.log.info('Test the command for a default descriptors wallet.')
-        node.createwallet(wallet_name='w3', descriptors=True)
+        node.createwallet(wallet_name='w3')
         result = node.get_wallet_rpc('w3').listdescriptors()
         assert_equal("w3", result['wallet_name'])
         assert_equal(8, len(result['descriptors']))
@@ -97,7 +97,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(expected_private, wallet.listdescriptors(True))
 
         self.log.info('Test list private descriptors with watch-only wallet')
-        node.createwallet(wallet_name='watch-only', descriptors=True, disable_private_keys=True)
+        node.createwallet(wallet_name='watch-only', disable_private_keys=True)
         watch_only_wallet = node.get_wallet_rpc('watch-only')
         watch_only_wallet.importdescriptors([{
             'desc': descsum_create('wpkh(' + xpub_acc + ')'),
@@ -106,7 +106,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
 
         self.log.info('Test non-active non-range combo descriptor')
-        node.createwallet(wallet_name='w4', blank=True, descriptors=True)
+        node.createwallet(wallet_name='w4', blank=True)
         wallet = node.get_wallet_rpc('w4')
         wallet.importdescriptors([{
             'desc': descsum_create('combo(' + node.get_deterministic_priv_key().key + ')'),

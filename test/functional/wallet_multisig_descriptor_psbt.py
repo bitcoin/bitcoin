@@ -53,7 +53,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             base58_to_byte(xpub)
 
         for i, node in enumerate(self.nodes):
-            node.createwallet(wallet_name=f"{self.name}_{i}", blank=True, descriptors=True, disable_private_keys=True)
+            node.createwallet(wallet_name=f"{self.name}_{i}", blank=True, disable_private_keys=True)
             multisig = node.get_wallet_rpc(f"{self.name}_{i}")
             external = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f'/0/*,'.join(xpubs)}/0/*))")
             internal = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f'/1/*,'.join(xpubs)}/1/*))")
@@ -83,7 +83,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         participants = {
             # Every participant generates an xpub. The most straightforward way is to create a new descriptor wallet.
             # This wallet will be the participant's `signer` for the resulting multisig. Avoid reusing this wallet for any other purpose (for privacy reasons).
-            "signers": [node.get_wallet_rpc(node.createwallet(wallet_name=f"participant_{self.nodes.index(node)}", descriptors=True)["name"]) for node in self.nodes],
+            "signers": [node.get_wallet_rpc(node.createwallet(wallet_name=f"participant_{self.nodes.index(node)}")["name"]) for node in self.nodes],
             # After participants generate and exchange their xpubs they will each create their own watch-only multisig.
             # Note: these multisigs are all the same, this just highlights that each participant can independently verify everything on their own node.
             "multisigs": []
