@@ -786,7 +786,7 @@ public:
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1;   // Always active unless overridden
         consensus.BIP66Height = 1;   // Always active unless overridden
-        consensus.BIP147Height = 1;  // Always active unless overridden
+        consensus.BIP147Height = 0;  // Always active unless overridden
         consensus.CSVHeight = 1;     // Always active unless overridden
         consensus.DIP0001Height = 1; // Always active unless overridden
         consensus.DIP0003Height = 432; // Always active for DashTestFramework in functional tests (see dip3params)
