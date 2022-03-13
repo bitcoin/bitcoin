@@ -13,7 +13,6 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
 #include <governance/governance.h>
-
 namespace node {
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
@@ -227,7 +226,9 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                 return ChainstateLoadVerifyError::ERROR_CORRUPTED_BLOCK_DB;
             }
             // SYSCOIN
-            chainstate->ResetBlockFailureFlags(nullptr);
+            if (gArgs.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
+                chainstate->ResetBlockFailureFlags(nullptr);
+            }
         }
     }
 
