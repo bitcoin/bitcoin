@@ -606,7 +606,7 @@ public:
         consensus.BIP65Height = 1;  // Always active unless overridden
         consensus.BIP66Height = 1;  // Always active unless overridden
         consensus.CSVHeight = 1;    // Always active unless overridden
-        consensus.SegwitHeight = 1; // Always active unless overridden
+        consensus.SegwitHeight = 0; // Always active unless overridden
         consensus.MinBIP9WarningHeight = 0;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nSeniorityHeight1 = 60;
