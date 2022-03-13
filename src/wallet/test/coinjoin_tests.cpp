@@ -7,6 +7,7 @@
 #include <amount.h>
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
+#include <coinjoin/options.h>
 #include <consensus/validation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
@@ -14,6 +15,34 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(coinjoin_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(coinjoin_options_tests)
+{
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetSessions(), DEFAULT_COINJOIN_SESSIONS);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetRounds(), DEFAULT_COINJOIN_ROUNDS);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetRandomRounds(), COINJOIN_RANDOM_ROUNDS);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetAmount(), DEFAULT_COINJOIN_AMOUNT);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetDenomsGoal(), DEFAULT_COINJOIN_DENOMS_GOAL);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetDenomsHardCap(), DEFAULT_COINJOIN_DENOMS_HARDCAP);
+
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::IsEnabled(), false);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::IsMultiSessionEnabled(), DEFAULT_COINJOIN_MULTISESSION);
+
+    CCoinJoinClientOptions::SetEnabled(true);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::IsEnabled(), true);
+    CCoinJoinClientOptions::SetEnabled(false);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::IsEnabled(), false);
+
+    CCoinJoinClientOptions::SetMultiSessionEnabled(!DEFAULT_COINJOIN_MULTISESSION);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::IsMultiSessionEnabled(), !DEFAULT_COINJOIN_MULTISESSION);
+    CCoinJoinClientOptions::SetMultiSessionEnabled(DEFAULT_COINJOIN_MULTISESSION);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::IsMultiSessionEnabled(), DEFAULT_COINJOIN_MULTISESSION);
+
+    CCoinJoinClientOptions::SetRounds(DEFAULT_COINJOIN_ROUNDS + 10);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetRounds(), DEFAULT_COINJOIN_ROUNDS + 10);
+    CCoinJoinClientOptions::SetAmount(DEFAULT_COINJOIN_AMOUNT + 50);
+    BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetAmount(), DEFAULT_COINJOIN_AMOUNT + 50);
+}
 
 BOOST_AUTO_TEST_CASE(coinjoin_collateral_tests)
 {
