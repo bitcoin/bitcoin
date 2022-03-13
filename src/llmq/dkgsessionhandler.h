@@ -18,15 +18,14 @@ namespace llmq
 class CDKGSession;
 class CDKGSessionManager;
 
-enum QuorumPhase {
-    QuorumPhase_None = -1,
-    QuorumPhase_Initialized = 1,
-    QuorumPhase_Contribute,
-    QuorumPhase_Complain,
-    QuorumPhase_Justify,
-    QuorumPhase_Commit,
-    QuorumPhase_Finalize,
-    QuorumPhase_Idle,
+enum class QuorumPhase {
+    Initialized = 1,
+    Contribute,
+    Complain,
+    Justify,
+    Commit,
+    Finalize,
+    Idle,
 };
 
 /**
@@ -111,7 +110,7 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
-    QuorumPhase phase GUARDED_BY(cs) {QuorumPhase_Idle};
+    QuorumPhase phase GUARDED_BY(cs) {QuorumPhase::Idle};
     int currentHeight GUARDED_BY(cs) {-1};
     uint256 quorumHash GUARDED_BY(cs);
 
@@ -154,7 +153,13 @@ private:
 
     using StartPhaseFunc = std::function<void()>;
     using WhileWaitFunc = std::function<bool()>;
-    void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting) const;
+    /**
+     * @param curPhase current QuorumPhase
+     * @param nextPhase next QuorumPhase
+     * @param expectedQuorumHash expected QuorumHash, defaults to null
+     * @param shouldNotWait function that returns bool, defaults to function that returns false. If the function returns false, we will wait in the loop, if true, we don't wait
+     */
+    void WaitForNextPhase(std::optional<QuorumPhase> curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash=uint256(), const WhileWaitFunc& shouldNotWait=[]{return false;}) const;
     void WaitForNewQuorum(const uint256& oldQuorumHash) const;
     void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting) const;
     void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const StartPhaseFunc& startPhaseFunc, const WhileWaitFunc& runWhileWaiting);

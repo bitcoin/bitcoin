@@ -92,12 +92,12 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
     bool fNewPhase = (quorumStageInt % params.dkgPhaseBlocks) == 0;
     int phaseInt = quorumStageInt / params.dkgPhaseBlocks + 1;
     QuorumPhase oldPhase = phase;
-    if (fNewPhase && phaseInt >= QuorumPhase_Initialized && phaseInt <= QuorumPhase_Idle) {
+    if (fNewPhase && phaseInt >= int(QuorumPhase::Initialized) && phaseInt <= int(QuorumPhase::Idle)) {
         phase = static_cast<QuorumPhase>(phaseInt);
     }
 
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - currentHeight=%d, pQuorumBaseBlockIndex->nHeight=%d, oldPhase=%d, newPhase=%d\n", __func__,
-            params.name, currentHeight, pQuorumBaseBlockIndex->nHeight, oldPhase, phase);
+            params.name, currentHeight, pQuorumBaseBlockIndex->nHeight, int(oldPhase), int(phase));
 }
 
 void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
@@ -159,38 +159,38 @@ std::pair<QuorumPhase, uint256> CDKGSessionHandler::GetPhaseAndQuorumHash() cons
 class AbortPhaseException : public std::exception {
 };
 
-void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
+void CDKGSessionHandler::WaitForNextPhase(std::optional<QuorumPhase> curPhase,
                                           QuorumPhase nextPhase,
                                           const uint256& expectedQuorumHash,
-                                          const WhileWaitFunc& runWhileWaiting) const
+                                          const WhileWaitFunc& shouldNotWait) const
 {
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase, nextPhase);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase.has_value() ? int(*curPhase) : -1, int(nextPhase));
 
     while (true) {
         if (stopRequested) {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due to stop/shutdown requested\n", __func__, params.name);
             throw AbortPhaseException();
         }
-        auto p = GetPhaseAndQuorumHash();
-        if (!expectedQuorumHash.IsNull() && p.second != expectedQuorumHash) {
+        auto [_phase, _quorumHash] = GetPhaseAndQuorumHash();
+        if (!expectedQuorumHash.IsNull() && _quorumHash != expectedQuorumHash) {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due unexpected expectedQuorumHash change\n", __func__, params.name);
             throw AbortPhaseException();
         }
-        if (p.first == nextPhase) {
+        if (_phase == nextPhase) {
             break;
         }
-        if (curPhase != QuorumPhase_None && p.first != curPhase) {
+        if (curPhase.has_value() && _phase != curPhase) {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due unexpected phase change\n", __func__, params.name);
             throw AbortPhaseException();
         }
-        if (!runWhileWaiting()) {
+        if (!shouldNotWait()) {
             UninterruptibleSleep(std::chrono::milliseconds{100});
         }
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase, nextPhase);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase.has_value() ? int(*curPhase) : -1, int(nextPhase));
 
-    if (nextPhase == QuorumPhase_Initialized) {
+    if (nextPhase == QuorumPhase::Initialized) {
         quorumDKGDebugManager->ResetLocalSessionStatus(params.type);
     } else {
         quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
@@ -256,7 +256,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
         heightTmp = heightStart = currentHeight;
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting sleep for %d ms, curPhase=%d\n", __func__, params.name, sleepTime, curPhase);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting sleep for %d ms, curPhase=%d\n", __func__, params.name, sleepTime, int(curPhase));
 
     while (GetTimeMillis() < endTime) {
         if (stopRequested) {
@@ -285,7 +285,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
         }
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d\n", __func__, params.name, curPhase);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d\n", __func__, params.name, int(curPhase));
 }
 
 void CDKGSessionHandler::HandlePhase(QuorumPhase curPhase,
@@ -295,13 +295,13 @@ void CDKGSessionHandler::HandlePhase(QuorumPhase curPhase,
                                      const StartPhaseFunc& startPhaseFunc,
                                      const WhileWaitFunc& runWhileWaiting)
 {
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase, nextPhase);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, int(curPhase), int(nextPhase));
 
     SleepBeforePhase(curPhase, expectedQuorumHash, randomSleepFactor, runWhileWaiting);
     startPhaseFunc();
     WaitForNextPhase(curPhase, nextPhase, expectedQuorumHash, runWhileWaiting);
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase, nextPhase);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, int(curPhase), int(nextPhase));
 }
 
 // returns a set of NodeIds which sent invalid messages
@@ -458,7 +458,7 @@ void CDKGSessionHandler::HandleDKGRound()
 {
     uint256 curQuorumHash;
 
-    WaitForNextPhase(QuorumPhase_None, QuorumPhase_Initialized, uint256(), []{return false;});
+    WaitForNextPhase(std::nullopt, QuorumPhase::Initialized);
 
     {
         LOCK(cs);
@@ -478,8 +478,8 @@ void CDKGSessionHandler::HandleDKGRound()
     }
 
     quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
-        bool changed = status.phase != (uint8_t) QuorumPhase_Initialized;
-        status.phase = (uint8_t) QuorumPhase_Initialized;
+        bool changed = status.phase != (uint8_t) QuorumPhase::Initialized;
+        status.phase = (uint8_t) QuorumPhase::Initialized;
         return changed;
     });
 
@@ -488,7 +488,7 @@ void CDKGSessionHandler::HandleDKGRound()
         CLLMQUtils::AddQuorumProbeConnections(params, pQuorumBaseBlockIndex, curSession->myProTxHash);
     }
 
-    WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});
+    WaitForNextPhase(QuorumPhase::Initialized, QuorumPhase::Contribute, curQuorumHash);
 
     // Contribute
     auto fContributeStart = [this]() {
@@ -497,7 +497,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fContributeWait = [this] {
         return ProcessPendingMessageBatch<CDKGContribution, MSG_QUORUM_CONTRIB>(*curSession, pendingContributions, 8);
     };
-    HandlePhase(QuorumPhase_Contribute, QuorumPhase_Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
+    HandlePhase(QuorumPhase::Contribute, QuorumPhase::Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
     // Complain
     auto fComplainStart = [this]() {
@@ -506,7 +506,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fComplainWait = [this] {
         return ProcessPendingMessageBatch<CDKGComplaint, MSG_QUORUM_COMPLAINT>(*curSession, pendingComplaints, 8);
     };
-    HandlePhase(QuorumPhase_Complain, QuorumPhase_Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
+    HandlePhase(QuorumPhase::Complain, QuorumPhase::Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
     // Justify
     auto fJustifyStart = [this]() {
@@ -515,7 +515,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fJustifyWait = [this] {
         return ProcessPendingMessageBatch<CDKGJustification, MSG_QUORUM_JUSTIFICATION>(*curSession, pendingJustifications, 8);
     };
-    HandlePhase(QuorumPhase_Justify, QuorumPhase_Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
+    HandlePhase(QuorumPhase::Justify, QuorumPhase::Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
     // Commit
     auto fCommitStart = [this]() {
@@ -524,7 +524,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fCommitWait = [this] {
         return ProcessPendingMessageBatch<CDKGPrematureCommitment, MSG_QUORUM_PREMATURE_COMMITMENT>(*curSession, pendingPrematureCommitments, 8);
     };
-    HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
+    HandlePhase(QuorumPhase::Commit, QuorumPhase::Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
 
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto& fqc : finalCommitments) {
