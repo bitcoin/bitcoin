@@ -1606,7 +1606,7 @@ LIBCHIABLS_CFLAGS="$LIBCHIABLS_CFLAGS -I$depends_prefix/include/bls-dash"
 if test x$need_bundled_chiabls = xyes; then
   LIBCHIABLS_LIBS=bls-dash/build/libbls-dash.a
 elif test "x$need_bundled_chiabls" = xno; then
-  LIBCHIABLS_LIBS=-lbls-dash
+  LIBCHIABLS_LIBS=-lbls-dash -lrelic_s
 fi        
 AC_SUBST(LIBCHIABLS_CFLAGS)
 AC_SUBST(LIBCHIABLS_LIBS)  

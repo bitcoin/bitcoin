@@ -1,11 +1,13 @@
 package=cmake
-$(package)_version=3.14.7
-$(package)_download_path=https://cmake.org/files/v3.14/
+$(package)_version=3.22.2
+$(package)_download_path=https://cmake.org/files/v3.22/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=9221993e0af3e6d10124d840ff24f5b2f3b884416fca04d3312cb0388dec1385
+$(package)_sha256_hash=3c1c478b9650b107d452c5bd545c72e2fad4e37c09b89a1984b9a2f46df6aced
 
 define $(package)_config_cmds
-  ./bootstrap --prefix=$(host_prefix)
+  export CC="" && \
+  export CXX="" && \
+  ./bootstrap --prefix=$(host_prefix) -- -DCMAKE_USE_OPENSSL=OFF
 endef
 
 define $(package)_build_cmds
