@@ -187,12 +187,15 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
-  previous_releases_cache:
-    folder: "releases"
+ # For faster CI feedback, immediately schedule a task that compiles most modules
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
-  << : *PERSISTENT_WORKER_TEMPLATE
+    depends_releases_cache:
+    folder: "/tmp/cirrus-ci-build/releases"
+  container:
+    image: ubuntu:bionic
   env:
-    << : *PERSISTENT_WORKER_TEMPLATE_ENV
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
