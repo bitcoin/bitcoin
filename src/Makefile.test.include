@@ -147,6 +147,7 @@ BITCOIN_TESTS =\
   test/descriptor_tests.cpp \
   test/dynamic_activation_thresholds_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
+  test/evo_instantsend_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/evo_trivialvalidation.cpp \
   test/flatfile_tests.cpp \
