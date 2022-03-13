@@ -187,7 +187,7 @@ class TestSymbolChecks(unittest.TestCase):
         executable = 'test3.exe'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
-                #include <windows.h>
+                #include <combaseapi.h>
 
                 int main()
                 {
