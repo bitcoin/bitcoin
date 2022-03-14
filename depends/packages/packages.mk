@@ -1,4 +1,4 @@
-packages:=boost libevent cmake gmp zlib nettle gnutls libcurl bls-dash
+packages:=boost libevent gmp zlib nettle gnutls libcurl
 
 qrencode_linux_packages = qrencode
 qrencode_android_packages = qrencode

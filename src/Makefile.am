@@ -20,14 +20,10 @@ SYSCOIN_INCLUDES += $(LIBCHIABLS_CFLAGS)
 SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
-if EMBEDDED_CHIABLS
 LIBCHIA = bls-dash/build/src/libbls-dash.a  bls-dash/build/_deps/relic-build/lib/librelic_s.a
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) $(GMP_LIBS)
 $(LIBCHIA):
 	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)
-else
-LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIABLS_LIBS) $(GMP_LIBS)
-endif
 
 LIBSYSCOIN_NODE=libsyscoin_node.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
