@@ -183,18 +183,19 @@ EOF
 while [ $# != 0 ]; do
     case "$1" in
 	    "PKG"*);;
-        "--cache-file="*);;
+        "-cache-file="*);;
+        "-stdlib="*);;
 	    "--srcdir="*)
             TOP_SRCDIR="${1#*=}";;
         "--host="*)
             HOST="${1#*=}"
             case $HOST in
                 *mingw*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Generic -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
                 *android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
             esac
@@ -203,11 +204,11 @@ while [ $# != 0 ]; do
             PREFIX="${1#*=}"
             case $PREFIX in
                 *mingw*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Generic -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
                 *android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
             esac
@@ -216,11 +217,11 @@ while [ $# != 0 ]; do
             TARGET="${1#*=}"
             case $TARGET in
                 *mingw*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Generic -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
                 *android*)
-                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
             esac
