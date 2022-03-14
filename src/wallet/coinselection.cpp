@@ -169,7 +169,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     return result;
 }
 
-std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value)
+std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
 {
     if (utxo_pool.empty()) return std::nullopt;
 
@@ -178,7 +178,7 @@ std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& ut
     std::vector<size_t> indexes;
     indexes.resize(utxo_pool.size());
     std::iota(indexes.begin(), indexes.end(), 0);
-    Shuffle(indexes.begin(), indexes.end(), FastRandomContext());
+    Shuffle(indexes.begin(), indexes.end(), rng);
 
     CAmount selected_eff_value = 0;
     for (const size_t i : indexes) {
@@ -193,7 +193,7 @@ std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& ut
     return std::nullopt;
 }
 
-static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
+static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
 {
     std::vector<char> vfIncluded;
@@ -201,8 +201,6 @@ static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const 
     vfBest.assign(groups.size(), true);
     nBest = nTotalLower;
     int nBestInputCount = 0;
-
-    FastRandomContext insecure_rand;
 
     for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
     {
@@ -266,7 +264,7 @@ bool less_then_denom (const OutputGroup& group1, const OutputGroup& group2)
     return (!found1 && found2);
 }
 
-std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue, bool fFullyMixedOnly, CAmount maxTxFee)
+std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue, FastRandomContext& rng, bool fFullyMixedOnly, CAmount maxTxFee)
 {
     if (groups.empty()) return std::nullopt;
 
@@ -277,7 +275,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
     std::vector<OutputGroup> applicable_groups;
     CAmount nTotalLower = 0;
 
-    Shuffle(groups.begin(), groups.end(), FastRandomContext());
+    Shuffle(groups.begin(), groups.end(), rng);
 
     int tryDenomStart = 0;
     CAmount nMinChange = MIN_CHANGE;
@@ -349,9 +347,9 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
     std::vector<char> vfBest;
     CAmount nBest;
 
-    ApproximateBestSubset(applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
+    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
     if (nBest != nTargetValue && nMinChange != 0 && nTotalLower >= nTargetValue + nMinChange) {
-        ApproximateBestSubset(applicable_groups, nTotalLower, nTargetValue + nMinChange, vfBest, nBest);
+        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + nMinChange, vfBest, nBest);
     }
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
