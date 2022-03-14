@@ -186,14 +186,14 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
+  name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [bullseye]'
   # For faster CI feedback, immediately schedule a task that compiles most modules
   << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   depends_releases_cache:
     folder: "/tmp/cirrus-ci-build/releases"
   container:
-    image: debian:buster
+    image: debian:bullseye
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
