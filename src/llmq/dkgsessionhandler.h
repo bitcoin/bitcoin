@@ -9,6 +9,8 @@
 #include <ctpl_stl.h>
 #include <net.h>
 
+#include <optional>
+
 class CBLSWorker;
 class CBlockIndex;
 
