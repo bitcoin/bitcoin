@@ -58,19 +58,19 @@ static void PreventOutdatedOptions(const UniValue& options)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Use fee_rate (" + CURRENCY_ATOM + "/vB) instead of feeRate");
     }
     if (options.exists("changeAddress")) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_address");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_address instead of changeAddress");
     }
     if (options.exists("changePosition")) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position instead of changePosition");
     }
     if (options.exists("includeWatching")) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching instead of includeWatching");
     }
     if (options.exists("lockUnspents")) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents instead of lockUnspents");
     }
     if (options.exists("subtractFeeFromOutputs")) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use subtract_fee_from_outputs");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use subtract_fee_from_outputs instead of subtractFeeFromOutputs");
     }
 }
 
