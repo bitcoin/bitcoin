@@ -554,6 +554,7 @@ inspecting signatures in Mach-O binaries.")
 (packages->manifest
  (append
   (list ;; The Basics
+        cmake
         bash
         which
         coreutils
@@ -613,5 +614,5 @@ inspecting signatures in Mach-O binaries.")
            (list ;; Native GCC 10 toolchain
                  gcc-toolchain-10
                  (list gcc-toolchain-10 "static")
-                 clang-toolchain-10 binutils cmake xorriso python-signapple))
+                 clang-toolchain-10 binutils xorriso python-signapple))
           (else '())))))
