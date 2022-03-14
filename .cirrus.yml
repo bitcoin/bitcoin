@@ -187,10 +187,10 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
- # For faster CI feedback, immediately schedule a task that compiles most modules
+  # For faster CI feedback, immediately schedule a task that compiles most modules
   << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
-    depends_releases_cache:
+  depends_releases_cache:
     folder: "/tmp/cirrus-ci-build/releases"
   container:
     image: ubuntu:bionic
