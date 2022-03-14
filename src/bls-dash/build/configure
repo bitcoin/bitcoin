@@ -184,7 +184,7 @@ while [ $# != 0 ]; do
     case "$1" in
 	    "PKG"*);;
         "--cache-file="*);;
-        "-stdlib="*);;
+        "*-stdlib="*);;
 	    "--srcdir="*)
             TOP_SRCDIR="${1#*=}";;
         "--host="*)
@@ -194,8 +194,12 @@ while [ $# != 0 ]; do
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Generic -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
-                *android*)
+                *arm-linux-gnueabihf*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+                *armv7a*)
                     CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
             esac
@@ -207,8 +211,12 @@ while [ $# != 0 ]; do
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Generic -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
-                *android*)
+                *arm-linux-gnueabihf*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+                *armv7a*)
                     CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
             esac
@@ -220,8 +228,12 @@ while [ $# != 0 ]; do
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Generic -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS='' -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=''";;
                 *darwin*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin";;
-                *android*)
+                *arm-linux-gnueabihf*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
+                *armv7a*)
                     CMAKE_ARGS="$CMAKE_ARGS -DWSIZE=32 -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
+                *android*)
+                    CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=DROID -DCMAKE_SYSTEM_NAME=Android";;
                 *linux*)
                     CMAKE_ARGS="$CMAKE_ARGS -DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux";;
             esac
