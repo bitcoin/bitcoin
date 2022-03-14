@@ -26,7 +26,6 @@ constexpr TransactionError ALL_TRANSACTION_ERROR[] = {
     TransactionError::MEMPOOL_ERROR,
     TransactionError::INVALID_PSBT,
     TransactionError::PSBT_MISMATCH,
-    TransactionError::SIGHASH_MISMATCH,
     TransactionError::MAX_FEE_EXCEEDED,
 };
 }; // namespace

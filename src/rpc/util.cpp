@@ -359,8 +359,6 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
         case TransactionError::INVALID_PSBT:
         case TransactionError::PSBT_MISMATCH:
             return RPC_INVALID_PARAMETER;
-        case TransactionError::SIGHASH_MISMATCH:
-            return RPC_DESERIALIZATION_ERROR;
         default: break;
     }
     return RPC_TRANSACTION_ERROR;
