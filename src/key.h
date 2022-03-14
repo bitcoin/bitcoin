@@ -17,7 +17,6 @@
 
 
 /**
- * secure_allocator is defined in allocators.h
  * CPrivKey is a serialized private key, with all parameters included
  * (SIZE bytes)
  */
