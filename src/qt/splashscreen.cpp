@@ -51,7 +51,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     float scale = qApp->devicePixelRatio();
 
     // define text to place
-    QString titleText       = tr(PACKAGE_NAME);
+    QString titleText       = PACKAGE_NAME;
     QString versionText = QString::fromStdString(FormatFullVersion()).remove(0, 1);
     QString titleAddText    = networkStyle->getTitleAddText();
 
