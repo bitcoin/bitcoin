@@ -1,187 +1,106 @@
-declare class PrivateKey {
-    static PRIVATE_KEY_SIZE: number;
-
-    static fromSeed(seed: Uint8Array): PrivateKey;
-
-    static fromBytes(bytes: Uint8Array, modOrder: boolean): PrivateKey;
-
-    static aggregate(privateKeys: PrivateKey[], publicKeys: PublicKey[]): PrivateKey;
-
-    static aggregateInsecure(privateKeys: PrivateKey[]): PrivateKey;
-
-    getPublicKey(): PublicKey;
-
-    serialize(): Uint8Array;
-
-    sign(message: Uint8Array): Signature;
-
-    signInsecure(message: Uint8Array): InsecureSignature;
-
-    signPrehashed(messageHash: Uint8Array): Signature;
-
-    delete(): void;
+export declare class AugSchemeMPL {
+  static sk_to_g1(sk: PrivateKey): G1Element;
+  static key_gen(msg: Uint8Array): PrivateKey;
+  static sign(sk: PrivateKey, msg: Uint8Array): G2Element;
+  static sign_prepend(sk: PrivateKey, msg: Uint8Array, prependPk: G1Element): G2Element;
+  static verify(pk: G1Element, msg: Uint8Array, sig: G2Element): boolean;
+  static aggregate(g2Elements: G2Element[]): G2Element;
+  static aggregate_verify(pks: G1Element[], msgs: Uint8Array[], sig: G2Element): boolean;
+  static derive_child_sk(sk: PrivateKey, index: number): PrivateKey;
+  static derive_child_sk_unhardened(sk: PrivateKey, index: number): PrivateKey;
+  static derive_child_pk_unhardened(pk: G1Element, index: number): G1Element;
 }
 
-declare class InsecureSignature {
-    static SIGNATURE_SIZE: number;
-
-    static fromBytes(bytes: Uint8Array);
-
-    static aggregate(signatures: InsecureSignature[]): InsecureSignature;
-
-    verify(hashes: Uint8Array[], pubKeys: PublicKey[]): boolean;
-
-    divideBy(insecureSignatures: InsecureSignature[]): InsecureSignature;
-
-    serialize(): Uint8Array;
-
-    delete(): void;
+export declare class BasicSchemeMPL {
+  static sk_to_g1(sk: PrivateKey): G1Element;
+  static key_gen(msg: Uint8Array): PrivateKey;
+  static sign(sk: PrivateKey, msg: Uint8Array): G2Element;
+  static verify(pk: G1Element, msg: Uint8Array, sig: G2Element): boolean;
+  static aggregate(g2Elements: G2Element[]): G2Element;
+  static aggregate_verify(pks: G1Element[], msgs: Uint8Array[], sig: G2Element): boolean;
+  static derive_child_sk(sk: PrivateKey, index: number): PrivateKey;
+  static derive_child_sk_unhardened(sk: PrivateKey, index: number): PrivateKey;
+  static derive_child_pk_unhardened(pk: G1Element, index: number): G1Element;
 }
 
-declare class Signature {
-    static SIGNATURE_SIZE: number;
-
-    static fromBytes(bytes: Uint8Array): Signature;
-
-    static fromBytesAndAggregationInfo(bytes: Uint8Array, aggregationInfo: AggregationInfo): Signature;
-
-    static aggregateSigs(signatures: Signature[]): Signature;
-
-    serialize(): Uint8Array;
-
-    verify(): boolean;
-
-    getAggregationInfo(): AggregationInfo;
-
-    setAggregationInfo(aggregationInfo: AggregationInfo): void;
-
-    delete(): void;
+export declare class PopSchemeMPL {
+  static sk_to_g1(sk: PrivateKey): G1Element;
+  static key_gen(msg: Uint8Array): PrivateKey;
+  static sign(sk: PrivateKey, msg: Uint8Array): G2Element;
+  static verify(pk: G1Element, msg: Uint8Array, sig: G2Element): boolean;
+  static aggregate(g2Elements: G2Element[]): G2Element;
+  static aggregate_verify(pks: G1Element[], msgs: Uint8Array[], sig: G2Element): boolean;
+  static derive_child_sk(sk: PrivateKey, index: number): PrivateKey;
+  static derive_child_sk_unhardened(sk: PrivateKey, index: number): PrivateKey;
+  static derive_child_pk_unhardened(pk: G1Element, index: number): G1Element;
+  static pop_prove(sk: PrivateKey): G2Element;
+  static pop_verify(pk: G1Element, signatureProof: G2Element): boolean;
+  static fast_aggregate_verify(pks: G1Element[], msg: Uint8Array, sig: G2Element): boolean;
 }
 
-declare class PublicKey {
-    static PUBLIC_KEY_SIZE: number;
-
-    static fromBytes(bytes: Uint8Array): PublicKey;
-
-    static aggregate(publicKeys: PublicKey[]): PublicKey;
-
-    static aggregateInsecure(publicKeys: PublicKey[]): PublicKey;
-
-    getFingerprint(): number;
-
-    serialize(): Uint8Array;
-
-    delete(): void;
+export declare class G1Element {
+  static SIZE: number;
+  static from_bytes(bytes: Uint8Array): G1Element;
+  static generator(): G2Element;
+  serialize(): Uint8Array;
+  negate(): G1Element;
+  deepcopy(): G1Element;
+  get_fingerprint(): number;
+  add(el: G1Element): G1Element;
+  mul(bn: Bignum): G1Element;
+  equal_to(el: G1Element): boolean;
+  delete(): void;
 }
 
-declare class AggregationInfo {
-    static fromMsgHash(publicKey: PublicKey, messageHash: Uint8Array): AggregationInfo;
-
-    static fromMsg(publicKey: PublicKey, message: Uint8Array): AggregationInfo;
-
-    static fromBuffers(pubKeys: PublicKey[], msgHashes: Uint8Array[], exponents: Uint8Array[]): AggregationInfo;
-
-    getPublicKeys(): PublicKey[];
-
-    getMessageHashes(): Uint8Array[];
-
-    getExponents(): Uint8Array[];
-
-    delete(): void;
+export declare class G2Element {
+  static SIZE: number;
+  static from_bytes(bytes: Uint8Array): G2Element;
+  static from_g2(sk: G2Element): G2Element;
+  static aggregate_sigs(sigs: G2Element[]): G2Element;
+  static generator(): G2Element;
+  serialize(): Uint8Array;
+  negate(): G2Element;
+  deepcopy(): G2Element;
+  add(el: G2Element): G2Element;
+  mul(bn: Bignum): G2Element;
+  equal_to(el: G2Element): boolean;
+  delete(): void;
 }
 
-declare class ExtendedPrivateKey {
-    static EXTENDED_PRIVATE_KEY_SIZE: number;
-
-    static fromSeed(seed: Uint8Array): ExtendedPrivateKey;
-
-    static fromBytes(bytes: Uint8Array): ExtendedPrivateKey;
-
-    privateChild(index: number): ExtendedPrivateKey;
-
-    publicChild(index: number): ExtendedPublicKey;
-
-    getVersion(): number;
-
-    getDepth(): number;
-
-    getParentFingerprint(): number;
-
-    getChildNumber(): number;
-
-    getChainCode(): ChainCode;
-
-    getPrivateKey(): PrivateKey;
-
-    getPublicKey(): PublicKey;
-
-    getExtendedPublicKey(): ExtendedPublicKey;
-
-    serialize(): Uint8Array;
-
-    delete(): void;
+export declare class PrivateKey {
+  static PRIVATE_KEY_SIZE: number;
+  static from_bytes(bytes: Uint8Array, modOrder: boolean): PrivateKey;
+  static aggregate(pks: PrivateKey[]): PrivateKey;
+  deepcopy(): PrivateKey;
+  serialize(): Uint8Array;
+  get_g1(): G1Element;
+  get_g2(): G2Element;
+  mul_g1(el: G1Element): G1Element;
+  mul_g2(el: G2Element): G2Element;
+  equal_to(key: PrivateKey): boolean;
+  delete(): void;
 }
 
-declare class ExtendedPublicKey {
-    static VERSION: number;
-    static EXTENDED_PUBLIC_KEY_SIZE: number;
-
-    static fromBytes(bytes: Uint8Array): ExtendedPublicKey;
-
-    publicChild(index: number): ExtendedPublicKey;
-
-    getVersion(): number;
-
-    getDepth(): number;
-
-    getParentFingerprint(): number;
-
-    getChildNumber(): number;
-
-    getPublicKey(): PublicKey;
-
-    getChainCode(): ChainCode;
-
-    serialize(): Uint8Array;
-
-    delete(): void;
+export declare class Bignum {
+  static from_string(s: string, radix: number): Bignum;
+  toString(radix: number): string;
+  delete(): void;
 }
 
-declare class ChainCode {
-    static CHAIN_CODE_SIZE: number;
-
-    static fromBytes(bytes: Uint8Array);
-
-    serialize(): Uint8Array;
-
-    delete(): void;
+export declare class Util {
+  static hash256(msg: Uint8Array): Uint8Array;
+  static hex_str(msg: Uint8Array): string;
 }
 
-declare class Threshold {
-    static create(commitment: PublicKey[], secretFragments: PrivateKey[], threshold: number, playersCount: number): PrivateKey;
-
-    static signWithCoefficient(sk: PrivateKey, message: Uint8Array, playerIndex: number, players: number[]): InsecureSignature;
-
-    static aggregateUnitSigs(signatures: InsecureSignature[], message: Uint8Array, players: number[]): InsecureSignature;
-
-    static verifySecretFragment(playerIndex: number, secretFragment: PrivateKey, commitment: PublicKey[], threshold: number): boolean;
+export interface ModuleInstance {
+  AugSchemeMPL: typeof AugSchemeMPL;
+  BasicSchemeMPL: typeof BasicSchemeMPL;
+  PopSchemeMPL: typeof PopSchemeMPL;
+  G1Element: typeof G1Element;
+  G2Element: typeof G2Element;
+  PrivateKey: typeof PrivateKey;
+  Bignum: typeof Bignum;
+  Util: typeof Util;
 }
 
-interface ModuleInstance {
-    then: (callback: (moduleInstance: ModuleInstance) => any) => ModuleInstance;
-    PrivateKey: typeof PrivateKey;
-    InsecureSignature: typeof InsecureSignature;
-    Signature: typeof Signature;
-    PublicKey: typeof PublicKey;
-    AggregationInfo: typeof AggregationInfo;
-    ExtendedPrivateKey: typeof ExtendedPrivateKey;
-    ExtendedPublicKey: typeof ExtendedPublicKey;
-    ChainCode: typeof ChainCode;
-    Threshold: typeof Threshold;
-    DHKeyExchange(privateKey: PrivateKey, publicKey: PublicKey);
-    GROUP_ORDER: string;
-}
-
-declare function createModule(options?: {}): ModuleInstance;
-
-export = createModule;
+export default function createModule(options?: {}): Promise<ModuleInstance>;

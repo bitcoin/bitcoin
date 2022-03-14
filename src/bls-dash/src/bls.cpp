@@ -20,6 +20,8 @@
 
 namespace bls {
 
+const size_t BLS::MESSAGE_HASH_LEN;
+
 bool BLSInitResult = BLS::Init();
 
 Util::SecureAllocCallback Util::secureAllocCallback;

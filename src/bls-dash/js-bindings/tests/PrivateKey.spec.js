@@ -1,14 +1,10 @@
-const blsSignatures = require('..')();
+const blsSignaturesModule = require('..')();
 const assert = require('assert');
 const crypto = require('crypto');
+const {Buffer} = require('buffer');
 
-function getSeedAndFinferprint() {
-    return {
-        seed: Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-        fingerprint: 0xddad59bb
-    };
-}
-
+// Values lifted from test.js, which is ported from test.py and is a more
+// primary source.
 function getPkSeed() {
     return Uint8Array.from([
         0, 50, 6, 244, 24, 199, 1, 25, 52, 88, 192, 19, 18, 12, 89, 6, 220,
@@ -16,10 +12,21 @@ function getPkSeed() {
     ]);
 }
 
+function getSeedAndFinferprint() {
+    var seedArray = getPkSeed();
+    var seed = Buffer.from(seedArray);
+    return {
+        seed: seed,
+        fingerprint: 3146750013
+    };
+}
+
 function getPkBuffer() {
     return Uint8Array.from([
-        84, 61, 124, 70, 203, 191, 91, 170, 188, 74, 176, 22, 97, 250, 169, 26,
-        105, 59, 39, 4, 246, 103, 227, 53, 133, 228, 214, 59, 165, 6, 158, 39
+        55, 112, 145, 240, 231, 40,  70,  59,
+        194, 218, 125,  84, 108, 83, 185, 246,
+        184,  29, 244, 161, 204, 26, 181, 191,
+        41, 197, 144, 139, 113, 81, 163,  45
     ]);
 }
 
@@ -27,84 +34,67 @@ function getPkUint8Array() {
     return new Uint8Array(getPkBuffer());
 }
 
+let blsSignatures = null;
 before((done) => {
-    blsSignatures.then(() => {
+    blsSignaturesModule.then((mod) => {
+        blsSignatures = mod;
         done();
     });
 });
 
+function makehash(msg) {
+    return crypto
+        .createHash('sha256')
+        .update(msg)
+        .digest();
+}
+
 describe('PrivateKey', () => {
     it('Should sign and verify', () => {
-        const {PrivateKey, AggregationInfo} = blsSignatures;
+        const {AugSchemeMPL, PrivateKey} = blsSignatures;
 
         const message1 = Uint8Array.from([1, 65, 254, 88, 90, 45, 22]);
 
         const seed = Uint8Array.from([28, 20, 102, 229, 1, 157]);
-        const sk1 = PrivateKey.fromSeed(seed);
-        const pk1 = sk1.getPublicKey();
-        const sig1 = sk1.sign(message1);
+        const sk1 = AugSchemeMPL.key_gen(getPkSeed());
+        const pk1 = AugSchemeMPL.sk_to_g1(sk1);
+        const sig1 = AugSchemeMPL.sign(sk1, message1);
 
-        sig1.setAggregationInfo(AggregationInfo.fromMsg(pk1, message1));
-        assert(sig1.verify());
-
-        const hash = crypto
-            .createHash('sha256')
-            .update(message1)
-            .digest();
-        const sig2 = sk1.signPrehashed(hash);
-        sig2.setAggregationInfo(AggregationInfo.fromMsgHash(pk1, hash));
-        assert.deepStrictEqual(sig1.serialize(), sig2.serialize());
-        assert(sig2.verify());
+        assert(AugSchemeMPL.verify(pk1, message1, sig1));
     });
 
     describe('.fromSeed', () => {
         it('Should create a private key from a seed', () => {
-            const {PrivateKey} = blsSignatures;
+            const {AugSchemeMPL, PrivateKey} = blsSignatures;
 
-            const pk = PrivateKey.fromSeed(getPkSeed());
+            const pk = AugSchemeMPL.key_gen(getPkSeed());
             assert(pk instanceof PrivateKey);
             assert.deepStrictEqual(pk.serialize(), getPkBuffer());
         });
     });
+
     describe('.fromBytes', () => {
         it('Should create a private key from a Buffer', () => {
-            const {PrivateKey} = blsSignatures;
+            const {PrivateKey, Util} = blsSignatures;
 
-            const pk = PrivateKey.fromBytes(getPkBuffer(), false);
+            const pk = PrivateKey.from_bytes(getPkBuffer(), false);
             assert(pk instanceof PrivateKey);
             assert.deepStrictEqual(pk.serialize(), getPkBuffer());
         });
         it('Should create a private key from a Uint8Array', () => {
-            const {PrivateKey} = blsSignatures;
+            const {PrivateKey, Util} = blsSignatures;
 
-            const pk = PrivateKey.fromBytes(getPkUint8Array(), false);
+            const pk = PrivateKey.from_bytes(getPkUint8Array(), false);
             assert(pk instanceof PrivateKey);
             assert.deepStrictEqual(pk.serialize(), getPkBuffer());
-        });
-    });
-
-    describe('.aggregate', () => {
-        it('Should aggregate private keys', () => {
-            const {PrivateKey} = blsSignatures;
-
-            const privateKeys = [
-                PrivateKey.fromSeed(Buffer.from([1, 2, 3])),
-                PrivateKey.fromSeed(Buffer.from([3, 4, 5]))
-            ];
-            const publicKeys = [
-                privateKeys[0].getPublicKey(),
-                privateKeys[1].getPublicKey()
-            ];
-            const aggregatedKey = PrivateKey.aggregate(privateKeys, publicKeys);
-            assert(aggregatedKey instanceof PrivateKey);
         });
     });
 
     describe('#serialize', () => {
         it('Should serialize key to a Buffer', () => {
-            const {PrivateKey} = blsSignatures;
+            const {AugSchemeMPL, PrivateKey} = blsSignatures;
 
-            const pk = PrivateKey.fromSeed(getPkSeed());
+            const pk = AugSchemeMPL.key_gen(getPkSeed());
             const serialized = pk.serialize();
             assert(serialized instanceof Uint8Array);
             assert.deepStrictEqual(serialized, getPkBuffer());
@@ -113,41 +103,26 @@ describe('PrivateKey', () => {
 
     describe('#sign', () => {
         it('Should return a verifiable signature', () => {
-            const {PrivateKey, Signature} = blsSignatures;
+            const {AugSchemeMPL, PrivateKey, G2Element} = blsSignatures;
 
             const pk = PrivateKey.fromBytes(getPkBuffer(), false);
+            const pubkey = AugSchemeMPL.sk_to_g1(pk);
             const message = 'Hello world';
-            const signature = pk.sign(Uint8Array.from(Buffer.from(message, 'utf8')));
-            assert(signature instanceof Signature);
-            assert(signature.verify());
-        });
-    });
-
-    describe('#signPrehashed', () => {
-        it('Should sign a hash and return a signature', () => {
-            const {PrivateKey, Signature} = blsSignatures;
-
-            const pk = PrivateKey.fromSeed(Uint8Array.from([1, 2, 3, 4, 5]));
-            const messageHash = Uint8Array.from(crypto
-                .createHash('sha256')
-                .update('Hello world')
-                .digest());
-            const sig = pk.signPrehashed(messageHash);
-            const info = sig.getAggregationInfo();
-            assert(sig instanceof Signature);
-            assert(sig.verify());
-            assert.deepStrictEqual(info.getMessageHashes()[0], messageHash);
+            const messageBuffer = Uint8Array.from(Buffer.from(message, 'utf8'));
+            const signature = AugSchemeMPL.sign(pk, messageBuffer);
+            assert(signature instanceof G2Element);
+            assert(AugSchemeMPL.verify(pubkey, messageBuffer, signature));
         });
     });
 
     describe('#getPublicKey', () => {
         it('Should return a public key with a verifiable fingerprint', () => {
-            const {PrivateKey, PublicKey} = blsSignatures;
+            const {AugSchemeMPL, PrivateKey, G1Element} = blsSignatures;
 
-            const pk = PrivateKey.fromSeed(getSeedAndFinferprint().seed);
-            const publicKey = pk.getPublicKey();
-            assert(publicKey instanceof PublicKey);
-            assert.strictEqual(publicKey.getFingerprint(), getSeedAndFinferprint().fingerprint);
+            const pk = AugSchemeMPL.key_gen(getPkSeed());
+            const publicKey = AugSchemeMPL.sk_to_g1(pk);
+            assert(publicKey instanceof G1Element);
+            assert.strictEqual(publicKey.get_fingerprint(), getSeedAndFinferprint().fingerprint);
         });
     });
 });

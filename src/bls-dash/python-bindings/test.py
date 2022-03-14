@@ -59,6 +59,20 @@ def test_schemes():
         agg_sig = Scheme.aggregate([sig1, sig2])
         assert Scheme.aggregate_verify([pk1, pk2], [msg, msg2], agg_sig)
 
+        # Manual pairing calculation and verification
+        if Scheme is AugSchemeMPL:
+            # AugSchemeMPL requires prepending the public key to message
+            aug_msg1 = bytes(pk1) + msg
+            aug_msg2 = bytes(pk2) + msg2
+        else:
+            aug_msg1 = msg
+            aug_msg2 = msg2
+        pair1 = pk1.pair(Scheme.g2_from_message(aug_msg1))
+        pair2 = pk2.pair(Scheme.g2_from_message(aug_msg2))
+        pair = pair1 * pair2
+        agg_sig_pair = G1Element.generator().pair(agg_sig)
+        assert pair == agg_sig_pair
+
         # HD keys
         child = Scheme.derive_child_sk(sk1, 123)
         childU = Scheme.derive_child_sk_unhardened(sk1, 123)

@@ -17,6 +17,8 @@
 
 namespace bls {
 
+const size_t PrivateKey::PRIVATE_KEY_SIZE;
+
 // Construct a private key from a bytearray.
 PrivateKey PrivateKey::FromBytes(const Bytes& bytes, bool modOrder)
 {
@@ -88,6 +90,7 @@ PrivateKey& PrivateKey::operator=(const PrivateKey& other)
 {
     CheckKeyData();
     other.CheckKeyData();
+    InvalidateCaches();
     bn_copy(keydata, other.keydata);
     return *this;
 }
@@ -258,7 +261,7 @@ void PrivateKey::AllocateKeyData()
 {
     assert(!keydata);
     keydata = Util::SecAlloc<bn_st>(1);
-    bn_init(keydata, RLC_BN_SIZE);
+    keydata->alloc = RLC_BN_SIZE;
     bn_zero(keydata);
 }
 

@@ -83,7 +83,7 @@ class PrivateKey {
         const uint8_t *dst,
         size_t dst_len,
         bool fLegacy = false) const;
-    
+
  private:
 
     // Allocate memory for private key

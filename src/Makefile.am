@@ -21,7 +21,7 @@ SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
 if EMBEDDED_CHIABLS
-LIBCHIA = bls-dash/build/libbls-dash.a
+LIBCHIA = bls-dash/build/src/libbls-dash.a  bls-dash/build/_deps/relic-build/lib/librelic_s.a
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) $(GMP_LIBS)
 $(LIBCHIA):
 	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)

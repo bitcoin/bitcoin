@@ -51,10 +51,10 @@ class PrivateKey:
         return self.PRIVATE_KEY_SIZE
 
     def __str__(self):
-        return "PrivateKey(" + hex(self.value) + ")"
+        return "PrivateKey(0x" + bytes(self).hex() + ")"
 
     def __repr__(self):
-        return "PrivateKey(" + hex(self.value) + ")"
+        return "PrivateKey(0x" + bytes(self).hex() + ")"
 
     @staticmethod
     def aggregate(private_keys):

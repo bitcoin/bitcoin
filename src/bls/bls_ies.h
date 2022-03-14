@@ -61,7 +61,7 @@ public:
         }
         try {
             ds >> objRet;
-        } catch (std::exception& e) {
+        } catch (const std::exception& e) {
             return false;
         }
         return true;

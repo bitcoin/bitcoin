@@ -16,7 +16,7 @@ pip3 install .
 ```
 
 Cmake, a c++ compiler, and a recent version of pip3 (v18) are required for source install.
-GMP(speed) and libsodium(secure memory alloc) are optional dependencies.
+GMP(speed) is an optional dependency.
 Public keys are G1Elements, and signatures are G2Elements.
 
 Then, to use:

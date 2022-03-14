@@ -8,7 +8,6 @@ from fields import Fq, Fq12
 # Struct for elliptic curve parameters
 EC = namedtuple("EC", "q a b gx gy g2x g2y n h x k sqrt_n3 sqrt_n3m1o2")
 
-# use secp256k1 as default
 default_ec = EC(*bls12381.parameters())
 default_ec_twist = EC(*bls12381.parameters())
 
@@ -82,7 +81,7 @@ def miller_loop(T: int, P: AffinePoint, Q: AffinePoint, ec=default_ec) -> Fq12:
 
 def final_exponentiation(element: Fq12, ec=default_ec) -> Fq12:
     """
-    Performs a final exponentiation to map the result of the miller
+    Performs a final exponentiation to map the result of the Miller
     loop to a unique element of Fq12.
     """
     if ec.k == 12:

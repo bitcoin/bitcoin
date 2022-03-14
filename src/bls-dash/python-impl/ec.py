@@ -11,7 +11,6 @@ from util import hash256
 # Struct for elliptic curve parameters
 EC = namedtuple("EC", "q a b gx gy g2x g2y n h x k sqrt_n3 sqrt_n3m1o2")
 
-# use secp256k1 as default
 default_ec = EC(*bls12381.parameters())
 default_ec_twist = EC(*bls12381.parameters_twist())
 
@@ -37,7 +36,7 @@ class AffinePoint:
 
     def is_on_curve(self) -> bool:
         """
-        Check that y^2 = x^3 + ax + b
+        Check that y^2 = x^3 + ax + b.
         """
         if self.infinity:
             return True
@@ -308,7 +307,7 @@ def bytes_to_point(buffer: bytes, ec, FE) -> JacobianPoint:
 
 def y_for_x(x, ec=default_ec, FE=Fq):
     """
-    Solves y = sqrt(x^3 + ax + b) for both valid ys
+    Solves y = sqrt(x^3 + ax + b) for both valid ys.
     """
     if not isinstance(x, FE):
         x = FE(ec.q, x)
@@ -336,7 +335,7 @@ def double_point(p1: AffinePoint, ec=default_ec, FE=Fq) -> AffinePoint:
 
 def add_points(p1: AffinePoint, p2: AffinePoint, ec=default_ec, FE=Fq) -> AffinePoint:
     """
-    Basic elliptic curve point addition
+    Basic elliptic curve point addition.
     """
     assert p1.is_on_curve()
     assert p2.is_on_curve()
@@ -347,7 +346,7 @@ def add_points(p1: AffinePoint, p2: AffinePoint, ec=default_ec, FE=Fq) -> Affine
     if p1 == p2:
         return double_point(p1, ec, FE)
     if p1.x == p2.x:
-        return AffinePoint(FE.zero(), FE.zero(), True, ec)
+        return AffinePoint(FE.zero(ec.q), FE.zero(ec.q), True, ec)
 
     x1, y1 = p1.x, p1.y
     x2, y2 = p2.x, p2.y
@@ -359,7 +358,7 @@ def add_points(p1: AffinePoint, p2: AffinePoint, ec=default_ec, FE=Fq) -> Affine
 
 def double_point_jacobian(p1: JacobianPoint, ec=default_ec, FE=Fq) -> JacobianPoint:
     """
-    Jacobian elliptic curve point doubling
+    Jacobian elliptic curve point doubling, see
     http://www.hyperelliptic.org/EFD/oldefd/jacobian.html
     """
     X, Y, Z = p1.x, p1.y, p1.z
@@ -391,7 +390,7 @@ def add_points_jacobian(
     p1: JacobianPoint, p2: JacobianPoint, ec=default_ec, FE=Fq
 ) -> JacobianPoint:
     """
-    Jacobian elliptic curve point addition
+    Jacobian elliptic curve point addition, see
     http://www.hyperelliptic.org/EFD/oldefd/jacobian.html
     """
     if p1.infinity:
@@ -429,7 +428,7 @@ def add_points_jacobian(
 
 def scalar_mult(c, p1: AffinePoint, ec=default_ec, FE=Fq) -> AffinePoint:
     """
-    Double and add:
+    Double and add, see
     https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
     """
     if p1.infinity or c % ec.q == 0:
@@ -449,7 +448,7 @@ def scalar_mult(c, p1: AffinePoint, ec=default_ec, FE=Fq) -> AffinePoint:
 
 def scalar_mult_jacobian(c, p1: JacobianPoint, ec=default_ec, FE=Fq) -> JacobianPoint:
     """
-    Double and add:
+    Double and add, see
     https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
     """
     if isinstance(c, FE):
@@ -494,7 +493,7 @@ def G2FromBytes(buffer: bytes, ec=default_ec_twist, FE=Fq2):
 
 def untwist(point: AffinePoint, ec=default_ec) -> AffinePoint:
     """
-    Given a point on G2 on the twisted curve, this converts it's
+    Given a point on G2 on the twisted curve, this converts its
     coordinates back from Fq2 to Fq12. See Craig Costello book, look
     up twists.
     """
@@ -518,7 +517,6 @@ def twist(point: AffinePoint, ec=default_ec_twist) -> AffinePoint:
     return AffinePoint(new_x, new_y, False, ec)
 
 
-#
 # Isogeny map evaluation specified by map_coeffs
 #
 # map_coeffs should be specified as (xnum, xden, ynum, yden)
@@ -531,7 +529,7 @@ def eval_iso(P: JacobianPoint, map_coeffs, ec) -> JacobianPoint:
     (x, y, z) = (P.x, P.y, P.z)
     mapvals: List[Optional[Fq2]] = [None] * 4
 
-    # precompute the required powers of Z^2
+    # Precompute the required powers of Z^2
     maxord = max(len(coeffs) for coeffs in map_coeffs)
     zpows: List[Optional[Fq2]] = [None] * maxord
     zpows[0] = z ** 0  # type: ignore
@@ -541,7 +539,7 @@ def eval_iso(P: JacobianPoint, map_coeffs, ec) -> JacobianPoint:
         assert zpows[1] is not None
         zpows[idx] = zpows[idx - 1] * zpows[1]
 
-    # compute the numerator and denominator of the X and Y maps via Horner's rule
+    # Compute the numerator and denominator of the X and Y maps via Horner's rule
     for (idx, coeffs) in enumerate(map_coeffs):
         coeffs_z = [
             zpow * c for (zpow, c) in zip(reversed(coeffs), zpows[: len(coeffs)])
@@ -552,13 +550,13 @@ def eval_iso(P: JacobianPoint, map_coeffs, ec) -> JacobianPoint:
             tmp += coeff
         mapvals[idx] = tmp
 
-    # xden is of order 1 less than xnum, so need to multiply it by an extra factor of Z^2
+    # xden is of order 1 less than xnum, so one needs to multiply it by an extra factor of Z^2
     assert len(map_coeffs[1]) + 1 == len(map_coeffs[0])
     assert zpows[1] is not None
     assert mapvals[1] is not None
     mapvals[1] *= zpows[1]
 
-    # multiply result of Y map by the y-coordinate y / z^3
+    # Multiply the result of Y map by the y-coordinate y / z^3
     assert mapvals[2] is not None
     assert mapvals[3] is not None
     mapvals[2] *= y

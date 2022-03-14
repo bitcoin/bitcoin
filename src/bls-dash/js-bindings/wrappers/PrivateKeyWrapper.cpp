@@ -27,32 +27,18 @@ std::vector <PrivateKey> PrivateKeyWrapper::Unwrap(std::vector <PrivateKeyWrappe
     return unwrapped;
 }
 
-PrivateKeyWrapper PrivateKeyWrapper::FromSeed(val buffer) {
-    std::vector <uint8_t> bytes = helpers::toVector(buffer);
-    PrivateKey sk = PrivateKey::FromSeed(bytes.data(), bytes.size());
-    return PrivateKeyWrapper(sk);
-}
-
-PrivateKeyWrapper PrivateKeyWrapper::Aggregate(val privateKeysArray, val publicKeysArray) {
-    std::vector <PublicKey> pubKeys = PublicKeyWrapper::Unwrap(
-            helpers::toVectorFromJSArray<PublicKeyWrapper>(publicKeysArray));
+PrivateKeyWrapper PrivateKeyWrapper::Aggregate(val privateKeysArray) {
     std::vector <PrivateKey> privateKeys = PrivateKeyWrapper::Unwrap(
             helpers::toVectorFromJSArray<PrivateKeyWrapper>(privateKeysArray));
 
-    PrivateKey aggregatedSk = PrivateKey::Aggregate(privateKeys, pubKeys);
-    return PrivateKeyWrapper(aggregatedSk);
-}
-
-PrivateKeyWrapper PrivateKeyWrapper::AggregateInsecure(val privateKeysArray) {
-    std::vector <PrivateKey> privateKeys = PrivateKeyWrapper::Unwrap(
-            helpers::toVectorFromJSArray<PrivateKeyWrapper>(privateKeysArray));
-    PrivateKey aggregatedSk = PrivateKey::AggregateInsecure(privateKeys);
+    PrivateKey aggregatedSk = PrivateKey::Aggregate(privateKeys);
     return PrivateKeyWrapper(aggregatedSk);
 }
 
 PrivateKeyWrapper PrivateKeyWrapper::FromBytes(val buffer, bool modOrder) {
     std::vector <uint8_t> bytes = helpers::toVector(buffer);
-    PrivateKey pk = PrivateKey::FromBytes(bytes.data(), modOrder);
+    const bls::Bytes bytesView(bytes);
+    PrivateKey pk = PrivateKey::FromBytes(bytesView, modOrder);
     return PrivateKeyWrapper(pk);
 }
 
@@ -60,26 +46,34 @@ val PrivateKeyWrapper::Serialize() const {
     return helpers::toUint8Array(wrapped.Serialize());
 }
 
-SignatureWrapper PrivateKeyWrapper::Sign(val messageBuffer) const {
-    std::vector <uint8_t> message = helpers::toVector(messageBuffer);
-    Signature signature = wrapped.Sign(message.data(), message.size());
-    return SignatureWrapper::FromSignature(signature);
+PrivateKeyWrapper PrivateKeyWrapper::Deepcopy() {
+    return PrivateKeyWrapper(GetWrappedInstance());
 }
 
-InsecureSignatureWrapper PrivateKeyWrapper::SignInsecure(val messageBuffer) const {
-    std::vector <uint8_t> message = helpers::toVector(messageBuffer);
-    InsecureSignature signature = wrapped.SignInsecure(message.data(), message.size());
-    return InsecureSignatureWrapper(signature);
+G1ElementWrapper PrivateKeyWrapper::GetG1() const {
+    G1Element pk = wrapped.GetG1Element();
+    return G1ElementWrapper(pk);
 }
 
-SignatureWrapper PrivateKeyWrapper::SignPrehashed(val messageHashBuffer) const {
-    std::vector <uint8_t> hash = helpers::toVector(messageHashBuffer);
-    Signature signature = wrapped.SignPrehashed(hash.data());
-    return SignatureWrapper::FromSignature(signature);
+G2ElementWrapper PrivateKeyWrapper::GetG2() const {
+    G2Element sk = wrapped.GetG2Element();
+    return G2ElementWrapper(sk);
 }
 
-PublicKeyWrapper PrivateKeyWrapper::GetPublicKey() const {
-    PublicKey pk = wrapped.GetPublicKey();
-    return PublicKeyWrapper(pk);
+G2ElementWrapper PrivateKeyWrapper::GetG2Power(const G2ElementWrapper& element) const {
+    return G2ElementWrapper(GetWrappedInstance().GetG2Power(element.GetWrappedInstance()));
 }
+
+G1ElementWrapper PrivateKeyWrapper::MulG1(const G1ElementWrapper& other) {
+    return G1ElementWrapper(GetWrappedInstance() * other.GetWrappedInstance());
+}
+
+G2ElementWrapper PrivateKeyWrapper::MulG2(const G2ElementWrapper& other) {
+    return G2ElementWrapper(GetWrappedInstance() * other.GetWrappedInstance());
+}
+
+bool PrivateKeyWrapper::EqualTo(const PrivateKeyWrapper& others) {
+    return GetWrappedInstance() == others.GetWrappedInstance();
+}
+
 }  // namespace js_wrappers

@@ -21,6 +21,9 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+#ifdef _MSC_VER
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 #define STR(x) #x
 #define ASSERT(x) if (!(x)) { printf("BLS assertion failed: (%s), function %s, file %s, line %d.\n", STR(x), __PRETTY_FUNCTION__, __FILE__, __LINE__); abort(); }
 

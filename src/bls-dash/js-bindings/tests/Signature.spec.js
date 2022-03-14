@@ -1,25 +1,28 @@
-const blsSignatures = require('..')();
+const blsSignaturesModule = require('..')();
 const assert = require('assert');
-const {createHash} = require('crypto');
+const crypto = require('crypto');
+const {Buffer} = require('buffer');
 
+// Current format of signature taken from test.js, ported from test.py
 function getSignatureHex() {
-    return '006d0a8661db762a94be51be85efb1199f62dfc3f8fa8c9f003d02fdc69b281e689a54928b9adce98a8471a889c55af40c9bd7b7339c00f6f8bf871d132cfa5cf4e9b11f7ce05acafbb24c2db82b7f6193ee954f5167a2a46e3daecf4a007609';
+    return '900d5223412ee471b42dbb8a6706de5f5eba4ca7e1a0fb6b3fa431f510b3e6d73c440748693d787e1a25c8bc4596f66b1130634f4b32e8e09f52f2c6a843b700cbb5aeadb8ab3456d002c143be68998573166e5979e6a48fcbb67ac8fd981f73';
 }
 
 function getSignatureBytes() {
     return Uint8Array.from(Buffer.from(getSignatureHex(), 'hex'));
 }
 
-function getAggregationInfo() {
-    return {
-        publicKeys: [Uint8Array.from(Buffer.from('02a8d2aaa6a5e2e08d4b8d406aaf0121a2fc2088ed12431e6b0663028da9ac5922c9ea91cde7dd74b7d795580acc7a61', 'hex'))],
-        messageHashes: [Uint8Array.from(Buffer.from('c7495fe7e1d49086a1966a2020e01b4f36ed71c456b6aa5e684ad6c3631890af', 'hex'))],
-        exponents: [Uint8Array.from(Buffer.from('01', 'hex'))]
-    };
+function makehash(msg) {
+    return crypto
+        .createHash('sha256')
+        .update(msg)
+        .digest();
 }
 
+var blsSignatures;
 before((done) => {
-    blsSignatures.then(() => {
+    blsSignaturesModule.then((mod) => {
+        blsSignatures = mod;
         done();
     });
 });
@@ -27,39 +30,35 @@ before((done) => {
 describe('Signature', () => {
     describe('Integration', () => {
         it('Should verify signatures', function () {
-            const {Signature, PublicKey, PrivateKey, AggregationInfo} = blsSignatures;
+            const {BasicSchemeMPL, G2Element, G1Element, PrivateKey} = blsSignatures;
 
             this.timeout(10000);
             const message = Uint8Array.from([100, 2, 254, 88, 90, 45, 23]);
-            const seed1 = Uint8Array.from([1, 2, 3, 4, 5]);
-            const seed2 = Uint8Array.from([3, 4, 5, 6, 7]);
-            const seed3 = Uint8Array.from([4, 5, 6, 7, 8]);
+            const seed1 = makehash(Uint8Array.from([1, 2, 3, 4, 5]));
+            const seed2 = makehash(Uint8Array.from([3, 4, 5, 6, 7]));
+            const seed3 = makehash(Uint8Array.from([4, 5, 6, 7, 8]));
 
-            const privateKey1 = PrivateKey.fromSeed(seed1);
-            const privateKey2 = PrivateKey.fromSeed(seed2);
-            const privateKey3 = PrivateKey.fromSeed(seed3);
+            const privateKey1 = BasicSchemeMPL.key_gen(seed1);
+            const privateKey2 = BasicSchemeMPL.key_gen(seed2);
+            const privateKey3 = BasicSchemeMPL.key_gen(seed3);
 
-            const publicKey1 = privateKey1.getPublicKey();
-            const publicKey2 = privateKey2.getPublicKey();
-            const publicKey3 = privateKey3.getPublicKey();
+            const publicKey1 = BasicSchemeMPL.sk_to_g1(privateKey1);
+            const publicKey2 = BasicSchemeMPL.sk_to_g1(privateKey2);
+            const publicKey3 = BasicSchemeMPL.sk_to_g1(privateKey3);
 
-            const sig1 = privateKey1.sign(message);
-            const sig2 = privateKey2.sign(message);
-            const sig3 = privateKey3.sign(message);
+            const sig1 = BasicSchemeMPL.sign(privateKey1, message);
+            const sig2 = BasicSchemeMPL.sign(privateKey2, message);
+            const sig3 = BasicSchemeMPL.sign(privateKey3, message);
 
-            assert(sig1.verify(), 'Signature 1 is not verifiable');
-            assert(sig2.verify(), 'Signature 2 is not verifiable');
-            assert(sig3.verify(), 'Signature 3 is not verifiable');
+            assert(BasicSchemeMPL.verify(publicKey1, message, sig1), 'Signature 1 is not verifiable');
+            assert(BasicSchemeMPL.verify(publicKey2, message, sig2), 'Signature 2 is not verifiable');
+            assert(BasicSchemeMPL.verify(publicKey3, message, sig3), 'Signature 3 is not verifiable');
 
-            const aggregatedSignature = Signature.aggregateSigs([sig1, sig2, sig3]);
-            assert(aggregatedSignature.verify(), 'Aggregated sig is not verified');
+            const aggregatedSignature = BasicSchemeMPL.aggregate([sig1, sig2, sig3]);
+            // PublicKey aggregate was replaced with G1Element add.
+            const aggregatedPubKey = publicKey1.add(publicKey2).add(publicKey3);
 
-            const aggregatedPubKey = PublicKey.aggregate([publicKey1, publicKey2, publicKey3]);
-
-            const aggregationInfo = AggregationInfo.fromMsg(aggregatedPubKey, message);
-
-            aggregatedSignature.setAggregationInfo(aggregationInfo);
-            assert(aggregatedSignature.verify());
+            assert(BasicSchemeMPL.verify(aggregatedPubKey, message, aggregatedSignature));
 
             privateKey1.delete();
             privateKey2.delete();
@@ -69,57 +68,38 @@ describe('Signature', () => {
             sig3.delete();
             aggregatedSignature.delete();
             aggregatedPubKey.delete();
-            aggregationInfo.delete();
         });
     });
     describe('.fromBytes', () => {
         it('Should create verifiable signature from bytes', () => {
-            const {Signature} = blsSignatures;
+            const {AugSchemeMPL, G2Element, Util} = blsSignatures;
 
-            const sig = Signature.fromBytes(getSignatureBytes());
+            const sig = G2Element.fromBytes(getSignatureBytes());
+
             assert.strictEqual(Buffer.from(sig.serialize()).toString('hex'), getSignatureHex());
             // Since there is no aggregation info, it's impossible to verify sig
-            assert.strictEqual(sig.verify(), false);
+            // This iteration of the library differs in that Signature objects
+            // aren't stateful and therefore can't be self-verified without a
+            // message and public key.
 
             sig.delete();
-        });
-    });
-    describe('.fromBytesAndAggregationInfo', () => {
-        it('Should create verifiable signature', () => {
-            const {Signature, PrivateKey} = blsSignatures;
-
-            const pk = PrivateKey.fromSeed(Uint8Array.from([1, 2, 3, 4, 5]));
-            const sig = pk.sign(Uint8Array.from([100, 2, 254, 88, 90, 45, 23]));
-            const info = sig.getAggregationInfo();
-            const restoredSig = Signature.fromBytesAndAggregationInfo(
-                sig.serialize(),
-                sig.getAggregationInfo()
-            );
-            const restoredInfo = restoredSig.getAggregationInfo();
-            assert(restoredSig instanceof Signature);
-            assert(restoredSig.verify());
-            assert.deepStrictEqual(info.getPublicKeys()[0].serialize(), restoredInfo.getPublicKeys()[0].serialize());
-            assert.deepStrictEqual(info.getMessageHashes()[0], restoredInfo.getMessageHashes()[0]);
-            assert.deepStrictEqual(info.getExponents()[0], restoredInfo.getExponents()[0]);
-
-            pk.delete();
-            sig.delete();
-            info.delete();
-            restoredSig.delete();
-            restoredInfo.delete();
         });
     });
     describe('.aggregateSigs', () => {
         it('Should aggregate signature', () => {
-            const {Signature, PrivateKey} = blsSignatures;
+            const {AugSchemeMPL, G2Element, PrivateKey} = blsSignatures;
 
-            const sk = PrivateKey.fromSeed(Uint8Array.from([1, 2, 3]));
-            const sig1 = sk.sign(Uint8Array.from([3, 4, 5]));
-            const sig2 = sk.sign(Uint8Array.from([6, 7, 8]));
-            const aggregatedSig = Signature.aggregateSigs([sig1, sig2]);
-            assert.strictEqual(aggregatedSig.verify(), true);
+            const sk = AugSchemeMPL.key_gen(makehash(Uint8Array.from([1, 2, 3])));
+            const pk = AugSchemeMPL.sk_to_g1(sk);
+            const msg1 = Uint8Array.from([3, 4, 5]);
+            const msg2 = Uint8Array.from([6, 7, 8]);
+            const sig1 = AugSchemeMPL.sign(sk, msg1);
+            const sig2 = AugSchemeMPL.sign(sk, msg2);
+            const aggregatedSig = G2Element.aggregate_sigs([sig1, sig2]);
+            assert.strictEqual(AugSchemeMPL.aggregate_verify([pk, pk], [msg1, msg2], aggregatedSig), true);
 
             sk.delete();
+            pk.delete();
             sig1.delete();
             sig2.delete();
             aggregatedSig.delete();
@@ -127,142 +107,55 @@ describe('Signature', () => {
     });
     describe('#serialize', () => {
         it('Should serialize signature to Buffer', () => {
-            const {Signature, PrivateKey} = blsSignatures;
+            const {AugSchemeMPL, G2Element, PrivateKey} = blsSignatures;
 
-            const pk = PrivateKey.fromSeed(Uint8Array.from([1, 2, 3, 4, 5]));
-            const sig = pk.sign(Uint8Array.from([100, 2, 254, 88, 90, 45, 23]));
-            assert(sig instanceof Signature);
+            const sk = AugSchemeMPL.key_gen(makehash(Uint8Array.from([1, 2, 3, 4, 5])));
+            const sig = AugSchemeMPL.sign(sk, Uint8Array.from([100, 2, 254, 88, 90, 45, 23]));
+            assert(sig instanceof G2Element);
             assert.deepStrictEqual(Buffer.from(sig.serialize()).toString('hex'), getSignatureHex());
 
+            sk.delete();
+            sig.delete();
+        });
+    });
+    describe('#verify', () => {
+        it('Should return true if signature can be verified', () => {
+            const {AugSchemeMPL, G2Element, G1Element} = blsSignatures;
+
+            const message = Uint8Array.from(Buffer.from('Message'));
+            const seed1 = makehash(Buffer.from([1, 2, 3, 4, 5]));
+            const seed2 = makehash(Buffer.from([1, 2, 3, 4, 6]));
+            const sk1 = AugSchemeMPL.key_gen(seed1);
+            const sk2 = AugSchemeMPL.key_gen(seed2);
+            const pk1 = AugSchemeMPL.sk_to_g1(sk1);
+            const pk2 = AugSchemeMPL.sk_to_g1(sk2);
+            const sig1 = AugSchemeMPL.sign(sk1, message);
+            const sig2 = AugSchemeMPL.sign(sk2, message);
+            const sig = AugSchemeMPL.aggregate([sig1, sig2]);
+
+            assert(AugSchemeMPL.aggregate_verify([pk1, pk2], [message, message], sig));
+
+            sk1.delete();
+            sk2.delete();
+            pk1.delete();
+            pk2.delete();
+            sig1.delete();
+            sig2.delete();
+            sig.delete();
+        });
+        it("Should return false if signature can't be verified", () => {
+            const {AugSchemeMPL, G1Element, PrivateKey} = blsSignatures;
+
+            const message1 = Uint8Array.from(Buffer.from('Message'));
+            const message2 = Uint8Array.from(Buffer.from('Nessage'));
+            const seed = makehash(Buffer.from([1, 2, 3, 4, 5]));
+            const sk = AugSchemeMPL.key_gen(seed);
+            const pk = AugSchemeMPL.sk_to_g1(sk);
+            const sig = AugSchemeMPL.sign(sk, message1);
+            assert.strictEqual(AugSchemeMPL.verify(pk, message2, sig), false);
+
+            sk.delete();
             pk.delete();
-            sig.delete();
-        });
-    });
-    describe('#verify', () => {
-        it('Should return true if signature can be verified', () => {
-            const {Signature, PublicKey, AggregationInfo} = blsSignatures;
-
-            const pks = getAggregationInfo().publicKeys.map(buf => PublicKey.fromBytes(buf));
-            const sig = Signature.fromBytesAndAggregationInfo(
-                getSignatureBytes(),
-                AggregationInfo.fromBuffers(
-                    pks,
-                    getAggregationInfo().messageHashes,
-                    getAggregationInfo().exponents
-                )
-            );
-            assert(sig.verify());
-
-            sig.delete();
-        });
-        it("Should return false if signature can't be verified", () => {
-            const {PublicKey, PrivateKey, AggregationInfo} = blsSignatures;
-
-            const sk = PrivateKey.fromSeed(Buffer.from([1, 2, 3, 4, 5]));
-            const pks = getAggregationInfo().publicKeys.map(buf => PublicKey.fromBytes(buf));
-            const sig = sk.sign(Uint8Array.from(Buffer.from('Message')));
-            const info = AggregationInfo.fromBuffers(
-                pks,
-                getAggregationInfo().messageHashes,
-                getAggregationInfo().exponents
-            );
-            sig.setAggregationInfo(info);
-            assert.strictEqual(sig.verify(), false);
-
-            sk.delete();
-            sig.delete();
-            info.delete();
-        })
-    });
-});
-
-describe('InsecureSignature', () => {
-    describe('.fromBytes', () => {
-        it('Should create sig from bytes', () => {
-            const {InsecureSignature} = blsSignatures;
-
-            const sig = InsecureSignature.fromBytes(getSignatureBytes());
-            assert(sig instanceof InsecureSignature);
-
-            sig.delete();
-        });
-    });
-    describe('.aggregate', () => {
-        it('Should aggregate signature', () => {
-            const {InsecureSignature, PrivateKey} = blsSignatures;
-
-            const sk = PrivateKey.fromSeed(Uint8Array.from([1, 2, 3]));
-            const msg1 = Uint8Array.from([3, 4, 5]);
-            const msg2 = Uint8Array.from([6, 7, 8]);
-            const msg1Hash = Uint8Array.from(createHash('sha256').update(msg1).digest());
-            const msg2Hash = Uint8Array.from(createHash('sha256').update(msg2).digest());
-
-            const sig1 = sk.signInsecure(msg1);
-            const sig2 = sk.signInsecure(msg2);
-
-            const aggregatedSig = InsecureSignature.aggregate([sig1, sig2]);
-
-            assert.strictEqual(aggregatedSig.verify([msg1Hash, msg2Hash], [sk.getPublicKey(), sk.getPublicKey()]), true);
-
-            sk.delete();
-            sig1.delete();
-            sig2.delete();
-            aggregatedSig.delete();
-        });
-    });
-    describe('#verify', () => {
-        it('Should return true if signature can be verified', () => {
-            const {InsecureSignature, PublicKey} = blsSignatures;
-
-            const sig = InsecureSignature.fromBytes(getSignatureBytes());
-            const messageHashes = getAggregationInfo().messageHashes;
-            const pubKeys = getAggregationInfo().publicKeys.map(buf => PublicKey.fromBytes(buf));
-            assert.strictEqual(sig.verify(messageHashes, pubKeys), true);
-
-            sig.delete();
-        });
-        it("Should return false if signature can't be verified", () => {
-            const {InsecureSignature, PrivateKey} = blsSignatures;
-
-            const sig = InsecureSignature.fromBytes(getSignatureBytes());
-            const messageHashes = getAggregationInfo().messageHashes;
-            const pubKeys = [PrivateKey.fromSeed(Uint8Array.from([6, 7, 8])).getPublicKey()];
-            assert.strictEqual(sig.verify(messageHashes, pubKeys), false);
-        })
-    });
-    describe('#divideBy', () => {
-        it('Should divide signature', () => {
-            const {InsecureSignature, PrivateKey} = blsSignatures;
-
-            const sk = PrivateKey.fromSeed(Uint8Array.from([1, 2, 3]));
-            const msg1 = Uint8Array.from([3, 4, 5]);
-            const msg2 = Uint8Array.from([6, 7, 8]);
-
-            const sig1 = sk.signInsecure(msg1);
-            const sig2 = sk.signInsecure(msg2);
-
-            const aggSig = InsecureSignature.aggregate([sig1, sig2]);
-            const dividedSig = aggSig.divideBy([sig2]);
-
-            const sig1Hex = Buffer.from(sig1.serialize()).toString('hex');
-            const dividedSigHex = Buffer.from(dividedSig.serialize()).toString('hex');
-            assert.strictEqual(sig1Hex, dividedSigHex);
-
-            sk.delete();
-            sig1.delete();
-            sig2.delete();
-            aggSig.delete();
-            dividedSig.delete();
-        });
-    });
-    describe('#serialize', () => {
-        it('Should serialize the sig', () => {
-            const {InsecureSignature} = blsSignatures;
-
-            const sig = InsecureSignature.fromBytes(getSignatureBytes());
-            assert(sig instanceof InsecureSignature);
-            assert.strictEqual(Buffer.from(sig.serialize()).toString('hex'), getSignatureHex());
-
             sig.delete();
         });
     });

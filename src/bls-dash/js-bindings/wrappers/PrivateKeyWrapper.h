@@ -17,8 +17,8 @@
 
 #include "../helpers.h"
 #include "JSWrapper.h"
-#include "SignatureWrapper.h"
-#include "PublicKeyWrapper.h"
+#include "G1ElementWrapper.h"
+#include "G2ElementWrapper.h"
 
 namespace js_wrappers {
 class PrivateKeyWrapper : public JSWrapper<PrivateKey> {
@@ -29,23 +29,25 @@ class PrivateKeyWrapper : public JSWrapper<PrivateKey> {
 
     static std::vector<PrivateKey> Unwrap(std::vector<PrivateKeyWrapper> wrappers);
 
-    static PrivateKeyWrapper FromSeed(val buffer);
-
     static PrivateKeyWrapper FromBytes(val buffer, bool modOrder);
 
-    static PrivateKeyWrapper Aggregate(val privateKeysArray, val publicKeysArray);
-
-    static PrivateKeyWrapper AggregateInsecure(val privateKeysArray);
+    static PrivateKeyWrapper Aggregate(val privateKeysArray);
 
     val Serialize() const;
 
-    SignatureWrapper Sign(val messageBuffer) const;
+    PrivateKeyWrapper Deepcopy();
 
-    InsecureSignatureWrapper SignInsecure(val messageBuffer) const;
+    G1ElementWrapper GetG1() const;
 
-    SignatureWrapper SignPrehashed(val messageHashBuffer) const;
+    G2ElementWrapper GetG2() const;
 
-    PublicKeyWrapper GetPublicKey() const;
+    G2ElementWrapper GetG2Power(const G2ElementWrapper &element) const;
+
+    G1ElementWrapper MulG1(const G1ElementWrapper &other);
+
+    G2ElementWrapper MulG2(const G2ElementWrapper &other);
+
+    bool EqualTo(const PrivateKeyWrapper &others);
 };
 }  // namespace js_wrappers
 

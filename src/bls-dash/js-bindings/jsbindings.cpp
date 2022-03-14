@@ -13,106 +13,101 @@
 // limitations under the License.
 
 #include <emscripten/bind.h>
-#include "wrappers/ExtendedPrivateKeyWrapper.h"
-#include "wrappers/ThresholdWrapper.h"
-#include "wrappers/BLSWrapper.h"
+#include "wrappers/PrivateKeyWrapper.h"
+#include "wrappers/SchemeMPLWrapper.h"
+#include "wrappers/UtilWrapper.h"
 
 using namespace emscripten;
 
 namespace js_wrappers {
-const std::string GROUP_ORDER = BLS::GROUP_ORDER;
-
 EMSCRIPTEN_BINDINGS(blsjs) {
+    class_<AugSchemeMPLWrapper>("AugSchemeMPL")
+        .class_function("sk_to_g1", &AugSchemeMPLWrapper::SkToG1)
+        .class_function("key_gen", &AugSchemeMPLWrapper::KeyGen)
+        .class_function("sign", &AugSchemeMPLWrapper::Sign)
+        .class_function("sign_prepend", &AugSchemeMPLWrapper::SignPrepend)
+        .class_function("verify", &AugSchemeMPLWrapper::Verify)
+        .class_function("aggregate", &AugSchemeMPLWrapper::Aggregate)
+        .class_function("aggregate_verify", &AugSchemeMPLWrapper::AggregateVerify)
+        .class_function("derive_child_sk", &AugSchemeMPLWrapper::DeriveChildSk)
+        .class_function("derive_child_sk_unhardened", &AugSchemeMPLWrapper::DeriveChildSkUnhardened)
+        .class_function("derive_child_pk_unhardened", &AugSchemeMPLWrapper::DeriveChildPkUnhardened);
+
+    class_<SchemeMPLWrapper<BasicSchemeMPL>>("BasicSchemeMPL")
+        .class_function("sk_to_g1", &SchemeMPLWrapper<BasicSchemeMPL>::SkToG1)
+        .class_function("key_gen", &SchemeMPLWrapper<BasicSchemeMPL>::KeyGen)
+        .class_function("sign", &SchemeMPLWrapper<BasicSchemeMPL>::Sign)
+        .class_function("verify", &SchemeMPLWrapper<BasicSchemeMPL>::Verify)
+        .class_function("aggregate", &SchemeMPLWrapper<BasicSchemeMPL>::Aggregate)
+        .class_function("aggregate_verify", &SchemeMPLWrapper<BasicSchemeMPL>::AggregateVerify)
+        .class_function("derive_child_sk", &SchemeMPLWrapper<BasicSchemeMPL>::DeriveChildSk)
+        .class_function("derive_child_sk_unhardened", &SchemeMPLWrapper<BasicSchemeMPL>::DeriveChildSkUnhardened)
+        .class_function("derive_child_pk_unhardened", &SchemeMPLWrapper<BasicSchemeMPL>::DeriveChildPkUnhardened);
+
+    class_<PopSchemeMPLWrapper>("PopSchemeMPL")
+        .class_function("sk_to_g1", &PopSchemeMPLWrapper::SkToG1)
+        .class_function("key_gen", &PopSchemeMPLWrapper::KeyGen)
+        .class_function("sign", &PopSchemeMPLWrapper::Sign)
+        .class_function("verify", &PopSchemeMPLWrapper::Verify)
+        .class_function("aggregate", &PopSchemeMPLWrapper::Aggregate)
+        .class_function("aggregate_verify", &PopSchemeMPLWrapper::AggregateVerify)
+        .class_function("derive_child_sk", &PopSchemeMPLWrapper::DeriveChildSk)
+        .class_function("derive_child_sk_unhardened", &PopSchemeMPLWrapper::DeriveChildSkUnhardened)
+        .class_function("derive_child_pk_unhardened", &PopSchemeMPLWrapper::DeriveChildPkUnhardened)
+        .class_function("pop_prove", &PopSchemeMPLWrapper::PopProve)
+        .class_function("pop_verify", &PopSchemeMPLWrapper::PopVerify)
+        .class_function("fast_aggregate_verify", &PopSchemeMPLWrapper::FastAggregateVerify);
+
+
+    class_<G1ElementWrapper>("G1Element")
+        .class_property("SIZE", &G1ElementWrapper::SIZE)
+        .constructor<>()
+        .class_function("fromBytes", &G1ElementWrapper::FromBytes) // Not removing this for compatibility
+        .class_function("from_bytes", &G1ElementWrapper::FromBytes)
+        .class_function("generator", &G2ElementWrapper::Generator)
+        .function("serialize", &G1ElementWrapper::Serialize)
+        .function("negate", &G1ElementWrapper::Negate)
+        .function("deepcopy", &G1ElementWrapper::Deepcopy)
+        .function("get_fingerprint", &G1ElementWrapper::GetFingerprint)
+        .function("add", &G1ElementWrapper::Add)
+        .function("mul", &G1ElementWrapper::Mul)
+        .function("equal_to", &G1ElementWrapper::EqualTo);
+
+    class_<G2ElementWrapper>("G2Element")
+        .class_property("SIZE", &G2ElementWrapper::SIZE)
+        .constructor<>()
+        .class_function("fromBytes", &G2ElementWrapper::FromBytes) // Not removing this for compatibility
+        .class_function("from_bytes", &G2ElementWrapper::FromBytes)
+        .class_function("from_g2", &G2ElementWrapper::FromG2Element)
+        .class_function("aggregate_sigs", &G2ElementWrapper::AggregateSigs)
+        .class_function("generator", &G2ElementWrapper::Generator)
+        .function("serialize", &G2ElementWrapper::Serialize)
+        .function("negate", &G2ElementWrapper::Negate)
+        .function("deepcopy", &G2ElementWrapper::Deepcopy)
+        .function("add", &G2ElementWrapper::Add)
+        .function("mul", &G2ElementWrapper::Mul)
+        .function("equal_to", &G2ElementWrapper::EqualTo);
+
     class_<PrivateKeyWrapper>("PrivateKey")
         .class_property("PRIVATE_KEY_SIZE", &PrivateKeyWrapper::PRIVATE_KEY_SIZE)
-        .class_function("fromSeed", &PrivateKeyWrapper::FromSeed)
-        .class_function("fromBytes", &PrivateKeyWrapper::FromBytes)
+        .class_function("fromBytes", &PrivateKeyWrapper::FromBytes) // Not removing this for compatibility
+        .class_function("from_bytes", &PrivateKeyWrapper::FromBytes)
         .class_function("aggregate", &PrivateKeyWrapper::Aggregate)
-        .class_function("aggregateInsecure", &PrivateKeyWrapper::AggregateInsecure)
+        .function("deepcopy", &PrivateKeyWrapper::Deepcopy)
         .function("serialize", &PrivateKeyWrapper::Serialize)
-        .function("sign", &PrivateKeyWrapper::Sign)
-        .function("signInsecure", &PrivateKeyWrapper::SignInsecure)
-        .function("signPrehashed", &PrivateKeyWrapper::SignPrehashed)
-        .function("getPublicKey", &PrivateKeyWrapper::GetPublicKey);
+        .function("get_g1", &PrivateKeyWrapper::GetG1)
+        .function("get_g2", &PrivateKeyWrapper::GetG2)
+        .function("mul_g1", &PrivateKeyWrapper::MulG1)
+        .function("mul_g2", &PrivateKeyWrapper::MulG2)
+        .function("equal_to", &PrivateKeyWrapper::EqualTo);
 
-    class_<SignatureWrapper>("Signature")
-        .class_property("SIGNATURE_SIZE", &SignatureWrapper::SIGNATURE_SIZE)
-        .class_function("fromBytes", &SignatureWrapper::FromBytes)
-        .class_function("fromBytesAndAggregationInfo", &SignatureWrapper::FromBytesAndAggregationInfo)
-        .class_function("aggregateSigs", &SignatureWrapper::AggregateSigs)
-        .class_function("fromInsecureSignature", &SignatureWrapper::FromInsecureSignature)
-        .class_function("FromInsecureSignatureAndInfo", &SignatureWrapper::FromInsecureSignatureAndInfo)
-        .function("serialize", &SignatureWrapper::Serialize)
-        .function("verify", &SignatureWrapper::Verify)
-        .function("getAggregationInfo", &SignatureWrapper::GetAggregationInfo)
-        .function("setAggregationInfo", &SignatureWrapper::SetAggregationInfo)
-        .function("divideBy", &SignatureWrapper::DivideBy);
+    class_<BignumWrapper>("Bignum")
+        .class_function("fromString", &BignumWrapper::FromString) // Not removing this for compatibility
+        .class_function("from_string", &BignumWrapper::FromString)
+        .function("toString", &BignumWrapper::ToString);
 
-    class_<InsecureSignatureWrapper>("InsecureSignature")
-        .class_property("SIGNATURE_SIZE", &InsecureSignatureWrapper::SIGNATURE_SIZE)
-        .class_function("fromBytes", &InsecureSignatureWrapper::FromBytes)
-        .class_function("aggregate", &InsecureSignatureWrapper::Aggregate)
-        .function("verify", &InsecureSignatureWrapper::Verify)
-        .function("divideBy", &InsecureSignatureWrapper::DivideBy)
-        .function("serialize", &InsecureSignatureWrapper::Serialize);
-
-    class_<PublicKeyWrapper>("PublicKey")
-        .class_property("PUBLIC_KEY_SIZE", &PublicKeyWrapper::PUBLIC_KEY_SIZE)
-        .class_function("fromBytes", &PublicKeyWrapper::FromBytes)
-        .class_function("aggregate", &PublicKeyWrapper::Aggregate)
-        .class_function("aggregateInsecure", &PublicKeyWrapper::AggregateInsecure)
-        .function("getFingerprint", &PublicKeyWrapper::GetFingerprint)
-        .function("serialize", &PublicKeyWrapper::Serialize);
-
-    class_<AggregationInfoWrapper>("AggregationInfo")
-        .class_function("fromMsgHash", &AggregationInfoWrapper::FromMsgHash)
-        .class_function("fromMsg", &AggregationInfoWrapper::FromMsg)
-        .class_function("fromBuffers", &AggregationInfoWrapper::FromBuffers)
-        .function("getPublicKeys", &AggregationInfoWrapper::GetPubKeys)
-        .function("getMessageHashes", &AggregationInfoWrapper::GetMessageHashes)
-        .function("getExponents", &AggregationInfoWrapper::GetExponents);
-
-    class_<ExtendedPrivateKeyWrapper>("ExtendedPrivateKey")
-        .class_property("EXTENDED_PRIVATE_KEY_SIZE", &ExtendedPrivateKeyWrapper::EXTENDED_PRIVATE_KEY_SIZE)
-        .class_function("fromSeed", &ExtendedPrivateKeyWrapper::FromSeed, allow_raw_pointers())
-        .class_function("fromBytes", &ExtendedPrivateKeyWrapper::FromBytes, allow_raw_pointers())
-        .function("privateChild", &ExtendedPrivateKeyWrapper::PrivateChild)
-        .function("publicChild", &ExtendedPrivateKeyWrapper::PublicChild)
-        .function("getVersion", &ExtendedPrivateKeyWrapper::GetVersion)
-        .function("getDepth", &ExtendedPrivateKeyWrapper::GetDepth)
-        .function("getParentFingerprint", &ExtendedPrivateKeyWrapper::GetParentFingerprint)
-        .function("getChildNumber", &ExtendedPrivateKeyWrapper::GetChildNumber)
-        .function("getChainCode", &ExtendedPrivateKeyWrapper::GetChainCode)
-        .function("getPrivateKey", &ExtendedPrivateKeyWrapper::GetPrivateKey)
-        .function("getPublicKey", &ExtendedPrivateKeyWrapper::GetPublicKey)
-        .function("getExtendedPublicKey", &ExtendedPrivateKeyWrapper::GetExtendedPublicKey)
-        .function("serialize", &ExtendedPrivateKeyWrapper::Serialize);
-
-    class_<ExtendedPublicKeyWrapper>("ExtendedPublicKey")
-        .class_property("VERSION", &ExtendedPublicKeyWrapper::VERSION)
-        .class_property("EXTENDED_PUBLIC_KEY_SIZE", &ExtendedPublicKeyWrapper::EXTENDED_PUBLIC_KEY_SIZE)
-        .class_function("fromBytes", &ExtendedPublicKeyWrapper::FromBytes)
-        .function("publicChild", &ExtendedPublicKeyWrapper::PublicChild)
-        .function("getVersion", &ExtendedPublicKeyWrapper::GetVersion)
-        .function("getDepth", &ExtendedPublicKeyWrapper::GetDepth)
-        .function("getParentFingerprint", &ExtendedPublicKeyWrapper::GetParentFingerprint)
-        .function("getChildNumber", &ExtendedPublicKeyWrapper::GetChildNumber)
-        .function("getChainCode", &ExtendedPublicKeyWrapper::GetChainCode)
-        .function("getPublicKey", &ExtendedPublicKeyWrapper::GetPublicKey)
-        .function("serialize", &ExtendedPublicKeyWrapper::Serialize);
-
-    class_<ChainCodeWrapper>("ChainCode")
-        .class_property("CHAIN_CODE_SIZE", &ChainCodeWrapper::CHAIN_CODE_SIZE)
-        .class_function("fromBytes", &ChainCodeWrapper::FromBytes)
-        .function("serialize", &ChainCodeWrapper::Serialize);
-
-    class_<ThresholdWrapper>("Threshold")
-        .class_function("create", &ThresholdWrapper::Create)
-        .class_function("signWithCoefficient", &ThresholdWrapper::SignWithCoefficient)
-        .class_function("aggregateUnitSigs", &ThresholdWrapper::AggregateUnitSigs)
-        .class_function("verifySecretFragment", &ThresholdWrapper::VerifySecretFragment);
-
-    constant("GROUP_ORDER", GROUP_ORDER);
-    function("DHKeyExchange", &BLSWrapper::DHKeyExchange);
+    class_<UtilWrapper>("Util")
+        .class_function("hash256", &UtilWrapper::Hash256)
+        .class_function("hex_str", &UtilWrapper::HexStr);
 };
 }  // namespace js_wrappers

@@ -12,31 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef JS_BINDINGS_WRAPPERS_PUBLICKEYWRAPPER_H_
-#define JS_BINDINGS_WRAPPERS_PUBLICKEYWRAPPER_H_
+#ifndef JS_BINDINGS_WRAPPERS_BIGNUMWRAPPER_H_
+#define JS_BINDINGS_WRAPPERS_BIGNUMWRAPPER_H_
 
 #include "../helpers.h"
 #include "JSWrapper.h"
 
 namespace js_wrappers {
-class PublicKeyWrapper : public JSWrapper<PublicKey> {
- public:
-    explicit PublicKeyWrapper(const PublicKey &publicKey);
+class Bignum {
+public:
+    Bignum();
+    ~Bignum();
+    Bignum(const Bignum &other);
 
-    static const size_t PUBLIC_KEY_SIZE;
+    bn_st *operator &();
 
-    static std::vector <PublicKey> Unwrap(std::vector <PublicKeyWrapper> wrappers);
+private:
+    bn_st content;
+};
 
-    static PublicKeyWrapper FromBytes(val buffer);
-
-    static PublicKeyWrapper Aggregate(val pubKeysWrappers);
-
-    static PublicKeyWrapper AggregateInsecure(val pubKeysWrappers);
-
-    val Serialize() const;
-
-    uint32_t GetFingerprint() const;
+class BignumWrapper : public JSWrapper<Bignum> {
+public:
+    explicit BignumWrapper(const Bignum &bn);
+    static BignumWrapper FromString(const std::string &s, int radix);
+    std::string ToString(int radix);
 };
 }  // namespace js_wrappers
 
-#endif  // JS_BINDINGS_WRAPPERS_PUBLICKEYWRAPPER_H_
+#endif  // JS_BINDINGS_WRAPPERS_SIGNATUREWRAPPER_H_

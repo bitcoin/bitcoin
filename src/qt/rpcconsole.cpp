@@ -877,7 +877,15 @@ void RPCConsole::buildParameterlist(QString arg)
             if (value.empty()) {
                 args << QString::fromStdString(key);
             } else {
-                args << QString::fromStdString(key + "=" + value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str());
+                std::string valStr;
+                if(value.isFalse())
+                    valStr = "0";
+                else if(value.isTrue())
+                    valStr = "1";
+                else
+                    valStr = value.get_str();
+
+                args << QString::fromStdString(key + "=" + valStr);
             }
         }
     }

@@ -12,20 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ChainCodeWrapper.h"
+#ifndef JS_BINDINGS_WRAPPERS_UTILWRAPPER_H_
+#define JS_BINDINGS_WRAPPERS_UTILWRAPPER_H_
+
+#include "../helpers.h"
+#include "JSWrapper.h"
 
 namespace js_wrappers {
-ChainCodeWrapper::ChainCodeWrapper(const ChainCode &chainCode) : JSWrapper(chainCode) {}
-
-const size_t ChainCodeWrapper::CHAIN_CODE_SIZE = ChainCode::CHAIN_CODE_SIZE;
-
-ChainCodeWrapper ChainCodeWrapper::FromBytes(val jsBuffer) {
-    std::vector <uint8_t> bytes = helpers::toVector(jsBuffer);
-    ChainCode chainCode = ChainCode::FromBytes(bytes.data());
-    return ChainCodeWrapper(chainCode);
-}
-
-val ChainCodeWrapper::Serialize() const {
-    return helpers::toUint8Array(wrapped.Serialize());
-}
+class UtilWrapper : public JSWrapper<Util> {
+public:
+    static val Hash256(val message);
+    static std::string HexStr(val message);
+};
 }  // namespace js_wrappers
+
+#endif  // JS_BINDINGS_WRAPPERS_SIGNATUREWRAPPER_H_
