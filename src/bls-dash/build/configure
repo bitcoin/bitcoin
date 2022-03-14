@@ -183,7 +183,7 @@ EOF
 while [ $# != 0 ]; do
     case "$1" in
 	    "PKG"*);;
-        "-cache-file="*);;
+        "--cache-file="*);;
         "-stdlib="*);;
 	    "--srcdir="*)
             TOP_SRCDIR="${1#*=}";;
