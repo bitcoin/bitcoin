@@ -873,7 +873,7 @@ void RPCConsole::buildParameterlist(QString arg)
     // Get command-line arguments and remove the application name
     QStringList args;
     for (const auto& [key, values] : gArgs.GetCommandLineArgs()) {
-        for (const util::SettingsValue& value : GetSettingsList(strArg)) {
+        for (const util::SettingsValue& value : values) {
             if (value.empty()) {
                 args << QString::fromStdString(key);
             } else {
