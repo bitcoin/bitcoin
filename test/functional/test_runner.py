@@ -156,6 +156,7 @@ BASE_SCRIPTS = [
     'mempool_spend_coinbase.py',
     'wallet_avoidreuse.py --legacy-wallet',
     'wallet_avoidreuse.py --descriptors',
+    'wallet_avoid_mixing_output_types.py --descriptors',
     'mempool_reorg.py',
     'mempool_persist.py',
     'p2p_block_sync.py',
