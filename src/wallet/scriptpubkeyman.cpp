@@ -235,6 +235,10 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
 isminetype LegacyScriptPubKeyMan::IsMine(const DestinationAddr& script) const
 {
     if (script.IsMWEB()) {
+        if (GetScanSecret().IsNull()) {
+            return ISMINE_NO;
+        }
+
         const StealthAddress& mweb_address = script.GetMWEBAddress();
         if (mweb_address.GetSpendPubKey().Mul(GetScanSecret()) != mweb_address.GetScanPubKey()) {
             return ISMINE_NO;
