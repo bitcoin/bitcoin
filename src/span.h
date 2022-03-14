@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <assert.h>
 
-#ifdef DEBUG
+#ifdef DEBUG_CORE
 #define CONSTEXPR_IF_NOT_DEBUG
 #define ASSERT_IF_DEBUG(x) assert((x))
 #else

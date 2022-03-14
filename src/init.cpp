@@ -1187,7 +1187,7 @@ void InitLogging()
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     std::string version_string = FormatFullVersion();
-#ifdef DEBUG
+#ifdef DEBUG_CORE
     version_string += " (debug build)";
 #else
     version_string += " (release build)";
