@@ -20,8 +20,8 @@ SYSCOIN_INCLUDES += $(LIBCHIABLS_CFLAGS)
 SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
-LIBCHIA = bls-dash/build/src/libbls-dash.a  bls-dash/build/_deps/relic-build/lib/librelic_s.a
-LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) $(GMP_LIBS)
+LIBCHIA = bls-dash/build/src/libbls-dash.a
+LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) $(LIBRELIC_LIBS) $(GMP_LIBS)
 $(LIBCHIA):
 	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)
 
@@ -1116,7 +1116,7 @@ clean-local:
 	-rm -f config.h
 	-rm -rf test/__pycache__
 	-rm -f bls-dash/build/*.a bls-dash/src/*.o
-	-rm -rf bls-dash/build/_deps bls-dash/build/object_bls-dashtmp bls-dash/build/object_relic_s bls-dash/build/object_sodium
+	-rm -rf bls-dash/build/_deps bls-dash/build/src bls-dash/build/object_bls-dashtmp bls-dash/build/object_relic_s bls-dash/build/object_sodium
 
 .rc.o:
 	@test -f $(WINDRES)

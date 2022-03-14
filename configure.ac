@@ -1598,14 +1598,11 @@ if test "$use_zmq" = "yes"; then
 fi
 
 dnl chiabls
-
+LIBRELIC_LIBS=bls-dash/build/_deps/relic-build/lib/librelic_s.a
 LIBCHIABLS_CFLAGS='-I$(srcdir)/bls-dash/build/_deps/relic-build/include -I$(srcdir)/bls-dash/build/_deps/relic-src/include'
 LIBCHIABLS_CFLAGS="$LIBCHIABLS_CFLAGS -I$depends_prefix/include/bls-dash"
-
-LIBCHIABLS_LIBS=bls-dash/build/src/libbls-dash.a bls-dash/build/_deps/relic-build/lib/librelic_s.a
-
 AC_SUBST(LIBCHIABLS_CFLAGS)
-AC_SUBST(LIBCHIABLS_LIBS)  
+AC_SUBST(LIBRELIC_LIBS)
 
 dnl libmultiprocess library check
 
@@ -1713,6 +1710,7 @@ else
 fi
 
 dnl libcurl check
+
 PKG_CHECK_MODULES([LIBCURL], [libcurl >= 7.35.0],, [AC_MSG_ERROR([libcurl 7.35.0 or greater was not found.])])
 AC_CHECK_HEADERS([curl/curl.h], [libcurl_found_headers=yes; break;])
 AS_IF([test "x$libcurl_found_headers" != "xyes"],
@@ -1989,9 +1987,8 @@ AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
 AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp3-dev missing))
 AC_SUBST(GMP_LIBS)
 
-if test x$need_bundled_chiabls = xyes; then
-  AC_CONFIG_SUBDIRS([src/bls-dash/build])
-fi
+
+AC_CONFIG_SUBDIRS([src/bls-dash/build])
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
 AC_CONFIG_SUBDIRS([src/secp256k1])
