@@ -32,27 +32,26 @@ define $(package)_extract_cmds
 endef
 
 define $(package)_set_vars
-  $(package)_config_opts=-DSTLIB=ON -DSHLIB=OFF -DSTBIN=OFF
-  $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_C_STANDARD=99
-  $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux -DMULTI=PTHREAD
-  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin -DMULTI=PTHREAD
-  $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DMULTI=PTHREAD -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
+  $(package)_config_opts=-DCMAKE_INSTALL_PREFIX=$(host_prefix)
+  $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$(host_prefix)
+  $(package)_config_opts+= -DSTLIB=ON -DSHLIB=OFF -DSTBIN=OFF
+  $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0
+  $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
+  $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
+  $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
   $(package)_config_opts_i686+= -DWSIZE=32
   $(package)_config_opts_x86_64+= -DWSIZE=64
   $(package)_config_opts_arm+= -DWSIZE=32
   $(package)_config_opts_armv7l+= -DWSIZE=32
+  $(package)_config_opts_debug=-DDEBUG=ON -DCMAKE_BUILD_TYPE=Debug
 
   ifneq ($(darwin_native_toolchain),)
-    $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
-    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
+    $(package)_config_opts_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ar"
+    $(package)_config_opts_darwin+= -DCMAKE_LINKER="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ld"
+    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ranlib"
   endif
-  $(package)_cflags_linux+= -std=c99 -funroll-loops -fomit-frame-pointer
-  $(package)_cflags_darwin+= -std=c99 -funroll-loops -fomit-frame-pointer
-  $(package)_cflags_arm+= -std=c99 -funroll-loops -fomit-frame-pointer
-  $(package)_cflags_armv7l+= -std=c99 -funroll-loops -fomit-frame-pointer
-  $(package)_cppflags+= -UBLSALLOC_SODIUM
-  $(package)_cxxflags_linux=-fPIC
-  $(package)_cxxflags_android=-fPIC
+
+  $(package)_cppflags+=-UBLSALLOC_SODIUM
 endef
 
 define $(package)_preprocess_cmds
@@ -61,11 +60,16 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_config_cmds
-  $($(package)_cmake) ../ $($(package)_config_opts)
+  export CC="$($(package)_cc)" && \
+  export CXX="$($(package)_cxx)" && \
+  export CFLAGS="$($(package)_cflags) $($(package)_cppflags)" && \
+  export CXXFLAGS="$($(package)_cxxflags) $($(package)_cppflags)" && \
+  export LDFLAGS="$($(package)_ldflags)" && \
+  $(host_prefix)/bin/cmake ../ $($(package)_config_opts)
 endef
 
 define $(package)_build_cmds
-  $(MAKE)
+  $(MAKE) $($(package)_build_opts)
 endef
 
 define $(package)_stage_cmds
