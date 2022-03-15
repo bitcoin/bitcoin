@@ -1,0 +1,21 @@
+commit 372ce30d15d47e986f6fabd3e2ee8575a71d4a3d
+Author: fanquake <fanquake@gmail.com>
+Date:   Tue Mar 15 13:41:04 2022 +0000
+
+    remap debug prefixes for startup code?
+
+diff --git a/Makeconfig b/Makeconfig
+index 03fd89c13e..4652e4e977 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -950,6 +950,10 @@ object-suffixes-for-libc += .oS
+ # shared objects.  We don't want to use CFLAGS-os because users may, for
+ # example, make that processor-specific.
+ CFLAGS-.oS = $(CFLAGS-.o) $(PIC-ccflag)
++
++# yuck. store paths for x86 and aarch64
++CFLAGS-.oS += -fdebug-prefix-map=/gnu/store/2d2r6jcsdjf6i3nzbrmf13psxmpwz55w-gcc-cross-sans-libc-x86_64-linux-gnu-7.5.0-lib/lib/gcc/x86_64-linux-gnu/7.5.0=/usr
++CFLAGS-.oS += -fdebug-prefix-map=/gnu/store/vyp1v42wwbz6k3pl79hvz20rsysk9rd9-gcc-cross-sans-libc-x86_64-linux-gnu-7.5.0-lib/lib/gcc/x86_64-linux-gnu/7.5.0=/usr
+ CPPFLAGS-.oS = $(CPPFLAGS-.o) -DPIC -DLIBC_NONSHARED=1
+ libtype.oS = lib%_nonshared.a
+ endif
