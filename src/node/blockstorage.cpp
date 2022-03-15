@@ -56,6 +56,17 @@ static FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
 
+std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
+{
+    AssertLockHeld(cs_main);
+    std::vector<CBlockIndex*> rv;
+    rv.reserve(m_block_index.size());
+    for (auto& [_, block_index] : m_block_index) {
+        rv.push_back(&block_index);
+    }
+    return rv;
+}
+
 CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash)
 {
     AssertLockHeld(cs_main);
@@ -242,11 +253,7 @@ bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
     }
 
     // Calculate nChainWork
-    std::vector<CBlockIndex*> vSortedByHeight;
-    vSortedByHeight.reserve(m_block_index.size());
-    for (auto& [_, block_index] : m_block_index) {
-        vSortedByHeight.push_back(&block_index);
-    }
+    std::vector<CBlockIndex*> vSortedByHeight{GetAllBlockIndices()};
     std::sort(vSortedByHeight.begin(), vSortedByHeight.end(),
               CBlockIndexHeightOnlyComparator());
 

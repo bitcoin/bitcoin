@@ -4069,11 +4069,7 @@ bool ChainstateManager::LoadBlockIndex()
         bool ret = m_blockman.LoadBlockIndexDB();
         if (!ret) return false;
 
-        std::vector<CBlockIndex*> vSortedByHeight;
-        vSortedByHeight.reserve(m_blockman.m_block_index.size());
-        for (auto& [_, block_index] : m_blockman.m_block_index) {
-            vSortedByHeight.push_back(&block_index);
-        }
+        std::vector<CBlockIndex*> vSortedByHeight{m_blockman.GetAllBlockIndices()};
         std::sort(vSortedByHeight.begin(), vSortedByHeight.end(),
                   CBlockIndexHeightOnlyComparator());
 
