@@ -998,31 +998,34 @@ void CBlockPolicyEstimator::FlushUnconfirmed() {
     LogPrint(BCLog::ESTIMATEFEE, "Recorded %u unconfirmed txs from mempool in %gs\n", num_entries, (endclear - startclear)*0.000001);
 }
 
-static std::set<double> MakeFeeSet(const CFeeRate& minIncrementalFee,
+static std::set<double> MakeFeeSet(const CFeeRate& min_incremental_fee,
                                    double max_filter_fee_rate,
                                    double fee_filter_spacing)
 {
-    std::set<double> feeset;
+    std::set<double> fee_set;
 
-    const CAmount minFeeLimit{std::max(CAmount(1), minIncrementalFee.GetFeePerK() / 2)};
-    feeset.insert(0);
-    for (double bucketBoundary = minFeeLimit; bucketBoundary <= max_filter_fee_rate; bucketBoundary *= fee_filter_spacing) {
-        feeset.insert(bucketBoundary);
+    const CAmount min_fee_limit{std::max(CAmount(1), min_incremental_fee.GetFeePerK() / 2)};
+    fee_set.insert(0);
+    for (double bucket_boundary = min_fee_limit;
+         bucket_boundary <= max_filter_fee_rate;
+         bucket_boundary *= fee_filter_spacing) {
+
+        fee_set.insert(bucket_boundary);
     }
 
-    return feeset;
+    return fee_set;
 }
 
 FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
-    : feeset{MakeFeeSet(minIncrementalFee, MAX_FILTER_FEERATE, FEE_FILTER_SPACING)}
+    : m_fee_set{MakeFeeSet(minIncrementalFee, MAX_FILTER_FEERATE, FEE_FILTER_SPACING)}
 {
 }
 
 CAmount FeeFilterRounder::round(CAmount currentMinFee)
 {
-    std::set<double>::iterator it = feeset.lower_bound(currentMinFee);
-    if (it == feeset.end() ||
-        (it != feeset.begin() &&
+    std::set<double>::iterator it = m_fee_set.lower_bound(currentMinFee);
+    if (it == m_fee_set.end() ||
+        (it != m_fee_set.begin() &&
          WITH_LOCK(m_insecure_rand_mutex, return insecure_rand.rand32()) % 3 != 0)) {
         --it;
     }
