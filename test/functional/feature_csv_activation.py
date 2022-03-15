@@ -310,6 +310,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         self.log.info("Test version 2 txs")
 
+        # All txs without flag fail
+        for tx in [tx['tx'] for tx in bip68txs_v2 if not tx['sdf']]:
+            self.send_blocks([self.create_test_block([tx])], success=False, reject_reason='bad-txns-nonfinal')
+
         success_txs = []
         # BIP113 tx, -1 CSV tx and empty stack CSV tx should succeed
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
@@ -317,14 +321,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         success_txs.append(bip113tx_v2)
         success_txs.append(bip112tx_special_v2)
         success_txs.append(bip112tx_emptystack_v2)
-        # add BIP 68 txs
-        success_txs.extend(all_rlt_txs(bip68txs_v2))
-        # add BIP 112 with seq=10 txs
-        success_txs.extend(all_rlt_txs(bip112txs_vary_nSequence_v2))
-        success_txs.extend(all_rlt_txs(bip112txs_vary_OP_CSV_v2))
-        # try BIP 112 with seq=9 txs
-        success_txs.extend(all_rlt_txs(bip112txs_vary_nSequence_9_v2))
-        success_txs.extend(all_rlt_txs(bip112txs_vary_OP_CSV_9_v2))
         self.send_blocks([self.create_test_block(success_txs)])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
