@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (c) 2012-2021 The Bitcoin Core developers
+# Copyright (c) 2012-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Generate valid and invalid base58/bech32(m) address and private key test vectors.
 
 Usage:
-    PYTHONPATH=../../test/functional/test_framework ./gen_key_io_test_vectors.py valid 70 > ../../src/test/data/key_io_valid.json
-    PYTHONPATH=../../test/functional/test_framework ./gen_key_io_test_vectors.py invalid 70 > ../../src/test/data/key_io_invalid.json
+    ./gen_key_io_test_vectors.py valid 70 > ../../src/test/data/key_io_valid.json
+    ./gen_key_io_test_vectors.py invalid 70 > ../../src/test/data/key_io_invalid.json
 '''
-# 2012 Wladimir J. van der Laan
-# Released under MIT License
+
 import os
 from itertools import islice
 from base58 import b58encode_chk, b58decode_chk, b58chars
 import random
-from segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../test/functional'))
+
+from test_framework.segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding  # noqa: E402
 
 # key types
 PUBKEY_ADDRESS = 0
@@ -250,7 +253,6 @@ def gen_invalid_vectors():
                 yield val,
 
 if __name__ == '__main__':
-    import sys
     import json
     iters = {'valid':gen_valid_vectors, 'invalid':gen_invalid_vectors}
     try:
