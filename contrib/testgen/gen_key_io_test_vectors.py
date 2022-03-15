@@ -18,6 +18,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../test/functional'))
 
+from test_framework.script import OP_0, OP_1, OP_2, OP_3, OP_16, OP_DUP, OP_EQUAL, OP_EQUALVERIFY, OP_HASH160, OP_CHECKSIG  # noqa: E402
 from test_framework.segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding  # noqa: E402
 
 # key types
@@ -32,16 +33,6 @@ PRIVKEY_TEST = 239
 PRIVKEY_REGTEST = 239
 
 # script
-OP_0 = 0x00
-OP_1 = 0x51
-OP_2 = 0x52
-OP_3 = 0x53
-OP_16 = 0x60
-OP_DUP = 0x76
-OP_EQUAL = 0x87
-OP_EQUALVERIFY = 0x88
-OP_HASH160 = 0xa9
-OP_CHECKSIG = 0xac
 pubkey_prefix = (OP_DUP, OP_HASH160, 20)
 pubkey_suffix = (OP_EQUALVERIFY, OP_CHECKSIG)
 script_prefix = (OP_HASH160, 20)
