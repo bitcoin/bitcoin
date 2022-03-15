@@ -6,11 +6,13 @@
 #define BITCOIN_RPC_UTIL_H
 
 #include <node/transaction.h>
-#include <pubkey.h>
 #include <protocol.h>
+#include <pubkey.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <script/standard.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <string>
@@ -21,6 +23,7 @@
 class CKeyStore;
 class CPubKey;
 class CScript;
+struct Sections;
 struct InitInterfaces;
 
 //! Pointers to interfaces that need to be accessible from RPC methods. Due to
@@ -90,6 +93,16 @@ UniValue GetServicesNames(ServiceFlags services);
 //! Parse a JSON range specified as int64, or [int64, int64]
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
+/**
+ * Serializing JSON objects depends on the outer type. Only arrays and
+ * dictionaries can be nested in json. The top-level outer type is "NONE".
+ */
+enum class OuterType {
+    ARR,
+    OBJ,
+    NONE, // Only set on first recursion
+};
+
 struct RPCArg {
     enum class Type {
         OBJ,
@@ -120,8 +133,9 @@ struct RPCArg {
         OMITTED,
     };
     using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
-    const std::string m_name; //!< The name of the arg (can be empty for inner args)
+    const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
+    const bool m_hidden;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
     const std::string m_description;
@@ -129,42 +143,51 @@ struct RPCArg {
     const std::vector<std::string> m_type_str; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_type_str.at(0) will override the type of the value in a key-value pair, m_type_str.at(1) will override the type in the argument description.
 
     RPCArg(
-        const std::string& name,
-        const Type& type,
-        const Fallback& fallback,
-        const std::string& description,
-        const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
+        const std::string name,
+        const Type type,
+        const Fallback fallback,
+        const std::string description,
+        const std::string oneline_description = "",
+        const std::vector<std::string> type_str = {},
+        const bool hidden = false)
+        : m_names{std::move(name)},
+          m_type{std::move(type)},
+          m_hidden{hidden},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_oneline_description{std::move(oneline_description)},
+          m_type_str{std::move(type_str)}
     {
-        assert(type != Type::ARR && type != Type::OBJ);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ);
     }
 
     RPCArg(
-        const std::string& name,
-        const Type& type,
-        const Fallback& fallback,
-        const std::string& description,
-        const std::vector<RPCArg>& inner,
-        const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_inner{inner},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
+        const std::string name,
+        const Type type,
+        const Fallback fallback,
+        const std::string description,
+        const std::vector<RPCArg> inner,
+        const std::string oneline_description = "",
+        const std::vector<std::string> type_str = {})
+        : m_names{std::move(name)},
+          m_type{std::move(type)},
+          m_hidden{false},
+          m_inner{std::move(inner)},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_oneline_description{std::move(oneline_description)},
+          m_type_str{std::move(type_str)}
     {
-        assert(type == Type::ARR || type == Type::OBJ);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ);
     }
 
     bool IsOptional() const;
+
+    /** Return the first of all aliases */
+    std::string GetFirstName() const;
+
+    /** Return the name, throws when there are aliases */
+    std::string GetName() const;
 
     /**
      * Return the type string of the argument.
@@ -184,21 +207,120 @@ struct RPCArg {
 };
 
 struct RPCResult {
+    enum class Type {
+        OBJ,
+        ARR,
+        STR,
+        NUM,
+        BOOL,
+        NONE,
+        STR_AMOUNT, //!< Special string to represent a floating point amount
+        STR_HEX,    //!< Special string with only hex chars
+        OBJ_DYN,    //!< Special dictionary with keys that are not literals
+        ARR_FIXED,  //!< Special array that has a fixed number of entries
+        NUM_TIME,   //!< Special numeric to denote unix epoch time
+        ELISION,    //!< Special type to denote elision (...)
+    };
+
+    const Type m_type;
+    const std::string m_key_name;         //!< Only used for dicts
+    const std::vector<RPCResult> m_inner; //!< Only used for arrays or dicts
+    const bool m_optional;
+    const std::string m_description;
     const std::string m_cond;
-    const std::string m_result;
+    const bool m_legacy;                  //!< Used for legacy support
+    const std::string m_result;           //!< Used for legacy support
 
-    explicit RPCResult(std::string result)
-        : m_cond{}, m_result{std::move(result)}
+    RPCResult(
+        const std::string cond,
+        const Type type,
+        const std::string m_key_name,
+        const bool optional,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : m_type{std::move(type)},
+          m_key_name{std::move(m_key_name)},
+          m_inner{std::move(inner)},
+          m_optional{optional},
+          m_description{std::move(description)},
+          m_cond{std::move(cond)},
+          m_result{},
+          m_legacy{false}
     {
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_cond.empty());
+        const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
+        CHECK_NONFATAL(inner_needed != inner.empty());
     }
 
+    // start legacy support logic
     RPCResult(std::string cond, std::string result)
-        : m_cond{std::move(cond)}, m_result{std::move(result)}
+        : m_type{Type::NONE},
+          m_key_name{},
+          m_inner{},
+          m_optional{false},
+          m_description{},
+          m_cond{std::move(cond)},
+          m_result{std::move(result)},
+          m_legacy{true}
     {
-        assert(!m_cond.empty());
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_cond.empty());
+        CHECK_NONFATAL(!m_result.empty());
     }
+
+    RPCResult(std::string result)
+        : m_type{Type::NONE},
+          m_key_name{},
+          m_inner{},
+          m_optional{false},
+          m_description{},
+          m_cond{},
+          m_result{std::move(result)},
+          m_legacy{true}
+    {
+        CHECK_NONFATAL(!m_result.empty());
+    }
+    // end legacy support logic
+
+    RPCResult(
+        const std::string cond,
+        const Type type,
+        const std::string m_key_name,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : RPCResult{cond, type, m_key_name, false, description, inner} {}
+
+    RPCResult(
+        const Type type,
+        const std::string m_key_name,
+        const bool optional,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : m_type{std::move(type)},
+          m_key_name{std::move(m_key_name)},
+          m_inner{std::move(inner)},
+          m_optional{optional},
+          m_description{std::move(description)},
+          m_cond{},
+          m_result{},
+          m_legacy{false}
+    {
+        const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
+        CHECK_NONFATAL(inner_needed != inner.empty());
+    }
+
+    RPCResult(
+        const Type type,
+        const std::string m_key_name,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : RPCResult{type, m_key_name, false, description, inner} {}
+
+    /** Append the sections of the result. */
+    void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, const int current_indent = 0) const;
+    /** Return the type string of the result when it is in an object (dict). */
+    std::string ToStringObj() const;
+    /** Return the description string, including the result type. */
+    std::string ToDescriptionString() const;
 };
 
 struct RPCResults {
@@ -239,13 +361,37 @@ class RPCHelpMan
 {
 public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
+    using RPCMethodImpl = std::function<UniValue(const RPCHelpMan&, const JSONRPCRequest&)>;
+    RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
 
     std::string ToString() const;
+    UniValue HandleRequest(const JSONRPCRequest& request)
+    {
+        Check(request);
+        return m_fun(*this, request);
+    }
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
+    /**
+     * Check if the given request is valid according to this command or if
+     * the user is asking for help information, and throw help when appropriate.
+     */
+    inline void Check(const JSONRPCRequest& request) const {
+        if (request.fHelp || !IsValidNumArgs(request.params.size())) {
+            throw std::runtime_error(ToString());
+        }
+    }
+
+    [[ noreturn ]] inline void Throw() const {
+        throw std::runtime_error(ToString());
+    }
+
+    std::vector<std::string> GetArgNames() const;
+
+    const std::string m_name;
 
 private:
-    const std::string m_name;
+    const RPCMethodImpl m_fun;
     const std::string m_description;
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;

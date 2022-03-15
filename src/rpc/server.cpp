@@ -161,7 +161,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                     {"subcommand", RPCArg::Type::STR, /* default */ "all subcommands", "The subcommand to get help on. Please note that not all subcommands support this at the moment"},
                 },
                 RPCResult{
-            "\"text\"     (string) The help text\n"
+                    RPCResult::Type::STR, "", "The help text"
                 },
                 RPCExamples{""},
             }.ToString()
@@ -208,7 +208,7 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
                 "\nReturns the total uptime of the server.\n",
                             {},
                             RPCResult{
-                        "ttt        (numeric) The number of seconds that the server has been running\n"
+                                RPCResult::Type::NUM, "", "The number of seconds that the server has been running"
                             },
                 RPCExamples{
                     HelpExampleCli("uptime", "")
@@ -339,41 +339,6 @@ bool RPCIsInWarmup(std::string *outStatus)
     if (outStatus)
         *outStatus = rpcWarmupStatus;
     return fRPCInWarmup;
-}
-
-void JSONRPCRequest::parse(const UniValue& valRequest)
-{
-    // Parse request
-    if (!valRequest.isObject())
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
-    const UniValue& request = valRequest.get_obj();
-
-    // Parse id now so errors from here on will have the id
-    id = find_value(request, "id");
-
-    // Parse method
-    UniValue valMethod = find_value(request, "method");
-    if (valMethod.isNull())
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
-    if (!valMethod.isStr())
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
-    strMethod = valMethod.get_str();
-    if (strMethod != "getblocktemplate") {
-        if (fLogIPs)
-            LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
-                this->authUser, this->peerAddr);
-        else
-            LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
-    }
-
-    // Parse params
-    UniValue valParams = find_value(request, "params");
-    if (valParams.isArray() || valParams.isObject())
-        params = valParams;
-    else if (valParams.isNull())
-        params = UniValue(UniValue::VARR);
-    else
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
 
 bool IsDeprecatedRPCEnabled(const std::string& method)

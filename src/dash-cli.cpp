@@ -12,6 +12,7 @@
 #include <clientversion.h>
 #include <rpc/client.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <stacktraces.h>
 #include <util/system.h>
 #include <util/strencodings.h>

@@ -15,8 +15,9 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <txmempool.h>
-#include <util/system.h>
+#include <util/check.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <validation.h>
 #include <util/validation.h>
 
@@ -254,8 +255,8 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
-            "  \"redeemScript\":\"script\"       (string) The string value of the hex-encoded redemption script.\n"
+            "  \"address\" : \"multisigaddress\",  (string) The value of the new multisig address.\n"
+            "  \"redeemScript\" : \"script\"       (string) The string value of the hex-encoded redemption script.\n"
             "}\n"
                 },
                 RPCExamples{
@@ -302,13 +303,14 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
                 {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor"},
             },
             RPCResult{
-            "{\n"
-            "  \"descriptor\" : \"desc\",         (string) The descriptor in canonical form, without private keys\n"
-            "  \"checksum\" : \"chksum\",         (string) The checksum for the input descriptor\n"
-            "  \"isrange\" : true|false,        (boolean) Whether the descriptor is ranged\n"
-            "  \"issolvable\" : true|false,     (boolean) Whether the descriptor is solvable\n"
-            "  \"hasprivatekeys\" : true|false, (boolean) Whether the input descriptor contained at least one private key\n"
-            "}\n"
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys"},
+                    {RPCResult::Type::STR, "checksum", "The checksum for the input descriptor"},
+                    {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
+                    {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
+                    {RPCResult::Type::BOOL, "hasprivatekeys", "Whether the input descriptor contained at least one private key"},
+                }
             },
             RPCExamples{
             "\nAnalyse a descriptor\n"
@@ -353,7 +355,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
                     {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
                 },
                 RPCResult{
-            "\"address\"        (array) A json array of the derived addresses\n"
+            "\"address\"        (json array) A json array of the derived addresses\n"
             "     [\n"
             "       ...\n"
             "     ]\n"
@@ -429,7 +431,7 @@ static UniValue verifymessage(const JSONRPCRequest& request)
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message that was signed."},
                 },
                 RPCResult{
-            "true|false   (boolean) If the signature is verified or not.\n"
+                    RPCResult::Type::BOOL, "", "If the signature is verified or not."
                 },
                 RPCExamples{
             "\nUnlock the wallet for 30 seconds\n"
@@ -487,7 +489,7 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
                 },
                 RPCResult{
-            "\"signature\"          (string) The signature of the message encoded in base 64\n"
+                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
                 },
                 RPCExamples{
             "\nCreate the signature\n"
@@ -899,10 +901,10 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"balance\": xxxxx,              (numeric) The current total balance in duffs\n"
-            "  \"balance_immature\": xxxxx,     (numeric) The current immature balance in duffs\n"
-            "  \"balance_spendable\": xxxxx,    (numeric) The current spendable balance in duffs\n"
-            "  \"received\": xxxxx              (numeric) The total number of duffs received (including change)\n"
+            "  \"balance\" : xxxxx,              (numeric) The current total balance in duffs\n"
+            "  \"balance_immature\" : xxxxx,     (numeric) The current immature balance in duffs\n"
+            "  \"balance_spendable\" : xxxxx,    (numeric) The current spendable balance in duffs\n"
+            "  \"received\" : xxxxx              (numeric) The total number of duffs received (including change)\n"
             "}\n"
                 },
                 RPCExamples{
@@ -1136,19 +1138,21 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
                 },
                 {
                     RPCResult{"mode \"stats\"",
-            "{\n"
-            "  \"locked\": {               (json object) Information about locked memory manager\n"
-            "    \"used\": xxxxx,          (numeric) Number of bytes used\n"
-            "    \"free\": xxxxx,          (numeric) Number of bytes available in current arenas\n"
-            "    \"total\": xxxxxxx,       (numeric) Total number of bytes managed\n"
-            "    \"locked\": xxxxxx,       (numeric) Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk.\n"
-            "    \"chunks_used\": xxxxx,   (numeric) Number allocated chunks\n"
-            "    \"chunks_free\": xxxxx,   (numeric) Number unused chunks\n"
-            "  }\n"
-            "}\n"
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::OBJ, "locked", "Information about locked memory manager",
+                            {
+                                {RPCResult::Type::NUM, "used", "Number of bytes used"},
+                                {RPCResult::Type::NUM, "free", "Number of bytes available in current arenas"},
+                                {RPCResult::Type::NUM, "total", "Total number of bytes managed"},
+                                {RPCResult::Type::NUM, "locked", "Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk."},
+                                {RPCResult::Type::NUM, "chunks_used", "Number allocated chunks"},
+                                {RPCResult::Type::NUM, "chunks_free", "Number unused chunks"},
+                            }},
+                        }
                     },
                     RPCResult{"mode \"mallocinfo\"",
-            "\"<malloc version=\"1\">...\"\n"
+                        RPCResult::Type::STR, "", "\"<malloc version=\"1\">...\""
                     },
                 },
                 RPCExamples{
@@ -1219,10 +1223,10 @@ static UniValue logging(const JSONRPCRequest& request)
                         }},
                 },
                 RPCResult{
-            "{                   (json object where keys are the logging categories, and values indicates its status\n"
-            "  \"category\": true|false,  (bool) if being debug logged or not. false:inactive, true:active\n"
-            "  ...\n"
-            "}\n"
+                    RPCResult::Type::OBJ_DYN, "", "keys are the logging categories, and values indicates its status",
+                    {
+                        {RPCResult::Type::BOOL, "category", "if being debug logged or not. false:inactive, true:active"},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
@@ -1270,6 +1274,7 @@ static UniValue echo(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"echo|echojson ...",
                 "\nSimply echo back the input arguments. This command is for testing.\n"
+                "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "dash-cli and the GUI. There is no server-side difference.",
                 {},
@@ -1277,6 +1282,8 @@ static UniValue echo(const JSONRPCRequest& request)
                 RPCExamples{""},
             }.ToString()
         );
+
+    CHECK_NONFATAL(request.params.size() != 100);
 
     return request.params;
 }

@@ -11,12 +11,12 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
-#include <node/coinstats.h>
 #include <core_io.h>
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
-#include <key_io.h>
 #include <index/txindex.h>
+#include <key_io.h>
+#include <node/coinstats.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -40,7 +40,6 @@
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 
-#include <assert.h>
 #include <stdint.h>
 
 #include <univalue.h>
@@ -67,7 +66,7 @@ extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
  */
 double GetDifficulty(const CBlockIndex* blockindex)
 {
-    assert(blockindex);
+    CHECK_NONFATAL(blockindex);
 
     int nShift = (blockindex->nBits >> 24) & 0xff;
     double dDiff =
@@ -190,8 +189,7 @@ static UniValue getblockcount(const JSONRPCRequest& request)
                 "The genesis block has height 0.\n",
                 {},
                 RPCResult{
-            "n    (numeric) The current block count\n"
-                },
+                    RPCResult::Type::NUM, "", "The current block count"},
                 RPCExamples{
                     HelpExampleCli("getblockcount", "")
             + HelpExampleRpc("getblockcount", "")
@@ -210,8 +208,7 @@ static UniValue getbestblockhash(const JSONRPCRequest& request)
                 "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
                 {},
                 RPCResult{
-            "\"hex\"      (string) the block hash, hex-encoded\n"
-                },
+                    RPCResult::Type::STR_HEX, "", "the block hash, hex-encoded"},
                 RPCExamples{
                     HelpExampleCli("getbestblockhash", "")
             + HelpExampleRpc("getbestblockhash", "")
@@ -278,11 +275,11 @@ static UniValue waitfornewblock(const JSONRPCRequest& request)
                     {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("waitfornewblock", "1000")
             + HelpExampleRpc("waitfornewblock", "1000")
@@ -320,11 +317,11 @@ static UniValue waitforblock(const JSONRPCRequest& request)
                     {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\" 1000")
             + HelpExampleRpc("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
@@ -366,11 +363,11 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
                     {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("waitforblockheight", "100 1000")
             + HelpExampleRpc("waitforblockheight", "100, 1000")
@@ -425,8 +422,7 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
                 "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n",
                 {},
                 RPCResult{
-            "n.nnn       (numeric) the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
-                },
+                    RPCResult::Type::NUM, "", "the proof-of-work difficulty as a multiple of the minimum difficulty."},
                 RPCExamples{
                     HelpExampleCli("getdifficulty", "")
             + HelpExampleRpc("getdifficulty", "")
@@ -458,10 +454,10 @@ static std::string EntryDescriptionString()
            "        \"ancestor\" : n,     (numeric) modified fees (see above) of in-mempool ancestors (including this one) in " + CURRENCY_UNIT + "\n"
            "        \"descendant\" : n,   (numeric) modified fees (see above) of in-mempool descendants (including this one) in " + CURRENCY_UNIT + "\n"
            "    }\n"
-           "    \"depends\" : [               (array) unconfirmed transactions used as inputs for this transaction\n"
+           "    \"depends\" : [               (json array) unconfirmed transactions used as inputs for this transaction\n"
            "        \"transactionid\",        (string) parent transaction id\n"
            "       ... ],\n"
-           "    \"spentby\" : [           (array) unconfirmed transactions spending outputs from this transaction\n"
+           "    \"spentby\" : [           (json array) unconfirmed transactions spending outputs from this transaction\n"
            "        \"transactionid\",    (string) child transaction id\n"
            "       ... ]\n"
            "    \"instantlock\" : true|false  (boolean) True if this transaction was locked via InstantSend\n";
@@ -802,8 +798,7 @@ static UniValue getblockhash(const JSONRPCRequest& request)
                     {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height index"},
                 },
                 RPCResult{
-            "\"hash\"         (string) The block hash\n"
-                },
+                    RPCResult::Type::STR_HEX, "", "The block hash"},
                 RPCExamples{
                     HelpExampleCli("getblockhash", "1000")
             + HelpExampleRpc("getblockhash", "1000")
@@ -1093,12 +1088,11 @@ static UniValue getblock(const JSONRPCRequest& request)
                 "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction. \n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-                    {"verbosity", RPCArg::Type::NUM, /* default */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
+                    {"verbosity|verbose", RPCArg::Type::NUM, /* default */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
                 },
                 {
                     RPCResult{"for verbosity = 0",
-            "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
-                    },
+                RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
                     RPCResult{"for verbosity = 1",
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
@@ -1186,8 +1180,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
             "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
                 },
                 RPCResult{
-            "n    (numeric) Height of the last block pruned.\n"
-                },
+                    RPCResult::Type::NUM, "", "Height of the last block pruned"},
                 RPCExamples{
                     HelpExampleCli("pruneblockchain", "1000")
             + HelpExampleRpc("pruneblockchain", "1000")
@@ -1227,7 +1220,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
 
     PruneBlockFilesManual(height);
     const CBlockIndex* block = ::ChainActive().Tip();
-    assert(block);
+    CHECK_NONFATAL(block);
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
         block = block->pprev;
     }
@@ -1243,17 +1236,17 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
                 "Note this call may take some time.\n",
                 {},
                 RPCResult{
-            "{\n"
-            "  \"height\":n,     (numeric) The current block height (index)\n"
-            "  \"bestblock\": \"hex\",   (string) The hash of the block at the tip of the chain\n"
-            "  \"transactions\": n,      (numeric) The number of transactions with unspent outputs\n"
-            "  \"txouts\": n,            (numeric) The number of unspent transaction outputs\n"
-            "  \"bogosize\": n,          (numeric) A meaningless metric for UTXO set size\n"
-            "  \"hash_serialized_2\": \"hash\", (string) The serialized hash\n"
-            "  \"disk_size\": n,         (numeric) The estimated size of the chainstate on disk\n"
-            "  \"total_amount\": x.xxx          (numeric) The total amount\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "height", "The current block height (index)"},
+                        {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
+                        {RPCResult::Type::NUM, "transactions", "The number of transactions with unspent outputs"},
+                        {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs"},
+                        {RPCResult::Type::NUM, "bogosize", "A meaningless metric for UTXO set size"},
+                        {RPCResult::Type::STR_HEX, "hash_serialized_2", "The serialized hash"},
+                        {RPCResult::Type::NUM, "disk_size", "The estimated size of the chainstate on disk"},
+                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("gettxoutsetinfo", "")
             + HelpExampleRpc("gettxoutsetinfo", "")
@@ -1294,7 +1287,7 @@ static UniValue gettxout(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"bestblock\":  \"hash\",    (string) The hash of the block at the tip of the chain\n"
+            "  \"bestblock\" :  \"hash\",    (string) The hash of the block at the tip of the chain\n"
             "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
             "  \"value\" : x.xxx,           (numeric) The transaction value in " + CURRENCY_UNIT + "\n"
             "  \"scriptPubKey\" : {         (json object)\n"
@@ -1376,8 +1369,7 @@ static UniValue verifychain(const JSONRPCRequest& request)
                     {"nblocks", RPCArg::Type::NUM, /* default */ strprintf("%d, 0=all", nCheckDepth), "The number of blocks to check."},
                 },
                 RPCResult{
-            "true|false       (boolean) Verified or not\n"
-                },
+                    RPCResult::Type::BOOL, "", "Verified or not"},
                 RPCExamples{
                     HelpExampleCli("verifychain", "")
             + HelpExampleRpc("verifychain", "")
@@ -1475,43 +1467,43 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
                 {},
                 RPCResult{
             "{\n"
-            "  \"chain\": \"xxxx\",              (string) current network name as defined in BIP70 (main, test, regtest) and\n"
+            "  \"chain\" : \"xxxx\",              (string) current network name as defined in BIP70 (main, test, regtest) and\n"
             "                                          devnet or devnet-<name> for \"-devnet\" and \"-devnet=<name>\" respectively\n"
-            "  \"blocks\": xxxxxx,             (numeric) the height of the most-work fully-validated chain. The genesis block has height 0\n"
-            "  \"headers\": xxxxxx,            (numeric) the current number of headers we have validated\n"
-            "  \"bestblockhash\": \"...\",       (string) the hash of the currently best block\n"
-            "  \"difficulty\": xxxxxx,         (numeric) the current difficulty\n"
-            "  \"mediantime\": xxxxxx,         (numeric) median time for the current best block\n"
-            "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
-            "  \"initialblockdownload\": xxxx, (bool) (debug information) estimate of whether this node is in Initial Block Download mode.\n"
-            "  \"chainwork\": \"xxxx\"           (string) total amount of work in active chain, in hexadecimal\n"
-            "  \"size_on_disk\": xxxxxx,       (numeric) the estimated size of the block and undo files on disk\n"
-            "  \"pruned\": xx,                 (boolean) if the blocks are subject to pruning\n"
-            "  \"pruneheight\": xxxxxx,        (numeric) lowest-height complete block stored (only present if pruning is enabled)\n"
-            "  \"automatic_pruning\": xx,      (boolean) whether automatic pruning is enabled (only present if pruning is enabled)\n"
-            "  \"prune_target_size\": xxxxxx,  (numeric) the target size used by pruning (only present if automatic pruning is enabled)\n"
-            "  \"softforks\": [                (array) status of softforks in progress\n"
+            "  \"blocks\" : xxxxxx,             (numeric) the height of the most-work fully-validated chain. The genesis block has height 0\n"
+            "  \"headers\" : xxxxxx,            (numeric) the current number of headers we have validated\n"
+            "  \"bestblockhash\" : \"...\",       (string) the hash of the currently best block\n"
+            "  \"difficulty\" : xxxxxx,         (numeric) the current difficulty\n"
+            "  \"mediantime\" : xxxxxx,         (numeric) median time for the current best block\n"
+            "  \"verificationprogress\" : xxxx, (numeric) estimate of verification progress [0..1]\n"
+            "  \"initialblockdownload\" : xxxx, (boolean) (debug information) estimate of whether this node is in Initial Block Download mode.\n"
+            "  \"chainwork\" : \"xxxx\"           (string) total amount of work in active chain, in hexadecimal\n"
+            "  \"size_on_disk\" : xxxxxx,       (numeric) the estimated size of the block and undo files on disk\n"
+            "  \"pruned\" : xx,                 (boolean) if the blocks are subject to pruning\n"
+            "  \"pruneheight\" : xxxxxx,        (numeric) lowest-height complete block stored (only present if pruning is enabled)\n"
+            "  \"automatic_pruning\" : xx,      (boolean) whether automatic pruning is enabled (only present if pruning is enabled)\n"
+            "  \"prune_target_size\" : xxxxxx,  (numeric) the target size used by pruning (only present if automatic pruning is enabled)\n"
+            "  \"softforks\" : [                (json array) status of softforks in progress\n"
             "     {\n"
-            "        \"id\": \"xxxx\",           (string) name of softfork\n"
-            "        \"version\": xx,          (numeric) block version\n"
-            "        \"reject\": {             (object) progress toward rejecting pre-softfork blocks\n"
-            "           \"status\": xx,        (boolean) true if threshold reached\n"
+            "        \"id\" : \"xxxx\",           (string) name of softfork\n"
+            "        \"version\" : xx,          (numeric) block version\n"
+            "        \"reject\" : {             (json object) progress toward rejecting pre-softfork blocks\n"
+            "           \"status\" : xx,        (boolean) true if threshold reached\n"
             "        },\n"
             "     }, ...\n"
             "  ],\n"
-            "  \"bip9_softforks\": {           (object) status of BIP9 softforks in progress\n"
+            "  \"bip9_softforks\": {           (json object) status of BIP9 softforks in progress\n"
             "     \"xxxx\" : {                 (string) name of the softfork\n"
-            "        \"status\": \"xxxx\",       (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
-            "        \"bit\": xx,              (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
-            "        \"start_time\": xx,        (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
-            "        \"timeout\": xx,          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
-            "        \"since\": xx,            (numeric) height of the first block to which the status applies\n"
-            "        \"statistics\": {         (object) numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)\n"
-            "           \"period\": xx,        (numeric) the length in blocks of the BIP9 signalling period \n"
-            "           \"threshold\": xx,     (numeric) the number of blocks with the version bit set required to activate the feature \n"
-            "           \"elapsed\": xx,       (numeric) the number of blocks elapsed since the beginning of the current period \n"
-            "           \"count\": xx,         (numeric) the number of blocks with the version bit set in the current period \n"
-            "           \"possible\": xx       (boolean) returns false if there are not enough blocks left in this period to pass activation threshold \n"
+            "        \"status\" : \"xxxx\",       (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+            "        \"bit\" : xx,              (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
+            "        \"start_time\" : xx,        (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
+            "        \"timeout\" : xx,          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
+            "        \"since\" : xx,            (numeric) height of the first block to which the status applies\n"
+            "        \"statistics\" : {         (json object) numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)\n"
+            "           \"period\" : xx,        (numeric) the length in blocks of the BIP9 signalling period \n"
+            "           \"threshold\" : xx,     (numeric) the number of blocks with the version bit set required to activate the feature \n"
+            "           \"elapsed\" : xx,       (numeric) the number of blocks elapsed since the beginning of the current period \n"
+            "           \"count\" : xx,         (numeric) the number of blocks with the version bit set in the current period \n"
+            "           \"possible\" : xx       (boolean) returns false if there are not enough blocks left in this period to pass activation threshold \n"
             "        }\n"
             "     }\n"
             "  }\n"
@@ -1543,7 +1535,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.pushKV("pruned",                fPruneMode);
     if (fPruneMode) {
         const CBlockIndex* block = tip;
-        assert(block);
+        CHECK_NONFATAL(block);
         while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
             block = block->pprev;
         }
@@ -1604,22 +1596,22 @@ static UniValue getchaintips(const JSONRPCRequest& request)
                 RPCResult{
             "[\n"
             "  {\n"
-            "    \"height\": xxxx,             (numeric) height of the chain tip\n"
-            "    \"hash\": \"xxxx\",             (string) block hash of the tip\n"
+            "    \"height\" : xxxx,             (numeric) height of the chain tip\n"
+            "    \"hash\" : \"xxxx\",             (string) block hash of the tip\n"
             "    \"difficulty\" : x.xxx,       (numeric) The difficulty\n"
             "    \"chainwork\" : \"0000...1f3\"  (string) Expected number of hashes required to produce the current chain (in hex)\n"
-            "    \"branchlen\": 0              (numeric) zero for main chain\n"
-            "    \"forkpoint\": \"xxxx\",        (string) same as \"hash\" for the main chain\n"
-            "    \"status\": \"active\"          (string) \"active\" for the main chain\n"
+            "    \"branchlen\" : 0              (numeric) zero for main chain\n"
+            "    \"forkpoint\" : \"xxxx\",        (string) same as \"hash\" for the main chain\n"
+            "    \"status\" : \"active\"          (string) \"active\" for the main chain\n"
             "  },\n"
             "  {\n"
-            "    \"height\": xxxx,\n"
-            "    \"hash\": \"xxxx\",\n"
+            "    \"height\" : xxxx,\n"
+            "    \"hash\" : \"xxxx\",\n"
             "    \"difficulty\" : x.xxx,\n"
             "    \"chainwork\" : \"0000...1f3\"\n"
-            "    \"branchlen\": 1              (numeric) length of branch connecting the tip to the main chain\n"
-            "    \"forkpoint\": \"xxxx\",        (string) block hash of the last common block between this tip and the main chain\n"
-            "    \"status\": \"xxxx\"            (string) status of the chain (active, valid-fork, valid-headers, headers-only, invalid)\n"
+            "    \"branchlen\" : 1              (numeric) length of branch connecting the tip to the main chain\n"
+            "    \"forkpoint\" : \"xxxx\",        (string) block hash of the last common block between this tip and the main chain\n"
+            "    \"status\" : \"xxxx\"            (string) status of the chain (active, valid-fork, valid-headers, headers-only, invalid)\n"
             "  }\n"
             "]\n"
             "Possible values for status:\n"
@@ -1751,14 +1743,14 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
                 {},
                 RPCResult{
             "{\n"
-            "  \"loaded\": true|false         (boolean) True if the mempool is fully loaded\n"
-            "  \"size\": xxxxx,               (numeric) Current tx count\n"
-            "  \"bytes\": xxxxx,              (numeric) Sum of all tx sizes\n"
-            "  \"usage\": xxxxx,              (numeric) Total memory usage for the mempool\n"
-            "  \"maxmempool\": xxxxx,         (numeric) Maximum memory usage for the mempool\n"
-            "  \"mempoolminfee\": xxxxx       (numeric) Minimum fee rate in " + CURRENCY_UNIT + "/kB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee\n"
-            "  \"minrelaytxfee\": xxxxx       (numeric) Current minimum relay fee for transactions\n"
-            "  \"instantsendlocks\": xxxxx,   (numeric) Number of unconfirmed instant send locks\n"
+            "  \"loaded\" : true|false         (boolean) True if the mempool is fully loaded\n"
+            "  \"size\" : xxxxx,               (numeric) Current tx count\n"
+            "  \"bytes\" : xxxxx,              (numeric) Sum of all tx sizes\n"
+            "  \"usage\" : xxxxx,              (numeric) Total memory usage for the mempool\n"
+            "  \"maxmempool\" : xxxxx,         (numeric) Maximum memory usage for the mempool\n"
+            "  \"mempoolminfee\" : xxxxx       (numeric) Minimum fee rate in " + CURRENCY_UNIT + "/kB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee\n"
+            "  \"minrelaytxfee\" : xxxxx       (numeric) Current minimum relay fee for transactions\n"
+            "  \"instantsendlocks\" : xxxxx,   (numeric) Number of unconfirmed instant send locks\n"
             "}\n"
                 },
                 RPCExamples{
@@ -1903,14 +1895,14 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"time\": xxxxx,                         (numeric) The timestamp for the final block in the window in UNIX format.\n"
-            "  \"txcount\": xxxxx,                      (numeric) The total number of transactions in the chain up to that point.\n"
-            "  \"window_final_block_hash\": \"...\",      (string) The hash of the final block in the window.\n"
-            "  \"window_final_block_height\": xxxxx,    (numeric) The height of the final block in the window.\n"
-            "  \"window_block_count\": xxxxx,           (numeric) Size of the window in number of blocks.\n"
-            "  \"window_tx_count\": xxxxx,              (numeric) The number of transactions in the window. Only returned if \"window_block_count\" is > 0.\n"
-            "  \"window_interval\": xxxxx,              (numeric) The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0.\n"
-            "  \"txrate\": x.xx,                        (numeric) The average rate of transactions per second in the window. Only returned if \"window_interval\" is > 0.\n"
+            "  \"time\" : xxxxx,                         (numeric) The timestamp for the final block in the window in UNIX format.\n"
+            "  \"txcount\" : xxxxx,                      (numeric) The total number of transactions in the chain up to that point.\n"
+            "  \"window_final_block_hash\" : \"...\",      (string) The hash of the final block in the window.\n"
+            "  \"window_final_block_height\" : xxxxx,    (numeric) The height of the final block in the window.\n"
+            "  \"window_block_count\" : xxxxx,           (numeric) Size of the window in number of blocks.\n"
+            "  \"window_tx_count\" : xxxxx,              (numeric) The number of transactions in the window. Only returned if \"window_block_count\" is > 0.\n"
+            "  \"window_interval\" : xxxxx,              (numeric) The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0.\n"
+            "  \"txrate\" : x.xx,                        (numeric) The average rate of transactions per second in the window. Only returned if \"window_interval\" is > 0.\n"
             "}\n"
                 },
                 RPCExamples{
@@ -1937,7 +1929,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
         }
     }
 
-    assert(pindex != nullptr);
+    CHECK_NONFATAL(pindex != nullptr);
 
     if (request.params[0].isNull()) {
         blockcount = std::max(0, std::min(blockcount, pindex->nHeight - 1));
@@ -2043,37 +2035,37 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{                           (json object)\n"
-            "  \"avgfee\": xxxxx,          (numeric) Average fee in the block\n"
-            "  \"avgfeerate\": xxxxx,      (numeric) Average feerate (in duffs per byte)\n"
-            "  \"avgtxsize\": xxxxx,       (numeric) Average transaction size\n"
-            "  \"blockhash\": xxxxx,       (string) The block hash (to check for potential reorgs)\n"
-            "  \"feerate_percentiles\": [  (array of numeric) Feerates at the 10th, 25th, 50th, 75th, and 90th percentile weight unit (in duffs per byte)\n"
+            "  \"avgfee\" : xxxxx,          (numeric) Average fee in the block\n"
+            "  \"avgfeerate\" : xxxxx,      (numeric) Average feerate (in duffs per byte)\n"
+            "  \"avgtxsize\" : xxxxx,       (numeric) Average transaction size\n"
+            "  \"blockhash\" : xxxxx,       (string) The block hash (to check for potential reorgs)\n"
+            "  \"feerate_percentiles\" : [  (array of numeric) Feerates at the 10th, 25th, 50th, 75th, and 90th percentile weight unit (in duffs per byte)\n"
             "      \"10th_percentile_feerate\",      (numeric) The 10th percentile feerate\n"
             "      \"25th_percentile_feerate\",      (numeric) The 25th percentile feerate\n"
             "      \"50th_percentile_feerate\",      (numeric) The 50th percentile feerate\n"
             "      \"75th_percentile_feerate\",      (numeric) The 75th percentile feerate\n"
             "      \"90th_percentile_feerate\",      (numeric) The 90th percentile feerate\n"
             "  ],\n"
-            "  \"height\": xxxxx,          (numeric) The height of the block\n"
-            "  \"ins\": xxxxx,             (numeric) The number of inputs (excluding coinbase)\n"
-            "  \"maxfee\": xxxxx,          (numeric) Maximum fee in the block\n"
-            "  \"maxfeerate\": xxxxx,      (numeric) Maximum feerate (in duffs per byte)\n"
-            "  \"maxtxsize\": xxxxx,       (numeric) Maximum transaction size\n"
-            "  \"medianfee\": xxxxx,       (numeric) Truncated median fee in the block\n"
-            "  \"mediantime\": xxxxx,      (numeric) The block median time past\n"
-            "  \"mediantxsize\": xxxxx,    (numeric) Truncated median transaction size\n"
-            "  \"minfee\": xxxxx,          (numeric) Minimum fee in the block\n"
-            "  \"minfeerate\": xxxxx,      (numeric) Minimum feerate (in duffs per byte)\n"
-            "  \"mintxsize\": xxxxx,       (numeric) Minimum transaction size\n"
-            "  \"outs\": xxxxx,            (numeric) The number of outputs\n"
-            "  \"subsidy\": xxxxx,         (numeric) The block subsidy\n"
-            "  \"time\": xxxxx,            (numeric) The block time\n"
-            "  \"total_out\": xxxxx,       (numeric) Total amount in all outputs (excluding coinbase and thus reward [ie subsidy + totalfee])\n"
-            "  \"total_size\": xxxxx,      (numeric) Total size of all non-coinbase transactions\n"
-            "  \"totalfee\": xxxxx,        (numeric) The fee total\n"
-            "  \"txs\": xxxxx,             (numeric) The number of transactions (excluding coinbase)\n"
-            "  \"utxo_increase\": xxxxx,   (numeric) The increase/decrease in the number of unspent outputs\n"
-            "  \"utxo_size_inc\": xxxxx,   (numeric) The increase/decrease in size for the utxo index (not discounting op_return and similar)\n"
+            "  \"height\" : xxxxx,          (numeric) The height of the block\n"
+            "  \"ins\" : xxxxx,             (numeric) The number of inputs (excluding coinbase)\n"
+            "  \"maxfee\" : xxxxx,          (numeric) Maximum fee in the block\n"
+            "  \"maxfeerate\" : xxxxx,      (numeric) Maximum feerate (in duffs per byte)\n"
+            "  \"maxtxsize\" : xxxxx,       (numeric) Maximum transaction size\n"
+            "  \"medianfee\" : xxxxx,       (numeric) Truncated median fee in the block\n"
+            "  \"mediantime\" : xxxxx,      (numeric) The block median time past\n"
+            "  \"mediantxsize\" : xxxxx,    (numeric) Truncated median transaction size\n"
+            "  \"minfee\" : xxxxx,          (numeric) Minimum fee in the block\n"
+            "  \"minfeerate\" : xxxxx,      (numeric) Minimum feerate (in duffs per byte)\n"
+            "  \"mintxsize\" : xxxxx,       (numeric) Minimum transaction size\n"
+            "  \"outs\" : xxxxx,            (numeric) The number of outputs\n"
+            "  \"subsidy\" : xxxxx,         (numeric) The block subsidy\n"
+            "  \"time\" : xxxxx,            (numeric) The block time\n"
+            "  \"total_out\" : xxxxx,       (numeric) Total amount in all outputs (excluding coinbase and thus reward [ie subsidy + totalfee])\n"
+            "  \"total_size\" : xxxxx,      (numeric) Total size of all non-coinbase transactions\n"
+            "  \"totalfee\" : xxxxx,        (numeric) The fee total\n"
+            "  \"txs\" : xxxxx,             (numeric) The number of transactions (excluding coinbase)\n"
+            "  \"utxo_increase\" : xxxxx,   (numeric) The increase/decrease in the number of unspent outputs\n"
+            "  \"utxo_size_inc\" : xxxxx,   (numeric) The increase/decrease in size for the utxo index (not discounting op_return and similar)\n"
             "}\n"
                 },
                 RPCExamples{
@@ -2119,7 +2111,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         }
     }
 
-    assert(pindex != nullptr);
+    CHECK_NONFATAL(pindex != nullptr);
 
     std::set<std::string> stats;
     if (!request.params[1].isNull()) {
@@ -2208,7 +2200,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
-            assert(MoneyRange(txfee));
+            CHECK_NONFATAL(MoneyRange(txfee));
             if (do_medianfee) {
                 fee_array.push_back(txfee);
             }
@@ -2448,7 +2440,7 @@ public:
     explicit CoinsViewScanReserver() : m_could_reserve(false) {}
 
     bool reserve() {
-        assert (!m_could_reserve);
+        CHECK_NONFATAL(!m_could_reserve);
         std::lock_guard<std::mutex> lock(g_utxosetscan);
         if (g_scan_in_progress) {
             return false;
@@ -2503,24 +2495,26 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                         "[scanobjects,...]"},
                 },
                 RPCResult{
-            "{\n"
-            "  \"success\": true|false,         (boolean) Whether the scan was completed\n"
-            "  \"txouts\": n,                   (numeric) The number of unspent transaction outputs scanned\n"
-            "  \"height\": n,                   (numeric) The current block height (index)\n"
-            "  \"bestblock\": \"hex\",            (string) The hash of the block at the tip of the chain\n"
-            "  \"unspents\": [\n"
-            "   {\n"
-            "    \"txid\": \"hash\",              (string) The transaction id\n"
-            "    \"vout\": n,                   (numeric) The vout value\n"
-            "    \"scriptPubKey\": \"script\",    (string) The script key\n"
-            "    \"desc\": \"descriptor\",        (string) A specialized descriptor for the matched scriptPubKey\n"
-            "    \"amount\": x.xxx,             (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output\n"
-            "    \"height\": n,                 (numeric) Height of the unspent transaction output\n"
-            "   }\n"
-            "   ,...],\n"
-            "  \"total_amount\": x.xxx,          (numeric) The total amount of all found unspent outputs in " + CURRENCY_UNIT + "\n"
-            "]\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::BOOL, "success", "Whether the scan was completed"},
+                        {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs scanned"},
+                        {RPCResult::Type::NUM, "height", "The current block height (index)"},
+                        {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
+                        {RPCResult::Type::ARR, "unspents", "",
+                            {
+                                {RPCResult::Type::OBJ, "", "",
+                                    {
+                                        {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+                                        {RPCResult::Type::NUM, "vout", "The vout value"},
+                                        {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
+                                        {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
+                                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                                        {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
+                                    }},
+                            }},
+                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
+                    }},
                 RPCExamples{""},
             }.ToString()
         );
@@ -2613,9 +2607,9 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             LOCK(cs_main);
             ::ChainstateActive().ForceFlushStateToDisk();
             pcursor = std::unique_ptr<CCoinsViewCursor>(::ChainstateActive().CoinsDB().Cursor());
-            assert(pcursor);
+            CHECK_NONFATAL(pcursor);
             tip = ::ChainActive().Tip();
-            assert(tip);
+            CHECK_NONFATAL(tip);
         }
         bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins);
         result.pushKV("success", res);

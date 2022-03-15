@@ -23,6 +23,13 @@ class RpcMiscTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
+        self.log.info("test CHECK_NONFATAL")
+        assert_raises_rpc_error(
+            -1,
+            "Internal bug detected: 'request.params.size() != 100'",
+            lambda: node.echo(*[0] * 100),
+        )
+
         self.log.info("test getmemoryinfo")
         memory = node.getmemoryinfo()['locked']
         assert_greater_than(memory['used'], 0)
