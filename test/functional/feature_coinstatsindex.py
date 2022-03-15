@@ -147,11 +147,24 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             })
             self.block_sanity_check(res5['block_info'])
 
-        # Generate and send a normal tx with two outputs
+        # Generate and send a normal tx with two outputs.
+        # Since we are expecting a specific value from `getxoutsetinfo`
+        # to check against, we need to fund tx1 deterministically,
+        # otherwise the value could change depending on coin selection.
+        #
+        # If we simply rely on `fundrawtransaction`, this test will need to be
+        # updated every time the logic for coin selection is changed.
+        #
+        # Instead, we know there is one UTXO of amount 40BTC in our wallet, so
+        # we select this as the first input and then use `fundrawtransaction`
+        # to select a 50 BTC coinbase UTXO from our wallet
         tx1_inputs = []
+        for utxo in self.nodes[0].listunspent():
+            if utxo['amount'] == 40:
+                tx1_inputs.append({"txid": utxo['txid'], "vout": utxo['vout']})
         tx1_outputs = {self.nodes[0].getnewaddress(): 21, self.nodes[0].getnewaddress(): 42}
         raw_tx1 = self.nodes[0].createrawtransaction(tx1_inputs, tx1_outputs)
-        funded_tx1 = self.nodes[0].fundrawtransaction(raw_tx1)
+        funded_tx1 = self.nodes[0].fundrawtransaction(hexstring=raw_tx1, options={"add_inputs": True})
         signed_tx1 = self.nodes[0].signrawtransactionwithwallet(funded_tx1['hex'])
         tx1_txid = self.nodes[0].sendrawtransaction(signed_tx1['hex'])
 
