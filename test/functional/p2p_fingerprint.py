@@ -11,11 +11,19 @@ the node should pretend that it does not have it to avoid fingerprinting.
 import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
-from test_framework.messages import CInv, MSG_BLOCK
+from test_framework.messages import (
+    CInv,
+    MSG_BLOCK,
+    CBlockHeader,
+    CBlock,
+    HeaderAndShortIDs,
+    from_hex,
+)
 from test_framework.p2p import (
     P2PInterface,
     msg_headers,
     msg_block,
+    msg_cmpctblock,
     msg_getdata,
     msg_getheaders,
     p2p_lock,
@@ -23,6 +31,7 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    p2p_port,
 )
 
 
@@ -30,6 +39,8 @@ class P2PFingerprintTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.onion_port = p2p_port(1)
+        self.extra_args = [[f"-bind=127.0.0.1:{self.onion_port}=onion"]]
 
     # Build a chain of blocks on top of given one
     def build_chain(self, nblocks, prev_hash, prev_height, prev_median_time):
@@ -57,6 +68,53 @@ class P2PFingerprintTest(BitcoinTestFramework):
         msg = msg_getheaders()
         msg.hashstop = block_hash
         node.send_message(msg)
+
+    def test_header_leak_via_headers(self, peer_id, node, stale_hash, allowed_to_leak=False):
+        if allowed_to_leak:
+            self.log.info(f"check that existence of stale header {hex(stale_hash)[2:]} leaks. peer={peer_id}")
+        else:
+            self.log.info(f"check that existence of stale header {hex(stale_hash)[2:]} does not leak. peer={peer_id}")
+
+        # Build headers for the fingerprinting attack
+        fake_stale_headers = []
+        prev_hash = stale_hash
+        for i in range(16):
+            fake_stale_header = CBlock()
+            fake_stale_header.hashPrevBlock = prev_hash
+            fake_stale_header.nBits = (32 << 24) + 0x7f0000
+            fake_stale_header.solve()
+            fake_stale_headers.append(fake_stale_header)
+            prev_hash = fake_stale_header.rehash()
+
+        self.log.info(f"send fake header with stale block as previous block. peer={peer_id}")
+        with p2p_lock:
+            node.last_message.pop("getheaders", None)
+        node.send_message(msg_headers(fake_stale_headers[:1]))
+        if allowed_to_leak:
+            node.wait_for_disconnect()
+            return
+        else:
+            node.wait_for_getheaders()
+
+        self.log.info(f"send multiple fake headers with stale block as previous block. peer={peer_id}")
+        with p2p_lock:
+            node.last_message.pop("getheaders", None)
+        with self.nodes[0].assert_debug_log(expected_msgs=[f"Misbehaving: peer={peer_id}"]):
+            node.send_message(msg_headers(fake_stale_headers))
+
+        self.log.info(f"send fake header using a compact block. peer={peer_id}")
+        header_and_shortids = HeaderAndShortIDs()
+        header_and_shortids.header = fake_stale_headers[0]
+        with p2p_lock:
+            node.last_message.pop("getheaders", None)
+        node.send_message(msg_cmpctblock(header_and_shortids.to_p2p()))
+        node.wait_for_getheaders()
+
+    def get_header(self, header_hash):
+        header = from_hex(CBlockHeader(), self.nodes[0].getblockheader(blockhash=header_hash, verbose=False))
+        header.calc_sha256()
+        assert_equal(header.hash, header_hash)
+        return header
 
     # Checks that stale blocks timestamped more than a month ago are not served
     # by the node while recent stale blocks and old active chain blocks are.
@@ -128,6 +186,43 @@ class P2PFingerprintTest(BitcoinTestFramework):
         self.send_header_request(block_hash, node0)
         node0.wait_for_header(hex(block_hash), timeout=3)
 
+        clearnet_node1 = node0
+        clearnet_node2 = self.nodes[0].add_p2p_connection(P2PInterface())
+        onion_node = self.nodes[0].add_p2p_connection(P2PInterface(), dstport=self.onion_port)
+
+        # Since the node mined the stale block itself, it should not leak it's
+        # existence to any network.
+        self.test_header_leak_via_headers(peer_id=0, node=clearnet_node1, stale_hash=stale_hash, allowed_to_leak=False)
+        self.test_header_leak_via_headers(peer_id=1, node=clearnet_node2, stale_hash=stale_hash, allowed_to_leak=False)
+        self.test_header_leak_via_headers(peer_id=2, node=onion_node, stale_hash=stale_hash, allowed_to_leak=False)
+
+        # Send the stale headers through clearnet_node1's network.
+        self.log.info("sending stale headers on clear net connection")
+        clearnet_node1.send_and_ping(msg_headers([
+            self.get_header(block_hashes[-2]),
+            self.get_header(block_hashes[-1])
+        ]))
+
+        # The header should now leak on any clearnet connection.
+        self.test_header_leak_via_headers(peer_id=0, node=clearnet_node1, stale_hash=stale_hash, allowed_to_leak=True)
+        self.test_header_leak_via_headers(peer_id=1, node=clearnet_node2, stale_hash=stale_hash, allowed_to_leak=True)
+        # Both clearnet connections should be disconnected because they sent
+        # invalid headers that build on the stale header.
+        assert(not clearnet_node1.is_connected)
+        assert(not clearnet_node2.is_connected)
+
+        # The header should still not be observable from another network.
+        self.test_header_leak_via_headers(peer_id=2, node=onion_node, stale_hash=stale_hash, allowed_to_leak=False)
+
+        # Send the stale headers through onion_node's network.
+        self.log.info("sending stale headers on onion connection")
+        onion_node.send_and_ping(msg_headers([
+            self.get_header(block_hashes[-2]),
+            self.get_header(block_hashes[-1])
+        ]))
+
+        self.test_header_leak_via_headers(peer_id=2, node=onion_node, stale_hash=stale_hash, allowed_to_leak=True)
+        assert(not onion_node.is_connected)
 
 if __name__ == '__main__':
     P2PFingerprintTest().main()
