@@ -457,3 +457,20 @@ RPCHelpMan savemempool()
 },
     };
 }
+
+void RegisterMempoolRPCCommands(CRPCTable& t)
+{
+    static const CRPCCommand commands[]{
+        // category     actor (function)
+        // --------     ----------------
+        {"blockchain", &getmempoolancestors},
+        {"blockchain", &getmempooldescendants},
+        {"blockchain", &getmempoolentry},
+        {"blockchain", &getmempoolinfo},
+        {"blockchain", &getrawmempool},
+        {"blockchain", &savemempool},
+    };
+    for (const auto& c : commands) {
+        t.appendCommand(c.name, &c);
+    }
+}

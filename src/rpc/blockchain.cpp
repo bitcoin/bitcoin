@@ -2378,13 +2378,6 @@ UniValue CreateUTXOSnapshot(
 }
 
 
-RPCHelpMan getmempoolancestors();
-RPCHelpMan getmempooldescendants();
-RPCHelpMan getmempoolentry();
-RPCHelpMan getmempoolinfo();
-RPCHelpMan getrawmempool();
-RPCHelpMan savemempool();
-
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -2403,15 +2396,9 @@ static const CRPCCommand commands[] =
     { "blockchain",         &getchaintips,                       },
     { "blockchain",         &getdifficulty,                      },
     { "blockchain",         &getdeploymentinfo,                  },
-    { "blockchain",         &getmempoolancestors,                },
-    { "blockchain",         &getmempooldescendants,              },
-    { "blockchain",         &getmempoolentry,                    },
-    { "blockchain",         &getmempoolinfo,                     },
-    { "blockchain",         &getrawmempool,                      },
     { "blockchain",         &gettxout,                           },
     { "blockchain",         &gettxoutsetinfo,                    },
     { "blockchain",         &pruneblockchain,                    },
-    { "blockchain",         &savemempool,                        },
     { "blockchain",         &verifychain,                        },
 
     { "blockchain",         &preciousblock,                      },
