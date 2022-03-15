@@ -1998,7 +1998,9 @@ AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp3-dev miss
 AC_SUBST(GMP_LIBS)
 
 
-AC_CONFIG_SUBDIRS([src/bls-dash/build])
+if test x$need_bundled_chiabls = xyes; then
+  AC_CONFIG_SUBDIRS([src/bls-dash/build])
+fi
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
 AC_CONFIG_SUBDIRS([src/secp256k1])
