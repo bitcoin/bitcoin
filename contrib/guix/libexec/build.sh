@@ -245,7 +245,21 @@ CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disab
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
 case "$HOST" in
-    *linux*)  HOST_CFLAGS+=" -ffile-prefix-map=${PWD}=." ;;
+    *linux*)  HOST_CFLAGS+=" -ffile-prefix-map=${PWD}=."
+              # looks horrible, but should remain stable with time-machine
+              # x86_64 paths
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/2d2r6jcsdjf6i3nzbrmf13psxmpwz55w-gcc-cross-sans-libc-x86_64-linux-gnu-7.5.0-lib/lib/gcc/x86_64-linux-gnu/7.5.0=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/4i6yk9wvvki48ap3nmx5lqpl71gzfgws-gcc-cross-x86_64-linux-gnu-10.3.0=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/kjsx80mi1vjcwkha8qdk1x6r31ds238k-gcc-cross-x86_64-linux-gnu-10.3.0-lib/lib/gcc/x86_64-linux-gnu/10.3.0=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/r3dlgv2cx82i775nad7hd4rb51azg04g-glibc-cross-x86_64-linux-gnu-2.24=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/gp1pjxqws72xnlzlz6m5m2mbsaypvzf5-linux-libre-headers-cross-x86_64-linux-gnu-4.9.301=/usr"
+              # aarch64 paths
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/vyp1v42wwbz6k3pl79hvz20rsysk9rd9-gcc-cross-sans-libc-x86_64-linux-gnu-7.5.0-lib/lib/gcc/x86_64-linux-gnu/7.5.0=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/7x4f9m2l69ad10ngjxy5cg8a0sjjfbwj-gcc-cross-x86_64-linux-gnu-10.3.0=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/24qha7qv7x1v9d7xfsfq1cbwm1206z3a-gcc-cross-x86_64-linux-gnu-10.3.0-lib/lib/gcc/x86_64-linux-gnu/10.3.0=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/wcw53rfzflsakmp1x9s1dqphbdc0sdr0-glibc-cross-x86_64-linux-gnu-2.24=/usr"
+              HOST_CFLAGS+=" -ffile-prefix-map=/gnu/store/cmgqkjwd5givck5wrcmax6k9sgd5v8k8-linux-libre-headers-cross-x86_64-linux-gnu-4.9.301=/usr"
+              ;;
     *mingw*)  HOST_CFLAGS+=" -fno-ident" ;;
     *darwin*) unset HOST_CFLAGS ;;
 esac
