@@ -217,7 +217,7 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
                 prevheights[txinIndex] = coin.nHeight;
             }
         }
-        lockPair = CalculateSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, prevheights, index);
+        lockPair = CalculateSequenceLocks(tx, prevheights, index);
         if (lp) {
             lp->height = lockPair.first;
             lp->time = lockPair.second;
@@ -2194,7 +2194,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
             }
 
-            if (!SequenceLocks(tx, LOCKTIME_VERIFY_SEQUENCE, prevheights, *pindex)) {
+            if (!SequenceLocks(tx, prevheights, *pindex)) {
                 LogPrintf("ERROR: %s: contains a non-BIP68-final transaction\n", __func__);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal");
             }

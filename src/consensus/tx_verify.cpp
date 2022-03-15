@@ -36,7 +36,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     return true;
 }
 
-std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeights, const CBlockIndex& block)
+std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction& tx, std::vector<int>& prevHeights, const CBlockIndex& block)
 {
     assert(prevHeights.size() == tx.vin.size());
 
@@ -51,8 +51,7 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
     // tx.nVersion is signed integer so requires cast to unsigned otherwise
     // we would be doing a signed comparison and half the range of nVersion
     // wouldn't support BIP 68.
-    bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
-                      && flags & LOCKTIME_VERIFY_SEQUENCE;
+    bool fEnforceBIP68{static_cast<uint32_t>(tx.nVersion) >= 2};
 
     // Do not enforce sequence numbers as a relative lock time
     // unless we have been instructed to
@@ -108,9 +107,9 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
     return true;
 }
 
-bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeights, const CBlockIndex& block)
+bool SequenceLocks(const CTransaction& tx, std::vector<int>& prevHeights, const CBlockIndex& block)
 {
-    return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
+    return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, prevHeights, block));
 }
 
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
