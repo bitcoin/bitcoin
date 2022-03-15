@@ -62,6 +62,11 @@ struct CBlockIndexWorkComparator {
     bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
 };
 
+struct CBlockIndexHeightOnlyComparator {
+    /* Only compares the height of two block indices, doesn't try to tie-break */
+    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+};
+
 /**
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
  * to determine where the most-work tip is.
