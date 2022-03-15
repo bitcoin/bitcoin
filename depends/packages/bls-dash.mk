@@ -46,12 +46,11 @@ define $(package)_set_vars
   $(package)_config_opts_debug=-DDEBUG=ON -DCMAKE_BUILD_TYPE=Debug
 
   ifneq ($(darwin_native_toolchain),)
-    $(package)_config_opts_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ar"
-    $(package)_config_opts_darwin+= -DCMAKE_LINKER="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ld"
-    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_darwin_triplet)-ranlib"
+    $(package)_config_opts_darwin+= -DCMAKE_AR="$($(package)_ar)"
+    $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$($(package)_ranlib)"
   endif
 
-  $(package)_cppflags+=-UBLSALLOC_SODIUM
+  $(package)_cppflags+= -UBLSALLOC_SODIUM
 endef
 
 define $(package)_preprocess_cmds
