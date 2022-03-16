@@ -30,7 +30,8 @@ set(CMAKE_MODULE_PATH
 
 include(FetchContent)
 
-FetchContent_Declare(Sodium
+FetchContent_Declare(
+  Sodium
   GIT_REPOSITORY https://github.com/AmineKhaldi/libsodium-cmake.git
   # Latest commit at the moment this was added here
   # Anchored to libsodium v1.0.18
