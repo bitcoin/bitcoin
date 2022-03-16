@@ -270,6 +270,7 @@ SYSCOIN_CORE_H = \
   rpc/blockchain.h \
   rpc/auxpow_miner.h \
   rpc/client.h \
+  rpc/mempool.h \
   rpc/mining.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
@@ -538,6 +539,7 @@ libsyscoin_node_a_SOURCES = \
   rest.cpp \
   rpc/auxpow_miner.cpp \
   rpc/blockchain.cpp \
+  rpc/mempool.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
