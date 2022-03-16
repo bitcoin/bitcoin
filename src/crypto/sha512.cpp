@@ -16,7 +16,7 @@ namespace sha512
 {
 uint64_t inline Ch(uint64_t x, uint64_t y, uint64_t z) { return z ^ (x & (y ^ z)); }
 uint64_t inline Maj(uint64_t x, uint64_t y, uint64_t z) { return (x & y) | (z & (x | y)); }
-uint64_t inline Rotr(uint64_t x, uint64_t n) { return ((x >> n)|(x << 64-n)); } // for uint64_t
+uint64_t inline Rotr(uint64_t x, uint64_t n) { return ((x >> n)|(x << 64-n)); } // for 64-bit int only
 
 /** Initialize SHA-256 state. */
 void inline Initialize(uint64_t* s)
@@ -68,31 +68,25 @@ void Transform(uint64_t* s, const unsigned char* chunk)
     // initialize hash values
     uint64_t V[8];
     memcpy(V, s, 64);
+
+    // 8-bit data chunk to 64-bit big endian array
     uint64_t* W = new uint64_t[80];
-    for(int c=0;c<80;c++) {
-        W[c] = 0x00;
-    }
-    
-    // 8 bit array values to 64 bit array
-    for (int i=0;i<128/8+1;i++) {
-        W[i] = (uint64_t)chunk[i*8]<<56;
-        for (int j=1;j<=6;j++)
-            W[i] = W[i]|( (uint64_t)chunk[i*8+j]<<(7-j)*8);
-        W[i] = W[i]|( (uint64_t)chunk[i*8+7] );
+    for(int i=0;i<16;i++) {
+        W[i] = ReadBE64(chunk + i*8);
     }
     
     // create message schedule
-    for (int c=16;c<80;c++) {
-        uint64_t s0 = Rotr(W[c-15],1) xor Rotr(W[c-15],8) xor (W[c-15]>>7);
-        uint64_t s1 = Rotr(W[c-2],19) xor Rotr(W[c-2],61) xor (W[c-2]>>6);
-        W[c] = W[c-16] + s0 + W[c-7] + s1;
+    for (int i=16;i<80;i++) {
+        uint64_t s0 = Rotr(W[i-15],1) xor Rotr(W[i-15],8) xor (W[i-15]>>7);
+        uint64_t s1 = Rotr(W[i-2],19) xor Rotr(W[i-2],61) xor (W[i-2]>>6);
+        W[i] = W[i-16] + s0 + W[i-7] + s1;
     }
     
     // Transform
-    for (int c=0;c<80;c++) {
+    for (int i=0;i<80;i++) {
         uint64_t S0 = Rotr(V[0], 28) xor Rotr(V[0], 34) xor Rotr(V[0], 39);
         uint64_t S1 = Rotr(V[4], 14) xor Rotr(V[4], 18) xor Rotr(V[4], 41);
-        uint64_t temp1 = V[7] + S1 + Ch(V[4], V[5], V[6]) + K[c] + W[c];
+        uint64_t temp1 = V[7] + S1 + Ch(V[4], V[5], V[6]) + K[i] + W[i];
         uint64_t temp2 = S0 + Maj(V[0], V[1], V[2]);
         V[7] = V[6];
         V[6] = V[5];
@@ -103,8 +97,8 @@ void Transform(uint64_t* s, const unsigned char* chunk)
         V[1] = V[0];
         V[0] = temp1 + temp2;
     }
-    for(int c=0;c<8;c++) {
-        s[c] += V[c];
+    for(int i=0;i<8;i++) {
+        s[i] += V[i];
     }
 }
 } // namespace sha512
