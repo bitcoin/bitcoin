@@ -121,6 +121,7 @@ BITCOIN_TESTS =\
   test/scheduler_tests.cpp \
   test/script_p2sh_tests.cpp \
   test/script_parse_tests.cpp \
+  test/script_segwit_tests.cpp \
   test/script_standard_tests.cpp \
   test/script_tests.cpp \
   test/scriptnum10.h \
