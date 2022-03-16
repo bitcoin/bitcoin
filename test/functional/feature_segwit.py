@@ -117,10 +117,6 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(len(node.getblock(block[0])["tx"]), 2)
         self.sync_blocks()
 
-    def fail_mine(self, node, txid, sign, redeem_script=""):
-        send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
-        assert_raises_rpc_error(-1, "unexpected witness data found", self.generate, node, 1)
-
     def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
         assert_raises_rpc_error(-26, error_msg, send_to_witness, use_p2wsh=1, node=node, utxo=getutxo(txid), pubkey=self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=sign, insert_redeem_script=redeem_script)
 
@@ -197,19 +193,19 @@ class SegWitTest(BitcoinTestFramework):
 
         self.generate(self.nodes[0], 264)  # block 427
 
-        self.log.info("Verify witness txs cannot be mined before the fork")
-        self.fail_mine(self.nodes[2], wit_ids[NODE_2][P2WPKH][0], True)
-        self.fail_mine(self.nodes[2], wit_ids[NODE_2][P2WSH][0], True)
-        self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][P2WPKH][0], True)
-        self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][P2WSH][0], True)
-
         self.log.info("Verify unsigned p2sh witness txs without a redeem script are invalid")
         self.fail_accept(self.nodes[2], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_2][P2WPKH][1], sign=False)
         self.fail_accept(self.nodes[2], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_2][P2WSH][1], sign=False)
 
         self.generate(self.nodes[0], 4)  # blocks 428-431
 
-        self.log.info("Verify previous witness txs can now be mined")
+        self.log.info("Verify witness txs are mined as soon as segwit activates")
+
+        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WPKH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WSH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(p2sh_ids[NODE_2][P2WPKH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(p2sh_ids[NODE_2][P2WSH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
         blockhash = self.generate(self.nodes[2], 1)[0]  # block 432 (first block with new rules; 432 = 144 * 3)
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
