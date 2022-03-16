@@ -17,6 +17,8 @@ bench_bench_syscoin_SOURCES = \
   bench/bech32.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/bls.cpp \
+  bench/bls_dkg.cpp \
   bench/bench_syscoin.cpp \
   bench/block_assemble.cpp \
   bench/ccoins_caching.cpp \
