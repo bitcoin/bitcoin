@@ -33,7 +33,7 @@ public:
 	// If there are multiple UTXOs for an output ID, the most recent will be removed.
 	// DatabaseException thrown if no UTXOs are found for an output ID.
 	//
-        void RemoveUTXOs(const std::vector<mw::Hash>& output_ids);
+    void RemoveUTXOs(const std::vector<mw::Hash>& output_ids);
 
 	//
 	// Removes all of the UTXOs from the database.

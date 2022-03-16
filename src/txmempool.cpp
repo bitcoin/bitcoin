@@ -1032,15 +1032,12 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
 bool CCoinsViewMemPool::HaveCoin(const OutputIndex& index) const 
 {
     if (index.type() == typeid(mw::Hash)) {
-        LogPrintf("Checking mempool\n");
         if (mempool.mapNextTx.find(index) != mempool.mapNextTx.end()) {
-            LogPrintf("Spend found in mempool!\n");
             return false;
         }
 
         auto iter = mempool.mapTxOutputs_MWEB.find(boost::get<mw::Hash>(index));
         if (iter != mempool.mapTxOutputs_MWEB.end()) {
-            LogPrintf("Coin in mempool!\n");
             assert(mempool.mapTx.count(iter->second->GetHash()) > 0);
             return true;
         }
