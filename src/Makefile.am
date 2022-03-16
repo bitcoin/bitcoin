@@ -681,7 +681,6 @@ bitcoin_bin_ldadd = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
@@ -868,7 +867,6 @@ bitcoin_chainstate_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBSECP256K1) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV)
 
 # Required for obj/build.h to be generated first.
