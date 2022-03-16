@@ -206,6 +206,8 @@ static const CRPCConvertParam rpc_params_convert_blockhash[] =
     { "getblockfilter", 0, "blockhash" },
     { "getrawtransaction", 2, "blockhash" },
     { "gettxoutproof", 1, "blockhash" },
+    { "getdeploymentinfo", 0, "blockhash" },
+    { "listsinceblock", 0, "blockhash" },
 };
 // clang-format on
 
