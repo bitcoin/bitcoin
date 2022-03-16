@@ -31,7 +31,7 @@ int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out
 
 std::string COutput::ToString() const
 {
-    return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
+    return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, depth, FormatMoney(tx->tx->vout[i].nValue));
 }
 
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* provider, bool use_max_sig)
@@ -218,7 +218,7 @@ CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinContr
     std::vector<COutput> vCoins;
     AvailableCoins(wallet, vCoins, coinControl);
     for (const COutput& out : vCoins) {
-        if (out.fSpendable) {
+        if (out.spendable) {
             balance += out.tx->tx->vout[out.i].nValue;
         }
     }
@@ -254,7 +254,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 
     for (const COutput& coin : availableCoins) {
         CTxDestination address;
-        if ((coin.fSpendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.fSolvable)) &&
+        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
             ExtractDestination(FindNonChangeParentOutput(wallet, *coin.tx->tx, coin.i).scriptPubKey, address)) {
             result[address].emplace_back(std::move(coin));
         }
@@ -292,7 +292,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
         // Allowing partial spends  means no grouping. Each COutput gets its own OutputGroup.
         for (const COutput& output : outputs) {
             // Skip outputs we cannot spend
-            if (!output.fSpendable) continue;
+            if (!output.spendable) continue;
 
             size_t ancestors, descendants;
             wallet.chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
@@ -300,7 +300,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
 
             // Make an OutputGroup containing just this output
             OutputGroup group{coin_sel_params};
-            group.Insert(input_coin, output.nDepth, CachedTxIsFromMe(wallet, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
+            group.Insert(input_coin, output.depth, CachedTxIsFromMe(wallet, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
 
             // Check the OutputGroup's eligibility. Only add the eligible ones.
             if (positive_only && group.GetSelectionAmount() <= 0) continue;
@@ -318,7 +318,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
     std::map<CScript, std::vector<OutputGroup>> spk_to_groups_map;
     for (const auto& output : outputs) {
         // Skip outputs we cannot spend
-        if (!output.fSpendable) continue;
+        if (!output.spendable) continue;
 
         size_t ancestors, descendants;
         wallet.chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
@@ -345,7 +345,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
         }
 
         // Add the input_coin to group
-        group->Insert(input_coin, output.nDepth, CachedTxIsFromMe(wallet, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
+        group->Insert(input_coin, output.depth, CachedTxIsFromMe(wallet, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
     }
 
     // Now we go through the entire map and pull out the OutputGroups
@@ -421,7 +421,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
     {
         for (const COutput& out : vCoins) {
-            if (!out.fSpendable) continue;
+            if (!out.spendable) continue;
             /* Set depth, from_me, ancestors, and descendants to 0 or false as these don't matter for preset inputs as no actual selection is being done.
              * positive_only is set to false because we want to include all preset inputs, even if they are dust.
              */

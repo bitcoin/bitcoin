@@ -58,7 +58,7 @@ static void CoinSelection(benchmark::Bench& bench)
     // Create coins
     std::vector<COutput> coins;
     for (const auto& wtx : wtxs) {
-        coins.emplace_back(wallet, *wtx, 0 /* iIn */, 6 * 24 /* nDepthIn */, true /* spendable */, true /* solvable */, true /* safe */);
+        coins.emplace_back(wallet, *wtx, 0 /* iIn */, 6 * 24 /* depth */, true /* spendable */, true /* solvable */, true /* safe */);
     }
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);

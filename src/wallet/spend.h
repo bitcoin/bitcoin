@@ -27,16 +27,16 @@ public:
      * If > 0: the tx is on chain and has this many confirmations.
      * If = 0: the tx is waiting confirmation.
      * If < 0: a conflicting tx is on chain and has this many confirmations. */
-    int nDepth;
+    int depth;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
-    int nInputBytes;
+    int input_bytes;
 
     /** Whether we have the private keys to spend this output */
-    bool fSpendable;
+    bool spendable;
 
     /** Whether we know how to spend this output, ignoring the lack of keys */
-    bool fSolvable;
+    bool solvable;
 
     /** Whether to use the maximum sized, 72 byte signature when calculating the size of the input spend. This should only be set when watch-only outputs are allowed */
     bool use_max_sig;
@@ -46,22 +46,22 @@ public:
      * from outside keys and unconfirmed replacement transactions are considered
      * unsafe and will not be used to fund new spending transactions.
      */
-    bool fSafe;
+    bool safe;
 
-    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
+    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, bool spendable, bool solvable, bool safe, bool use_max_sig_in = false)
         : tx(&wtx),
         i(iIn),
-        nDepth(nDepthIn),
-        nInputBytes(-1),
-        fSpendable(fSpendableIn),
-        fSolvable(fSolvableIn),
+        depth(depth),
+        input_bytes(-1),
+        spendable(spendable),
+        solvable(solvable),
         use_max_sig(use_max_sig_in),
-        fSafe(fSafeIn)
+        safe(safe)
     {
-        // If known and signable by the given wallet, compute nInputBytes
+        // If known and signable by the given wallet, compute input_bytes
         // Failure will keep this value -1
-        if (fSpendable) {
-            nInputBytes = GetTxSpendSize(wallet, wtx, i, use_max_sig);
+        if (spendable) {
+            input_bytes = GetTxSpendSize(wallet, wtx, i, use_max_sig);
         }
     }
 
@@ -69,7 +69,7 @@ public:
 
     inline CInputCoin GetInputCoin() const
     {
-        return CInputCoin(tx->tx, i, nInputBytes);
+        return CInputCoin(tx->tx, i, input_bytes);
     }
 };
 
