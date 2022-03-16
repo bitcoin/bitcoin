@@ -4,8 +4,6 @@
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on macOS
 
-**Note:** The following is for Intel Macs only!
-
 ## Dependencies
 
 The following dependencies are **required**:
