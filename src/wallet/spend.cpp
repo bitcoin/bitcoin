@@ -275,7 +275,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(wallet, *it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        wallet, it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                        wallet, it->second, output.n, depth, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, /*use_max_sig_in=*/ false);
                 }
             }
         }

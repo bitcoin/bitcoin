@@ -48,7 +48,7 @@ public:
      */
     bool safe;
 
-    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, bool spendable, bool solvable, bool safe, bool use_max_sig_in = false)
+    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int depth, bool spendable, bool solvable, bool safe, bool use_max_sig_in)
         : tx(&wtx),
         i(iIn),
         depth(depth),

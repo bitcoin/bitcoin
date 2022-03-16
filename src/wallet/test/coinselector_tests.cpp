@@ -98,7 +98,7 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
         wtx.m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
         wtx.m_is_cache_empty = false;
     }
-    COutput output(wallet, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wallet, wtx, nInput, nAge, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*use_max_sig_in=*/ false);
     coins.push_back(output);
 }
 
