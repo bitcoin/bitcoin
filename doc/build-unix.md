@@ -26,30 +26,7 @@ make install # optional
 
 This will build bitcoin-qt as well, if the dependencies are met.
 
-Dependencies
----------------------
-
-These dependencies are required:
-
- Library     | Purpose          | Description
- ------------|------------------|----------------------
- libboost    | Utility          | Library for threading, data structures, etc
- libevent    | Networking       | OS independent asynchronous networking
-
-Optional dependencies:
-
- Library     | Purpose          | Description
- ------------|------------------|----------------------
- miniupnpc   | UPnP Support     | Firewall-jumping support
- libnatpmp   | NAT-PMP Support  | Firewall-jumping support
- libdb4.8    | Berkeley DB      | Wallet storage (only needed when legacy wallet enabled)
- qt          | GUI              | GUI toolkit (only needed when GUI enabled)
- libqrencode | QR codes in GUI  | QR code generation (only needed when GUI enabled)
- libzmq3     | ZMQ notification | ZMQ notifications (requires ZMQ version >= 4.0.0)
- sqlite3     | SQLite DB        | Wallet storage (only needed when descriptor wallet enabled)
- systemtap   | Tracing (USDT)   | Statically defined tracepoints
-
-For the versions used, see [dependencies.md](dependencies.md)
+See [dependencies.md](dependencies.md) for a complete overview.
 
 Memory Requirements
 --------------------
