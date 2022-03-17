@@ -4,7 +4,7 @@ These are the dependencies used by Bitcoin Core.
 You can find installation instructions in the `build-*.md` file for your platform.
 "Runtime" and "Version Used" are both in reference to the release binaries.
 
-| Compiler | Minimum required |
+| Dependency | Minimum required |
 | --- | --- |
 | [Autoconf](https://www.gnu.org/software/autoconf/) | [2.69](https://github.com/bitcoin/bitcoin/pull/17769) |
 | [Automake](https://www.gnu.org/software/automake/) | [1.13](https://github.com/bitcoin/bitcoin/pull/18290) |
