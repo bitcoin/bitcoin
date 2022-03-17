@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
 #include <arith_uint256.h>
+#include <chainparams.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
@@ -16,7 +16,7 @@
 #include <pow.h>
 #include <pubkey.h>
 #include <rpc/util.h>
-#include <script/signingprovider.h>
+#include <script/sign.h>
 #include <script/standard.h>
 #include <serialize.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -57,14 +57,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     const Consensus::Params& consensus_params = Params().GetConsensus();
     (void)CheckProofOfWork(u256, u32, consensus_params);
-    if (u64 <= MAX_MONEY) {
-        const uint64_t compressed_money_amount = CompressAmount(u64);
-        assert(u64 == DecompressAmount(compressed_money_amount));
-        static const uint64_t compressed_money_amount_max = CompressAmount(MAX_MONEY - 1);
-        assert(compressed_money_amount <= compressed_money_amount_max);
-    } else {
-        (void)CompressAmount(u64);
-    }
+    (void)CompressAmount(u64);
     static const uint256 u256_min(uint256S("0000000000000000000000000000000000000000000000000000000000000000"));
     static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     const std::vector<uint256> v256{u256, u256_min, u256_max};
@@ -95,6 +88,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const unsigned char uch = static_cast<unsigned char>(u8);
     (void)memusage::DynamicUsage(uch);
     (void)MillisToTimeval(i64);
+    const double d = ser_uint64_to_double(u64);
+    assert(ser_double_to_uint64(d) == u64);
+    const float f = ser_uint32_to_float(u32);
+    assert(ser_float_to_uint32(f) == u32);
     (void)SighashToStr(uch);
     (void)SipHashUint256(u64, u64, u256);
     (void)SipHashUint256Extra(u64, u64, u256, u32);
@@ -114,17 +111,11 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     const CKeyID key_id{u160};
     const CScriptID script_id{u160};
-    // CTxDestination = CNoDestination ∪ PKHash ∪ ScriptHash ∪ WitnessV0ScriptHash ∪ WitnessV0KeyHash ∪ WitnessUnknown
-    const PKHash pk_hash{u160};
-    const ScriptHash script_hash{u160};
-    const WitnessV0KeyHash witness_v0_key_hash{u160};
-    const WitnessV0ScriptHash witness_v0_script_hash{u256};
-    const std::vector<CTxDestination> destinations{pk_hash, script_hash, witness_v0_key_hash, witness_v0_script_hash};
-    const SigningProvider store;
+    // CTxDestination = CNoDestination ∪ CKeyID ∪ CScriptID
+    const std::vector<CTxDestination> destinations{key_id, script_id};
     for (const CTxDestination& destination : destinations) {
         (void)DescribeAddress(destination);
         (void)EncodeDestination(destination);
-        (void)GetKeyForDestination(store, destination);
         (void)GetScriptForDestination(destination);
         (void)IsValidDestination(destination);
     }
