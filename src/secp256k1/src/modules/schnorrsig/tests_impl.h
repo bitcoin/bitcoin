@@ -87,7 +87,7 @@ void run_nonce_function_bip340_tests(void) {
     CHECK(nonce_function_bip340(nonce, msg, msglen, key, pk, NULL, 0, NULL) == 0);
     CHECK(nonce_function_bip340(nonce, msg, msglen, key, pk, algo, algolen, NULL) == 1);
     /* Other algo is fine */
-    secp256k1_rfc6979_hmac_sha256_generate(&secp256k1_test_rng, algo, algolen);
+    secp256k1_testrand_bytes_test(algo, algolen);
     CHECK(nonce_function_bip340(nonce, msg, msglen, key, pk, algo, algolen, NULL) == 1);
 
     for (i = 0; i < count; i++) {
@@ -795,18 +795,18 @@ void test_schnorrsig_sign_verify(void) {
         /* Flip a few bits in the signature and in the message and check that
          * verify and verify_batch (TODO) fail */
         size_t sig_idx = secp256k1_testrand_int(N_SIGS);
-        size_t byte_idx = secp256k1_testrand_int(32);
+        size_t byte_idx = secp256k1_testrand_bits(5);
         unsigned char xorbyte = secp256k1_testrand_int(254)+1;
         sig[sig_idx][byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(ctx, sig[sig_idx], msg[sig_idx], sizeof(msg[sig_idx]), &pk));
         sig[sig_idx][byte_idx] ^= xorbyte;
 
-        byte_idx = secp256k1_testrand_int(32);
+        byte_idx = secp256k1_testrand_bits(5);
         sig[sig_idx][32+byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(ctx, sig[sig_idx], msg[sig_idx], sizeof(msg[sig_idx]), &pk));
         sig[sig_idx][32+byte_idx] ^= xorbyte;
 
-        byte_idx = secp256k1_testrand_int(32);
+        byte_idx = secp256k1_testrand_bits(5);
         msg[sig_idx][byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(ctx, sig[sig_idx], msg[sig_idx], sizeof(msg[sig_idx]), &pk));
         msg[sig_idx][byte_idx] ^= xorbyte;
