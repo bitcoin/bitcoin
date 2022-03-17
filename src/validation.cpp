@@ -65,21 +65,22 @@
 using node::BLOCKFILE_CHUNK_SIZE;
 using node::BlockManager;
 using node::BlockMap;
+using node::CBlockIndexHeightOnlyComparator;
 using node::CBlockIndexWorkComparator;
 using node::CCoinsStats;
 using node::CoinStatsHashType;
+using node::fHavePruned;
+using node::fImporting;
+using node::fPruneMode;
+using node::fReindex;
 using node::GetUTXOStats;
+using node::nPruneTarget;
 using node::OpenBlockFile;
 using node::ReadBlockFromDisk;
 using node::SnapshotMetadata;
 using node::UNDOFILE_CHUNK_SIZE;
 using node::UndoReadFromDisk;
 using node::UnlinkPrunedFiles;
-using node::fHavePruned;
-using node::fImporting;
-using node::fPruneMode;
-using node::fReindex;
-using node::nPruneTarget;
 
 #define MICRO 0.000001
 #define MILLI 0.001
@@ -106,24 +107,6 @@ const std::vector<std::string> CHECKLEVEL_DOC {
     "level 4 tries to reconnect the blocks",
     "each level includes the checks of the previous levels",
 };
-
-bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
-    // First sort by most total work, ...
-    if (pa->nChainWork > pb->nChainWork) return false;
-    if (pa->nChainWork < pb->nChainWork) return true;
-
-    // ... then by earliest time received, ...
-    if (pa->nSequenceId < pb->nSequenceId) return false;
-    if (pa->nSequenceId > pb->nSequenceId) return true;
-
-    // Use pointer address as tie breaker (should only happen with blocks
-    // loaded from disk, as those all have id 0).
-    if (pa < pb) return false;
-    if (pa > pb) return true;
-
-    // Identical blocks.
-    return false;
-}
 
 /**
  * Mutex to guard access to validation specific variables, such as reading
@@ -152,14 +135,14 @@ arith_uint256 nMinimumChainWork;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
-CBlockIndex* CChainState::FindForkInGlobalIndex(const CBlockLocator& locator) const
+const CBlockIndex* CChainState::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
     AssertLockHeld(cs_main);
 
     // Find the latest block common to locator and chain - we expect that
     // locator.vHave is sorted descending by height.
     for (const uint256& hash : locator.vHave) {
-        CBlockIndex* pindex{m_blockman.LookupBlockIndex(hash)};
+        const CBlockIndex* pindex{m_blockman.LookupBlockIndex(hash)};
         if (pindex) {
             if (m_chain.Contains(pindex)) {
                 return pindex;
@@ -3381,7 +3364,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         // Don't accept any forks from the main chain prior to last checkpoint.
         // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
         // BlockIndex().
-        CBlockIndex* pcheckpoint = blockman.GetLastCheckpoint(params.Checkpoints());
+        const CBlockIndex* pcheckpoint = blockman.GetLastCheckpoint(params.Checkpoints());
         if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
             LogPrintf("ERROR: %s: forked chain older than last checkpoint (height %d)\n", __func__, nHeight);
             return state.Invalid(BlockValidationResult::BLOCK_CHECKPOINT, "bad-fork-prior-to-checkpoint");
@@ -4091,8 +4074,74 @@ bool ChainstateManager::LoadBlockIndex()
     // Load block index from databases
     bool needs_init = fReindex;
     if (!fReindex) {
-        bool ret = m_blockman.LoadBlockIndexDB(*this);
+        bool ret = m_blockman.LoadBlockIndexDB();
         if (!ret) return false;
+
+        std::vector<CBlockIndex*> vSortedByHeight{m_blockman.GetAllBlockIndices()};
+        std::sort(vSortedByHeight.begin(), vSortedByHeight.end(),
+                  CBlockIndexHeightOnlyComparator());
+
+        // Find start of assumed-valid region.
+        int first_assumed_valid_height = std::numeric_limits<int>::max();
+
+        for (const CBlockIndex* block : vSortedByHeight) {
+            if (block->IsAssumedValid()) {
+                auto chainstates = GetAll();
+
+                // If we encounter an assumed-valid block index entry, ensure that we have
+                // one chainstate that tolerates assumed-valid entries and another that does
+                // not (i.e. the background validation chainstate), since assumed-valid
+                // entries should always be pending validation by a fully-validated chainstate.
+                auto any_chain = [&](auto fnc) { return std::any_of(chainstates.cbegin(), chainstates.cend(), fnc); };
+                assert(any_chain([](auto chainstate) { return chainstate->reliesOnAssumedValid(); }));
+                assert(any_chain([](auto chainstate) { return !chainstate->reliesOnAssumedValid(); }));
+
+                first_assumed_valid_height = block->nHeight;
+                break;
+            }
+        }
+
+        for (CBlockIndex* pindex : vSortedByHeight) {
+            if (ShutdownRequested()) return false;
+            if (pindex->IsAssumedValid() ||
+                    (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
+                     (pindex->HaveTxsDownloaded() || pindex->pprev == nullptr))) {
+
+                // Fill each chainstate's block candidate set. Only add assumed-valid
+                // blocks to the tip candidate set if the chainstate is allowed to rely on
+                // assumed-valid blocks.
+                //
+                // If all setBlockIndexCandidates contained the assumed-valid blocks, the
+                // background chainstate's ActivateBestChain() call would add assumed-valid
+                // blocks to the chain (based on how FindMostWorkChain() works). Obviously
+                // we don't want this since the purpose of the background validation chain
+                // is to validate assued-valid blocks.
+                //
+                // Note: This is considering all blocks whose height is greater or equal to
+                // the first assumed-valid block to be assumed-valid blocks, and excluding
+                // them from the background chainstate's setBlockIndexCandidates set. This
+                // does mean that some blocks which are not technically assumed-valid
+                // (later blocks on a fork beginning before the first assumed-valid block)
+                // might not get added to the background chainstate, but this is ok,
+                // because they will still be attached to the active chainstate if they
+                // actually contain more work.
+                //
+                // Instead of this height-based approach, an earlier attempt was made at
+                // detecting "holistically" whether the block index under consideration
+                // relied on an assumed-valid ancestor, but this proved to be too slow to
+                // be practical.
+                for (CChainState* chainstate : GetAll()) {
+                    if (chainstate->reliesOnAssumedValid() ||
+                            pindex->nHeight < first_assumed_valid_height) {
+                        chainstate->setBlockIndexCandidates.insert(pindex);
+                    }
+                }
+            }
+            if (pindex->nStatus & BLOCK_FAILED_MASK && (!m_best_invalid || pindex->nChainWork > m_best_invalid->nChainWork)) {
+                m_best_invalid = pindex;
+            }
+        }
+
         needs_init = m_blockman.m_block_index.empty();
     }
 
@@ -4194,7 +4243,7 @@ void CChainState::LoadExternalBlockFile(FILE* fileIn, FlatFilePos* dbp)
                     }
 
                     // process in case the block isn't known yet
-                    CBlockIndex* pindex = m_blockman.LookupBlockIndex(hash);
+                    const CBlockIndex* pindex = m_blockman.LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
                       BlockValidationState state;
                       if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr)) {
