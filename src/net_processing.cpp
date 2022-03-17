@@ -332,6 +332,104 @@ struct Peer {
 
 using PeerRef = std::shared_ptr<Peer>;
 
+/**
+ * Maintain validation-specific state about nodes, protected by cs_main, instead
+ * by CNode's own locks. This simplifies asynchronous operation, where
+ * processing of incoming data is done after the ProcessMessage call returns,
+ * and we're no longer holding the node's locks.
+ */
+struct CNodeState {
+    //! The best known block we know this peer has announced.
+    const CBlockIndex* pindexBestKnownBlock{nullptr};
+    //! The hash of the last unknown block this peer has announced.
+    uint256 hashLastUnknownBlock{};
+    //! The last full block we both have.
+    const CBlockIndex* pindexLastCommonBlock{nullptr};
+    //! The best header we have sent our peer.
+    const CBlockIndex* pindexBestHeaderSent{nullptr};
+    //! Length of current-streak of unconnecting headers announcements
+    int nUnconnectingHeaders{0};
+    //! Whether we've started headers synchronization with this peer.
+    bool fSyncStarted{false};
+    //! When to potentially disconnect peer for stalling headers download
+    std::chrono::microseconds m_headers_sync_timeout{0us};
+    //! Since when we're stalling block download progress (in microseconds), or 0.
+    std::chrono::microseconds m_stalling_since{0us};
+    std::list<QueuedBlock> vBlocksInFlight;
+    //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
+    std::chrono::microseconds m_downloading_since{0us};
+    int nBlocksInFlight{0};
+    //! Whether we consider this a preferred download peer.
+    bool fPreferredDownload{false};
+    //! Whether this peer wants invs or headers (when possible) for block announcements.
+    bool fPreferHeaders{false};
+    //! Whether this peer wants invs or cmpctblocks (when possible) for block announcements.
+    bool fPreferHeaderAndIDs{false};
+    /**
+      * Whether this peer will send us cmpctblocks if we request them.
+      * This is not used to gate request logic, as we really only care about fSupportsDesiredCmpctVersion,
+      * but is used as a flag to "lock in" the version of compact blocks (fWantsCmpctWitness) we send.
+      */
+    bool fProvidesHeaderAndIDs{false};
+    //! Whether this peer can give us witnesses
+    bool fHaveWitness{false};
+    //! Whether this peer wants witnesses in cmpctblocks/blocktxns
+    bool fWantsCmpctWitness{false};
+    /**
+     * If we've announced NODE_WITNESS to this peer: whether the peer sends witnesses in cmpctblocks/blocktxns,
+     * otherwise: whether this peer sends non-witnesses in cmpctblocks/blocktxns.
+     */
+    bool fSupportsDesiredCmpctVersion{false};
+
+    /** State used to enforce CHAIN_SYNC_TIMEOUT and EXTRA_PEER_CHECK_INTERVAL logic.
+      *
+      * Both are only in effect for outbound, non-manual, non-protected connections.
+      * Any peer protected (m_protect = true) is not chosen for eviction. A peer is
+      * marked as protected if all of these are true:
+      *   - its connection type is IsBlockOnlyConn() == false
+      *   - it gave us a valid connecting header
+      *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
+      *   - its chain tip has at least as much work as ours
+      *
+      * CHAIN_SYNC_TIMEOUT: if a peer's best known block has less work than our tip,
+      * set a timeout CHAIN_SYNC_TIMEOUT in the future:
+      *   - If at timeout their best known block now has more work than our tip
+      *     when the timeout was set, then either reset the timeout or clear it
+      *     (after comparing against our current tip's work)
+      *   - If at timeout their best known block still has less work than our
+      *     tip did when the timeout was set, then send a getheaders message,
+      *     and set a shorter timeout, HEADERS_RESPONSE_TIME seconds in future.
+      *     If their best known block is still behind when that new timeout is
+      *     reached, disconnect.
+      *
+      * EXTRA_PEER_CHECK_INTERVAL: after each interval, if we have too many outbound peers,
+      * drop the outbound one that least recently announced us a new block.
+      */
+    struct ChainSyncTimeoutState {
+        //! A timeout used for checking whether our peer has sufficiently synced
+        std::chrono::seconds m_timeout{0s};
+        //! A header with the work we require on our peer's chain
+        const CBlockIndex* m_work_header{nullptr};
+        //! After timeout is reached, set to true after sending getheaders
+        bool m_sent_getheaders{false};
+        //! Whether this peer is protected from disconnection due to a bad/slow chain
+        bool m_protect{false};
+    };
+
+    ChainSyncTimeoutState m_chain_sync;
+
+    //! Time of last new block announcement
+    int64_t m_last_block_announcement{0};
+
+    //! Whether this peer is an inbound connection
+    const bool m_is_inbound;
+
+    //! A rolling bloom filter of all announced tx CInvs to this peer.
+    CRollingBloomFilter m_recently_announced_invs = CRollingBloomFilter{INVENTORY_MAX_RECENT_RELAY, 0.000001};
+
+    CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
+};
+
 class PeerManagerImpl final : public PeerManager
 {
 public:
@@ -716,103 +814,6 @@ namespace {
 } // namespace
 
 namespace {
-/**
- * Maintain validation-specific state about nodes, protected by cs_main, instead
- * by CNode's own locks. This simplifies asynchronous operation, where
- * processing of incoming data is done after the ProcessMessage call returns,
- * and we're no longer holding the node's locks.
- */
-struct CNodeState {
-    //! The best known block we know this peer has announced.
-    const CBlockIndex* pindexBestKnownBlock{nullptr};
-    //! The hash of the last unknown block this peer has announced.
-    uint256 hashLastUnknownBlock{};
-    //! The last full block we both have.
-    const CBlockIndex* pindexLastCommonBlock{nullptr};
-    //! The best header we have sent our peer.
-    const CBlockIndex* pindexBestHeaderSent{nullptr};
-    //! Length of current-streak of unconnecting headers announcements
-    int nUnconnectingHeaders{0};
-    //! Whether we've started headers synchronization with this peer.
-    bool fSyncStarted{false};
-    //! When to potentially disconnect peer for stalling headers download
-    std::chrono::microseconds m_headers_sync_timeout{0us};
-    //! Since when we're stalling block download progress (in microseconds), or 0.
-    std::chrono::microseconds m_stalling_since{0us};
-    std::list<QueuedBlock> vBlocksInFlight;
-    //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
-    std::chrono::microseconds m_downloading_since{0us};
-    int nBlocksInFlight{0};
-    //! Whether we consider this a preferred download peer.
-    bool fPreferredDownload{false};
-    //! Whether this peer wants invs or headers (when possible) for block announcements.
-    bool fPreferHeaders{false};
-    //! Whether this peer wants invs or cmpctblocks (when possible) for block announcements.
-    bool fPreferHeaderAndIDs{false};
-    /**
-      * Whether this peer will send us cmpctblocks if we request them.
-      * This is not used to gate request logic, as we really only care about fSupportsDesiredCmpctVersion,
-      * but is used as a flag to "lock in" the version of compact blocks (fWantsCmpctWitness) we send.
-      */
-    bool fProvidesHeaderAndIDs{false};
-    //! Whether this peer can give us witnesses
-    bool fHaveWitness{false};
-    //! Whether this peer wants witnesses in cmpctblocks/blocktxns
-    bool fWantsCmpctWitness{false};
-    /**
-     * If we've announced NODE_WITNESS to this peer: whether the peer sends witnesses in cmpctblocks/blocktxns,
-     * otherwise: whether this peer sends non-witnesses in cmpctblocks/blocktxns.
-     */
-    bool fSupportsDesiredCmpctVersion{false};
-
-    /** State used to enforce CHAIN_SYNC_TIMEOUT and EXTRA_PEER_CHECK_INTERVAL logic.
-      *
-      * Both are only in effect for outbound, non-manual, non-protected connections.
-      * Any peer protected (m_protect = true) is not chosen for eviction. A peer is
-      * marked as protected if all of these are true:
-      *   - its connection type is IsBlockOnlyConn() == false
-      *   - it gave us a valid connecting header
-      *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
-      *   - its chain tip has at least as much work as ours
-      *
-      * CHAIN_SYNC_TIMEOUT: if a peer's best known block has less work than our tip,
-      * set a timeout CHAIN_SYNC_TIMEOUT in the future:
-      *   - If at timeout their best known block now has more work than our tip
-      *     when the timeout was set, then either reset the timeout or clear it
-      *     (after comparing against our current tip's work)
-      *   - If at timeout their best known block still has less work than our
-      *     tip did when the timeout was set, then send a getheaders message,
-      *     and set a shorter timeout, HEADERS_RESPONSE_TIME seconds in future.
-      *     If their best known block is still behind when that new timeout is
-      *     reached, disconnect.
-      *
-      * EXTRA_PEER_CHECK_INTERVAL: after each interval, if we have too many outbound peers,
-      * drop the outbound one that least recently announced us a new block.
-      */
-    struct ChainSyncTimeoutState {
-        //! A timeout used for checking whether our peer has sufficiently synced
-        std::chrono::seconds m_timeout{0s};
-        //! A header with the work we require on our peer's chain
-        const CBlockIndex* m_work_header{nullptr};
-        //! After timeout is reached, set to true after sending getheaders
-        bool m_sent_getheaders{false};
-        //! Whether this peer is protected from disconnection due to a bad/slow chain
-        bool m_protect{false};
-    };
-
-    ChainSyncTimeoutState m_chain_sync;
-
-    //! Time of last new block announcement
-    int64_t m_last_block_announcement{0};
-
-    //! Whether this peer is an inbound connection
-    const bool m_is_inbound;
-
-    //! A rolling bloom filter of all announced tx CInvs to this peer.
-    CRollingBloomFilter m_recently_announced_invs = CRollingBloomFilter{INVENTORY_MAX_RECENT_RELAY, 0.000001};
-
-    CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
-};
 
 /** Map maintaining per-node state. */
 static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
