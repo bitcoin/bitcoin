@@ -257,6 +257,13 @@ linux64_cxx20-build:
   variables:
     BUILD_TARGET: linux64_cxx20
 
+linux64_fuzz-build:
+  extends: .build-template
+  needs:
+    - x86_64-unknown-linux-gnu-debug
+  variables:
+    BUILD_TARGET: linux64_fuzz
+
 linux64_tsan-build:
   extends:
     - .build-template
