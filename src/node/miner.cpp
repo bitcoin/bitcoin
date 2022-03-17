@@ -60,7 +60,7 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman, const std
     tx.vout.erase(tx.vout.begin() + GetWitnessCommitmentIndex(block));
     block.vtx.at(0) = MakeTransactionRef(tx);
 
-    CBlockIndex* prev_block = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock));
+    const CBlockIndex* prev_block = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock));
     // SYSCOIN
     GenerateCoinbaseCommitment(block, prev_block, Params().GetConsensus(), vchExtraData);
 
