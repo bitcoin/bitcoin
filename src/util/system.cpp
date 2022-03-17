@@ -5,12 +5,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <limits>
 #include <util/system.h>
 
 #include <chainparamsbase.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
+#include <veriblock/pop.hpp>
 
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
@@ -849,6 +851,20 @@ std::string ArgsManager::GetChainName() const
     if (fTestNet)
         return CBaseChainParams::TESTNET;
     return GetArg("-chain", CBaseChainParams::MAIN);
+}
+
+int64_t ArgsManager::AltBlocksInMem() const {
+    int64_t window = GetArg("-popaltblocksinmem", altintegration::MAX_REORG_BLOCKS_MIN_VALUE);
+    if (window < 0) {
+        return std::numeric_limits<::int32_t>::max();
+    }
+    if (window >= std::numeric_limits<int32_t>::max()) {
+        return std::numeric_limits<int32_t>::max();
+    }
+    if (window < altintegration::MAX_REORG_BLOCKS_MIN_VALUE) {
+        throw std::runtime_error(strprintf("popaltblocksinmem should be >= %d", altintegration::MAX_REORG_BLOCKS_MIN_VALUE));
+    }
+    return window;
 }
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const

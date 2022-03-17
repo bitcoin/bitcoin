@@ -91,7 +91,7 @@ void printConfig(const altintegration::Config& config)
         config.alt->getIdentifier());
 }
 
-void selectPopConfig(const std::string& network)
+void selectPopConfig(const std::string& network, int32_t window)
 {
     altintegration::Config popconfig;
 
@@ -100,21 +100,21 @@ void selectPopConfig(const std::string& network)
         popconfig.setBTC(mainnetBTCstartHeight, mainnetBTCblocks, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsMain>();
         popconfig.setVBK(mainnetVBKstartHeight, mainnetVBKblocks, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQ>(Params().GenesisBlock());
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQ>(Params().GenesisBlock(), window);
         popconfig.alt = altparam;
     } else if (network == CBaseChainParams::TESTNET) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsTest>();
         popconfig.setBTC(testnetBTCstartHeight, testnetBTCblocks, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsTest>();
         popconfig.setVBK(testnetVBKstartHeight, testnetVBKblocks, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQ>(Params().GenesisBlock());
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQ>(Params().GenesisBlock(), window);
         popconfig.alt = altparam;
     } else if (network == CBaseChainParams::REGTEST) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsRegTest>();
         popconfig.setBTC(0, {}, btcparam);
         auto vbkparam = std::make_shared<altintegration::VbkChainParamsRegTest>();
         popconfig.setVBK(0, {}, vbkparam);
-        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQRegTest>(Params().GenesisBlock());
+        auto altparam = std::make_shared<VeriBlock::AltChainParamsBTCSQRegTest>(Params().GenesisBlock(), window);
         popconfig.alt = altparam;
     } else if (network == CBaseChainParams::DETREGTEST) {
         auto btcparam = std::make_shared<altintegration::BtcChainParamsRegTest>();

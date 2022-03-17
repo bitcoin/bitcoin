@@ -289,6 +289,8 @@ public:
      */
     std::string GetChainName() const;
 
+    int64_t AltBlocksInMem() const;
+
     /**
      * Add argument
      */

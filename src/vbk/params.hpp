@@ -19,7 +19,7 @@ struct AltChainParamsBTCSQ : public altintegration::AltChainParams {
     ~AltChainParamsBTCSQ() override = default;
     AltChainParamsBTCSQ() = default;
 
-    explicit AltChainParamsBTCSQ(const CBlock& genesis)
+    explicit AltChainParamsBTCSQ(const CBlock& genesis, int32_t window)
     {
         // if block time changes, update altchain id. see altchain id comment.
         assert(altintegration::getMaxAtvsInVbkBlock(VeriBlock::ALT_CHAIN_ID) == 20);
@@ -37,7 +37,7 @@ struct AltChainParamsBTCSQ : public altintegration::AltChainParams {
         this->mMaxVTBsInAltBlock = 50;
         this->mMaxATVsInAltBlock = 100;
         this->mPreserveBlocksBehindFinal = mEndorsementSettlementInterval;
-        this->mMaxReorgBlocks = std::numeric_limits<int>::max(); // disable finalization for now
+        this->mMaxReorgBlocks = window;
 
         //! copying all parameters here to make sure that
         //! if anyone changes them in alt-int-cpp, they
@@ -101,7 +101,7 @@ struct AltChainParamsBTCSQ : public altintegration::AltChainParams {
 struct AltChainParamsBTCSQRegTest : public AltChainParamsBTCSQ {
     ~AltChainParamsBTCSQRegTest() override = default;
 
-    explicit AltChainParamsBTCSQRegTest(const CBlock& genesis) : AltChainParamsBTCSQ(genesis)
+    explicit AltChainParamsBTCSQRegTest(const CBlock& genesis, int32_t window) : AltChainParamsBTCSQ(genesis, window)
     {
         this->mMaxReorgBlocks = 1000;
         this->mMaxVbkBlocksInAltBlock = 200;
@@ -123,8 +123,8 @@ struct AltChainParamsBTCSQDetRegTest : public AltChainParamsBTCSQ {
 };
 
 void printConfig(const altintegration::Config& config);
-void selectPopConfig(const std::string& network = "test");
+void selectPopConfig(const std::string& network = "test", int32_t window = altintegration::MAX_REORG_BLOCKS_MIN_VALUE);
 
 } // namespace VeriBlock
 
-#endif //INTEGRATION_REFERENCE_BTC_BTCSQ_PARAMS_HPP
+#endif // INTEGRATION_REFERENCE_BTC_BTCSQ_PARAMS_HPP

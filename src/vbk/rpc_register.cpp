@@ -567,8 +567,16 @@ bool GetPayload(
         return true;
     }
 
+    // first, search in finalized storage
+    auto id = pid.asVector();
+    auto containing = pop.getAltBlockTree().getPayloadsIndex().find(id);
+    auto* fh = pop.getAltBlockTree().getFinalizedPayloadsIndex().find(id);
+    if(fh != nullptr) {
+        containing.clear();
+        containing.insert(*fh);
+    }
+
     // search in the alttree storage
-    const auto& containing = pop.getAltBlockTree().getPayloadsIndex().getContainingAltBlocks(pid.asVector());
     if (containing.size() == 0) return false;
 
     // fill containing blocks
