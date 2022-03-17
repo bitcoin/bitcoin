@@ -134,13 +134,16 @@ class MiniWallet:
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
         return blocks
 
+    def get_scriptPubKey(self):
+        return self._scriptPubKey
+
     def get_descriptor(self):
         return descsum_create(f'raw({self._scriptPubKey.hex()})')
 
     def get_address(self):
         return self._address
 
-    def get_utxo(self, *, txid: Optional[str]='', mark_as_spent=True):
+    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True):
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
@@ -152,6 +155,8 @@ class MiniWallet:
             utxo_filter: Any = filter(lambda utxo: txid == utxo['txid'], self._utxos)
         else:
             utxo_filter = reversed(self._utxos)  # By default the largest utxo
+        if vout is not None:
+            utxo_filter = filter(lambda utxo: vout == utxo['vout'], utxo_filter)
         index = self._utxos.index(next(utxo_filter))
         if mark_as_spent:
             return self._utxos.pop(index)
