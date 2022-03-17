@@ -37,6 +37,7 @@ export RUN_INTEGRATIONTESTS=true
 
 # Configure sanitizers options
 export TSAN_OPTIONS="suppressions=${SRC_DIR}/test/sanitizer_suppressions/tsan"
+export UBSAN_OPTIONS="suppressions=${SRC_DIR}/test/sanitizer_suppressions/ubsan"
 
 if [ "$BUILD_TARGET" = "arm-linux" ]; then
   export HOST=arm-linux-gnueabihf
