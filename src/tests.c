@@ -28,6 +28,8 @@
 #include "modinv64_impl.h"
 #endif
 
+#define CONDITIONAL_TEST(cnt, nam) if (count < (cnt)) { printf("Skipping %s (iteration count too low)\n", nam); } else
+
 static int count = 64;
 static secp256k1_context *ctx = NULL;
 
@@ -98,6 +100,12 @@ void random_group_element_jacobian_test(secp256k1_gej *gej, const secp256k1_ge *
     secp256k1_fe_mul(&gej->x, &ge->x, &z2);
     secp256k1_fe_mul(&gej->y, &ge->y, &z3);
     gej->infinity = ge->infinity;
+}
+
+void random_gej_test(secp256k1_gej *gej) {
+    secp256k1_ge ge;
+    random_group_element_test(&ge);
+    random_group_element_jacobian_test(gej, &ge);
 }
 
 void random_scalar_order_test(secp256k1_scalar *num) {
@@ -790,7 +798,7 @@ void signed30_to_uint16(uint16_t* out, const secp256k1_modinv32_signed30* in) {
 void mutate_sign_signed30(secp256k1_modinv32_signed30* x) {
     int i;
     for (i = 0; i < 16; ++i) {
-        int pos = secp256k1_testrand_int(8);
+        int pos = secp256k1_testrand_bits(3);
         if (x->v[pos] > 0 && x->v[pos + 1] <= 0x3fffffff) {
             x->v[pos] -= 0x40000000;
             x->v[pos + 1] += 1;
@@ -862,7 +870,7 @@ void mutate_sign_signed62(secp256k1_modinv64_signed62* x) {
     static const int64_t M62 = (int64_t)(UINT64_MAX >> 2);
     int i;
     for (i = 0; i < 8; ++i) {
-        int pos = secp256k1_testrand_int(4);
+        int pos = secp256k1_testrand_bits(2);
         if (x->v[pos] > 0 && x->v[pos + 1] <= M62) {
             x->v[pos] -= (M62 + 1);
             x->v[pos + 1] += 1;
@@ -2451,13 +2459,65 @@ void run_field_convert(void) {
     CHECK(secp256k1_memcmp_var(&fes2, &fes, sizeof(fes)) == 0);
 }
 
-int fe_secp256k1_memcmp_var(const secp256k1_fe *a, const secp256k1_fe *b) {
-    secp256k1_fe t = *b;
+/* Returns true if two field elements have the same representation. */
+int fe_identical(const secp256k1_fe *a, const secp256k1_fe *b) {
+    int ret = 1;
 #ifdef VERIFY
-    t.magnitude = a->magnitude;
-    t.normalized = a->normalized;
+    ret &= (a->magnitude == b->magnitude);
+    ret &= (a->normalized == b->normalized);
 #endif
-    return secp256k1_memcmp_var(a, &t, sizeof(secp256k1_fe));
+    /* Compare the struct member that holds the limbs. */
+    ret &= (secp256k1_memcmp_var(a->n, b->n, sizeof(a->n)) == 0);
+    return ret;
+}
+
+void run_field_half(void) {
+    secp256k1_fe t, u;
+    int m;
+
+    /* Check magnitude 0 input */
+    secp256k1_fe_get_bounds(&t, 0);
+    secp256k1_fe_half(&t);
+#ifdef VERIFY
+    CHECK(t.magnitude == 1);
+    CHECK(t.normalized == 0);
+#endif
+    CHECK(secp256k1_fe_normalizes_to_zero(&t));
+
+    /* Check non-zero magnitudes in the supported range */
+    for (m = 1; m < 32; m++) {
+        /* Check max-value input */
+        secp256k1_fe_get_bounds(&t, m);
+
+        u = t;
+        secp256k1_fe_half(&u);
+#ifdef VERIFY
+        CHECK(u.magnitude == (m >> 1) + 1);
+        CHECK(u.normalized == 0);
+#endif
+        secp256k1_fe_normalize_weak(&u);
+        secp256k1_fe_add(&u, &u);
+        CHECK(check_fe_equal(&t, &u));
+
+        /* Check worst-case input: ensure the LSB is 1 so that P will be added,
+         * which will also cause all carries to be 1, since all limbs that can
+         * generate a carry are initially even and all limbs of P are odd in
+         * every existing field implementation. */
+        secp256k1_fe_get_bounds(&t, m);
+        CHECK(t.n[0] > 0);
+        CHECK((t.n[0] & 1) == 0);
+        --t.n[0];
+
+        u = t;
+        secp256k1_fe_half(&u);
+#ifdef VERIFY
+        CHECK(u.magnitude == (m >> 1) + 1);
+        CHECK(u.normalized == 0);
+#endif
+        secp256k1_fe_normalize_weak(&u);
+        secp256k1_fe_add(&u, &u);
+        CHECK(check_fe_equal(&t, &u));
+    }
 }
 
 void run_field_misc(void) {
@@ -2467,9 +2527,13 @@ void run_field_misc(void) {
     secp256k1_fe q;
     secp256k1_fe fe5 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 5);
     int i, j;
-    for (i = 0; i < 5*count; i++) {
+    for (i = 0; i < 1000 * count; i++) {
         secp256k1_fe_storage xs, ys, zs;
-        random_fe(&x);
+        if (i & 1) {
+            random_fe(&x);
+        } else {
+            random_fe_test(&x);
+        }
         random_fe_non_zero(&y);
         /* Test the fe equality and comparison operations. */
         CHECK(secp256k1_fe_cmp_var(&x, &x) == 0);
@@ -2483,13 +2547,13 @@ void run_field_misc(void) {
         CHECK(x.normalized && x.magnitude == 1);
 #endif
         secp256k1_fe_cmov(&x, &x, 1);
-        CHECK(fe_secp256k1_memcmp_var(&x, &z) != 0);
-        CHECK(fe_secp256k1_memcmp_var(&x, &q) == 0);
+        CHECK(!fe_identical(&x, &z));
+        CHECK(fe_identical(&x, &q));
         secp256k1_fe_cmov(&q, &z, 1);
 #ifdef VERIFY
         CHECK(!q.normalized && q.magnitude == z.magnitude);
 #endif
-        CHECK(fe_secp256k1_memcmp_var(&q, &z) == 0);
+        CHECK(fe_identical(&q, &z));
         secp256k1_fe_normalize_var(&x);
         secp256k1_fe_normalize_var(&z);
         CHECK(!secp256k1_fe_equal_var(&x, &z));
@@ -2537,6 +2601,14 @@ void run_field_misc(void) {
         secp256k1_fe_add(&q, &x);
         CHECK(check_fe_equal(&y, &z));
         CHECK(check_fe_equal(&q, &y));
+        /* Check secp256k1_fe_half. */
+        z = x;
+        secp256k1_fe_half(&z);
+        secp256k1_fe_add(&z, &z);
+        CHECK(check_fe_equal(&x, &z));
+        secp256k1_fe_add(&z, &z);
+        secp256k1_fe_half(&z);
+        CHECK(check_fe_equal(&x, &z));
     }
 }
 
@@ -3338,6 +3410,37 @@ void run_ge(void) {
     test_intialized_inf();
 }
 
+void test_gej_cmov(const secp256k1_gej *a, const secp256k1_gej *b) {
+    secp256k1_gej t = *a;
+    secp256k1_gej_cmov(&t, b, 0);
+    CHECK(gej_xyz_equals_gej(&t, a));
+    secp256k1_gej_cmov(&t, b, 1);
+    CHECK(gej_xyz_equals_gej(&t, b));
+}
+
+void run_gej(void) {
+    int i;
+    secp256k1_gej a, b;
+
+    /* Tests for secp256k1_gej_cmov */
+    for (i = 0; i < count; i++) {
+        secp256k1_gej_set_infinity(&a);
+        secp256k1_gej_set_infinity(&b);
+        test_gej_cmov(&a, &b);
+
+        random_gej_test(&a);
+        test_gej_cmov(&a, &b);
+        test_gej_cmov(&b, &a);
+
+        b = a;
+        test_gej_cmov(&a, &b);
+
+        random_gej_test(&b);
+        test_gej_cmov(&a, &b);
+        test_gej_cmov(&b, &a);
+    }
+}
+
 void test_ec_combine(void) {
     secp256k1_scalar sum = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
     secp256k1_pubkey data[6];
@@ -4052,6 +4155,174 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
     }
 }
 
+int test_ecmult_multi_random(secp256k1_scratch *scratch) {
+    /* Large random test for ecmult_multi_* functions which exercises:
+     * - Few or many inputs (0 up to 128, roughly exponentially distributed).
+     * - Few or many 0*P or a*INF inputs (roughly uniformly distributed).
+     * - Including or excluding an nonzero a*G term (or such a term at all).
+     * - Final expected result equal to infinity or not (roughly 50%).
+     * - ecmult_multi_var, ecmult_strauss_single_batch, ecmult_pippenger_single_batch
+     */
+
+    /* These 4 variables define the eventual input to the ecmult_multi function.
+     * g_scalar is the G scalar fed to it (or NULL, possibly, if g_scalar=0), and
+     * scalars[0..filled-1] and gejs[0..filled-1] are the scalars and points
+     * which form its normal inputs. */
+    int filled = 0;
+    secp256k1_scalar g_scalar = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
+    secp256k1_scalar scalars[128];
+    secp256k1_gej gejs[128];
+    /* The expected result, and the computed result. */
+    secp256k1_gej expected, computed;
+    /* Temporaries. */
+    secp256k1_scalar sc_tmp;
+    secp256k1_ge ge_tmp;
+    /* Variables needed for the actual input to ecmult_multi. */
+    secp256k1_ge ges[128];
+    ecmult_multi_data data;
+
+    int i;
+    /* Which multiplication function to use */
+    int fn = secp256k1_testrand_int(3);
+    secp256k1_ecmult_multi_func ecmult_multi = fn == 0 ? secp256k1_ecmult_multi_var :
+                                               fn == 1 ? secp256k1_ecmult_strauss_batch_single :
+                                               secp256k1_ecmult_pippenger_batch_single;
+    /* Simulate exponentially distributed num. */
+    int num_bits = 2 + secp256k1_testrand_int(6);
+    /* Number of (scalar, point) inputs (excluding g). */
+    int num = secp256k1_testrand_int((1 << num_bits) + 1);
+    /* Number of those which are nonzero. */
+    int num_nonzero = secp256k1_testrand_int(num + 1);
+    /* Whether we're aiming to create an input with nonzero expected result. */
+    int nonzero_result = secp256k1_testrand_bits(1);
+    /* Whether we will provide nonzero g multiplicand. In some cases our hand
+     * is forced here based on num_nonzero and nonzero_result. */
+    int g_nonzero = num_nonzero == 0 ? nonzero_result :
+                    num_nonzero == 1 && !nonzero_result ? 1 :
+                    (int)secp256k1_testrand_bits(1);
+    /* Which g_scalar pointer to pass into ecmult_multi(). */
+    const secp256k1_scalar* g_scalar_ptr = (g_nonzero || secp256k1_testrand_bits(1)) ? &g_scalar : NULL;
+    /* How many EC multiplications were performed in this function. */
+    int mults = 0;
+    /* How many randomization steps to apply to the input list. */
+    int rands = (int)secp256k1_testrand_bits(3);
+    if (rands > num_nonzero) rands = num_nonzero;
+
+    secp256k1_gej_set_infinity(&expected);
+    secp256k1_gej_set_infinity(&gejs[0]);
+    secp256k1_scalar_set_int(&scalars[0], 0);
+
+    if (g_nonzero) {
+        /* If g_nonzero, set g_scalar to nonzero value r. */
+        random_scalar_order_test(&g_scalar);
+        if (!nonzero_result) {
+            /* If expected=0 is desired, add a (a*r, -(1/a)*g) term to compensate. */
+            CHECK(num_nonzero > filled);
+            random_scalar_order_test(&sc_tmp);
+            secp256k1_scalar_mul(&scalars[filled], &sc_tmp, &g_scalar);
+            secp256k1_scalar_inverse_var(&sc_tmp, &sc_tmp);
+            secp256k1_scalar_negate(&sc_tmp, &sc_tmp);
+            secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &gejs[filled], &sc_tmp);
+            ++filled;
+            ++mults;
+        }
+    }
+
+    if (nonzero_result && filled < num_nonzero) {
+        /* If a nonzero result is desired, and there is space, add a random nonzero term. */
+        random_scalar_order_test(&scalars[filled]);
+        random_group_element_test(&ge_tmp);
+        secp256k1_gej_set_ge(&gejs[filled], &ge_tmp);
+        ++filled;
+    }
+
+    if (nonzero_result) {
+        /* Compute the expected result using normal ecmult. */
+        CHECK(filled <= 1);
+        secp256k1_ecmult(&expected, &gejs[0], &scalars[0], &g_scalar);
+        mults += filled + g_nonzero;
+    }
+
+    /* At this point we have expected = scalar_g*G + sum(scalars[i]*gejs[i] for i=0..filled-1). */
+    CHECK(filled <= 1 + !nonzero_result);
+    CHECK(filled <= num_nonzero);
+
+    /* Add entries to scalars,gejs so that there are num of them. All the added entries
+     * either have scalar=0 or point=infinity, so these do not change the expected result. */
+    while (filled < num) {
+        if (secp256k1_testrand_bits(1)) {
+            secp256k1_gej_set_infinity(&gejs[filled]);
+            random_scalar_order_test(&scalars[filled]);
+        } else {
+            secp256k1_scalar_set_int(&scalars[filled], 0);
+            random_group_element_test(&ge_tmp);
+            secp256k1_gej_set_ge(&gejs[filled], &ge_tmp);
+        }
+        ++filled;
+    }
+
+    /* Now perform cheapish transformations on gejs and scalars, for indices
+     * 0..num_nonzero-1, which do not change the expected result, but may
+     * convert some of them to be both non-0-scalar and non-infinity-point. */
+    for (i = 0; i < rands; ++i) {
+        int j;
+        secp256k1_scalar v, iv;
+        /* Shuffle the entries. */
+        for (j = 0; j < num_nonzero; ++j) {
+            int k = secp256k1_testrand_int(num_nonzero - j);
+            if (k != 0) {
+                secp256k1_gej gej = gejs[j];
+                secp256k1_scalar sc = scalars[j];
+                gejs[j] = gejs[j + k];
+                scalars[j] = scalars[j + k];
+                gejs[j + k] = gej;
+                scalars[j + k] = sc;
+            }
+        }
+        /* Perturb all consecutive pairs of inputs:
+         * a*P + b*Q -> (a+b)*P + b*(Q-P). */
+        for (j = 0; j + 1 < num_nonzero; j += 2) {
+            secp256k1_gej gej;
+            secp256k1_scalar_add(&scalars[j], &scalars[j], &scalars[j+1]);
+            secp256k1_gej_neg(&gej, &gejs[j]);
+            secp256k1_gej_add_var(&gejs[j+1], &gejs[j+1], &gej, NULL);
+        }
+        /* Transform the last input: a*P -> (v*a) * ((1/v)*P). */
+        CHECK(num_nonzero >= 1);
+        random_scalar_order_test(&v);
+        secp256k1_scalar_inverse(&iv, &v);
+        secp256k1_scalar_mul(&scalars[num_nonzero - 1], &scalars[num_nonzero - 1], &v);
+        secp256k1_ecmult(&gejs[num_nonzero - 1], &gejs[num_nonzero - 1], &iv, NULL);
+        ++mults;
+    }
+
+    /* Shuffle all entries (0..num-1). */
+    for (i = 0; i < num; ++i) {
+        int j = secp256k1_testrand_int(num - i);
+        if (j != 0) {
+            secp256k1_gej gej = gejs[i];
+            secp256k1_scalar sc = scalars[i];
+            gejs[i] = gejs[i + j];
+            scalars[i] = scalars[i + j];
+            gejs[i + j] = gej;
+            scalars[i + j] = sc;
+        }
+    }
+
+    /* Compute affine versions of all inputs. */
+    secp256k1_ge_set_all_gej_var(ges, gejs, filled);
+    /* Invoke ecmult_multi code. */
+    data.sc = scalars;
+    data.pt = ges;
+    CHECK(ecmult_multi(&ctx->error_callback, scratch, &computed, g_scalar_ptr, ecmult_multi_callback, &data, filled));
+    mults += num_nonzero + g_nonzero;
+    /* Compare with expected result. */
+    secp256k1_gej_neg(&computed, &computed);
+    secp256k1_gej_add_var(&computed, &computed, &expected, NULL);
+    CHECK(secp256k1_gej_is_infinity(&computed));
+    return mults;
+}
+
 void test_ecmult_multi_batch_single(secp256k1_ecmult_multi_func ecmult_multi) {
     secp256k1_scalar szero;
     secp256k1_scalar sc;
@@ -4093,7 +4364,7 @@ void test_secp256k1_pippenger_bucket_window_inv(void) {
  * for a given scratch space.
  */
 void test_ecmult_multi_pippenger_max_points(void) {
-    size_t scratch_size = secp256k1_testrand_int(256);
+    size_t scratch_size = secp256k1_testrand_bits(8);
     size_t max_size = secp256k1_pippenger_scratch_size(secp256k1_pippenger_bucket_window_inv(PIPPENGER_MAX_BUCKET_WINDOW-1)+512, 12);
     secp256k1_scratch *scratch;
     size_t n_points_supported;
@@ -4242,6 +4513,7 @@ void test_ecmult_multi_batching(void) {
 
 void run_ecmult_multi_tests(void) {
     secp256k1_scratch *scratch;
+    int64_t todo = (int64_t)320 * count;
 
     test_secp256k1_pippenger_bucket_window_inv();
     test_ecmult_multi_pippenger_max_points();
@@ -4252,6 +4524,9 @@ void run_ecmult_multi_tests(void) {
     test_ecmult_multi_batch_single(secp256k1_ecmult_pippenger_batch_single);
     test_ecmult_multi(scratch, secp256k1_ecmult_strauss_batch_single);
     test_ecmult_multi_batch_single(secp256k1_ecmult_strauss_batch_single);
+    while (todo > 0) {
+        todo -= test_ecmult_multi_random(scratch);
+    }
     secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 
     /* Run test_ecmult_multi with space for exactly one point */
@@ -4347,7 +4622,7 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
         secp256k1_scalar_add(&x, &x, &t);
     }
     /* Skew num because when encoding numbers as odd we use an offset */
-    secp256k1_scalar_set_int(&scalar_skew, 1 << (skew == 2));
+    secp256k1_scalar_set_int(&scalar_skew, skew);
     secp256k1_scalar_add(&num, &num, &scalar_skew);
     CHECK(secp256k1_scalar_eq(&x, &num));
 }
@@ -4540,8 +4815,8 @@ void test_ecmult_accumulate(secp256k1_sha256* acc, const secp256k1_scalar* x, se
     }
 }
 
-void test_ecmult_constants(void) {
-    /* Test ecmult_gen for:
+void test_ecmult_constants_2bit(void) {
+    /* Using test_ecmult_accumulate, test ecmult for:
      * - For i in 0..36:
      *   - Key i
      *   - Key -i
@@ -4584,8 +4859,81 @@ void test_ecmult_constants(void) {
     secp256k1_scratch_space_destroy(ctx, scratch);
 }
 
+void test_ecmult_constants_sha(uint32_t prefix, size_t iter, const unsigned char* expected32) {
+    /* Using test_ecmult_accumulate, test ecmult for:
+     * - Key 0
+     * - Key 1
+     * - Key -1
+     * - For i in range(iter):
+     *   - Key SHA256(LE32(prefix) || LE16(i))
+     */
+    secp256k1_scalar x;
+    secp256k1_sha256 acc;
+    unsigned char b32[32];
+    unsigned char inp[6];
+    size_t i;
+    secp256k1_scratch_space *scratch = secp256k1_scratch_space_create(ctx, 65536);
+
+    inp[0] = prefix & 0xFF;
+    inp[1] = (prefix >> 8) & 0xFF;
+    inp[2] = (prefix >> 16) & 0xFF;
+    inp[3] = (prefix >> 24) & 0xFF;
+    secp256k1_sha256_initialize(&acc);
+    secp256k1_scalar_set_int(&x, 0);
+    test_ecmult_accumulate(&acc, &x, scratch);
+    secp256k1_scalar_set_int(&x, 1);
+    test_ecmult_accumulate(&acc, &x, scratch);
+    secp256k1_scalar_negate(&x, &x);
+    test_ecmult_accumulate(&acc, &x, scratch);
+
+    for (i = 0; i < iter; ++i) {
+        secp256k1_sha256 gen;
+        inp[4] = i & 0xff;
+        inp[5] = (i >> 8) & 0xff;
+        secp256k1_sha256_initialize(&gen);
+        secp256k1_sha256_write(&gen, inp, sizeof(inp));
+        secp256k1_sha256_finalize(&gen, b32);
+        secp256k1_scalar_set_b32(&x, b32, NULL);
+        test_ecmult_accumulate(&acc, &x, scratch);
+    }
+    secp256k1_sha256_finalize(&acc, b32);
+    CHECK(secp256k1_memcmp_var(b32, expected32, 32) == 0);
+
+    secp256k1_scratch_space_destroy(ctx, scratch);
+}
+
 void run_ecmult_constants(void) {
-    test_ecmult_constants();
+    /* Expected hashes of all points in the tests below. Computed using an
+     * independent implementation. */
+    static const unsigned char expected32_6bit20[32] = {
+        0x68, 0xb6, 0xed, 0x6f, 0x28, 0xca, 0xc9, 0x7f,
+        0x8e, 0x8b, 0xd6, 0xc0, 0x61, 0x79, 0x34, 0x6e,
+        0x5a, 0x8f, 0x2b, 0xbc, 0x3e, 0x1f, 0xc5, 0x2e,
+        0x2a, 0xd0, 0x45, 0x67, 0x7f, 0x95, 0x95, 0x8e
+    };
+    static const unsigned char expected32_8bit8[32] = {
+        0x8b, 0x65, 0x8e, 0xea, 0x86, 0xae, 0x3c, 0x95,
+        0x90, 0xb6, 0x77, 0xa4, 0x8c, 0x76, 0xd9, 0xec,
+        0xf5, 0xab, 0x8a, 0x2f, 0xfd, 0xdb, 0x19, 0x12,
+        0x1a, 0xee, 0xe6, 0xb7, 0x6e, 0x05, 0x3f, 0xc6
+    };
+    /* For every combination of 6 bit positions out of 256, restricted to
+     * 20-bit windows (i.e., the first and last bit position are no more than
+     * 19 bits apart), all 64 bit patterns occur in the input scalars used in
+     * this test. */
+    CONDITIONAL_TEST(1, "test_ecmult_constants_sha 1024") {
+        test_ecmult_constants_sha(4808378u, 1024, expected32_6bit20);
+    }
+
+    /* For every combination of 8 consecutive bit positions, all 256 bit
+     * patterns occur in the input scalars used in this test. */
+    CONDITIONAL_TEST(3, "test_ecmult_constants_sha 2048") {
+        test_ecmult_constants_sha(1607366309u, 2048, expected32_8bit8);
+    }
+
+    CONDITIONAL_TEST(35, "test_ecmult_constants_2bit") {
+        test_ecmult_constants_2bit();
+    }
 }
 
 void test_ecmult_gen_blind(void) {
@@ -5851,14 +6199,14 @@ static void random_ber_signature(unsigned char *sig, size_t *len, int* certainly
         /* We generate two classes of numbers: nlow==1 "low" ones (up to 32 bytes), nlow==0 "high" ones (32 bytes with 129 top bits set, or larger than 32 bytes) */
         nlow[n] = der ? 1 : (secp256k1_testrand_bits(3) != 0);
         /* The length of the number in bytes (the first byte of which will always be nonzero) */
-        nlen[n] = nlow[n] ? secp256k1_testrand_int(33) : 32 + secp256k1_testrand_int(200) * secp256k1_testrand_int(8) / 8;
+        nlen[n] = nlow[n] ? secp256k1_testrand_int(33) : 32 + secp256k1_testrand_int(200) * secp256k1_testrand_bits(3) / 8;
         CHECK(nlen[n] <= 232);
         /* The top bit of the number. */
         nhbit[n] = (nlow[n] == 0 && nlen[n] == 32) ? 1 : (nlen[n] == 0 ? 0 : secp256k1_testrand_bits(1));
         /* The top byte of the number (after the potential hardcoded 16 0xFF characters for "high" 32 bytes numbers) */
         nhbyte[n] = nlen[n] == 0 ? 0 : (nhbit[n] ? 128 + secp256k1_testrand_bits(7) : 1 + secp256k1_testrand_int(127));
         /* The number of zero bytes in front of the number (which is 0 or 1 in case of DER, otherwise we extend up to 300 bytes) */
-        nzlen[n] = der ? ((nlen[n] == 0 || nhbit[n]) ? 1 : 0) : (nlow[n] ? secp256k1_testrand_int(3) : secp256k1_testrand_int(300 - nlen[n]) * secp256k1_testrand_int(8) / 8);
+        nzlen[n] = der ? ((nlen[n] == 0 || nhbit[n]) ? 1 : 0) : (nlow[n] ? secp256k1_testrand_int(3) : secp256k1_testrand_int(300 - nlen[n]) * secp256k1_testrand_bits(3) / 8);
         if (nzlen[n] > ((nlen[n] == 0 || nhbit[n]) ? 1 : 0)) {
             *certainly_not_der = 1;
         }
@@ -5867,7 +6215,7 @@ static void random_ber_signature(unsigned char *sig, size_t *len, int* certainly
         nlenlen[n] = nlen[n] + nzlen[n] < 128 ? 0 : (nlen[n] + nzlen[n] < 256 ? 1 : 2);
         if (!der) {
             /* nlenlen[n] max 127 bytes */
-            int add = secp256k1_testrand_int(127 - nlenlen[n]) * secp256k1_testrand_int(16) * secp256k1_testrand_int(16) / 256;
+            int add = secp256k1_testrand_int(127 - nlenlen[n]) * secp256k1_testrand_bits(4) * secp256k1_testrand_bits(4) / 256;
             nlenlen[n] += add;
             if (add != 0) {
                 *certainly_not_der = 1;
@@ -5881,7 +6229,7 @@ static void random_ber_signature(unsigned char *sig, size_t *len, int* certainly
     CHECK(tlen <= 856);
 
     /* The length of the garbage inside the tuple. */
-    elen = (der || indet) ? 0 : secp256k1_testrand_int(980 - tlen) * secp256k1_testrand_int(8) / 8;
+    elen = (der || indet) ? 0 : secp256k1_testrand_int(980 - tlen) * secp256k1_testrand_bits(3) / 8;
     if (elen != 0) {
         *certainly_not_der = 1;
     }
@@ -5889,7 +6237,7 @@ static void random_ber_signature(unsigned char *sig, size_t *len, int* certainly
     CHECK(tlen <= 980);
 
     /* The length of the garbage after the end of the tuple. */
-    glen = der ? 0 : secp256k1_testrand_int(990 - tlen) * secp256k1_testrand_int(8) / 8;
+    glen = der ? 0 : secp256k1_testrand_int(990 - tlen) * secp256k1_testrand_bits(3) / 8;
     if (glen != 0) {
         *certainly_not_der = 1;
     }
@@ -5904,7 +6252,7 @@ static void random_ber_signature(unsigned char *sig, size_t *len, int* certainly
     } else {
         int tlenlen = tlen < 128 ? 0 : (tlen < 256 ? 1 : 2);
         if (!der) {
-            int add = secp256k1_testrand_int(127 - tlenlen) * secp256k1_testrand_int(16) * secp256k1_testrand_int(16) / 256;
+            int add = secp256k1_testrand_int(127 - tlenlen) * secp256k1_testrand_bits(4) * secp256k1_testrand_bits(4) / 256;
             tlenlen += add;
             if (add != 0) {
                 *certainly_not_der = 1;
@@ -6625,6 +6973,7 @@ int main(int argc, char **argv) {
     run_scalar_tests();
 
     /* field tests */
+    run_field_half();
     run_field_misc();
     run_field_convert();
     run_fe_mul();
@@ -6633,6 +6982,7 @@ int main(int argc, char **argv) {
 
     /* group tests */
     run_ge();
+    run_gej();
     run_group_decompress();
 
     /* ecmult tests */
