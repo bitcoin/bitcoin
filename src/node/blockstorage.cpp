@@ -285,8 +285,6 @@ bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
         if (pindex->pprev) {
             pindex->BuildSkip();
         }
-        if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
-            pindexBestHeader = pindex;
     }
 
     return true;
