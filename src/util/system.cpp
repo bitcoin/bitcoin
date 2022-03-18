@@ -856,9 +856,11 @@ std::string ArgsManager::GetChainName() const
 int64_t ArgsManager::AltBlocksInMem() const {
     int64_t window = GetArg("-popaltblocksinmem", altintegration::MAX_REORG_BLOCKS_MIN_VALUE);
     if (window < 0) {
+        LogPrintf("popaltblocksinmem is negative. Will keep all blocks in memory\n");
         return std::numeric_limits<::int32_t>::max();
     }
     if (window >= std::numeric_limits<int32_t>::max()) {
+        LogPrintf("popaltblocksinmem is bigger than maximum (max of int32). Will keep all blocks in memory\n");
         return std::numeric_limits<int32_t>::max();
     }
     if (window < altintegration::MAX_REORG_BLOCKS_MIN_VALUE) {
