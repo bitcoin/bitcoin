@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <mempool_args.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <sync.h>
@@ -34,8 +35,11 @@ FUZZ_TARGET_INIT(rbf, initialize_rbf)
     if (!mtx) {
         return;
     }
-    CTxMemPool pool;
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+
+    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
         const std::optional<CMutableTransaction> another_mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
         if (!another_mtx) {
             break;
