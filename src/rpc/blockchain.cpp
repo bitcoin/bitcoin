@@ -1205,18 +1205,18 @@ RPCHelpMan getblockchaininfo()
     CHECK_NONFATAL(tip);
     const int height = tip->nHeight;
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("chain",                 Params().NetworkIDString());
-    obj.pushKV("blocks",                height);
+    obj.pushKV("chain", Params().NetworkIDString());
+    obj.pushKV("blocks", height);
     obj.pushKV("headers", chainman.pindexBestHeader ? chainman.pindexBestHeader->nHeight : -1);
-    obj.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
-    obj.pushKV("difficulty",            (double)GetDifficulty(tip));
-    obj.pushKV("time",                  (int64_t)tip->nTime);
-    obj.pushKV("mediantime",            (int64_t)tip->GetMedianTimePast());
-    obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
-    obj.pushKV("initialblockdownload",  active_chainstate.IsInitialBlockDownload());
-    obj.pushKV("chainwork",             tip->nChainWork.GetHex());
+    obj.pushKV("bestblockhash", tip->GetBlockHash().GetHex());
+    obj.pushKV("difficulty", (double)GetDifficulty(tip));
+    obj.pushKV("time", (int64_t)tip->nTime);
+    obj.pushKV("mediantime", (int64_t)tip->GetMedianTimePast());
+    obj.pushKV("verificationprogress", GuessVerificationProgress(Params().TxData(), tip));
+    obj.pushKV("initialblockdownload", active_chainstate.IsInitialBlockDownload());
+    obj.pushKV("chainwork", tip->nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
-    obj.pushKV("pruned",                node::fPruneMode);
+    obj.pushKV("pruned", node::fPruneMode);
     if (node::fPruneMode) {
         const CBlockIndex* block = tip;
         CHECK_NONFATAL(block);
