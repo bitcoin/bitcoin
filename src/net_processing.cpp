@@ -613,8 +613,6 @@ private:
     /** Number of preferable block download peers. */
     int nPreferredDownload GUARDED_BY(cs_main){0};
 
-    void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
     bool AlreadyHaveTx(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
@@ -873,16 +871,6 @@ static void AddKnownTx(Peer& peer, const uint256& hash)
         LOCK(peer.m_tx_relay->m_tx_inventory_mutex);
         peer.m_tx_relay->m_tx_inventory_known_filter.insert(hash);
     }
-}
-
-void PeerManagerImpl::UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    nPreferredDownload -= state->fPreferredDownload;
-
-    // Whether this node should be marked as a preferred download node.
-    state->fPreferredDownload = (!node.IsInboundConn() || node.HasPermission(NetPermissionFlags::NoBan)) && !node.IsAddrFetchConn() && !node.fClient;
-
-    nPreferredDownload += state->fPreferredDownload;
 }
 
 std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
@@ -2741,8 +2729,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         // Potentially mark this peer as a preferred download peer.
         {
-        LOCK(cs_main);
-        UpdatePreferredDownload(pfrom, State(pfrom.GetId()));
+            LOCK(cs_main);
+            CNodeState* state = State(pfrom.GetId());
+            state->fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && !pfrom.fClient;
+            nPreferredDownload += state->fPreferredDownload;
         }
 
         // Self advertisement & GETADDR logic
