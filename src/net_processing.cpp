@@ -610,6 +610,11 @@ private:
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
+    /** Number of preferable block download peers. */
+    int nPreferredDownload GUARDED_BY(cs_main){0};
+
+    void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     bool AlreadyHaveTx(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
@@ -817,14 +822,6 @@ private:
      */
     bool SetupAddressRelay(const CNode& node, Peer& peer);
 };
-} // namespace
-
-namespace {
-    /** Number of preferable block download peers. */
-    int nPreferredDownload GUARDED_BY(cs_main) = 0;
-} // namespace
-
-namespace {
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -878,7 +875,7 @@ static void AddKnownTx(Peer& peer, const uint256& hash)
     }
 }
 
-static void UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManagerImpl::UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     nPreferredDownload -= state->fPreferredDownload;
 
