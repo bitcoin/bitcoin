@@ -212,7 +212,7 @@ public:
     bool getHeaderTip(int& height, int64_t& block_time) override
     {
         LOCK(::cs_main);
-        auto best_header = chainman().pindexBestHeader;
+        auto best_header = chainman().m_best_header;
         if (best_header) {
             height = best_header->nHeight;
             block_time = best_header->GetBlockTime();
@@ -645,7 +645,7 @@ public:
     bool havePruned() override
     {
         LOCK(cs_main);
-        return m_node.chainman->m_blockman.fHavePruned;
+        return m_node.chainman->m_blockman.m_have_pruned;
     }
     bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {

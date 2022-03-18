@@ -881,7 +881,7 @@ public:
     std::set<CBlockIndex*> m_failed_blocks;
 
     /** Best header we've seen so far (used for getheaders queries' starting points). */
-    CBlockIndex* pindexBestHeader = nullptr;
+    CBlockIndex* m_best_header = nullptr;
 
     //! The total number of bytes available for us to use across all in-memory
     //! coins caches. This will be split somehow across chainstates.
