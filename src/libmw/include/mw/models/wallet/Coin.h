@@ -30,14 +30,14 @@ static constexpr uint32_t UNKNOWN_INDEX{std::numeric_limits<uint32_t>::max()};
 /// </summary>
 struct Coin : public Traits::ISerializable {
     // Version byte to more easily support adding new fields to the object.
-    uint8_t version{1};
+    uint8_t version{2};
 
     // Index of the subaddress this coin was received at.
     uint32_t address_index{UNKNOWN_INDEX};
 
     // The private key needed in order to spend the coin.
     // May be empty for watch-only wallets.
-    boost::optional<SecretKey> key;
+    boost::optional<SecretKey> spend_key;
 
     // The blinding factor of the coin's output.
     // May be empty for watch-only wallets.
@@ -58,16 +58,37 @@ struct Coin : public Traits::ISerializable {
     // This will only be populated when the coin has flag HAS_SENDER_INFO.
     boost::optional<StealthAddress> address;
 
+    // The shared secret used to generate the output key.
+    // By storing this, we are able to postpone calculation of the spend key.
+    // This allows us to scan for outputs while wallet is locked, and recalculate
+    // the output key once the wallet becomes unlocked.
+    boost::optional<SecretKey> shared_secret;
+
     bool IsChange() const noexcept { return address_index == CHANGE_INDEX; }
     bool IsPegIn() const noexcept { return address_index == PEGIN_INDEX; }
     bool IsMine() const noexcept { return address_index != UNKNOWN_INDEX; }
     bool HasAddress() const noexcept { return !!address; }
+    bool HasSpendKey() const noexcept { return !!spend_key; }
+    bool HasSharedSecret() const noexcept { return !!shared_secret; }
+
+    void Reset()
+    {
+        version = 2;
+        address_index = UNKNOWN_INDEX;
+        spend_key = boost::none;
+        blind = boost::none;
+        amount = 0;
+        output_id = mw::Hash();
+        sender_key = boost::none;
+        address = boost::none;
+        shared_secret = boost::none;
+    }
 
     IMPL_SERIALIZABLE(Coin, obj)
     {
         READWRITE(obj.version);
         READWRITE(VARINT(obj.address_index));
-        READWRITE(obj.key);
+        READWRITE(obj.spend_key);
         READWRITE(obj.blind);
         READWRITE(VARINT_MODE(obj.amount, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(obj.output_id);
@@ -75,6 +96,10 @@ struct Coin : public Traits::ISerializable {
         if (obj.version >= 1) {
             READWRITE(obj.sender_key);
             READWRITE(obj.address);
+        }
+
+        if (obj.version >= 2) {
+            READWRITE(obj.shared_secret);
         }
     }
 };

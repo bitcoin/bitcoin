@@ -91,7 +91,7 @@ TxBuilder::Inputs TxBuilder::CreateInputs(const std::vector<mw::Coin>& input_coi
         input_coins.cbegin(), input_coins.cend(), std::back_inserter(inputs),
         [&blinds, &keys](const mw::Coin& input_coin) {
             assert(!!input_coin.blind);
-            assert(!!input_coin.key);
+            assert(!!input_coin.spend_key);
 
             BlindingFactor blind = Pedersen::BlindSwitch(input_coin.blind.value(), input_coin.amount);
             SecretKey ephemeral_key = SecretKey::Random();
@@ -99,12 +99,12 @@ TxBuilder::Inputs TxBuilder::CreateInputs(const std::vector<mw::Coin>& input_coi
                 input_coin.output_id,
                 Commitment::Blinded(blind, input_coin.amount),
                 ephemeral_key,
-                input_coin.key.value()
+                input_coin.spend_key.value()
             );
 
             blinds.Add(blind);
             keys.Add(ephemeral_key);
-            keys.Sub(input_coin.key.value());
+            keys.Sub(input_coin.spend_key.value());
             return input;
         }
     );

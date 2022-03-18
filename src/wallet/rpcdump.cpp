@@ -376,7 +376,7 @@ RPCHelpMan importprunedfunds()
     CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, height, merkleBlock.header.GetHash(), txnIndex);
 
     CTransactionRef tx_ref = MakeTransactionRef(tx);
-    if (pwallet->IsMine(*tx_ref)) {
+    if (pwallet->IsMine(*tx_ref, boost::none)) {
         pwallet->AddToWallet(std::move(tx_ref), boost::none, confirm);
         return NullUniValue;
     }

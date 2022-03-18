@@ -22,6 +22,8 @@ public:
     secret_key_t(std::array<uint8_t, NUM_BYTES>&& bytes) : m_value(BigInt<NUM_BYTES>(std::move(bytes))) { }
     secret_key_t(const uint8_t* bytes) : m_value(BigInt<NUM_BYTES>(bytes)) { }
 
+    static secret_key_t Null() { return secret_key_t<NUM_BYTES>(); }
+
     static secret_key_t Random()
     {
         secret_key_t<NUM_BYTES> key;

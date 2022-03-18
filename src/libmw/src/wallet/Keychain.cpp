@@ -12,6 +12,7 @@ bool Keychain::RewindOutput(const Output& output, mw::Coin& coin) const
         return false;
     }
 
+    assert(!GetScanSecret().IsNull());
     PublicKey shared_secret = output.Ke().Mul(GetScanSecret());
     uint8_t view_tag = Hashed(EHashTag::TAG, shared_secret)[0];
     if (view_tag != output.GetViewTag()) {
@@ -40,33 +41,44 @@ bool Keychain::RewindOutput(const Output& output, mw::Coin& coin) const
     }
 
     // Calculate Carol's sending key 's' and check that s*B ?= Ke
-    StealthAddress wallet_addr = GetStealthAddress(index);
     SecretKey s = Hasher(EHashTag::SEND_KEY)
-        .Append(wallet_addr.A())
-        .Append(wallet_addr.B())
+        .Append(address.A())
+        .Append(address.B())
         .Append(value)
         .Append(n)
         .hash();
-    if (output.Ke() != wallet_addr.B().Mul(s)) {
+    if (output.Ke() != address.B().Mul(s)) {
         return false;
     }
 
-    SecretKey private_key = SecretKeys::From(GetSpendKey(index))
-        .Mul(Hashed(EHashTag::OUT_KEY, t))
-        .Total();
+    // Spend secret will be null for locked or watch-only wallets.
+    if (!GetSpendSecret().IsNull()) {
+        coin.spend_key = boost::make_optional(CalculateOutputKey(index, t));
+    }
 
     coin.address_index = index;
-    coin.key = boost::make_optional(std::move(private_key));
     coin.blind = boost::make_optional(mask.GetRawBlind());
     coin.amount = value;
     coin.output_id = output.GetOutputID();
-    coin.address = wallet_addr;
+    coin.address = address;
+    coin.shared_secret = boost::make_optional(std::move(t));
 
     return true;
 }
 
+SecretKey Keychain::CalculateOutputKey(const uint32_t index, const SecretKey& shared_secret) const
+{
+    assert(!m_spendSecret.IsNull());
+
+    return SecretKeys::From(GetSpendKey(index))
+        .Mul(Hashed(EHashTag::OUT_KEY, shared_secret))
+        .Total();
+}
+
 StealthAddress Keychain::GetStealthAddress(const uint32_t index) const
 {
+    assert(!m_spendSecret.IsNull());
+
     PublicKey Bi = PublicKey::From(GetSpendKey(index));
     PublicKey Ai = Bi.Mul(m_scanSecret);
 
@@ -75,6 +87,8 @@ StealthAddress Keychain::GetStealthAddress(const uint32_t index) const
 
 SecretKey Keychain::GetSpendKey(const uint32_t index) const
 {
+    assert(!m_spendSecret.IsNull());
+
     SecretKey mi = Hasher(EHashTag::ADDRESS)
         .Append<uint32_t>(index)
         .Append(m_scanSecret)

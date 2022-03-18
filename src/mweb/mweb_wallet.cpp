@@ -5,13 +5,43 @@
 
 using namespace MWEB;
 
+bool Wallet::UpgradeCoins()
+{
+    mw::Keychain::Ptr keychain = GetKeychain();
+    if (!keychain || keychain->GetSpendSecret().IsNull()) {
+        return false;
+    }
+
+    // Loop through transactions and try upgrading output coins
+    for (auto& entry : m_pWallet->mapWallet) {
+        CWalletTx* wtx = &entry.second;
+        RewindOutputs(*wtx->tx);
+
+        if (wtx->mweb_wtx_info && wtx->mweb_wtx_info->received_coin) {
+            mw::Coin& coin = *wtx->mweb_wtx_info->received_coin;
+            if (!coin.HasSpendKey() && coin.HasSharedSecret()) {
+                coin.spend_key = keychain->CalculateOutputKey(coin.address_index, *coin.shared_secret);
+
+                m_coins[coin.output_id] = coin;
+
+                WalletBatch batch(m_pWallet->GetDatabase());
+                batch.WriteMWEBCoin(coin);
+                batch.WriteTx(*wtx);
+            }
+        }
+    }
+
+    return true;
+}
+
 std::vector<mw::Coin> Wallet::RewindOutputs(const CTransaction& tx)
 {
     std::vector<mw::Coin> coins;
-    for (const CTxOutput& txout : tx.GetOutputs()) {
-        if (txout.IsMWEB()) {
+
+    if (tx.HasMWEBTx()) {
+        for (const Output& output : tx.mweb_tx.m_transaction->GetOutputs()) {
             mw::Coin mweb_coin;
-            if (RewindOutput(tx.mweb_tx.m_transaction, txout.ToMWEB(), mweb_coin)) {
+            if (RewindOutput(output, mweb_coin)) {
                 coins.push_back(mweb_coin);
             }
         }
@@ -20,43 +50,25 @@ std::vector<mw::Coin> Wallet::RewindOutputs(const CTransaction& tx)
     return coins;
 }
 
-bool Wallet::RewindOutput(const boost::variant<mw::Block::CPtr, mw::Transaction::CPtr>& parent,
-        const mw::Hash& output_id, mw::Coin& coin)
+bool Wallet::RewindOutput(const Output& output, mw::Coin& coin)
 {
-    if (GetCoin(output_id, coin) && coin.IsMine()) {
-        return true;
+    mw::Keychain::Ptr keychain = GetKeychain();
+
+    if (GetCoin(output.GetOutputID(), coin) && coin.IsMine()) {
+        // If the coin has the spend key, it's fully rewound.
+        // If not, try rewinding further if we have the master spend key (i.e. wallet is unlocked).
+        if (coin.HasSpendKey() || !keychain || keychain->GetSpendSecret().IsNull()) {
+            return true;
+        }
     }
 
-    mw::Keychain::Ptr keychain = GetKeychain();
-    if (!keychain) {
+    if (!keychain || !keychain->RewindOutput(output, coin)) {
         return false;
     }
 
-    bool rewound = false;
-    if (parent.type() == typeid(mw::Block::CPtr)) {
-        const mw::Block::CPtr& block = boost::get<mw::Block::CPtr>(parent);
-        for (const Output& output : block->GetOutputs()) {
-            if (output.GetOutputID() == output_id) {
-                rewound = keychain->RewindOutput(output, coin);
-                break;
-            }
-        }
-    } else {
-        const mw::Transaction::CPtr& tx = boost::get<mw::Transaction::CPtr>(parent);
-        for (const Output& output : tx->GetOutputs()) {
-            if (output.GetOutputID() == output_id) {
-                rewound = keychain->RewindOutput(output, coin);
-                break;
-            }
-        }
-    }
-
-    if (rewound) {
-        m_coins[coin.output_id] = coin;
-        WalletBatch(m_pWallet->GetDatabase()).WriteMWEBCoin(coin);
-    }
-
-    return rewound;
+    m_coins[coin.output_id] = coin;
+    WalletBatch(m_pWallet->GetDatabase()).WriteMWEBCoin(coin);
+    return true;
 }
 
 bool Wallet::IsChange(const StealthAddress& address) const
@@ -108,6 +120,7 @@ bool Wallet::GetCoin(const mw::Hash& output_id, mw::Coin& coin) const
         return true;
     }
 
+    coin.Reset();
     return false;
 }
 

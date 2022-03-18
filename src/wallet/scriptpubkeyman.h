@@ -259,8 +259,7 @@ public:
     virtual void SetInternal(bool internal) {}
 
     // Creates an MWEB KeyChain from the appropriate keychain paths.
-    virtual bool LoadMWEBKeychain() { return false; }
-    void UnloadMWEBKeychain() { m_mwebKeychain.reset(); }
+    virtual void LoadMWEBKeychain() { }
     const mw::Keychain::Ptr& GetMWEBKeychain() const noexcept { return m_mwebKeychain; }
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
@@ -520,8 +519,19 @@ public:
 
     std::set<CKeyID> GetKeys() const override;
 
-    bool LoadMWEBKeychain() override;
-    SecretKey GetScanSecret() const noexcept { return m_mwebKeychain ? m_mwebKeychain->GetScanSecret() : SecretKey(); }
+    void LoadMWEBKeychain() override;
+    SecretKey GetScanSecret() const noexcept
+    {
+        if (m_mwebKeychain) {
+            return m_mwebKeychain->GetScanSecret();
+        }
+
+        if (IsHDEnabled() && m_hd_chain.mweb_scan_key) {
+            return *m_hd_chain.mweb_scan_key;
+        }
+        
+        return SecretKey::Null();
+    };
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr. Does not provide privkeys */
@@ -642,8 +652,6 @@ public:
 
     const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     const std::vector<DestinationAddr> GetScriptPubKeys() const;
-
-    bool LoadMWEBKeychain() override;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

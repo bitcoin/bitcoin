@@ -511,7 +511,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 }
 
                 if (!!keyMeta.mweb_index) {
-                    chain.nVersion = CHDChain::VERSION_HD_MWEB;
+                    chain.nVersion = std::max(chain.nVersion, CHDChain::VERSION_HD_MWEB_WATCH);
                     chain.nMWEBIndexCounter = std::max(chain.nMWEBIndexCounter, *keyMeta.mweb_index);
                 } else if (internal) {
                     chain.nVersion = std::max(chain.nVersion, CHDChain::VERSION_HD_CHAIN_SPLIT);

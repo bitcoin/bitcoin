@@ -27,16 +27,17 @@ public:
     Wallet(CWallet* pWallet)
         : m_pWallet(pWallet) {}
 
-    bool IsSupported() const { return GetKeychain() != nullptr; }
     bool IsChange(const StealthAddress& address) const;
     bool GetCoin(const mw::Hash& output_id, mw::Coin& coin) const;
 
+    // Loops through the transactions in the wallet and attempts to fill
+    // in missing information for mw::Coin's, in particular the spend key.
+    // Intended to be called after unlocking an encrypted wallet.
+    bool UpgradeCoins();
+
     std::vector<mw::Coin> RewindOutputs(const CTransaction& tx);
-    bool RewindOutput(
-        const boost::variant<mw::Block::CPtr, mw::Transaction::CPtr>& parent,
-        const mw::Hash& output_id,
-        mw::Coin& coin
-    );
+    bool RewindOutput(const Output& output, mw::Coin& coin);
+
     bool GetStealthAddress(const mw::Coin& coin, StealthAddress& address) const;
     bool GetStealthAddress(const uint32_t index, StealthAddress& address) const;
 

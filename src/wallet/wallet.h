@@ -195,6 +195,41 @@ static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
     mapValue["n"] = ToString(nOrderPos);
 }
 
+static inline void ReadPegoutIndices(std::vector<std::pair<mw::Hash, size_t>>& pegout_indices, const mapValue_t& mapValue)
+{
+    if (!mapValue.count("pegout_indices")) {
+        return;
+    }
+
+    std::vector<uint8_t> bytes = ParseHex(mapValue.at("pegout_indices"));
+    CDataStream s((const char*)bytes.data(), (const char*)bytes.data() + bytes.size(), SER_DISK, PROTOCOL_VERSION);
+
+    size_t num_indices = ReadVarInt<CDataStream, VarIntMode::DEFAULT, size_t>(s);
+    for (size_t i = 0; i < num_indices; i++) {
+        mw::Hash kernel_id;
+        s >> kernel_id;
+        size_t sub_idx = ReadVarInt<CDataStream, VarIntMode::DEFAULT, size_t>(s);
+
+        pegout_indices.push_back({std::move(kernel_id), sub_idx});
+    }
+}
+
+static inline void WritePegoutIndices(const std::vector<std::pair<mw::Hash, size_t>>& pegout_indices, mapValue_t& mapValue)
+{
+    if (pegout_indices.empty()) {
+        return;
+    }
+
+    CDataStream s(SER_DISK, PROTOCOL_VERSION);
+    WriteVarInt<CDataStream, VarIntMode::DEFAULT, size_t>(s, pegout_indices.size());
+    for (const auto& pegout_idx : pegout_indices) {
+        pegout_idx.first.Serialize(s);
+        WriteVarInt<CDataStream, VarIntMode::DEFAULT, size_t>(s, pegout_idx.second);
+    }
+
+    mapValue["pegout_indices"] = HexStr(std::vector<uint8_t>{s.begin(), s.end()});
+}
+
 struct COutputEntry
 {
     CTxDestination destination;
@@ -289,6 +324,7 @@ public:
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
     boost::optional<MWEB::WalletTxInfo> mweb_wtx_info;
+    std::vector<std::pair<mw::Hash, size_t>> pegout_indices;
 
     // memory only
     enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
@@ -371,6 +407,7 @@ public:
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
 
+        WritePegoutIndices(pegout_indices, mapValueCopy);
         if (mweb_wtx_info) {
             mapValueCopy["mweb_info"] = mweb_wtx_info->ToHex();
         }
@@ -412,6 +449,8 @@ public:
 
         ReadOrderPos(nOrderPos, mapValue);
         nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
+
+        ReadPegoutIndices(pegout_indices, mapValue);
         mweb_wtx_info = mapValue.count("mweb_info") ? boost::make_optional(MWEB::WalletTxInfo::FromHex(mapValue["mweb_info"])) : boost::none;
 
         mapValue.erase("fromaccount");
@@ -419,6 +458,7 @@ public:
         mapValue.erase("n");
         mapValue.erase("timesmart");
         mapValue.erase("mweb_info");
+        mapValue.erase("pegout_indices");
     }
 
     void SetTx(CTransactionRef arg)
@@ -758,6 +798,10 @@ private:
      * Used to keep track of which CWalletTx an MWEB output came from.
      */
     std::map<mw::Hash, uint256> mapOutputsMWEB GUARDED_BY(cs_wallet);
+    /**
+     * Used to keep track of which CWalletTx an MWEB kernel is in.
+     */
+    std::map<mw::Hash, uint256> mapKernelsMWEB GUARDED_BY(cs_wallet); // MW: TODO - Could be multiple transactions. Need to handle conflicts?
     void AddMWEBOrigins(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
@@ -773,19 +817,19 @@ private:
      * Abandoned state should probably be more carefully tracked via different
      * posInBlock signals or by checking mempool presence when necessary.
      */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info, CWalletTx::Confirmation confirm, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx);
 
     /* Mark a transaction's inputs dirty, thus forcing the outputs to be recomputed */
-    void MarkInputsDirty(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void MarkInputsDirty(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected/ScanForWalletTransactions.
      * Should be called with non-zero block_hash and posInBlock if this is for a transaction that is included in a block. */
-    void SyncTransaction(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SyncTransaction(const CTransactionRef& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info, CWalletTx::Confirmation confirm, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::atomic<uint64_t> m_wallet_flags{0};
 
@@ -904,6 +948,7 @@ public:
     /** Interface for accessing chain state. */
     interfaces::Chain& chain() const { assert(m_chain); return *m_chain; }
 
+    CWalletTx* GetWalletTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     const CWalletTx* GetWalletTx(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
@@ -1162,7 +1207,7 @@ public:
     bool IsChange(const CTxOutput& output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsChange(const DestinationAddr& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     CAmount GetChange(const CTxOutput& output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool IsMine(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsMine(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info) const;
     CAmount GetDebit(const CTransaction& tx, const boost::optional<MWEB::WalletTxInfo>& mweb_wtx_info, const isminefilter& filter) const;

@@ -894,7 +894,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
     if (Func("mweb", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, false, out, error);
         if (!pubkey) return nullptr;
-        return MakeUnique<MWEBDescriptor>(std::move(pubkey), SecretKey()); // MW: TODO - Lookup scan_secret
+        return MakeUnique<MWEBDescriptor>(std::move(pubkey), SecretKey::Null()); // MW: TODO - Lookup scan_secret
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, true, out, error);
@@ -1137,7 +1137,7 @@ std::unique_ptr<Descriptor> InferDescriptor(const DestinationAddr& script, const
     if (script.IsMWEB()) {
         // MW: TODO - Lookup scan_secret
         CPubKey pubkey(script.GetMWEBAddress().GetSpendPubKey().vec());
-        return MakeUnique<MWEBDescriptor>(InferPubkey(pubkey, ParseScriptContext::TOP, provider), SecretKey());
+        return MakeUnique<MWEBDescriptor>(InferPubkey(pubkey, ParseScriptContext::TOP, provider), SecretKey::Null());
     }
 
     return InferScript(script.GetScript(), ParseScriptContext::TOP, provider);

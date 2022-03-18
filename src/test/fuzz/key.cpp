@@ -182,7 +182,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(v_solutions_ret_tx_multisig[2].size() == 1);
 
         OutputType output_type{};
-        const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type, SecretKey());
+        const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type, SecretKey::Null());
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));
         assert(CTxDestination{PKHash{pubkey}} == tx_destination);

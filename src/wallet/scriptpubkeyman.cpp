@@ -1718,20 +1718,28 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 
 void LegacyScriptPubKeyMan::SetInternal(bool internal) {}
 
-bool LegacyScriptPubKeyMan::LoadMWEBKeychain()
+void LegacyScriptPubKeyMan::LoadMWEBKeychain()
 {
     if (!m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) {
-        return false;
+        return;
     }
 
     if (m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || m_storage.IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
-        return false;
+        return;
     }
 
     // try to get the seed
     CKey seed;
     if (!GetKey(m_hd_chain.seed_id, seed)) {
-        return false;
+        if (m_hd_chain.mweb_scan_key) {
+            m_mwebKeychain = std::make_shared<mw::Keychain>(
+                *this,
+                *m_hd_chain.mweb_scan_key,
+                SecretKey::Null()
+            );
+        }
+
+        return;
     }
 
     CExtKey masterKey;
@@ -1751,11 +1759,21 @@ bool LegacyScriptPubKeyMan::LoadMWEBKeychain()
     CExtKey spendKey;
     chainChildKey.Derive(spendKey, BIP32_HARDENED_KEY_LIMIT + 1);
 
+    m_hd_chain.nVersion = std::max(m_hd_chain.nVersion, CHDChain::VERSION_HD_MWEB_WATCH);
     m_mwebKeychain = std::make_shared<mw::Keychain>(
         *this,
         SecretKey(scanKey.key.begin()),
         SecretKey(spendKey.key.begin())
     );
+
+    // Add the MWEB scan key to the CHDChain
+    if (!m_hd_chain.mweb_scan_key) {
+        m_hd_chain.mweb_scan_key = SecretKey(scanKey.key.begin());
+
+        if (!WalletBatch(m_storage.GetDatabase()).WriteHDChain(m_hd_chain)) {
+            throw std::runtime_error(std::string(__func__) + ": writing chain failed");
+        }
+    }
 
     // Mark change and peg-in addresses as used
     if (m_hd_chain.nMWEBIndexCounter == 0) {
@@ -1767,8 +1785,6 @@ bool LegacyScriptPubKeyMan::LoadMWEBKeychain()
         // Generate PEGIN pubkey
         GenerateNewKey(batch, m_hd_chain, KeyPurpose::MWEB);
     }
-
-    return true;
 }
 
 bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
@@ -2450,9 +2466,4 @@ const std::vector<DestinationAddr> DescriptorScriptPubKeyMan::GetScriptPubKeys()
         script_pub_keys.push_back(script_pub_key.first);
     }
     return script_pub_keys;
-}
-
-bool DescriptorScriptPubKeyMan::LoadMWEBKeychain()
-{
-    return false;
 }
