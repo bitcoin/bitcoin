@@ -16,7 +16,18 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(timedata_tests, BasicTestingSetup)
+/**
+ * Set -maxtimeadjustment to 70 minutes to test the adjusted time code. This was
+ * the default value before being changed in v24.0 to 0 to disable adjusted
+ * time by default.
+ */
+static constexpr int64_t TIME_ADJUSTMENT{70 * 60};
+struct TimeDataTestingSetup : public BasicTestingSetup {
+    TimeDataTestingSetup()
+        : BasicTestingSetup{CBaseChainParams::MAIN, /*extra_args=*/{strprintf("-maxtimeadjustment=%d", TIME_ADJUSTMENT).c_str()}} {}
+};
+
+BOOST_FIXTURE_TEST_SUITE(timedata_tests, TimeDataTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_MedianFilter)
 {
@@ -59,12 +70,12 @@ BOOST_AUTO_TEST_CASE(addtimedata)
     BOOST_CHECK_EQUAL(GetTimeOffset(), 0);
 
     //Part 1: Add large offsets to test a warning message that our clock may be wrong.
-    MultiAddTimeData(3, DEFAULT_MAX_TIME_ADJUSTMENT + 1);
+    MultiAddTimeData(3, TIME_ADJUSTMENT + 1);
     // Filter size is 1 + 3 = 4: It is always initialized with a single element (offset 0)
 
     {
         ASSERT_DEBUG_LOG("Please check that your computer's date and time are correct!");
-        MultiAddTimeData(1, DEFAULT_MAX_TIME_ADJUSTMENT + 1); //filter size 5
+        MultiAddTimeData(1, TIME_ADJUSTMENT + 1); //filter size 5
     }
 
     BOOST_CHECK(GetWarnings(true).original.find("clock is wrong") != std::string::npos);
