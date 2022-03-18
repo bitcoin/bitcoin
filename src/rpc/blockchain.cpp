@@ -144,7 +144,7 @@ UniValue AuxpowToJSON(const CAuxPow& auxpow, ChainstateManager& chainstate)
 
     return result;
 }
-static const CBlockIndex* ParseHashOrHeight(const UniValue& param, ChainstateManager& chainman)
+static const CBlockIndex* ParseHashOrHeight(const UniValue& param, ChainstateManager& chainman) {
     LOCK(::cs_main);
     CChain& active_chain = chainman.ActiveChain();
 
