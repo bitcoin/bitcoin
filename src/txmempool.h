@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include <kernel/mempool_limits.h>
 #include <kernel/mempool_options.h>
 
 #include <coins.h>
@@ -568,6 +569,10 @@ public:
 
     const int64_t m_max_size_bytes;
     const std::chrono::seconds m_expiry;
+
+    using Limits = kernel::MemPoolLimits;
+
+    const Limits m_limits;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise

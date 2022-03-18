@@ -4,6 +4,8 @@
 #ifndef BITCOIN_KERNEL_MEMPOOL_OPTIONS_H
 #define BITCOIN_KERNEL_MEMPOOL_OPTIONS_H
 
+#include <kernel/mempool_limits.h>
+
 #include <chrono>
 #include <cstdint>
 
@@ -29,6 +31,7 @@ struct MemPoolOptions {
     int check_ratio{0};
     int64_t max_size_bytes{DEFAULT_MAX_MEMPOOL_SIZE_MB * 1'000'000};
     std::chrono::seconds expiry{std::chrono::hours{DEFAULT_MEMPOOL_EXPIRY_HOURS}};
+    MemPoolLimits limits{};
 };
 } // namespace kernel
 

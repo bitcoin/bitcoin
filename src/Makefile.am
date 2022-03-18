@@ -173,6 +173,7 @@ BITCOIN_CORE_H = \
   kernel/checks.h \
   kernel/coinstats.h \
   kernel/context.h \
+  kernel/mempool_limits.h \
   kernel/mempool_options.h \
   key.h \
   key_io.h \
