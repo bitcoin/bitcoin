@@ -347,7 +347,7 @@ mkdir -p "$DISTSRC"
             mkdir -p "unsigned-app-${HOST}"
             cp  --target-directory="unsigned-app-${HOST}" \
                 osx_volname \
-                contrib/macdeploy/detached-sig-{apply,create}.sh \
+                contrib/macdeploy/detached-sig-create.sh \
                 "${BASEPREFIX}/${HOST}"/native/bin/dmg
             mv --target-directory="unsigned-app-${HOST}" dist
             (
