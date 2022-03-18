@@ -549,7 +549,8 @@ inspecting signatures in Mach-O binaries.")
                                            "glibc-versioned-locpath.patch"
                                            "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
                                            "glibc-2.24-no-build-time-cxx-header-run.patch"
-                                           "glibc-2.24-fcommon.patch"))))))
+                                           "glibc-2.24-fcommon.patch"
+                                           "glibc-2.24-guix-prefix.patch"))))))
 
 (define-public glibc-2.27/bitcoin-patched
   (package
@@ -566,7 +567,8 @@ inspecting signatures in Mach-O binaries.")
                 "1b2n1gxv9f4fd5yy68qjbnarhf8mf4vmlxk10i3328c1w5pmp0ca"))
               (patches (search-our-patches "glibc-ldd-x86_64.patch"
                                            "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
-                                           "glibc-2.27-dont-redefine-nss-database.patch"))))))
+                                           "glibc-2.27-dont-redefine-nss-database.patch"
+                                           "glibc-2.27-guix-prefix.patch"))))))
 
 (packages->manifest
  (append
