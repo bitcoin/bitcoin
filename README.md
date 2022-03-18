@@ -1,3 +1,3 @@
-Environment Conservation Coin - ECC
+Environment Conservation Coin - ECC 2022
 =====================================
 
