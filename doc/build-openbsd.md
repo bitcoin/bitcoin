@@ -7,7 +7,7 @@ This guide describes how to build bitcoind, bitcoin-qt, and command-line utiliti
 Preparation
 -------------
 
-Run the following as root to install the base dependencies for building:
+Install the required dependencies the usual way you [install software on OpenBSD](https://www.openbsd.org/faq/faq15.html) using `pkg_add`. The example commands below use `pkg_add` which is usually ran as `root` or via `doas`. The built in tool for executing commands as other users is `doas`. If you havent setup `doas` refer to the [documentation](https://man.openbsd.org/doas.conf.5) and check the `/etc/examples/doas.conf` for configuration examples.
 
 ```bash
 pkg_add git gmake libevent libtool boost
