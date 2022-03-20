@@ -217,7 +217,9 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
 	@mkdir -p $(@D)
 	sed -e 's|@HOST@|$(host)|' \
             -e 's|@CC@|$(host_CC)|' \
+            -e 's|@ENVIRONMENT_CC@|$(ENVIRONMENT_CC)|' \
             -e 's|@CXX@|$(host_CXX)|' \
+            -e 's|@ENVIRONMENT_CXX@|$(ENVIRONMENT_CXX)|' \
             -e 's|@AR@|$(host_AR)|' \
             -e 's|@RANLIB@|$(host_RANLIB)|' \
             -e 's|@NM@|$(host_NM)|' \

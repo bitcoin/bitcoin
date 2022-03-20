@@ -95,9 +95,13 @@ LDFLAGS="-L${depends_prefix}/lib ${LDFLAGS}"
 if test -n "@CC@" -a -z "${CC}"; then
   CC="@CC@"
 fi
+ENVIRONMENT_CC='@ENVIRONMENT_CC@'
+
 if test -n "@CXX@" -a -z "${CXX}"; then
   CXX="@CXX@"
 fi
+ENVIRONMENT_CXX='@ENVIRONMENT_CXX@'
+
 PYTHONPATH="${depends_prefix}/native/lib/python3/dist-packages${PYTHONPATH:+${PATH_SEPARATOR}}${PYTHONPATH}"
 
 if test -n "@AR@"; then

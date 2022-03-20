@@ -1657,6 +1657,21 @@ AC_MSG_RESULT($build_bitcoin_libs)
 
 AC_LANG_POP
 
+dnl Add a ccache to a compiler invocation string
+dnl
+dnl   ADD_CCACHE[COMPILER_NAME]
+dnl
+dnl The ccache fails if a compiler invocation string is prepended with the "env"
+dnl command. In such cases the environment variables ENVIRONMENT_C{C,XX} must be
+dnl set to a full "env" command with its options.
+AC_DEFUN([ADD_CCACHE], [
+  if test "$ENVIRONMENT_$1" = ""; then
+    $1="$ac_cv_path_CCACHE $$1"
+  else
+    $1=$(echo $$1 | ${SED} -e "s|\($ENVIRONMENT_$1\)|\1 $ac_cv_path_CCACHE|")
+  fi
+])
+
 if test "$use_ccache" != "no"; then
   AC_MSG_CHECKING([if ccache should be used])
   if test "$CCACHE" = ""; then
@@ -1667,8 +1682,8 @@ if test "$use_ccache" != "no"; then
     fi
   else
     use_ccache=yes
-    CC="$ac_cv_path_CCACHE $CC"
-    CXX="$ac_cv_path_CCACHE $CXX"
+    ADD_CCACHE([CC])
+    ADD_CCACHE([CXX])
   fi
   AC_MSG_RESULT($use_ccache)
   if test "$use_ccache" = "yes"; then
