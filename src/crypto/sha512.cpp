@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "crypto/sha512.h"
-#include "crypto/common.h"
+#include <crypto/sha512.h>
+#include <crypto/common.h>
 
 #include <string.h>
 #include <iostream>
@@ -16,7 +16,7 @@ namespace sha512
 {
 uint64_t inline Ch(uint64_t x, uint64_t y, uint64_t z) { return z ^ (x & (y ^ z)); }
 uint64_t inline Maj(uint64_t x, uint64_t y, uint64_t z) { return (x & y) | (z & (x | y)); }
-uint64_t inline Rotr(uint64_t x, uint64_t n) { return ((x >> n)|(x << 64-n)); } // for 64-bit int only
+uint64_t inline Rotr(uint64_t x, uint64_t n) { return ((x >> n)|(x << (64-n))); } // for 64-bit int only
 
 /** Initialize SHA-256 state. */
 void inline Initialize(uint64_t* s)
@@ -101,6 +101,7 @@ void Transform(uint64_t* s, const unsigned char* chunk)
         s[i] += V[i];
     }
 }
+    
 } // namespace sha512
 
 } // namespace
