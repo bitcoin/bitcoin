@@ -54,16 +54,6 @@ struct update_ancestor_state
         int64_t modifySigOpsCost;
 };
 
-struct update_fee_delta
-{
-    explicit update_fee_delta(int64_t _feeDelta) : feeDelta(_feeDelta) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateFeeDelta(feeDelta); }
-
-private:
-    int64_t feeDelta;
-};
-
 bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 {
     AssertLockHeld(cs_main);
@@ -496,7 +486,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     CAmount delta{0};
     ApplyDelta(entry.GetTx().GetHash(), delta);
     if (delta) {
-            mapTx.modify(newit, update_fee_delta(delta));
+        mapTx.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateFeeDelta(delta); });
     }
 
     // Update cachedInnerUsage to include contained transaction's usage.
@@ -931,7 +921,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
         delta += nFeeDelta;
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
-            mapTx.modify(it, update_fee_delta(delta));
+            mapTx.modify(it, [&delta](CTxMemPoolEntry& e) { e.UpdateFeeDelta(delta); });
             // Now update all ancestors' modified fees with descendants
             setEntries setAncestors;
             uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
