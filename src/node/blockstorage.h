@@ -97,6 +97,7 @@ struct CBlockIndexHeightOnlyComparator {
 
 struct PruneLockInfo {
     int height_first{std::numeric_limits<int>::max()}; //! Height of earliest block that should be kept and not pruned
+    int height_last{std::numeric_limits<int>::max()}; //! Height of latest block that should be kept and not pruned
 };
 
 enum BlockfileType {
@@ -248,8 +249,9 @@ private:
     /**
      * Map from external index name to oldest block that must not be pruned.
      *
-     * @note Internally, only blocks at height (height_first - PRUNE_LOCK_BUFFER - 1) and
-     * below will be pruned, but callers should avoid assuming any particular buffer size.
+     * @note Internally, only blocks before height (height_first - PRUNE_LOCK_BUFFER - 1) and
+     * after height (height_last + PRUNE_LOCK_BUFFER) will be pruned, but callers should
+     * avoid assuming any particular buffer size.
      */
     std::unordered_map<std::string, PruneLockInfo> m_prune_locks GUARDED_BY(::cs_main);
 

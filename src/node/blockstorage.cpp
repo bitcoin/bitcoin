@@ -31,6 +31,7 @@
 #include <util/batchpriority.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/overflow.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -284,10 +285,13 @@ bool BlockManager::DoPruneLocksForbidPruning(const CBlockFileInfo& block_file_in
         if (prune_lock.second.height_first == std::numeric_limits<int>::max()) continue;
         // Remove the buffer and one additional block here to get actual height that is outside of the buffer
         const unsigned int lock_height{(unsigned)std::max(1, prune_lock.second.height_first - PRUNE_LOCK_BUFFER - 1)};
-        if (block_file_info.nHeightLast > lock_height) {
-            LogDebug(BCLog::PRUNE, "%s limited pruning to height %d\n", prune_lock.first, lock_height);
-            return true;
-        }
+        const unsigned int lock_height_last{(unsigned)std::max(1, SaturatingAdd(prune_lock.second.height_last, PRUNE_LOCK_BUFFER))};
+        if (block_file_info.nHeightFirst > lock_height_last) continue;
+        if (block_file_info.nHeightLast <= lock_height) continue;
+        // TODO: Check each block within the file against the prune_lock range
+
+        LogDebug(BCLog::PRUNE, "%s limited pruning to height %d\n", prune_lock.first, lock_height);
+        return true;
     }
     return false;
 }
