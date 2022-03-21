@@ -1156,12 +1156,14 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
     }
 
-    // if using block pruning, then disallow txindex, coinstatsindex and require disabling governance validation
     if (args.GetArg("-prune", 0)) {
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX))
             return InitError(_("Prune mode is incompatible with -coinstatsindex."));
+        if (args.GetBoolArg("-reindex-chainstate", false)) {
+            return InitError(_("Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead."));
+        }
         if (!args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)) {
             return InitError(_("Prune mode is incompatible with -disablegovernance=false."));
         }
