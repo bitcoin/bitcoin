@@ -1,0 +1,11 @@
+--- a/qtbase/mkspecs/features/mac/no_warn_empty_obj_files.prf
++++ b/qtbase/mkspecs/features/mac/no_warn_empty_obj_files.prf
+@@ -1,7 +1,7 @@
+ # Prevent warnings about object files without any symbols. This is a common
+ # thing in Qt as we tend to build files unconditionally, and then use ifdefs
+ # to compile out parts that are not relevant.
+-QMAKE_RANLIB += -no_warning_for_no_symbols
++# QMAKE_RANLIB += -no_warning_for_no_symbols
+ 
+ # We have to tell 'ar' to not run ranlib by itself
+ QMAKE_AR += -S
