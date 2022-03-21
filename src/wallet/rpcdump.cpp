@@ -1072,7 +1072,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << "# End of dump\n";
     file.close();
 
-    std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!").translated, request.params[0].get_str().c_str());
+    std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!").translated, request.params[0].get_str());
     obj.pushKV("keys", int(vKeyBirth.size()));
     obj.pushKV("filename", filepath.string());
     obj.pushKV("warning", strWarning);

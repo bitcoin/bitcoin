@@ -111,7 +111,7 @@ static int AppInitRPC(int argc, char* argv[])
     SetupCliArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
 
@@ -131,7 +131,7 @@ static int AppInitRPC(int argc, char* argv[])
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        tfm::format(std::cout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage);
         if (argc < 2) {
             tfm::format(std::cerr, "Error: too few parameters\n");
             return EXIT_FAILURE;
@@ -140,15 +140,15 @@ static int AppInitRPC(int argc, char* argv[])
     }
     bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
     if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
     if (!gArgs.ReadConfigFiles(error, true)) {
-        tfm::format(std::cerr, "Error reading configuration file: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error reading configuration file: %s\n", error);
         return EXIT_FAILURE;
     }
     if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
@@ -413,7 +413,7 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
         if (failedToGetAuthCookie) {
             throw std::runtime_error(strprintf(
                 "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)",
-                GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
+                GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string()));
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
         }
@@ -561,7 +561,7 @@ static int CommandLineRPC(int argc, char *argv[])
     }
 
     if (strPrint != "") {
-        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint.c_str());
+        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint);
     }
     return nRet;
 }

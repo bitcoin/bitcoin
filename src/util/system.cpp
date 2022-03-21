@@ -326,7 +326,7 @@ public:
             LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
             val = "1";
         } else {
-            error = strprintf("Negating of %s is meaningless and therefore forbidden", key.c_str());
+            error = strprintf("Negating of %s is meaningless and therefore forbidden", key);
             return false;
         }
     }
@@ -438,7 +438,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             }
             m_command_line_args[key].push_back(val);
         } else {
-            error = strprintf("Invalid parameter %s", key.c_str());
+            error = strprintf("Invalid parameter %s", key);
             return false;
         }
     }
@@ -735,7 +735,7 @@ void PrintExceptionContinue(const std::exception_ptr pex, const char* pszExcepti
 {
     std::string message = strprintf("\"%s\" raised an exception\n%s", pszExceptionOrigin, GetPrettyExceptionStr(pex));
     LogPrintf("\n\n************************\n%s\n", message);
-    tfm::format(std::cerr, "\n\n************************\n%s\n", message.c_str());
+    tfm::format(std::cerr, "\n\n************************\n%s\n", message);
 }
 
 fs::path GetDefaultDataDir()
@@ -908,7 +908,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
             if (ignore_invalid_keys) {
                 LogPrintf("Ignoring unknown configuration value %s\n", option.first);
             } else {
-                error = strprintf("Invalid configuration value %s", option.first.c_str());
+                error = strprintf("Invalid configuration value %s", option.first);
                 return false;
             }
         }
@@ -962,7 +962,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                     if (!ReadConfigStream(include_config, to_include, error, ignore_invalid_keys)) {
                         return false;
                     }
-                    LogPrintf("Included configuration file %s\n", to_include.c_str());
+                    LogPrintf("Included configuration file %s\n", to_include);
                 } else {
                     error = "Failed to include configuration file " + to_include;
                     return false;
@@ -982,7 +982,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                 }
             }
             for (const std::string& to_include : includeconf) {
-                tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include.c_str());
+                tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include);
             }
         }
     } else {
@@ -996,7 +996,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     // If datadir is changed in .conf file:
     ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {
-        error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str());
+        error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", ""));
         return false;
     }
     return true;
@@ -1211,7 +1211,7 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
 
     for (int i = 0; i < tp.size(); i++) {
         futures[i] = tp.push([baseName, i, cond, mutex, &doneCnt](int threadId) {
-            util::ThreadRename(strprintf("%s-%d", baseName, i).c_str());
+            util::ThreadRename(strprintf("%s-%d", baseName, i));
             std::unique_lock<std::mutex> l(*mutex);
             doneCnt++;
             cond->wait(l);

@@ -189,7 +189,7 @@ std::string SafeStringFormat(const std::string& fmt, const Args&... args)
         return tinyformat::format(fmt, args...);
     } catch (std::runtime_error& fmterr) {
         std::string message = tinyformat::format("\n****TINYFORMAT ERROR****\n    err=\"%s\"\n    fmt=\"%s\"\n", fmterr.what(), fmt);
-        tfm::format(std::cerr, "%s", message.c_str());
+        tfm::format(std::cerr, "%s", message);
         return message;
     }
 }

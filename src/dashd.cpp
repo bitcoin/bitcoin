@@ -55,7 +55,7 @@ static bool AppInit(int argc, char* argv[])
     SetupServerArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return false;
     }
 
@@ -78,7 +78,7 @@ static bool AppInit(int argc, char* argv[])
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        tfm::format(std::cout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage);
         return true;
     }
 
@@ -87,16 +87,16 @@ static bool AppInit(int argc, char* argv[])
         bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
         if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+            tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
             return false;
         }
         if (!gArgs.ReadConfigFiles(error, true)) {
-            tfm::format(std::cerr, "Error reading configuration file: %s\n", error.c_str());
+            tfm::format(std::cerr, "Error reading configuration file: %s\n", error);
             return false;
         }
         if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+            tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", ""));
             return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
