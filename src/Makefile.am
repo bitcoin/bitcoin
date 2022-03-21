@@ -231,6 +231,10 @@ BITCOIN_CORE_H = \
   shutdown.h \
   signet.h \
   streams.h \
+  support/allocators/node_allocator/allocator_fwd.h \
+  support/allocators/node_allocator/allocator.h \
+  support/allocators/node_allocator/factory.h \
+  support/allocators/node_allocator/memory_resource.h \
   support/allocators/node_allocator/node_size.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -609,6 +613,7 @@ libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
   support/lockedpool.cpp \
+  support/allocators/node_allocator/memory_resource.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
   compat/glibcxx_sanity.cpp \
@@ -835,6 +840,7 @@ bitcoin_chainstate_SOURCES = \
   script/standard.cpp \
   shutdown.cpp \
   signet.cpp \
+  support/allocators/node_allocator/memory_resource.cpp \
   support/cleanse.cpp \
   support/lockedpool.cpp \
   sync.cpp \

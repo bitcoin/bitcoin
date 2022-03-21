@@ -111,6 +111,7 @@ BITCOIN_TESTS =\
   test/net_tests.cpp \
   test/netbase_tests.cpp \
   test/node_allocator_helpers.h \
+  test/node_allocator_tests.cpp \
   test/node_size_tests.cpp \
   test/orphanage_tests.cpp \
   test/pmt_tests.cpp \
