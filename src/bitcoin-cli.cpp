@@ -1059,7 +1059,9 @@ static void ParseGetInfoResult(UniValue& result)
         result_string += "\n";
     }
 
-    result_string += strprintf("%sWarnings:%s %s", YELLOW, RESET, result["warnings"].getValStr());
+    const std::string warnings{result["warnings"].getValStr()};
+    result_string += strprintf("%sWarnings:%s %s", YELLOW, RESET, warnings.empty() ? "(none)" : warnings);
+
     result.setStr(result_string);
 }
 
