@@ -163,6 +163,8 @@ dist/
 
 /guix-build-*
 
+/ci/scratch/
+
 # cppcheck cache-directory
 test/lint/.cppcheck/*
 
