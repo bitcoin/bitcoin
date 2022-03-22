@@ -1,0 +1,39 @@
+From 5209c558df9849193a4e03429ee548b92eaa59ca Mon Sep 17 00:00:00 2001
+From: Andrew Chow <achow101-github@achow101.com>
+Date: Tue, 22 Mar 2022 13:58:42 -0400
+Subject: [PATCH] guix: remap guix store paths to /usr
+
+---
+ libgcc/Makefile.in  | 2 ++
+ libgcc/configure.ac | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/libgcc/Makefile.in b/libgcc/Makefile.in
+index 851e7657d07..847536f1b88 100644
+--- a/libgcc/Makefile.in
++++ b/libgcc/Makefile.in
+@@ -87,6 +87,8 @@ CFLAGS = @CFLAGS@
+ RANLIB = @RANLIB@
+ LN_S = @LN_S@
+ 
++CFLAGS+=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
++
+ PWD_COMMAND = $${PWDCMD-pwd}
+ 
+ # Flags to pass to a recursive make.
+diff --git a/libgcc/configure.ac b/libgcc/configure.ac
+index bff6e54f22e..f91024fd0e1 100644
+--- a/libgcc/configure.ac
++++ b/libgcc/configure.ac
+@@ -420,6 +420,8 @@ esac
+ ;;
+ esac
+ 
++CFLAGS=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
++
+ case ${host} in
+ # At present, we cannot turn -mfloat128 on via #pragma GCC target, so just
+ # check if we have VSX (ISA 2.06) support to build the software libraries, and
+-- 
+2.35.1
+
