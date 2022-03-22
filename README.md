@@ -20,7 +20,7 @@ source software which enables the use of this currency.
 Pre-Built Binary
 ----------------
 
-For more information, as well as an immediately useable, binary version of
+For more information, as well as an immediately usable, binary version of
 the Dash Core software, see https://www.dash.org/downloads/.
 
 License
