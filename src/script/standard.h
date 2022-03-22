@@ -191,6 +191,10 @@ CScript GetScriptForDestination(const CTxDestination& dest);
 /** Generate a P2PK script for the given pubkey. */
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 
+/** Determine if script is a "multi_a" script. Returns (threshold, keyspans) if so, and nullopt otherwise.
+ *  The keyspans refer to bytes in the passed script. */
+std::optional<std::pair<int, std::vector<Span<const unsigned char>>>> MatchMultiA(const CScript& script LIFETIMEBOUND);
+
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 

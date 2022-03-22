@@ -13,38 +13,39 @@ GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 bench_bench_bitcoin_SOURCES = \
   $(RAW_BENCH_FILES) \
   bench/addrman.cpp \
-  bench/bench_bitcoin.cpp \
+  bench/base58.cpp \
+  bench/bech32.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/bench_bitcoin.cpp \
   bench/block_assemble.cpp \
-  bench/checkblock.cpp \
-  bench/checkqueue.cpp \
-  bench/data.h \
-  bench/data.cpp \
-  bench/duplicate_inputs.cpp \
-  bench/examples.cpp \
-  bench/rollingbloom.cpp \
+  bench/ccoins_caching.cpp \
   bench/chacha20.cpp \
   bench/chacha_poly_aead.cpp \
+  bench/checkblock.cpp \
+  bench/checkqueue.cpp \
   bench/crypto_hash.cpp \
-  bench/ccoins_caching.cpp \
+  bench/data.cpp \
+  bench/data.h \
+  bench/duplicate_inputs.cpp \
+  bench/examples.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \
-  bench/merkle_root.cpp \
+  bench/lockedpool.cpp \
+  bench/logging.cpp \
   bench/mempool_eviction.cpp \
   bench/mempool_stress.cpp \
-  bench/nanobench.h \
+  bench/merkle_root.cpp \
   bench/nanobench.cpp \
+  bench/nanobench.h \
   bench/peer_eviction.cpp \
+  bench/poly1305.cpp \
+  bench/prevector.cpp \
+  bench/rollingbloom.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/util_time.cpp \
-  bench/verify_script.cpp \
-  bench/base58.cpp \
-  bench/bech32.cpp \
-  bench/lockedpool.cpp \
-  bench/poly1305.cpp \
-  bench/prevector.cpp
+  bench/verify_script.cpp
 
 nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
 

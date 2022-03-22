@@ -109,8 +109,8 @@ int main(int argc, char** argv)
     args.asymptote = parseAsymptote(argsman.GetArg("-asymptote", ""));
     args.is_list_only = argsman.GetBoolArg("-list", false);
     args.min_time = std::chrono::milliseconds(argsman.GetIntArg("-min_time", DEFAULT_MIN_TIME_MS));
-    args.output_csv = fs::PathFromString(argsman.GetArg("-output_csv", ""));
-    args.output_json = fs::PathFromString(argsman.GetArg("-output_json", ""));
+    args.output_csv = argsman.GetPathArg("-output_csv");
+    args.output_json = argsman.GetPathArg("-output_json");
     args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
 
     benchmark::BenchRunner::RunAll(args);

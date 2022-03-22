@@ -280,7 +280,7 @@ class ProxyTest(BitcoinTestFramework):
             n3 = networks_dict(self.nodes[3].getnetworkinfo())
             assert_equal(NETWORKS, n3.keys())
             for net in NETWORKS:
-                if net == NET_I2P:
+                if net == NET_I2P or net == NET_ONION:
                     expected_proxy = ''
                 else:
                     expected_proxy = f'[{self.conf3.addr[0]}]:{self.conf3.addr[1]}'
