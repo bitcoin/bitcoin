@@ -100,13 +100,6 @@ class CNodeStats;
 class CClientUIInterface;
 
 struct CSerializedNetMsg {
-    CSerializedNetMsg() = default;
-    CSerializedNetMsg(CSerializedNetMsg&&) = default;
-    CSerializedNetMsg& operator=(CSerializedNetMsg&&) = default;
-    // No implicit copying, only moves.
-    CSerializedNetMsg(const CSerializedNetMsg& msg) = delete;
-    CSerializedNetMsg& operator=(const CSerializedNetMsg&) = delete;
-
     CSerializedNetMsg Copy() const
     {
         CSerializedNetMsg copy;
@@ -117,7 +110,11 @@ struct CSerializedNetMsg {
 
     std::vector<unsigned char> data;
     std::string m_type;
+
+    // No implicit copying, only moves.
+    DISABLE_IMPLICIT_COPIES();
 };
+static_assert(!std::is_copy_constructible_v<CSerializedNetMsg>);
 
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
