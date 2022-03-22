@@ -351,7 +351,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
     CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", m_args, CreateDummyWalletDatabase());
-    CWalletTx wtx{m_coinbase_txns.back(), TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*position_in_block=*/0}};
+    CWalletTx wtx{m_coinbase_txns.back(), TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/0}};
 
     LOCK(wallet.cs_wallet);
     wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -385,7 +385,7 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
         block = &inserted.first->second;
         block->nTime = blockTime;
         block->phashBlock = &hash;
-        state = TxStateConfirmed{hash, block->nHeight, /*position_in_block=*/0};
+        state = TxStateConfirmed{hash, block->nHeight, /*index=*/0};
     }
     return wallet.AddToWallet(MakeTransactionRef(tx), state, [&](CWalletTx& wtx, bool /* new_tx */) {
         // Assign wtx.m_state to simplify test and avoid the need to simulate
@@ -552,7 +552,7 @@ public:
         wallet->SetLastBlockProcessed(wallet->GetLastBlockHeight() + 1, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.m_state = TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*position_in_block=*/1};
+        it->second.m_state = TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1};
         return it->second;
     }
 
@@ -1100,7 +1100,7 @@ public:
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
         wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
-        it->second.m_state = TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*position_in_block=*/1};
+        it->second.m_state = TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1};
 
         std::vector<COutPoint> vecOutpoints;
         size_t n;
