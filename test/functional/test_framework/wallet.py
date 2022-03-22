@@ -93,6 +93,9 @@ class MiniWallet:
             self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
+    def get_balance(self):
+        return sum(u['value'] for u in self._utxos)
+
     def rescan_utxos(self):
         """Drop all utxos and rescan the utxo set"""
         self._utxos = []
