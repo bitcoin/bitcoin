@@ -32,3 +32,4 @@ unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
 vptr:fs.cpp
+vptr:bls/bls.h

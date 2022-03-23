@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     bsdmainutils \
     curl \
     ccache \
+    clang \
     cmake \
     git \
     g++ \

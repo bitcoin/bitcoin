@@ -37,6 +37,7 @@ export RUN_INTEGRATIONTESTS=true
 
 # Configure sanitizers options
 export TSAN_OPTIONS="suppressions=${SRC_DIR}/test/sanitizer_suppressions/tsan"
+export UBSAN_OPTIONS="suppressions=${SRC_DIR}/test/sanitizer_suppressions/ubsan"
 
 if [ "$BUILD_TARGET" = "arm-linux" ]; then
   export HOST=arm-linux-gnueabihf
@@ -74,6 +75,14 @@ elif [ "$BUILD_TARGET" = "linux64_tsan" ]; then
   export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=thread"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
+elif [ "$BUILD_TARGET" = "linux64_fuzz" ]; then
+  export HOST=x86_64-unknown-linux-gnu
+  export DEP_OPTS="NO_UPNP=1 DEBUG=1"
+  export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++"
+  export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
+  export PYZMQ=true
+  export RUN_UNITTESTS=false
+  export RUN_INTEGRATIONTESTS=false
 elif [ "$BUILD_TARGET" = "linux64_cxx20" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"

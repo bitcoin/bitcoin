@@ -36,13 +36,13 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         return;
     }
     const Consensus::Params& consensus_params = Params().GetConsensus();
-    BlockValidationState validation_state_pow_and_merkle;
+    CValidationState validation_state_pow_and_merkle;
     const bool valid_incl_pow_and_merkle = CheckBlock(block, validation_state_pow_and_merkle, consensus_params, /* fCheckPOW= */ true, /* fCheckMerkleRoot= */ true);
-    BlockValidationState validation_state_pow;
+    CValidationState validation_state_pow;
     const bool valid_incl_pow = CheckBlock(block, validation_state_pow, consensus_params, /* fCheckPOW= */ true, /* fCheckMerkleRoot= */ false);
-    BlockValidationState validation_state_merkle;
+    CValidationState validation_state_merkle;
     const bool valid_incl_merkle = CheckBlock(block, validation_state_merkle, consensus_params, /* fCheckPOW= */ false, /* fCheckMerkleRoot= */ true);
-    BlockValidationState validation_state_none;
+    CValidationState validation_state_none;
     const bool valid_incl_none = CheckBlock(block, validation_state_none, consensus_params, /* fCheckPOW= */ false, /* fCheckMerkleRoot= */ false);
     if (valid_incl_pow_and_merkle) {
         assert(valid_incl_pow && valid_incl_merkle && valid_incl_none);
@@ -52,12 +52,5 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)block.GetHash();
     (void)block.ToString();
     (void)BlockMerkleRoot(block);
-    if (!block.vtx.empty()) {
-        // TODO: Avoid array index out of bounds error in BlockWitnessMerkleRoot
-        //       when block.vtx.empty().
-        (void)BlockWitnessMerkleRoot(block);
-    }
-    (void)GetBlockWeight(block);
-    (void)GetWitnessCommitmentIndex(block);
     (void)RecursiveDynamicUsage(block);
 }

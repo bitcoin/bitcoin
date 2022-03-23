@@ -109,7 +109,7 @@ FUZZ_SUITE_LD_COMMON = \
  $(CRYPTO_LIBS) \
  $(EVENT_PTHREADS_LIBS) \
  $(BLS_LIBS) \
- $(GMP_LIBS \
+ $(GMP_LIBS) \
  $(BACKTRACE_LIB)
 
 # test_dash binary #
