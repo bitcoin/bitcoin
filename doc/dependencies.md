@@ -18,7 +18,7 @@ You can find installation instructions in the `build-*.md` file for your platfor
 | Dependency | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- |
 | [Boost](https://www.boost.org/users/download/) | 1.81.0 | [1.73.0](https://github.com/bitcoin/bitcoin/pull/29066) | No |
-| [libevent](https://github.com/libevent/libevent/releases) | 2.1.12-stable | [2.0.21](https://github.com/bitcoin/bitcoin/pull/18676) | No |
+| [libevent](https://github.com/libevent/libevent/releases) | 2.1.12-stable | [2.1.8](https://github.com/bitcoin/bitcoin/pull/24681) | No |
 | [glibc](https://www.gnu.org/software/libc/) | N/A | [2.31](https://github.com/bitcoin/bitcoin/pull/29987) | Yes |
 
 ## Optional
