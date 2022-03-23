@@ -479,7 +479,7 @@ bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, CAsset
             if(!IsAssetTx(nVersion) && nTargetValueAsset.nValue == 0)  {
                 nTargetValueAsset.nValue = 1;
             }
-            bAssetSolver = KnapsackSolver(nTargetValueAsset, groupAssets, setCoinsRet, nValueRetAsset);
+            bAssetSolver = KnapsackSolver(nTargetValueAsset, groupAssets, setCoinsRet, nValueRetAsset, coin_selection_params.rng_fast);
             // from returned coins, see if we need to also add more gas or do we have enough already
             for(const auto& inputCoin: setCoinsRet) {
                 nValueRet += inputCoin.effective_value;
@@ -487,7 +487,7 @@ bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, CAsset
             // remove attached gas from asset inputs from how much we thought we needed before
             nTarget -= nValueRet;
         }
-        bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, groups, setCoinsRet, nValueRetInternal);
+        bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, groups, setCoinsRet, nValueRetInternal, coin_selection_params.rng_fast);
         // add new gas value to returned amount
         nValueRet += nValueRetInternal;
         // reduce target by amount returned
@@ -502,7 +502,7 @@ bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, CAsset
                 }
             }
             // only look for reduced target coins
-            bBaseSysSolver = KnapsackSolver(nTarget, groupAssets, setCoinsRet, nValueRetInternal);
+            bBaseSysSolver = KnapsackSolver(nTarget, groupAssets, setCoinsRet, nValueRetInternal, coin_selection_params.rng_fast);
             // add new gas value to returned amount
             nValueRet += nValueRetInternal;
             // from returned coins, tally total asset amount. setCoinsRet is cumulative throughout KnapsackSolver calls
@@ -621,7 +621,7 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
         // Cases where we have 101+ outputs all pointing to the same destination may result in
         // privacy leaks as they will potentially be deterministically sorted. We solve that by
         // explicitly shuffling the outputs before processing
-        Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
+        Shuffle(vCoins.begin(), vCoins.end(), coin_selection_params.rng_fast);
     }
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
     // transaction at a target feerate. If an attempt fails, more attempts may be made using a more
@@ -703,7 +703,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
  * Return a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
-static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uint256& block_hash, int block_height)
+static uint32_t GetLocktimeForNewTransaction(FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height)
 {
     uint32_t locktime;
     // Discourage fee sniping.
@@ -733,8 +733,8 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uin
         // that transactions that are delayed after signing for whatever reason,
         // e.g. high-latency mix networks and some CoinJoin implementations, have
         // better privacy.
-        if (GetRandInt(10) == 0)
-            locktime = std::max(0, (int)locktime - GetRandInt(100));
+        if (rng_fast.randrange(10) == 0)
+            locktime = std::max(0, int(locktime) - int(rng_fast.randrange(100)));
     } else {
         // If our chain is lagging behind, we can't discourage fee sniping nor help
         // the privacy of high-latency transactions. To avoid leaking a potentially
@@ -887,6 +887,7 @@ static bool CreateTransactionInternal(
         nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
         nValueToSelectAsset.SetNull();
     }
+    FastRandomContext rng_fast;
     CMutableTransaction txNew;
     CAssetCoinInfo nChangeAsset;
     txNew.nVersion = nVersion;
@@ -919,12 +920,12 @@ static bool CreateTransactionInternal(
     {
         std::set<CInputCoin> setCoins;
         AssertLockHeld(wallet.cs_wallet);
-        txNew.nLockTime = GetLocktimeForNewTransaction(wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+        CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
+        txNew.nLockTime = GetLocktimeForNewTransaction(rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
         {
             std::vector<COutput> vAvailableCoins;
             // SYSCOIN
             AvailableCoins(wallet, vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0, false, nValueToSelectAsset, nVersion);
-            CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 
             // Create change script that will be used if we need change
@@ -1112,7 +1113,7 @@ static bool CreateTransactionInternal(
                         if (nChangePosInOut == -1)
                         {
                             // Insert change txn at random position:
-                            nChangePosInOut = GetRandInt(txNew.vout.size()+1);
+                            nChangePosInOut = rng_fast.randrange(txNew.vout.size()+1);
                         }
                         else if ((unsigned int)nChangePosInOut > txNew.vout.size())
                         {
@@ -1219,7 +1220,7 @@ static bool CreateTransactionInternal(
         // Shuffle selected coins and fill in final vin
         txNew.vin.clear();
         std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
-        Shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
+        Shuffle(selected_coins.begin(), selected_coins.end(), coin_selection_params.rng_fast);
 
         // Note how the sequence number is set to non-maxint so that
         // the nLockTime set above actually works.

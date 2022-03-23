@@ -79,6 +79,8 @@ public:
 /** Parameters for one iteration of Coin Selection. */
 struct CoinSelectionParams
 {
+    /** Randomness to use in the context of coin selection. */
+    FastRandomContext& rng_fast;
     /** Toggles use of Branch and Bound instead of Knapsack solver. */
     bool use_bnb = true;
     /** Size of a change output in bytes, determined by the output type. */
@@ -102,8 +104,9 @@ struct CoinSelectionParams
      * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
     bool m_avoid_partial_spends = false;
 
-    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
+    CoinSelectionParams(FastRandomContext& rng_fast, bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
                         CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial) :
+        rng_fast{rng_fast},
         use_bnb(use_bnb),
         change_output_size(change_output_size),
         change_spend_size(change_spend_size),
@@ -113,7 +116,8 @@ struct CoinSelectionParams
         tx_noinputs_size(tx_noinputs_size),
         m_avoid_partial_spends(avoid_partial)
     {}
-    CoinSelectionParams() {}
+    CoinSelectionParams(FastRandomContext& rng_fast)
+        : rng_fast{rng_fast} {}
 };
 
 /** Parameters for filtering which OutputGroups we may use in coin selection.
@@ -184,9 +188,9 @@ struct OutputGroup
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees);
 
 // Original coin selection algorithm as a fallback
-bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, FastRandomContext& rng);
 // SYSCOIN
-bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, FastRandomContext& rng);
 } // namespace wallet
 
 #endif // SYSCOIN_WALLET_COINSELECTION_H

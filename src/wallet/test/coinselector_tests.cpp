@@ -32,7 +32,8 @@ typedef std::set<CInputCoin> CoinSet;
 static const CoinEligibilityFilter filter_standard(1, 6, 0);
 static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
 static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
-CoinSelectionParams coin_selection_params(/* use_bnb= */ false, /* change_output_size= */ 0,
+FastRandomContext rand{};
+CoinSelectionParams coin_selection_params(rand, /* use_bnb= */ false, /* change_output_size= */ 0,
                                           /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(0),
                                           /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                           /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
@@ -256,9 +257,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     for (int i = 0; i < 100; ++i) {
         BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 2 * CENT, selection, value_ret, not_input_fees));
     }
-
     // Make sure that effective value is working in AttemptSelection when BnB is used
-    CoinSelectionParams coin_selection_params_bnb(/* use_bnb= */ true, /* change_output_size= */ 0,
+    CoinSelectionParams coin_selection_params_bnb(rand, /* use_bnb= */ true, /* change_output_size= */ 0,
                                                   /* change_spend_size= */ 0, /* effective_feerate= */ CFeeRate(3000),
                                                   /* long_term_feerate= */ CFeeRate(1000), /* discard_feerate= */ CFeeRate(1000),
                                                   /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
@@ -649,11 +649,11 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         CAmount target = rand.randrange(balance - 1000) + 1000;
 
         // Perform selection
-        CoinSelectionParams coin_selection_params_knapsack(/* use_bnb= */ false, /* change_output_size= */ 34,
+        CoinSelectionParams coin_selection_params_knapsack(rand, /* use_bnb= */ false, /* change_output_size= */ 34,
                                                            /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                            /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                                            /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
-        CoinSelectionParams coin_selection_params_bnb(/* use_bnb= */ true, /* change_output_size= */ 34,
+        CoinSelectionParams coin_selection_params_bnb(rand, /* use_bnb= */ true, /* change_output_size= */ 34,
                                                       /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                       /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                                       /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
