@@ -872,11 +872,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("Cannot set -bind or -whitebind together with -listen=0"));
     }
 
-    // if listen=0, then disallow listenonion=1
-    if (!args.GetBoolArg("-listen", DEFAULT_LISTEN) && args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
-        return InitError(Untranslated("Cannot set -listen=0 together with -listenonion=1"));
-    }
-
     // Make sure enough file descriptors are available
     int nBind = std::max(nUserBind, size_t(1));
     nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
