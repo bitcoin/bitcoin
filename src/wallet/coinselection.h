@@ -84,14 +84,6 @@ public:
     bool operator<(const COutput& rhs) const {
         return outpoint < rhs.outpoint;
     }
-
-    bool operator!=(const COutput& rhs) const {
-        return outpoint != rhs.outpoint;
-    }
-
-    bool operator==(const COutput& rhs) const {
-        return outpoint == rhs.outpoint;
-    }
 };
 
 /** Parameters for one iteration of Coin Selection. */
