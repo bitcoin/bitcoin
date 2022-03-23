@@ -7,7 +7,7 @@ This guide describes how to build bitcoind, command-line utilities, and GUI on F
 ## Preparation
 
 ### 1. Install Required Dependencies
-Install the required dependencies the usual way you [install software on FreeBSD](https://www.freebsd.org/doc/en/books/handbook/ports.html) - either with `pkg` or via the Ports collection. The example commands below use `pkg` which is usually run as `root` or via `sudo`. If you want to use `sudo`, and you haven't set it up: [use this guide](http://www.freebsdwiki.net/index.php/Sudo%2C_configuring) to setup `sudo` access on FreeBSD.
+Run the following as root to install the base dependencies for building.
 
 ```bash
 pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
