@@ -386,7 +386,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     std::vector<OutputGroup> all_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, false /* positive_only */);
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    if (auto knapsack_result{KnapsackSolver(all_groups, nTargetValue + coin_selection_params.m_change_fee)}) {
+    if (auto knapsack_result{KnapsackSolver(all_groups, nTargetValue + coin_selection_params.m_change_fee, coin_selection_params.rng_fast)}) {
         knapsack_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*knapsack_result);
     }
@@ -394,7 +394,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     // We include the minimum final change for SRD as we do want to avoid making really small change.
     // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
     const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE;
-    if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target)}) {
+    if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target, coin_selection_params.rng_fast)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*srd_result);
     }
@@ -501,7 +501,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
         // Cases where we have 101+ outputs all pointing to the same destination may result in
         // privacy leaks as they will potentially be deterministically sorted. We solve that by
         // explicitly shuffling the outputs before processing
-        Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
+        Shuffle(vCoins.begin(), vCoins.end(), coin_selection_params.rng_fast);
     }
 
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
@@ -585,7 +585,8 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
-static void DiscourageFeeSniping(CMutableTransaction& tx, interfaces::Chain& chain, const uint256& block_hash, int block_height)
+static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
+                                 interfaces::Chain& chain, const uint256& block_hash, int block_height)
 {
     // All inputs must be added by now
     assert(!tx.vin.empty());
@@ -616,8 +617,8 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, interfaces::Chain& cha
         // that transactions that are delayed after signing for whatever reason,
         // e.g. high-latency mix networks and some CoinJoin implementations, have
         // better privacy.
-        if (GetRandInt(10) == 0) {
-            tx.nLockTime = std::max(0, int(tx.nLockTime) - GetRandInt(100));
+        if (rng_fast.randrange(10) == 0) {
+            tx.nLockTime = std::max(0, int(tx.nLockTime) - int(rng_fast.randrange(100)));
         }
     } else {
         // If our chain is lagging behind, we can't discourage fee sniping nor help
@@ -653,9 +654,10 @@ static bool CreateTransactionInternal(
 {
     AssertLockHeld(wallet.cs_wallet);
 
+    FastRandomContext rng_fast;
     CMutableTransaction txNew; // The resulting transaction that we make
 
-    CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
+    CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 
     // Set the long term feerate estimate to the wallet's consolidate feerate
@@ -782,10 +784,9 @@ static bool CreateTransactionInternal(
     assert(change_and_fee >= 0);
     CTxOut newTxOut(change_and_fee, scriptChange);
 
-    if (nChangePosInOut == -1)
-    {
+    if (nChangePosInOut == -1) {
         // Insert change txn at random position:
-        nChangePosInOut = GetRandInt(txNew.vout.size()+1);
+        nChangePosInOut = rng_fast.randrange(txNew.vout.size() + 1);
     }
     else if ((unsigned int)nChangePosInOut > txNew.vout.size())
     {
@@ -811,7 +812,7 @@ static bool CreateTransactionInternal(
     for (const auto& coin : selected_coins) {
         txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
     }
-    DiscourageFeeSniping(txNew, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+    DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
 
     // Calculate the transaction fee
     TxSize tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), &wallet, &coin_control);
