@@ -438,6 +438,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
         SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         result.AddInput(preset_inputs);
         if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
+        result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         return result;
     }
 
@@ -573,6 +574,9 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
 
     // Add preset inputs to result
     res->AddInput(preset_inputs);
+    if (res->m_algo == SelectionAlgorithm::MANUAL) {
+        res->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+    }
 
     return res;
 }
