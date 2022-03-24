@@ -9,6 +9,7 @@ FUZZ_TARGETS = \
   test/fuzz/address_deserialize \
   test/fuzz/addrman_deserialize \
   test/fuzz/asmap \
+  test/fuzz/asmap_direct \
   test/fuzz/banentry_deserialize \
   test/fuzz/base_encode_decode \
   test/fuzz/bech32 \
@@ -291,6 +292,12 @@ test_fuzz_asmap_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_asmap_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_asmap_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_asmap_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_asmap_direct_SOURCES = $(FUZZ_SUITE) test/fuzz/asmap_direct.cpp
+test_fuzz_asmap_direct_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_asmap_direct_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_asmap_direct_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_asmap_direct_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_blockheader_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_blockheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKHEADER_DESERIALIZE=1
