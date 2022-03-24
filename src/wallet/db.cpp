@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <fs.h>
 #include <logging.h>
+#include <util/system.h>
 #include <wallet/db.h>
 
 #include <exception>
@@ -137,4 +138,13 @@ bool IsSQLiteFile(const fs::path& path)
     // Check the application id matches our network magic
     return memcmp(Params().MessageStart(), app_id, 4) == 0;
 }
+
+void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)
+{
+    // Override current options with args values, if any were specified
+    options.use_unsafe_sync = args.GetBoolArg("-unsafesqlitesync", options.use_unsafe_sync);
+    options.use_shared_memory = !args.GetBoolArg("-privdb", !options.use_shared_memory);
+    options.max_log_mb = args.GetIntArg("-dblogsize", options.max_log_mb);
+}
+
 } // namespace wallet
