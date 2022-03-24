@@ -151,8 +151,11 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fListen"))
         settings.setValue("fListen", DEFAULT_LISTEN);
-    if (!gArgs.SoftSetBoolArg("-listen", settings.value("fListen").toBool()))
+    if (!gArgs.SoftSetBoolArg("-listen", settings.value("fListen").toBool())) {
         addOverriddenOption("-listen");
+    } else if (!settings.value("fListen").toBool()) {
+        gArgs.SoftSetBoolArg("-listenonion", false);
+    }
 
     if (!settings.contains("server")) {
         settings.setValue("server", false);
