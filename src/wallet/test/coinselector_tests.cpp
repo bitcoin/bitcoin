@@ -28,20 +28,20 @@ BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 // we repeat those tests this many times and only complain if all iterations of the test fail
 #define RANDOM_REPEATS 5
 
-typedef std::set<CInputCoin> CoinSet;
+typedef std::set<COutput> CoinSet;
 
 static const CoinEligibilityFilter filter_standard(1, 6, 0);
 static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
 static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
 static int nextLockTime = 0;
 
-static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
+static void add_coin(const CAmount& nValue, int nInput, std::vector<COutput>& set)
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    set.emplace_back(MakeTransactionRef(tx), nInput);
+    set.emplace_back(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false);
 }
 
 static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
@@ -50,9 +50,9 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    CInputCoin coin(MakeTransactionRef(tx), nInput);
+    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false);
     OutputGroup group;
-    group.Insert(coin, 1, false, 0, 0, true);
+    group.Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ true);
     result.AddInput(group);
 }
 
@@ -62,10 +62,10 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    CInputCoin coin(MakeTransactionRef(tx), nInput);
+    COutput coin(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false);
     coin.effective_value = nValue - fee;
-    coin.m_fee = fee;
-    coin.m_long_term_fee = long_term_fee;
+    coin.fee = fee;
+    coin.long_term_fee = long_term_fee;
     set.insert(coin);
 }
 
@@ -82,24 +82,13 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
         assert(destination_ok);
         tx.vout[nInput].scriptPubKey = GetScriptForDestination(dest);
     }
-    if (fIsFromMe) {
-        // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),
-        // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
-        tx.vin.resize(1);
-    }
     uint256 txid = tx.GetHash();
 
     LOCK(wallet.cs_wallet);
     auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
     assert(ret.second);
     CWalletTx& wtx = (*ret.first).second;
-    if (fIsFromMe)
-    {
-        wtx.m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
-        wtx.m_is_cache_empty = false;
-    }
-    COutput output(wallet, wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
-    coins.push_back(output);
+    coins.emplace_back(COutPoint(wtx.GetHash(), nInput), wtx.tx->vout.at(nInput), nAge, GetTxSpendSize(wallet, wtx, nInput), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe);
 }
 
 /** Check if SelectionResult a is equivalent to SelectionResult b.
@@ -124,11 +113,14 @@ static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
 /** Check if this selection is equal to another one. Equal means same inputs (i.e same value and prevout) */
 static bool EqualResult(const SelectionResult& a, const SelectionResult& b)
 {
-    std::pair<CoinSet::iterator, CoinSet::iterator> ret = std::mismatch(a.GetInputSet().begin(), a.GetInputSet().end(), b.GetInputSet().begin());
+    std::pair<CoinSet::iterator, CoinSet::iterator> ret = std::mismatch(a.GetInputSet().begin(), a.GetInputSet().end(), b.GetInputSet().begin(),
+        [](const COutput& a, const COutput& b) {
+            return a.outpoint == b.outpoint;
+        });
     return ret.first == a.GetInputSet().end() && ret.second == b.GetInputSet().end();
 }
 
-static CAmount make_hard_case(int utxos, std::vector<CInputCoin>& utxo_pool)
+static CAmount make_hard_case(int utxos, std::vector<COutput>& utxo_pool)
 {
     utxo_pool.clear();
     CAmount target = 0;
@@ -140,24 +132,13 @@ static CAmount make_hard_case(int utxos, std::vector<CInputCoin>& utxo_pool)
     return target;
 }
 
-inline std::vector<OutputGroup>& GroupCoins(const std::vector<CInputCoin>& coins)
-{
-    static std::vector<OutputGroup> static_groups;
-    static_groups.clear();
-    for (auto& coin : coins) {
-        static_groups.emplace_back();
-        static_groups.back().Insert(coin, 0, true, 0, 0, false);
-    }
-    return static_groups;
-}
-
 inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
 {
     static std::vector<OutputGroup> static_groups;
     static_groups.clear();
     for (auto& coin : coins) {
         static_groups.emplace_back();
-        static_groups.back().Insert(coin.GetInputCoin(), coin.nDepth, coin.tx->m_amounts[CWalletTx::DEBIT].m_cached[ISMINE_SPENDABLE] && coin.tx->m_amounts[CWalletTx::DEBIT].m_value[ISMINE_SPENDABLE] == 1 /* HACK: we can't figure out the is_me flag so we use the conditions defined above; perhaps set safe to false for !fIsFromMe in add_coin() */, 0, 0, false);
+        static_groups.back().Insert(coin, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
     }
     return static_groups;
 }
@@ -185,7 +166,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 {
     FastRandomContext rand{};
     // Setup
-    std::vector<CInputCoin> utxo_pool;
+    std::vector<COutput> utxo_pool;
     SelectionResult expected_result(CAmount(0));
 
     /////////////////////////
@@ -329,13 +310,13 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         std::vector<COutput> coins;
 
         add_coin(coins, *wallet, 1);
-        coins.at(0).nInputBytes = 40; // Make sure that it has a negative effective value. The next check should assert if this somehow got through. Otherwise it will fail
+        coins.at(0).input_bytes = 40; // Make sure that it has a negative effective value. The next check should assert if this somehow got through. Otherwise it will fail
         BOOST_CHECK(!SelectCoinsBnB(GroupCoins(coins), 1 * CENT, coin_selection_params_bnb.m_cost_of_change));
 
         // Test fees subtracted from output:
         coins.clear();
         add_coin(coins, *wallet, 1 * CENT);
-        coins.at(0).nInputBytes = 40;
+        coins.at(0).input_bytes = 40;
         coin_selection_params_bnb.m_subtract_fee_outputs = true;
         const auto result9 = SelectCoinsBnB(GroupCoins(coins), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
         BOOST_CHECK(result9);
@@ -356,7 +337,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(coins, *wallet, 2 * CENT, 6 * 24, false, 0, true);
         CCoinControl coin_control;
         coin_control.fAllowOtherInputs = true;
-        coin_control.Select(COutPoint(coins.at(0).tx->GetHash(), coins.at(0).i));
+        coin_control.Select(coins.at(0).outpoint);
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
         const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);

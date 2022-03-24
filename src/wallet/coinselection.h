@@ -19,56 +19,70 @@ static constexpr CAmount MIN_CHANGE{COIN / 100};
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 
 /** A UTXO under consideration for use in funding a new transaction. */
-class CInputCoin {
+class COutput
+{
 public:
-    CInputCoin(const CTransactionRef& tx, unsigned int i)
-    {
-        if (!tx)
-            throw std::invalid_argument("tx should not be null");
-        if (i >= tx->vout.size())
-            throw std::out_of_range("The output index is out of range");
-
-        outpoint = COutPoint(tx->GetHash(), i);
-        txout = tx->vout[i];
-        effective_value = txout.nValue;
-    }
-
-    CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(tx, i)
-    {
-        m_input_bytes = input_bytes;
-    }
-
-    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in)
-    {
-        outpoint = outpoint_in;
-        txout = txout_in;
-        effective_value = txout.nValue;
-    }
-
-    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in, int input_bytes) : CInputCoin(outpoint_in, txout_in)
-    {
-        m_input_bytes = input_bytes;
-    }
-
+    /** The outpoint identifying this UTXO */
     COutPoint outpoint;
+
+    /** The output itself */
     CTxOut txout;
-    CAmount effective_value;
-    CAmount m_fee{0};
-    CAmount m_long_term_fee{0};
+
+    /**
+     * Depth in block chain.
+     * If > 0: the tx is on chain and has this many confirmations.
+     * If = 0: the tx is waiting confirmation.
+     * If < 0: a conflicting tx is on chain and has this many confirmations. */
+    int depth;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
-    int m_input_bytes{-1};
+    int input_bytes;
 
-    bool operator<(const CInputCoin& rhs) const {
+    /** Whether we have the private keys to spend this output */
+    bool spendable;
+
+    /** Whether we know how to spend this output, ignoring the lack of keys */
+    bool solvable;
+
+    /**
+     * Whether this output is considered safe to spend. Unconfirmed transactions
+     * from outside keys and unconfirmed replacement transactions are considered
+     * unsafe and will not be used to fund new spending transactions.
+     */
+    bool safe;
+
+    /** The time of the transaction containing this output as determined by CWalletTx::nTimeSmart */
+    int64_t time;
+
+    /** Whether the transaction containing this output is sent from the owning wallet */
+    bool from_me;
+
+    /** The output's value minus fees required to spend it. Initialized as the output's absolute value. */
+    CAmount effective_value;
+
+    /** The fee required to spend this output at the transaction's target feerate. */
+    CAmount fee{0};
+
+    /** The fee required to spend this output at the consolidation feerate. */
+    CAmount long_term_fee{0};
+
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
+        : outpoint(outpoint),
+        txout(txout),
+        depth(depth),
+        input_bytes(input_bytes),
+        spendable(spendable),
+        solvable(solvable),
+        safe(safe),
+        time(time),
+        from_me(from_me),
+        effective_value(txout.nValue)
+    {}
+
+    std::string ToString() const;
+
+    bool operator<(const COutput& rhs) const {
         return outpoint < rhs.outpoint;
-    }
-
-    bool operator!=(const CInputCoin& rhs) const {
-        return outpoint != rhs.outpoint;
-    }
-
-    bool operator==(const CInputCoin& rhs) const {
-        return outpoint == rhs.outpoint;
     }
 };
 
@@ -143,7 +157,7 @@ struct CoinEligibilityFilter
 struct OutputGroup
 {
     /** The list of UTXOs contained in this output group. */
-    std::vector<CInputCoin> m_outputs;
+    std::vector<COutput> m_outputs;
     /** Whether the UTXOs were sent by the wallet to itself. This is relevant because we may want at
      * least a certain number of confirmations on UTXOs received from outside wallets while trusting
      * our own UTXOs more. */
@@ -180,7 +194,7 @@ struct OutputGroup
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
     {}
 
-    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only);
+    void Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
     CAmount GetSelectionAmount() const;
 };
@@ -202,13 +216,13 @@ struct OutputGroup
  * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
  * @return The waste
  */
-[[nodiscard]] CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
+[[nodiscard]] CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
 
 struct SelectionResult
 {
 private:
     /** Set of inputs selected by the algorithm to use in the transaction */
-    std::set<CInputCoin> m_selected_inputs;
+    std::set<COutput> m_selected_inputs;
     /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
     const CAmount m_target;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
@@ -234,9 +248,9 @@ public:
     [[nodiscard]] CAmount GetWaste() const;
 
     /** Get m_selected_inputs */
-    const std::set<CInputCoin>& GetInputSet() const;
-    /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
-    std::vector<CInputCoin> GetShuffledInputVector() const;
+    const std::set<COutput>& GetInputSet() const;
+    /** Get the vector of COutputs that will be used to fill in a CTransaction's vin */
+    std::vector<COutput> GetShuffledInputVector() const;
 
     bool operator<(SelectionResult other) const;
 };
