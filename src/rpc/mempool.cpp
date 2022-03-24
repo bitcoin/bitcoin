@@ -16,7 +16,9 @@
 #include <univalue.h>
 #include <validation.h>
 
-static std::vector<RPCResult> MempoolEntryDescription() { return {
+static std::vector<RPCResult> MempoolEntryDescription()
+{
+    return {
         RPCResult{RPCResult::Type::NUM, "vsize", "virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
         RPCResult{RPCResult::Type::NUM, "weight", "transaction weight as defined in BIP 141."},
         RPCResult{RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true,
@@ -50,7 +52,8 @@ static std::vector<RPCResult> MempoolEntryDescription() { return {
             {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "child transaction id"}}},
         RPCResult{RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction could be replaced due to BIP125 (replace-by-fee)"},
         RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
-};}
+    };
+}
 
 static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
@@ -164,7 +167,7 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
     }
 }
 
-RPCHelpMan getrawmempool()
+static RPCHelpMan getrawmempool()
 {
     return RPCHelpMan{"getrawmempool",
         "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
@@ -214,7 +217,7 @@ RPCHelpMan getrawmempool()
     };
 }
 
-RPCHelpMan getmempoolancestors()
+static RPCHelpMan getmempoolancestors()
 {
     return RPCHelpMan{"getmempoolancestors",
         "\nIf txid is in the mempool, returns all in-mempool ancestors.\n",
@@ -278,7 +281,7 @@ RPCHelpMan getmempoolancestors()
     };
 }
 
-RPCHelpMan getmempooldescendants()
+static RPCHelpMan getmempooldescendants()
 {
     return RPCHelpMan{"getmempooldescendants",
         "\nIf txid is in the mempool, returns all in-mempool descendants.\n",
@@ -343,7 +346,7 @@ RPCHelpMan getmempooldescendants()
     };
 }
 
-RPCHelpMan getmempoolentry()
+static RPCHelpMan getmempoolentry()
 {
     return RPCHelpMan{"getmempoolentry",
         "\nReturns mempool data for given transaction\n",
@@ -394,7 +397,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     return ret;
 }
 
-RPCHelpMan getmempoolinfo()
+static RPCHelpMan getmempoolinfo()
 {
     return RPCHelpMan{"getmempoolinfo",
         "\nReturns details on the active state of the TX memory pool.\n",
@@ -423,7 +426,7 @@ RPCHelpMan getmempoolinfo()
     };
 }
 
-RPCHelpMan savemempool()
+static RPCHelpMan savemempool()
 {
     return RPCHelpMan{"savemempool",
         "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
