@@ -5,7 +5,6 @@
 """Utilities for manipulating blocks and transactions."""
 
 from decimal import Decimal
-import io
 import struct
 import time
 import unittest
@@ -66,9 +65,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     if txlist:
         for tx in txlist:
             if not hasattr(tx, 'calc_sha256'):
-                txo = CTransaction()
-                txo.deserialize(io.BytesIO(tx))
-                tx = txo
+                tx = tx_from_hex(tx)
             block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
