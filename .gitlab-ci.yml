@@ -132,6 +132,7 @@ builder-image:
       - build-ci/dashcore-$BUILD_TARGET/src/qt/test/test_dash-qt.exe
       - build-ci/dashcore-$BUILD_TARGET/src/test/test_dash
       - build-ci/dashcore-$BUILD_TARGET/src/test/test_dash.exe
+      - build-ci/dashcore-$BUILD_TARGET/src/test/fuzz/*
     expire_in: 3 days
 
 .test-template:
