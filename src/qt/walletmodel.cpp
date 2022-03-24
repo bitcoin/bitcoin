@@ -429,10 +429,10 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 
 bool WalletModel::autoBackupWallet(QString& strBackupWarningRet, QString& strBackupErrorRet)
 {
-    std::string strBackupWarning;
     std::string strBackupError;
-    bool result = m_wallet->autoBackupWallet("", strBackupWarning, strBackupError);
-    strBackupWarningRet = QString::fromStdString(strBackupWarning);
+    std::vector<std::string> warnings;
+    bool result = m_wallet->autoBackupWallet("", strBackupError, warnings);
+    strBackupWarningRet = QString::fromStdString(Join(warnings, "\n"));
     strBackupErrorRet = QString::fromStdString(strBackupError);
     return result;
 }

@@ -340,13 +340,9 @@ class MultiWalletTest(BitcoinTestFramework):
         self.log.info("Fail -upgradewallet that results in downgrade")
         assert_raises_rpc_error(
             -4,
-            "Wallet loading failed.",
+            'Wallet loading failed. Error loading {}: Wallet requires newer version of {}'.format(
+                wallet_dir('high_minversion', 'wallet.dat'), "Dash Core"),
             lambda: self.nodes[0].loadwallet(filename='high_minversion'),
-        )
-        self.stop_node(
-            i=0,
-            expected_stderr='Error: Error loading {}: Wallet requires newer version of Dash Core'.format(
-                wallet_dir('high_minversion', 'wallet.dat')),
         )
 
 

@@ -734,13 +734,13 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
 
         if (fCreateAutoBackups) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- Trying to create new backup.\n");
-            std::string warningString;
             std::string errorString;
+            std::vector<std::string> warnings;
 
-            if (!mixingWallet.AutoBackupWallet("", warningString, errorString)) {
-                if (!warningString.empty()) {
+            if (!mixingWallet.AutoBackupWallet("", errorString, warnings)) {
+                if (!warnings.empty()) {
                     // There were some issues saving backup but yet more or less safe to continue
-                    LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- WARNING! Something went wrong on automatic backup: %s\n", warningString);
+                    LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- WARNING! Something went wrong on automatic backup: %s\n", Join(warnings, "\n"));
                 }
                 if (!errorString.empty()) {
                     // Things are really broken

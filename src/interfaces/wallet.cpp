@@ -173,9 +173,9 @@ public:
     }
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
-    bool autoBackupWallet(const fs::path& wallet_path, std::string& strBackupWarningRet, std::string& strBackupErrorRet) override
+    bool autoBackupWallet(const fs::path& wallet_path, std::string& error_string, std::vector<std::string>& warnings) override
     {
-        return m_wallet->AutoBackupWallet(wallet_path, strBackupWarningRet, strBackupErrorRet);
+        return m_wallet->AutoBackupWallet(wallet_path, error_string, warnings);
     }
     int64_t getKeysLeftSinceAutoBackup() override { return m_wallet->nKeysLeftSinceAutoBackup; }
     std::string getWalletName() override { return m_wallet->GetName(); }
