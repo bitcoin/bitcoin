@@ -732,26 +732,31 @@ BOOST_AUTO_TEST_CASE(LimitedAndReachable_Network)
     BOOST_CHECK(IsReachable(NET_IPV6));
     BOOST_CHECK(IsReachable(NET_ONION));
     BOOST_CHECK(IsReachable(NET_I2P));
+    BOOST_CHECK(IsReachable(NET_CJDNS));
 
     SetReachable(NET_IPV4, false);
     SetReachable(NET_IPV6, false);
     SetReachable(NET_ONION, false);
     SetReachable(NET_I2P, false);
+    SetReachable(NET_CJDNS, false);
 
     BOOST_CHECK(!IsReachable(NET_IPV4));
     BOOST_CHECK(!IsReachable(NET_IPV6));
     BOOST_CHECK(!IsReachable(NET_ONION));
     BOOST_CHECK(!IsReachable(NET_I2P));
+    BOOST_CHECK(!IsReachable(NET_CJDNS));
 
     SetReachable(NET_IPV4, true);
     SetReachable(NET_IPV6, true);
     SetReachable(NET_ONION, true);
     SetReachable(NET_I2P, true);
+    SetReachable(NET_CJDNS, true);
 
     BOOST_CHECK(IsReachable(NET_IPV4));
     BOOST_CHECK(IsReachable(NET_IPV6));
     BOOST_CHECK(IsReachable(NET_ONION));
     BOOST_CHECK(IsReachable(NET_I2P));
+    BOOST_CHECK(IsReachable(NET_CJDNS));
 }
 
 BOOST_AUTO_TEST_CASE(LimitedAndReachable_NetworkCaseUnroutableAndInternal)
