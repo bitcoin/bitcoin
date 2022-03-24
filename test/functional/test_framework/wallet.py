@@ -208,11 +208,12 @@ class MiniWallet:
         return {'new_utxos': [self.get_utxo(txid=txid, vout=vout) for vout in range(len(tx.vout))],
                 'txid': txid, 'hex': tx.serialize().hex(), 'tx': tx}
 
-    def create_self_transfer_multi(self, *, from_node, utxos_to_spend, num_outputs=1, fee_per_output=1000):
+    def create_self_transfer_multi(self, *, from_node, utxos_to_spend=None, num_outputs=1, fee_per_output=1000):
         """
         Create and return a transaction that spends the given UTXOs and creates a
         certain number of outputs with equal amounts.
         """
+        utxos_to_spend = utxos_to_spend or [self.get_utxo()]
         # create simple tx template (1 input, 1 output)
         tx = self.create_self_transfer(fee_rate=0, from_node=from_node, utxo_to_spend=utxos_to_spend[0], mempool_valid=False)['tx']
 
@@ -227,8 +228,8 @@ class MiniWallet:
         # adapt output amounts (use fixed fee per output)
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
-        for i in range(num_outputs):
-            tx.vout[i].nValue = outputs_value_total // num_outputs
+        for o in tx.vout:
+            o.nValue = outputs_value_total // num_outputs
         return tx
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
