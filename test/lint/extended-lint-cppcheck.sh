@@ -73,7 +73,9 @@ function join_array {
 
 ENABLED_CHECKS_REGEXP=$(join_array "|" "${ENABLED_CHECKS[@]}")
 IGNORED_WARNINGS_REGEXP=$(join_array "|" "${IGNORED_WARNINGS[@]}")
-IGNORED_SUBTREES_REGEXP=$(paste -s -d '|' lint-ignored-subtrees.txt)
+IGNORED_SUBTREES_REGEXP=$(sed -E 's/^/src\//g' test/lint/lint-ignored-subtrees.txt | \
+    sed -E 's/$/\//g' | \
+    tr '\n' '|')
 WARNINGS=$(git ls-files -- "*.cpp" "*.h" | \
     grep -Ev "${IGNORED_SUBTREES_REGEXP}" | \
     xargs cppcheck --enable=all -j "$(getconf _NPROCESSORS_ONLN)" --language=c++ --std=c++17 --template=gcc -D__cplusplus -DCLIENT_VERSION_BUILD -DCLIENT_VERSION_IS_RELEASE -DCLIENT_VERSION_MAJOR -DCLIENT_VERSION_MINOR -DCOPYRIGHT_YEAR -DDEBUG -I src/ -q 2>&1 | sort -u | \

@@ -45,8 +45,8 @@ KNOWN_VIOLATIONS=(
     "src/test/fuzz/string.cpp"
     "src/test/util_tests.cpp"
 )
-
-REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|minisketch/|tinyformat.h|univalue/)"
+IGNORED_SUBTREES_REGEXP=$(sed -E 's/$/\/|/g' test/lint/lint-ignored-subtrees.txt | tr -d '\n')
+REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(${IGNORED_SUBTREES_REGEXP}crypto/ctaes/|tinyformat.h)"
 
 LOCALE_DEPENDENT_FUNCTIONS=(
     alphasort    # LC_COLLATE (via strcoll)

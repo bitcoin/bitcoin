@@ -10,9 +10,10 @@
 # b.) explicitly opt in to locale dependence using the annotation below.
 
 export LC_ALL=C
+IGNORED_SUBTREES_REGEXP=$(paste -s -d '|' test/lint/lint-ignored-subtrees.txt)
 
 EXIT_CODE=0
-for SHELL_SCRIPT in $(git ls-files -- "*.sh" | grep -vE "src/(secp256k1|minisketch|univalue)/"); do
+for SHELL_SCRIPT in $(git ls-files -- "*.sh" | grep -vE "src/(${IGNORED_SUBTREES_REGEXP})/"); do
     if grep -q "# This script is intentionally locale dependent by not setting \"export LC_ALL=C\"" "${SHELL_SCRIPT}"; then
         continue
     fi

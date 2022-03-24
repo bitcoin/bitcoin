@@ -10,7 +10,8 @@ export LC_ALL=C
 HEADER_ID_PREFIX="BITCOIN_"
 HEADER_ID_SUFFIX="_H"
 
-REGEXP_EXCLUDE_FILES_WITH_PREFIX="src/(crypto/ctaes/|leveldb/|crc32c/|secp256k1/|minisketch/|test/fuzz/FuzzedDataProvider.h|tinyformat.h|bench/nanobench.h|univalue/)"
+IGNORED_SUBTREES_REGEXP=$(sed -E 's/$/\/|/g' test/lint/lint-ignored-subtrees.txt | tr -d '\n')
+REGEXP_EXCLUDE_FILES_WITH_PREFIX="src/(${IGNORED_SUBTREES_REGEXP}crypto/ctaes/|test/fuzz/FuzzedDataProvider.h|tinyformat.h|bench/nanobench.h)"
 
 EXIT_CODE=0
 for HEADER_FILE in $(git ls-files -- "*.h" | grep -vE "^${REGEXP_EXCLUDE_FILES_WITH_PREFIX}")

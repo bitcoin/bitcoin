@@ -9,10 +9,11 @@
 # Check includes: Check for duplicate includes. Enforce bracket syntax includes.
 
 export LC_ALL=C
-IGNORE_REGEXP=$(paste -s -d '|' lint-ignored-subtrees.txt)
 
 # cd to root folder of git repo for git ls-files to work properly
 cd "$(dirname "$0")/../.." || exit 1
+
+IGNORE_REGEXP=$(paste -s -d '|' test/lint/lint-ignored-subtrees.txt)
 
 filter_suffix() {
     git ls-files | grep -E "^src/.*\.${1}"'$' | grep -Ev "${IGNORE_REGEXP}"

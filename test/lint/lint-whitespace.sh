@@ -32,15 +32,19 @@ if [ -z "${COMMIT_RANGE}" ]; then
   fi
 fi
 
+IGNORED_SUBTREES_REGEXP=$(sed -E 's/^/src\//g' test/lint/lint-ignored-subtrees.txt | \
+    sed -E 's/$/\//g' | \
+    tr '\n' '|')
+
 showdiff() {
-  if ! git diff -U0 "${COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)contrib/guix/patches/" ":(exclude)src/leveldb/" ":(exclude)src/crc32c/" ":(exclude)src/secp256k1/" ":(exclude)src/minisketch/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
+  if ! git diff -U0 "${COMMIT_RANGE}" -- "." | grep -Ev "${IGNORED_SUBTREES_REGEXP}|depends/patches/|contrib/guix/patches/|doc/release-notes/|src/qt/locale/"; then
     echo "Failed to get a diff"
     exit 1
   fi
 }
 
 showcodediff() {
-  if ! git diff -U0 "${COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/crc32c/" ":(exclude)src/secp256k1/" ":(exclude)src/minisketch/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
+  if ! git diff -U0 "${COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh | grep -Ev "${IGNORED_SUBTREES_REGEXP}|doc/release-notes/|src/qt/locale/"; then
     echo "Failed to get a diff"
     exit 1
   fi
