@@ -18,6 +18,7 @@
 #include <util/moneystr.h>
 #include <util/ranges.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <version.h>
 #include <wallet/coincontrol.h>
@@ -309,7 +310,7 @@ std::string CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
 
     switch (nState) {
     case POOL_STATE_IDLE:
-        return strprintf(_("%s is idle."), gCoinJoinName);
+        return strprintf(_("%s is idle.").translated, gCoinJoinName);
     case POOL_STATE_QUEUE:
         if (nStatusMessageProgress % 70 <= 30)
             strSuffix = ".";
@@ -317,23 +318,23 @@ std::string CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
             strSuffix = "..";
         else
             strSuffix = "...";
-        return strprintf(_("Submitted to masternode, waiting in queue %s"), strSuffix);
+        return strprintf(_("Submitted to masternode, waiting in queue %s").translated, strSuffix);
     case POOL_STATE_ACCEPTING_ENTRIES:
         return strAutoDenomResult;
     case POOL_STATE_SIGNING:
         if (nStatusMessageProgress % 70 <= 40)
-            return _("Found enough users, signing ...");
+            return _("Found enough users, signing ...").translated;
         else if (nStatusMessageProgress % 70 <= 50)
             strSuffix = ".";
         else if (nStatusMessageProgress % 70 <= 60)
             strSuffix = "..";
         else
             strSuffix = "...";
-        return strprintf(_("Found enough users, signing ( waiting %s )"), strSuffix);
+        return strprintf(_("Found enough users, signing ( waiting %s )").translated, strSuffix);
     case POOL_STATE_ERROR:
-        return strprintf(_("%s request incomplete: %s"), gCoinJoinName, strLastMessage) + " " + _("Will retry...");
+        return strprintf(_("%s request incomplete: %s").translated, gCoinJoinName, strLastMessage) + " " + _("Will retry...").translated;
     default:
-        return strprintf(_("Unknown state: id = %u"), nState);
+        return strprintf(_("Unknown state: id = %u").translated, nState);
     }
 }
 
@@ -427,7 +428,7 @@ void CCoinJoinClientManager::CheckTimeout()
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
         if (session.CheckTimeout()) {
-            strAutoDenomResult = _("Session timed out.");
+            strAutoDenomResult = _("Session timed out.").translated;
         }
     }
 }
@@ -511,7 +512,7 @@ void CCoinJoinClientSession::ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup
     }
 
     std::string strMessageTmp = CCoinJoin::GetMessageByID(psssup.nMessageID);
-    strAutoDenomResult = _("Masternode:") + " " + strMessageTmp;
+    strAutoDenomResult = _("Masternode:").translated + " " + strMessageTmp;
 
     switch (psssup.nStatusUpdate) {
         case STATUS_REJECTED: {
@@ -699,7 +700,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
     switch (nWalletBackups) {
     case 0:
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- Automatic backups disabled, no mixing available.\n");
-        strAutoDenomResult = _("Automatic backups disabled") + ", " + _("no mixing available.");
+        strAutoDenomResult = _("Automatic backups disabled").translated + ", " + _("no mixing available.").translated;
         StopMixing();
         mixingWallet.nKeysLeftSinceAutoBackup = 0; // no backup, no "keys since last backup"
         return false;
@@ -708,28 +709,28 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
         // There is no way to bring user attention in daemon mode, so we just update status and
         // keep spamming if debug is on.
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- ERROR! Failed to create automatic backup.\n");
-        strAutoDenomResult = _("ERROR! Failed to create automatic backup") + ", " + _("see debug.log for details.");
+        strAutoDenomResult = _("ERROR! Failed to create automatic backup").translated + ", " + _("see debug.log for details.").translated;
         return false;
     case -2:
         // We were able to create automatic backup but keypool was not replenished because wallet is locked.
         // There is no way to bring user attention in daemon mode, so we just update status and
         // keep spamming if debug is on.
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- WARNING! Failed to create replenish keypool, please unlock your wallet to do so.\n");
-        strAutoDenomResult = _("WARNING! Failed to replenish keypool, please unlock your wallet to do so.") + ", " + _("see debug.log for details.");
+        strAutoDenomResult = _("WARNING! Failed to replenish keypool, please unlock your wallet to do so.").translated + ", " + _("see debug.log for details.").translated;
         return false;
     }
 
     if (mixingWallet.nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_STOP) {
         // We should never get here via mixing itself but probably something else is still actively using keypool
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- Very low number of keys left: %d, no mixing available.\n", mixingWallet.nKeysLeftSinceAutoBackup);
-        strAutoDenomResult = strprintf(_("Very low number of keys left: %d") + ", " + _("no mixing available."), mixingWallet.nKeysLeftSinceAutoBackup);
+        strAutoDenomResult = strprintf(_("Very low number of keys left: %d").translated + ", " + _("no mixing available.").translated, mixingWallet.nKeysLeftSinceAutoBackup);
         // It's getting really dangerous, stop mixing
         StopMixing();
         return false;
     } else if (mixingWallet.nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING) {
         // Low number of keys left, but it's still more or less safe to continue
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- Very low number of keys left: %d\n", mixingWallet.nKeysLeftSinceAutoBackup);
-        strAutoDenomResult = strprintf(_("Very low number of keys left: %d"), mixingWallet.nKeysLeftSinceAutoBackup);
+        strAutoDenomResult = strprintf(_("Very low number of keys left: %d").translated, mixingWallet.nKeysLeftSinceAutoBackup);
 
         if (fCreateAutoBackups) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- Trying to create new backup.\n");
@@ -744,7 +745,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
                 if (!errorString.empty()) {
                     // Things are really broken
                     LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- ERROR! Failed to create automatic backup: %s\n", errorString);
-                    strAutoDenomResult = strprintf(_("ERROR! Failed to create automatic backup") + ": %s", errorString);
+                    strAutoDenomResult = strprintf(_("ERROR! Failed to create automatic backup").translated + ": %s", errorString);
                     return false;
                 }
             }
@@ -768,7 +769,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
     if (nState != POOL_STATE_IDLE) return false;
 
     if (!masternodeSync.IsBlockchainSynced()) {
-        strAutoDenomResult = _("Can't mix while sync in progress.");
+        strAutoDenomResult = _("Can't mix while sync in progress.").translated;
         return false;
     }
 
@@ -780,25 +781,25 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
         LOCK2(cs_main, mixingWallet.cs_wallet);
 
         if (!fDryRun && mixingWallet.IsLocked(true)) {
-            strAutoDenomResult = _("Wallet is locked.");
+            strAutoDenomResult = _("Wallet is locked.").translated;
             return false;
         }
 
         if (GetEntriesCount() > 0) {
-            strAutoDenomResult = _("Mixing in progress...");
+            strAutoDenomResult = _("Mixing in progress...").translated;
             return false;
         }
 
         TRY_LOCK(cs_coinjoin, lockDS);
         if (!lockDS) {
-            strAutoDenomResult = _("Lock is already in place.");
+            strAutoDenomResult = _("Lock is already in place.").translated;
             return false;
         }
 
         if (deterministicMNManager->GetListAtChainTip().GetValidMNsCount() == 0 &&
             Params().NetworkIDString() != CBaseChainParams::REGTEST) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- No Masternodes detected\n");
-            strAutoDenomResult = _("No Masternodes detected.");
+            strAutoDenomResult = _("No Masternodes detected.").translated;
             return false;
         }
 
@@ -828,7 +829,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
         // mixable balance is way too small
         if (nBalanceAnonymizable < nValueMin) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- Not enough funds to mix\n");
-            strAutoDenomResult = _("Not enough funds to mix.");
+            strAutoDenomResult = _("Not enough funds to mix.").translated;
             return false;
         }
 
@@ -890,7 +891,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
         }
 
         if (nSessionID) {
-            strAutoDenomResult = _("Mixing in progress...");
+            strAutoDenomResult = _("Mixing in progress...").translated;
             return false;
         }
 
@@ -903,7 +904,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
         // should be no unconfirmed denoms in non-multi-session mode
         if (!CCoinJoinClientOptions::IsMultiSessionEnabled() && nBalanceDenominatedUnconf > 0) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
-            strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
+            strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.").translated;
             return false;
         }
 
@@ -938,7 +939,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
     // If we were unable to find/join an existing queue then start a new one.
     if (StartNewQueue(nBalanceNeedsAnonymized, connman)) return true;
 
-    strAutoDenomResult = _("No compatible Masternode found.");
+    strAutoDenomResult = _("No compatible Masternode found.").translated;
     return false;
 }
 
@@ -948,12 +949,12 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, bool fDr
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
 
     if (!masternodeSync.IsBlockchainSynced()) {
-        strAutoDenomResult = _("Can't mix while sync in progress.");
+        strAutoDenomResult = _("Can't mix while sync in progress.").translated;
         return false;
     }
 
     if (!fDryRun && mixingWallet.IsLocked(true)) {
-        strAutoDenomResult = _("Wallet is locked.");
+        strAutoDenomResult = _("Wallet is locked.").translated;
         return false;
     }
 
@@ -979,7 +980,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, bool fDr
 
         if (WaitForAnotherBlock()) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::DoAutomaticDenominating -- Last successful action was too recent\n");
-            strAutoDenomResult = _("Last successful action was too recent.");
+            strAutoDenomResult = _("Last successful action was too recent.").translated;
             return false;
         }
 
@@ -1090,10 +1091,10 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
         nTimeLastSuccessfulStep = GetTime();
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::JoinExistingQueue -- pending connection (from queue): nSessionDenom: %d (%s), addr=%s\n",
             nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
-        strAutoDenomResult = _("Trying to connect...");
+        strAutoDenomResult = _("Trying to connect...").translated;
         return true;
     }
-    strAutoDenomResult = _("Failed to find mixing queue to join");
+    strAutoDenomResult = _("Failed to find mixing queue to join").translated;
     return false;
 }
 
@@ -1111,7 +1112,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
     if (!mixingWallet.SelectDenominatedAmounts(nBalanceNeedsAnonymized, setAmounts)) {
         // this should never happen
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::StartNewQueue -- Can't mix: no compatible inputs found!\n");
-        strAutoDenomResult = _("Can't mix: no compatible inputs found!");
+        strAutoDenomResult = _("Can't mix: no compatible inputs found!").translated;
         return false;
     }
 
@@ -1121,7 +1122,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
 
         if (!dmn) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::StartNewQueue -- Can't find random masternode!\n");
-            strAutoDenomResult = _("Can't find random Masternode.");
+            strAutoDenomResult = _("Can't find random Masternode.").translated;
             return false;
         }
 
@@ -1170,10 +1171,10 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
         nTimeLastSuccessfulStep = GetTime();
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::StartNewQueue -- pending connection, nSessionDenom: %d (%s), addr=%s\n",
             nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
-        strAutoDenomResult = _("Trying to connect...");
+        strAutoDenomResult = _("Trying to connect...").translated;
         return true;
     }
-    strAutoDenomResult = _("Failed to start a new mixing queue");
+    strAutoDenomResult = _("Failed to start a new mixing queue").translated;
     return false;
 }
 
@@ -1206,7 +1207,7 @@ void CCoinJoinClientManager::ProcessPendingDsaRequest(CConnman& connman)
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
         if (session.ProcessPendingDsaRequest(connman)) {
-            strAutoDenomResult = _("Mixing in progress...");
+            strAutoDenomResult = _("Mixing in progress...").translated;
         }
     }
 }

@@ -7,6 +7,7 @@
 #include <wallet/db.h>
 
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <stdint.h>
 
@@ -300,14 +301,14 @@ bool BerkeleyDatabase::Verify(std::string& errorStr)
     LogPrintf("Using wallet %s\n", file_path.string());
 
     if (!env->Open(true /* retry */)) {
-        errorStr = strprintf(_("Error initializing wallet database environment %s!"), walletDir);
+        errorStr = strprintf(_("Error initializing wallet database environment %s!").translated, walletDir);
         return false;
     }
 
     if (fs::exists(file_path))
     {
         if (!env->Verify(strFile)) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup."), file_path);
+            errorStr = strprintf(_("%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.").translated, file_path);
             return false;
         }
     }

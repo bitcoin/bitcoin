@@ -36,6 +36,7 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
+#include <util/translation.h>
 
 #include <memory>
 #include <stdint.h>
@@ -425,7 +426,7 @@ static void SetupUIArgs()
     gArgs.AddArg("-splash", strprintf(QObject::tr("Show splash screen on startup (default: %u)").toStdString(), DEFAULT_SPLASHSCREEN), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     gArgs.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::GUI);
     gArgs.AddArg("-debug-ui", "Updates the UI's stylesheets in realtime with changes made to the css files in -custom-css-dir and forces some widgets to show up which are usually only visible under certain circumstances. (default: 0)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::GUI);
-    gArgs.AddArg("-windowtitle=<name>", _("Sets a window title which is appended to \"Dash Core - \""), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
+    gArgs.AddArg("-windowtitle=<name>", _("Sets a window title which is appended to \"Dash Core - \"").translated, ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
 }
 
 int GuiMain(int argc, char* argv[])

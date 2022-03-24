@@ -17,6 +17,7 @@
 #include <util/bip32.h>
 #include <util/system.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
@@ -565,7 +566,7 @@ UniValue importwallet(const JSONRPCRequest& request)
 
         // Use uiInterface.ShowProgress instead of pwallet.ShowProgress because pwallet.ShowProgress has a cancel button tied to AbortRescan which
         // we don't want for this progress bar showing the import progress. uiInterface.ShowProgress does not have a cancel button.
-        pwallet->chain().showProgress(strprintf("%s " + _("Importing..."), pwallet->GetDisplayName()), 0, false); // show progress dialog in GUI
+        pwallet->chain().showProgress(strprintf("%s " + _("Importing...").translated, pwallet->GetDisplayName()), 0, false); // show progress dialog in GUI
         std::vector<std::tuple<CKey, int64_t, bool, std::string>> keys;
         std::vector<std::pair<CScript, int64_t>> scripts;
         while (file.good()) {
@@ -728,7 +729,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
 
-    pwallet->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
+    pwallet->ShowProgress(_("Importing...").translated, 0); // show progress dialog in GUI
 
     if(strFileExt == "csv") {
         while (file.good()) {
@@ -1071,7 +1072,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << "# End of dump\n";
     file.close();
 
-    std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!"), request.params[0].get_str().c_str());
+    std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!").translated, request.params[0].get_str().c_str());
     obj.pushKV("keys", int(vKeyBirth.size()));
     obj.pushKV("filename", filepath.string());
     obj.pushKV("warning", strWarning);

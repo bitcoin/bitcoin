@@ -30,32 +30,33 @@
 #include <key.h>
 #include <mapport.h>
 #include <miner.h>
-#include <netbase.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
+#include <netbase.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
-#include <rpc/server.h>
-#include <rpc/register.h>
 #include <rpc/blockchain.h>
+#include <rpc/register.h>
+#include <rpc/server.h>
 #include <rpc/util.h>
-#include <script/standard.h>
-#include <script/sigcache.h>
 #include <scheduler.h>
+#include <script/sigcache.h>
+#include <script/standard.h>
 #include <shutdown.h>
 #include <timedata.h>
+#include <torcontrol.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <torcontrol.h>
 #include <ui_interface.h>
 #include <util/asmap.h>
 #include <util/error.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/threadnames.h>
+#include <util/translation.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -150,7 +151,7 @@ static fs::path GetPidFile()
         tfm::format(file, "%d\n", getpid());
         return true;
     } else {
-        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));
+        return InitError(strprintf(_("Unable to create the PID file '%s': %s").translated, GetPidFile().string(), std::strerror(errno)));
     }
 }
 #endif
@@ -755,20 +756,20 @@ std::string LicenseInfo()
     const std::string URL_SOURCE_CODE = "<https://github.com/dashpay/dash>";
     const std::string URL_WEBSITE = "<https://dash.org>";
 
-    return CopyrightHolders(_("Copyright (C)"), 2014, COPYRIGHT_YEAR) + "\n" +
+    return CopyrightHolders(_("Copyright (C)").translated, 2014, COPYRIGHT_YEAR) + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
-                       "Visit %s for further information about the software."),
+                       "Visit %s for further information about the software.").translated,
                PACKAGE_NAME, URL_WEBSITE) +
            "\n" +
-           strprintf(_("The source code is available from %s."),
+           strprintf(_("The source code is available from %s.").translated,
                URL_SOURCE_CODE) +
            "\n" +
            "\n" +
-           _("This is experimental software.") + "\n" +
-           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s"), "COPYING", "<https://opensource.org/licenses/MIT>") + "\n" +
+           _("This is experimental software.").translated + "\n" +
+           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>") + "\n" +
            "\n" +
-           strprintf(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard."), "<https://www.openssl.org>") +
+           strprintf(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.").translated, "<https://www.openssl.org>") +
            "\n";
 }
 
@@ -1166,7 +1167,7 @@ void InitParameterInteraction()
 
 static std::string ResolveErrMsg(const char * const optname, const std::string& strBind)
 {
-    return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
+    return strprintf(_("Cannot resolve -%s address: '%s'").translated, optname, strBind);
 }
 
 /**
@@ -1272,16 +1273,16 @@ bool AppInitParameterInteraction()
     // on the command line or in this network's section of the config file.
     std::string network = gArgs.GetChainName();
     for (const auto& arg : gArgs.GetUnsuitableSectionOnlyArgs()) {
-        return InitError(strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, network, network));
+        return InitError(strprintf(_("Config setting for %s only applied on %s network when in [%s] section.").translated, arg, network, network));
     }
 
     // Warn if unrecognized section name are present in the config file.
     for (const auto& section : gArgs.GetUnrecognizedSections()) {
-        InitWarning(strprintf("%s:%i " + _("Section [%s] is not recognized."), section.m_file, section.m_line, section.m_name));
+        InitWarning(strprintf("%s:%i " + _("Section [%s] is not recognized.").translated, section.m_file, section.m_line, section.m_name));
     }
 
     if (!fs::is_directory(GetBlocksDir())) {
-        return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist."), gArgs.GetArg("-blocksdir", "").c_str()));
+        return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist.").translated, gArgs.GetArg("-blocksdir", "").c_str()));
     }
 
     // parse and validate enabled filter types
@@ -1293,7 +1294,7 @@ bool AppInitParameterInteraction()
         for (const auto& name : names) {
             BlockFilterType filter_type;
             if (!BlockFilterTypeByName(name, filter_type)) {
-                return InitError(strprintf(_("Unknown -blockfilterindex value %s."), name));
+                return InitError(strprintf(_("Unknown -blockfilterindex value %s.").translated, name));
             }
             g_enabled_filter_types.insert(filter_type);
         }
@@ -1302,7 +1303,7 @@ bool AppInitParameterInteraction()
     // Signal NODE_COMPACT_FILTERS if peerblockfilters and basic filters index are both enabled.
     if (gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS)) {
         if (g_enabled_filter_types.count(BlockFilterType::BASIC_FILTER) != 1) {
-            return InitError(_("Cannot set -peerblockfilters without -blockfilterindex."));
+            return InitError(_("Cannot set -peerblockfilters without -blockfilterindex.").translated);
         }
 
         nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
@@ -1311,25 +1312,25 @@ bool AppInitParameterInteraction()
     // if using block pruning, then disallow txindex and require disabling governance validation
     if (gArgs.GetArg("-prune", 0)) {
         if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
-            return InitError(_("Prune mode is incompatible with -txindex."));
+            return InitError(_("Prune mode is incompatible with -txindex.").translated);
         if (!gArgs.GetBoolArg("-disablegovernance", false)) {
-            return InitError(_("Prune mode is incompatible with -disablegovernance=false."));
+            return InitError(_("Prune mode is incompatible with -disablegovernance=false.").translated);
         }
         if (!g_enabled_filter_types.empty()) {
-            return InitError(_("Prune mode is incompatible with -blockfilterindex."));
+            return InitError(_("Prune mode is incompatible with -blockfilterindex.").translated);
         }
     }
 
     if (gArgs.IsArgSet("-devnet")) {
         // Require setting of ports when running devnet
         if (gArgs.GetArg("-listen", DEFAULT_LISTEN) && !gArgs.IsArgSet("-port")) {
-            return InitError(_("-port must be specified when -devnet and -listen are specified"));
+            return InitError(_("-port must be specified when -devnet and -listen are specified").translated);
         }
         if (gArgs.GetArg("-server", false) && !gArgs.IsArgSet("-rpcport")) {
-            return InitError(_("-rpcport must be specified when -devnet and -server are specified"));
+            return InitError(_("-rpcport must be specified when -devnet and -server are specified").translated);
         }
         if (gArgs.GetArgs("-devnet").size() > 1) {
-            return InitError(_("-devnet can only be specified once"));
+            return InitError(_("-devnet can only be specified once").translated);
         }
     }
 
@@ -1356,11 +1357,11 @@ bool AppInitParameterInteraction()
 #endif
     nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS), 0);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
-        return InitError(_("Not enough file descriptors available."));
+        return InitError(_("Not enough file descriptors available.").translated);
     nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS, nMaxConnections);
 
     if (nMaxConnections < nUserMaxConnections)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
+        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations.").translated, nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (gArgs.IsArgSet("-debug")) {
@@ -1371,7 +1372,7 @@ bool AppInitParameterInteraction()
             [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
                 if (!LogInstance().EnableCategory(cat)) {
-                    InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
+                    InitWarning(strprintf(_("Unsupported logging category %s=%s.").translated, "-debug", cat));
                 }
             }
         }
@@ -1380,7 +1381,7 @@ bool AppInitParameterInteraction()
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
         if (!LogInstance().DisableCategory(cat)) {
-            InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
+            InitWarning(strprintf(_("Unsupported logging category %s=%s.").translated, "-debugexclude", cat));
         }
     }
 
@@ -1416,7 +1417,7 @@ bool AppInitParameterInteraction()
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t nMempoolSizeMin = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
-        return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
+        return InitError(strprintf(_("-maxmempool must be at least %d MB").translated, std::ceil(nMempoolSizeMin / 1000000.0)));
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (gArgs.IsArgSet("-incrementalrelayfee"))
@@ -1430,7 +1431,7 @@ bool AppInitParameterInteraction()
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nPruneArg = gArgs.GetArg("-prune", 0);
     if (nPruneArg < 0) {
-        return InitError(_("Prune cannot be configured with a negative value."));
+        return InitError(_("Prune cannot be configured with a negative value.").translated);
     }
     nPruneTarget = (uint64_t) nPruneArg * 1024 * 1024;
     if (nPruneArg == 1) {  // manual pruning: -prune=1
@@ -1441,11 +1442,11 @@ bool AppInitParameterInteraction()
         if (gArgs.GetBoolArg("-regtest", false)) {
             // we use 1MB blocks to test this on regtest
             if (nPruneTarget < 550 * 1024 * 1024) {
-                return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), 550));
+                return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number.").translated, 550));
             }
         } else {
             if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
-                return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
+                return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number.").translated, MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
             }
         }
         LogPrintf("Prune configured to target %u MiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
@@ -1529,7 +1530,7 @@ bool AppInitParameterInteraction()
     }
 
     if (gArgs.IsArgSet("-masternode")) {
-        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode."));
+        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.").translated);
     }
 
     if (gArgs.IsArgSet("-masternodeblsprivkey")) {
@@ -1549,12 +1550,12 @@ bool AppInitParameterInteraction()
             return InitError(strprintf("Masternode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
         if (gArgs.GetBoolArg("-disablegovernance", false)) {
-            return InitError(_("You can not disable governance validation on a masternode."));
+            return InitError(_("You can not disable governance validation on a masternode.").translated);
         }
     }
 
     if (gArgs.IsArgSet("-litemode")) {
-        InitWarning(_("-litemode is deprecated.") + (gArgs.GetBoolArg("-litemode", false) ? (" "  + _("Its replacement -disablegovernance has been forced instead.")) : ( " " + _("It has been replaced by -disablegovernance."))));
+        InitWarning(_("-litemode is deprecated.").translated + (gArgs.GetBoolArg("-litemode", false) ? (" "  + _("Its replacement -disablegovernance has been forced instead.").translated) : ( " " + _("It has been replaced by -disablegovernance.").translated)));
         gArgs.ForceRemoveArg("-litemode");
     }
 
@@ -1562,7 +1563,7 @@ bool AppInitParameterInteraction()
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
     if (fDisableGovernance) {
-        InitWarning(_("You are starting with governance validation disabled.") + (fPruneMode ? " " + _("This is expected because you are running a pruned node.") : ""));
+        InitWarning(_("You are starting with governance validation disabled.").translated + (fPruneMode ? " " + _("This is expected because you are running a pruned node.").translated : ""));
     }
 
     return true;
@@ -1573,10 +1574,10 @@ static bool LockDataDirectory(bool probeOnly)
     // Make sure only a single Dash Core process is using the data directory.
     fs::path datadir = GetDataDir();
     if (!DirIsWritable(datadir)) {
-        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.string()));
+        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions.").translated, datadir.string()));
     }
     if (!LockDirectory(datadir, ".lock", probeOnly)) {
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), datadir.string(), PACKAGE_NAME));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running.").translated, datadir.string(), PACKAGE_NAME));
     }
     return true;
 }
@@ -1594,7 +1595,7 @@ bool AppInitSanityChecks()
 
     // Sanity check
     if (!InitSanityCheck())
-        return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), PACKAGE_NAME));
+        return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down.").translated, PACKAGE_NAME));
 
     // Probe the data directory lock to give an early error message, if possible
     // We cannot hold the data directory lock here, as the forking for daemon() hasn't yet happened,
@@ -1647,7 +1648,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         LogPrintf("Config file: %s\n", config_file_path.string());
     } else if (gArgs.IsArgSet("-conf")) {
         // Warn if no conf file exists at path provided by user
-        InitWarning(strprintf(_("The specified config file %s does not exist\n"), config_file_path.string()));
+        InitWarning(strprintf(_("The specified config file %s does not exist\n").translated, config_file_path.string()));
     } else {
         // Not categorizing as "Warning" because it's the default behavior
         LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());
@@ -1694,19 +1695,19 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
     for (const auto& address: vSporkAddresses) {
         if (!sporkManager.SetSporkAddress(address)) {
-            return InitError(_("Invalid spork address specified with -sporkaddr"));
+            return InitError(_("Invalid spork address specified with -sporkaddr").translated);
         }
     }
 
     int minsporkkeys = gArgs.GetArg("-minsporkkeys", Params().MinSporkKeys());
     if (!sporkManager.SetMinSporkKeys(minsporkkeys)) {
-        return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
+        return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys").translated);
     }
 
 
     if (gArgs.IsArgSet("-sporkkey")) { // spork priv key
         if (!sporkManager.SetPrivKey(gArgs.GetArg("-sporkkey", ""))) {
-            return InitError(_("Unable to sign spork message, wrong key?"));
+            return InitError(_("Unable to sign spork message, wrong key?").translated);
         }
     }
 
@@ -1746,7 +1747,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
         if (!AppInitServers())
-            return InitError(_("Unable to start HTTP server. See debug log for details."));
+            return InitError(_("Unable to start HTTP server. See debug log for details.").translated);
     }
 
     // ********************************************************* Step 5: verify wallet database integrity
@@ -1782,12 +1783,12 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     for (const std::string& cmt : gArgs.GetArgs("-uacomment")) {
         if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
-            return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
+            return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters.").translated, cmt));
         uacomments.push_back(cmt);
     }
     strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
-        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
+        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.").translated,
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
 
@@ -1796,7 +1797,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         for (const std::string& snet : gArgs.GetArgs("-onlynet")) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
-                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
+                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'").translated, snet));
             nets.insert(net);
         }
         for (int n = 0; n < NET_MAX; n++) {
@@ -1817,12 +1818,12 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg.c_str(), proxyAddr, 9050, fNameLookup)) {
-            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'").translated, proxyArg));
         }
 
         proxyType addrProxy = proxyType(proxyAddr, proxyRandomize);
         if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'").translated, proxyArg));
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
@@ -1841,11 +1842,11 @@ bool AppInitMain(InitInterfaces& interfaces)
         } else {
             CService onionProxy;
             if (!Lookup(onionArg.c_str(), onionProxy, 9050, fNameLookup)) {
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
+                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'").translated, onionArg));
             }
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
             if (!addrOnion.IsValid())
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
+                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'").translated, onionArg));
             SetProxy(NET_ONION, addrOnion);
             SetReachable(NET_ONION, true);
         }
@@ -1874,12 +1875,12 @@ bool AppInitMain(InitInterfaces& interfaces)
             asmap_path = GetDataDir() / asmap_path;
         }
         if (!fs::exists(asmap_path)) {
-            InitError(strprintf(_("Could not find asmap file %s"), asmap_path));
+            InitError(strprintf(_("Could not find asmap file %s").translated, asmap_path));
             return false;
         }
         std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
         if (asmap.size() == 0) {
-            InitError(strprintf(_("Could not parse asmap file %s"), asmap_path));
+            InitError(strprintf(_("Could not parse asmap file %s").translated, asmap_path));
             return false;
         }
         const uint256 asmap_version = SerializeHash(asmap);
@@ -1909,10 +1910,10 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     // ********************************************************* Step 7a: Load sporks
 
-    uiInterface.InitMessage(_("Loading sporks cache..."));
+    uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
     if (!flatdb6.Load(sporkManager)) {
-        return InitError(_("Failed to load sporks cache from") + "\n" + (GetDataDir() / "sporks.dat").string());
+        return InitError(_("Failed to load sporks cache from").translated + "\n" + (GetDataDir() / "sporks.dat").string());
     }
 
     // ********************************************************* Step 7b: load block chain
@@ -1959,7 +1960,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         bool fReset = fReindex;
         std::string strLoadError;
 
-        uiInterface.InitMessage(_("Loading block index..."));
+        uiInterface.InitMessage(_("Loading block index...").translated);
 
         do {
             const int64_t load_block_index_start_time = GetTimeMillis();
@@ -1998,47 +1999,47 @@ bool AppInitMain(InitInterfaces& interfaces)
                 // From here on out fReindex and fReset mean something different!
                 if (!LoadBlockIndex(chainparams)) {
                     if (ShutdownRequested()) break;
-                    strLoadError = _("Error loading block database");
+                    strLoadError = _("Error loading block database").translated;
                     break;
                 }
 
                 if (!fDisableGovernance && !gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)
                    && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
-                    return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index."));
+                    return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.").translated);
                 }
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!::BlockIndex().empty() &&
                         !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
-                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?").translated);
                 }
 
                 if (!chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && !::BlockIndex().empty() && ::BlockIndex().count(chainparams.GetConsensus().hashDevnetGenesisBlock) == 0)
-                    return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
+                    return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?").translated);
 
                 // Check for changed -addressindex state
                 if (fAddressIndex != gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex to change -addressindex");
+                    strLoadError = _("You need to rebuild the database using -reindex to change -addressindex").translated;
                     break;
                 }
 
                 // Check for changed -timestampindex state
                 if (fTimestampIndex != gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex to change -timestampindex");
+                    strLoadError = _("You need to rebuild the database using -reindex to change -timestampindex").translated;
                     break;
                 }
 
                 // Check for changed -spentindex state
                 if (fSpentIndex != gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex to change -spentindex");
+                    strLoadError = _("You need to rebuild the database using -reindex to change -spentindex").translated;
                     break;
                 }
 
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode) {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
+                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain").translated;
                     break;
                 }
 
@@ -2047,7 +2048,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 // (otherwise we use the one already on disk).
                 // This is called again in ThreadImport after the reindex completes.
                 if (!fReindex && !LoadGenesisBlock(chainparams)) {
-                    strLoadError = _("Error initializing block database");
+                    strLoadError = _("Error initializing block database").translated;
                     break;
                 }
 
@@ -2061,20 +2062,20 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 ::ChainstateActive().CoinsErrorCatcher().AddReadErrCallback([]() {
                     uiInterface.ThreadSafeMessageBox(
-                        _("Error reading from database, shutting down."),
+                        _("Error reading from database, shutting down.").translated,
                         "", CClientUIInterface::MSG_ERROR);
                 });
 
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                 if (!::ChainstateActive().CoinsDB().Upgrade()) {
-                    strLoadError = _("Error upgrading chainstate database");
+                    strLoadError = _("Error upgrading chainstate database").translated;
                     break;
                 }
 
                 // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                 if (!::ChainstateActive().ReplayBlocks(chainparams)) {
-                    strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
+                    strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.").translated;
                     break;
                 }
 
@@ -2084,7 +2085,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 // flush evodb
                 if (!evoDb->CommitRootTransaction()) {
-                    strLoadError = _("Failed to commit EvoDB");
+                    strLoadError = _("Failed to commit EvoDB").translated;
                     break;
                 }
 
@@ -2093,7 +2094,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 if (!is_coinsview_empty) {
                     // LoadChainTip initializes the chain based on CoinsTip()'s best block
                     if (!::ChainstateActive().LoadChainTip(chainparams)) {
-                        strLoadError = _("Error initializing block database");
+                        strLoadError = _("Error initializing block database").translated;
                         break;
                     }
                     assert(::ChainActive().Tip() != NULL);
@@ -2101,17 +2102,17 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 if (is_coinsview_empty && !evoDb->IsEmpty()) {
                     // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
-                    strLoadError = _("Error initializing block database");
+                    strLoadError = _("Error initializing block database").translated;
                     break;
                 }
 
                 if (!deterministicMNManager->UpgradeDBIfNeeded() || !llmq::quorumBlockProcessor->UpgradeDB()) {
-                    strLoadError = _("Error upgrading evo database");
+                    strLoadError = _("Error upgrading evo database").translated;
                     break;
                 }
 
                 if (!is_coinsview_empty) {
-                    uiInterface.InitMessage(_("Verifying blocks..."));
+                    uiInterface.InitMessage(_("Verifying blocks...").translated);
                     if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
                         LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                             MIN_BLOCKS_TO_KEEP);
@@ -2122,13 +2123,13 @@ bool AppInitMain(InitInterfaces& interfaces)
                     if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
                         strLoadError = _("The block database contains a block which appears to be from the future. "
                                 "This may be due to your computer's date and time being set incorrectly. "
-                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                                "Only rebuild the block database if you are sure that your computer's date and time are correct").translated;
                         break;
                     }
 
                     if (!CVerifyDB().VerifyDB(chainparams, &::ChainstateActive().CoinsDB(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
                                   gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
-                        strLoadError = _("Corrupted block database detected");
+                        strLoadError = _("Corrupted block database detected").translated;
                         break;
                     }
 
@@ -2138,7 +2139,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 }
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
-                strLoadError = _("Error opening block database");
+                strLoadError = _("Error opening block database").translated;
                 break;
             }
 
@@ -2150,7 +2151,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             // first suggest a reindex
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
-                    strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?"),
+                    strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?").translated,
                     strLoadError + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
@@ -2215,7 +2216,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
         nLocalServices = ServiceFlags(nLocalServices & ~NODE_NETWORK);
         if (!fReindex) {
-            uiInterface.InitMessage(_("Pruning blockstore..."));
+            uiInterface.InitMessage(_("Pruning blockstore...").translated);
             ::ChainstateActive().PruneAndFlush();
         }
     }
@@ -2235,7 +2236,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         auto binKey = ParseHex(strMasterNodeBLSPrivKey);
         CBLSSecretKey keyOperator(binKey);
         if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation.").translated);
         }
         fMasternodeMode = true;
         {
@@ -2284,45 +2285,45 @@ bool AppInitMain(InitInterfaces& interfaces)
     std::string strDBName;
 
     strDBName = "mncache.dat";
-    uiInterface.InitMessage(_("Loading masternode cache..."));
+    uiInterface.InitMessage(_("Loading masternode cache...").translated);
     CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
     if (fLoadCacheFiles) {
         if(!flatdb1.Load(mmetaman)) {
-            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load masternode cache from").translated + "\n" + (pathDB / strDBName).string());
         }
     } else {
         CMasternodeMetaMan mmetamanTmp;
         if(!flatdb1.Dump(mmetamanTmp)) {
-            return InitError(_("Failed to clear masternode cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to clear masternode cache at").translated + "\n" + (pathDB / strDBName).string());
         }
     }
 
     strDBName = "governance.dat";
-    uiInterface.InitMessage(_("Loading governance cache..."));
+    uiInterface.InitMessage(_("Loading governance cache...").translated);
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
     if (fLoadCacheFiles && !fDisableGovernance) {
         if(!flatdb3.Load(governance)) {
-            return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load governance cache from").translated + "\n" + (pathDB / strDBName).string());
         }
         governance.InitOnLoad();
     } else {
         CGovernanceManager governanceTmp;
         if(!flatdb3.Dump(governanceTmp)) {
-            return InitError(_("Failed to clear governance cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to clear governance cache at").translated + "\n" + (pathDB / strDBName).string());
         }
     }
 
     strDBName = "netfulfilled.dat";
-    uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
+    uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
     CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
     if (fLoadCacheFiles) {
         if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load fulfilled requests cache from").translated + "\n" + (pathDB / strDBName).string());
         }
     } else {
         CNetFulfilledRequestManager netfulfilledmanTmp;
         if(!flatdb4.Dump(netfulfilledmanTmp)) {
-            return InitError(_("Failed to clear fulfilled requests cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to clear fulfilled requests cache at").translated + "\n" + (pathDB / strDBName).string());
         }
     }
 
@@ -2351,11 +2352,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     // ********************************************************* Step 11: import blocks
 
     if (!CheckDiskSpace(GetDataDir())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), GetDataDir()));
+        InitError(strprintf(_("Error: Disk space is low for %s").translated, GetDataDir()));
         return false;
     }
     if (!CheckDiskSpace(GetBlocksDir())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
+        InitError(strprintf(_("Error: Disk space is low for %s").translated, GetBlocksDir()));
         return false;
     }
 
@@ -2482,7 +2483,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         connOptions.socketEventsMode = CConnman::SOCKETEVENTS_KQUEUE;
 #endif
     } else {
-        return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), strSocketEventsMode, GetSupportedSocketEventsStr()));
+        return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s").translated, strSocketEventsMode, GetSupportedSocketEventsStr()));
     }
 
     if (!g_connman->Start(scheduler, connOptions)) {
@@ -2492,7 +2493,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
-    uiInterface.InitMessage(_("Done loading"));
+    uiInterface.InitMessage(_("Done loading").translated);
 
     for (const auto& client : interfaces.chain_clients) {
         client->start(scheduler);

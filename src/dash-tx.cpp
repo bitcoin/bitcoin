@@ -17,10 +17,12 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <univalue.h>
-#include <util/system.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <util/translation.h>
 
+#include <functional>
 #include <memory>
 #include <stdio.h>
 

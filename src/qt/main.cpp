@@ -4,6 +4,8 @@
 
 #include <qt/dash.h>
 
+#include <util/translation.h>
+
 #include <QCoreApplication>
 
 #include <functional>
