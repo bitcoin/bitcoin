@@ -506,8 +506,7 @@ and endian independent.")
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
          ("python-requests" ,python-requests)
-         ("python-macholib" ,python-macholib)
-         ("libcrypto" ,openssl)))
+         ("python-macholib" ,python-macholib)))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
       (arguments '(#:tests? #f))
