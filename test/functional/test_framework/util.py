@@ -79,7 +79,7 @@ def assert_greater_than_or_equal(thing1, thing2, err_msg=None):
 
 def assert_true(thing, err_msg=None):
     if thing is not True:
-        msg = err_msg or "%s it is not True" % str(thing)
+        msg = err_msg or "%s is not True" % str(thing)
         raise AssertionError(msg)
 
 
