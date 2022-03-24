@@ -30,15 +30,33 @@ git clone https://github.com/dashpay/dash.git
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-### Building BerkeleyDB
+### Building Dash Core
 
-BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
-`--disable-wallet` to `./configure` and skip to the next section.
+**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
+
+#### With descriptor wallet:
+
+The descriptor wallet uses `sqlite3`. You can install it using:
+```bash
+pkgin install sqlite3
+```
+
+```bash
+./autogen.sh
+./configure --with-gui=no --without-bdb \
+    CPPFLAGS="-I/usr/pkg/include" \
+    LDFLAGS="-L/usr/pkg/lib" \
+    BOOST_CPPFLAGS="-I/usr/pkg/include" \
+    MAKE=gmake
+```
+
+#### With legacy wallet:
+
+BerkeleyDB is use for legacy wallet functionality.
 
 It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
-from ports, for the same reason as boost above (g++/libstd++ incompatibility).
-If you have to build it yourself, you can use [the installation script included
-in contrib/](/contrib/install_db4.sh) like so:
+from ports.
+You can use [the installation script included in contrib/](/contrib/install_db4.sh) like so:
 
 ```bash
 ./contrib/install_db4.sh `pwd`
@@ -50,11 +68,6 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building Dash Core
-
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
-
-With wallet:
 ```bash
 ./autogen.sh
 ./configure --with-gui=no CPPFLAGS="-I/usr/pkg/include" \
@@ -65,7 +78,7 @@ With wallet:
     MAKE=gmake
 ```
 
-Without wallet:
+#### Without wallet:
 ```bash
 ./autogen.sh
 ./configure --with-gui=no --disable-wallet \
