@@ -12,7 +12,7 @@ EXIT_CODE=0
 IGNORED_SUBTREES_REGEXP=$(sed -E 's/^/src\//g' test/lint/lint-ignored-subtrees.txt | \
     sed -E 's/$/\//g' | \
     tr '\n' '|')
-    
+
 OUTPUT=$(git grep " open(" -- "*.py" | grep -Ev "${IGNORED_SUBTREES_REGEXP}" | grep -vE "encoding=.(ascii|utf8|utf-8)." | grep -vE "open\([^,]*, ['\"][^'\"]*b[^'\"]*['\"]")
 if [[ ${OUTPUT} != "" ]]; then
     echo "Python's open(...) seems to be used to open text files without explicitly"
