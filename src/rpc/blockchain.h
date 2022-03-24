@@ -48,4 +48,6 @@ void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], s
 //! direct way to pass in state to RPC methods without globals.
 extern NodeContext* g_rpc_node;
 
+CTxMemPool& EnsureMemPool();
+
 #endif
