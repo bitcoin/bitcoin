@@ -971,6 +971,7 @@ static RPCHelpMan decodepsbt()
                                     {RPCResult::Type::OBJ, "scriptPubKey", "",
                                     {
                                         {RPCResult::Type::STR, "asm", "The asm"},
+                                        {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
                                         {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                         {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                         {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
