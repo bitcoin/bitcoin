@@ -492,8 +492,8 @@ class WalletSendTest(BitcoinTestFramework):
         self.nodes[1].createwallet("extfund")
         ext_fund = self.nodes[1].get_wallet_rpc("extfund")
 
-        # Make a weird but signable script. sh(pkh()) descriptor accomplishes this
-        desc = descsum_create("sh(pkh({}))".format(privkey))
+        # Make a weird but signable script. sh(wsh(pkh())) descriptor accomplishes this
+        desc = descsum_create("sh(wsh(pkh({})))".format(privkey))
         if self.options.descriptors:
             res = ext_fund.importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
@@ -511,7 +511,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, include_watching=True, expect_error=(-4, "Insufficient funds"))
 
         # But funding should work when the solving data is provided
-        res = self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, include_watching=True, solving_data={"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"]]})
+        res = self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, include_watching=True, solving_data={"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"], addr_info["embedded"]["embedded"]["scriptPubKey"]]})
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
