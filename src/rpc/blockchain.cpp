@@ -2254,12 +2254,13 @@ static RPCHelpMan scanblocks()
         },
         {
             scan_result_status_none,
-            RPCResult{"When action=='start'", RPCResult::Type::OBJ, "", "", {
+            RPCResult{"When action=='start'; only returns after scan completes", RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::NUM, "from_height", "The height we started the scan from"},
                 {RPCResult::Type::NUM, "to_height", "The height we ended the scan at"},
-                {RPCResult::Type::ARR, "relevant_blocks", "", {{RPCResult::Type::STR_HEX, "blockhash", "A relevant blockhash"},}},
-                },
-            },
+                {RPCResult::Type::ARR, "relevant_blocks", "Blocks that may have matched a scanobject.", {
+                    {RPCResult::Type::STR_HEX, "blockhash", "A relevant blockhash"},
+                }},
+            }},
             RPCResult{"when action=='status' and a scan is currently in progress", RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::NUM, "progress", "Approximate percent complete"},
                     {RPCResult::Type::NUM, "current_height", "Height of the block currently being scanned"},
