@@ -30,6 +30,11 @@ addnode connect to generic DNS name
 addnode connect to a CJDNS address
 
 - Test getnetworkinfo for each node
+
+- Test passing invalid -proxy
+- Test passing invalid -onion
+- Test passing -onlynet=onion without -proxy or -onion
+- Test passing -onlynet=onion with -onion=0 and with -noonion
 """
 
 import socket
@@ -263,12 +268,13 @@ class ProxyTest(BitcoinTestFramework):
 
         n2 = networks_dict(self.nodes[2].getnetworkinfo())
         assert_equal(NETWORKS, n2.keys())
+        proxy = f'{self.conf2.addr[0]}:{self.conf2.addr[1]}'
         for net in NETWORKS:
             if net == NET_I2P:
                 expected_proxy = ''
                 expected_randomize = False
             else:
-                expected_proxy = f'{self.conf2.addr[0]}:{self.conf2.addr[1]}'
+                expected_proxy = proxy
                 expected_randomize = True
             assert_equal(n2[net]['proxy'], expected_proxy)
             assert_equal(n2[net]['proxy_randomize_credentials'], expected_randomize)
@@ -279,11 +285,9 @@ class ProxyTest(BitcoinTestFramework):
         if self.have_ipv6:
             n3 = networks_dict(self.nodes[3].getnetworkinfo())
             assert_equal(NETWORKS, n3.keys())
+            proxy = f'[{self.conf3.addr[0]}]:{self.conf3.addr[1]}'
             for net in NETWORKS:
-                if net == NET_I2P or net == NET_ONION:
-                    expected_proxy = ''
-                else:
-                    expected_proxy = f'[{self.conf3.addr[0]}]:{self.conf3.addr[1]}'
+                expected_proxy = '' if net == NET_I2P or net == NET_ONION else proxy
                 assert_equal(n3[net]['proxy'], expected_proxy)
                 assert_equal(n3[net]['proxy_randomize_credentials'], False)
             assert_equal(n3['onion']['reachable'], False)
@@ -304,6 +308,32 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n4['onion']['reachable'], True)
         assert_equal(n4['i2p']['reachable'], False)
         assert_equal(n4['cjdns']['reachable'], True)
+
+        self.stop_node(1)
+
+        self.log.info("Test passing invalid -proxy raises expected init error")
+        self.nodes[1].extra_args = ["-proxy=abc:def"]
+        msg = "Error: Invalid -proxy address or hostname: 'abc:def'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing invalid -onion raises expected init error")
+        self.nodes[1].extra_args = ["-onion=xyz:abc"]
+        msg = "Error: Invalid -onion address or hostname: 'xyz:abc'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        msg = (
+            "Error: Outbound connections restricted to Tor (-onlynet=onion) but "
+            "the proxy for reaching the Tor network is not provided (no -proxy= "
+            "and no -onion= given) or it is explicitly forbidden (-onion=0)"
+        )
+        self.log.info("Test passing -onlynet=onion without -proxy or -onion raises expected init error")
+        self.nodes[1].extra_args = ["-onlynet=onion"]
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing -onlynet=onion with -onion=0/-noonion raises expected init error")
+        for arg in ["-onion=0", "-noonion"]:
+            self.nodes[1].extra_args = ["-onlynet=onion", arg]
+            self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
 
 if __name__ == '__main__':
