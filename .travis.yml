@@ -13,7 +13,7 @@ services:
 cache:
   ccache: true
   directories:
-    - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+    - $BASE_BUILD_DIR/ci/scratch/.ccache
     # macOS
     - $HOME/Library/Caches/Homebrew
     - /usr/local/Homebrew
@@ -158,7 +158,7 @@ install:
     - export PULL_REQUEST="$TRAVIS_PULL_REQUEST"
     - export COMMIT_RANGE="$TRAVIS_COMMIT_RANGE"
     - export JOB_NUMBER="$TRAVIS_JOB_NUMBER"
-    - export HOST_SRC_DIR=$TRAVIS_BUILD_DIR
+    - export HOST_SRC_DIR=$BASE_BUILD_DIR
     - export HOST_CACHE_DIR=$HOME/cache
     - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
     - source ./ci/matrix.sh
