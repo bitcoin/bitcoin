@@ -1169,7 +1169,6 @@ void RPCConsole::updateDetailWidget()
         peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));
     ui->peerHeading->setText(peerAddrDetails);
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
-    ui->peerRelayTxes->setText(stats->nodeStats.fRelayTxes ? ts.yes : ts.no);
     QString bip152_hb_settings;
     if (stats->nodeStats.m_bip152_highbandwidth_to) bip152_hb_settings = ts.to;
     if (stats->nodeStats.m_bip152_highbandwidth_from) bip152_hb_settings += (bip152_hb_settings.isEmpty() ? ts.from : QLatin1Char('/') + ts.from);
@@ -1221,6 +1220,7 @@ void RPCConsole::updateDetailWidget()
         ui->peerAddrRelayEnabled->setText(stats->nodeStateStats.m_addr_relay_enabled ? ts.yes : ts.no);
         ui->peerAddrProcessed->setText(QString::number(stats->nodeStateStats.m_addr_processed));
         ui->peerAddrRateLimited->setText(QString::number(stats->nodeStateStats.m_addr_rate_limited));
+        ui->peerRelayTxes->setText(stats->nodeStateStats.m_relay_txs ? ts.yes : ts.no);
     }
 
     ui->peersTabRightPanel->show();

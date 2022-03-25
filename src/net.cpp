@@ -626,12 +626,6 @@ void CNode::CopyStats(CNodeStats& stats)
     X(addr);
     X(addrBind);
     stats.m_network = ConnectedThroughNetwork();
-    if (m_tx_relay != nullptr) {
-        LOCK(m_tx_relay->cs_filter);
-        stats.fRelayTxes = m_tx_relay->fRelayTxes;
-    } else {
-        stats.fRelayTxes = false;
-    }
     X(m_last_send);
     X(m_last_recv);
     X(m_last_tx_time);
@@ -658,11 +652,6 @@ void CNode::CopyStats(CNodeStats& stats)
         X(nRecvBytes);
     }
     X(m_permissionFlags);
-    if (m_tx_relay != nullptr) {
-        stats.minFeeFilter = m_tx_relay->minFeeFilter;
-    } else {
-        stats.minFeeFilter = 0;
-    }
 
     X(m_last_ping_time);
     X(m_min_ping_time);
@@ -913,7 +902,7 @@ static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEviction
 {
     // There is a fall-through here because it is common for a node to have more than a few peers that have not yet relayed txn.
     if (a.m_last_tx_time != b.m_last_tx_time) return a.m_last_tx_time < b.m_last_tx_time;
-    if (a.fRelayTxes != b.fRelayTxes) return b.fRelayTxes;
+    if (a.m_relay_txs != b.m_relay_txs) return b.m_relay_txs;
     if (a.fBloomFilter != b.fBloomFilter) return a.fBloomFilter;
     return a.m_connected > b.m_connected;
 }
@@ -921,7 +910,7 @@ static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEviction
 // Pick out the potential block-relay only peers, and sort them by last block time.
 static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
-    if (a.fRelayTxes != b.fRelayTxes) return a.fRelayTxes;
+    if (a.m_relay_txs != b.m_relay_txs) return a.m_relay_txs;
     if (a.m_last_block_time != b.m_last_block_time) return a.m_last_block_time < b.m_last_block_time;
     if (a.fRelevantServices != b.fRelevantServices) return b.fRelevantServices;
     return a.m_connected > b.m_connected;
@@ -1046,7 +1035,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     EraseLastKElements(vEvictionCandidates, CompareNodeTXTime, 4);
     // Protect up to 8 non-tx-relay peers that have sent us novel blocks.
     EraseLastKElements(vEvictionCandidates, CompareNodeBlockRelayOnlyTime, 8,
-                       [](const NodeEvictionCandidate& n) { return !n.fRelayTxes && n.fRelevantServices; });
+                       [](const NodeEvictionCandidate& n) { return !n.m_relay_txs && n.fRelevantServices; });
 
     // Protect 4 nodes that most recently sent us novel blocks.
     // An attacker cannot manipulate this metric without performing useful work.
@@ -1112,18 +1101,11 @@ bool CConnman::AttemptToEvictConnection()
                 continue;
             if (node->fDisconnect)
                 continue;
-            bool peer_relay_txes = false;
-            bool peer_filter_not_null = false;
-            if (node->m_tx_relay != nullptr) {
-                LOCK(node->m_tx_relay->cs_filter);
-                peer_relay_txes = node->m_tx_relay->fRelayTxes;
-                peer_filter_not_null = node->m_tx_relay->pfilter != nullptr;
-            }
             NodeEvictionCandidate candidate = {node->GetId(), node->m_connected, node->m_min_ping_time,
                                                node->m_last_block_time, node->m_last_tx_time,
                                                HasAllDesirableServiceFlags(node->nServices),
-                                               peer_relay_txes, peer_filter_not_null, node->nKeyedNetGroup,
-                                               node->m_prefer_evict, node->addr.IsLocal(),
+                                               node->m_relays_txs.load(), node->m_bloom_filter_loaded.load(),
+                                               node->nKeyedNetGroup, node->m_prefer_evict, node->addr.IsLocal(),
                                                node->ConnectedThroughNetwork()};
             vEvictionCandidates.push_back(candidate);
         }
@@ -3031,9 +3013,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> s
       nLocalServices(nLocalServicesIn)
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
-    if (conn_type_in != ConnectionType::BLOCK_RELAY) {
-        m_tx_relay = std::make_unique<TxRelay>();
-    }
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
