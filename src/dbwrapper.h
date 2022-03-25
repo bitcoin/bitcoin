@@ -290,10 +290,7 @@ public:
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;
 
-    CDBIterator *NewIterator()
-    {
-        return new CDBIterator(*this, pdb->NewIterator(iteroptions));
-    }
+    CDBIterator* NewIterator();
 
     /**
      * Return true if the database managed by this class contains no entries.

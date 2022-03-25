@@ -268,6 +268,11 @@ size_t CDBWrapper::DynamicMemoryUsage() const
     return parsed.value();
 }
 
+CDBIterator* CDBWrapper::NewIterator()
+{
+    return new CDBIterator(*this, pdb->NewIterator(iteroptions));
+}
+
 // Prefixed with null character to avoid collisions with other keys
 //
 // We must use a string constructor which specifies length so that we copy
