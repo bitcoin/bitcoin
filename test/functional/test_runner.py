@@ -287,7 +287,6 @@ BASE_SCRIPTS = [
     'p2p_net_deadlock.py --v2transport',
     'wallet_signmessagewithaddress.py',
     'rpc_signmessagewithprivkey.py',
-    'rpc_generateblock.py',
     'rpc_generate.py',
     'wallet_balance.py --legacy-wallet',
     'wallet_balance.py --descriptors',
