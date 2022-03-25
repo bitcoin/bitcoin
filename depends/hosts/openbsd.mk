@@ -1,11 +1,11 @@
 openbsd_CFLAGS=-pipe
-openbsd_CFLAGS_CXXFLAGS=$(openbsd_CFLAGS)
+openbsd_CXXFLAGS=$(openbsd_CFLAGS)
 
-openbsd_CFLAGS_release_CFLAGS=-O2
-openbsd_CFLAGS_release_CXXFLAGS=$(openbsd_release_CFLAGS)
+openbsd_release_CFLAGS=-O2
+openbsd_release_CXXFLAGS=$(openbsd_release_CFLAGS)
 
-openbsd_CFLAGS_debug_CFLAGS=-O1
-openbsd_CFLAGS_debug_CXXFLAGS=$(openbsd_debug_CFLAGS)
+openbsd_debug_CFLAGS=-O1
+openbsd_debug_CXXFLAGS=$(openbsd_debug_CFLAGS)
 
 ifeq (86,$(findstring 86,$(build_arch)))
 i686_openbsd_CC=clang -m32
