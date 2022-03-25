@@ -16,7 +16,7 @@ export DPKG_ADD_ARCH="armhf"
 export PACKAGES="python3 g++-arm-linux-gnueabihf busybox qemu-user libc6:armhf libstdc++6:armhf libfontconfig1:armhf libxcb1:armhf"
 export USE_BUSY_BOX=true
 export RUN_UNIT_TESTS=true
-export RUN_FUNCTIONAL_TESTS=true
+export RUN_INTEGRATION_TESTS=true
 export GOAL="install"
 # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
 # This could be removed once the ABI change warning does not show up by default

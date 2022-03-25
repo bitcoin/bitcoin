@@ -8,14 +8,14 @@ set -e
 
 source ./ci/dash/matrix.sh
 
-if [ "$RUN_UNITTESTS" != "true" ]; then
+if [ "$RUN_UNIT_TESTS" != "true" ]; then
   echo "Skipping unit tests"
   exit 0
 fi
 
 # TODO this is not Travis agnostic
 export BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
-export LD_LIBRARY_PATH=$BUILD_DIR/depends/$HOST/lib
+export LD_LIBRARY_PATH=$BASE_BUILD_DIR/depends/$HOST/lib
 
 export WINEDEBUG=fixme-all
 export BOOST_TEST_LOG_LEVEL=test_suite

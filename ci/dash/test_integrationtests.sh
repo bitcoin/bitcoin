@@ -10,12 +10,12 @@ PASS_ARGS="$*"
 
 source ./ci/dash/matrix.sh
 
-if [ "$RUN_INTEGRATIONTESTS" != "true" ]; then
+if [ "$RUN_INTEGRATION_TESTS" != "true" ]; then
   echo "Skipping integration tests"
   exit 0
 fi
 
-export LD_LIBRARY_PATH=$BUILD_DIR/depends/$HOST/lib
+export LD_LIBRARY_PATH=$BASE_BUILD_DIR/depends/$HOST/lib
 
 cd build-ci/dashcore-$BUILD_TARGET
 

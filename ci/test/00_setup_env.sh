@@ -28,7 +28,7 @@ export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
 # Whether to prefer BusyBox over GNU utilities
 export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
-export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-true}
+export RUN_INTEGRATION_TESTS=${RUN_INTEGRATION_TESTS:-true}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:18.04}
 # Randomize test order.
