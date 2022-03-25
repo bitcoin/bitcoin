@@ -67,12 +67,6 @@ case $host in
   ;;
 esac
 
-AC_ARG_WITH([seccomp],
-  [AS_HELP_STRING([--with-seccomp],
-  [enable experimental syscall sandbox feature (-sandbox), default is yes if seccomp-bpf is detected under Linux x86_64])],
-  [seccomp_found=$withval],
-  [seccomp_found=auto])
-
 AC_ARG_ENABLE([c++20],
   [AS_HELP_STRING([--enable-c++20],
   [enable compilation in c++20 mode (disabled by default)])],
@@ -334,6 +328,12 @@ AC_ARG_ENABLE([lto],
     [AS_HELP_STRING([--enable-lto],[build using LTO (default is no)])],
     [enable_lto=$enableval],
     [enable_lto=no])
+
+AC_ARG_WITH([seccomp],
+  [AS_HELP_STRING([--with-seccomp],
+  [enable experimental syscall sandbox feature (-sandbox), default is yes if seccomp-bpf is detected under Linux x86_64])],
+  [],
+  [with_seccomp=auto])
 
 AC_LANG_PUSH([C++])
 
@@ -1497,9 +1497,9 @@ dnl The sanitizers introduce use of syscalls that are not typically used in bitc
 dnl (such as execve when the sanitizers execute llvm-symbolizer).
 if test "$use_sanitizers" != ""; then
   AC_MSG_WARN([Specifying --with-sanitizers forces --without-seccomp since the sanitizers introduce use of syscalls not allowed by the bitcoind syscall sandbox (-sandbox=<mode>).])
-  seccomp_found=no
+  with_seccomp=no
 fi
-if test "$seccomp_found" != "no"; then
+if test "$with_seccomp" != "no"; then
   AC_MSG_CHECKING([for seccomp-bpf (Linux x86-64)])
   AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
       @%:@include <linux/seccomp.h>
@@ -1509,17 +1509,17 @@ if test "$seccomp_found" != "no"; then
       #endif
     ]])],[
       AC_MSG_RESULT([yes])
-      seccomp_found="yes"
+      with_seccomp="yes"
       AC_DEFINE([USE_SYSCALL_SANDBOX], [1], [Define this symbol to build with syscall sandbox support.])
     ],[
       AC_MSG_RESULT([no])
-      seccomp_found="no"
+      with_seccomp="no"
   ])
 fi
 dnl Currently only enable -sandbox=<mode> feature if seccomp is found.
 dnl In the future, sandboxing could be also be supported with other
 dnl sandboxing mechanisms besides seccomp.
-use_syscall_sandbox=$seccomp_found
+use_syscall_sandbox=$with_seccomp
 AM_CONDITIONAL([ENABLE_SYSCALL_SANDBOX], [test "$use_syscall_sandbox" != "no"])
 
 dnl Check for reduced exports
@@ -1974,7 +1974,7 @@ echo
 echo "Options used to compile and link:"
 echo "  external signer = $use_external_signer"
 echo "  multiprocess    = $build_multiprocess"
-echo "  with experimental syscall sandbox support = $use_syscall_sandbox"
+echo "  with syscall sandbox = $use_syscall_sandbox"
 echo "  with libs       = $build_bitcoin_libs"
 echo "  with wallet     = $enable_wallet"
 if test "$enable_wallet" != "no"; then
