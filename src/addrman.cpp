@@ -946,16 +946,16 @@ std::optional<AddressPosition> AddrManImpl::FindAddressEntry_(const CAddress& ad
 
     if(addr_info->fInTried) {
         int bucket{addr_info->GetTriedBucket(nKey, m_asmap)};
-        return AddressPosition(/*tried=*/true,
-                               /*multiplicity=*/1,
-                               /*bucket=*/bucket,
-                               /*position=*/addr_info->GetBucketPosition(nKey, false, bucket));
+        return AddressPosition(/*tried_in=*/true,
+                               /*multiplicity_in=*/1,
+                               /*bucket_in=*/bucket,
+                               /*position_in=*/addr_info->GetBucketPosition(nKey, false, bucket));
     } else {
         int bucket{addr_info->GetNewBucket(nKey, m_asmap)};
-        return AddressPosition(/*tried=*/false,
-                               /*multiplicity=*/addr_info->nRefCount,
-                               /*bucket=*/bucket,
-                               /*position=*/addr_info->GetBucketPosition(nKey, true, bucket));
+        return AddressPosition(/*tried_in=*/false,
+                               /*multiplicity_in=*/addr_info->nRefCount,
+                               /*bucket_in=*/bucket,
+                               /*position_in=*/addr_info->GetBucketPosition(nKey, true, bucket));
     }
 }
 
