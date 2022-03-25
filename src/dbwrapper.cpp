@@ -165,6 +165,10 @@ public:
 
     bool IsEmpty();
 
+    /**
+     * Returns a string (consisting of 8 random bytes) suitable for use as an
+     * obfuscating XOR key.
+     */
     std::vector<unsigned char> CreateObfuscateKey() const;
 
     // Removed from interface later when pimpl'd
@@ -392,15 +396,6 @@ CDBIterator* DBWrapperImpl::NewIterator()
 const std::string DBWrapperImpl::OBFUSCATE_KEY_KEY("\000obfuscate_key", 14);
 
 const unsigned int DBWrapperImpl::OBFUSCATE_KEY_NUM_BYTES = 8;
-
-/**
- * Returns a string (consisting of 8 random bytes) suitable for use as an
- * obfuscating XOR key.
- */
-std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
-{
-    return m_impl->CreateObfuscateKey();
-}
 
 std::vector<unsigned char> DBWrapperImpl::CreateObfuscateKey() const
 {
