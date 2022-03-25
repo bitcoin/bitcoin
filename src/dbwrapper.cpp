@@ -4,15 +4,19 @@
 
 #include <dbwrapper.h>
 
-#include <memory>
 #include <random.h>
+#include <streams.h>
 
 #include <leveldb/cache.h>
+#include <leveldb/db.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
+#include <leveldb/write_batch.h>
 #include <memenv.h>
-#include <stdint.h>
+
 #include <algorithm>
+#include <memory>
+#include <stdint.h>
 
 /** These should be considered an implementation detail of the specific database.
  */
