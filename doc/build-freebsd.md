@@ -1,6 +1,6 @@
 # FreeBSD Build Guide
 
-**Updated for FreeBSD [12.2](https://www.freebsd.org/releases/12.2R/announce.html)**
+**Updated for FreeBSD [12.3](https://www.freebsd.org/releases/12.3R/announce/)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.
 
@@ -25,20 +25,22 @@ git clone https://github.com/bitcoin/bitcoin.git
 ### 3. Install Optional Dependencies
 
 #### Wallet Dependencies
-It is not necessary to build wallet functionality to run bitcoind or the GUI. To enable legacy wallets, you must install `db5`. To enable [descriptor wallets](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md), `sqlite3` is required. Skip `db5` if you intend to *exclusively* use descriptor wallets
-
-###### Legacy Wallet Support
-`db5` is required to enable support for legacy wallets. Skip if you don't intend to use legacy wallets
-
-```bash
-pkg install db5
-```
+It is not necessary to build wallet functionality to run either `bitcoind` or `bitcoin-qt`.
 
 ###### Descriptor Wallet Support
 
-`sqlite3` is required to enable support for descriptor wallets. Skip if you don't intend to use descriptor wallets.
+`sqlite3` is required to support [descriptor wallets](descriptors.md).
+Skip if you don't intend to use descriptor wallets.
 ``` bash
 pkg install sqlite3
+```
+
+###### Legacy Wallet Support
+`db5` is only required to support legacy wallets.
+Skip if you don't intend to use legacy wallets.
+
+```bash
+pkg install db5
 ```
 ---
 
@@ -79,8 +81,17 @@ pkg install python3
 ### 1. Configuration
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
-##### Wallet (BDB + SQlite) Support, No GUI:
-This explicitly enables legacy wallet support and disables the GUI. If `sqlite3` is installed, then descriptor wallet support will be built.
+
+##### Descriptor Wallet and GUI:
+This explicitly enables the GUI and disables legacy wallet support, assuming `sqlite` and `qt` are installed.
+```bash
+./autogen.sh
+./configure --without-bdb --with-gui=yes MAKE=gmake
+```
+
+##### Descriptor & Legacy Wallet. No GUI:
+This enables support for both wallet types and disables the GUI, assuming
+`sqlite3` and `db5` are both installed.
 ```bash
 ./autogen.sh
 ./configure --with-gui=no --with-incompatible-bdb \
@@ -89,12 +100,6 @@ This explicitly enables legacy wallet support and disables the GUI. If `sqlite3`
     MAKE=gmake
 ```
 
-##### Wallet (only SQlite) and GUI Support:
-This explicitly enables the GUI and disables legacy wallet support. If `qt5` is not installed, this will throw an error. If `sqlite3` is installed then descriptor wallet functionality will be built. If `sqlite3` is not installed, then wallet functionality will be disabled.
-```bash
-./autogen.sh
-./configure --without-bdb --with-gui=yes MAKE=gmake
-```
 ##### No Wallet or GUI
 ``` bash
 ./autogen.sh
