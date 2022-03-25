@@ -260,11 +260,6 @@ DBWrapperImpl::~DBWrapperImpl()
 
 CDBWrapper::~CDBWrapper() = default;
 
-bool CDBWrapper::doRawGet(const CDataStream& ssKey, std::string& strValue) const
-{
-    return m_impl->doRawGet(ssKey, strValue);
-}
-
 bool DBWrapperImpl::doRawGet(const CDataStream& ssKey, std::string& strValue) const
 {
     leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());

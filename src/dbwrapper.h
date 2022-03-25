@@ -178,9 +178,6 @@ class CDBWrapper
 {
     friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
 private:
-    // Removed from interface later when pimpl'd
-    bool doRawGet(const CDataStream& ssKey, std::string& strValue) const;
-
     std::optional<CDataStream> doGet(const CDataStream& ssKey) const;
 
     bool doExists(const CDataStream& ssKey) const;
