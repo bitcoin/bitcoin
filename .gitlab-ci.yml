@@ -193,14 +193,6 @@ x86_64-unknown-linux-gnu-nowallet:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "NO_WALLET=1"
 
-x86_64-unknown-linux-gnu-release:
-  extends:
-    - .build-depends-template
-    - .skip-in-fast-mode-template
-  variables:
-    HOST: x86_64-unknown-linux-gnu
-    DEP_OPTS: "NO_UPNP=1"
-
 x86_64-apple-darwin19:
   extends:
     - .build-depends-template
@@ -282,15 +274,6 @@ linux64_nowallet-build:
     - x86_64-unknown-linux-gnu-nowallet
   variables:
     BUILD_TARGET: linux64_nowallet
-
-linux64_release-build:
-  extends:
-    - .build-template
-    - .skip-in-fast-mode-template
-  needs:
-    - x86_64-unknown-linux-gnu-release
-  variables:
-    BUILD_TARGET: linux64_release
 
 mac-build:
   extends:
