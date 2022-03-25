@@ -53,16 +53,13 @@ private:
     const CDBWrapper &parent;
     leveldb::WriteBatch batch;
 
-    CDataStream ssKey;
-    CDataStream ssValue;
-
     size_t size_estimate;
 
 public:
     /**
      * @param[in] _parent   CDBWrapper that this batch is to be submitted to
      */
-    explicit CDBBatch(const CDBWrapper &_parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION), size_estimate(0) { };
+    explicit CDBBatch(const CDBWrapper &_parent) : parent(_parent), size_estimate(0) { };
 
     void Clear()
     {
@@ -73,10 +70,12 @@ public:
     template <typename K, typename V>
     void Write(const K& key, const V& value)
     {
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
 
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
         ssValue << value;
         ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
@@ -91,13 +90,12 @@ public:
         // - byte[]: value
         // The formula below assumes the key and value are both less than 16k.
         size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
-        ssKey.clear();
-        ssValue.clear();
     }
 
     template <typename K>
     void Erase(const K& key)
     {
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
@@ -109,7 +107,6 @@ public:
         // - byte[]: key
         // The formula below assumes the key is less than 16kB.
         size_estimate += 2 + (slKey.size() > 127) + slKey.size();
-        ssKey.clear();
     }
 
     size_t SizeEstimate() const { return size_estimate; }
