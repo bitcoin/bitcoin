@@ -13,6 +13,7 @@
 
 using node::NodeContext;
 using wallet::AttemptSelection;
+using wallet::CHANGE_LOWER;
 using wallet::COutput;
 using wallet::CWallet;
 using wallet::CWalletTx;
@@ -66,6 +67,7 @@ static void CoinSelection(benchmark::Bench& bench)
         rand,
         /* change_output_size= */ 34,
         /* change_spend_size= */ 148,
+        /*min_change_target=*/ CHANGE_LOWER,
         /* effective_feerate= */ CFeeRate(0),
         /* long_term_feerate= */ CFeeRate(0),
         /* discard_feerate= */ CFeeRate(0),

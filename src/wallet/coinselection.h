@@ -13,10 +13,10 @@
 #include <optional>
 
 namespace wallet {
-//! target minimum change amount
-static constexpr CAmount MIN_CHANGE{COIN / 100};
-//! final minimum change amount after paying for fees
-static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
+//! lower bound for randomly-chosen target change amount
+static constexpr CAmount CHANGE_LOWER{50000};
+//! upper bound for randomly-chosen target change amount
+static constexpr CAmount CHANGE_UPPER{1000000};
 
 /** A UTXO under consideration for use in funding a new transaction. */
 struct COutput {
@@ -93,8 +93,13 @@ struct CoinSelectionParams {
     size_t change_output_size = 0;
     /** Size of the input to spend a change output in virtual bytes. */
     size_t change_spend_size = 0;
+    /** Mininmum change to target in Knapsack solver: select coins to cover the payment and
+     * at least this value of change. */
+    CAmount m_min_change_target{0};
     /** Cost of creating the change output. */
     CAmount m_change_fee{0};
+    /** The pre-determined minimum value to target when funding a change output. */
+    CAmount m_change_target{0};
     /** Cost of creating the change output + cost of spending the change output in the future. */
     CAmount m_cost_of_change{0};
     /** The targeted feerate of the transaction being built. */
@@ -114,11 +119,13 @@ struct CoinSelectionParams {
      * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
     bool m_avoid_partial_spends = false;
 
-    CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
+    CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
+                        CAmount min_change_target, CFeeRate effective_feerate,
                         CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
           change_spend_size(change_spend_size),
+          m_min_change_target(min_change_target),
           m_effective_feerate(effective_feerate),
           m_long_term_feerate(long_term_feerate),
           m_discard_feerate(discard_feerate),
@@ -217,6 +224,21 @@ struct OutputGroup
  */
 [[nodiscard]] CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
 
+
+/** Chooose a random change target for each transaction to make it harder to fingerprint the Core
+ * wallet based on the change output values of transactions it creates.
+ * The random value is between 50ksat and min(2 * payment_value, 1milsat)
+ * When payment_value <= 25ksat, the value is just 50ksat.
+ *
+ * Making change amounts similar to the payment value may help disguise which output(s) are payments
+ * are which ones are change. Using double the payment value may increase the number of inputs
+ * needed (and thus be more expensive in fees), but breaks analysis techniques which assume the
+ * coins selected are just sufficient to cover the payment amount ("unnecessary input" heuristic).
+ *
+ * @param[in]   payment_value   Average payment value of the transaction output(s).
+ */
+[[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng);
+
 struct SelectionResult
 {
 private:
@@ -266,7 +288,8 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng);
 
 // Original coin selection algorithm as a fallback
-std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue, FastRandomContext& rng);
+std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
+                                              CAmount change_target, FastRandomContext& rng);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_COINSELECTION_H
