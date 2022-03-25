@@ -12,7 +12,6 @@
 #include <saltedhasher.h>
 extern RecursiveMutex cs_main;
 class CNode;
-class CConnman;
 class PeerManager;
 class BlockValidationState;
 class ChainstateManager;
@@ -25,7 +24,7 @@ using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 class CQuorumBlockProcessor
 {
 private:
-    CConnman& connman;
+    PeerManager& peerman;
     ChainstateManager &chainman;
     CEvoDB& evoDb;
     // TODO cleanup
@@ -36,7 +35,7 @@ private:
     mutable std::map<uint8_t, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman &_connman, ChainstateManager& _chainman);
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, PeerManager &_peerman, ChainstateManager& _chainman);
 
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman);

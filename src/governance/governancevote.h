@@ -10,7 +10,7 @@
 class CGovernanceVote;
 class CBLSPublicKey;
 class CBLSSecretKey;
-class CConnman;
+class PeerManager;
 class CKey;
 class CKeyID;
 
@@ -102,7 +102,7 @@ public:
     bool Sign(const CBLSSecretKey& key);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
     bool IsValid(bool useVotingKey) const;
-    void Relay(CConnman& connman) const;
+    void Relay(PeerManager& peerman) const;
 
     const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
 

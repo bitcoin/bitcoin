@@ -214,9 +214,9 @@ static RPCHelpMan gobject_submit()
 
     if (fMissingConfirmations) {
         governance->AddPostponedObject(govobj);
-        govobj.Relay(*node.connman);
+        govobj.Relay(*node.peerman);
     } else {
-        governance->AddGovernanceObject(govobj, *node.connman);
+        governance->AddGovernanceObject(govobj, *node.peerman);
     }
 
     return govobj.GetHash().ToString();
@@ -317,7 +317,7 @@ static RPCHelpMan gobject_vote_conf()
     }
 
     CGovernanceException exception;
-    if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
+    if (governance->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
         nSuccessful++;
         statusObj.pushKV("result", "success");
     } else {
@@ -682,7 +682,7 @@ static RPCHelpMan voteraw()
     }
 
     CGovernanceException exception;
-    if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
+    if (governance->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessageStr());

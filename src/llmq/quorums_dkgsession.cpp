@@ -22,7 +22,7 @@
 
 #include <cxxtimer.hpp>
 #include <memory>
-
+#include <net_processing.h>
 namespace llmq
 {
 
@@ -260,7 +260,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
         member->contributions.emplace(hash);
 
         CInv inv(MSG_QUORUM_CONTRIB, hash);
-        RelayOtherInvToParticipants(inv);
+        RelayOtherInvToParticipants(inv, dkgManager.peerman);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
             status.statusBits.receivedContribution = true;
@@ -433,7 +433,8 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
     CDKGLogger logger(*this, __func__);
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
-    dkgManager.connman.ForEachNode([&](const CNode* pnode) {
+    dkgManager.connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        AssertLockHeld(::cs_main);
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
             return;
@@ -566,7 +567,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, b
         member->complaints.emplace(hash);
 
         CInv inv(MSG_QUORUM_COMPLAINT, hash);
-        RelayOtherInvToParticipants(inv);
+        RelayOtherInvToParticipants(inv, dkgManager.peerman);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
             status.statusBits.receivedComplaint = true;
@@ -776,7 +777,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
 
     // we always relay, even if further verification fails
     CInv inv(MSG_QUORUM_JUSTIFICATION, hash);
-    RelayOtherInvToParticipants(inv);
+    RelayOtherInvToParticipants(inv, dkgManager.peerman);
 
     quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
         status.statusBits.receivedJustification = true;
@@ -1133,7 +1134,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitm
     WITH_LOCK(invCs, validCommitments.emplace(hash));
 
     CInv inv(MSG_QUORUM_PREMATURE_COMMITMENT, hash);
-    RelayOtherInvToParticipants(inv);
+    RelayOtherInvToParticipants(inv, dkgManager.peerman);
 
     quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
         status.statusBits.receivedPrematureCommitment = true;
@@ -1269,13 +1270,18 @@ void CDKGSession::MarkBadMember(size_t idx)
     member->bad = true;
 }
 
-void CDKGSession::RelayOtherInvToParticipants(const CInv& inv) const
+void CDKGSession::RelayOtherInvToParticipants(const CInv& inv, PeerManager& peerman) const
 {
-    dkgManager.connman.ForEachNode([&](CNode* pnode) {
+    LOCK(cs_main);
+    dkgManager.connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        AssertLockHeld(::cs_main);
         if (pnode->qwatch ||
                 (!pnode->GetVerifiedProRegTxHash().IsNull() && relayMembers.count(pnode->GetVerifiedProRegTxHash()))) {
-            pnode->PushOtherInventory(inv);
-        }
+                PeerRef peer = peerman.GetPeerRef(pnode->GetId());
+                if(peer) {
+                    peerman.PushTxInventoryOther(*peer, inv);
+                }
+            }
     });
 }
 

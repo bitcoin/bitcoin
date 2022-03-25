@@ -97,35 +97,37 @@ void CSporkManager::CheckAndRemove()
 
 void CSporkManager::ProcessSporkMessages(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
 {
-    ProcessSpork(pfrom, strCommand, vRecv, connman, peerman);
+    ProcessSpork(pfrom, strCommand, vRecv, peerman);
     ProcessGetSporks(pfrom, strCommand, connman);
 }
 
-void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
+void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman)
 {
     if (strCommand != NetMsgType::SPORK) return;
 
     CSporkMessage spork;
     vRecv >> spork;
 
-        const uint256 &hash = spork.GetHash();
-        std::string strLogMsg;
+    const uint256 &hash = spork.GetHash();
+    std::string strLogMsg;
+    PeerRef peer = peerman.GetPeerRef(pfrom->GetId());
+    if (peer)
+        peerman.AddKnownTx(*peer, hash);
+    {
+        LOCK(cs_main);
+        peerman.ReceivedResponse(pfrom->GetId(), hash);
+        strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, pfrom->GetId());
+    }
+
+    if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
         {
             LOCK(cs_main);
-            pfrom->AddKnownTx(hash);
-            peerman.ReceivedResponse(pfrom->GetId(), hash);
-            strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, pfrom->GetId());
+            peerman.ForgetTxHash(pfrom->GetId(), hash);
         }
-
-        if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
-            {
-                LOCK(cs_main);
-                peerman.ForgetTxHash(pfrom->GetId(), hash);
-            }
-            LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
-            peerman.Misbehaving(pfrom->GetId(), 100, "spork too far into the future");
-            return;
-        }
+        LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
+        peerman.Misbehaving(pfrom->GetId(), 100, "spork too far into the future");
+        return;
+    }
 
     CKeyID keyIDSigner;
 
@@ -169,7 +171,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         mapSporksCachedActive.erase(spork.nSporkID);
         mapSporksCachedValues.erase(spork.nSporkID);
     }
-    spork.Relay(connman);
+    spork.Relay(peerman);
     {
         LOCK(cs_main);
         peerman.ForgetTxHash(pfrom->GetId(), hash);
@@ -188,7 +190,7 @@ void CSporkManager::ProcessGetSporks(CNode* pfrom, const std::string &strCommand
     }
 }
 
-bool CSporkManager::UpdateSpork(int32_t nSporkID, int64_t nValue, CConnman& connman)
+bool CSporkManager::UpdateSpork(int32_t nSporkID, int64_t nValue, PeerManager& peerman)
 {
     CSporkMessage spork(nSporkID, nValue, GetAdjustedTime());
 
@@ -213,7 +215,7 @@ bool CSporkManager::UpdateSpork(int32_t nSporkID, int64_t nValue, CConnman& conn
         mapSporksCachedActive.erase(spork.nSporkID);
         mapSporksCachedValues.erase(spork.nSporkID);
     }
-    spork.Relay(connman);
+    spork.Relay(peerman);
     return true;
 }
 
@@ -402,8 +404,8 @@ bool CSporkMessage::GetSignerKeyID(CKeyID& retKeyidSporkSigner) const
     return true;
 }
 
-void CSporkMessage::Relay(CConnman& connman) const
+void CSporkMessage::Relay(PeerManager& peerman) const
 {
     CInv inv(MSG_SPORK, GetHash());
-    connman.RelayOtherInv(inv);
+    peerman.RelayTransactionOther(inv);
 }

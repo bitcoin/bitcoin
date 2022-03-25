@@ -11,6 +11,7 @@
 
 class CBLSPublicKey;
 class CBLSSecretKey;
+class CConnman;
 struct CActiveMasternodeInfo;
 extern CActiveMasternodeInfo activeMasternodeInfo;
 extern RecursiveMutex activeMasternodeInfoCs;

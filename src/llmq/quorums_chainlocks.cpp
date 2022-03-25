@@ -409,18 +409,19 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         AssertLockNotHeld(cs);
         if (clsigAggInv.type == MSG_CLSIG) {
             // We just created an aggregated CLSIG, relay it
-            connman.RelayOtherInv(clsigAggInv);
+            peerman.RelayTransactionOther(clsigAggInv);
         } else {
+            LOCK(cs_main);
             CInv clsigInv(MSG_CLSIG, ::SerializeHash(clsig));
             // Relay partial CLSIGs to full nodes only, SPV wallets should wait for the aggregated CLSIG.
-            connman.ForEachNode([&](CNode* pnode) {
-                bool fSPV{false};
-                if(pnode->m_tx_relay != nullptr) {
-                    LOCK(pnode->m_tx_relay->cs_filter);
-                    fSPV = pnode->m_tx_relay->pfilter != nullptr;
-                }
+            connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+                AssertLockHeld(::cs_main);
+                bool fSPV{pnode->m_bloom_filter_loaded.load()};
                 if (!fSPV && pnode->CanRelay()) {
-                    pnode->PushOtherInventory(clsigInv);
+                    PeerRef peer = peerman.GetPeerRef(pnode->GetId());
+                    if(peer) {
+                        peerman.PushTxInventoryOther(*peer, clsigInv);
+                    }
                 }
             });
             // Try signing the tip ourselves
@@ -444,7 +445,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         }
         // Note: do not hold cs while calling RelayInv
         AssertLockNotHeld(cs);
-        connman.RelayOtherInv(clsigInv);
+        peerman.RelayTransactionOther(clsigInv);
     }
     
     if (pindexSig == nullptr) {
@@ -669,7 +670,7 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
         if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
-                continue;
+            continue;
         }
         fMemberOfSomeQuorum = true;
         if (i > 0) {
@@ -690,7 +691,7 @@ void CChainLocksHandler::TrySignChainTip()
             if (it2 == mapSharesAtTip.end()) {
                 if (signingState.GetAttempt() <= (int)i) {
                     // previous quorum did not sign a chainlock, bail out for now
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum did not sign a chainlock at height %d yet\n", __func__, nHeight);
+                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum did not sign a chainlock at height %d yet, signingState.GetAttempt() %d i %d\n", __func__, nHeight, signingState.GetAttempt(), i);
                     return;
                 }
                 // else

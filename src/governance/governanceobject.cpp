@@ -18,6 +18,7 @@
 #include <string>
 #include <univalue.h>
 #include <timedata.h>
+#include <net_processing.h>
 using node::GetTransaction;
 CGovernanceObject::CGovernanceObject() :
     cs(),
@@ -100,8 +101,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
 
 bool CGovernanceObject::ProcessVote(CNode* pfrom,
     const CGovernanceVote& vote,
-    CGovernanceException& exception,
-    CConnman& connman)
+    CGovernanceException& exception)
 {
     LOCK(cs);
 
@@ -646,7 +646,7 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
     return true;
 }
 
-void CGovernanceObject::Relay(CConnman& connman)
+void CGovernanceObject::Relay(PeerManager& peerman)
 {
     // Do not relay until fully synced
     if (!masternodeSync.IsSynced()) {
@@ -655,7 +655,7 @@ void CGovernanceObject::Relay(CConnman& connman)
     }
 
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    connman.RelayOtherInv(inv);
+    peerman.RelayTransactionOther(inv);
 }
 
 void CGovernanceObject::UpdateSentinelVariables()

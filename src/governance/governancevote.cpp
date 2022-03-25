@@ -11,7 +11,7 @@
 #include <util/system.h>
 #include <timedata.h>
 #include <evo/deterministicmns.h>
-
+#include <net_processing.h>
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
     static const std::map<vote_outcome_enum_t, std::string> mapOutcomeString = {
@@ -113,7 +113,7 @@ std::string CGovernanceVote::ToString() const
     return ostr.str();
 }
 
-void CGovernanceVote::Relay(CConnman& connman) const
+void CGovernanceVote::Relay(PeerManager& peerman) const
 {
     // Do not relay until fully synced
     if (!masternodeSync.IsSynced()) {
@@ -127,7 +127,7 @@ void CGovernanceVote::Relay(CConnman& connman) const
     }
 
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
-    connman.RelayOtherInv(inv);
+    peerman.RelayTransactionOther(inv);
 }
 
 void CGovernanceVote::UpdateHash() const

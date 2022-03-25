@@ -14,7 +14,7 @@
 #include <sync.h>
 #include <optional>
 class UniValue;
-
+class PeerManager;
 namespace llmq
 {
 
@@ -302,7 +302,7 @@ public:
     bool AreWeMember() const { return !myProTxHash.IsNull(); }
     void MarkBadMember(size_t idx);
 
-    void RelayOtherInvToParticipants(const CInv& inv) const;
+    void RelayOtherInvToParticipants(const CInv& inv, PeerManager& peerman) const;
 
 public:
     CDKGMember* GetMember(const uint256& proTxHash) const;

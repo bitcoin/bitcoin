@@ -17,7 +17,6 @@ class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
-class CConnman;
 class CValidationInterface;
 class uint256;
 class CScheduler;

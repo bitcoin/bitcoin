@@ -15,6 +15,7 @@
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_chainlocks.h>
 #include <shutdown.h>
+#include <net_processing.h>
 void CDSNotificationInterface::InitializeCurrentBlockTip(ChainstateManager& chainman)
 {
     LOCK(cs_main);
@@ -56,7 +57,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     if(llmq::chainLocksHandler)
         llmq::chainLocksHandler->UpdatedBlockTip(pindexNew, fInitialDownload);
-    if (!fDisableGovernance && governance) governance->UpdatedBlockTip(pindexNew, connman);
+    if (!fDisableGovernance && governance) governance->UpdatedBlockTip(pindexNew, peerman);
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)

@@ -33,7 +33,7 @@ static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
 
-CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb, CConnman &_connman, ChainstateManager& _chainman) : connman(_connman), chainman(_chainman), evoDb(_evoDb)
+CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb, PeerManager &_peerman, ChainstateManager& _chainman) : peerman(_peerman), chainman(_chainman), evoDb(_evoDb)
 {
     CLLMQUtils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }
@@ -45,9 +45,11 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         vRecv >> qc;
 
         const uint256& hash = ::SerializeHash(qc);
+        PeerRef peer = peerman.GetPeerRef(pfrom->GetId());
+        if (peer)
+            peerman.AddKnownTx(*peer, hash);
         {
             LOCK(cs_main);
-            pfrom->AddKnownTx(hash);
             peerman.ReceivedResponse(pfrom->GetId(), hash);
         }
 
@@ -497,7 +499,7 @@ void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
         CInv inv(MSG_QUORUM_FINAL_COMMITMENT, commitmentHash);
-        connman.RelayOtherInv(inv);
+        peerman.RelayTransactionOther(inv);
     }
 }
 

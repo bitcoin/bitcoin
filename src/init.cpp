@@ -1622,7 +1622,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     if(fNEVMConnection) {
         DoGethMaintenance();
     }
-    pdsNotificationInterface = new CDSNotificationInterface(*node.connman);
+    pdsNotificationInterface = new CDSNotificationInterface(*node.connman, *node.peerman);
     RegisterValidationInterface(pdsNotificationInterface);
     // ********************************************************* Step 7: load block chain
     if(fRegTest) {

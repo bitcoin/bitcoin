@@ -26,7 +26,7 @@ void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, CConnman& connman, BanMan& ba
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
-    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman, chainman);
+    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, peerman, chainman);
     quorumDKGSessionManager = new CDKGSessionManager(*blsWorker, connman, peerman, chainman, unitTests, fWipe);
     quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager, chainman);
     quorumSigSharesManager = new CSigSharesManager(connman, banman, peerman);

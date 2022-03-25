@@ -16,7 +16,7 @@
 using namespace wallet;
 UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
-                             vote_outcome_enum_t eVoteOutcome, CConnman& connman)
+                             vote_outcome_enum_t eVoteOutcome, CConnman& connman, PeerManager& peerman)
 {
     {
         LOCK(governance->cs);
@@ -57,7 +57,7 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         }
 
         CGovernanceException exception;
-        if (governance->ProcessVoteAndRelay(vote, exception, connman)) {
+        if (governance->ProcessVoteAndRelay(vote, exception, connman, peerman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -289,7 +289,7 @@ static RPCHelpMan gobject_vote_many()
         }
     });
 
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
+    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman, *node.peerman);
 },
     };
 } 
@@ -360,7 +360,7 @@ static RPCHelpMan gobject_vote_alias()
     std::map<uint256, CKey> votingKeys;
     votingKeys.emplace(proTxHash, key);
 
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
+    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman, *node.peerman);
 },
     };
 } 

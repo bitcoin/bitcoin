@@ -32,9 +32,11 @@ void CDKGPendingMessages::PushPendingMessage(CNode* pfrom, CDataStream& vRecv)
     const uint256 &hash = hw.GetHash();
     LOCK2(cs_main, cs);
     peerman.ReceivedResponse(from, hash);
-    if(pfrom)
-        pfrom->AddKnownTx(hash);
-
+    if(pfrom) {
+        PeerRef peer = peerman.GetPeerRef(pfrom->GetId());
+        if (peer)
+            peerman.AddKnownTx(*peer, hash);
+    }
     if (messagesPerNode[from] >= maxMessagesPerNode) {
         // TODO ban?
         LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);

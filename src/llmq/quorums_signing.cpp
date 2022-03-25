@@ -584,9 +584,11 @@ void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand
 void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const std::shared_ptr<const CRecoveredSig>& recoveredSig)
 {
     const uint256& hash = recoveredSig->GetHash();
+    PeerRef peer = peerman.GetPeerRef(pfrom->GetId());
+    if (peer)
+        peerman.AddKnownTx(*peer, hash);
     {
         LOCK(cs_main);
-        pfrom->AddKnownTx(hash);
         peerman.ReceivedResponse(pfrom->GetId(), hash);
     }
     bool ban = false;
@@ -864,9 +866,14 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
         }
     }
     if (fMasternodeMode) {
-        connman.ForEachNode([&](CNode* pnode) {
+        LOCK(cs_main);
+        connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            AssertLockHeld(::cs_main);
             if (pnode->fSendRecSigs) {
-                pnode->PushOtherInventory(inv);
+                PeerRef peer = peerman.GetPeerRef(pnode->GetId());
+                if(peer) {
+                    peerman.PushTxInventoryOther(*peer, inv);
+                }
             }
         });
     }

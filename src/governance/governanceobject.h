@@ -270,7 +270,7 @@ public:
 
     UniValue GetJSONObject();
 
-    void Relay(CConnman& connman);
+    void Relay(PeerManager& peerman);
 
     uint256 GetHash() const;
 
@@ -311,8 +311,7 @@ public:
 
     bool ProcessVote(CNode* pfrom,
         const CGovernanceVote& vote,
-        CGovernanceException& exception,
-        CConnman& connman);
+        CGovernanceException& exception);
 
     /// Called when MN's which have voted on this object have been removed
     void ClearMasternodeVotes();
