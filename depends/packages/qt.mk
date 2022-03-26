@@ -8,7 +8,7 @@ $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_uti
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_linguist_tools = lrelease lupdate lconvert
 $(package)_patches = qt.pro qttools_src.pro
-$(package)_patches += fix_qt_pkgconfig.patch mac-qmake.conf fix_no_printer.patch no-xlib.patch
+$(package)_patches += fix_qt_pkgconfig.patch mac-qmake.conf no-xlib.patch
 $(package)_patches += dont_hardcode_x86_64.patch fix_montery_include.patch
 $(package)_patches += fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch fix_limits_header.patch
@@ -232,7 +232,6 @@ define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_no_printer.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_x86_64.patch && \
