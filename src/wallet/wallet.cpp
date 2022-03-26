@@ -145,6 +145,14 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
     return RemoveWallet(context, wallet, load_on_start, warnings);
 }
 
+void ForEachWallet(WalletContext& context, const WalletFn& fn)
+{
+    LOCK(context.wallets_mutex);
+    for (const auto& wallet : context.wallets) {
+        fn(*wallet);
+    }
+}
+
 std::vector<std::shared_ptr<CWallet>> GetWallets(WalletContext& context)
 {
     LOCK(context.wallets_mutex);
@@ -1916,9 +1924,9 @@ void CWallet::ResendWalletTransactions()
 
 void MaybeResendWalletTxs(WalletContext& context)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        pwallet->ResendWalletTransactions();
-    }
+    ForEachWallet(context, [](CWallet& wallet) {
+        wallet.ResendWalletTransactions();
+    });
 }
 
 

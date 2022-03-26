@@ -1045,8 +1045,8 @@ void MaybeCompactWalletDB(WalletContext& context)
         return;
     }
 
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        WalletDatabase& dbh = pwallet->GetDatabase();
+    ForEachWallet(context, [](CWallet& wallet) {
+        WalletDatabase& dbh = wallet.GetDatabase();
 
         unsigned int nUpdateCounter = dbh.nUpdateCounter;
 
@@ -1060,7 +1060,7 @@ void MaybeCompactWalletDB(WalletContext& context)
                 dbh.nLastFlushed = nUpdateCounter;
             }
         }
-    }
+    });
 
     fOneThread = false;
 }

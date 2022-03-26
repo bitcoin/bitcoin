@@ -183,10 +183,10 @@ static RPCHelpMan listwallets()
     UniValue obj(UniValue::VARR);
 
     WalletContext& context = EnsureWalletContext(request.context);
-    for (const std::shared_ptr<CWallet>& wallet : GetWallets(context)) {
-        LOCK(wallet->cs_wallet);
-        obj.push_back(wallet->GetName());
-    }
+    ForEachWallet(context, [&](CWallet& wallet) {
+        LOCK(wallet.cs_wallet);
+        obj.push_back(wallet.GetName());
+    });
 
     return obj;
 },

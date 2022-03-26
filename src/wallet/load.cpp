@@ -141,9 +141,9 @@ bool LoadWallets(WalletContext& context)
 
 void StartWallets(WalletContext& context, CScheduler& scheduler)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        pwallet->postInitProcess();
-    }
+    ForEachWallet(context, [](CWallet& wallet) {
+        wallet.postInitProcess();
+    });
 
     // Schedule periodic wallet flushes and tx rebroadcasts
     if (context.args->GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
@@ -154,16 +154,16 @@ void StartWallets(WalletContext& context, CScheduler& scheduler)
 
 void FlushWallets(WalletContext& context)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        pwallet->Flush();
-    }
+    ForEachWallet(context, [](CWallet& wallet) {
+        wallet.Flush();
+    });
 }
 
 void StopWallets(WalletContext& context)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        pwallet->Close();
-    }
+    ForEachWallet(context, [](CWallet& wallet) {
+        wallet.Close();
+    });
 }
 
 void UnloadWallets(WalletContext& context)
