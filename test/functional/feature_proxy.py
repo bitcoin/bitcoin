@@ -33,6 +33,7 @@ addnode connect to a CJDNS address
 
 - Test passing invalid -proxy
 - Test passing invalid -onion
+- Test passing invalid -i2psam
 - Test passing -onlynet=onion without -proxy or -onion
 - Test passing -onlynet=onion with -onion=0 and with -noonion
 """
@@ -319,6 +320,11 @@ class ProxyTest(BitcoinTestFramework):
         self.log.info("Test passing invalid -onion raises expected init error")
         self.nodes[1].extra_args = ["-onion=xyz:abc"]
         msg = "Error: Invalid -onion address or hostname: 'xyz:abc'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing invalid -i2psam raises expected init error")
+        self.nodes[1].extra_args = ["-i2psam=def:xyz"]
+        msg = "Error: Invalid -i2psam address or hostname: 'def:xyz'"
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
         msg = (
