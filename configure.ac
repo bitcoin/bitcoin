@@ -320,9 +320,9 @@ AC_ARG_ENABLE([werror],
     [enable_werror=no])
 
 AC_ARG_ENABLE([external-signer],
-    [AS_HELP_STRING([--enable-external-signer],[compile external signer support (default is yes, requires Boost::Process)])],
-    [use_external_signer=$enableval],
-    [use_external_signer=auto])
+  [AS_HELP_STRING([--enable-external-signer],[compile external signer support (default is yes, requires Boost::Process)])],
+  [],
+  [enable_external_signer=auto])
 
 AC_ARG_ENABLE([lto],
     [AS_HELP_STRING([--enable-lto],[build using LTO (default is no)])],
@@ -1293,7 +1293,7 @@ if test "$enable_fuzz" = "yes"; then
   bitcoin_enable_qt_test=no
   bitcoin_enable_qt_dbus=no
   use_bench=no
-  use_external_signer=no
+  enable_external_signer=no
   use_upnp=no
   use_natpmp=no
   use_zmq=no
@@ -1449,16 +1449,16 @@ if test "$use_boost" = "yes"; then
   fi
 fi
 
-if test "$use_external_signer" != "no"; then
+if test "$enable_external_signer" != "no"; then
   case $host in
     *mingw*)
       dnl Boost Process uses Boost Filesystem when targeting Windows. Also,
       dnl since Boost 1.71.0, Process does not work with mingw-w64 without
       dnl workarounds. See 67669ab425b52a2b6be3d2f3b3b7e3939b676a2c.
-      if test "$use_external_signer" = "yes"; then
+      if test "$enable_external_signer" = "yes"; then
         AC_MSG_ERROR([External signing is not supported on Windows])
       fi
-      use_external_signer="no";
+      enable_external_signer="no";
     ;;
     *)
       AC_MSG_CHECKING([whether Boost.Process can be used])
@@ -1479,18 +1479,18 @@ if test "$use_external_signer" != "no"; then
       CXXFLAGS="$TEMP_CXXFLAGS"
       AC_MSG_RESULT([$have_boost_process])
       if test "$have_boost_process" = "yes"; then
-        use_external_signer="yes"
+        enable_external_signer="yes"
         AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
       else
-        if test "$use_external_signer" = "yes"; then
+        if test "$enable_external_signer" = "yes"; then
           AC_MSG_ERROR([External signing is not supported for this Boost version])
         fi
-        use_external_signer="no";
+        enable_external_signer="no";
       fi
     ;;
   esac
 fi
-AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$use_external_signer" = "yes"])
+AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$enable_external_signer" = "yes"])
 
 dnl Do not compile with syscall sandbox support when compiling under the sanitizers.
 dnl The sanitizers introduce use of syscalls that are not typically used in bitcoind
@@ -1972,7 +1972,7 @@ esac
 
 echo
 echo "Options used to compile and link:"
-echo "  external signer = $use_external_signer"
+echo "  external signer = $enable_external_signer"
 echo "  multiprocess    = $build_multiprocess"
 echo "  with syscall sandbox = $use_syscall_sandbox"
 echo "  with libs       = $build_bitcoin_libs"
