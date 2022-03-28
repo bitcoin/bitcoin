@@ -301,9 +301,8 @@ AC_ARG_ENABLE([debug],
 
 dnl Enable different -fsanitize options
 AC_ARG_WITH([sanitizers],
-    [AS_HELP_STRING([--with-sanitizers],
-                    [comma separated list of extra sanitizers to build with (default is none enabled)])],
-    [use_sanitizers=$withval])
+  [AS_HELP_STRING([--with-sanitizers],
+  [comma separated list of extra sanitizers to build with (default is none enabled)])])
 
 dnl Enable gprof profiling
 AC_ARG_ENABLE([gprof],
@@ -389,13 +388,13 @@ if test "$enable_lto" = "yes"; then
   AX_CHECK_LINK_FLAG([-flto], [LTO_LDFLAGS="$LTO_LDFLAGS -flto"], [AC_MSG_ERROR([link failed with -flto])], [$CXXFLAG_WERROR])
 fi
 
-if test "$use_sanitizers" != ""; then
+if test "$with_sanitizers" != ""; then
   dnl First check if the compiler accepts flags. If an incompatible pair like
   dnl -fsanitize=address,thread is used here, this check will fail. This will also
   dnl fail if a bad argument is passed, e.g. -fsanitize=undfeined
   AX_CHECK_COMPILE_FLAG(
-    [-fsanitize=$use_sanitizers],
-    [SANITIZER_CXXFLAGS="-fsanitize=$use_sanitizers"],
+    [-fsanitize=$with_sanitizers],
+    [SANITIZER_CXXFLAGS="-fsanitize=$with_sanitizers"],
     [AC_MSG_ERROR([compiler did not accept requested flags])])
 
   dnl Some compilers (e.g. GCC) require additional libraries like libasan,
@@ -404,8 +403,8 @@ if test "$use_sanitizers" != ""; then
   dnl the sanitize flags are supported by the compiler but the actual sanitizer
   dnl libs are missing.
   AX_CHECK_LINK_FLAG(
-    [-fsanitize=$use_sanitizers],
-    [SANITIZER_LDFLAGS="-fsanitize=$use_sanitizers"],
+    [-fsanitize=$with_sanitizers],
+    [SANITIZER_LDFLAGS="-fsanitize=$with_sanitizers"],
     [AC_MSG_ERROR([linker did not accept requested flags, you are missing required libraries])],
     [],
     [AC_LANG_PROGRAM([[
@@ -1495,7 +1494,7 @@ AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$enable_external_signer" = "yes"
 dnl Do not compile with syscall sandbox support when compiling under the sanitizers.
 dnl The sanitizers introduce use of syscalls that are not typically used in bitcoind
 dnl (such as execve when the sanitizers execute llvm-symbolizer).
-if test "$use_sanitizers" != ""; then
+if test "$with_sanitizers" != ""; then
   AC_MSG_WARN([Specifying --with-sanitizers forces --without-seccomp since the sanitizers introduce use of syscalls not allowed by the bitcoind syscall sandbox (-sandbox=<mode>).])
   with_seccomp=no
 fi
@@ -1997,7 +1996,7 @@ echo "  with upnp       = $use_upnp"
 echo "  with natpmp     = $use_natpmp"
 echo "  use asm         = $use_asm"
 echo "  USDT tracing    = $use_usdt"
-echo "  sanitizers      = $use_sanitizers"
+echo "  sanitizers      = $with_sanitizers"
 echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"
 echo "  werror          = $enable_werror"
