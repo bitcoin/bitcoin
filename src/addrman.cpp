@@ -866,25 +866,27 @@ void AddrManImpl::ResolveCollisions_()
                 int id_old = vvTried[tried_bucket][tried_bucket_pos];
                 AddrInfo& info_old = mapInfo[id_old];
 
+                const auto current_time{GetAdjustedTime()};
+
                 // Has successfully connected in last X hours
-                if (GetAdjustedTime() - info_old.nLastSuccess < ADDRMAN_REPLACEMENT_HOURS*(60*60)) {
+                if (current_time - info_old.nLastSuccess < ADDRMAN_REPLACEMENT_HOURS*(60*60)) {
                     erase_collision = true;
-                } else if (GetAdjustedTime() - info_old.nLastTry < ADDRMAN_REPLACEMENT_HOURS*(60*60)) { // attempted to connect and failed in last X hours
+                } else if (current_time - info_old.nLastTry < ADDRMAN_REPLACEMENT_HOURS*(60*60)) { // attempted to connect and failed in last X hours
 
                     // Give address at least 60 seconds to successfully connect
-                    if (GetAdjustedTime() - info_old.nLastTry > 60) {
+                    if (current_time - info_old.nLastTry > 60) {
                         LogPrint(BCLog::ADDRMAN, "Replacing %s with %s in tried table\n", info_old.ToString(), info_new.ToString());
 
                         // Replaces an existing address already in the tried table with the new address
-                        Good_(info_new, false, GetAdjustedTime());
+                        Good_(info_new, false, current_time);
                         erase_collision = true;
                     }
-                } else if (GetAdjustedTime() - info_new.nLastSuccess > ADDRMAN_TEST_WINDOW) {
+                } else if (current_time - info_new.nLastSuccess > ADDRMAN_TEST_WINDOW) {
                     // If the collision hasn't resolved in some reasonable amount of time,
                     // just evict the old entry -- we must not be able to
                     // connect to it for some reason.
                     LogPrint(BCLog::ADDRMAN, "Unable to test; replacing %s with %s in tried table anyway\n", info_old.ToString(), info_new.ToString());
-                    Good_(info_new, false, GetAdjustedTime());
+                    Good_(info_new, false, current_time);
                     erase_collision = true;
                 }
             } else { // Collision is not actually a collision anymore
