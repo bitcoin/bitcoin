@@ -63,6 +63,8 @@ brew install automake libtool boost pkg-config libevent
 Now that all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory.
 All build scripts and commands will run from this directory.
 
+if `git` is not installed use this link to get it installed: [Install git](https://git-scm.com/download/mac)
+
 ``` bash
 git clone https://github.com/bitcoin/bitcoin.git
 ```
