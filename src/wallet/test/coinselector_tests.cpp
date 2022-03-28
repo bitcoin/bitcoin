@@ -148,14 +148,14 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const std::vector<COutput>
     FastRandomContext rand{};
     CoinSelectionParams coin_selection_params{
         rand,
-        /* change_output_size= */ 0,
-        /* change_spend_size= */ 0,
+        /*change_output_size=*/ 0,
+        /*change_spend_size=*/ 0,
         /*min_change_target=*/ CENT,
-        /* effective_feerate= */ CFeeRate(0),
-        /* long_term_feerate= */ CFeeRate(0),
-        /* discard_feerate= */ CFeeRate(0),
-        /* tx_noinputs_size= */ 0,
-        /* avoid_partial= */ false,
+        /*effective_feerate=*/ CFeeRate(0),
+        /*long_term_feerate=*/ CFeeRate(0),
+        /*discard_feerate=*/ CFeeRate(0),
+        /*tx_noinputs_size=*/ 0,
+        /*avoid_partial=*/ false,
     };
     static std::vector<OutputGroup> static_groups;
     static_groups = GroupOutputs(wallet, coins, coin_selection_params, filter, /*positive_only=*/false);
@@ -293,14 +293,14 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Make sure that effective value is working in AttemptSelection when BnB is used
     CoinSelectionParams coin_selection_params_bnb{
         rand,
-        /* change_output_size= */ 0,
-        /* change_spend_size= */ 0,
+        /*change_output_size=*/ 0,
+        /*change_spend_size=*/ 0,
         /*min_change_target=*/ 0,
-        /* effective_feerate= */ CFeeRate(3000),
-        /* long_term_feerate= */ CFeeRate(1000),
-        /* discard_feerate= */ CFeeRate(1000),
-        /* tx_noinputs_size= */ 0,
-        /* avoid_partial= */ false,
+        /*effective_feerate=*/ CFeeRate(3000),
+        /*long_term_feerate=*/ CFeeRate(1000),
+        /*discard_feerate=*/ CFeeRate(1000),
+        /*tx_noinputs_size=*/ 0,
+        /*avoid_partial=*/ false,
     };
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), "", m_args, CreateMockWalletDatabase());
@@ -717,14 +717,14 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         // Perform selection
         CoinSelectionParams cs_params{
             rand,
-            /* change_output_size= */ 34,
-            /* change_spend_size= */ 148,
+            /*change_output_size=*/ 34,
+            /*change_spend_size=*/ 148,
             /*min_change_target=*/ CENT,
-            /* effective_feerate= */ CFeeRate(0),
-            /* long_term_feerate= */ CFeeRate(0),
-            /* discard_feerate= */ CFeeRate(0),
-            /* tx_noinputs_size= */ 0,
-            /* avoid_partial= */ false,
+            /*effective_feerate=*/ CFeeRate(0),
+            /*long_term_feerate=*/ CFeeRate(0),
+            /*discard_feerate=*/ CFeeRate(0),
+            /*tx_noinputs_size=*/ 0,
+            /*avoid_partial=*/ false,
         };
         CCoinControl cc;
         const auto result = SelectCoins(*wallet, coins, target, cc, cs_params);
