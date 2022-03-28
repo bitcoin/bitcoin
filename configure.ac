@@ -265,8 +265,8 @@ fi
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
   [disable ZMQ notifications])],
-  [use_zmq=$enableval],
-  [use_zmq=yes])
+  [],
+  [enable_zmq=yes])
 
 AC_ARG_WITH([libmultiprocess],
   [AS_HELP_STRING([--with-libmultiprocess=yes|no|auto],
@@ -1296,7 +1296,7 @@ if test "$enable_fuzz" = "yes"; then
   enable_external_signer=no
   use_upnp=no
   use_natpmp=no
-  use_zmq=no
+  enable_zmq=no
   enable_fuzz_binary=yes
 
   AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"], [], [$CXXFLAG_WERROR])
@@ -1388,7 +1388,7 @@ AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
 if test "$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nonononononono"; then
   use_upnp=no
   use_natpmp=no
-  use_zmq=no
+  enable_zmq=no
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -1577,17 +1577,17 @@ fi
 
 dnl ZMQ check
 
-if test "$use_zmq" = "yes"; then
+if test "$enable_zmq" = "yes"; then
   PKG_CHECK_MODULES([ZMQ], [libzmq >= 4],
     AC_DEFINE([ENABLE_ZMQ], [1], [Define to 1 to enable ZMQ functions]),
     [AC_DEFINE([ENABLE_ZMQ], [0], [Define to 1 to enable ZMQ functions])
     AC_MSG_WARN([libzmq version 4.x or greater not found, disabling])
-    use_zmq=no])
+    enable_zmq=no])
 else
   AC_DEFINE_UNQUOTED([ENABLE_ZMQ], [0], [Define to 1 to enable ZMQ functions])
 fi
 
-if test "$use_zmq" = "yes"; then
+if test "$enable_zmq" = "yes"; then
   dnl Assume libzmq was built for static linking
   case $host in
     *mingw*)
@@ -1795,7 +1795,7 @@ if test "$bitcoin_enable_qt" != "no"; then
   fi
 fi
 
-AM_CONDITIONAL([ENABLE_ZMQ], [test "$use_zmq" = "yes"])
+AM_CONDITIONAL([ENABLE_ZMQ], [test "$enable_zmq" = "yes"])
 
 AC_MSG_CHECKING([whether to build test_bitcoin])
 if test "$use_tests" = "yes"; then
@@ -1985,7 +1985,7 @@ echo "  with gui / qt   = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then
     echo "    with qr       = $use_qr"
 fi
-echo "  with zmq        = $use_zmq"
+echo "  with zmq        = $enable_zmq"
 if test $enable_fuzz = "no"; then
     echo "  with test       = $use_tests"
 else
