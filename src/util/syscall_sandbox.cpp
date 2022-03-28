@@ -592,6 +592,7 @@ public:
         allowed_syscalls.insert(__NR_getcwd);          // get current working directory
         allowed_syscalls.insert(__NR_getdents);        // get directory entries
         allowed_syscalls.insert(__NR_getdents64);      // get directory entries
+        allowed_syscalls.insert(__NR_linkat);          // create relative to a directory file descriptor
         allowed_syscalls.insert(__NR_lstat);           // get file status
         allowed_syscalls.insert(__NR_mkdir);           // create a directory
         allowed_syscalls.insert(__NR_newfstatat);      // get file status
