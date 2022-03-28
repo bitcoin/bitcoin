@@ -24,7 +24,7 @@ To install, run the following command from your terminal:
 xcode-select --install
 ```
 
-And if it shows an error, you can use this command: 
+And if it shows an error, you can use this command to grant it permission: 
 
 ```bash
 sudo xcode-select --install
