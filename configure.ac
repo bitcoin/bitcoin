@@ -141,8 +141,8 @@ AC_ARG_WITH([bdb],
 AC_ARG_ENABLE([usdt],
   [AS_HELP_STRING([--enable-usdt],
   [enable tracepoints for Userspace, Statically Defined Tracing (default is yes if sys/sdt.h is found)])],
-  [use_usdt=$enableval],
-  [use_usdt=yes])
+  [],
+  [enable_usdt=yes])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -1371,7 +1371,7 @@ if test "$enable_wallet" != "no"; then
     fi
 fi
 
-if test "$use_usdt" != "no"; then
+if test "$enable_usdt" != "no"; then
   AC_MSG_CHECKING([whether Userspace, Statically Defined Tracing tracepoints are supported])
   AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM(
@@ -1379,7 +1379,7 @@ if test "$use_usdt" != "no"; then
       [DTRACE_PROBE("context", "event");]
     )],
     [AC_MSG_RESULT([yes]); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
-    [AC_MSG_RESULT([no]); use_usdt=no;]
+    [AC_MSG_RESULT([no]); enable_usdt=no;]
   )
 fi
 AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
@@ -1995,7 +1995,7 @@ echo "  with bench      = $use_bench"
 echo "  with upnp       = $use_upnp"
 echo "  with natpmp     = $use_natpmp"
 echo "  use asm         = $use_asm"
-echo "  USDT tracing    = $use_usdt"
+echo "  USDT tracing    = $enable_usdt"
 echo "  sanitizers      = $with_sanitizers"
 echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"
