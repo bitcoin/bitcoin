@@ -12,7 +12,7 @@ What Bitcoin Core is used for?
 ------------------------------
 
 Bitcoin core created by bitcoin core developers is a very popular software used to connect to a bitcoin network and to run a node<br />
-check more our here [Bitcoin core](https://bitcoin.org/en/bitcoin-core/)
+check more of bitcoin core here [Bitcoin core](https://bitcoin.org/en/bitcoin-core/)
 
 What is Bitcoin?
 ----------------
