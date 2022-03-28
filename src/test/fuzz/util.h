@@ -287,10 +287,7 @@ inline CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcep
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
 }
 
-inline CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-}
+CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <bool ReturnUniquePtr = false>
 auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<NodeId>& node_id_in = std::nullopt) noexcept
