@@ -31,7 +31,7 @@ sudo xcode-select --install
 ```
 
 Upon running the command, you should see a popup appear.
-Click on `Install` to continue the installation process.
+Click on `Install` to continue the installation process on your mac and wait patiently for it to be done..
 
 ### 2. Homebrew Package Manager
 
