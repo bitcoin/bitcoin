@@ -38,16 +38,16 @@ class AddrInfo : public CAddress
 {
 public:
     //! last try whatsoever by us (memory only)
-    int64_t nLastTry{0};
+    int64_t m_last_try{0};
 
     //! last counted attempt (memory only)
-    int64_t nLastCountAttempt{0};
+    int64_t m_last_count_attempt{0};
 
     //! where knowledge about this address first came from
     CNetAddr source;
 
     //! last successful connection by us
-    int64_t nLastSuccess{0};
+    int64_t m_last_success{0};
 
     //! connection attempts since last successful attempt
     int nAttempts{0};
@@ -64,7 +64,7 @@ public:
     SERIALIZE_METHODS(AddrInfo, obj)
     {
         READWRITEAS(CAddress, obj);
-        READWRITE(obj.source, obj.nLastSuccess, obj.nAttempts);
+        READWRITE(obj.source, obj.m_last_success, obj.nAttempts);
     }
 
     AddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
@@ -112,7 +112,7 @@ public:
 
     size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
+    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t time_penalty)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool Good(const CService& addr, int64_t nTime)
@@ -202,7 +202,7 @@ private:
     int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
-    int64_t nLastGood GUARDED_BY(cs){1};
+    int64_t m_last_good GUARDED_BY(cs){1};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
@@ -233,11 +233,11 @@ private:
 
     /** Attempt to add a single address to addrman's new table.
      *  @see AddrMan::Add() for parameters. */
-    bool AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool AddSingle(const CAddress& addr, const CNetAddr& source, int64_t time_penalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool Good_(const CService& addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t time_penalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 

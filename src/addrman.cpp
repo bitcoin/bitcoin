@@ -66,7 +66,7 @@ int AddrInfo::GetBucketPosition(const uint256& nKey, bool fNew, int nBucket) con
 
 bool AddrInfo::IsTerrible(int64_t nNow) const
 {
-    if (nNow - nLastTry <= 60) { // never remove things tried in the last minute
+    if (nNow - m_last_try <= 60) { // never remove things tried in the last minute
         return false;
     }
 
@@ -77,10 +77,10 @@ bool AddrInfo::IsTerrible(int64_t nNow) const
         return true;
     }
 
-    if (nLastSuccess == 0 && nAttempts >= ADDRMAN_RETRIES) // tried N times and never a success
+    if (m_last_success == 0 && nAttempts >= ADDRMAN_RETRIES) // tried N times and never a success
         return true;
 
-    if (nNow - nLastSuccess > ADDRMAN_MIN_FAIL_DAYS * 24 * 60 * 60 && nAttempts >= ADDRMAN_MAX_FAILURES) // N successive failures in the last week
+    if (nNow - m_last_success > ADDRMAN_MIN_FAIL_DAYS * 24 * 60 * 60 && nAttempts >= ADDRMAN_MAX_FAILURES) // N successive failures in the last week
         return true;
 
     return false;
@@ -91,7 +91,7 @@ double AddrInfo::GetChance(int64_t nNow) const
     double fChance = 1.0;
 
     // deprioritize very recent attempts away
-    if (nNow - nLastTry < 60 * 10) {
+    if (nNow - m_last_try < 60 * 10) {
         fChance *= 0.01;
     }
 
@@ -540,7 +540,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
     info.fInTried = true;
 }
 
-bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
+bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_t time_penalty)
 {
     AssertLockHeld(cs);
 
@@ -552,15 +552,15 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
 
     // Do not set a penalty for a source's self-announcement
     if (addr == source) {
-        nTimePenalty = 0;
+        time_penalty = 0;
     }
 
     if (pinfo) {
         // periodically update nTime
-        bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
-        int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
-        if (pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty) {
-            pinfo->nTime = std::max((int64_t)0, addr.nTime - nTimePenalty);
+        bool currently_online = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
+        int64_t update_interval = (currently_online ? 60 * 60 : 24 * 60 * 60);
+        if (pinfo->nTime < addr.nTime - update_interval - time_penalty) {
+            pinfo->nTime = std::max((int64_t)0, addr.nTime - time_penalty);
         }
 
         // add services
@@ -587,7 +587,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
             return false;
     } else {
         pinfo = Create(addr, source, &nId);
-        pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - nTimePenalty);
+        pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - time_penalty);
         nNew++;
     }
 
@@ -623,7 +623,7 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
 
     int nId;
 
-    nLastGood = nTime;
+    m_last_good = nTime;
 
     AddrInfo* pinfo = Find(addr, &nId);
 
@@ -633,8 +633,8 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
     AddrInfo& info = *pinfo;
 
     // update info
-    info.nLastSuccess = nTime;
-    info.nLastTry = nTime;
+    info.m_last_success = nTime;
+    info.m_last_try = nTime;
     info.nAttempts = 0;
     // nTime is not updated here, to avoid leaking information about
     // currently-connected peers.
@@ -671,11 +671,11 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
     }
 }
 
-bool AddrManImpl::Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty)
+bool AddrManImpl::Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t time_penalty)
 {
     int added{0};
     for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++) {
-        added += AddSingle(*it, source, nTimePenalty) ? 1 : 0;
+        added += AddSingle(*it, source, time_penalty) ? 1 : 0;
     }
     if (added > 0) {
         LogPrint(BCLog::ADDRMAN, "Added %i addresses (of %i) from %s: %i tried, %i new\n", added, vAddr.size(), source.ToString(), nTried, nNew);
@@ -696,9 +696,9 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTi
     AddrInfo& info = *pinfo;
 
     // update info
-    info.nLastTry = nTime;
-    if (fCountFailure && info.nLastCountAttempt < nLastGood) {
-        info.nLastCountAttempt = nTime;
+    info.m_last_try = nTime;
+    if (fCountFailure && info.m_last_count_attempt < m_last_good) {
+        info.m_last_count_attempt = nTime;
         info.nAttempts++;
     }
 }
@@ -736,7 +736,7 @@ std::pair<CAddress, int64_t> AddrManImpl::Select_(bool newOnly) const
             // With probability GetChance() * fChanceFactor, return the entry.
             if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30)) {
                 LogPrint(BCLog::ADDRMAN, "Selected %s from tried\n", info.ToString());
-                return {info, info.nLastTry};
+                return {info, info.m_last_try};
             }
             // Otherwise start over with a (likely) different bucket, and increased chance factor.
             fChanceFactor *= 1.2;
@@ -764,7 +764,7 @@ std::pair<CAddress, int64_t> AddrManImpl::Select_(bool newOnly) const
             // With probability GetChance() * fChanceFactor, return the entry.
             if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30)) {
                 LogPrint(BCLog::ADDRMAN, "Selected %s from new\n", info.ToString());
-                return {info, info.nLastTry};
+                return {info, info.m_last_try};
             }
             // Otherwise start over with a (likely) different bucket, and increased chance factor.
             fChanceFactor *= 1.2;
@@ -823,8 +823,8 @@ void AddrManImpl::Connected_(const CService& addr, int64_t nTime)
     AddrInfo& info = *pinfo;
 
     // update info
-    int64_t nUpdateInterval = 20 * 60;
-    if (nTime - info.nTime > nUpdateInterval)
+    int64_t update_interval = 20 * 60;
+    if (nTime - info.nTime > update_interval)
         info.nTime = nTime;
 }
 
@@ -873,19 +873,19 @@ void AddrManImpl::ResolveCollisions_()
                 const auto current_time{GetAdjustedTime()};
 
                 // Has successfully connected in last X hours
-                if (current_time - info_old.nLastSuccess < ADDRMAN_REPLACEMENT_HOURS*(60*60)) {
+                if (current_time - info_old.m_last_success < ADDRMAN_REPLACEMENT_HOURS*(60*60)) {
                     erase_collision = true;
-                } else if (current_time - info_old.nLastTry < ADDRMAN_REPLACEMENT_HOURS*(60*60)) { // attempted to connect and failed in last X hours
+                } else if (current_time - info_old.m_last_try < ADDRMAN_REPLACEMENT_HOURS*(60*60)) { // attempted to connect and failed in last X hours
 
                     // Give address at least 60 seconds to successfully connect
-                    if (current_time - info_old.nLastTry > 60) {
+                    if (current_time - info_old.m_last_try > 60) {
                         LogPrint(BCLog::ADDRMAN, "Replacing %s with %s in tried table\n", info_old.ToString(), info_new.ToString());
 
                         // Replaces an existing address already in the tried table with the new address
                         Good_(info_new, false, current_time);
                         erase_collision = true;
                     }
-                } else if (current_time - info_new.nLastSuccess > ADDRMAN_TEST_WINDOW) {
+                } else if (current_time - info_new.m_last_success > ADDRMAN_TEST_WINDOW) {
                     // If the collision hasn't resolved in some reasonable amount of time,
                     // just evict the old entry -- we must not be able to
                     // connect to it for some reason.
@@ -932,7 +932,7 @@ std::pair<CAddress, int64_t> AddrManImpl::SelectTriedCollision_()
     int tried_bucket_pos = newInfo.GetBucketPosition(nKey, false, tried_bucket);
 
     const AddrInfo& info_old = mapInfo[vvTried[tried_bucket][tried_bucket_pos]];
-    return {info_old, info_old.nLastTry};
+    return {info_old, info_old.m_last_try};
 }
 
 std::optional<AddressPosition> AddrManImpl::FindAddressEntry_(const CAddress& addr)
@@ -990,7 +990,7 @@ int AddrManImpl::CheckAddrman() const
         int n = entry.first;
         const AddrInfo& info = entry.second;
         if (info.fInTried) {
-            if (!info.nLastSuccess)
+            if (!info.m_last_success)
                 return -1;
             if (info.nRefCount)
                 return -2;
@@ -1008,9 +1008,9 @@ int AddrManImpl::CheckAddrman() const
         }
         if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
             return -14;
-        if (info.nLastTry < 0)
+        if (info.m_last_try < 0)
             return -6;
-        if (info.nLastSuccess < 0)
+        if (info.m_last_success < 0)
             return -8;
     }
 
@@ -1067,11 +1067,11 @@ size_t AddrManImpl::size() const
     return vRandom.size();
 }
 
-bool AddrManImpl::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
+bool AddrManImpl::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t time_penalty)
 {
     LOCK(cs);
     Check();
-    auto ret = Add_(vAddr, source, nTimePenalty);
+    auto ret = Add_(vAddr, source, time_penalty);
     Check();
     return ret;
 }
@@ -1184,9 +1184,9 @@ size_t AddrMan::size() const
     return m_impl->size();
 }
 
-bool AddrMan::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
+bool AddrMan::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t time_penalty)
 {
-    return m_impl->Add(vAddr, source, nTimePenalty);
+    return m_impl->Add(vAddr, source, time_penalty);
 }
 
 bool AddrMan::Good(const CService& addr, int64_t nTime)

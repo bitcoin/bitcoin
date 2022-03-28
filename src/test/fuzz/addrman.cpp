@@ -161,7 +161,7 @@ public:
             CSipHasher hasher(0, 0);
             auto addr_key = a.GetKey();
             auto source_key = a.source.GetAddrBytes();
-            hasher.Write(a.nLastSuccess);
+            hasher.Write(a.m_last_success);
             hasher.Write(a.nAttempts);
             hasher.Write(a.nRefCount);
             hasher.Write(a.fInTried);
@@ -175,8 +175,8 @@ public:
         };
 
         auto addrinfo_eq = [](const AddrInfo& lhs, const AddrInfo& rhs) {
-            return std::tie(static_cast<const CService&>(lhs), lhs.source, lhs.nLastSuccess, lhs.nAttempts, lhs.nRefCount, lhs.fInTried) ==
-                   std::tie(static_cast<const CService&>(rhs), rhs.source, rhs.nLastSuccess, rhs.nAttempts, rhs.nRefCount, rhs.fInTried);
+            return std::tie(static_cast<const CService&>(lhs), lhs.source, lhs.m_last_success, lhs.nAttempts, lhs.nRefCount, lhs.fInTried) ==
+                   std::tie(static_cast<const CService&>(rhs), rhs.source, rhs.m_last_success, rhs.nAttempts, rhs.nRefCount, rhs.fInTried);
         };
 
         using Addresses = std::unordered_set<AddrInfo, decltype(addrinfo_hasher), decltype(addrinfo_eq)>;
