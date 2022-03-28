@@ -438,8 +438,7 @@ static RPCHelpMan unloadwallet()
     }
 
     // Release the "main" shared pointer and prevent further notifications.
-    // Note that any attempt to load the same wallet would fail until the wallet
-    // is destroyed (see CheckUniqueFileid).
+    // Note that any attempt to load the same wallet would fail until the wallet is destroyed (see CheckUniqueFileid).
     std::vector<bilingual_str> warnings;
     std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
     if (!RemoveWallet(context, wallet, load_on_start, warnings)) {
