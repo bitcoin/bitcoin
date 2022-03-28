@@ -93,7 +93,7 @@ static RPCHelpMan getpeerinfo()
 {
     return RPCHelpMan{
         "getpeerinfo",
-        "\nReturns data about each connected network node as a json array of objects.\n",
+        "Returns data about each connected network peer as a json array of objects.",
         {},
         RPCResult{
             RPCResult::Type::ARR, "", "",
@@ -113,7 +113,7 @@ static RPCHelpMan getpeerinfo()
                     {
                         {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
                     }},
-                    {RPCResult::Type::BOOL, "relaytxes", "Whether peer has asked us to relay transactions to it"},
+                    {RPCResult::Type::BOOL, "relaytxes", /*optional=*/true, "Whether peer has asked us to relay transactions to it"},
                     {RPCResult::Type::NUM_TIME, "lastsend", "The " + UNIX_EPOCH_TIME + " of the last send"},
                     {RPCResult::Type::NUM_TIME, "lastrecv", "The " + UNIX_EPOCH_TIME + " of the last receive"},
                     {RPCResult::Type::NUM_TIME, "last_transaction", "The " + UNIX_EPOCH_TIME + " of the last valid transaction received from this peer"},
@@ -144,7 +144,7 @@ static RPCHelpMan getpeerinfo()
                     {
                         {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
                     }},
-                    {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
+                    {RPCResult::Type::NUM, "minfeefilter", /*optional=*/true, "The minimum fee rate for transactions this peer accepts"},
                     {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                     {
                         {RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
