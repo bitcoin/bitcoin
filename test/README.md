@@ -107,6 +107,34 @@ how many jobs to run, append `--jobs=n`
 The individual tests and the test_runner harness have many command-line
 options. Run `test/functional/test_runner.py -h` to see them all.
 
+#### Speed up test runs with a ramdisk
+
+If you have available RAM on your system you can create a ramdisk to use as the `cache` and `tmp` directories for the functional tests in order to speed them up.
+Speed-up amount varies on each system (and according to your ram speed and other variables), but a 2-3x speed-up is not uncommon.
+
+To create a 4GB ramdisk on Linux at `/mnt/tmp/`:
+
+```bash
+sudo mkdir -p /mnt/tmp
+sudo mount -t tmpfs -o size=4g tmpfs /mnt/tmp/
+```
+
+Configure the size of the ramdisk using the `size=` option.
+The size of the ramdisk needed is relative to the number of concurrent jobs the test suite runs.
+For example running the test suite with `--jobs=100` might need a 4GB ramdisk, but running with `--jobs=32` will only need a 2.5GB ramdisk.
+
+To use, run the test suite specifying the ramdisk as the `cachedir` and `tmpdir`:
+
+```bash
+test/functional/test_runner.py --cachedir=/mnt/tmp/cache --tmpdir=/mnt/tmp
+```
+
+Once finished with the tests and the disk, and to free the ram, simply unmount the disk:
+
+```bash
+sudo umount /mnt/tmp
+```
+
 #### Troubleshooting and debugging test failures
 
 ##### Resource contention
