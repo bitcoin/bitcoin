@@ -146,7 +146,6 @@ class CNetAddr
          */
         void SetLegacyIPv6(Span<const uint8_t> ipv6);
 
-    private:
         /**
          * Set raw IPv4 or IPv6 address (in network byte order)
          * @note Only NET_IPV4 and NET_IPV6 are allowed for network.
@@ -530,5 +529,7 @@ class CService : public CNetAddr
             READWRITE(Using<BigEndianFormatter<2>>(obj.port));
         }
 };
+
+bool SanityCheckASMap(const std::vector<bool>& asmap);
 
 #endif // BITCOIN_NETADDRESS_H

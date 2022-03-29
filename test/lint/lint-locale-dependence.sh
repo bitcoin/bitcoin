@@ -4,19 +4,39 @@ export LC_ALL=C
 
 KNOWN_VIOLATIONS=(
     "src/bench/string_cast.cpp.*atoi"
+    "src/bench/string_cast.cpp.*std::to_string"
     "src/dash-tx.cpp.*stoul"
+    "src/dash-tx.cpp.*std::to_string"
     "src/dash-tx.cpp.*trim_right"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
+    "src/governance/vote.cpp.*std::to_string"
     "src/httprpc.cpp.*trim"
     "src/init.cpp:.*atoi"
+    "src/qt/optionsmodel.cpp.*std::to_string"
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/rpc/blockchain.cpp.*atoi"
     "src/rpc/governance.cpp.*atoi"
     "src/rpc/masternode.cpp.*atoi"
     "src/statsd_client.cpp:.*snprintf"
+    "src/rpc/net.cpp.*std::to_string"
+    "src/rpc/rawtransaction.cpp.*std::to_string"
+    "src/rpc/util.cpp.*std::to_string"
+    "src/spork.cpp.*std::to_string"
+    "src/test/addrman_tests.cpp.*std::to_string"
+    "src/test/blockchain_tests.cpp.*std::to_string"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
+    "src/test/denialofservice_tests.cpp.*std::to_string"
+    "src/test/fuzz/locale.cpp"
+    "src/test/fuzz/parse_numbers.cpp:.*atoi"
+    "src/test/key_tests.cpp.*std::to_string"
+    "src/test/net_tests.cpp.*std::to_string"
+    "src/test/settings_tests.cpp.*std::to_string"
+    "src/test/timedata_tests.cpp.*std::to_string"
+    "src/test/util/setup_common.cpp.*std::to_string"
+    "src/test/util_tests.cpp.*std::to_string"
+    "src/test/util_threadnames_tests.cpp.*std::to_string"
     "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
     "src/util/strencodings.cpp:.*atoi"
@@ -26,6 +46,7 @@ KNOWN_VIOLATIONS=(
     "src/wallet/wallet.cpp:.*atoi"
     "src/util/system.cpp:.*atoi"
     "src/util/system.cpp:.*fprintf"
+    "src/wallet/scriptpubkeyman.cpp.*std::to_string"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
@@ -100,6 +121,7 @@ LOCALE_DEPENDENT_FUNCTIONS=(
     snprintf
     sprintf
     sscanf
+    std::to_string
     stod
     stof
     stoi

@@ -102,7 +102,7 @@ libFuzzer is needed (all found in the `compiler-rt` runtime libraries package).
 To build all fuzz targets with libFuzzer, run
 
 ```
-./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++
+./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++
 make
 ```
 

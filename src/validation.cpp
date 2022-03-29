@@ -742,7 +742,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        PrecomputedTransactionData txdata(tx);
+        PrecomputedTransactionData txdata;
         if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, false, txdata))
             return false; // state filled in by CheckInputs
 
@@ -1452,6 +1452,10 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 return true;
             }
 
+            if (!txdata.m_ready) {
+                txdata.Init(tx, {});
+            }
+
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const Coin& coin = inputs.AccessCoin(prevout);
@@ -2126,7 +2130,13 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     CBlockUndo blockundo;
 
+    // Precomputed transaction data pointers must not be invalidated
+    // until after `control` has run the script checks (potentially
+    // in multiple threads). Preallocate the vector size so a new allocation
+    // doesn't invalidate pointers into the vector, and keep txsdata in scope
+    // for as long as `control`.
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && g_parallel_script_checks ? &scriptcheckqueue : nullptr);
+    std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
 
     std::vector<int> prevheights;
     CAmount nFees = 0;
@@ -2136,9 +2146,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
-
-    std::vector<PrecomputedTransactionData> txdata;
-    txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
 
     bool fDIP0001Active_context = pindex->nHeight >= Params().GetConsensus().DIP0001Height;
 
@@ -2233,13 +2240,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
-        txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (fScriptChecks && !CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], g_parallel_script_checks ? &vChecks : nullptr)) {
+            if (fScriptChecks && !CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txsdata[i], g_parallel_script_checks ? &vChecks : nullptr)) {
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             }
