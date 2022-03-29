@@ -10,7 +10,8 @@ CJDNS is like a distributed, shared VPN with multiple entry points where every
 participant can reach any other participant. All participants use addresses from
 the `fc00::/8` network (reserved IPv6 range). Installation and configuration is
 done outside of Bitcoin Core, similarly to a VPN (either in the host/OS or on
-the network router).
+the network router). See https://github.com/cjdelisle/cjdns#readme and
+https://github.com/hyperboria/docs#hyperboriadocs for more information.
 
 Compared to IPv4/IPv6, CJDNS provides end-to-end encryption and protects nodes
 from traffic analysis and filtering.
@@ -26,7 +27,7 @@ routers.
 ## Installing CJDNS and finding a peer to connect to the network
 
 To install and set up CJDNS, follow the instructions at
-https://github.com/cjdelisle/cjdns#cjdns.
+https://github.com/cjdelisle/cjdns#how-to-install-cjdns.
 
 You need to initiate an outbound connection to a peer on the CJDNS network
 before it will work with your Bitcoin Core node. This is described in steps
