@@ -25,15 +25,15 @@ inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)
     return ds.empty();
 }
 template <typename T>
-inline bool GetTxPayload(const CMutableTransaction& tx, T& obj)
+inline bool GetTxPayload(const CMutableTransaction& tx, T& obj, bool assert_type = true)
 {
-    ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE);
+    if (assert_type) { ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE); }
     return tx.nType == obj.SPECIALTX_TYPE && GetTxPayload(tx.vExtraPayload, obj);
 }
 template <typename T>
-inline bool GetTxPayload(const CTransaction& tx, T& obj)
+inline bool GetTxPayload(const CTransaction& tx, T& obj, bool assert_type = true)
 {
-    ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE);
+    if (assert_type) { ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE); }
     return tx.nType == obj.SPECIALTX_TYPE && GetTxPayload(tx.vExtraPayload, obj);
 }
 

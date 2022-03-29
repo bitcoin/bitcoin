@@ -45,28 +45,28 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
                 case TRANSACTION_PROVIDER_REGISTER: {
                     BOOST_CHECK_EQUAL(txType, "proregtx");
                     CProRegTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx));
+                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
                     BOOST_CHECK(!ptx.IsTriviallyValid().did_err);
                     break;
                 }
                 case TRANSACTION_PROVIDER_UPDATE_SERVICE: {
                     BOOST_CHECK_EQUAL(txType, "proupservtx");
                     CProUpServTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx));
+                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
                     BOOST_CHECK(!ptx.IsTriviallyValid().did_err);
                     break;
                 }
                 case TRANSACTION_PROVIDER_UPDATE_REGISTRAR: {
                     BOOST_CHECK_EQUAL(txType, "proupregtx");
                     CProUpRegTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx));
+                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
                     BOOST_CHECK(!ptx.IsTriviallyValid().did_err);
                     break;
                 }
                 case TRANSACTION_PROVIDER_UPDATE_REVOKE: {
                     BOOST_CHECK_EQUAL(txType, "prouprevtx");
                     CProUpRevTx ptx;
-                    BOOST_CHECK(GetTxPayload(tx, ptx));
+                    BOOST_CHECK(GetTxPayload(tx, ptx, false));
                     BOOST_CHECK(!ptx.IsTriviallyValid().did_err);
                     break;
                 }
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             // Deserialization based on transaction nType
             if (txType == "proregtx") {
                 CProRegTx ptx;
-                if (GetTxPayload(tx, ptx)) {
+                if (GetTxPayload(tx, ptx, false)) {
                     BOOST_CHECK(ptx.IsTriviallyValid().did_err);
                 } else {
                     BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_REGISTER);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             }
             else if (txType == "proupservtx") {
                 CProUpServTx ptx;
-                if (GetTxPayload(tx, ptx)) {
+                if (GetTxPayload(tx, ptx, false)) {
                     BOOST_CHECK(ptx.IsTriviallyValid().did_err);
                 } else {
                     BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             }
             else if (txType == "proupregtx") {
                 CProUpRegTx ptx;
-                if (GetTxPayload(tx, ptx)) {
+                if (GetTxPayload(tx, ptx, false)) {
                     BOOST_CHECK(ptx.IsTriviallyValid().did_err);
                 }
                 else {
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
             }
             else if (txType == "prouprevtx") {
                 CProUpRevTx ptx;
-                if (GetTxPayload(tx, ptx)) {
+                if (GetTxPayload(tx, ptx, false)) {
                     BOOST_CHECK(ptx.IsTriviallyValid().did_err);
                 } else {
                     BOOST_CHECK(tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE);
