@@ -521,9 +521,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
         // Pre-selected inputs already cover the target amount.
         if (value_to_select <= 0) return std::make_optional(SelectionResult(nTargetValue));
 
-        // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
-        // confirmations on outputs received from other wallets and only spend confirmed change.
-        if (auto r1{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(1, 6, 0), vCoins, coin_selection_params)}) return r1;
+        // If possible, fund the transaction with confirmed UTXOs only.
         if (auto r2{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(1, 1, 0), vCoins, coin_selection_params)}) return r2;
 
         // Fall back to using zero confirmation change (but with as few ancestors in the mempool as
