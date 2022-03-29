@@ -86,6 +86,8 @@ task:
     CI_VCPKG_TAG: '2022.02.23'
     VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
     VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
+    CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
+    WRAPPED_CL: 'C:\Users\ContainerAdministrator\AppData\Local\Temp\cirrus-ci-build\ci\test\wrapped-cl.bat'
     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.zip'
     QT_LOCAL_PATH: 'C:\qt-everywhere-src-5.15.2.zip'
     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.15.2'
@@ -135,9 +137,13 @@ task:
       - msbuild -version
     populate_script:
       - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
-  install_python_script:
+  ccache_cache:
+    folder: '%CCACHE_DIR%'
+  install_tools_script:
+    - choco install --yes --no-progress ccache
     - choco install --yes --no-progress python3 --version=3.9.6
     - pip install zmq
+    - ccache --version
     - python -VV
   install_vcpkg_script:
     - cd ..
@@ -149,9 +155,12 @@ task:
     - .\vcpkg integrate install
     - .\vcpkg version
   build_script:
+    - '%x64_NATIVE_TOOLS%'
     - cd %CIRRUS_WORKING_DIR%
+    - ccache --zero-stats
     - python build_msvc\msvc-autogen.py
-    - msbuild build_msvc\bitcoin.sln -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL% -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+    - ccache --show-stats
   unit_tests_script:
     - src\test_bitcoin.exe -l test_suite
     - src\bench_bitcoin.exe > NUL
