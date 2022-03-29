@@ -426,7 +426,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Send a version message to a peer */
-    void PushNodeVersion(CNode& pnode, Peer& peer);
+    void PushNodeVersion(CNode& pnode, const Peer& peer);
 
     /** Send a ping message every PING_INTERVAL or if requested via RPC. May
      *  mark the peer to be disconnected if a ping has timed out.
@@ -1158,7 +1158,7 @@ void PeerManagerImpl::FindNextBlocksToDownload(NodeId nodeid, unsigned int count
 
 } // namespace
 
-void PeerManagerImpl::PushNodeVersion(CNode& pnode, Peer& peer)
+void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 {
     // Note that pnode->GetLocalServices() is a reflection of the local
     // services we were offering when the CNode object was created for this
