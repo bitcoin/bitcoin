@@ -148,7 +148,7 @@ chain for " target " development."))
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc gcc-7)
+                                       (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc (make-glibc-without-ssp (make-glibc-without-werror glibc-2.24)))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
@@ -586,6 +586,9 @@ inspecting signatures in Mach-O binaries.")
         automake
         pkg-config
         bison
+        ;; Native GCC 10 toolchain
+        gcc-toolchain-10
+        (list gcc-toolchain-10 "static")
         ;; Scripting
         perl
         python-3
@@ -596,26 +599,17 @@ inspecting signatures in Mach-O binaries.")
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list ;; Native GCC 10 toolchain
-                 gcc-toolchain-10
-                 (list gcc-toolchain-10 "static")
-                 zip
+           (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 7 toolchain
-                 gcc-toolchain-7
-                 (list gcc-toolchain-7 "static")
-                 (cond ((string-contains target "riscv64-")
+           (list (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
                                                       #:base-libc (make-glibc-without-werror glibc-2.27/bitcoin-patched)
                                                       #:base-kernel-headers base-linux-kernel-headers))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list ;; Native GCC 10 toolchain
-                 gcc-toolchain-10
-                 (list gcc-toolchain-10 "static")
-                 clang-toolchain-10 binutils cmake xorriso python-signapple))
+           (list clang-toolchain-10 binutils cmake xorriso python-signapple))
           (else '())))))
