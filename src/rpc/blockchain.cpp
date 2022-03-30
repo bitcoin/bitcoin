@@ -601,13 +601,13 @@ static CBlockUndo GetUndoChecked(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS
 static RPCHelpMan getblock()
 {
     return RPCHelpMan{"getblock",
-                "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
-                "If verbosity is 1, returns an Object with information about block <hash>.\n"
-                "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction.\n"
-                "If verbosity is 3, returns an Object with information about block <hash> and information about each transaction, including prevout information for inputs (only for unpruned blocks in the current best chain).\n",
+                "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data about block <hash>.\n"
+                "If verbosity is 1, returns a JSON object with information about block <hash>.\n"
+                "If verbosity is 2, returns a JSON object with information about block <hash> and information about each transaction.\n"
+                "If verbosity is 3, returns a JSON object with information about block <hash> and information about each transaction, including prevout information for inputs (only for unpruned blocks in the current best chain).\n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a JSON object, 2 for JSON object with transaction data, and 3 for JSON object with transaction data including prevout information for inputs"},
+                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a JSON object, 2 for a JSON object with transaction data, and 3 for a JSON object with transaction data including prevout information for inputs"},
                 },
                 {
                     RPCResult{"for verbosity = 0",
@@ -617,15 +617,10 @@ static RPCHelpMan getblock()
                 {
                     {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
                     {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
-                    {RPCResult::Type::NUM, "size", "The block size"},
-                    {RPCResult::Type::NUM, "strippedsize", "The block size excluding witness data"},
-                    {RPCResult::Type::NUM, "weight", "The block weight as defined in BIP 141"},
                     {RPCResult::Type::NUM, "height", "The block height or index"},
                     {RPCResult::Type::NUM, "version", "The block version"},
                     {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
                     {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
-                    {RPCResult::Type::ARR, "tx", "The transaction ids",
-                        {{RPCResult::Type::STR_HEX, "", "The transaction id"}}},
                     {RPCResult::Type::NUM_TIME, "time",       "The block time expressed in " + UNIX_EPOCH_TIME},
                     {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
                     {RPCResult::Type::NUM, "nonce", "The nonce"},
@@ -635,6 +630,11 @@ static RPCHelpMan getblock()
                     {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                     {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
                     {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
+                    {RPCResult::Type::NUM, "strippedsize", "The block size, excluding witness data"},
+                    {RPCResult::Type::NUM, "size", "The block size"},
+                    {RPCResult::Type::NUM, "weight", "The block weight as defined in BIP 141"},
+                    {RPCResult::Type::ARR, "tx", "The transaction ids",
+                        {{RPCResult::Type::STR_HEX, "", "The transaction id"}}},
                 }},
                     RPCResult{"for verbosity = 2",
                 RPCResult::Type::OBJ, "", "",
@@ -666,12 +666,13 @@ static RPCHelpMan getblock()
                                     {
                                         {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
                                         {RPCResult::Type::NUM, "height", "The height of the prevout"},
-                                        {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
+                                        {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
                                         {RPCResult::Type::OBJ, "scriptPubKey", "",
                                         {
                                             {RPCResult::Type::STR, "asm", "The asm"},
-                                            {RPCResult::Type::STR, "hex", "The hex"},
-                                            {RPCResult::Type::STR, "address", /* optional */ true, "The Bitcoin address (only if a well-defined address exists)"},
+                                            {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
+                                            {RPCResult::Type::STR_HEX, "hex", "The hex"},
+                                            {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                                             {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                         }},
                                     }},
