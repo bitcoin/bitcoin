@@ -403,17 +403,12 @@ bool InitHTTPServer()
 }
 
 bool UpdateHTTPServerLogging(bool enable) {
-#if LIBEVENT_VERSION_NUMBER >= 0x02010100
     if (enable) {
         event_enable_debug_logging(EVENT_DBG_ALL);
     } else {
         event_enable_debug_logging(EVENT_DBG_NONE);
     }
     return true;
-#else
-    // Can't update libevent logging if version < 02010100
-    return false;
-#endif
 }
 
 static std::thread g_thread_http;
