@@ -129,8 +129,8 @@ AC_ARG_ENABLE([wallet],
 AC_ARG_WITH([sqlite],
   [AS_HELP_STRING([--with-sqlite=yes|no|auto],
   [enable sqlite wallet support (default: auto, i.e., enabled if wallet is enabled and sqlite is found)])],
-  [use_sqlite=$withval],
-  [use_sqlite=auto])
+  [],
+  [with_sqlite=auto])
 
 AC_ARG_WITH([bdb],
   [AS_HELP_STRING([--without-bdb],
@@ -737,7 +737,7 @@ case $host in
            BDB_LIBS="-L$bdb_prefix/lib -ldb_cxx-4.8"
          fi
 
-         if test "$use_sqlite" != "no" && $BREW list --versions sqlite3 >/dev/null; then
+         if test "$with_sqlite" != "no" && $BREW list --versions sqlite3 >/dev/null; then
            export PKG_CONFIG_PATH="$($BREW --prefix sqlite3 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
          fi
 
@@ -1348,27 +1348,27 @@ if test "$enable_wallet" != "no"; then
     fi
 
     dnl Check for sqlite3
-    if test "$use_sqlite" != "no"; then
+    if test "$with_sqlite" != "no"; then
       PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.17], [have_sqlite=yes], [have_sqlite=no])
     fi
     AC_MSG_CHECKING([whether to build wallet with support for sqlite])
-    if test "$use_sqlite" = "no"; then
-      use_sqlite=no
+    if test "$with_sqlite" = "no"; then
+      with_sqlite=no
     elif test "$have_sqlite" = "no"; then
-      if test "$use_sqlite" = "yes"; then
+      if test "$with_sqlite" = "yes"; then
         AC_MSG_ERROR([sqlite support requested but cannot be built. Use --without-sqlite])
       fi
-      use_sqlite=no
+      with_sqlite=no
     else
-      if test "$use_sqlite" != "no"; then
+      if test "$with_sqlite" != "no"; then
         AC_DEFINE([USE_SQLITE],[1],[Define if sqlite support should be compiled in])
-        use_sqlite=yes
+        with_sqlite=yes
       fi
     fi
-    AC_MSG_RESULT([$use_sqlite])
+    AC_MSG_RESULT([$with_sqlite])
 
     dnl Disable wallet if both --without-bdb and --without-sqlite
-    if test "$with_bdb$use_sqlite" = "nono"; then
+    if test "$with_bdb$with_sqlite" = "nono"; then
         if test "$enable_wallet" = "yes"; then
             AC_MSG_ERROR([wallet functionality requested but no BDB or SQLite support available.])
         fi
@@ -1830,7 +1830,7 @@ AM_CONDITIONAL([BUILD_DARWIN], [test "$BUILD_OS" = "darwin"])
 AM_CONDITIONAL([TARGET_LINUX], [test "$TARGET_OS" = "linux"])
 AM_CONDITIONAL([TARGET_WINDOWS], [test "$TARGET_OS" = "windows"])
 AM_CONDITIONAL([ENABLE_WALLET], [test "$enable_wallet" = "yes"])
-AM_CONDITIONAL([USE_SQLITE], [test "$use_sqlite" = "yes"])
+AM_CONDITIONAL([USE_SQLITE], [test "$with_sqlite" = "yes"])
 AM_CONDITIONAL([USE_BDB], [test "$with_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
@@ -1982,7 +1982,7 @@ echo "  with syscall sandbox = $use_syscall_sandbox"
 echo "  with libs       = $build_bitcoin_libs"
 echo "  with wallet     = $enable_wallet"
 if test "$enable_wallet" != "no"; then
-    echo "    with sqlite   = $use_sqlite"
+    echo "    with sqlite   = $with_sqlite"
     echo "    with bdb      = $with_bdb"
 fi
 echo "  with gui / qt   = $bitcoin_enable_qt"
