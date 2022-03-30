@@ -287,9 +287,10 @@ AC_ARG_ENABLE([multiprocess],
   [enable_multiprocess=no])
 
 AC_ARG_ENABLE(man,
-    [AS_HELP_STRING([--disable-man],
-                    [do not install man pages (default is to install)])],,
-    enable_man=yes)
+  [AS_HELP_STRING([--disable-man],
+  [do not install man pages (default is to install)])],
+  [],
+  [enable_man=yes])
 AM_CONDITIONAL([ENABLE_MAN], [test "$enable_man" != "no"])
 
 dnl Enable debug
