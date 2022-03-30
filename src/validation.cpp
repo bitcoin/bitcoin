@@ -731,7 +731,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
         // mined
         // NOTE: we use UTXO here and do NOT allow mempool txes as masternode collaterals
-        if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip()))
+        if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), true))
             return false;
 
         if (pool.existsProviderTxConflict(tx)) {

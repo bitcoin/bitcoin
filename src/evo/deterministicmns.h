@@ -9,9 +9,11 @@
 
 #include <arith_uint256.h>
 #include <crypto/common.h>
+#include <consensus/params.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
 #include <saltedhasher.h>
+#include <scheduler.h>
 #include <sync.h>
 
 #include <immer/map.hpp>
@@ -517,6 +519,13 @@ public:
     CCriticalSection cs;
 
 private:
+    Mutex cs_cleanup;
+    // We have performed CleanupCache() on this height.
+    int did_cleanup GUARDED_BY(cs_cleanup) {0};
+
+    // Main thread has indicated we should perform cleanup up to this height
+    std::atomic<int> to_cleanup {0};
+
     CEvoDB& evoDb;
 
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache GUARDED_BY(cs);
@@ -524,7 +533,8 @@ private:
     const CBlockIndex* tipIndex GUARDED_BY(cs) {nullptr};
 
 public:
-    explicit CDeterministicMNManager(CEvoDB& _evoDb);
+    explicit CDeterministicMNManager(CEvoDB& _evoDb) : evoDb(_evoDb) {}
+    ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state,
                       const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -550,14 +560,16 @@ public:
     void UpgradeDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
     bool UpgradeDBIfNeeded();
 
+    void DoMaintenance();
+
 private:
     void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs);
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs);
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs);
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs);
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 

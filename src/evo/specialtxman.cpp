@@ -16,7 +16,7 @@
 #include <primitives/block.h>
 #include <validation.h>
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     AssertLockHeld(cs_main);
 
@@ -30,13 +30,13 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
     try {
         switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state, view);
+            return CheckProRegTx(tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, state);
+            return CheckProUpServTx(tx, pindexPrev, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state, view);
+            return CheckProUpRegTx(tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return CheckProUpRevTx(tx, pindexPrev, state);
+            return CheckProUpRevTx(tx, pindexPrev, state, check_sigs);
         case TRANSACTION_COINBASE:
             return CheckCbTx(tx, pindexPrev, state);
         case TRANSACTION_QUORUM_COMMITMENT:
@@ -111,7 +111,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         int64_t nTime1 = GetTimeMicros();
 
         for (const auto& ptr_tx : block.vtx) {
-            if (!CheckSpecialTx(*ptr_tx, pindex->pprev, state, view)) {
+            if (!CheckSpecialTx(*ptr_tx, pindex->pprev, state, view, fCheckCbTxMerleRoots)) {
                 // pass the state returned by the function above
                 return false;
             }
@@ -125,7 +125,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         nTimeLoop += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
 
-        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck)) {
+        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerleRoots)) {
             // pass the state returned by the function above
             return false;
         }

@@ -527,11 +527,6 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
 }
 
-CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
-    evoDb(_evoDb)
-{
-}
-
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& _state, const CCoinsViewCache& view, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
@@ -597,9 +592,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         }
         LogPrintf("CDeterministicMNManager::%s -- DIP3 is enforced now. nHeight=%d\n", __func__, nHeight);
     }
-
-    LOCK(cs);
-    CleanupCache(nHeight);
+    if (nHeight > to_cleanup) to_cleanup = nHeight;
 
     return true;
 }
@@ -901,7 +894,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
 void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList)
 {
     std::vector<uint256> toDecrease;
-    toDecrease.reserve(mnList.GetValidMNsCount() / 10);
+    toDecrease.reserve(mnList.GetAllMNsCount() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
     mnList.ForEachMN(true /* onlyValid */, [&](auto& dmn) {
@@ -1020,9 +1013,8 @@ bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, u
 
 bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
 {
-    LOCK(cs);
-
     if (nHeight == -1) {
+        LOCK(cs);
         if (tipIndex == nullptr) {
             // Since EnforcementHeight can be set to block 1, we shouldn't just return false here
             nHeight = 1;
@@ -1245,7 +1237,7 @@ static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValid
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -1336,7 +1328,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     if (keyForPayloadSig) {
         // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
-        if (!CheckStringSig(ptx, *keyForPayloadSig, state)) {
+        if (check_sigs && !CheckStringSig(ptx, *keyForPayloadSig, state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -1350,7 +1342,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -1396,7 +1388,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         if (auto maybe_err = CheckInputsHash(tx, ptx); maybe_err.did_err) {
             return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
         }
-        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
+        if (check_sigs && !CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -1405,7 +1397,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -1469,7 +1461,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         if (auto maybe_err = CheckInputsHash(tx, ptx); maybe_err.did_err) {
             return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state)) {
+        if (check_sigs && !CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -1478,7 +1470,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -1502,7 +1494,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         if (auto maybe_err = CheckInputsHash(tx, ptx); maybe_err.did_err) {
             return state.DoS(maybe_err.ban_amount, false, REJECT_INVALID, std::string(maybe_err.error_str));
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
+        if (check_sigs && !CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -1512,3 +1504,11 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 }
 //end
 
+void CDeterministicMNManager::DoMaintenance() {
+    LOCK(cs_cleanup);
+    int loc_to_cleanup = to_cleanup.load();
+    if (loc_to_cleanup <= did_cleanup) return;
+    LOCK(cs);
+    CleanupCache(loc_to_cleanup);
+    did_cleanup = loc_to_cleanup;
+}
