@@ -11,6 +11,9 @@ from math import ceil
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
+from test_framework.messages import (
+    COIN,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -103,6 +106,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[2], 1)
         self.generate(self.nodes[0], 121)
 
+        self.test_weight_calculation()
         self.test_change_position()
         self.test_simple()
         self.test_simple_two_coins()
@@ -1068,6 +1072,27 @@ class RawTransactionsTest(BitcoinTestFramework):
         funded_tx = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 65539}]})
 
         self.nodes[2].unloadwallet("extfund")
+
+    def test_weight_calculation(self):
+        self.log.info("Test weight calculation with external inputs")
+
+        self.nodes[2].createwallet("test_weight_calculation")
+        wallet = self.nodes[2].get_wallet_rpc("test_weight_calculation")
+
+        addr = wallet.getnewaddress()
+        txid = self.nodes[0].sendtoaddress(addr, 5)
+        vout = find_vout_for_address(self.nodes[0], txid, addr)
+
+        self.nodes[0].sendtoaddress(wallet.getnewaddress(), 5)
+        self.generate(self.nodes[0], 1)
+
+        rawtx = wallet.createrawtransaction([{'txid': txid, 'vout': vout}], [{self.nodes[0].getnewaddress(): 9.999}])
+        fundedtx = wallet.fundrawtransaction(rawtx, {'fee_rate': 10})
+        # with 71-byte signatures we should expect following tx size
+        tx_size = 10 + 41*2 + 31*2 + (2 + 107*2)/4
+        assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
+
+        self.nodes[2].unloadwallet("test_weight_calculation")
 
     def test_include_unsafe(self):
         self.log.info("Test fundrawtxn with unsafe inputs")
