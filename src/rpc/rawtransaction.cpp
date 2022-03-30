@@ -764,11 +764,11 @@ static RPCHelpMan decodepsbt()
                                     {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
                                     {RPCResult::Type::OBJ, "scriptPubKey", "",
                                     {
-                                        {RPCResult::Type::STR, "asm", "The asm"},
-                                        {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
-                                        {RPCResult::Type::STR_HEX, "hex", "The hex"},
-                                        {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                        {RPCResult::Type::STR, "asm", "String representation of the script public key"},
+                                        {RPCResult::Type::STR, "desc", "Inferred descriptor for the script"},
+                                        {RPCResult::Type::STR_HEX, "hex", "Hex string of the script public key"},
                                         {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+                                        {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                     }},
                                 }},
                                 {RPCResult::Type::OBJ_DYN, "partial_signatures", /*optional=*/true, "",
@@ -780,13 +780,13 @@ static RPCHelpMan decodepsbt()
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
-                                    {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                    {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                 }},
                                 {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
-                                    {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                    {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                 }},
                                 {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
                                 {
@@ -846,13 +846,13 @@ static RPCHelpMan decodepsbt()
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
-                                    {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                    {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                 }},
                                 {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
                                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
-                                    {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+                                    {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                 }},
                                 {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
                                 {
