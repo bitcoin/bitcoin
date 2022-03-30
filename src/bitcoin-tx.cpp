@@ -93,7 +93,7 @@ static int AppInitRawTx(int argc, char* argv[])
     // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         SelectParams(gArgs.GetChainName());
-        VeriBlock::selectPopConfig(gArgs.GetChainName(), gArgs.AltBlocksInMem());
+        VeriBlock::selectPopConfig(gArgs.GetChainName(), gArgs.AltBlocksInMem(), gArgs.VbkBlocksInMem(), gArgs.BtcBlocksInMem());
     } catch (const std::exception& e) {
         tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;

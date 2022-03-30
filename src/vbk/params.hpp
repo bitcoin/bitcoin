@@ -123,7 +123,7 @@ struct AltChainParamsBTCSQDetRegTest : public AltChainParamsBTCSQ {
 };
 
 void printConfig(const altintegration::Config& config);
-void selectPopConfig(const std::string& network = "test", int32_t window = altintegration::MAX_REORG_BLOCKS_MIN_VALUE);
+void selectPopConfig(const std::string& network = "test", int32_t alt_window = altintegration::ALT_MAX_REORG_BLOCKS_MIN_VALUE, int32_t vbk_window = altintegration::VBK_MAX_REORG_BLOCKS_MIN_VALUE, int32_t btc_window = altintegration::BTC_MAX_REORG_BLOCKS_MIN_VALUE);
 
 } // namespace VeriBlock
 

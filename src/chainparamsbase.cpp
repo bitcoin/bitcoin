@@ -29,6 +29,9 @@ void SetupChainParamsBaseOptions()
 
     // VeriBlock
     gArgs.AddArg("-popaltblocksinmem","Enter inmemory window size of the altintegration::AltTree, if set -1 window will be set to the max value", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
+    gArgs.AddArg("-popvbkblocksinmem","Enter inmemory window size of the altintegration::VbkBlockTree, if set -1 window will be set to the max value", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
+    gArgs.AddArg("-popbtcblocksinmem","Enter inmemory window size of the altintegration::BtcBlockTree, if set -1 window will be set to the max value", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
+
 }
 
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;

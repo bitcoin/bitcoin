@@ -291,6 +291,11 @@ public:
 
     int64_t AltBlocksInMem() const;
 
+    int64_t VbkBlocksInMem() const;
+
+    int64_t BtcBlocksInMem() const;
+
+
     /**
      * Add argument
      */
