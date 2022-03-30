@@ -221,8 +221,8 @@ AC_ARG_ENABLE([reduce-exports],
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--disable-ccache],
   [do not use ccache for building (default is to use if found)])],
-  [use_ccache=$enableval],
-  [use_ccache=auto])
+  [],
+  [enable_ccache=auto])
 
 dnl Suppress warnings from external headers (e.g. Boost, Qt).
 dnl May be useful if warnings from external headers clutter the build output
@@ -1670,21 +1670,21 @@ AC_MSG_RESULT($build_bitcoin_libs)
 
 AC_LANG_POP
 
-if test "$use_ccache" != "no"; then
+if test "$enable_ccache" != "no"; then
   AC_MSG_CHECKING([if ccache should be used])
   if test "$CCACHE" = ""; then
-    if test "$use_ccache" = "yes"; then
+    if test "$enable_ccache" = "yes"; then
       AC_MSG_ERROR([ccache not found.]);
     else
-      use_ccache=no
+      enable_ccache=no
     fi
   else
-    use_ccache=yes
+    enable_ccache=yes
     CC="$ac_cv_path_CCACHE $CC"
     CXX="$ac_cv_path_CCACHE $CXX"
   fi
-  AC_MSG_RESULT($use_ccache)
-  if test "$use_ccache" = "yes"; then
+  AC_MSG_RESULT($enable_ccache)
+  if test "$enable_ccache" = "yes"; then
     AX_CHECK_COMPILE_FLAG([-fdebug-prefix-map=A=B], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -fdebug-prefix-map=\$(abs_top_srcdir)=."], [], [$CXXFLAG_WERROR])
     AX_CHECK_PREPROC_FLAG([-fmacro-prefix-map=A=B], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -fmacro-prefix-map=\$(abs_top_srcdir)=."], [], [$CXXFLAG_WERROR])
   fi
