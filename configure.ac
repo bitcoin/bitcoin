@@ -249,8 +249,8 @@ AC_ARG_ENABLE([lcov-branch-coverage],
 AC_ARG_ENABLE([threadlocal],
   [AS_HELP_STRING([--enable-threadlocal],
   [enable features that depend on the c++ thread_local keyword (currently just thread names in debug logs). (default is to enable if there is platform support)])],
-  [use_thread_local=$enableval],
-  [use_thread_local=auto])
+  [],
+  [enable_threadlocal=auto])
 
 AC_ARG_ENABLE([asm],
   [AS_HELP_STRING([--disable-asm],
@@ -1083,7 +1083,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   [AC_MSG_RESULT([no])]
 )
 
-if test "$use_thread_local" = "yes" || test "$use_thread_local" = "auto"; then
+if test "$enable_threadlocal" = "yes" || test "$enable_threadlocal" = "auto"; then
   TEMP_LDFLAGS="$LDFLAGS"
   LDFLAGS="$TEMP_LDFLAGS $PTHREAD_CFLAGS"
   AC_MSG_CHECKING([for thread_local support])
