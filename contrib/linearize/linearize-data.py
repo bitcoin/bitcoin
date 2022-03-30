@@ -20,41 +20,9 @@ from collections import namedtuple
 
 settings = {}
 
-def hex_switchEndian(s):
-    """ Switches the endianness of a hex string (in pairs of hex chars) """
-    pairList = [s[i:i+2].encode() for i in range(0, len(s), 2)]
-    return b''.join(pairList[::-1]).decode()
-
-def uint32(x):
-    return x & 0xffffffff
-
-def bytereverse(x):
-    return uint32(( ((x) << 24) | (((x) << 8) & 0x00ff0000) |
-               (((x) >> 8) & 0x0000ff00) | ((x) >> 24) ))
-
-def bufreverse(in_buf):
-    out_words = []
-    for i in range(0, len(in_buf), 4):
-        word = struct.unpack('@I', in_buf[i:i+4])[0]
-        out_words.append(struct.pack('@I', bytereverse(word)))
-    return b''.join(out_words)
-
-def wordreverse(in_buf):
-    out_words = []
-    for i in range(0, len(in_buf), 4):
-        out_words.append(in_buf[i:i+4])
-    out_words.reverse()
-    return b''.join(out_words)
-
-def calc_hdr_hash(blk_hdr):
-    return dash_hash.getPoWHash(blk_hdr)
-
 def calc_hash_str(blk_hdr):
-    hash = calc_hdr_hash(blk_hdr)
-    hash = bufreverse(hash)
-    hash = wordreverse(hash)
-    hash_str = hash.hex()
-    return hash_str
+    blk_hdr_hash = dash_hash.getPoWHash(blk_hdr)
+    return blk_hdr_hash[::-1].hex()
 
 def get_blk_dt(blk_hdr):
     members = struct.unpack("<I", blk_hdr[68:68+4])
@@ -70,7 +38,7 @@ def get_block_hashes(settings):
     for line in f:
         line = line.rstrip()
         if settings['rev_hash_bytes'] == 'true':
-            line = hex_switchEndian(line)
+            line = bytes.fromhex(line)[::-1].hex()
         blkindex.append(line)
 
     print("Read " + str(len(blkindex)) + " hashes")
