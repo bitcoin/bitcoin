@@ -197,7 +197,7 @@ chain for " target " development."))
 (define-public lief
   (package
    (name "python-lief")
-   (version "0.11.5")
+   (version "0.12.0")
    (source
     (origin
      (method git-fetch)
@@ -207,7 +207,7 @@ chain for " target " development."))
      (file-name (git-file-name name version))
      (sha256
       (base32
-       "0qahjfg1n0x76ps2mbyljvws1l3qhkqvmxqbahps4qgywl2hbdkj"))))
+       "026jchj56q25v6gc0754dj9cj5hz5zaza8ij93y5ga94w20kzm9q"))))
    (build-system python-build-system)
    (native-inputs
     `(("cmake" ,cmake)))
