@@ -614,10 +614,11 @@ const RPCResult getblock_vin{
             {
                 {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
                 {RPCResult::Type::NUM, "height", "The height of the prevout"},
-                {RPCResult::Type::NUM, "value", "The value in " + CURRENCY_UNIT},
+                {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                 {
                     {RPCResult::Type::STR, "asm", "The asm"},
+                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
                     {RPCResult::Type::STR_HEX, "hex", "The hex"},
                     {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                     {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
