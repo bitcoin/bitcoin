@@ -313,10 +313,10 @@ AC_ARG_ENABLE([gprof],
 
 dnl Turn warnings into errors
 AC_ARG_ENABLE([werror],
-    [AS_HELP_STRING([--enable-werror],
-                    [Treat compiler warnings as errors (default is no)])],
-    [enable_werror=$enableval],
-    [enable_werror=no])
+  [AS_HELP_STRING([--enable-werror],
+  [Treat compiler warnings as errors (default is no)])],
+  [],
+  [enable_werror=no])
 
 AC_ARG_ENABLE([external-signer],
   [AS_HELP_STRING([--enable-external-signer],[compile external signer support (default is yes, requires Boost::Process)])],
