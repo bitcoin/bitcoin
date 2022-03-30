@@ -179,9 +179,10 @@ AC_ARG_ENABLE(gui-tests,
     [use_gui_tests=$use_tests])
 
 AC_ARG_ENABLE(bench,
-    AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
-    [use_bench=$enableval],
-    [use_bench=yes])
+  AS_HELP_STRING([--disable-bench],
+  [do not compile benchmarks (default is to compile)]),
+  [],
+  [enable_bench=yes])
 
 AC_ARG_ENABLE([extended-functional-tests],
   AS_HELP_STRING([--enable-extended-functional-tests],
@@ -1293,7 +1294,7 @@ if test "$enable_fuzz" = "yes"; then
   bitcoin_enable_qt=no
   bitcoin_enable_qt_test=no
   bitcoin_enable_qt_dbus=no
-  use_bench=no
+  enable_bench=no
   enable_external_signer=no
   use_upnp=no
   use_natpmp=no
@@ -1386,7 +1387,7 @@ if test "$enable_usdt" != "no"; then
 fi
 AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
 
-if test "$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nonononononono"; then
+if test "$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$enable_bench$use_tests" = "nonononononono"; then
   use_upnp=no
   use_natpmp=no
   enable_zmq=no
@@ -1428,7 +1429,7 @@ if test "$use_natpmp" != "no"; then
                    [have_natpmp=no])
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" = "nonononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$enable_bench" = "nonononononono"; then
   use_boost=no
 else
   use_boost=yes
@@ -1539,7 +1540,7 @@ fi
 
 dnl libevent check
 
-if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" != "nonononono"; then
+if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$enable_bench" != "nonononono"; then
   PKG_CHECK_MODULES([EVENT], [libevent >= 2.1.8], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.1.8 or greater not found.])])
   if test "$TARGET_OS" != "windows"; then
     PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.1.8], [], [AC_MSG_ERROR([libevent_pthreads version 2.1.8 or greater not found.])])
@@ -1818,7 +1819,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$enable_bench$use_tests" = "nononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1834,7 +1835,7 @@ AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
 AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
 AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
-AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
+AM_CONDITIONAL([ENABLE_BENCH], [test "$enable_bench" = "yes"])
 AM_CONDITIONAL([USE_QRCODE], [test "$with_qrencode" = "yes"])
 AM_CONDITIONAL([USE_LCOV], [test "$enable_lcov" = "yes"])
 AM_CONDITIONAL([USE_LIBEVENT], [test "$use_libevent" = "yes"])
@@ -1993,7 +1994,7 @@ else
     echo "  with test       = not building test_bitcoin because fuzzing is enabled"
 fi
 echo "  with fuzz binary = $enable_fuzz_binary"
-echo "  with bench      = $use_bench"
+echo "  with bench      = $enable_bench"
 echo "  with upnp       = $use_upnp"
 echo "  with natpmp     = $use_natpmp"
 echo "  use asm         = $enable_asm"
