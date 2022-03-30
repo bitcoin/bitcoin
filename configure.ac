@@ -306,10 +306,10 @@ AC_ARG_WITH([sanitizers],
 
 dnl Enable gprof profiling
 AC_ARG_ENABLE([gprof],
-    [AS_HELP_STRING([--enable-gprof],
-                    [use gprof profiling compiler flags (default is no)])],
-    [enable_gprof=$enableval],
-    [enable_gprof=no])
+  [AS_HELP_STRING([--enable-gprof],
+  [use gprof profiling compiler flags (default is no)])],
+  [],
+  [enable_gprof=no])
 
 dnl Turn warnings into errors
 AC_ARG_ENABLE([werror],
