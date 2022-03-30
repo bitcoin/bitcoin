@@ -123,7 +123,7 @@ AC_ARG_VAR([PYTHONPATH], [Augments the default search path for python module fil
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--disable-wallet],
   [disable wallet (enabled by default)])],
-  [enable_wallet=$enableval],
+  [],
   [enable_wallet=auto])
 
 AC_ARG_WITH([sqlite],
