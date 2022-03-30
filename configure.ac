@@ -294,10 +294,10 @@ AM_CONDITIONAL([ENABLE_MAN], [test "$enable_man" != "no"])
 
 dnl Enable debug
 AC_ARG_ENABLE([debug],
-    [AS_HELP_STRING([--enable-debug],
-                    [use compiler flags and macros suited for debugging (default is no)])],
-    [enable_debug=$enableval],
-    [enable_debug=no])
+  [AS_HELP_STRING([--enable-debug],
+  [use compiler flags and macros suited for debugging (default is no)])],
+  [],
+  [enable_debug=no])
 
 dnl Enable different -fsanitize options
 AC_ARG_WITH([sanitizers],
