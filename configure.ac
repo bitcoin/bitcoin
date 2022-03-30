@@ -1006,7 +1006,6 @@ AC_CHECK_DECLS([getifaddrs, freeifaddrs],[CHECK_SOCKET],,
     [#include <sys/types.h>
     #include <ifaddrs.h>]
 )
-AC_CHECK_DECLS([strnlen])
 
 dnl These are used for daemonization in syscoind
 AC_CHECK_DECLS([fork])

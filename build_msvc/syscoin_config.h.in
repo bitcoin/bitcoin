@@ -125,10 +125,6 @@
    don't. */
 #define HAVE_DECL_STRERROR_R 0
 
-/* Define to 1 if you have the declaration of `strnlen', and to 0 if you
-   don't. */
-#define HAVE_DECL_STRNLEN 1
-
 /* Define if the dllexport attribute is supported. */
 #define HAVE_DLLEXPORT_ATTRIBUTE 1
 
