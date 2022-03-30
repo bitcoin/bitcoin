@@ -189,16 +189,16 @@ AC_ARG_ENABLE([extended-functional-tests],
     [use_extended_functional_tests=no])
 
 AC_ARG_ENABLE([fuzz],
-    AS_HELP_STRING([--enable-fuzz],
-    [build for fuzzing (default no). enabling this will disable all other targets and override --{enable,disable}-fuzz-binary]),
-    [enable_fuzz=$enableval],
-    [enable_fuzz=no])
+  AS_HELP_STRING([--enable-fuzz],
+  [build for fuzzing (default no). enabling this will disable all other targets and override --{enable,disable}-fuzz-binary]),
+  [],
+  [enable_fuzz=no])
 
 AC_ARG_ENABLE([fuzz-binary],
-    AS_HELP_STRING([--enable-fuzz-binary],
-    [enable building of fuzz binary (default yes).]),
-    [enable_fuzz_binary=$enableval],
-    [enable_fuzz_binary=yes])
+  AS_HELP_STRING([--enable-fuzz-binary],
+  [enable building of fuzz binary (default yes).]),
+  [],
+  [enable_fuzz_binary=yes])
 
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
