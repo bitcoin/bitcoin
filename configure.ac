@@ -324,9 +324,9 @@ AC_ARG_ENABLE([external-signer],
   [enable_external_signer=auto])
 
 AC_ARG_ENABLE([lto],
-    [AS_HELP_STRING([--enable-lto],[build using LTO (default is no)])],
-    [enable_lto=$enableval],
-    [enable_lto=no])
+  [AS_HELP_STRING([--enable-lto],[build using LTO (default is no)])],
+  [],
+  [enable_lto=no])
 
 AC_ARG_WITH([seccomp],
   [AS_HELP_STRING([--with-seccomp],
