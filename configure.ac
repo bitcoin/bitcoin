@@ -203,8 +203,8 @@ AC_ARG_ENABLE([fuzz-binary],
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
   [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
-  [use_qr=$withval],
-  [use_qr=auto])
+  [],
+  [with_qrencode=auto])
 
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--disable-hardening],
@@ -1571,7 +1571,7 @@ fi
 
 dnl QR Code encoding library check
 
-if test "$use_qr" != "no"; then
+if test "$with_qrencode" != "no"; then
   BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
 fi
 
@@ -1770,17 +1770,17 @@ if test "$bitcoin_enable_qt" != "no"; then
   dnl enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test "$have_qrencode" = "no"; then
-    if test "$use_qr" = "yes"; then
+    if test "$with_qrencode" = "yes"; then
       AC_MSG_ERROR([QR support requested but cannot be built. Use --without-qrencode])
     fi
-    use_qr=no
+    with_qrencode=no
   else
-    if test "$use_qr" != "no"; then
+    if test "$with_qrencode" != "no"; then
       AC_DEFINE([USE_QRCODE], [1], [Define if QR support should be compiled in])
-      use_qr=yes
+      with_qrencode=yes
     fi
   fi
-  AC_MSG_RESULT([$use_qr])
+  AC_MSG_RESULT([$with_qrencode])
 
   if test "$XGETTEXT" = ""; then
     AC_MSG_WARN([xgettext is required to update qt translations])
@@ -1834,7 +1834,7 @@ AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
 AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
 AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
 AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
-AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
+AM_CONDITIONAL([USE_QRCODE], [test "$with_qrencode" = "yes"])
 AM_CONDITIONAL([USE_LCOV], [test "$enable_lcov" = "yes"])
 AM_CONDITIONAL([USE_LIBEVENT], [test "$use_libevent" = "yes"])
 AM_CONDITIONAL([HARDEN], [test "$enable_hardening" = "yes"])
@@ -1983,7 +1983,7 @@ if test "$enable_wallet" != "no"; then
 fi
 echo "  with gui / qt   = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then
-    echo "    with qr       = $use_qr"
+    echo "    with qr       = $with_qrencode"
 fi
 echo "  with zmq        = $enable_zmq"
 if test $enable_fuzz = "no"; then
