@@ -147,14 +147,14 @@ AC_ARG_ENABLE([usdt],
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
-  [use_upnp=$withval],
-  [use_upnp=auto])
+  [],
+  [with_miniupnpc=auto])
 
 AC_ARG_ENABLE([upnp-default],
   [AS_HELP_STRING([--enable-upnp-default],
   [if UPNP is enabled, turn it on at startup (default is no)])],
-  [use_upnp_default=$enableval],
-  [use_upnp_default=no])
+  [],
+  [enable_upnp_default=no])
 
 AC_ARG_WITH([natpmp],
   [AS_HELP_STRING([--with-natpmp],
@@ -751,7 +751,7 @@ case $host in
              dnl Therefore, as we do not use pkg-config to detect miniupnpc and libnatpmp
              dnl packages, we should set the CPPFLAGS and LDFLAGS variables for them
              dnl explicitly.
-             if test "$use_upnp" != "no" && $BREW list --versions miniupnpc >/dev/null; then
+             if test "$with_miniupnpc" != "no" && $BREW list --versions miniupnpc >/dev/null; then
                miniupnpc_prefix=$($BREW --prefix miniupnpc 2>/dev/null)
                if test "$enable_suppress_external_warnings" != "no"; then
                  CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $miniupnpc_prefix/include"
@@ -1298,7 +1298,7 @@ if test "$enable_fuzz" = "yes"; then
   bitcoin_enable_qt_dbus=no
   enable_bench=no
   enable_external_signer=no
-  use_upnp=no
+  with_miniupnpc=no
   with_natpmp=no
   enable_zmq=no
   enable_fuzz_binary=yes
@@ -1390,13 +1390,13 @@ fi
 AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
 
 if test "$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$enable_bench$enable_tests" = "nonononononono"; then
-  use_upnp=no
+  with_miniupnpc=no
   with_natpmp=no
   enable_zmq=no
 fi
 
 dnl Check for libminiupnpc (optional)
-if test "$use_upnp" != "no"; then
+if test "$with_miniupnpc" != "no"; then
   AC_CHECK_HEADERS(
     [miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
     [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
@@ -1708,22 +1708,22 @@ fi
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test "$have_miniupnpc" = "no"; then
-  if test "$use_upnp" = "yes"; then
+  if test "$with_miniupnpc" = "yes"; then
      AC_MSG_ERROR([UPnP requested but cannot be built. Use --without-miniupnpc])
   fi
   AC_MSG_RESULT([no])
-  use_upnp=no
+  with_miniupnpc=no
 else
-  if test "$use_upnp" != "no"; then
+  if test "$with_miniupnpc" != "no"; then
     AC_MSG_RESULT([yes])
     AC_MSG_CHECKING([whether to build with UPnP enabled by default])
-    use_upnp=yes
+    with_miniupnpc=yes
     upnp_setting=0
-    if test "$use_upnp_default" != "no"; then
-      use_upnp_default=yes
+    if test "$enable_upnp_default" != "no"; then
+      enable_upnp_default=yes
       upnp_setting=1
     fi
-    AC_MSG_RESULT([$use_upnp_default])
+    AC_MSG_RESULT([$enable_upnp_default])
     AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test "$TARGET_OS" = "windows"; then
       MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"
@@ -1851,7 +1851,7 @@ AM_CONDITIONAL([ENABLE_ARM_SHANI], [test "$enable_arm_shani" = "yes"])
 AM_CONDITIONAL([USE_ASM], [test "$enable_asm" = "yes"])
 AM_CONDITIONAL([WORDS_BIGENDIAN], [test "$ac_cv_c_bigendian" = "yes"])
 AM_CONDITIONAL([USE_NATPMP], [test "$with_natpmp" = "yes"])
-AM_CONDITIONAL([USE_UPNP], [test "$use_upnp" = "yes"])
+AM_CONDITIONAL([USE_UPNP], [test "$with_miniupnpc" = "yes"])
 
 dnl for minisketch
 AM_CONDITIONAL([ENABLE_CLMUL], [test "$enable_clmul" = "yes"])
@@ -1997,7 +1997,7 @@ else
 fi
 echo "  with fuzz binary = $enable_fuzz_binary"
 echo "  with bench      = $enable_bench"
-echo "  with upnp       = $use_upnp"
+echo "  with upnp       = $with_miniupnpc"
 echo "  with natpmp     = $with_natpmp"
 echo "  use asm         = $enable_asm"
 echo "  USDT tracing    = $enable_usdt"
