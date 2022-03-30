@@ -135,8 +135,8 @@ AC_ARG_WITH([sqlite],
 AC_ARG_WITH([bdb],
   [AS_HELP_STRING([--without-bdb],
   [disable bdb wallet support (default is enabled if wallet is enabled)])],
-  [use_bdb=$withval],
-  [use_bdb=auto])
+  [],
+  [with_bdb=auto])
 
 AC_ARG_ENABLE([usdt],
   [AS_HELP_STRING([--enable-usdt],
@@ -730,7 +730,7 @@ case $host in
          dnl It's safe to add these paths even if the functionality is disabled by
          dnl the user (--without-wallet or --without-gui for example).
 
-         if test "$use_bdb" != "no" && $BREW list --versions berkeley-db@4 >/dev/null && test "$BDB_CFLAGS" = "" && test "$BDB_LIBS" = ""; then
+         if test "$with_bdb" != "no" && $BREW list --versions berkeley-db@4 >/dev/null && test "$BDB_CFLAGS" = "" && test "$BDB_LIBS" = ""; then
            bdb_prefix=$($BREW --prefix berkeley-db@4 2>/dev/null)
            dnl This must precede the call to BITCOIN_FIND_BDB48 below.
            BDB_CFLAGS="-I$bdb_prefix/include"
@@ -1340,7 +1340,7 @@ fi
 
 if test "$enable_wallet" != "no"; then
     dnl Check for libdb_cxx only if wallet enabled
-    if test "$use_bdb" != "no"; then
+    if test "$with_bdb" != "no"; then
       BITCOIN_FIND_BDB48
       if test "$enable_suppress_external_warnings" != "no" ; then
         BDB_CPPFLAGS=SUPPRESS_WARNINGS($BDB_CPPFLAGS)
@@ -1368,7 +1368,7 @@ if test "$enable_wallet" != "no"; then
     AC_MSG_RESULT([$use_sqlite])
 
     dnl Disable wallet if both --without-bdb and --without-sqlite
-    if test "$use_bdb$use_sqlite" = "nono"; then
+    if test "$with_bdb$use_sqlite" = "nono"; then
         if test "$enable_wallet" = "yes"; then
             AC_MSG_ERROR([wallet functionality requested but no BDB or SQLite support available.])
         fi
@@ -1831,7 +1831,7 @@ AM_CONDITIONAL([TARGET_LINUX], [test "$TARGET_OS" = "linux"])
 AM_CONDITIONAL([TARGET_WINDOWS], [test "$TARGET_OS" = "windows"])
 AM_CONDITIONAL([ENABLE_WALLET], [test "$enable_wallet" = "yes"])
 AM_CONDITIONAL([USE_SQLITE], [test "$use_sqlite" = "yes"])
-AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
+AM_CONDITIONAL([USE_BDB], [test "$with_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
@@ -1983,7 +1983,7 @@ echo "  with libs       = $build_bitcoin_libs"
 echo "  with wallet     = $enable_wallet"
 if test "$enable_wallet" != "no"; then
     echo "    with sqlite   = $use_sqlite"
-    echo "    with bdb      = $use_bdb"
+    echo "    with bdb      = $with_bdb"
 fi
 echo "  with gui / qt   = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then

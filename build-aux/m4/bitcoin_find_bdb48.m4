@@ -6,8 +6,8 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
   AC_ARG_VAR([BDB_CFLAGS], [C compiler flags for BerkeleyDB, bypasses autodetection])
   AC_ARG_VAR([BDB_LIBS], [Linker flags for BerkeleyDB, bypasses autodetection])
 
-  if test "$use_bdb" = "no"; then
-    use_bdb=no
+  if test "$with_bdb" = "no"; then
+    with_bdb=no
   elif test "$BDB_CFLAGS" = ""; then
     AC_MSG_CHECKING([for Berkeley DB C++ headers])
     BDB_CPPFLAGS=
@@ -46,7 +46,7 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
       ],[])
     done
     if test "$bdbpath" = "X"; then
-      use_bdb=no
+      with_bdb=no
       AC_MSG_RESULT([no])
       AC_MSG_WARN([libdb_cxx headers missing])
       AC_MSG_WARN(AC_PACKAGE_NAME[ requires this library for BDB (legacy) wallet support])
@@ -56,26 +56,26 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
       AC_ARG_WITH([incompatible-bdb],[AS_HELP_STRING([--with-incompatible-bdb], [allow using a bdb version other than 4.8])],[
         AC_MSG_WARN([Found Berkeley DB other than 4.8])
         AC_MSG_WARN([BDB (legacy) wallets opened by this build will not be portable!])
-        use_bdb=yes
+        with_bdb=yes
       ],[
         AC_MSG_WARN([Found Berkeley DB other than 4.8])
         AC_MSG_WARN([BDB (legacy) wallets opened by this build would not be portable!])
         AC_MSG_WARN([If this is intended, pass --with-incompatible-bdb])
         AC_MSG_WARN([Passing --without-bdb will suppress this warning])
-        use_bdb=no
+        with_bdb=no
       ])
     else
       BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb48path}],db_cxx)
       bdbpath="${bdb48path}"
-      use_bdb=yes
+      with_bdb=yes
     fi
   else
     BDB_CPPFLAGS=${BDB_CFLAGS}
   fi
   AC_SUBST(BDB_CPPFLAGS)
 
-  if test "$use_bdb" = "no"; then
-    use_bdb=no
+  if test "$with_bdb" = "no"; then
+    with_bdb=no
   elif test "$BDB_LIBS" = ""; then
     # TODO: Ideally this could find the library version and make sure it matches the headers being used
     for searchlib in db_cxx-4.8 db_cxx db4_cxx; do
@@ -90,8 +90,8 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
         AC_MSG_WARN([Passing --without-bdb will suppress this warning])
     fi
   fi
-  if test "$use_bdb" != "no"; then
+  if test "$with_bdb" != "no"; then
     AC_DEFINE([USE_BDB], [1], [Define if BDB support should be compiled in])
-    use_bdb=yes
+    with_bdb=yes
   fi
 ])
