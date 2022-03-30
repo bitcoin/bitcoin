@@ -215,8 +215,8 @@ AC_ARG_ENABLE([hardening],
 AC_ARG_ENABLE([reduce-exports],
   [AS_HELP_STRING([--enable-reduce-exports],
   [attempt to reduce exported symbols in the resulting executables (default is no)])],
-  [use_reduce_exports=$enableval],
-  [use_reduce_exports=no])
+  [],
+  [enable_reduce_exports=no])
 
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--disable-ccache],
@@ -1065,7 +1065,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   ],
   [
     AC_MSG_RESULT([no])
-    if test "$use_reduce_exports" = "yes"; then
+    if test "$enable_reduce_exports" = "yes"; then
       AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduce-exports.])
     fi
   ]
@@ -1523,7 +1523,7 @@ use_syscall_sandbox=$with_seccomp
 AM_CONDITIONAL([ENABLE_SYSCALL_SANDBOX], [test "$use_syscall_sandbox" != "no"])
 
 dnl Check for reduced exports
-if test "$use_reduce_exports" = "yes"; then
+if test "$enable_reduce_exports" = "yes"; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fvisibility=hidden"],
   [AC_MSG_ERROR([Cannot set hidden symbol visibility. Use --disable-reduce-exports.])], [$CXXFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,--exclude-libs,ALL], [RELDFLAGS="-Wl,--exclude-libs,ALL"], [], [$LDFLAG_WERROR])
@@ -1811,7 +1811,7 @@ else
 fi
 
 AC_MSG_CHECKING([whether to reduce exports])
-if test "$use_reduce_exports" = "yes"; then
+if test "$enable_reduce_exports" = "yes"; then
   AC_MSG_RESULT([yes])
 else
   AC_MSG_RESULT([no])
