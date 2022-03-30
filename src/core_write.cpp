@@ -19,6 +19,10 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 
+#include <map>
+#include <string>
+#include <vector>
+
 UniValue ValueFromAmount(const CAmount amount)
 {
     static_assert(COIN > 1);
