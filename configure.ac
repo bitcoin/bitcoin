@@ -237,14 +237,14 @@ AC_ARG_ENABLE([suppress-external-warnings],
 AC_ARG_ENABLE([lcov],
   [AS_HELP_STRING([--enable-lcov],
   [enable lcov testing (default is no)])],
-  [use_lcov=$enableval],
-  [use_lcov=no])
+  [],
+  [enable_lcov=no])
 
 AC_ARG_ENABLE([lcov-branch-coverage],
   [AS_HELP_STRING([--enable-lcov-branch-coverage],
   [enable lcov testing branch coverage (default is no)])],
-  [use_lcov_branch=yes],
-  [use_lcov_branch=no])
+  [],
+  [enable_lcov_branch_coverage=no])
 
 AC_ARG_ENABLE([threadlocal],
   [AS_HELP_STRING([--enable-threadlocal],
@@ -818,7 +818,7 @@ if test "$use_extended_functional_tests" != "no"; then
   AC_SUBST(EXTENDED_FUNCTIONAL_TESTS, --extended)
 fi
 
-if test "$use_lcov" = "yes"; then
+if test "$enable_lcov" = "yes"; then
   if test "$LCOV" = ""; then
     AC_MSG_ERROR([lcov testing requested but lcov not found])
   fi
@@ -866,7 +866,7 @@ if test "$use_lcov" = "yes"; then
   CORE_CXXFLAGS="$CORE_CXXFLAGS -Og -O0"
 fi
 
-if test "$use_lcov_branch" != "no"; then
+if test "$enable_lcov_branch_coverage" != "no"; then
   AC_SUBST(LCOV_OPTS, "$LCOV_OPTS --rc lcov_branch_coverage=1")
 fi
 
@@ -1835,7 +1835,7 @@ AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
 AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
 AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
 AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
-AM_CONDITIONAL([USE_LCOV], [test "$use_lcov" = "yes"])
+AM_CONDITIONAL([USE_LCOV], [test "$enable_lcov" = "yes"])
 AM_CONDITIONAL([USE_LIBEVENT], [test "$use_libevent" = "yes"])
 AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
 AM_CONDITIONAL([ENABLE_SSE42], [test "$enable_sse42" = "yes"])
