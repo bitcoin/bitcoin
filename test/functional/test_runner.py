@@ -318,6 +318,7 @@ BASE_SCRIPTS = [
     'rpc_deriveaddresses.py --usecli',
     'p2p_ping.py',
     'rpc_scanblocks.py',
+    'p2p_sendtxrcncl.py',
     'rpc_scantxoutset.py',
     'feature_txindex_compatibility.py',
     'feature_unsupported_utxo_db.py',
