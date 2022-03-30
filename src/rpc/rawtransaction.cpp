@@ -516,10 +516,10 @@ static RPCHelpMan decodescript()
                  "Result of a witness output script wrapping this redeem script (not returned for types that should not be wrapped)",
                  {
                      {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
-                     {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
-                     {RPCResult::Type::STR, "type", "The type of the output script (e.g. witness_v0_keyhash or witness_v0_scripthash)"},
-                     {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                      {RPCResult::Type::STR, "desc", "Inferred descriptor for the script"},
+                     {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
+                     {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+                     {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                      {RPCResult::Type::STR, "p2sh-segwit", "address of the P2SH script wrapping this witness redeem script"},
                  }},
             },
