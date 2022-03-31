@@ -324,31 +324,28 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
     return HexStr(ssTx);
 }
 
-void ScriptToUniv(const CScript& script, UniValue& out)
-{
-    ScriptPubKeyToUniv(script, out, /* include_hex */ true, /* include_address */ false);
-}
-
-void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool include_hex, bool include_address)
+void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool include_address)
 {
     CTxDestination address;
 
-    out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
+    out.pushKV("asm", ScriptToAsmStr(script));
     if (include_address) {
-        out.pushKV("desc", InferDescriptor(scriptPubKey, DUMMY_SIGNING_PROVIDER)->ToString());
+        out.pushKV("desc", InferDescriptor(script, DUMMY_SIGNING_PROVIDER)->ToString());
     }
-    if (include_hex) out.pushKV("hex", HexStr(scriptPubKey));
+    if (include_hex) {
+        out.pushKV("hex", HexStr(script));
+    }
 
     std::vector<std::vector<unsigned char>> solns;
-    const TxoutType type{Solver(scriptPubKey, solns)};
+    const TxoutType type{Solver(script, solns)};
 
-    if (include_address && ExtractDestination(scriptPubKey, address) && type != TxoutType::PUBKEY) {
+    if (include_address && ExtractDestination(script, address) && type != TxoutType::PUBKEY) {
         out.pushKV("address", EncodeDestination(address));
     }
     out.pushKV("type", GetTxnOutputType(type));
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
+void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo, TxVerbosity verbosity)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
@@ -399,7 +396,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 
             if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
                 UniValue o_script_pub_key(UniValue::VOBJ);
-                ScriptPubKeyToUniv(prev_txout.scriptPubKey, o_script_pub_key, /*include_hex=*/ true);
+                ScriptToUniv(prev_txout.scriptPubKey, /*out=*/o_script_pub_key, /*include_hex=*/true, /*include_address=*/true);
 
                 UniValue p(UniValue::VOBJ);
                 p.pushKV("generated", bool(prev_coin.fCoinBase));
@@ -424,7 +421,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         out.pushKV("n", (int64_t)i);
 
         UniValue o(UniValue::VOBJ);
-        ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
+        ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
         out.pushKV("scriptPubKey", o);
         vout.push_back(out);
         // SYSCOIN
@@ -481,7 +478,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         }
     }
     UniValue output(UniValue::VOBJ);
-    if(DecodeSyscoinRawtransaction(tx, hashBlock, output))
+    if(DecodeSyscoinRawtransaction(tx, block_hash, output))
         entry.pushKV("systx", output);
 
     if (have_undo) {
@@ -490,8 +487,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         entry.pushKV("fee", ValueFromAmount(fee));
     }
 
-    if (!hashBlock.IsNull())
-        entry.pushKV("blockhash", hashBlock.GetHex());
+    if (!block_hash.IsNull()) {
+        entry.pushKV("blockhash", block_hash.GetHex());
+    }
 
     if (include_hex) {
         entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
