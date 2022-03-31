@@ -198,7 +198,7 @@ produce a transaction. Examples include hardware wallets, multisig setups, and
 Overall, the construction of a fully signed Bitcoin transaction goes through the
 following steps:
 
-- A **Creator** proposes a particular transaction to be created. He constructs
+- A **Creator** proposes a particular transaction to be created. They constructs
   a PSBT that contains certain inputs and outputs, but no additional metadata.
 - For each input, an **Updater** adds information about the UTXOs being spent by
   the transaction to the PSBT.

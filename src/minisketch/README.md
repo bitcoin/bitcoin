@@ -13,16 +13,16 @@ Sketches, as produced by this library, can be seen as "set checksums" with two p
 This makes them appropriate for a very bandwidth-efficient set reconciliation protocol. If Alice and Bob each have a set of elements, and they suspect that the sets largely but not entirely overlap,
 they can use the following protocol to let both parties learn all the elements:
 * Alice and Bob both compute a sketch of their set elements.
-* Alice sends her sketch to Bob.
+* Alice sends them sketch to Bob.
 * Bob combines the two sketches, and obtains a sketch of the symmetric difference.
 * Bob tries to recover the elements from the difference sketch.
-* Bob sends every element in the difference that he has to Alice.
+* Bob sends every element in the difference that they has to Alice.
 
 This will always succeed when the size of the difference (elements that Alice has but Bob doesn't plus elements that Bob has but Alice doesn't) does not exceed the
 capacity of the sketch that Alice sent. The interesting part is that this works regardless of the actual set sizes—only the difference matters.
 
 If the elements are large, it may be preferable to compute the sketches over *hashes* of the set elements. In that case an additional step is added to the protocol, where Bob also sends the hash
-of every element he does not have to Alice, who responds with the requested elements.
+of every element they does not have to Alice, who responds with the requested elements.
 
 The doc/ directory has additional [tips for designing reconciliation protocols using libminisketch](doc/protocoltips.md).
 
@@ -63,7 +63,7 @@ Below we compare the PinSketch algorithm (which `libminisketch` is an implementa
 * **Sketch size:** This column shows the size in bits of a sketch designed for reconciling *c* different *b*-bit elements. PinSketch and CPISync have a near-optimal<sup>[[11]](#myfootnote11)</sup> communication overhead, which in practice means the sketch size is very close (or equal to) *bc* bits. That is the same size as would be needed to transfer the elements of the difference naively (which is remarkable, as the difference isn't even known by the sender). For IBLT there is an overhead factor *&alpha;*, which depends on various design parameters, but is often between *2* and *10*.
 * **Decode success:** Whenever a sketch is designed with a capacity not lower than the actual difference size, CPISync and PinSketch guarantee that decoding of the difference will always succeed. IBLT always has a chance of failure, though that chance can be made arbitrarily small by increasing the communication overhead.
 * **Decoding complexity:** The space savings achieved by near-optimal algorithms come at a cost in performance, as their asymptotic decode complexity is quadratic or cubic, while IBLT is linear. This means that using near-optimal algorithms can be too expensive for applications where the difference is sufficiently large.
-* **Difference type:** PinSketch can only compute the symmetric difference from a merged sketch, while CPISync and IBLT can distinguish which side certain elements were missing on. When the decoder has access to one of the sets, this generally doesn't matter, as he can look up each of the elements in the symmetric difference with one of the sets.
+* **Difference type:** PinSketch can only compute the symmetric difference from a merged sketch, while CPISync and IBLT can distinguish which side certain elements were missing on. When the decoder has access to one of the sets, this generally doesn't matter, as they can look up each of the elements in the symmetric difference with one of the sets.
 * **Secure sketch:** Whether the sketch satisfies the definition of a secure sketch<sup>[[1]](#myfootnote1)</sup>, which implies a minimal amount about a set can be extracted from a sketch by anyone who does not know most of the elements already. This makes the algorithm appropriate for applications like fingerprint authentication.
 
 ## Building
@@ -99,7 +99,7 @@ The arguments are:
 * The implementation number. Implementation *0* is always supported, but more efficient algorithms may be available on some hardware. The serialized form of a sketch is independent of the implementation, so different implementations can interoperate.
 * The capacity *c*, which specifies how many differences the resulting sketch can reconcile.
 
-Then Alice adds her elements to her sketch. Note that adding the same element a second time removes it again, as sketches have set semantics, not multiset semantics.
+Then Alice adds them elements to them sketch. Note that adding the same element a second time removes it again, as sketches have set semantics, not multiset semantics.
 
 ```c
   for (int i = 3000; i < 3010; ++i) {
@@ -117,7 +117,7 @@ The next step is serializing the sketch into a byte array:
   minisketch_destroy(sketch_a);
 ```
 
-The contents of the buffer can then be submitted to Bob, who can create his own sketch:
+The contents of the buffer can then be submitted to Bob, who can create their own sketch:
 
 ```c
   minisketch *sketch_b = minisketch_create(12, 0, 4); // Bob's own sketch
@@ -126,7 +126,7 @@ The contents of the buffer can then be submitted to Bob, who can create his own 
   }
 ```
 
-After Bob receives Alice's serialized sketch, he can reconcile:
+After Bob receives Alice's serialized sketch, they can reconcile:
 
 ```c
   sketch_a = minisketch_create(12, 0, 4);     // Alice's sketch

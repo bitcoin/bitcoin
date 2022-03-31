@@ -43,7 +43,7 @@ relevant to you).
 
 Pieter Wuille implemented many optimizations to the way transactions are
 verified, so a running, synchronized node uses less working memory and does
-much less I/O. He also implemented parallel signature checking, so if you
+much less I/O. They also implemented parallel signature checking, so if you
 have a multi-CPU machine all CPUs will be used to verify transactions.
 
 New Features

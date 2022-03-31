@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     // 1. GetLocalAddrForPeer() calls GetLocalAddress() which returns an address that is
     //    not routable.
     // 2. GetLocalAddrForPeer() overrides the address with whatever the peer has told us
-    //    he sees us as.
+    //    they sees us as.
     // 2.1. For inbound connections we must override both the address and the port.
     // 2.2. For outbound connections we must override only the address.
 
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     // Tests the following scenario:
     // * -bind=3.4.5.6:20001 is specified
     // * we make an outbound connection to a peer
-    // * the peer reports he sees us as 2.3.4.5:20002 in the version message
+    // * the peer reports they sees us as 2.3.4.5:20002 in the version message
     //   (20002 is a random port assigned by our OS for the outgoing TCP connection,
     //   we cannot accept connections to it)
     // * we should self-advertise to that peer as 2.3.4.5:20001

@@ -803,7 +803,7 @@ std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) co
         // Thus skip the constant 8 bits at the start.
         nBits = 12;
     } else if (IsHeNet()) {
-        // for he.net, use /36 groups
+        // for they.net, use /36 groups
         nBits = 36;
     } else {
         // for the rest of the IPv6 network, use /32 groups

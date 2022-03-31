@@ -126,7 +126,7 @@ covered by the txid. This provides several immediate benefits:
   produce an accurate copy of Bitcoin's current ledger (called the UTXO set),
   making the node vulnerable to falling out of consensus with other nodes.
   Although the problems with Nakamoto's method can't be fixed in a soft fork,
-  Segwit accomplishes something similar to his original proposal: it makes it
+  Segwit accomplishes something similar to their original proposal: it makes it
   possible for a node to optionally skip downloading some blockchain data
   (specifically, the segregated witnesses) while still ensuring that the node
   can build an accurate copy of the UTXO set for the block chain with the most
