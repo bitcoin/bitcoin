@@ -130,6 +130,8 @@ bool LoadWallets(WalletContext& context)
                 chain.initError(error);
                 return false;
             }
+
+            NotifyWalletLoaded(context, pwallet);
             AddWallet(context, pwallet);
         }
         return true;
