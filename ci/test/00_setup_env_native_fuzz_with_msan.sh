@@ -13,7 +13,7 @@ LIBCXX_FLAGS="-nostdinc++ -stdlib=libc++ -L${LIBCXX_DIR}lib -lc++abi -I${LIBCXX_
 export MSAN_AND_LIBCXX_FLAGS="${MSAN_FLAGS} ${LIBCXX_FLAGS}"
 
 export CONTAINER_NAME="ci_native_msan"
-export PACKAGES="clang-12 llvm-12 cmake"
+export PACKAGES="cmake gpg gpg-agent lsb-release wget software-properties-common"
 # BDB generates false-positives and will be removed in future
 export DEP_OPTS="NO_BDB=1 NO_QT=1 CC='clang' CXX='clang++' CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' libevent_cflags='${MSAN_FLAGS}' sqlite_cflags='${MSAN_FLAGS}' zeromq_cxxflags='-std=c++17 ${MSAN_AND_LIBCXX_FLAGS}'"
 export GOAL="install"
