@@ -328,8 +328,8 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n segundo(s)</numerusform>
+            <numerusform>%n segundo(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -806,8 +806,8 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Procesado(s) %n bloque(s) del historial de transacciones.</numerusform>
+            <numerusform>Procesado(s) %n bloque(s) del historial de transacciones.</numerusform>
         </translation>
     </message>
     <message>

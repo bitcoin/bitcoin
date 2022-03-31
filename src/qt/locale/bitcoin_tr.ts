@@ -1523,6 +1523,10 @@ Cüzdan kilidini aç.</translation>
 <context>
     <name>Intro</name>
     <message>
+        <source>%1 GB of space available</source>
+        <translation type="unfinished">%1 GB boş alan mevcut.</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Bu dizinde en az %1 GB veri depolanacak ve zamanla büyüyecek.</translation>
     </message>

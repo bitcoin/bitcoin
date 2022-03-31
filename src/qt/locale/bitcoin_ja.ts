@@ -630,6 +630,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">以前のバージョンで開始された -txindex アップグレードを完了できません。 以前のバージョンで再起動するか、 -reindex を実行してください。</translation>
     </message>
     <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation type="unfinished">%s のロード中にエラーが発生しました：外​​部署名者ウォレットがロードされています</translation>
+    </message>
+    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">%s の設定は、 [%s] セクションに書かれた場合のみ %s ネットワークへ適用されます。</translation>
     </message>

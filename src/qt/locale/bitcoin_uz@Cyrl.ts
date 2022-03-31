@@ -70,6 +70,12 @@
         <translation type="unfinished">Улар тўловларни жўнатиш учун сизнинг Bitcoin манзилларингиз. Доимо тангаларни жўнатишдан олдин сумма ва қабул қилувчи манзилни текшириб кўринг. </translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Улар тўловларни қабул қилиш учун сизнинг Bitcoin манзилларингиз. Янги манзилларни яратиш учун қабул қилиш варағидаги "Янги қабул қилиш манзилини яратиш" устига босинг. 
+Фақат 'legacy' туридаги манзиллар билан ҳисобга кириш мумкин.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">Манзилдан &amp;нусха олиш</translation>
     </message>
@@ -84,6 +90,11 @@
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">Манзил рўйхатини экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Вергул билан ажратилган файл</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -129,6 +140,10 @@
         <translation type="unfinished">Янги махфий сузни такрорланг</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">Махфий сўзни кўрсатиш</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation type="unfinished">Ҳамённи қодлаш</translation>
     </message>
@@ -159,6 +174,18 @@
     <message>
         <source>Wallet encrypted</source>
         <translation type="unfinished">Ҳамёни кодланган</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Шифрланадиган ҳамён</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">Ҳамёнингиз шифрланиш арафасида.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">Ҳамёнингиз энди шифрланади.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -1636,6 +1663,11 @@
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Ўтказмалар тарихини экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Вергул билан ажратилган файл</translation>
     </message>
     <message>
         <source>Confirmed</source>

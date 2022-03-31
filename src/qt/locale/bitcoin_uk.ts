@@ -657,6 +657,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Оновлення -txindex, що було почате попередньою версією, не вдалося завершити. Перезапустить попередню версію або виконайте повний -reindex.</translation>
     </message>
     <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation type="unfinished">Не вдалося встановити визначені з'єднання і одночасно використовувати addrman для встановлення вихідних з'єднань.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation type="unfinished">Помилка завантаження %s: Завантаження гаманця зі зовнішнім підписувачем, але скомпільовано без підтримки зовнішнього підписування</translation>
+    </message>
+    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">Налаштування конфігурації %s застосовується лише для мережі %s у розділі [%s].</translation>
     </message>
@@ -850,7 +858,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Вказано некоректну суму для параметру -paytxfee: «%s» (повинно бути щонайменше %s)</translation>
+        <translation type="unfinished">Вказано некоректну суму для параметра -paytxfee=&lt;amount&gt;: '%s' (повинно бути щонайменше %s)</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
@@ -1842,12 +1850,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Зкомпільовано без підтримки sqlite (потрібно для гаманців дескрипторів)</translation>
+        <translation type="unfinished">Скомпільовано без підтримки sqlite (потрібно для гаманців дескрипторів)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Скомпільовано без підтримки зовнішнього підписування</translation>
+        <translation type="unfinished">Скомпільовано без підтримки зовнішнього підписування (потрібно для зовнішнього підписування)</translation>
     </message>
 </context>
 <context>
@@ -2402,7 +2410,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Скомпільовано без підтримки зовнішнього підписування</translation>
+        <translation type="unfinished">Скомпільовано без підтримки зовнішнього підписування (потрібно для зовнішнього підписування)</translation>
     </message>
     <message>
         <source>default</source>

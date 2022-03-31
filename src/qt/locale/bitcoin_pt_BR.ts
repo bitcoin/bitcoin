@@ -666,6 +666,10 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
         <translation type="unfinished">Necessário informar uma porta com -whitebind: '%s'</translation>
     </message>
     <message>
+        <source>No addresses available</source>
+        <translation type="unfinished">Nenhum endereço disponível</translation>
+    </message>
+    <message>
         <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
         <translation type="unfinished">Nenhum servidor proxy especificado. Use -proxy=&lt;ip&gt; ou proxy=&lt;ip:port&gt;.</translation>
     </message>
@@ -784,6 +788,10 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
     <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">A transação deve ter ao menos um destinatário</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">Transação necessita de um endereço de troco, mas não conseguimos gera-lo. </translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -1897,8 +1905,23 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
         <translation type="unfinished">Reverter esta configuração requer baixar de novo a blockchain inteira.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Tamanho máximo do cache do banco de dados. Um cache maior pode contribuir para uma sincronização mais rápida, após a qual o benefício é menos pronunciado para a maioria dos casos de uso. Reduzir o tamanho do cache reduzirá o uso de memória. A memória do mempool não utilizada é compartilhada para este cache.</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">Define o número de threads para script de verificação. Valores negativos correspondem ao número de núcleos que você quer deixar livre para o sistema.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished">(0 = automático, &lt;0 = número de núcleos deixados livres)</translation>
+    </message>
+    <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation type="unfinished">Isso permite que você ou ferramentas de terceiros comunique-se  com o node através de linha de comando e comandos JSON-RPC.</translation>
     </message>
     <message>
         <source>Enable R&amp;PC server</source>
@@ -1908,6 +1931,11 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
     <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">C&amp;arteira</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Se deve definir subtrair a taxa do montante como padrão ou não.</translation>
     </message>
     <message>
         <source>Subtract &amp;fee from amount by default</source>
@@ -1934,6 +1962,11 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
         <translation type="unfinished">Ative controles &amp;PSBT</translation>
+    </message>
+    <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation type="unfinished">Se os controles PSBT devem ser exibidos.</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>

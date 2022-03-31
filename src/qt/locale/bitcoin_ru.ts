@@ -6,6 +6,10 @@
         <translation type="unfinished">Нажмите правой кнопкой мыши, чтобы изменить адрес или метку</translation>
     </message>
     <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">Создать новый адрес</translation>
+    </message>
+    <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;Новый</translation>
     </message>
@@ -40,6 +44,10 @@
     <message>
         <source>&amp;Delete</source>
         <translation type="unfinished">&amp;Удалить</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">Выберите адрес чтобы отправить монеты</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -253,6 +261,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>QObject</name>
     <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">Произошла фатальная ошибка. Проверьте, доступна ли запись в файл настроек, или повторите запуск с параметром -nosettings.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">Ошибка: указанный каталог данных "%1" не существует.</translation>
     </message>
@@ -354,25 +367,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%nсекунду</numerusform>
+            <numerusform>%nсекунд</numerusform>
+            <numerusform>%nсекунд</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%nминуту</numerusform>
+            <numerusform>%nминут</numerusform>
+            <numerusform>%nминут</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%nчас</numerusform>
+            <numerusform>%nчасов</numerusform>
+            <numerusform>%nчасов</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -422,6 +435,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Файл настроек не может быть прочитан</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Файл настроек не может быть записан</translation>
+    </message>
     <message>
         <source>The %s developers</source>
         <translation type="unfinished">Разработчики %s</translation>
@@ -1058,6 +1079,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Создать новый кошелёк</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Уменьшить</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Кошелёк:</translation>
     </message>
@@ -1205,9 +1230,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Обработан %n блок истории транзакций.</numerusform>
+            <numerusform>Обработано %n блока истории транзакций.</numerusform>
+            <numerusform>Обработано %n блоков истории транзакций.</numerusform>
         </translation>
     </message>
     <message>
@@ -1245,6 +1270,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
         <translation type="unfinished">Загрузить частично подписанную биткоин-транзакцию (PSBT)</translation>
+    </message>
+    <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation type="unfinished">Загрузить PSBT из &amp;буфера обмена...</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
@@ -1321,6 +1350,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>%1 client</source>
         <translation type="unfinished">%1 клиент</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;Скрыть</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -1510,6 +1543,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Копировать сумму</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Копировать адрес</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Копировать &amp;метку</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Копировать &amp;сумму</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">Скопировать &amp;ID транзакции и индекс вывода</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">З&amp;аблокировать неизрасходованный остаток</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Разблокировать неизрасходованный остаток</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Копировать количество</translation>
     </message>
@@ -1586,7 +1643,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create wallet warning</source>
         <translation type="unfinished">Кошелёк создан</translation>
     </message>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Невозможно отобразить подписантов</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">Загрузка кошельков</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">Загрузка кошельков...</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1686,6 +1760,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Дескрипторный кошелёк</translation>
     </message>
     <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Используйте внешнее устройство для подписи, например аппаратный кошелек. Сначала настройте сценарий внешней подписи в настройках кошелька.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">Внешняя подписывающая сторона</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">Создать</translation>
     </message>
@@ -1693,7 +1775,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation type="unfinished">Скомпилирован без поддержки sqlite (необходимо для дескрипторных кошельков)</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Скомпилировано без поддержки внешней подписи (требуется для внешней подписи)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1777,6 +1864,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">биткоин</translation>
+    </message>
+    <message>
+        <source>%1 GB of space available</source>
+        <translation type="unfinished">Доступно %1 Гб пространства</translation>
     </message>
     <message>
         <source>(of %1 GB needed)</source>
@@ -2036,6 +2127,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Возврат этой настройки в прежнее значение потребует повторного скачивания всей цепочки блоков.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Максимальный размер кэша базы данных. Больший размер кэша может способствовать более быстрой синхронизации, после чего это преимущество становится менее выраженным для большинства случаев использования. Уменьшение размера кэша уменьшит использование памяти. Неиспользуемая память mempool используется совместно для этого кэша.</translation>
+    </message>
+    <message>
         <source>MiB</source>
         <translation type="unfinished">МиБ</translation>
     </message>
@@ -2072,6 +2168,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Тратить неподтверждённую сдачу</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">Внешний подписант(например, аппаратный кошелёк)</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -2200,6 +2300,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Cancel</source>
         <translation type="unfinished">О&amp;тмена</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Скомпилировано без поддержки внешней подписи (требуется для внешней подписи)</translation>
     </message>
     <message>
         <source>default</source>
@@ -2703,6 +2808,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Синхронизировано блоков</translation>
     </message>
     <message>
+        <source>Last Transaction</source>
+        <translation type="unfinished">Последняя транзакция</translation>
+    </message>
+    <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
         <translation type="unfinished">Подключённая автономная система, используемая для диверсификации узлов, к которым производится подключение.</translation>
     </message>
@@ -2894,6 +3003,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">широкополосный передатчик не выбран</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;Копировать адрес</translation>
+    </message>
+    <message>
         <source>&amp;Disconnect</source>
         <translation type="unfinished">О&amp;тключиться</translation>
     </message>
@@ -3057,6 +3171,18 @@ For more information on using this console, type %6.
     <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">Копировать &amp;URI</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Копировать адрес</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Копировать &amp;метку</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Копировать &amp;сумму</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -3332,6 +3458,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">%1 (%2 блоков)</translation>
     </message>
     <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">Сначала подключите ваш аппаратный кошелёк.</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">Создать &amp;без подписи</translation>
     </message>
@@ -3384,6 +3514,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Пожалуйста, ещё раз просмотрите черновик вашей транзакции. Будет создана частично подписанная биткоин-транзакция (PSBT), которую можно сохранить или скопировать, после чего подписать, например, офлайновым кошельком %1 или PSBT-совместимым аппаратным кошельком.</translation>
+    </message>
+    <message>
+        <source>Do you want to create this transaction?</source>
+        <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
+        <translation type="unfinished">Вы хотите создать эту транзакцию?</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3706,7 +3841,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>(press q to shutdown and continue later)</source>
         <translation type="unfinished">(нажмите q, чтобы завершить работу и продолжить позже)</translation>
     </message>
-    </context>
+    <message>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">нажмите q для выключения</translation>
+    </message>
+</context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -4048,6 +4187,22 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Range…</source>
         <translation type="unfinished">Диапазон...</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Копировать адрес</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Копировать &amp;метку</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Копировать &amp;сумму</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">Копировать транзакцию и &amp;ID</translation>
     </message>
     <message>
         <source>Export Transaction History</source>

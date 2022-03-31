@@ -268,6 +268,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">輸入 比特幣地址 (比如說 %1)</translation>
     </message>
     <message>
+        <source>Unroutable</source>
+        <translation type="unfinished">不可路由</translation>
+    </message>
+    <message>
         <source>Inbound</source>
         <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
         <translation type="unfinished">進來</translation>
@@ -833,12 +837,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">將錢包中之密鑰加密</translation>
     </message>
     <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">&amp;备用钱包...</translation>
+    </message>
+    <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">用比特幣地址簽名訊息來證明位址是你的</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">驗證訊息是用來確定訊息是用指定的比特幣地址簽名的</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">关钱包...</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">创建钱包...</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">关所有钱包...</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -855,6 +875,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation type="unfinished">分頁工具列</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">连到同行...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -881,6 +905,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>%1 behind</source>
         <translation type="unfinished">落後 %1</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">赶上...</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -985,6 +1013,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>%1 client</source>
         <translation type="unfinished">%1 客戶端</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;躲</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -1150,6 +1182,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy amount</source>
         <translation type="unfinished">複製金額</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">复制和标签</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">复制和数量</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1503,6 +1547,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">剩餘區塊數</translation>
     </message>
     <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">不明...</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">计算...</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation type="unfinished">最近區塊時間</translation>
     </message>
@@ -1764,6 +1816,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">設定檔可以用來指定進階的使用選項，並且會覆蓋掉圖形介面的設定。不過，命令列的選項也會覆蓋掉設定檔中的選項。</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">继续</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation type="unfinished">取消</translation>
     </message>
@@ -1882,6 +1938,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">複製到剪貼簿</translation>
     </message>
     <message>
+        <source>Save…</source>
+        <translation type="unfinished">拯救...</translation>
+    </message>
+    <message>
         <source>Close</source>
         <translation type="unfinished">關閉</translation>
     </message>
@@ -1988,6 +2048,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation type="unfinished">Ping  時間</translation>
+    </message>
+    <message>
+        <source>Peer</source>
+        <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
+        <translation type="unfinished">同行</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -2276,6 +2341,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">去:</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
         <source>&amp;Disconnect</source>
         <translation type="unfinished">斷線(&amp;D)</translation>
     </message>
@@ -2409,6 +2479,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">複製 &amp;URI</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">复制和标签</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">复制和数量</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -3335,6 +3417,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Min amount</source>
         <translation type="unfinished">最小金額</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;复制地址</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">复制和标签</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">复制和数量</translation>
     </message>
     <message>
         <source>Export Transaction History</source>

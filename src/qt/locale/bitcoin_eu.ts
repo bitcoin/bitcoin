@@ -392,6 +392,10 @@
         <translation type="unfinished">Egiaztatu mesua Bitcoin helbide espezifikoarekin erregistratu direla ziurtatzeko</translation>
     </message>
     <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Diru-zorro guztiak itxi...</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation type="unfinished">&amp;Artxiboa</translation>
     </message>

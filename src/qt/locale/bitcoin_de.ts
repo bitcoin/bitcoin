@@ -265,6 +265,16 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Möchten Sie die Einstellungen auf die Standardwerte zurücksetzen oder den Vorgang abbrechen, ohne Änderungen vorzunehmen?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">Ein schwerwiegender Fehler ist aufgetreten. Prüfen Sie, ob die Einstellungsdatei beschreibbar ist, oder versuchen Sie, das Programm mit "-nosettings" auszuführen.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">Fehler: Angegebenes Datenverzeichnis "%1" existiert nicht.</translation>
     </message>
@@ -586,12 +596,24 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <translation type="unfinished">Kann Adresse in -%s nicht auflösen: '%s'</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation type="unfinished">Kann -forcednsseed nicht auf true setzen, wenn -dnsseed auf false gesetzt ist.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation type="unfinished">Kann -peerblockfilters nicht ohne -blockfilterindex setzen.</translation>
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation type="unfinished">Es konnte nicht in das Datenverzeichnis '%s' geschrieben werden; Überprüfen Sie die Berechtigungen.</translation>
+    </message>
+    <message>
+        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation type="unfinished">Das von einer früheren Version gestartete -txindex-Upgrade kann nicht abgeschlossen werden. Starten Sie mit der vorherigen Version neu oder führen Sie ein vollständiges -reindex aus.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation type="unfinished">Es ist nicht möglich, bestimmte Verbindungen anzubieten und gleichzeitig addrman ausgehende Verbindungen finden zu lassen.</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -812,6 +834,10 @@ Berechnet: %s, erwartet: %s</translation>
         <translation type="unfinished">Fehlender Betrag</translation>
     </message>
     <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation type="unfinished">Fehlende Auflösungsdaten zur Schätzung der Transaktionsgröße</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">Angabe eines Ports benötigt für -whitebind: '%s'</translation>
     </message>
@@ -937,12 +963,20 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Transaktionsbeträge dürfen nicht negativ sein.</translation>
     </message>
     <message>
+        <source>Transaction change output index out of range</source>
+        <translation type="unfinished">Ausgangsindex der Transaktionsänderung außerhalb des Bereichs</translation>
+    </message>
+    <message>
         <source>Transaction has too long of a mempool chain</source>
         <translation type="unfinished">Die Speicherpoolkette der Transaktion ist zu lang.</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">Die Transaktion muss mindestens einen Empfänger enthalten.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">Für die Transaktion wird eine neue Adresse benötigt, aber wir können sie nicht generieren.</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -1538,6 +1572,10 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Betrag kopieren</translation>
     </message>
     <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">Transaktion &amp;ID und Ausgabeindex kopieren</translation>
+    </message>
+    <message>
         <source>L&amp;ock unspent</source>
         <translation type="unfinished">Nicht ausgegebenen Betrag sperren</translation>
     </message>
@@ -2089,8 +2127,23 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Wenn diese Einstellung rückgängig gemacht wird, muss die komplette Blockchain erneut heruntergeladen werden.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Maximale Größe des Datenbank-Caches. Ein größerer Cache kann zu einer schnelleren Synchronisierung beitragen, danach ist der Vorteil für die meisten Anwendungsfälle weniger ausgeprägt. Eine Verringerung der Cache-Größe reduziert den Speicherverbrauch. Ungenutzter Mempool-Speicher wird für diesen Cache gemeinsam genutzt.</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">Legen Sie die Anzahl der Skriptüberprüfungs-Threads fest. Negative Werte entsprechen der Anzahl der Kerne, die Sie für das System frei lassen möchten.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished">(0 = automatisch, &lt;0 = so viele Kerne frei lassen)</translation>
+    </message>
+    <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation type="unfinished">Dies ermöglicht Ihnen oder einem Drittanbieter-Tool die Kommunikation mit dem Knoten über Befehlszeilen- und JSON-RPC-Befehle.</translation>
     </message>
     <message>
         <source>Enable R&amp;PC server</source>
@@ -2417,6 +2470,10 @@ Verifikations-Error: %s</translation>
     <message>
         <source>Failed to sign transaction: %1</source>
         <translation type="unfinished">Signieren der Transaktion fehlgeschlagen: %1</translation>
+    </message>
+    <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">Eingaben können nicht unterzeichnet werden, wenn die Brieftasche gesperrt ist.</translation>
     </message>
     <message>
         <source>Could not sign any more inputs.</source>
@@ -3817,7 +3874,11 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
         <source>(press q to shutdown and continue later)</source>
         <translation type="unfinished">(drücke q, um herunterzufahren und später fortzuführen)</translation>
     </message>
-    </context>
+    <message>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">q zum Herunterfahren drücken</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDesc</name>
     <message>
