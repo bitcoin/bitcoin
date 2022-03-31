@@ -870,7 +870,7 @@ int64_t ArgsManager::AltBlocksInMem() const {
 }
 
 int64_t ArgsManager::VbkBlocksInMem() const {
-    int64_t window = GetArg("-popvbkblocksinmem", altintegration::ALT_MAX_REORG_BLOCKS_MIN_VALUE);
+    int64_t window = GetArg("-popvbkblocksinmem", altintegration::VBK_MAX_REORG_BLOCKS_MIN_VALUE);
     if (window < 0) {
         LogPrintf("popvbkblocksinmem is negative. Will keep all blocks in memory\n");
         return std::numeric_limits<::int32_t>::max();
@@ -879,14 +879,14 @@ int64_t ArgsManager::VbkBlocksInMem() const {
         LogPrintf("popvbkblocksinmem is bigger than maximum (max of int32). Will keep all blocks in memory\n");
         return std::numeric_limits<int32_t>::max();
     }
-    if (window < altintegration::ALT_MAX_REORG_BLOCKS_MIN_VALUE) {
-        throw std::runtime_error(strprintf("popvbkblocksinmem should be >= %d", altintegration::ALT_MAX_REORG_BLOCKS_MIN_VALUE));
+    if (window < altintegration::VBK_MAX_REORG_BLOCKS_MIN_VALUE) {
+        throw std::runtime_error(strprintf("popvbkblocksinmem should be >= %d", altintegration::VBK_MAX_REORG_BLOCKS_MIN_VALUE));
     }
     return window;
 }
 
 int64_t ArgsManager::BtcBlocksInMem() const {
-    int64_t window = GetArg("-popbtcblocksinmem", altintegration::ALT_MAX_REORG_BLOCKS_MIN_VALUE);
+    int64_t window = GetArg("-popbtcblocksinmem", altintegration::BTC_MAX_REORG_BLOCKS_MIN_VALUE);
     if (window < 0) {
         LogPrintf("popbtcblocksinmem is negative. Will keep all blocks in memory\n");
         return std::numeric_limits<::int32_t>::max();
@@ -895,8 +895,8 @@ int64_t ArgsManager::BtcBlocksInMem() const {
         LogPrintf("popbtcblocksinmem is bigger than maximum (max of int32). Will keep all blocks in memory\n");
         return std::numeric_limits<int32_t>::max();
     }
-    if (window < altintegration::ALT_MAX_REORG_BLOCKS_MIN_VALUE) {
-        throw std::runtime_error(strprintf("popbtcblocksinmem should be >= %d", altintegration::ALT_MAX_REORG_BLOCKS_MIN_VALUE));
+    if (window < altintegration::BTC_MAX_REORG_BLOCKS_MIN_VALUE) {
+        throw std::runtime_error(strprintf("popbtcblocksinmem should be >= %d", altintegration::BTC_MAX_REORG_BLOCKS_MIN_VALUE));
     }
     return window;
 }
