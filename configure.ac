@@ -554,8 +554,12 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
   ]],[[
+#ifdef __MINGW64__
+#error AVX2 is disabled in Windows gcc builds (see https://github.com/bitcoin/bitcoin/issues/24726).
+#else
     __m256i l = _mm256_set1_epi32(0);
     return _mm256_extract_epi32(l, 7);
+#endif
   ]])],
  [ AC_MSG_RESULT([yes]); enable_avx2=yes; AC_DEFINE([ENABLE_AVX2], [1], [Define this symbol to build code that uses AVX2 intrinsics]) ],
  [ AC_MSG_RESULT([no])]
