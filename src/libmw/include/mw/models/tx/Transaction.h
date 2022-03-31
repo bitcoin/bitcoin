@@ -137,8 +137,8 @@ public:
             GetHash(),
             GetKernelOffset().ToHex(),
             kernels_str,
-            GetInputCommits(),
-            GetOutputCommits()
+            GetInputs(),
+            GetOutputs()
         );
     }
 

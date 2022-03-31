@@ -16,7 +16,10 @@ enum class TxType {
     PEGOUT // NOTE: It's possible pegout transactions will also have pegins, but they will still be classified as PEGOUT
 };
 
-TxType GetTxType(const std::vector<CRecipient>& recipients, const std::vector<CInputCoin>& input_coins);
+bool ContainsPegIn(const TxType& mweb_type, const std::set<CInputCoin>& input_coins);
+bool IsChangeOnMWEB(const CWallet& wallet, const MWEB::TxType& mweb_type, const std::vector<CRecipient>& recipients, const CTxDestination& dest_change);
+uint64_t CalcMWEBWeight(const MWEB::TxType& mweb_type, const bool change_on_mweb, const std::vector<CRecipient>& recipients);
+int64_t CalcPegOutBytes(const TxType& mweb_type, const std::vector<CRecipient>& recipients);
 
 class Transact
 {
@@ -28,15 +31,13 @@ public:
         const std::vector<CRecipient>& recipients,
         const CAmount& ltc_fee,
         const CAmount& mweb_fee,
-        const bool include_mweb_change
+        const CAmount& ltc_change,
+        const bool include_mweb_change,
+        bilingual_str& error
     );
 
 private:
-    static std::vector<mw::Coin> GetInputCoins(const std::vector<CInputCoin>& inputs);
-    static CAmount GetMWEBInputAmount(const std::vector<CInputCoin>& inputs);
-    static CAmount GetLTCInputAmount(const std::vector<CInputCoin>& inputs);
-    static CAmount GetMWEBRecipientAmount(const std::vector<CRecipient>& recipients);
-    static bool UpdatePegInOutput(CMutableTransaction& transaction, const PegInCoin& pegin);
+    static mw::Recipient BuildChangeRecipient();
 };
 
 }

@@ -31,7 +31,7 @@
 #include <util/string.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/createtransaction.h>
+#include <wallet/txassembler.h>
 #include <wallet/fees.h>
 #include <wallet/reserve.h>
 
@@ -988,11 +988,22 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const boost::optional<MWEB::
 
 bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx)
 {
-    const auto& ins = mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(this, nullptr));
-    CWalletTx& wtx = ins.first->second;
-    if (!fill_wtx(wtx, ins.second)) {
+    CWalletTx wtx_tmp(this, nullptr);
+    if (!fill_wtx(wtx_tmp, true)) {
         return false;
     }
+
+    uint256 wtx_hash = wtx_tmp.GetHash();
+    if (mapWallet.count(wtx_hash) > 0 && wtx_tmp.tx->IsNull()) {
+        LogPrintf("%s already exists\n", wtx_hash.ToString());
+        return true;
+    }
+
+    const auto& ins = mapWallet.emplace(wtx_hash, std::move(wtx_tmp));
+    assert(ins.second);
+
+    CWalletTx& wtx = ins.first->second;
+
     // If wallet doesn't have a chain (e.g wallet-tool), don't bother to update txn.
     if (HaveChain()) {
         Optional<int> block_height = chain().getBlockHeight(wtx.m_confirm.hashBlock);
@@ -1016,7 +1027,7 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     if (/* insertion took place */ ins.second) {
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
     }
-    AddToSpends(hash);
+    AddToSpends(wtx.GetHash());
     AddMWEBOrigins(wtx);
     for (const CTxInput& txin : wtx.GetInputs()) {
         CWalletTx* prevtx = FindPrevTx(txin);
@@ -1321,6 +1332,14 @@ void CWallet::blockConnected(const CBlock& block, int height)
 
             assert(hogex_wtx->tx->vout.size() == hogex_wtx->pegout_indices.size());
             WalletBatch(*database).WriteTx(*hogex_wtx);
+        }
+
+        for (const Kernel& kernel : block.mweb_block.m_block->GetKernels()) {
+            auto wtx = FindWalletTxByKernelId(kernel.GetKernelID());
+            if (wtx != nullptr) {
+                SyncTransaction(wtx->tx, wtx->mweb_wtx_info, {CWalletTx::Status::CONFIRMED, height, block_hash, wtx->m_confirm.nIndex});
+                transactionRemovedFromMempool(wtx->tx, MemPoolRemovalReason::BLOCK, 0 /* mempool_sequence */);
+            }
         }
 
         mw::Coin mweb_coin;
@@ -1926,6 +1945,35 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
         if (fIsMine & filter)
             listReceived.push_back(output);
     }
+
+    // MWEB: Treat pegouts as outputs
+    for (const PegOutCoin& pegout : tx->mweb_tx.GetPegOuts()) {
+        DestinationAddr dest_addr{pegout.GetScriptPubKey()};
+
+        isminetype fIsMine = pwallet->IsMine(dest_addr);
+        // Only need to handle txouts if AT LEAST one of these is true:
+        //   1) they debit from us (sent)
+        //   2) the output is to us (received)
+        if (nDebit > 0) {
+            // Don't report 'change' txouts
+            if (pwallet->IsChange(dest_addr))
+                continue;
+        } else if (!(fIsMine & filter))
+            continue;
+
+        CTxDestination address;
+        dest_addr.ExtractDestination(address);
+
+        COutputEntry output = {address, pegout.GetAmount(), mw::Hash()};
+
+        // If we are debited by the transaction, add the output as a "sent" entry
+        if (nDebit > 0)
+            listSent.push_back(output);
+
+        // If we are receiving the output, add it as a "received" entry
+        if (fIsMine & filter)
+            listReceived.push_back(output);
+    }
 }
 
 /**
@@ -2035,7 +2083,13 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             }
 
             if (!block.mweb_block.IsNull()) {
-                // MW: TODO - Pegouts?
+                for (const Kernel& kernel : block.mweb_block.m_block->GetKernels()) {
+                    const CWalletTx* wtx = FindWalletTxByKernelId(kernel.GetKernelID());
+                    if (wtx) {
+                        SyncTransaction(wtx->tx, wtx->mweb_wtx_info, {CWalletTx::Status::CONFIRMED, block_height, block_hash, wtx->m_confirm.nIndex}, fUpdate);
+                    }
+                }
+
                 mw::Coin mweb_coin;
                 for (const Output& output : block.mweb_block.m_block->GetOutputs()) {
                     if (mweb_wallet->RewindOutput(output, mweb_coin)) {
@@ -2347,6 +2401,10 @@ bool CWallet::IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents
     int nDepth = wtx.GetDepthInMainChain();
     if (nDepth >= 1) return true;
     if (nDepth < 0) return false;
+
+    // If the HogEx is not in the main chain, then we should assume it has been replaced during a reorg.
+    if (wtx.IsHogEx()) return false;
+
     // using wtx's cached debit
     if (!m_spend_zero_conf_change || !wtx.IsFromMe(ISMINE_ALL)) return false;
 
@@ -2598,7 +2656,7 @@ void CWallet::AvailableCoins(std::vector<COutputCoin>& vCoins, bool fOnlySafe, c
 
             if (output.IsMWEB()) {
                 mw::Coin coin;
-                if (!GetCoin(output.ToMWEB(), coin)) {
+                if (!GetCoin(output.ToMWEB(), coin) || !coin.IsMine()) {
                     continue;
                 }
 
@@ -3014,27 +3072,36 @@ bool CWallet::CreateTransaction(
         bool sign)
 {
     int nChangePosIn = nChangePosInOut;
-    CTransactionRef tx2 = tx;
-    bool res = CreateTransactionEx(*this, vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
+
+    Optional<AssembledTx> tx1 = TxAssembler(*this).AssembleTx(vecSend, coin_control, nChangePosIn, sign, error);
+    if (tx1) {
+        tx = tx1->tx;
+        nFeeRet = tx1->fee;
+        nChangePosInOut = tx1->change_position;
+        fee_calc_out = tx1->fee_calc;
+    }
+
     // try with avoidpartialspends unless it's enabled already
-    if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
+    if (tx1 && tx1->fee > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         CCoinControl tmp_cc = coin_control;
         tmp_cc.m_avoid_partial_spends = true;
-        CAmount nFeeRet2;
-        int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
-        if (CreateTransactionEx(*this, vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign)) {
+
+        Optional<AssembledTx> tx2 = TxAssembler(*this).AssembleTx(vecSend, tmp_cc, nChangePosIn, sign, error2);
+        if (tx2) {
             // if fee of this alternative one is within the range of the max fee, we use this one
-            const bool use_aps = nFeeRet2 <= nFeeRet + m_max_aps_fee;
-            WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");
+            const bool use_aps = tx2->fee <= tx1->fee + m_max_aps_fee;
+            WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", tx1->fee, tx2->fee, use_aps ? "grouped" : "non-grouped");
             if (use_aps) {
-                tx = tx2;
-                nFeeRet = nFeeRet2;
-                nChangePosInOut = nChangePosInOut2;
+                tx = tx2->tx;
+                nFeeRet = tx2->fee;
+                nChangePosInOut = tx2->change_position;
+                fee_calc_out = tx2->fee_calc;
             }
         }
     }
-    return res;
+
+    return !!tx1;
 }
 
 void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)
@@ -4071,6 +4138,11 @@ bool CWalletTx::IsImmature() const
     return GetBlocksToMaturity() > 0;
 }
 
+bool CWalletTx::IsFinal() const
+{
+    return pwallet->chain().checkFinalTx(*tx);
+}
+
 std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutputCoin>& outputs, bool single_coin, const size_t max_ancestors) const {
     std::vector<OutputGroup> groups;
     std::map<CTxDestination, OutputGroup> gmap;
@@ -4515,6 +4587,20 @@ bool CWallet::ExtractDestinationScript(const CTxOutput& output, DestinationAddr&
     }
 
     return true;
+}
+
+const CWalletTx* CWallet::FindWalletTxByKernelId(const mw::Hash& kernel_id) const
+{
+    LOCK(cs_wallet);
+    auto kernel_iter = mapKernelsMWEB.find(kernel_id);
+    if (kernel_iter != mapOutputsMWEB.end()) {
+        auto tx_iter = mapWallet.find(kernel_iter->second);
+        if (tx_iter != mapWallet.end()) {
+            return &tx_iter->second;
+        }
+    }
+
+    return nullptr;
 }
 
 const CWalletTx* CWallet::FindWalletTx(const OutputIndex& output) const

@@ -25,7 +25,10 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         self.log.info("Setting up MWEB chain")
         setup_mweb_chain(node0)
         self.sync_all()
-
+        
+        #
+        # Send to node1 mweb
+        #
         self.log.info("Send to node1 mweb address")
         n1_addr = node1.getnewaddress(address_type='mweb')
         tx1_id = node0.sendtoaddress(n1_addr, 25)
@@ -63,28 +66,40 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         assert n0_tx1['amount'] == -25
         assert n0_tx1['fee'] < 0 and n0_tx1['fee'] > -0.1
 
+        #
         # Pegout to node2
+        #
         self.log.info("Send (pegout) to node2 bech32 address")
         n2_addr = node2.getnewaddress(address_type='bech32')
-        self.log.info("Address: {}".format(n2_addr))
         tx2_id = node1.sendtoaddress(n2_addr, 15)
         self.sync_mempools()
 
         self.log.info("Verify node1's wallet lists the transaction as spent")
         n1_tx2 = node1.gettransaction(txid=tx2_id)
-        self.log.info(n1_tx2)
         assert_equal(n1_tx2['confirmations'], 0)
         assert_equal(n1_tx2['amount'], -15)
         assert n1_tx2['fee'] < 0 and n1_tx2['fee'] > -0.1
 
         self.log.info("Verify node2's wallet receives the first pegout transaction")
         n2_tx2 = node2.gettransaction(txid=tx2_id)
-        self.log.info(n2_tx2)
-        #n2_addr_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr)
         assert_equal(n2_tx2['amount'], 15)
         assert_equal(n2_tx2['confirmations'], 0)
+        assert tx2_id in node1.getrawmempool()
 
+        self.log.info("Mine next block to make sure the transaction confirms successfully")
+        node0.generate(1)
+        self.sync_all()
+        assert tx2_id not in node1.getrawmempool()
+
+        self.log.info("Verify node2's wallet receives the first pegout transaction")
+        n2_addr_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr)
+        assert_equal(len(n2_addr_coins), 1)
+        assert_equal(n2_addr_coins[0]['amount'], 15)
+        assert_equal(n2_addr_coins[0]['confirmations'], 1)
+        
+        #
         # Pegout to node2 using subtract fee from amount
+        #
         self.log.info("Send (pegout) to node2 bech32 address")
         n2_addr2 = node2.getnewaddress(address_type='bech32')
         tx3_id = node1.sendtoaddress(address=n2_addr2, amount=5, subtractfeefromamount=True)
@@ -96,25 +111,16 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         assert n1_tx3['amount'] > -5 and n1_tx3['amount'] < -4.9
         assert n1_tx3['fee'] < 0 and n1_tx3['fee'] > -0.1
 
-        assert tx2_id in node1.getrawmempool()
         assert tx3_id in node1.getrawmempool()
 
-        self.log.info("Mine next block so node2 sees the transactions")
-        node0.generate(2)
+        self.log.info("Mine next block so node2 sees the transaction")
+        node0.generate(1)
         self.sync_all()
         
-        assert tx2_id not in node1.getrawmempool()
         assert tx3_id not in node1.getrawmempool()
-
-        self.log.info("Verify node2's wallet receives the first pegout transaction")
-        n2_addr_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr)
-        assert_equal(len(n2_addr_coins), 1)
-        assert_equal(n2_addr_coins[0]['amount'], 15)
-        assert_equal(n2_addr_coins[0]['confirmations'], 1)
         
         self.log.info("Verify node2's wallet receives the second pegout transaction")
-        n2_addr2_coins = node2.listreceivedbyaddress(minconf=0)
-        self.log.info(n2_addr2_coins)
+        n2_addr2_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr2)
         assert_equal(len(n2_addr2_coins), 1)
         assert n2_addr2_coins[0]['amount'] < 5 and n2_addr2_coins[0]['amount'] > 4.9
         assert_equal(n2_addr2_coins[0]['confirmations'], 1)
@@ -126,7 +132,6 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
 
         # TODO: Conflicting txs
         # TODO: Duplicate hash
-
 
 if __name__ == '__main__':
     MWEBWalletBasicTest().main()

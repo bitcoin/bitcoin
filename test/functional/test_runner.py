@@ -252,6 +252,7 @@ BASE_SCRIPTS = [
     'mweb_node_compatibility.py',
     'mweb_wallet_address.py',
     'mweb_wallet_basic.py',
+    'wallet_listwallettransactions.py',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'wallet_resendwallettransactions.py --descriptors',

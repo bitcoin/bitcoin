@@ -5,7 +5,7 @@
 #include <qt/transactionfilterproxy.h>
 
 #include <qt/transactiontablemodel.h>
-#include <qt/transactionrecord.h>
+#include <wallet/txrecord.h>
 
 #include <cstdlib>
 
@@ -32,7 +32,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
     int status = index.data(TransactionTableModel::StatusRole).toInt();
-    if (!showInactive && status == TransactionStatus::Conflicted)
+    if (!showInactive && status == WalletTxStatus::Conflicted)
         return false;
 
     int type = index.data(TransactionTableModel::TypeRole).toInt();

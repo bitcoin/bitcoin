@@ -13,6 +13,7 @@
 #include <support/allocators/secure.h> // For SecureString
 #include <util/message.h>
 #include <util/ui_change_type.h>
+#include <wallet/txrecord.h>
 
 #include <functional>
 #include <map>
@@ -188,16 +189,10 @@ public:
     virtual CTransactionRef getTx(const uint256& txid) = 0;
 
     //! Get transaction information.
-    virtual WalletTx getWalletTx(const uint256& txid) = 0;
+    virtual std::vector<WalletTxRecord> getWalletTx(const uint256& txid) = 0;
 
     //! Get list of all wallet transactions.
-    virtual std::vector<WalletTx> getWalletTxs() = 0;
-
-    //! Try to get updated status for a particular transaction, if possible without blocking.
-    virtual bool tryGetTxStatus(const uint256& txid,
-        WalletTxStatus& tx_status,
-        int& num_blocks,
-        int64_t& block_time) = 0;
+    virtual std::vector<WalletTxRecord> getWalletTxs() = 0;
 
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const uint256& txid,
@@ -240,6 +235,9 @@ public:
 
     //! Return credit amount if transaction input belongs to wallet.
     virtual CAmount getCredit(const CTxOutput& txout, isminefilter filter) = 0;
+
+    //! Return true if the output is a change output.
+    virtual bool isChange(const CTxOutput& txout) = 0;
 
     //! Return AvailableCoins + LockedCoins grouped by wallet address.
     //! (put change in one group with wallet address)
@@ -430,6 +428,7 @@ struct WalletTxStatus
     bool is_trusted;
     bool is_abandoned;
     bool is_coinbase;
+    bool is_hogex;
     bool is_in_main_chain;
 };
 

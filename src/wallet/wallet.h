@@ -349,6 +349,8 @@ public:
         mweb_wtx_info = mweb_wtx_info_;
     }
 
+    CWalletTx(CWalletTx&& wtx) = default;
+
     void Init()
     {
         mapValue.clear();
@@ -595,6 +597,7 @@ public:
     bool IsCoinBase() const { return tx->IsCoinBase(); }
     bool IsHogEx() const { return tx->IsHogEx(); }
     bool IsImmature() const;
+    bool IsFinal() const;
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the
@@ -1436,6 +1439,7 @@ public:
     bool ExtractOutputDestination(const CTxOutput& output, CTxDestination& dest) const;
     bool ExtractDestinationScript(const CTxOutput& output, DestinationAddr& dest) const;
 
+    const CWalletTx* FindWalletTxByKernelId(const mw::Hash& kernel_id) const;
     const CWalletTx* FindWalletTx(const OutputIndex& output) const;
     const CWalletTx* FindPrevTx(const CTxInput& input) const;
     CWalletTx* FindPrevTx(const CTxInput& input);

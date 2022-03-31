@@ -10,6 +10,7 @@ from test_framework.util import assert_equal
 class MWEBBasicTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
+        self.extra_args = [['-whitelist=noban@127.0.0.1'],[]]  # immediate tx relay
         self.num_nodes = 2
 
     def skip_test_if_missing_module(self):
@@ -54,9 +55,7 @@ class MWEBBasicTest(BitcoinTestFramework):
 
         self.log.info("Send MWEB coins to node 1")
         addr1 = self.nodes[1].getnewaddress(address_type='mweb')
-        tx1_hash = self.nodes[0].sendtoaddress(addr1, 5)
-        tx1 = self.nodes[0].getmempoolentry(tx1_hash)
-        self.log.info("tx1: {}".format(tx1))
+        self.nodes[0].sendtoaddress(addr1, 5)
         self.nodes[0].generate(1)
         self.sync_all()
 

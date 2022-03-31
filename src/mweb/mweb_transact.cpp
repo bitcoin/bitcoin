@@ -1,36 +1,70 @@
 #include <mweb/mweb_transact.h>
 #include <key_io.h>
+#include <policy/policy.h>
 
 #include <mw/models/tx/PegOutCoin.h>
 #include <mw/wallet/TxBuilder.h>
+#include <util/translation.h>
 
 using namespace MWEB;
 
-TxType MWEB::GetTxType(const std::vector<CRecipient>& recipients, const std::vector<CInputCoin>& input_coins)
+bool MWEB::ContainsPegIn(const TxType& mweb_type, const std::set<CInputCoin>& input_coins)
 {
-    assert(!recipients.empty());
-
-    static auto is_ltc = [](const CInputCoin& input) { return !input.IsMWEB(); };
-    static auto is_mweb = [](const CInputCoin& input) { return input.IsMWEB(); };
-
-    if (recipients.front().IsMWEB()) {
-        // If any inputs are non-MWEB inputs, this is a peg-in transaction.
-        // Otherwise, it's a simple MWEB-to-MWEB transaction.
-        if (std::any_of(input_coins.cbegin(), input_coins.cend(), is_ltc)) {
-            return TxType::PEGIN;
-        } else {
-            return TxType::MWEB_TO_MWEB;
-        }
-    } else {
-        // If any inputs are MWEB inputs, this is a peg-out transaction.
-        // NOTE: This does not exclude the possibility that it's also pegging-in in addition to the pegout.
-        // Otherwise, if there are no MWEB inputs, it's a simple LTC-to-LTC transaction.
-        if (std::any_of(input_coins.cbegin(), input_coins.cend(), is_mweb)) {
-            return TxType::PEGOUT;
-        } else {
-            return TxType::LTC_TO_LTC;
-        }
+    if (mweb_type == MWEB::TxType::PEGIN) {
+        return true;
     }
+
+    if (mweb_type == MWEB::TxType::PEGOUT) {
+        return std::any_of(
+            input_coins.cbegin(), input_coins.cend(),
+            [](const CInputCoin& coin) { return !coin.IsMWEB(); });
+    }
+
+    return false;
+}
+
+bool MWEB::IsChangeOnMWEB(const CWallet& wallet, const MWEB::TxType& mweb_type, const std::vector<CRecipient>& recipients, const CTxDestination& dest_change)
+{
+    if (mweb_type == MWEB::TxType::MWEB_TO_MWEB || mweb_type == MWEB::TxType::PEGOUT) {
+        return true;
+    }
+
+    if (mweb_type == MWEB::TxType::PEGIN) {
+        return dest_change.type() == typeid(CNoDestination) || dest_change.type() == typeid(StealthAddress);
+    }
+
+    return false;
+}
+
+uint64_t MWEB::CalcMWEBWeight(const MWEB::TxType& mweb_type, const bool change_on_mweb, const std::vector<CRecipient>& recipients)
+{
+    uint64_t mweb_weight = 0;
+
+    if (mweb_type == MWEB::TxType::PEGIN || mweb_type == MWEB::TxType::MWEB_TO_MWEB) {
+        mweb_weight += Weight::STANDARD_OUTPUT_WEIGHT; // MW: FUTURE - Look at actual recipients list, but for now we only support 1 MWEB recipient.
+    }
+
+    if (change_on_mweb) {
+        mweb_weight += Weight::STANDARD_OUTPUT_WEIGHT;
+    }
+
+    if (mweb_type != MWEB::TxType::LTC_TO_LTC) {
+        CScript pegout_script = (mweb_type == MWEB::TxType::PEGOUT) ? recipients.front().GetScript() : CScript();
+        mweb_weight += Weight::CalcKernelWeight(true, pegout_script);
+    }
+
+    return mweb_weight;
+}
+
+int64_t MWEB::CalcPegOutBytes(const TxType& mweb_type, const std::vector<CRecipient>& recipients)
+{
+    if (mweb_type == MWEB::TxType::PEGOUT) {
+        CTxOut pegout_output(recipients.front().nAmount, recipients.front().receiver.GetScript());
+        int64_t pegout_weight = (int64_t)::GetSerializeSize(pegout_output, PROTOCOL_VERSION) * WITNESS_SCALE_FACTOR;
+        return GetVirtualTransactionSize(pegout_weight, 0, 0);
+    }
+
+    return 0;
 }
 
 bool Transact::CreateTx(
@@ -38,22 +72,19 @@ bool Transact::CreateTx(
     CMutableTransaction& transaction,
     const std::vector<CInputCoin>& selected_coins,
     const std::vector<CRecipient>& recipients,
-    const CAmount& ltc_fee,
+    const CAmount& total_fee,
     const CAmount& mweb_fee,
-    const bool include_mweb_change)
+    const CAmount& ltc_change,
+    const bool include_mweb_change,
+    bilingual_str& error)
 {
-    TxType type = MWEB::GetTxType(recipients, selected_coins);
-    if (type == TxType::LTC_TO_LTC) {
-        return true;
-    }
-
     // Add recipients
     std::vector<mw::Recipient> receivers;
     std::vector<PegOutCoin> pegouts;
     for (const CRecipient& recipient : recipients) {
         CAmount recipient_amount = recipient.nAmount;
         if (recipient.fSubtractFeeFromAmount) {
-            recipient_amount -= ltc_fee;
+            recipient_amount -= total_fee;
         }
 
         if (recipient.IsMWEB()) {
@@ -69,38 +100,56 @@ bool Transact::CreateTx(
 
     // Calculate pegin_amount
     boost::optional<CAmount> pegin_amount = boost::none;
-    CAmount ltc_input_amount = GetLTCInputAmount(selected_coins);
+    CAmount ltc_input_amount = std::accumulate(
+        selected_coins.cbegin(), selected_coins.cend(), CAmount(0),
+        [](CAmount amt, const CInputCoin& input) { return amt + (input.IsMWEB() ? 0 : input.GetAmount()); }
+    );
     if (ltc_input_amount > 0) {
-        assert(ltc_fee < ltc_input_amount);
-        pegin_amount = (ltc_input_amount - ltc_fee + mweb_fee); // MW: TODO - There could also be LTC change
+        assert(total_fee < ltc_input_amount);
+        const CAmount ltc_fee = total_fee - mweb_fee;
+        pegin_amount = (ltc_input_amount - (ltc_fee + ltc_change));
     }
 
     // Add Change
     if (include_mweb_change) {
         CAmount recipient_amount = std::accumulate(
             recipients.cbegin(), recipients.cend(), CAmount(0),
-            [ltc_fee](CAmount amount, const CRecipient& recipient) {
-                return amount + (recipient.nAmount - (recipient.fSubtractFeeFromAmount ? ltc_fee : 0));
+            [total_fee](CAmount amount, const CRecipient& recipient) {
+                return amount + (recipient.nAmount - (recipient.fSubtractFeeFromAmount ? total_fee : 0));
             }
         );
 
-        CAmount change_amount = (pegin_amount.value_or(0) + GetMWEBInputAmount(selected_coins)) - (recipient_amount + mweb_fee);
+        CAmount mweb_input_amount = std::accumulate(
+            selected_coins.cbegin(), selected_coins.cend(), CAmount(0),
+            [](CAmount amt, const CInputCoin& input) { return amt + (input.IsMWEB() ? input.GetAmount() : 0); }
+        );
+
+        CAmount change_amount = (pegin_amount.value_or(0) + mweb_input_amount) - (recipient_amount + mweb_fee + ltc_change);
         if (change_amount < 0) {
+            error = _("MWEB change calculation failed");
             return false;
         }
+
         StealthAddress change_address;
         if (!mweb_wallet->GetStealthAddress(mw::CHANGE_INDEX, change_address)) {
+            error = _("Failed to retrieve change stealth address");
             return false;
         }
 
         receivers.push_back(mw::Recipient{change_amount, change_address});
     }
 
-    // Create transaction
-    std::vector<mw::Coin> input_coins = GetInputCoins(selected_coins);
+    std::vector<mw::Coin> input_coins;
+    for (const auto& coin : selected_coins) {
+        if (coin.IsMWEB()) {
+            input_coins.push_back(coin.GetMWEBCoin());
+        }
+    }
+
     std::vector<mw::Coin> output_coins;
 
     try {
+        // Create the MWEB transaction
         transaction.mweb_tx = TxBuilder::BuildTx(
             input_coins,
             receivers,
@@ -109,7 +158,8 @@ bool Transact::CreateTx(
             mweb_fee,
             output_coins
         );
-    } catch (std::exception&) {
+    } catch (std::exception& e) {
+        error = Untranslated(e.what());
         return false;
     }
 
@@ -120,54 +170,43 @@ bool Transact::CreateTx(
     // Update pegin output
     auto pegins = transaction.mweb_tx.GetPegIns();
     if (!pegins.empty()) {
-        UpdatePegInOutput(transaction, pegins.front());
+        for (size_t i = 0; i < transaction.vout.size(); i++) {
+            if (IsPegInOutput(CTransaction(transaction).GetOutput(i))) {
+                transaction.vout[i].nValue = pegins.front().GetAmount();
+                transaction.vout[i].scriptPubKey = GetScriptForPegin(pegins.front().GetKernelID());
+                break;
+            }
+        }
     }
 
     return true;
 }
 
-std::vector<mw::Coin> Transact::GetInputCoins(const std::vector<CInputCoin>& inputs)
+mw::Recipient Transact::BuildChangeRecipient()
 {
-    std::vector<mw::Coin> input_coins;
-    for (const auto& coin : inputs) {
-        if (coin.IsMWEB()) {
-            input_coins.push_back(coin.GetMWEBCoin());
-        }
-    }
-
-    return input_coins;
-}
-
-CAmount Transact::GetMWEBInputAmount(const std::vector<CInputCoin>& inputs)
-{
-    return std::accumulate(
-        inputs.cbegin(), inputs.cend(), CAmount(0),
-        [](CAmount amt, const CInputCoin& input) { return amt + (input.IsMWEB() ? input.GetAmount() : 0); });
-}
-
-CAmount Transact::GetLTCInputAmount(const std::vector<CInputCoin>& inputs)
-{
-    return std::accumulate(
-        inputs.cbegin(), inputs.cend(), CAmount(0),
-        [](CAmount amt, const CInputCoin& input) { return amt + (input.IsMWEB() ? 0 : input.GetAmount()); });
-}
-
-CAmount Transact::GetMWEBRecipientAmount(const std::vector<CRecipient>& recipients)
-{
-    return std::accumulate(
+    CAmount recipient_amount = std::accumulate(
         recipients.cbegin(), recipients.cend(), CAmount(0),
-        [](CAmount amt, const CRecipient& recipient) { return amt + (recipient.IsMWEB() ? recipient.nAmount : 0); });
-}
-
-bool Transact::UpdatePegInOutput(CMutableTransaction& transaction, const PegInCoin& pegin)
-{
-    for (size_t i = 0; i < transaction.vout.size(); i++) {
-        if (IsPegInOutput(CTransaction(transaction).GetOutput(i))) {
-            transaction.vout[i].nValue = pegin.GetAmount();
-            transaction.vout[i].scriptPubKey = GetScriptForPegin(pegin.GetKernelID());
-            return true;
+        [total_fee](CAmount amount, const CRecipient& recipient) {
+            return amount + (recipient.nAmount - (recipient.fSubtractFeeFromAmount ? total_fee : 0));
         }
+    );
+
+    CAmount mweb_input_amount = std::accumulate(
+        selected_coins.cbegin(), selected_coins.cend(), CAmount(0),
+        [](CAmount amt, const CInputCoin& input) { return amt + (input.IsMWEB() ? input.GetAmount() : 0); }
+    );
+
+    CAmount change_amount = (pegin_amount.value_or(0) + mweb_input_amount) - (recipient_amount + mweb_fee + ltc_change);
+    if (change_amount < 0) {
+        error = _("MWEB change calculation failed");
+        return false;
     }
 
-    return false;
+    StealthAddress change_address;
+    if (!mweb_wallet->GetStealthAddress(mw::CHANGE_INDEX, change_address)) {
+        error = _("Failed to retrieve change stealth address");
+        return false;
+    }
+
+    return mw::Recipient{change_amount, change_address};
 }

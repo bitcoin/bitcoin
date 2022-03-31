@@ -62,20 +62,14 @@ struct WalletTxInfo
     // so we create an empty Transaction and store the spent hash here.
     boost::optional<mw::Hash> spent_input;
 
-    uint256 hash;
+    mutable uint256 hash;
 
     WalletTxInfo()
         : received_coin(boost::none), spent_input(boost::none), hash() { }
     WalletTxInfo(mw::Coin received)
-        : received_coin(std::move(received)), spent_input(boost::none)
-    {
-        hash = SerializeHash(*this);
-    }
+        : received_coin(std::move(received)), spent_input(boost::none), hash(received_coin->output_id.vec()) {}
     WalletTxInfo(mw::Hash spent)
-        : received_coin(boost::none), spent_input(std::move(spent))
-    {
-        hash = SerializeHash(*this);
-    }
+        : received_coin(boost::none), spent_input(std::move(spent)), hash(spent_input->vec()) {}
 
     SERIALIZE_METHODS(WalletTxInfo, obj)
     {
@@ -86,15 +80,15 @@ struct WalletTxInfo
             mw::Coin coin;
             SER_WRITE(obj, coin = *obj.received_coin);
             READWRITE(coin);
+            SER_READ(obj, obj.hash = uint256(coin.output_id.vec()));
             SER_READ(obj, obj.received_coin = boost::make_optional<mw::Coin>(std::move(coin)));
         } else {
             mw::Hash output_id;
             SER_WRITE(obj, output_id = *obj.spent_input);
             READWRITE(output_id);
+            SER_READ(obj, obj.hash = uint256(output_id.vec()));
             SER_READ(obj, obj.spent_input = boost::make_optional<mw::Hash>(std::move(output_id)));
         }
-
-        SER_READ(obj, obj.hash = SerializeHash(obj));
     }
 
     static WalletTxInfo FromHex(const std::string& str)
@@ -114,7 +108,9 @@ struct WalletTxInfo
         return HexStr(std::vector<uint8_t>{stream.begin(), stream.end()});
     }
 
-    const uint256& GetHash() const { return hash; }
+    const uint256& GetHash() const {
+        return hash;
+    }
 };
 
 } // namespace MWEB

@@ -262,6 +262,7 @@ public:
     bool fIsEncrypted{false};
     bool fAnyUnordered{false};
     std::vector<uint256> vWalletUpgrade;
+    std::vector<uint256> vWalletRemove;
     std::map<OutputType, uint256> m_active_external_spks;
     std::map<OutputType, uint256> m_active_internal_spks;
     std::map<uint256, DescriptorCache> m_descriptor_caches;
@@ -304,8 +305,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             auto fill_wtx = [&](CWalletTx& wtx, bool new_tx) {
                 assert(new_tx);
                 ssValue >> wtx;
-                if (wtx.GetHash() != hash)
-                    return false;
+                if (wtx.GetHash() != hash) {
+					// We previously calculated hash for mweb_wtx_info in an impractical way.
+					// We changed to just using the output ID as hash, so need to upgrade any existing txs.
+                    if (wtx.mweb_wtx_info) {
+                        wss.vWalletRemove.push_back(hash);
+                        wss.vWalletUpgrade.push_back(wtx.GetHash());
+                    } else {
+                        return false;
+                    }
+                }
 
                 // Undo serialize changes in 31600
                 if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
@@ -832,6 +841,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     for (const uint256& hash : wss.vWalletUpgrade)
         WriteTx(pwallet->mapWallet.at(hash));
+
+    for (const uint256& hash : wss.vWalletRemove) {
+        EraseTx(hash);
+    }
 
     // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
     if (wss.fIsEncrypted && (last_client == 40000 || last_client == 50000))

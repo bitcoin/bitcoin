@@ -25,6 +25,7 @@
 #include <wallet/load.h>
 #include <wallet/reserve.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/txlist.h>
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -156,6 +157,7 @@ WalletTxStatus MakeWalletTxStatus(CWallet& wallet, const CWalletTx& wtx)
     result.is_trusted = wtx.IsTrusted();
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();
+    result.is_hogex = wtx.IsHogEx();
     result.is_in_main_chain = wtx.IsInMainChain();
     return result;
 }
@@ -375,43 +377,19 @@ public:
         }
         return {};
     }
-    WalletTx getWalletTx(const uint256& txid) override
+    std::vector<WalletTxRecord> getWalletTx(const uint256& txid) override
     {
         LOCK(m_wallet->cs_wallet);
         auto mi = m_wallet->mapWallet.find(txid);
         if (mi != m_wallet->mapWallet.end()) {
-            return MakeWalletTx(*m_wallet, mi->second);
+            return TxList(*m_wallet).List(mi->second, ISMINE_ALL, boost::none, boost::none);
         }
         return {};
     }
-    std::vector<WalletTx> getWalletTxs() override
+    std::vector<WalletTxRecord> getWalletTxs() override
     {
         LOCK(m_wallet->cs_wallet);
-        std::vector<WalletTx> result;
-        result.reserve(m_wallet->mapWallet.size());
-        for (const auto& entry : m_wallet->mapWallet) {
-            result.emplace_back(MakeWalletTx(*m_wallet, entry.second));
-        }
-        return result;
-    }
-    bool tryGetTxStatus(const uint256& txid,
-        interfaces::WalletTxStatus& tx_status,
-        int& num_blocks,
-        int64_t& block_time) override
-    {
-        TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
-        if (!locked_wallet) {
-            return false;
-        }
-        auto mi = m_wallet->mapWallet.find(txid);
-        if (mi == m_wallet->mapWallet.end()) {
-            return false;
-        }
-        num_blocks = m_wallet->GetLastBlockHeight();
-        block_time = -1;
-        CHECK_NONFATAL(m_wallet->chain().findBlock(m_wallet->GetLastBlockHash(), FoundBlock().time(block_time)));
-        tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
-        return true;
+        return TxList(*m_wallet).ListAll(ISMINE_ALL);
     }
     WalletTx getWalletTxDetails(const uint256& txid,
         WalletTxStatus& tx_status,
@@ -493,6 +471,11 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetCredit(txout, filter);
+    }
+    bool isChange(const CTxOutput& txout) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->IsChange(txout);
     }
     CoinsList listCoins() override
     {

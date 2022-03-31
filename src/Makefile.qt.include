@@ -153,7 +153,6 @@ BITCOIN_QT_H = \
   qt/transactiondescdialog.h \
   qt/transactionfilterproxy.h \
   qt/transactionoverviewwidget.h \
-  qt/transactionrecord.h \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
   qt/utilitydialog.h \
@@ -262,7 +261,6 @@ BITCOIN_QT_WALLET_CPP = \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \
-  qt/transactionrecord.cpp \
   qt/transactiontablemodel.cpp \
   qt/transactionview.cpp \
   qt/walletcontroller.cpp \

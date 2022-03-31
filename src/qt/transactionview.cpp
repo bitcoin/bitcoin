@@ -13,7 +13,6 @@
 #include <qt/platformstyle.h>
 #include <qt/transactiondescdialog.h>
 #include <qt/transactionfilterproxy.h>
-#include <qt/transactionrecord.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
@@ -83,13 +82,13 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     }
 
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
-    typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(TransactionRecord::RecvWithAddress) |
-                                        TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
-    typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
-                                  TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
-    typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
-    typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
-    typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
+    typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(WalletTxRecord::RecvWithAddress) |
+                                        TransactionFilterProxy::TYPE(WalletTxRecord::RecvFromOther));
+    typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(WalletTxRecord::SendToAddress) |
+                                  TransactionFilterProxy::TYPE(WalletTxRecord::SendToOther));
+    typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(WalletTxRecord::SendToSelf));
+    typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(WalletTxRecord::Generated));
+    typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(WalletTxRecord::Other));
 
     hlayout->addWidget(typeWidget);
 

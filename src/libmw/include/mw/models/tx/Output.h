@@ -96,7 +96,8 @@ private:
 class Output :
     public Traits::ICommitted,
     public Traits::ISerializable,
-    public Traits::IHashable
+    public Traits::IHashable,
+    public Traits::IPrintable
 {
 public:
     //
@@ -190,6 +191,7 @@ public:
     //
     // Traits
     //
+    std::string Format() const noexcept final { return "Output(ID=" + GetOutputID().Format() + ")"; }
     const mw::Hash& GetHash() const noexcept final { return m_hash; }
 
 private:

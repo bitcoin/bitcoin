@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QString>
 
-class TransactionRecord;
+class WalletTxRecord;
 
 namespace interfaces {
 class Node;
@@ -25,17 +25,17 @@ class TransactionDesc: public QObject
     Q_OBJECT
 
 public:
-    static QString toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit);
+    static QString toHTML(interfaces::Node& node, interfaces::Wallet& wallet, WalletTxRecord* rec, int unit);
 
 private:
     TransactionDesc() {}
 
     static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks);
 
-    static QString toHTML_Addresses(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, TransactionRecord* rec);
+    static QString toHTML_Addresses(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, WalletTxRecord* rec);
     static QString toHTML_Amounts(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, int unit);
     static QString toHTML_OrderForm(const interfaces::WalletOrderForm& orderForm);
-    static QString toHTML_Debug(interfaces::Node& node, interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, TransactionRecord* rec, int unit);
+    static QString toHTML_Debug(interfaces::Node& node, interfaces::Wallet& wallet, const interfaces::WalletTx& wtx, WalletTxRecord* rec, int unit);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONDESC_H

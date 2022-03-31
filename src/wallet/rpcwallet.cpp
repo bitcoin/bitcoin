@@ -34,6 +34,7 @@
 #include <wallet/feebumper.h>
 #include <wallet/load.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/txlist.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
@@ -399,10 +400,6 @@ void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_f
             if (addr.get_str() == address) {
                 subtract_fee = true;
             }
-        }
-
-        if (recipient_addr.IsMWEB() && !subtract_fee_outputs.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Subtract fee from amount not yet supported for MWEB transactions.");
         }
 
         CRecipient recipient = {recipient_addr, amount, subtract_fee};
@@ -1345,7 +1342,7 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
 
             if (s.index.type() == typeid(COutPoint)) {
                 entry.pushKV("vout", (int)boost::get<COutPoint>(s.index).n);
-            } else {
+            } else if (!boost::get<mw::Hash>(s.index).IsZero()) {
                 entry.pushKV("mweb_out", boost::get<mw::Hash>(s.index).ToHex());
             }
 
@@ -1374,14 +1371,16 @@ static void ListTransactions(const CWallet* const pwallet, const CWalletTx& wtx,
                 entry.pushKV("involvesWatchonly", true);
             }
             MaybePushAddress(entry, r.destination);
-            if (wtx.IsCoinBase())
+            if (wtx.IsCoinBase() || wtx.IsHogEx())
             {
                 if (wtx.GetDepthInMainChain() < 1)
                     entry.pushKV("category", "orphan");
                 else if (wtx.IsImmature())
                     entry.pushKV("category", "immature");
-                else
+                else if (wtx.IsCoinBase())
                     entry.pushKV("category", "generate");
+                else
+                    entry.pushKV("category", "hogex");
             }
             else
             {
@@ -1535,6 +1534,96 @@ static RPCHelpMan listtransactions()
     UniValue result{UniValue::VARR};
     result.push_backV({ txs.rend() - nFrom - nCount, txs.rend() - nFrom }); // Return oldest to newest
     return result;
+},
+    };
+}
+
+static RPCHelpMan listwallettransactions()
+{
+    return RPCHelpMan{"listwallettransactions",
+                "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
+                "\nReturns the list of transactions as they would be displayed in the GUI.\n",
+                {
+                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "The transaction id"},
+                },
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                        {
+                            {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction."},
+                            {RPCResult::Type::STR, "address", "The litecoin address of the transaction."},
+                            {RPCResult::Type::STR, "category", "The transaction category.\n"
+                                "\"send\"                  Transactions sent.\n"
+                                "\"receive\"               Non-coinbase transactions received.\n"
+                                "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                                "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                                "\"orphan\"                Orphaned coinbase transactions received."},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
+                                "for all other categories"},
+                            {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
+                            {RPCResult::Type::NUM, "vout", "the vout value"},
+                            {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                 "'send' category of transactions."},
+                        },
+                        TransactionDescriptionString()),
+                        {
+                            {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                                 "'send' category of transactions."},
+                        })},
+                    }
+                },
+                RPCExamples{
+            "\nList the wallet's transaction records\n"
+            + HelpExampleCli("listwallettransactions", "") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("listwallettransactions", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    const CWallet* const pwallet = wallet.get();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    UniValue ret(UniValue::VARR);
+
+    {
+        LOCK(pwallet->cs_wallet);
+
+        std::vector<WalletTxRecord> tx_records;
+        if (request.params[0].isNull()) {
+            tx_records = TxList(*pwallet).ListAll(ISMINE_ALL);
+        } else {
+            uint256 hash(ParseHashV(request.params[0], "txid"));
+            auto iter = pwallet->mapWallet.find(hash);
+            if (iter == pwallet->mapWallet.end()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+            }
+            
+            tx_records = TxList(*pwallet).List(iter->second, ISMINE_ALL, boost::none, boost::none);
+        }
+
+        for (WalletTxRecord& tx_record : tx_records) {
+            tx_record.UpdateStatusIfNeeded(pwallet->GetLastBlockHash());
+        }
+
+        std::sort(tx_records.begin(), tx_records.end(), [](const WalletTxRecord& a, const WalletTxRecord& b) {
+            return a.status.sortKey > b.status.sortKey;
+        });
+
+        
+        for (WalletTxRecord& tx_record : tx_records) {
+            UniValue entry = tx_record.ToUniValue();
+            WalletTxToJSON(pwallet->chain(), tx_record.GetWTX(), entry);
+            ret.push_back(entry);
+        }
+    }
+
+    return ret;
 },
     };
 }
@@ -4638,6 +4727,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listreceivedbylabel",              &listreceivedbylabel,           {"minconf","include_empty","include_watchonly"} },
     { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
     { "wallet",             "listtransactions",                 &listtransactions,              {"label|dummy","count","skip","include_watchonly"} },
+    { "wallet",             "listwallettransactions",           &listwallettransactions,        {"txid"} },
     { "wallet",             "listunspent",                      &listunspent,                   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwalletdir",                    &listwalletdir,                 {} },
     { "wallet",             "listwallets",                      &listwallets,                   {} },

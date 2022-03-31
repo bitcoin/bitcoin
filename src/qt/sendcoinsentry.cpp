@@ -252,14 +252,11 @@ void SendCoinsEntry::setPegInAddress(const std::string& address)
         setAddress("");
         ui->payTo->setReadOnly(false);
         ui->payTo->setValidating(true);
-        ui->checkboxSubtractFeeFromAmount->setEnabled(true);
     } else {
         setAddress(QString::fromStdString("Peg-In: " + address));
         ui->payTo->setReadOnly(true);
         ui->payTo->setValidating(false);
         ui->payTo->setCursorPosition(0);
-        ui->checkboxSubtractFeeFromAmount->setChecked(false);
-        ui->checkboxSubtractFeeFromAmount->setEnabled(false);
     }
 }
 
@@ -272,14 +269,11 @@ void SendCoinsEntry::setPegOut(const bool pegout_set)
         setAddress("");
         ui->payTo->setReadOnly(false);
         ui->payTo->setValidating(true);
-        ui->checkboxSubtractFeeFromAmount->setEnabled(true);
     } else {
         setAddress(QString::fromStdString("Peg-Out Address"));
         ui->payTo->setReadOnly(true);
         ui->payTo->setValidating(false);
         ui->payTo->setCursorPosition(0);
-        ui->checkboxSubtractFeeFromAmount->setChecked(false);
-        ui->checkboxSubtractFeeFromAmount->setEnabled(false);
     }
 }
 

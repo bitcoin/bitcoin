@@ -45,6 +45,15 @@ void WalletModelTransaction::reassignAmounts(interfaces::Wallet& wallet, int nCh
 {
     std::vector<CTxOutput> outputs = wtx->GetOutputs();
 
+    if (nChangePosRet == -1) {
+        for (size_t i = 0; i < outputs.size(); i++) {
+            if (wallet.isChange(outputs[i])) {
+                nChangePosRet = i;
+                break;
+            }
+        }
+    }
+
     int i = 0;
     for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {

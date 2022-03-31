@@ -17,6 +17,7 @@
 class Input :
     public Traits::ICommitted,
     public Traits::IHashable,
+    public Traits::IPrintable,
     public Traits::ISerializable
 {
     enum FeatureBit {
@@ -101,6 +102,7 @@ public:
     //
     // Traits
     //
+    std::string Format() const final { return "Input(ID=" + GetOutputID().Format() + ")"; }
     const mw::Hash& GetHash() const noexcept final { return m_hash; }
 
 private:
