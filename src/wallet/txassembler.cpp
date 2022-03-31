@@ -205,18 +205,7 @@ void TxAssembler::CreateTransaction_Locked(
 
     // Now build the MWEB side of the transaction
     if (new_tx.mweb_type != MWEB::TxType::LTC_TO_LTC) {
-        // Lookup the change paid on the LTC side
-        CAmount ltc_change = 0;
-        if (new_tx.change_position != -1) {
-            assert(new_tx.tx.vout.size() > (size_t)new_tx.change_position);
-            ltc_change = new_tx.tx.vout[new_tx.change_position].nValue;
-        }
-
-        std::vector<CInputCoin> selected_coins(new_tx.selected_coins.begin(), new_tx.selected_coins.end());
-        bilingual_str error;
-        if (!MWEB::Transact::CreateTx(m_wallet.GetMWWallet(), new_tx.tx, selected_coins, new_tx.recipients, new_tx.total_fee, new_tx.mweb_fee, ltc_change, new_tx.change_on_mweb, error)) {
-            throw CreateTxError(error);
-        }
+        MWEB::Transact(m_wallet).AddMWEBTx(new_tx);
     }
 
     if (sign && !m_wallet.SignTransaction(new_tx.tx)) {

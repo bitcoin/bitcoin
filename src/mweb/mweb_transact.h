@@ -2,10 +2,14 @@
 
 #include <mweb/mweb_models.h>
 #include <mweb/mweb_wallet.h>
+#include <mw/models/wallet/Recipient.h>
 #include <wallet/coinselection.h>
 #include <wallet/wallet.h>
 #include <boost/optional.hpp>
 #include <numeric>
+
+// Forward Declarations
+struct InProcessTx;
 
 namespace MWEB {
 
@@ -23,21 +27,20 @@ int64_t CalcPegOutBytes(const TxType& mweb_type, const std::vector<CRecipient>& 
 
 class Transact
 {
+    const CWallet& m_wallet;
+
 public:
-    static bool CreateTx(
-        const std::shared_ptr<MWEB::Wallet>& mweb_wallet,
-        CMutableTransaction& transaction,
-        const std::vector<CInputCoin>& selected_coins,
-        const std::vector<CRecipient>& recipients,
-        const CAmount& ltc_fee,
-        const CAmount& mweb_fee,
-        const CAmount& ltc_change,
-        const bool include_mweb_change,
-        bilingual_str& error
-    );
+    Transact(const CWallet& wallet)
+        : m_wallet(wallet) {}
+
+    void AddMWEBTx(InProcessTx& new_tx);
 
 private:
-    static mw::Recipient BuildChangeRecipient();
+    mw::Recipient BuildChangeRecipient(
+        const InProcessTx& new_tx,
+        const boost::optional<CAmount>& pegin_amount,
+        const CAmount& ltc_change
+    );
 };
 
 }
