@@ -58,7 +58,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     // Blockchain contextual information (confirmations and blocktime) is not
     // available to code in bitcoin-common, so we query them here and push the
     // data into the returned UniValue.
-    TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags());
+    TxToUniv(tx, /*block_hash=*/uint256(), entry, /*include_hex=*/true, RPCSerializationFlags());
 
     if (!hashBlock.IsNull()) {
         LOCK(cs_main);
@@ -383,7 +383,7 @@ static RPCHelpMan decoderawtransaction()
     }
 
     UniValue result(UniValue::VOBJ);
-    TxToUniv(CTransaction(std::move(mtx)), uint256(), result, false);
+    TxToUniv(CTransaction(std::move(mtx)), /*block_hash=*/uint256(), /*entry=*/result, /*include_hex=*/false);
 
     return result;
 },
@@ -435,7 +435,7 @@ static RPCHelpMan decodescript()
     } else {
         // Empty scripts are valid
     }
-    ScriptPubKeyToUniv(script, r, /* include_hex */ false);
+    ScriptToUniv(script, /*out=*/r, /*include_hex=*/false, /*include_address=*/true);
 
     std::vector<std::vector<unsigned char>> solutions_data;
     const TxoutType which_type{Solver(script, solutions_data)};
@@ -512,7 +512,7 @@ static RPCHelpMan decodescript()
                 // Scripts that are not fit for P2WPKH are encoded as P2WSH.
                 segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
-            ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
+            ScriptToUniv(segwitScr, /*out=*/sr, /*include_hex=*/true, /*include_address=*/true);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
@@ -900,7 +900,7 @@ static RPCHelpMan decodepsbt()
 
     // Add the decoded tx
     UniValue tx_univ(UniValue::VOBJ);
-    TxToUniv(CTransaction(*psbtx.tx), uint256(), tx_univ, false);
+    TxToUniv(CTransaction(*psbtx.tx), /*block_hash=*/uint256(), /*entry=*/tx_univ, /*include_hex=*/false);
     result.pushKV("tx", tx_univ);
 
     // Add the global xpubs
@@ -956,7 +956,7 @@ static RPCHelpMan decodepsbt()
             txout = input.witness_utxo;
 
             UniValue o(UniValue::VOBJ);
-            ScriptPubKeyToUniv(txout.scriptPubKey, o, /* include_hex */ true);
+            ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
 
             UniValue out(UniValue::VOBJ);
             out.pushKV("amount", ValueFromAmount(txout.nValue));
@@ -970,7 +970,7 @@ static RPCHelpMan decodepsbt()
             txout = input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n];
 
             UniValue non_wit(UniValue::VOBJ);
-            TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
+            TxToUniv(*input.non_witness_utxo, /*block_hash=*/uint256(), /*entry=*/non_wit, /*include_hex=*/false);
             in.pushKV("non_witness_utxo", non_wit);
 
             have_a_utxo = true;
@@ -1003,12 +1003,12 @@ static RPCHelpMan decodepsbt()
         // Redeem script and witness script
         if (!input.redeem_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.redeem_script, r);
+            ScriptToUniv(input.redeem_script, /*out=*/r);
             in.pushKV("redeem_script", r);
         }
         if (!input.witness_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(input.witness_script, r);
+            ScriptToUniv(input.witness_script, /*out=*/r);
             in.pushKV("witness_script", r);
         }
 
@@ -1113,12 +1113,12 @@ static RPCHelpMan decodepsbt()
         // Redeem script and witness script
         if (!output.redeem_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.redeem_script, r);
+            ScriptToUniv(output.redeem_script, /*out=*/r);
             out.pushKV("redeem_script", r);
         }
         if (!output.witness_script.empty()) {
             UniValue r(UniValue::VOBJ);
-            ScriptToUniv(output.witness_script, r);
+            ScriptToUniv(output.witness_script, /*out=*/r);
             out.pushKV("witness_script", r);
         }
 
