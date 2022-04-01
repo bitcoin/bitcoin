@@ -160,7 +160,9 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::VALIDATION, "validation"},
     {BCLog::I2P, "i2p"},
     {BCLog::IPC, "ipc"},
+#ifdef DEBUG_LOCKCONTENTION
     {BCLog::LOCK, "lock"},
+#endif
     {BCLog::UTIL, "util"},
     {BCLog::BLOCKSTORE, "blockstorage"},
     {BCLog::ALL, "1"},
