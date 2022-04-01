@@ -3402,7 +3402,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, interface
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
     if (IsCurrentForAntiFeeSniping(chain, locked_chain)) {
-        locktime = locked_chain.getHeight().value_or(-1);
+        locktime = locked_chain.getHeight().get_value_or(-1);
 
         // Secondly occasionally randomly pick a nLockTime even further back, so
         // that transactions that are delayed after signing for whatever reason,

@@ -226,8 +226,21 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getrpcinfo",
                        "\nReturns details of the RPC server.\n",
                        {},
-                       RPCResults{},
-                       RPCExamples{""},
+                RPCResult{
+            "{\n"
+            " \"active_commands\" (array) All active commands\n"
+            "  [\n"
+            "   {               (object) Information about an active command\n"
+            "    \"method\"       (string)  The name of the RPC command \n"
+            "    \"duration\"     (numeric)  The running time in microseconds\n"
+            "   },...\n"
+            "  ],\n"
+            " \"logpath\": \"xxx\" (string) The complete file path to the debug log\n"
+            "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("getrpcinfo", "")
+                + HelpExampleRpc("getrpcinfo", "")},
             }.ToString()
         );
     }
@@ -243,6 +256,10 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("active_commands", active_commands);
+
+    const std::string path = LogInstance().m_file_path.string();
+    UniValue log_path(UniValue::VSTR, path);
+    result.pushKV("logpath", log_path);
 
     return result;
 }
