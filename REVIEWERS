@@ -1,8 +1,8 @@
 # ==============================================================================
-#                          Bitcoin Core REVIEWERS
+#                          Navcoin Core REVIEWERS
 # ==============================================================================
 
-# Configuration of automated review requests for the bitcoin/bitcoin repo
+# Configuration of automated review requests for the navcoin/navcoin repo
 # via DrahtBot.
 
 # Order is not important; if a modified file or directory matches a fnmatch,
@@ -18,123 +18,118 @@
 
 
 # Maintainers
-#   @achow101
-#   @fanquake
-#   @hebasto
-#   @laanwj
-#   @marcofalke
-#   @sipa
+#   @aguycalled
 
 # Docs
-/doc/*[a-zA-Z-].md                          @harding
-/doc/Doxyfile.in                            @fanquake
-/doc/REST-interface.md                      @jonasschnelli
-/doc/benchmarking.md                        @ariard
-/doc/bitcoin-conf.md                        @hebasto
-/doc/build-freebsd.md                       @fanquake
-/doc/build-netbsd.md                        @fanquake
-/doc/build-openbsd.md                       @laanwj
-/doc/build-osx.md                           @fanquake
-/doc/build-unix.md                          @laanwj
-/doc/build-windows.md                       @sipsorcery
-/doc/dependencies.md                        @fanquake
-/doc/developer-notes.md                     @laanwj
-/doc/files.md                               @hebasto
-/doc/reduce-memory.md                       @fanquake
-/doc/reduce-traffic.md                      @jonasschnelli
-/doc/release-process.md                     @laanwj
-/doc/translation_strings_policy.md          @laanwj
+/doc/*[a-zA-Z-].md                          @aguycalled
+/doc/Doxyfile.in                            @aguycalled
+/doc/REST-interface.md                      @aguycalled
+/doc/benchmarking.md                        @aguycalled
+/doc/bitcoin-conf.md                        @aguycalled
+/doc/build-freebsd.md                       @aguycalled
+/doc/build-netbsd.md                        @aguycalled
+/doc/build-openbsd.md                       @aguycalled
+/doc/build-osx.md                           @aguycalled
+/doc/build-unix.md                          @aguycalled
+/doc/build-windows.md                       @aguycalled
+/doc/dependencies.md                        @aguycalled
+/doc/developer-notes.md                     @aguycalled
+/doc/files.md                               @aguycalled
+/doc/reduce-memory.md                       @aguycalled
+/doc/reduce-traffic.md                      @aguycalled
+/doc/release-process.md                     @aguycalled
+/doc/translation_strings_policy.md          @aguycalled
 
 # Build aux
-/build-aux/m4/bitcoin_qt.m4                 @hebasto
+/build-aux/m4/bitcoin_qt.m4                 @aguycalled
 
 # MSVC build system
-/build_msvc/                                @sipsorcery
+/build_msvc/                                @aguycalled
 
 # Settings
-/src/util/settings.*                        @ryanofsky
+/src/util/settings.*                        @aguycalled
 
 # Fuzzing
 
 # Tests
-/src/test/net_peer_eviction_tests.cpp       @jonatack
-/test/functional/mempool_updatefromblock.py @hebasto
-/test/functional/feature_asmap.py           @jonatack
-/test/functional/interface_bitcoin_cli.py   @jonatack
+/src/test/net_peer_eviction_tests.cpp       @aguycalled
+/test/functional/mempool_updatefromblock.py @aguycalled
+/test/functional/feature_asmap.py           @aguycalled
+/test/functional/interface_bitcoin_cli.py   @aguycalled
 
 # Backwards compatibility tests
-*_compatibility.py                          @sjors
-/test/functional/wallet_upgradewallet.py    @sjors @achow101
-/test/get_previous_releases.py              @sjors
+*_compatibility.py                          @aguycalled
+/test/functional/wallet_upgradewallet.py    @aguycalled
+/test/get_previous_releases.py              @aguycalled
 
 # Translations
-/src/util/translation.h                     @hebasto
+/src/util/translation.h                     @aguycalled
 
 # Dev Tools
-/contrib/devtools/security-check.py         @fanquake
-/contrib/devtools/test-security-check.py    @fanquake
-/contrib/devtools/symbol-check.py           @fanquake
+/contrib/devtools/security-check.py         @aguycalled
+/contrib/devtools/test-security-check.py    @aguycalled
+/contrib/devtools/symbol-check.py           @aguycalled
 
 # Guix
-/contrib/guix/                              @dongcarl
+/contrib/guix/                              @aguycalled
 
 # Compatibility
-/src/compat/glibc_*                         @fanquake
+/src/compat/glibc_*                         @aguycalled
 
 # GUI
-/src/qt/forms/                              @hebasto
+/src/qt/forms/                              @aguycalled
 
 # Wallet
-/src/wallet/                                @achow101
+/src/wallet/                                @aguycalled
 
 # CLI
-/src/bitcoin-cli.cpp                        @jonatack
+/src/bitcoin-cli.cpp                        @aguycalled
 
 # Coinstats
-/src/node/coinstats.*                       @fjahr
+/src/node/coinstats.*                       @aguycalled
 
 # Index
-/src/index/                                 @fjahr
+/src/index/                                 @aguycalled
 
 # Descriptors
-*descriptor*                                @achow101 @sipa
+*descriptor*                                @aguycalled
 
 # External signer
-*external_signer*                           @sjors
-/doc/external-signer.md                     @sjors
-*signer.py                                  @sjors
+*external_signer*                           @aguycalled
+/doc/external-signer.md                     @aguycalled
+*signer.py                                  @aguycalled
 
 # Interfaces
-/src/interfaces/                            @ryanofsky
+/src/interfaces/                            @aguycalled
 
 # DB
-/src/txdb.*                                 @jamesob
-/src/dbwrapper.*                            @jamesob
+/src/txdb.*                                 @aguycalled
+/src/dbwrapper.*                            @aguycalled
 
 # Linter
-/test/lint/lint-shell.sh                    @hebasto
+/test/lint/lint-shell.sh                    @aguycalled
 
 # Bech32
-/src/bech32.*                               @sipa
-/src/bench/bech32.*                         @sipa
+/src/bech32.*                               @aguycalled
+/src/bench/bech32.*                         @aguycalled
 
 # PSBT
-/src/psbt*                                  @achow101
-/src/node/psbt*                             @achow101
-/doc/psbt.md                                @achow101
+/src/psbt*                                  @aguycalled
+/src/node/psbt*                             @aguycalled
+/doc/psbt.md                                @aguycalled
 
 # P2P
-/src/net_processing.*                       @sipa
-/src/protocol.*                             @sipa
+/src/net_processing.*                       @aguycalled
+/src/protocol.*                             @aguycalled
 
 # Consensus
-/src/coins.*                                @sipa @jamesob
-/src/script/script.*                        @sipa
-/src/script/interpreter.*                   @sipa
-/src/validation.*                           @sipa
-/src/consensus/                             @sipa
+/src/coins.*                                @aguycalled
+/src/script/script.*                        @aguycalled
+/src/script/interpreter.*                   @aguycalled
+/src/validation.*                           @aguycalled
+/src/consensus/                             @aguycalled
 
 # Tracing
-/doc/tracing.md                             @jb55 @0xB10C
-/src/util/trace.h                           @jb55 @0xB10C
-/contrib/tracing/                           @jb55 @0xB10C
+/doc/tracing.md                             @aguycalled
+/src/util/trace.h                           @aguycalled
+/contrib/tracing/                           @aguycalled
