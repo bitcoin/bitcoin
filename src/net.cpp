@@ -1867,6 +1867,12 @@ void CConnman::SetTryNewOutboundPeer(bool flag)
     LogPrint(BCLog::NET, "net: setting try another outbound peer=%s\n", flag ? "true" : "false");
 }
 
+void CConnman::StartExtraBlockRelayPeers()
+{
+    LogPrint(BCLog::NET, "net: enabling extra block-relay-only peers\n");
+    m_start_extra_block_relay_peers = true;
+}
+
 // Return the number of peers we have over our outbound connection limit
 // Exclude peers that are marked for disconnect, or are going to be
 // disconnected soon (eg ADDR_FETCH and FEELER)
