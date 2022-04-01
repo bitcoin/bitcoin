@@ -610,6 +610,28 @@ static RPCHelpMan getblocktemplate()
                 {RPCResult::Type::NUM, "height", "The height of the next block"},
                 {RPCResult::Type::STR_HEX, "signet_challenge", /*optional=*/true, "Only on signet"},
                 {RPCResult::Type::STR_HEX, "default_witness_commitment", /*optional=*/true, "a valid witness commitment for the unmodified block template"},
+                // SYSCOIN
+                {RPCResult::Type::NUM, "version_coinbase", "The coinbase tx version"},
+                {RPCResult::Type::ARR, "masternode", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "payee", "Payee address"},
+                        {RPCResult::Type::STR_HEX, "script", "Payee script"},
+                        {RPCResult::Type::NUM, "amount", "Payee amount"},
+                    }},
+                }},
+                {RPCResult::Type::NUM, "masternode_collateral_height", "Collateral block height of payee"},
+                {RPCResult::Type::ARR, "superblock", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "payee", "Superblock address"},
+                        {RPCResult::Type::STR_HEX, "script", "Superblock script"},
+                        {RPCResult::Type::NUM, "amount", "Superblock amount"},
+                    }},
+                }}, 
+                {RPCResult::Type::STR_HEX, "default_witness_commitment_extra",  /*optional=*/true, "a valid extra witness commitment for the unmodified block template"},
             }},
         },
         RPCExamples{
@@ -952,8 +974,6 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
-    result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
-
     if (consensusParams.signet_blocks) {
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));
     }
@@ -962,6 +982,7 @@ static RPCHelpMan getblocktemplate()
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment));
     }
     // SYSCOIN
+    result.pushKV("version_coinbase", pblock->vtx[0]->nVersion);
     UniValue masternodeObj(UniValue::VARR);
     for (const auto& txout : pblocktemplate->voutMasternodePayments) {
         CTxDestination address1;
@@ -976,8 +997,6 @@ static RPCHelpMan getblocktemplate()
     
 
     result.pushKV("masternode", masternodeObj);
-    result.pushKV("masternode_payments_started", true);
-    result.pushKV("masternode_payments_enforced", true);
     result.pushKV("masternode_collateral_height", nCollateralHeight);
 
     UniValue superblockObjArray(UniValue::VARR);
@@ -992,8 +1011,6 @@ static RPCHelpMan getblocktemplate()
     }
     
     result.pushKV("superblock", superblockObjArray);
-    result.pushKV("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock);
-    result.pushKV("superblocks_enabled", isSBSportActive);
     if (!pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
         result.pushKV("default_witness_commitment_extra", HexStr(pblocktemplate->vchCoinbaseCommitmentExtra));
     }
