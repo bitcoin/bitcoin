@@ -19,4 +19,4 @@ assignees: ''
 
 #### Want to work on this issue?
 
-For guidance on contributing, please read [CONTRIBUTING.md](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md) before opening your pull request.
+For guidance on contributing, please read [CONTRIBUTING.md](https://github.com/navcoin/navcoin/blob/master/CONTRIBUTING.md) before opening your pull request.
