@@ -18,6 +18,7 @@
 #include <crypto/sha256.h>
 #include <fs.h>
 #include <i2p.h>
+#include <logging.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -51,8 +52,12 @@
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <list>
+#include <map>
 #include <optional>
+#include <thread>
 #include <unordered_map>
+#include <vector>
 
 #include <math.h>
 
