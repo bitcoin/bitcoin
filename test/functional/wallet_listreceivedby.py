@@ -27,9 +27,6 @@ class ReceivedByTest(BitcoinTestFramework):
         self.skip_if_no_cli()
 
     def run_test(self):
-        # Generate block to get out of IBD
-        self.generate(self.nodes[0], 1)
-
         # save the number of coinbase reward addresses so far
         num_cb_reward_addresses = len(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True))
 
@@ -178,7 +175,7 @@ class ReceivedByTest(BitcoinTestFramework):
         address = self.nodes[0].getnewaddress(label)
 
         reward = Decimal("464.28571429")
-        self.generatetoaddress(self.nodes[0], 1, address, sync_fun=self.no_op)
+        self.generatetoaddress(self.nodes[0], 1, address)
         hash = self.nodes[0].getbestblockhash()
 
         self.log.info("getreceivedbyaddress returns nothing with defaults")
@@ -218,7 +215,7 @@ class ReceivedByTest(BitcoinTestFramework):
                             {"label": label, "amount": reward})
 
         self.log.info("Generate 100 more blocks")
-        self.generate(self.nodes[0], COINBASE_MATURITY, sync_fun=self.no_op)
+        self.generate(self.nodes[0], COINBASE_MATURITY)
 
         self.log.info("getreceivedbyaddress returns reward with defaults")
         balance = self.nodes[0].getreceivedbyaddress(address)
