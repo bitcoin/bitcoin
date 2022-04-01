@@ -16,7 +16,7 @@
 #include <util/threadnames.h>
 
 #ifdef HAVE_SYS_PRCTL_H
-#include <sys/prctl.h> // For prctl, PR_SET_NAME, PR_GET_NAME
+#include <sys/prctl.h>
 #endif
 
 //! Set the thread's name at the process level. Does not affect the
