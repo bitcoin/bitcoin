@@ -2362,6 +2362,56 @@ std::string RejectCodeToString(const unsigned char code)
     return "";
 }
 
+bool static ValidateDSTX(CCoinJoinBroadcastTx dstx, uint256 hashTx, bool &bReturn)
+{
+    bReturn = true;
+    if (!dstx.IsValidStructure()) {
+        LogPrint(BCLog::COINJOIN, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
+        return false;
+    }
+    if(CCoinJoin::GetDSTX(hashTx)) {
+        LogPrint(BCLog::COINJOIN, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
+        return true; // not an error
+    }
+
+    const CBlockIndex* pindex{nullptr};
+    CDeterministicMNCPtr dmn{nullptr};
+    {
+        LOCK(cs_main);
+        pindex = ::ChainActive().Tip();
+    }
+    // It could be that a MN is no longer in the list but its DSTX is not yet mined.
+    // Try to find a MN up to 24 blocks deep to make sure such dstx-es are relayed and processed correctly.
+    for (int i = 0; i < 24 && pindex; ++i) {
+        dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
+        if (dmn) break;
+        pindex = pindex->pprev;
+    }
+    if(!dmn) {
+        LogPrint(BCLog::COINJOIN, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+        return false;
+    }
+
+    if (!mmetaman.GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
+        LogPrint(BCLog::COINJOIN, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+        return true;
+        // TODO: Not an error? Could it be that someone is relaying old DSTXes
+        // we have no idea about (e.g we were offline)? How to handle them?
+    }
+
+    if (!dstx.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+        LogPrint(BCLog::COINJOIN, "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
+        return false;
+    }
+
+    LogPrint(BCLog::COINJOIN, "DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
+    mempool.PrioritiseTransaction(hashTx, 0.1*COIN);
+    mmetaman.DisallowMixing(dmn->proTxHash);
+
+    bReturn = false;
+    return true;
+}
+
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
@@ -3149,49 +3199,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (nInvType == MSG_DSTX) {
-            uint256 hashTx = tx.GetHash();
-            if (!dstx.IsValidStructure()) {
-                LogPrint(BCLog::COINJOIN, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
-                return false;
-            }
-            if(CCoinJoin::GetDSTX(hashTx)) {
-                LogPrint(BCLog::COINJOIN, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
-                return true; // not an error
-            }
 
-            const CBlockIndex* pindex{nullptr};
-            CDeterministicMNCPtr dmn{nullptr};
-            {
-                LOCK(cs_main);
-                pindex = ::ChainActive().Tip();
-            }
-            // It could be that a MN is no longer in the list but its DSTX is not yet mined.
-            // Try to find a MN up to 24 blocks deep to make sure such dstx-es are relayed and processed correctly.
-            for (int i = 0; i < 24 && pindex; ++i) {
-                dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
-                if (dmn) break;
-                pindex = pindex->pprev;
-            }
-            if(!dmn) {
-                LogPrint(BCLog::COINJOIN, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
-                return false;
-            }
-
-            if (!mmetaman.GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
-                LogPrint(BCLog::COINJOIN, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
-                return true;
-                // TODO: Not an error? Could it be that someone is relaying old DSTXes
-                // we have no idea about (e.g we were offline)? How to handle them?
-            }
-
-            if (!dstx.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-                LogPrint(BCLog::COINJOIN, "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
-                return false;
-            }
-
-            LogPrint(BCLog::COINJOIN, "DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
-            mempool.PrioritiseTransaction(hashTx, 0.1*COIN);
-            mmetaman.DisallowMixing(dmn->proTxHash);
+           // Validate DSTX and return bRet if we need to return from here
+           bool bDoReturn = false;
+           uint256 hashTx = tx.GetHash();
+           bool bRet = ValidateDSTX(dstx, hashTx, bDoReturn);
+           if (bDoReturn) {
+               return bRet;
+           }
         }
 
         LOCK2(cs_main, g_cs_orphans);
