@@ -83,7 +83,7 @@ against other `guix-attest` signatures.
 git -C ./guix.sigs pull
 ```
 
-### Create the macOS SDK tarball: (first time, or when SDK version changes)
+### Create the macOS SDK tarball (first time, or when SDK version changes)
 
 _Note: this step can be skipped if [our CI](https://github.com/dashpay/dash/blob/master/ci/test/00_setup_env.sh#L64) still uses bitcoin's SDK package (see SDK_URL)_
 
@@ -91,7 +91,7 @@ Create the macOS SDK tarball, see the [macOS build
 instructions](build-osx.md#deterministic-macos-app-notes) for
 details.
 
-### Build and attest to build outputs:
+### Build and attest to build outputs
 
 Follow the relevant Guix README.md sections:
 - [Building](/contrib/guix/README.md#building)
@@ -99,16 +99,12 @@ Follow the relevant Guix README.md sections:
 
 _Note: we ship releases for only some supported HOSTs so consider providing limited `HOSTS` variable or run `./contrib/containers/guix/scripts/guix-start` instead of `./contrib/guix/guix-build` when building binaries for quicker builds that exclude the supported but not shipped HOSTs_
 
-### Verify other builders' signatures to your own. (Optional)
+### Verify other builders' signatures to your own (optional)
 
-Add other builders keys to your gpg keyring, and/or refresh keys: See `../dash/contrib/builder-keys/README.md`.
-
-Follow the relevant Guix README.md sections:
+- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
 - [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
 
-### Next steps:
-
-Commit your signature to `guix.sigs`:
+### Commit your non codesigned signature to guix.sigs
 
 ```sh
 pushd guix.sigs
@@ -118,24 +114,22 @@ git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
 
-Codesigner only: Create Windows/macOS detached signatures:
-- Only one person handles codesigning. Everyone else should skip to the next step.
-- Only once the Windows/macOS builds each have 3 matching signatures may they be signed with their respective release keys.
+## Codesigning
 
-Codesigner only: Sign the macOS binary:
+### macOS codesigner only: Create detached macOS signatures (assuming [signapple](https://github.com/achow101/signapple/) is installed and up to date with master branch)
 
 * Transfer `dashcore-osx-unsigned.tar.gz` to macOS for signing
 * Extract and sign:
 
     ```sh
     tar xf dashcore-osx-unsigned.tar.gz
-    ./detached-sig-create.sh -s "Key ID" -o runtime
+    ./detached-sig-create.sh /path/to/codesign.p12 -o runtime
     ```
 
 * Enter the keychain password and authorize the signature
-* Move `signature-osx.tar.gz` back to the guix-build host
+* `signature-osx.tar.gz` will be created
 
-Codesigner only: Sign the windows binaries:
+### Windows codesigner only: Create detached Windows signatures
 
 * Extract and sign:
 
@@ -147,10 +141,11 @@ Codesigner only: Sign the windows binaries:
 * Enter the passphrase for the key when prompted
 * `signature-win.tar.gz` will be created
 
-Code-signer only: It is advised to test that the code signature attaches properly prior to tagging by performing the `guix-codesign` step.
-However if this is done, once the release has been tagged in the bitcoin-detached-sigs repo, the `guix-codesign` step must be performed again in order for the guix attestation to be valid when compared against the attestations of non-codesigner builds.
+### Windows and macOS codesigners only: test code signatures
+It is advised to test that the code signature attaches properly prior to tagging by performing the `guix-codesign` step.
+However if this is done, once the release has been tagged in the dash-detached-sigs repo, the `guix-codesign` step must be performed again in order for the guix attestation to be valid when compared against the attestations of non-codesigner builds.
 
-Codesigner only: Commit the detached codesign payloads:
+### Windows and macOS codesigners only: Commit the detached codesign payloads
 
 ```sh
 pushd ~/dashcore-detached-sigs
@@ -165,15 +160,20 @@ git push
 popd
 ```
 
-Non-codesigners: wait for Windows/macOS detached signatures:
+### Non-codesigners: wait for Windows and macOS detached signatures
 
-- Once the Windows/macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
+- Once the Windows and macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
 - Detached signatures will then be committed to the [dash-detached-sigs](https://github.com/dashpay/dash-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
-Create (and optionally verify) the codesigned outputs:
-- [Codesigning](/contrib/guix/README.md#codesigning)
+### Create the codesigned build outputs
+- [Codesigning build outputs](/contrib/guix/README.md#codesigning-build-outputs)
 
-Commit your signature for the signed macOS/Windows binaries:
+### Verify other builders' signatures to your own (optional)
+
+- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
+- [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
+
+### Commit your codesigned signature to guix.sigs (for the signed macOS/Windows binaries)
 
 ```sh
 pushd ./guix.sigs
@@ -183,7 +183,7 @@ git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
 
-### After 3 or more people have guix-built and their results match:
+## After 3 or more people have guix-built and their results match
 
 * [ ] Combine the `all.SHA256SUMS.asc` file from all signers into `SHA256SUMS.asc`:
     ```sh
