@@ -1052,31 +1052,31 @@ void BitcoinGUI::showDebugWindow()
 
 void BitcoinGUI::showInfo()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_INFO);
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::INFO);
     showDebugWindow();
 }
 
 void BitcoinGUI::showConsole()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::CONSOLE);
     showDebugWindow();
 }
 
 void BitcoinGUI::showGraph()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_GRAPH);
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::GRAPH);
     showDebugWindow();
 }
 
 void BitcoinGUI::showPeers()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_PEERS);
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::PEERS);
     showDebugWindow();
 }
 
 void BitcoinGUI::showRepair()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_REPAIR);
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::REPAIR);
     showDebugWindow();
 }
 
