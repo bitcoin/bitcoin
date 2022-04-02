@@ -31,6 +31,9 @@
 #include <memory>
 #include <stdio.h>
 
+#include "jurat.hpp"
+#include <core_io.h>
+
 #include <boost/algorithm/string.hpp>
 
 static bool fCreateBlank;
@@ -38,6 +41,481 @@ static std::map<std::string,UniValue> registers;
 static const int CONTINUE_EXECUTION=-1;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+
+std::string JURAT_CREATE_TX = "juratCreateTx";
+std::string JURAT_SIGN_TX = "juratSignTx";
+
+const std::string keyJudicialAction = "judicialAction";
+const std::string keyNonce = "nonce";
+const std::string keySrcAddr = "srcAddr";
+const std::string keyTargetAddr = "targetAddr";
+const std::string keyTxId = "txid";
+const std::string keyVout = "vout";
+const std::string keyFreezeAmt = "amount";
+const std::string keyTotalAmt = "availableAmount";
+const std::string keyFeeAmt = "feeAmt";
+const std::string keyLockHeight = "lockHeight";
+
+const std::string keyJuratWitnessSig = "jwsig";
+const std::string keySigs = "sigs";
+const std::string keyTxHex = "txHex";
+const std::string keyPrivKeys = "privkeys";
+
+using namespace jurat;
+CAmount FEE = 300;
+
+///regtes keys (addr, pubkey, privkey)
+//(bcrt1qef4q448pt74s6wl9xd7d6qu5k67hf4p8ehg04c,  024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c, cPSTKWLXx7aoCsVcCNgzafAMRx2wVp2mmg5PNPrNE4Ef9sCJdbCu
+//)
+//
+//(bcrt1qqf7n7axwxml4ye2yk80p9vyuh38sa9vvj7l3q6, 02b5efb6fa70adbe1aa9a70347699ed6948a660bf8eca9826cb4824b644a1484bb,
+//cVWYLhVS2ppfQDVmvPgppw84Wo69gkBqP7Z3g8HFcRHFNZF1rAg9
+//)
+//
+//(bcrt1qef4q448pt74s6wl9xd7d6qu5k67hf4p8ehg04c, 024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c,
+//cVWYLhVS2ppfQDVmvPgppw84Wo69gkBqP7Z3g8HFcRHFNZF1rAg9
+//)
+//
+//(mqHU8cja5UQh22biGnrrA4rnuDzLaMWhmj, 03432e525e798fb76f96b0596fc5e6bd4b78fb628b2debece5be146b9e467d7f1f,
+//cS55U7eMUB7rXfPa5xPyGEacUtenbU346keSv8Js3rJLLQEVBH2M
+//)
+
+
+
+const std::string judicialVerifierPvtKeys[] =
+    {  "cPSTKWLXx7aoCsVcCNgzafAMRx2wVp2mmg5PNPrNE4Ef9sCJdbCu",
+        "cVWYLhVS2ppfQDVmvPgppw84Wo69gkBqP7Z3g8HFcRHFNZF1rAg9"
+    };
+
+const std::string bitcoinSignPrivKey = "cS55U7eMUB7rXfPa5xPyGEacUtenbU346keSv8Js3rJLLQEVBH2M";
+
+
+CTransaction juratSign(CTransaction& tx, std::string& srcAddr,
+                       std::string& targetAddr, int nIn, int nOut,
+                       CAmount satoshisTxIn, CAmount satoshisFrozenLessFee,
+                       int nLockBlockHeight, const std::string judicialVerifierPvtKeys[],
+                       bool& isSigned)
+
+{
+    
+    isSigned = false;
+    if(nIn >=  (int)tx.vin.size() || nOut >= (int)tx.vout.size())
+    {
+        //invalid nIn or nOut
+        return tx;
+    }
+    
+    ///check addr
+    std::string err;
+    std::vector<unsigned char> srcAddrPKHash;
+    CScript srcScriptPubKey;
+    std::vector<unsigned char> targetAddrPKHash;
+    CScript targetScriptPubKey;
+    if(!checkAddr(srcAddr, srcAddrPKHash, srcScriptPubKey, err) ||
+       !checkAddr(targetAddr, targetAddrPKHash, targetScriptPubKey, err))
+    {
+        std::cout << "invalid src or target addr: " + err;
+        return tx;
+    }
+    
+    ///jurat sig data
+    ///<hash160(from_addr_pk) 20 byte> <hash160(to_addr_pk) 20 byte><amount 4 byte> <lock block height 4 byte>
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << srcAddrPKHash;
+    ss << targetAddrPKHash;
+    ss << satoshisFrozenLessFee;
+    ss << nLockBlockHeight;
+    std::cout << "[signer] sig-data srcAddr=" << HexStr(targetAddrPKHash) << std::endl;
+    std::cout << "[signer] sig-data targetAddr=" << HexStr(targetAddrPKHash) << std::endl;
+    std::cout << "[signer] sig-data satoshisFrozenLessFee=" << satoshisFrozenLessFee << std::endl;
+    std::cout << "[signer] sig-data nLockBlockHeight=" << nLockBlockHeight << std::endl;
+    
+    uint256 juratSigDataHash = ss.GetHash();
+    std::cout << "[signer] sig-data hash=" << HexStr(juratSigDataHash) << std::endl;
+    
+    CMutableTransaction mutableTx(tx);
+    mutableTx.vin[nIn].scriptWitness.stack.clear();
+    std::vector<unsigned char> emptyChunk;
+    mutableTx.vin[nIn].scriptWitness.stack.push_back(emptyChunk);
+    std::vector<std::vector<unsigned char>> signingPubKeys;
+    CScript redeemScript = getMultiSigRedeemScript();
+    
+    uint256 sigData = SignatureHash(redeemScript, mutableTx, nIn, SIGHASH_ALL,satoshisTxIn, SigVersion::WITNESS_V0);
+    std::cout <<"[signer] sigDataHash=" << HexStr(sigData);
+    
+    for(char i=0;i<N_JURAT_KEYS;i++){
+        std::vector<unsigned char> vchJuratSig;
+        CKey privateKey = DecodeSecret(judicialVerifierPvtKeys[(int)i]);
+        
+        if(privateKey.Sign(juratSigDataHash,vchJuratSig))
+        {
+            vchJuratSig.push_back(i);//judicial verifier index
+            mutableTx.vin[nIn].scriptWitness.stack.push_back(vchJuratSig);
+        }else
+        {
+            isSigned = false;
+            return tx;
+        }
+        
+        CPubKey pubKey = privateKey.GetPubKey();
+        std::vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+        //CScript scriptPubKey = GetScriptForDestination(PKHash(pubKey.GetID()));
+        std::vector<unsigned char> vchSig;
+        if(privateKey.Sign(sigData, vchSig))
+        {
+            vchSig.push_back(SIGHASH_ALL);
+            mutableTx.vin[nIn].scriptWitness.stack.push_back(vchSig);
+            signingPubKeys.insert(signingPubKeys.begin(),vchPubKey);
+            std::cout << "[signer] sig=" << HexStr(vchSig) << std::endl;
+            std::cout << "[signer] signed by pubkey=" << HexStr(vchPubKey) << std::endl;
+        } else
+        {
+            isSigned = false;
+            return tx;
+        }
+    }
+    
+    if(signingPubKeys.size()==0){
+        isSigned = false;
+        return tx;
+    }
+    
+    std::vector<unsigned char> vchscriptData(redeemScript.begin(), redeemScript.end());
+    mutableTx.vin[nIn].scriptWitness.stack.push_back(vchscriptData);
+    isSigned = true;
+    return CTransaction(mutableTx);
+}
+
+
+bool freezeTx(enumJurat action,
+              std::string& srcAddr, std::string targetAddr,
+              std::string& txId, int nOutToFreeze,
+              CAmount& satoshiTxInTotalAmount,
+              CAmount& satoshiFreezeAmt,
+              CAmount& satoshiFeeAmt,
+              uint32_t nLockBlockHeight,
+              uint32_t nonce,
+              CMutableTransaction& freezeTx,
+              UniValue& out)
+{
+    
+    std::cout << "create freeze tx for src addr " << srcAddr << std::endl;
+    std::vector<unsigned char> vchSrcPKHash;
+    CScript srcScriptPubKey;
+    std::string err;
+    std::vector<unsigned char> vchTargetPKHash;
+    CScript targetScriptPubKey;
+    
+    if (!checkAddr(srcAddr, vchSrcPKHash,srcScriptPubKey, err) ||
+        !checkAddr(targetAddr, vchTargetPKHash,targetScriptPubKey, err) )
+    {
+        tfm::format(std::cout,"invalid address: ",err);
+        out.pushKV("error", err);
+        return false;
+    }
+    
+    
+    if (satoshiFreezeAmt > satoshiTxInTotalAmount) {
+        err = tfm::format("freeze amount %d is greater than fund available %d",satoshiFreezeAmt, satoshiTxInTotalAmount);
+        out.pushKV("error", err);
+        return false;
+    }
+    
+    std::cout << "lock to pub key hash " << HexStr(vchTargetPKHash) << std::endl;
+    CScript lockingScript;
+    CScript sendToLockScriptPubKey;
+    createLockingScript(nLockBlockHeight, vchTargetPKHash, lockingScript,
+                        sendToLockScriptPubKey);
+    CMutableTransaction mutableTx;
+    uint256 prevTxHash;
+    ParseHashStr(txId, prevTxHash);
+    CTxIn txIn(prevTxHash, nOutToFreeze);
+    txIn.nSequence = CTxIn::SEQUENCE_FINAL;
+    mutableTx.vin.push_back(txIn);
+    CAmount satoshisFrozenLessFee = satoshiFreezeAmt-satoshiFeeAmt;
+    CTxOut txOutToFreeze(satoshisFrozenLessFee, sendToLockScriptPubKey);
+    mutableTx.vout.push_back(txOutToFreeze);
+    if ( satoshiTxInTotalAmount > satoshiFreezeAmt) {
+        CTxOut txOutReturnChange(satoshiTxInTotalAmount -
+                                 satoshiFreezeAmt, srcScriptPubKey);
+        mutableTx.vout.push_back(txOutReturnChange);
+    }
+    
+    //attach jurat marker
+    CScript markerScript;
+    createJuratMarker(action,0,0,nLockBlockHeight,nonce,vchTargetPKHash
+                      ,markerScript);
+    CTxOut txOutMarker(0, markerScript);
+    mutableTx.vout.push_back(txOutMarker);
+    
+    CTransaction tx(mutableTx);
+    freezeTx = mutableTx;
+    std::string txHex = EncodeHexTx(tx);
+    
+    out.pushKV("txHex", txHex);
+    
+    CScript redeemScript = getMultiSigRedeemScript();
+    uint256 sigData = SignatureHash(redeemScript, mutableTx, 0, SIGHASH_ALL,satoshiTxInTotalAmount, SigVersion::WITNESS_V0);
+    out.pushKV("sigDataHash", HexStr(sigData));
+    
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << vchSrcPKHash;
+    ss << vchTargetPKHash;
+    ss << satoshisFrozenLessFee;
+    ss << nLockBlockHeight;
+    ss << nonce;
+    uint256 juratSigDataHash = ss.GetHash();
+    out.pushKV("juratDataHash", HexStr(juratSigDataHash));
+    
+    jurat::JuratVerifier verifier(tx, srcScriptPubKey);
+    if(!verifier.isJuratTx())
+        return false;
+    
+    return true;
+}
+
+static bool attachWitness(CMutableTransaction& mutableTx,
+                          int nInToSign, CAmount& satoshisTxIn,
+                          std::vector<std::string>& jsigs,
+                          UniValue& out)
+{
+    std::string err = "";
+    if (nInToSign >= (int)mutableTx.vin.size() ) {
+        err = tfm::format("vin [%d] being signed is out of bound vin.size = %d", nInToSign, (int)mutableTx.vin.size());
+        out.pushKV("error", err);
+        return false;
+    }
+    
+    if (jsigs.size() ==0 ){
+        out.pushKV("error", "jurat witness signature array is empty");
+        return false;
+    }
+    
+    CScriptWitness witness;
+    std::vector<unsigned char> emptyChunk;
+    witness.stack.push_back(emptyChunk);
+    bool signatureCheck = true;
+    for(int i=0;i<(int)jsigs.size();i++){
+        
+        if(IsHex(jsigs[i])) {
+            tfm::format(std::cout, "witness push hex signature => %s\n",jsigs[i]);
+            witness.stack.push_back(ParseHex(jsigs[i]));
+        } else {
+            //try base64 decoding
+            bool isInvalid = false;
+            std::vector<unsigned char> byteSign = DecodeBase64(jsigs[i].c_str(),&isInvalid);
+            if(isInvalid){
+                signatureCheck = false;
+                std::string str = tfm::format("witness signature is not a valid base64 encoded string ..%s",jsigs[i]);
+                err = err + "; " + str;
+            }else{
+                witness.stack.push_back(byteSign);
+                tfm::format(std::cout, "witness push base64 decoded signature  %s => %s\n",jsigs[i],HexStr(byteSign));
+            }
+        }
+    }
+    
+    if(!signatureCheck){
+        out.pushKV("error", err);
+        return false;
+    }
+    
+    CScript redeemScript = getMultiSigRedeemScript();
+    uint256 sigData = SignatureHash(redeemScript, mutableTx, nInToSign, SIGHASH_ALL,satoshisTxIn, SigVersion::WITNESS_V0);
+    std::cout <<"[signer] sigDataHash=" << HexStr(sigData);
+    std::vector<unsigned char> vchSig;
+    CKey privateKey = DecodeSecret(bitcoinSignPrivKey);
+    if(privateKey.Sign(sigData, vchSig))
+    {
+        vchSig.push_back(SIGHASH_ALL);
+
+        witness.stack.push_back(vchSig);
+        std::cout << "[signer] sig=" << HexStr(vchSig) << std::endl;
+        std::cout << "[signer] signed by pubkey=" << HexStr(bitcoinSignPubKey) << std::endl;
+    } else{
+        out.pushKV("error", "failed to sign Tx");
+        return false;
+    }
+    
+    
+    std::vector<unsigned char> vchscriptData(redeemScript.begin(), redeemScript.end());
+    witness.stack.push_back(vchscriptData);
+    
+    mutableTx.vin[nInToSign].scriptWitness = witness;
+    
+    CTransaction tx(mutableTx);
+    std::string txSignedHex = EncodeHexTx(tx);
+    out.pushKV("signedTx", txSignedHex);
+    return true;
+}
+
+static bool checkKeysForCreate(const UniValue& uniVal, UniValue& out)
+{
+    bool ret = true;
+    std::string err = "";
+    
+    std::vector<std::string> strKeys;
+    std::vector<std::string> numKeys;
+    
+    strKeys.push_back(keyJudicialAction);
+    strKeys.push_back(keySrcAddr);
+    strKeys.push_back(keyTargetAddr);
+    strKeys.push_back(keyTxId);
+    for(std::string key: strKeys){
+        if(uniVal[key].isNull() || !uniVal[key].isStr() ) {
+            err.append(key).append(": key is null or not a string; ");
+            ret = false;
+        }
+    }
+    
+    numKeys.push_back(keyNonce);
+    numKeys.push_back(keyVout);
+    numKeys.push_back(keyTotalAmt);
+    numKeys.push_back(keyFreezeAmt);
+    numKeys.push_back(keyLockHeight);
+    for(std::string key: numKeys){
+        if(uniVal[key].isNull() || !uniVal[key].isNum() ) {
+            err.append(key).append(": key is null or not a number; ");
+            ret = false;
+        }
+    }
+    
+    if(!ret){
+        out.pushKV("error",err);
+    }
+    
+    return ret;
+}
+
+static bool getJuratActionCode(std::string& judicialAction, enumJurat& action, UniValue& out)
+{
+    bool ret = false;
+    
+    if (judicialAction == "freeze") {
+        action =  enumJurat::JURAT_ACTION_FREEZE_WITH_TIMELOCK;
+        ret = true;
+    } else if(judicialAction == "transfer") {
+        action = enumJurat::JURAT_ACTION_MOVE_FUND_WITH_TIMLOCK;
+        ret = true;
+    }else {
+        out.pushKV("error", "invalid judicial action, can be freeze or transfer; ");
+    }
+    
+    return ret;
+}
+
+static bool createJuratTx(const UniValue& uniVal, UniValue& out,
+                          CMutableTransaction& mutableTx)
+{
+    if(!checkKeysForCreate(uniVal, out)) {
+        return false;
+    }
+    
+    std::string judicialAction = uniVal[keyJudicialAction].get_str();
+    std::string srcAddr = uniVal[keySrcAddr].get_str();
+    std::string targetAddr = uniVal[keyTargetAddr].get_str();
+    std::string txid = uniVal[keyTxId].get_str();
+    uint32_t nOutToFreeze = uniVal[keyVout].get_int();
+    uint32_t nonce = uniVal[keyNonce].get_int();
+    
+    enumJurat action;
+    bool isValidAction = getJuratActionCode(judicialAction, action, out);
+    if(!isValidAction){
+        return false;
+    }
+    
+    CAmount satoshiTxInTotalAmount = (int64_t) (COIN* uniVal[keyTotalAmt].get_real());
+    CAmount satoshiFreezeAmt = (int64_t)(COIN* uniVal[keyFreezeAmt].get_real());
+    uint32_t nLockBlockHeight = uniVal[keyLockHeight].get_int();
+    CAmount satoshiFee = FEE;
+    if( !uniVal[keyFeeAmt].isNull()  &&  uniVal[keyLockHeight].isNum()) {
+        satoshiFee = uniVal[keyLockHeight].get_int();
+    }
+    
+    
+    
+    bool isCreated = freezeTx(action,
+                              srcAddr,
+                              targetAddr,
+                              txid,
+                              nOutToFreeze,
+                              satoshiTxInTotalAmount,
+                              satoshiFreezeAmt,
+                              satoshiFee,
+                              nLockBlockHeight,
+                              nonce,
+                              mutableTx,
+                              out);
+   
+    return isCreated;
+}
+
+static void printOutput(UniValue& out) {
+    std::string json = out.write(4);
+    std::cout << "begin_json_out:\n" << json << "\nend_json_out\n";
+    std::cout.flush();
+}
+
+static bool runJuratCmd()
+{
+
+    
+    if(registers.find(JURAT_CREATE_TX) != registers.end()) {
+        const UniValue uniVal = registers[JURAT_CREATE_TX];
+        UniValue out(UniValue::VOBJ);
+        out.pushKV("request", uniVal);
+        CMutableTransaction mutableTx;
+        bool isCreated =  createJuratTx(uniVal, out, mutableTx);
+        printOutput(out);
+        return isCreated;
+    }
+    
+    ECC_Start();
+    ECCVerifyHandle verifyHandle;
+    
+    if(!ECC_InitSanityCheck()){
+        tfm::format(std::cout,"ecc support not available at runtime");
+        return false;
+    }
+    
+    
+    if(registers.find(JURAT_SIGN_TX) != registers.end()) {
+        const UniValue uniVal = registers[JURAT_SIGN_TX];
+        UniValue out(UniValue::VOBJ);
+        out.pushKV("request", uniVal);
+        CMutableTransaction mutableTx;
+        bool isCreated =  createJuratTx(uniVal, out, mutableTx);
+        if(!isCreated){
+            printOutput(out);
+            return false;
+        }
+        
+        if(uniVal[keyJuratWitnessSig].isNull() ||
+           uniVal[keyJuratWitnessSig].getType() != UniValue::VType::VARR) {
+            out.pushKV("error", "jwsig is null or not an array");
+            printOutput(out);
+            return false;
+        }
+        
+        //attach witness
+        std::vector<std::string> jsigs;
+        for (const UniValue& univalJsig : uniVal[keyJuratWitnessSig].getValues()){
+            std::string jwsig = univalJsig.get_str();
+            jsigs.push_back(jwsig);
+        }
+        int nInToSign = 0;
+        CAmount satoshiTxInTotalAmount = (int64_t) (COIN* uniVal[keyTotalAmt].get_real());
+        bool isWitessAttached = attachWitness(mutableTx, nInToSign, satoshiTxInTotalAmount,jsigs, out);
+        printOutput(out);
+        return isWitessAttached;
+    }
+    
+    ECC_Stop();
+    return false;
+}
+
+
+
 
 static void SetupBitcoinTxArgs(ArgsManager &argsman)
 {
@@ -47,6 +525,8 @@ static void SetupBitcoinTxArgs(ArgsManager &argsman)
     argsman.AddArg("-create", "Create new, empty TX.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-json", "Select JSON output", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-txid", "Output only the hex-encoded transaction id of the resultant transaction.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-jurat", "Create jurat tx from the json specified in the set= argument", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    
     SetupChainParamsBaseOptions(argsman);
 
     argsman.AddArg("delin=N", "Delete input N from TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
@@ -98,6 +578,11 @@ static int AppInitRawTx(int argc, char* argv[])
     }
 
     fCreateBlank = gArgs.GetBoolArg("-create", false);
+    
+    bool isJurat = gArgs.IsArgSet("-jurat");
+    tfm::format(std::cout, "isJurat: %b\n", isJurat);
+    
+    
 
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         // First part of help message is specific to this utility
@@ -742,7 +1227,7 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
 
     else if (command == "set")
         RegisterSet(commandVal);
-
+    
     else
         throw std::runtime_error("unknown command");
 }
@@ -840,11 +1325,18 @@ static int CommandLineRawTx(int argc, char* argv[])
                 key = arg.substr(0, eqpos);
                 value = arg.substr(eqpos + 1);
             }
-
             MutateTx(tx, key, value);
         }
+        
+        bool isJurat = gArgs.IsArgSet("-jurat");
+        if(isJurat) {
+            runJuratCmd();
+            
+        } else {
+            OutputTx(CTransaction(tx));
+        }
 
-        OutputTx(CTransaction(tx));
+        
     }
     catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();
