@@ -286,12 +286,10 @@ static RPCHelpMan addnode()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
+    const std::string strCommand{request.params[1].isNull() ? "" : request.params[1].get_str()};
+
     if (strCommand != "onetry" && strCommand != "add" && strCommand != "remove") {
-        throw std::runtime_error(
-            self.ToString());
+        throw std::runtime_error(self.ToString());
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -683,9 +681,8 @@ static RPCHelpMan setban()
                 },
         [&](const RPCHelpMan& help, const JSONRPCRequest& request) -> UniValue
 {
-    std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
+    const std::string strCommand{request.params[1].isNull() ? "" : request.params[1].get_str()};
+
     if (strCommand != "add" && strCommand != "remove") {
         throw std::runtime_error(help.ToString());
     }
@@ -718,13 +715,10 @@ static RPCHelpMan setban()
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
         }
 
-        int64_t banTime = 0; //use standard bantime if not specified
-        if (!request.params[2].isNull())
-            banTime = request.params[2].get_int64();
+        //use standard bantime if not specified
+        const int64_t banTime{request.params[2].isNull() ? 0 : request.params[2].get_int64()};
 
-        bool absolute = false;
-        if (request.params[3].isTrue())
-            absolute = true;
+        const bool absolute{request.params[3].isTrue() ? true : false};
 
         if (isSubnet) {
             node.banman->Ban(subNet, banTime, absolute);

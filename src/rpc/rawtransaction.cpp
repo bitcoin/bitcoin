@@ -303,10 +303,7 @@ static RPCHelpMan createrawtransaction()
         }, true
     );
 
-    bool rbf = false;
-    if (!request.params[3].isNull()) {
-        rbf = request.params[3].isTrue();
-    }
+    const bool rbf{request.params[3].isNull() ? false : request.params[3].isTrue()};
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
 
     return EncodeHexTx(CTransaction(rawTx));
@@ -342,8 +339,8 @@ static RPCHelpMan decoderawtransaction()
 
     CMutableTransaction mtx;
 
-    bool try_witness = request.params[1].isNull() ? true : request.params[1].get_bool();
-    bool try_no_witness = request.params[1].isNull() ? true : !request.params[1].get_bool();
+    const bool try_witness{request.params[1].isNull() ? true : request.params[1].get_bool()};
+    const bool try_no_witness{request.params[1].isNull() ? true : !request.params[1].get_bool()};
 
     if (!DecodeHexTx(mtx, request.params[0].get_str(), try_no_witness, try_witness)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
@@ -1229,7 +1226,7 @@ static RPCHelpMan finalizepsbt()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
+    const bool extract{request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool())};
 
     CMutableTransaction mtx;
     bool complete = FinalizeAndExtractPSBT(psbtx, mtx);
@@ -1277,10 +1274,8 @@ static RPCHelpMan createpsbt()
         }, true
     );
 
-    bool rbf = false;
-    if (!request.params[3].isNull()) {
-        rbf = request.params[3].isTrue();
-    }
+    const bool rbf{request.params[3].isNull() ? false : request.params[3].isTrue()};
+
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
 
     // Make a blank psbt
@@ -1334,11 +1329,11 @@ static RPCHelpMan converttopsbt()
 
     // parse hex string from parameter
     CMutableTransaction tx;
-    bool permitsigdata = request.params[1].isNull() ? false : request.params[1].get_bool();
-    bool witness_specified = !request.params[2].isNull();
-    bool iswitness = witness_specified ? request.params[2].get_bool() : false;
-    const bool try_witness = witness_specified ? iswitness : true;
-    const bool try_no_witness = witness_specified ? !iswitness : true;
+    const bool permitsigdata{request.params[1].isNull() ? false : request.params[1].get_bool()};
+    const bool witness_specified{!request.params[2].isNull()};
+    const bool iswitness{witness_specified ? request.params[2].get_bool() : false};
+    const bool try_witness{witness_specified ? iswitness : true};
+    const bool try_no_witness{witness_specified ? !iswitness : true};
     if (!DecodeHexTx(tx, request.params[0].get_str(), try_no_witness, try_witness)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }

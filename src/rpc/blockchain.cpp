@@ -269,9 +269,7 @@ static RPCHelpMan waitfornewblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
-    if (!request.params[0].isNull())
-        timeout = request.params[0].get_int();
+    const int timeout{request.params[0].isNull() ? 0 : request.params[0].get_int()};
 
     CUpdatedBlock block;
     {
@@ -312,12 +310,9 @@ static RPCHelpMan waitforblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    const int timeout{request.params[1].isNull() ? 0 : request.params[1].get_int()};
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
-
-    if (!request.params[1].isNull())
-        timeout = request.params[1].get_int();
 
     CUpdatedBlock block;
     {
@@ -359,12 +354,9 @@ static RPCHelpMan waitforblockheight()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    const int timeout {request.params[1].isNull() ? 0 : request.params[1].get_int()};
 
     int height = request.params[0].get_int();
-
-    if (!request.params[1].isNull())
-        timeout = request.params[1].get_int();
 
     CUpdatedBlock block;
     {
@@ -535,9 +527,7 @@ static RPCHelpMan getblockheader()
 {
     uint256 hash(ParseHashV(request.params[0], "hash"));
 
-    bool fVerbose = true;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose{request.params[1].isNull() ? true : request.params[1].get_bool()};
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -996,9 +986,7 @@ static RPCHelpMan gettxout()
     uint256 hash(ParseHashV(request.params[0], "txid"));
     int n = request.params[1].get_int();
     COutPoint out(hash, n);
-    bool fMempool = true;
-    if (!request.params[2].isNull())
-        fMempool = request.params[2].get_bool();
+    const bool fMempool{request.params[2].isNull() ? true : request.params[2].get_bool()};
 
     Coin coin;
     CChainState& active_chainstate = chainman.ActiveChainstate();
@@ -2191,10 +2179,7 @@ static RPCHelpMan getblockfilter()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 block_hash = ParseHashV(request.params[0], "blockhash");
-    std::string filtertype_name = "basic";
-    if (!request.params[1].isNull()) {
-        filtertype_name = request.params[1].get_str();
-    }
+    const std::string filtertype_name = {request.params[1].isNull() ? "basic" : request.params[1].get_str()};
 
     BlockFilterType filtertype;
     if (!BlockFilterTypeByName(filtertype_name, filtertype)) {

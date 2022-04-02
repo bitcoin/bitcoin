@@ -411,14 +411,9 @@ static RPCHelpMan getrawmempool()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[0].isNull())
-        fVerbose = request.params[0].get_bool();
+    const bool fVerbose{request.params[0].isNull() ? false : request.params[0].get_bool()};
 
-    bool include_mempool_sequence = false;
-    if (!request.params[1].isNull()) {
-        include_mempool_sequence = request.params[1].get_bool();
-    }
+    const bool include_mempool_sequence{request.params[1].isNull() ? false : request.params[1].get_bool()};
 
     return MempoolToJSON(EnsureAnyMemPool(request.context), fVerbose, include_mempool_sequence);
 },
@@ -449,9 +444,7 @@ static RPCHelpMan getmempoolancestors()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose{request.params[1].isNull() ? false : request.params[1].get_bool()};
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
@@ -513,9 +506,7 @@ static RPCHelpMan getmempooldescendants()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose{request.params[1].isNull() ? false : request.params[1].get_bool()};
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
