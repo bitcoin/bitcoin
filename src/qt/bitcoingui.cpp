@@ -853,7 +853,7 @@ void BitcoinGUI::aboutClicked()
     if(!clientModel)
         return;
 
-    auto dlg = new HelpMessageDialog(this, /* about */ true);
+    auto dlg = new HelpMessageDialog(this, /*about=*/true);
     GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 
