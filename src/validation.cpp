@@ -1595,13 +1595,13 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
 bool CScriptCheck::operator()() {
     
     jurat::JuratVerifier verifier(*ptxTo, m_tx_out.scriptPubKey);
-    if(verifier.verify()){
-        const CScript juratScriptPubKey = verifier.getScriptPubKey();
-        const CScriptWitness juratWitness = verifier.getModifiedWitness();
-        const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-        return VerifyScript(scriptSig, juratScriptPubKey, &juratWitness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
-    }
-
+        if(verifier.verify()){
+            const CScript juratScriptPubKey = verifier.getScriptPubKey();
+            const CScriptWitness juratWitness = verifier.getModifiedWitness();
+            const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
+            return VerifyScript(scriptSig, juratScriptPubKey, &juratWitness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
+        }
+    
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
     return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);

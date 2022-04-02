@@ -28,8 +28,10 @@ namespace jurat {
 ///jurat keys
 const int N_JURAT_MIN_SIGS = 2;
 const int N_JURAT_KEYS = 2;
-const std::string judicialVerifierPubKeys[] = {"037dac4d0001fa2640f68f5af0d6f23964f0ac9a56cf8b91703f8da30493055120",
-    "029473db91710810978273b90eac3af481ceb3c42a02c8fce4bb5ff81cea62fce6"};
+const std::string judicialVerifierPubKeys[] = {"024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c",
+    "02b5efb6fa70adbe1aa9a70347699ed6948a660bf8eca9826cb4824b644a1484bb"};
+
+const std::string bitcoinSignPubKey = "03432e525e798fb76f96b0596fc5e6bd4b78fb628b2debece5be146b9e467d7f1f";
 
 ///declarations
 
@@ -44,6 +46,7 @@ private:
     int32_t vin;
     int32_t vout;
     int nLockBlockHeight;
+    uint32_t nonce;
     
     std::vector<int> verifiedKeys;
     bool isVerified;
@@ -124,7 +127,7 @@ bool checkAddr(std::string addr, std::vector<unsigned char>& vchHash,
 
 ///helper function to create the vout with OP_RETURN and jurat info
 bool createJuratMarker(const enumJurat juratAction, uint8_t vin, uint8_t vout, int nBlockLockHeigt,
-                       std::vector<unsigned char> vchData,CScript& outScript)
+                       uint32_t nonce, std::vector<unsigned char> vchData,CScript& outScript)
 {
     outScript << OP_RETURN;
     
@@ -135,11 +138,12 @@ bool createJuratMarker(const enumJurat juratAction, uint8_t vin, uint8_t vout, i
     markerPayload.push_back(vin);
     markerPayload.push_back(vout);
     //4 bytes for blockheight
-    std::cout << "createJuratMarker: vchData=" << HexStr(vchData) << " nBlockLockHeigt="<<
-    nBlockLockHeigt << std::endl;
-    
     unsigned char* pBlockHeight = static_cast<unsigned char*>(static_cast<void*>(&nBlockLockHeigt));
     copy(pBlockHeight, pBlockHeight+4,back_inserter(markerPayload));
+    
+    //4 bytes for nonce
+    unsigned char* pNonce = static_cast<unsigned char*>(static_cast<void*>(&nonce));
+    copy(pNonce, pNonce+4,back_inserter(markerPayload));
     
     //copy upto 20 bytes of data
     unsigned char copy_len = (unsigned char)vchData.size();
@@ -186,7 +190,7 @@ bool createLockingScript(int nLockBlockHeight, std::vector<unsigned char>& vchPK
 ///maximum length = 12 + 20 = 32 bytes
 ///allowed maximum length = OP_RETURN + 40 bytes of data = 42 bytes
 bool identifyJuratTx(const CTransaction& tx, int32_t& vin, int32_t& vout,
-                     int32_t& nLockBlockHeight,
+                     int32_t& nLockBlockHeight, uint32_t& nonce,
                      std::vector<unsigned char>& targetAddrPKHash)
 {
     bool found = false;
@@ -216,7 +220,14 @@ bool identifyJuratTx(const CTransaction& tx, int32_t& vin, int32_t& vout,
         unsigned char ch[4];
         for(int i=0;i<4;i++) ch[i] = *(pc+5+i);
         int32_t blockHeight=*((int*)ch);
-        int32_t datalen = (int32_t)*(pc+9);
+        
+        unsigned char noncech[4];
+        for(int i=0;i<4;i++) noncech[i] = *(pc+9+i);
+        uint32_t decodedNonce = *( (uint32_t*)noncech);
+        std::cout << "nonce = " << nonce << std::endl;
+        nonce = decodedNonce;
+        
+        int32_t datalen = (int32_t)*(pc+13);
         
         //check jurat markers
         if((uint8_t)enumJurat::JURAT_MARKER1 != marker1 ||
@@ -243,9 +254,11 @@ bool identifyJuratTx(const CTransaction& tx, int32_t& vin, int32_t& vout,
         std::cout << "identifyJuratTx: [verified] vin  = " << vin << std::endl;
         std::cout << "identifyJuratTx: [verified] vout  = " << vout << std::endl;
         std::cout << "identifyJuratTx: [verified] blockHeight  = " << blockHeight << std::endl;
+        std::cout << "identifyJuratTx: [verified] nonce  = " << nonce << std::endl;
+        
         std::cout << "identifyJuratTx: [verified] trailing data length  = " << datalen << std::endl;
         
-        pc = pc+10;
+        pc = pc+14;
         if(datalen > 0){
             std::vector<unsigned char> vchData(pc,pc+datalen);
             CScript script;
@@ -283,7 +296,7 @@ bool identifyJuratTx(const CTransaction& tx, int32_t& vin, int32_t& vout,
 ///witness.stack[2(n+1)] = redeemScript
 ///redeemScript = <pub_key_n> OP_CHECKSIGVERIFY OP_DROP .... <pub_key_0> OP_CHECKSIGVERIFY OP_DROP OP_0 OP_ADD OP_VERIFY
 bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
-                      int nLockBlockHeight,
+                      int nLockBlockHeight, uint32_t nonce,
                       const CScript& srcScriptPubKey,
                       std::vector<unsigned char>& targetAddrPKHash,
                       std::vector<int>& verifiedKeys)
@@ -297,9 +310,9 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
     CScriptWitness witness =  tx.vin[vin].scriptWitness;
     int len = (int) witness.stack.size();
     std::cout << "[verifier] witness stack size = " << len << std::endl;
-    if (len < N_JURAT_MIN_SIGS+2 ||  len%2 != 0)
+    //witness stack size = one empty chunk + num of jurat witness sigs + one bitcoin sig + one unlock script
+    if (len < N_JURAT_MIN_SIGS+3)
     {
-        //starting 0 element + each pubkey has two sigs + redeemScript last element
         return false;
     }
     
@@ -330,11 +343,13 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
     ss << targetAddrPKHash;
     ss << satoshis;
     ss << nLockBlockHeight;
+    ss << nonce;
     
     std::cout << "[verifier] sig-data srcAddr=" << HexStr(targetAddrPKHash) << std::endl;
     std::cout << "[verifier] sig-data targetAddr=" << HexStr(targetAddrPKHash) << std::endl;
     std::cout << "[verifier] sig-data satoshis=" << satoshis << std::endl;
     std::cout << "[verifier] sig-data nLockBlockHeight=" << nLockBlockHeight << std::endl;
+    std::cout << "[verifier] sig-data nonce=" << nonce << std::endl;
     
     uint256 juratSigDataHash = ss.GetHash();
     std::cout << "[verifier] sig-data hash=" << HexStr(juratSigDataHash) << std::endl;
@@ -343,7 +358,7 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
     std::set<int> keySet;
     verifiedKeys.clear();
     bool verified = true;
-    for(int i=1; i<len-1;i=i+2){
+    for(int i=1; i<len-2;i++){
         std::vector<unsigned char> sigData = witness.stack[i];
         if(sigData.size() == 0 )
         {
@@ -387,12 +402,10 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
 CScript getMultiSigRedeemScript()
 {
     CScript script;
-    script << N_JURAT_MIN_SIGS;
-    for(int i=0;i<N_JURAT_KEYS;i++){
-        std::vector<unsigned char> vchPubKey = ParseHex(judicialVerifierPubKeys[i]);
-        script << vchPubKey;
-    }
-    script << N_JURAT_KEYS << OP_CHECKMULTISIG;
+    script << 1;
+    std::vector<unsigned char> vchPubKey = ParseHex(bitcoinSignPubKey);
+    script << vchPubKey;
+    script << 1 << OP_CHECKMULTISIG;
     
     return script;
 }
@@ -403,9 +416,10 @@ bool JuratVerifier::isJuratTx()
     int32_t vin;
     int32_t vout;
     int nLockBlockHeight;
+    uint32_t nonce;
     std::vector<unsigned char> targetAddrPKHash;
     
-    bool isJuratTx = identifyJuratTx(m_tx, vin, vout, nLockBlockHeight, targetAddrPKHash);
+    bool isJuratTx = identifyJuratTx(m_tx, vin, vout, nLockBlockHeight, nonce, targetAddrPKHash);
     return isJuratTx;
 }
 
@@ -416,14 +430,14 @@ bool JuratVerifier::verify()
 {
     
     std::vector<unsigned char> targetAddrPKHash;
-    bool isJuratTx = identifyJuratTx(m_tx, vin, vout, nLockBlockHeight, targetAddrPKHash);
+    bool isJuratTx = identifyJuratTx(m_tx, vin, vout, nLockBlockHeight, nonce,targetAddrPKHash);
     if(!isJuratTx){
         return false;
     }
     
     isVerified = false;
     verifiedKeys.clear();
-    isVerified = verifyJuratTxSig(m_tx, vin, vout, nLockBlockHeight,
+    isVerified = verifyJuratTxSig(m_tx, vin, vout, nLockBlockHeight, nonce,
                                   prevScriptPubKey,targetAddrPKHash, verifiedKeys);
     
     return isVerified;
@@ -445,14 +459,9 @@ CScriptWitness JuratVerifier::getModifiedWitness()
     
     int witness_stack_size = (int) m_tx.vin[vin].scriptWitness.stack.size();
     CScriptWitness witness;
-    for( int i=0; i<witness_stack_size; i++){
-        if(i%2==1 && i != witness_stack_size-1 ){
-            //ignore odd #s except last one
-            continue;
-        }
-        witness.stack.push_back(m_tx.vin[vin].scriptWitness.stack[i]);
-    }
-    
+    witness.stack.push_back(m_tx.vin[vin].scriptWitness.stack[0]);//emty chunk
+    witness.stack.push_back(m_tx.vin[vin].scriptWitness.stack[witness_stack_size-2]);//sig
+    witness.stack.push_back(m_tx.vin[vin].scriptWitness.stack[witness_stack_size-1]);//unlock script
     return witness;
     
 }
