@@ -67,9 +67,9 @@ class ZMQSubscriber:
         label = chr(body[32])
         mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
         if mempool_sequence is not None:
-            assert label == "A" or label == "R"
+            assert label in {"A", "R"}
         else:
-            assert label == "D" or label == "C"
+            assert label in {"D", "C"}
         return (hash, label, mempool_sequence)
 
 
@@ -304,9 +304,6 @@ class ZMQTest (BitcoinTestFramework):
         [seq] = self.setup_zmq_test([("sequence", "tcp://127.0.0.1:28333")])
         self.disconnect_nodes(0, 1)
 
-        # Mempool sequence number starts at 1
-        seq_num = 1
-
         # Generate 1 block in nodes[0] and receive all notifications
         dc_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
 
@@ -331,6 +328,9 @@ class ZMQTest (BitcoinTestFramework):
             payment_txid = self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=5.0, replaceable=True)
             self.sync_all()
             self.log.info("Testing sequence notifications with mempool sequence values")
+
+            # Mempool sequence number starts at 1
+            seq_num = 1
 
             # Should receive the broadcasted txid.
             assert_equal((payment_txid, "A", seq_num), seq.receive_sequence())
@@ -394,9 +394,10 @@ class ZMQTest (BitcoinTestFramework):
             orig_txid = self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0, replaceable=True)
 
             # More to be simply mined
-            more_tx = []
-            for _ in range(5):
-                more_tx.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.1))
+            more_tx = [
+                self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.1)
+                for _ in range(5)
+            ]
 
             raw_tx = self.nodes[0].getrawtransaction(orig_txid)
             bump_info = self.nodes[0].bumpfee(orig_txid)
@@ -419,8 +420,8 @@ class ZMQTest (BitcoinTestFramework):
             # Added original tx
             assert_equal(label, "A")
             # More transactions to be simply mined
-            for i in range(len(more_tx)):
-                assert_equal((more_tx[i], "A", mempool_seq), seq.receive_sequence())
+            for item in more_tx:
+                assert_equal((item, "A", mempool_seq), seq.receive_sequence())
                 mempool_seq += 1
             # Bumped by rbf
             assert_equal((orig_txid, "R", mempool_seq), seq.receive_sequence())
@@ -453,12 +454,14 @@ class ZMQTest (BitcoinTestFramework):
         next_mempool_seq = self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"]
         assert_equal(next_mempool_seq, 1)
 
-        # Some transactions have been happening but we aren't consuming zmq notifications yet
-        # or we lost a ZMQ message somehow and want to start over
-        txids = []
         num_txs = 5
-        for _ in range(num_txs):
-            txids.append(self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1.0, replaceable=True))
+        txids = [
+            self.nodes[1].sendtoaddress(
+                address=self.nodes[0].getnewaddress(), amount=1.0, replaceable=True
+            )
+            for _ in range(num_txs)
+        ]
+
         self.sync_all()
 
         # 1) Consume backlog until we get a mempool sequence number
@@ -466,7 +469,7 @@ class ZMQTest (BitcoinTestFramework):
         while zmq_mem_seq is None:
             (hash_str, label, zmq_mem_seq) = seq.receive_sequence()
 
-        assert label == "A" or label == "R"
+        assert label in ["A", "R"]
         assert hash_str is not None
 
         # 2) We need to "seed" our view of the mempool
@@ -483,8 +486,13 @@ class ZMQTest (BitcoinTestFramework):
 
         # Things continue to happen in the "interim" while waiting for snapshot results
         # We have node 0 do all these to avoid p2p races with RBF announcements
-        for _ in range(num_txs):
-            txids.append(self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=0.1, replaceable=True))
+        txids.extend(
+            self.nodes[0].sendtoaddress(
+                address=self.nodes[0].getnewaddress(), amount=0.1, replaceable=True
+            )
+            for _ in range(num_txs)
+        )
+
         self.nodes[0].bumpfee(txids[-1])
         self.sync_all()
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
@@ -506,15 +514,14 @@ class ZMQTest (BitcoinTestFramework):
         r_gap = 0
         for _ in range(num_txs + 2 + 1 + 1):
             (hash_str, label, mempool_sequence) = seq.receive_sequence()
-            if mempool_sequence is not None:
-                if mempool_sequence != expected_sequence:
-                    # Detected "R" gap, means this a conflict eviction, and mempool tx are being evicted before its
-                    # position in the incoming block message "C"
-                    if label == "R":
-                        assert mempool_sequence > expected_sequence
-                        r_gap += mempool_sequence - expected_sequence
-                    else:
-                        raise Exception(f"WARNING: txhash has unexpected mempool sequence value: {mempool_sequence} vs expected {expected_sequence}")
+            if (
+                mempool_sequence is not None
+                and mempool_sequence != expected_sequence
+            ):
+                if label != "R":
+                    raise Exception(f"WARNING: txhash has unexpected mempool sequence value: {mempool_sequence} vs expected {expected_sequence}")
+                assert mempool_sequence > expected_sequence
+                r_gap += mempool_sequence - expected_sequence
             if label == "A":
                 assert hash_str not in mempool_view
                 mempool_view.add(hash_str)

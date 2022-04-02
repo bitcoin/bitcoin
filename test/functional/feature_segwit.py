@@ -60,10 +60,7 @@ P2WSH = 1
 
 
 def getutxo(txid):
-    utxo = {}
-    utxo["vout"] = 0
-    utxo["txid"] = txid
-    return utxo
+    return {"vout": 0, "txid": txid}
 
 
 def find_spendable_utxo(node, min_value):

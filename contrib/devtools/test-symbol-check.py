@@ -180,14 +180,27 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cc, source, executable, ['-Wl,--major-subsystem-version', '-Wl,9', '-Wl,--minor-subsystem-version', '-Wl,9']),
-            (1, executable + ': failed SUBSYSTEM_VERSION'))
+        self.assertEqual(
+            call_symbol_check(
+                cc,
+                source,
+                executable,
+                [
+                    '-Wl,--major-subsystem-version',
+                    '-Wl,9',
+                    '-Wl,--minor-subsystem-version',
+                    '-Wl,9',
+                ],
+            ),
+            (1, f'{executable}: failed SUBSYSTEM_VERSION'),
+        )
+
 
         source = 'test3.c'
         executable = 'test3.exe'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
-                #include <windows.h>
+                #include <combaseapi.h>
 
                 int main()
                 {

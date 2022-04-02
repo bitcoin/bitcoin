@@ -109,7 +109,7 @@ def main(args):
         return 4
 
     # fetch second signature file
-    sigfile2 = SIGNATUREFILENAME + ".2"
+    sigfile2 = f'{SIGNATUREFILENAME}.2'
     success, output = download_with_wget(HOST2 + remote_sigfile, sigfile2)
     if not success:
         print("bitcoin.org failed to provide signature file, "

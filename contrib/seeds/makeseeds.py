@@ -53,21 +53,19 @@ def parseline(line):
             m = PATTERN_ONION.match(sline[0])
             if m is None:
                 return None
-            else:
-                net = 'onion'
-                ipstr = sortkey = m.group(1)
-                port = int(m.group(2))
+            net = 'onion'
+            ipstr = sortkey = m.group(1)
         else:
             net = 'ipv6'
             if m.group(1) in ['::']: # Not interested in localhost
                 return None
             ipstr = m.group(1)
             sortkey = ipstr # XXX parse IPv6 into number, could use name_to_ipv6 from generate-seeds
-            port = int(m.group(2))
+        port = int(m.group(2))
     else:
         # Do IPv4 sanity check
         ip = 0
-        for i in range(0,4):
+        for i in range(4):
             if int(m.group(i+2)) < 0 or int(m.group(i+2)) > 255:
                 return None
             ip = ip + (int(m.group(i+2)) << (8*(3-i)))
@@ -130,18 +128,17 @@ def lookup_asn(net, ip):
         if net == 'ipv4':
             ipaddr = ip
             prefix = '.origin'
-        else:                  # http://www.team-cymru.com/IP-ASN-mapping.html
+        else:          # http://www.team-cymru.com/IP-ASN-mapping.html
             res = str()                         # 2001:4860:b002:23::68
             for nb in ip.split(':')[:4]:  # pick the first 4 nibbles
                 for c in nb.zfill(4):           # right padded with '0'
-                    res += c + '.'              # 2001 4860 b002 0023
+                    res += f'{c}.'
             ipaddr = res.rstrip('.')            # 2.0.0.1.4.8.6.0.b.0.0.2.0.0.2.3
             prefix = '.origin6'
 
-        asn = int([x.to_text() for x in dns.resolver.resolve('.'.join(
+        return int([x.to_text() for x in dns.resolver.resolve('.'.join(
                    reversed(ipaddr.split('.'))) + prefix + '.asn.cymru.com',
                    'TXT').response.answer][0].split('\"')[1].split(' ')[0])
-        return asn
     except Exception as e:
         sys.stderr.write(f'ERR: Could not resolve ASN for "{ip}": {e}\n')
         return None
@@ -167,7 +164,7 @@ def filterbyasn(ips, max_per_asn, max_per_net):
         result.append(ip)
 
     # Add back Onions (up to max_per_net)
-    result.extend(ips_onion[0:max_per_net])
+    result.extend(ips_onion[:max_per_net])
     return result
 
 def ip_stats(ips):
@@ -183,22 +180,22 @@ def main():
     ips = [parseline(line) for line in lines]
 
     print('\x1b[7m  IPv4   IPv6  Onion Pass                                               \x1b[0m', file=sys.stderr)
-    print('%s Initial' % (ip_stats(ips)), file=sys.stderr)
+    print(f'{ip_stats(ips)} Initial', file=sys.stderr)
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
-    print('%s Skip entries with invalid address' % (ip_stats(ips)), file=sys.stderr)
+    print(f'{ip_stats(ips)} Skip entries with invalid address', file=sys.stderr)
     # Skip duplicates (in case multiple seeds files were concatenated)
     ips = dedup(ips)
-    print('%s After removing duplicates' % (ip_stats(ips)), file=sys.stderr)
+    print(f'{ip_stats(ips)} After removing duplicates', file=sys.stderr)
     # Skip entries from suspicious hosts.
     ips = [ip for ip in ips if ip['ip'] not in SUSPICIOUS_HOSTS]
-    print('%s Skip entries from suspicious hosts' % (ip_stats(ips)), file=sys.stderr)
+    print(f'{ip_stats(ips)} Skip entries from suspicious hosts', file=sys.stderr)
     # Enforce minimal number of blocks.
     ips = [ip for ip in ips if ip['blocks'] >= MIN_BLOCKS]
-    print('%s Enforce minimal number of blocks' % (ip_stats(ips)), file=sys.stderr)
+    print(f'{ip_stats(ips)} Enforce minimal number of blocks', file=sys.stderr)
     # Require service bit 1.
     ips = [ip for ip in ips if (ip['service'] & 1) == 1]
-    print('%s Require service bit 1' % (ip_stats(ips)), file=sys.stderr)
+    print(f'{ip_stats(ips)} Require service bit 1', file=sys.stderr)
     # Require at least 50% 30-day uptime for clearnet, 10% for onion.
     req_uptime = {
         'ipv4': 50,
@@ -206,18 +203,30 @@ def main():
         'onion': 10,
     }
     ips = [ip for ip in ips if ip['uptime'] > req_uptime[ip['net']]]
-    print('%s Require minimum uptime' % (ip_stats(ips)), file=sys.stderr)
+    print(f'{ip_stats(ips)} Require minimum uptime', file=sys.stderr)
     # Require a known and recent user agent.
     ips = [ip for ip in ips if PATTERN_AGENT.match(ip['agent'])]
-    print('%s Require a known and recent user agent' % (ip_stats(ips)), file=sys.stderr)
+    print(
+        f'{ip_stats(ips)} Require a known and recent user agent',
+        file=sys.stderr,
+    )
+
     # Sort by availability (and use last success as tie breaker)
     ips.sort(key=lambda x: (x['uptime'], x['lastsuccess'], x['ip']), reverse=True)
     # Filter out hosts with multiple bitcoin ports, these are likely abusive
     ips = filtermultiport(ips)
-    print('%s Filter out hosts with multiple bitcoin ports' % (ip_stats(ips)), file=sys.stderr)
+    print(
+        f'{ip_stats(ips)} Filter out hosts with multiple bitcoin ports',
+        file=sys.stderr,
+    )
+
     # Look up ASNs and limit results, both per ASN and globally.
     ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
-    print('%s Look up ASNs and limit results per ASN and per net' % (ip_stats(ips)), file=sys.stderr)
+    print(
+        f'{ip_stats(ips)} Look up ASNs and limit results per ASN and per net',
+        file=sys.stderr,
+    )
+
     # Sort the results by IP address (for deterministic output).
     ips.sort(key=lambda x: (x['net'], x['sortkey']))
     for ip in ips:

@@ -177,7 +177,7 @@ class NotificationsTest(BitcoinTestFramework):
                     # On Windows, echo as above will append a whitespace
                     assert_equal(text[-1], ' ')
                     text = text[:-1]
-                expected = str(blockheight) + '_' + blockhash
+                expected = f'{str(blockheight)}_{blockhash}'
                 assert_equal(text, expected)
 
         for tx_file in os.listdir(self.walletnotify_dir):

@@ -81,34 +81,34 @@ class FrameworkInfo(object):
     @classmethod
     def fromOtoolLibraryLine(cls, line: str) -> Optional['FrameworkInfo']:
         # Note: line must be trimmed
-        if line == "":
+        if not line:
             return None
-        
+
         # Don't deploy system libraries
         if line.startswith("/System/Library/") or line.startswith("@executable_path") or line.startswith("/usr/lib/"):
             return None
-        
+
         m = cls.reOLine.match(line)
         if m is None:
             raise RuntimeError(f"otool line could not be parsed: {line}")
-        
+
         path = m.group(1)
-        
+
         info = cls()
         info.sourceFilePath = path
         info.installName = path
-        
+
         if path.endswith(".dylib"):
             dirname, filename = os.path.split(path)
             info.frameworkName = filename
             info.frameworkDirectory = dirname
             info.frameworkPath = path
-            
+
             info.binaryDirectory = dirname
             info.binaryName = filename
             info.binaryPath = path
             info.version = "-"
-            
+
             info.installName = path
             info.deployedInstallName = f"@executable_path/../Frameworks/{info.binaryName}"
             info.sourceFilePath = path
@@ -123,25 +123,25 @@ class FrameworkInfo(object):
                 i += 1
             if i == len(parts):
                 raise RuntimeError(f"Could not find .framework or .dylib in otool line: {line}")
-            
+
             info.frameworkName = parts[i]
             info.frameworkDirectory = "/".join(parts[:i])
             info.frameworkPath = os.path.join(info.frameworkDirectory, info.frameworkName)
-            
+
             info.binaryName = parts[i+3]
             info.binaryDirectory = "/".join(parts[i+1:i+3])
             info.binaryPath = os.path.join(info.binaryDirectory, info.binaryName)
             info.version = parts[i+2]
-            
+
             info.deployedInstallName = f"@executable_path/../Frameworks/{os.path.join(info.frameworkName, info.binaryPath)}"
             info.destinationDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, info.binaryDirectory)
-            
+
             info.sourceResourcesDirectory = os.path.join(info.frameworkPath, "Resources")
             info.sourceContentsDirectory = os.path.join(info.frameworkPath, "Contents")
             info.sourceVersionContentsDirectory = os.path.join(info.frameworkPath, "Versions", info.version, "Contents")
             info.destinationResourcesDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Resources")
             info.destinationVersionContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Versions", info.version, "Contents")
-        
+
         return info
 
 class ApplicationBundleInfo(object):
@@ -212,7 +212,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
 
 def runInstallNameTool(action: str, *args):
     installnametoolbin=os.getenv("INSTALLNAMETOOL", "install_name_tool")
-    run([installnametoolbin, "-"+action] + list(args), check=True)
+    run([installnametoolbin, f"-{action}"] + list(args), check=True)
 
 def changeInstallName(oldName: str, newName: str, binaryPath: str, verbose: int):
     if verbose:
@@ -290,54 +290,53 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
 def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPath: str, strip: bool, verbose: int, deploymentInfo: Optional[DeploymentInfo] = None) -> DeploymentInfo:
     if deploymentInfo is None:
         deploymentInfo = DeploymentInfo()
-    
-    while len(frameworks) > 0:
+
+    while frameworks:
         framework = frameworks.pop(0)
         deploymentInfo.deployedFrameworks.append(framework.frameworkName)
-        
+
         print("Processing", framework.frameworkName, "...")
-        
+
         # Get the Qt path from one of the Qt frameworks
         if deploymentInfo.qtPath is None and framework.isQtFramework():
             deploymentInfo.detectQtPath(framework.frameworkDirectory)
-        
+
         if framework.installName.startswith("@executable_path") or framework.installName.startswith(bundlePath):
             print(framework.frameworkName, "already deployed, skipping.")
             continue
-        
+
         # install_name_tool the new id into the binary
         changeInstallName(framework.installName, framework.deployedInstallName, binaryPath, verbose)
-        
+
         # Copy framework to app bundle.
         deployedBinaryPath = copyFramework(framework, bundlePath, verbose)
         # Skip the rest if already was deployed.
         if deployedBinaryPath is None:
             continue
-        
+
         if strip:
             runStrip(deployedBinaryPath, verbose)
-        
+
         # install_name_tool it a new id.
         changeIdentification(framework.deployedInstallName, deployedBinaryPath, verbose)
         # Check for framework dependencies
         dependencies = getFrameworks(deployedBinaryPath, verbose)
-        
+
         for dependency in dependencies:
             changeInstallName(dependency.installName, dependency.deployedInstallName, deployedBinaryPath, verbose)
-            
+
             # Deploy framework if necessary.
             if dependency.frameworkName not in deploymentInfo.deployedFrameworks and dependency not in frameworks:
                 frameworks.append(dependency)
-    
+
     return deploymentInfo
 
 def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip: bool, verbose: int) -> DeploymentInfo:
     frameworks = getFrameworks(applicationBundle.binaryPath, verbose)
-    if len(frameworks) == 0:
-        print(f"Warning: Could not find any external frameworks to deploy in {applicationBundle.path}.")
-        return DeploymentInfo()
-    else:
+    if len(frameworks) != 0:
         return deployFrameworks(frameworks, applicationBundle.path, applicationBundle.binaryPath, strip, verbose)
+    print(f"Warning: Could not find any external frameworks to deploy in {applicationBundle.path}.")
+    return DeploymentInfo()
 
 def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: DeploymentInfo, strip: bool, verbose: int):
     plugins = []
@@ -417,12 +416,12 @@ if os.path.exists("dist"):
     print("+ Removing existing dist folder +")
     shutil.rmtree("dist")
 
-if os.path.exists(appname + ".dmg"):
+if os.path.exists(f'{appname}.dmg'):
     print("+ Removing existing DMG +")
-    os.unlink(appname + ".dmg")
+    os.unlink(f'{appname}.dmg')
 
-if os.path.exists(appname + ".temp.dmg"):
-    os.unlink(appname + ".temp.dmg")
+if os.path.exists(f'{appname}.temp.dmg'):
+    os.unlink(f'{appname}.temp.dmg')
 
 # ------------------------------------------------
 
@@ -445,9 +444,9 @@ try:
     deploymentInfo = deployFrameworksForAppBundle(applicationBundle, config.strip, verbose)
     if deploymentInfo.qtPath is None:
         deploymentInfo.qtPath = os.getenv("QTDIR", None)
-        if deploymentInfo.qtPath is None:
-            sys.stderr.write("Warning: Could not detect Qt's path, skipping plugin deployment!\n")
-            config.plugins = False
+    if deploymentInfo.qtPath is None:
+        sys.stderr.write("Warning: Could not detect Qt's path, skipping plugin deployment!\n")
+        config.plugins = False
 except RuntimeError as e:
     sys.stderr.write(f"Error: {str(e)}\n")
     sys.exit(1)
@@ -456,7 +455,7 @@ except RuntimeError as e:
 
 if config.plugins:
     print("+ Deploying plugins +")
-    
+
     try:
         deployPlugins(applicationBundle, deploymentInfo, config.strip, verbose)
     except RuntimeError as e:
@@ -465,10 +464,9 @@ if config.plugins:
 
 # ------------------------------------------------
 
-if config.translations_dir:
-    if not Path(config.translations_dir[0]).exists():
-        sys.stderr.write(f"Error: Could not find translation dir \"{config.translations_dir[0]}\"\n")
-        sys.exit(1)
+if config.translations_dir and not Path(config.translations_dir[0]).exists():
+    sys.stderr.write(f"Error: Could not find translation dir \"{config.translations_dir[0]}\"\n")
+    sys.exit(1)
 
 print("+ Adding Qt translations +")
 
@@ -527,7 +525,7 @@ icvp = {
 }
 alias = Alias().from_bytes(icvp['backgroundImageAlias'])
 alias.volume.name = appname
-alias.volume.posix_path = '/Volumes/' + appname
+alias.volume.posix_path = f'/Volumes/{appname}'
 icvp['backgroundImageAlias'] = alias.to_bytes()
 ds['.']['icvp'] = icvp
 
@@ -559,7 +557,7 @@ if config.dmg is not None:
     if verbose:
         print("Creating temp image for modification...")
 
-    tempname: str = appname + ".temp.dmg"
+    tempname: str = f'{appname}.temp.dmg'
 
     run(["hdiutil", "create", tempname, "-srcfolder", "dist", "-format", "UDRW", "-size", str(size), "-volname", appname], check=True, universal_newlines=True)
 

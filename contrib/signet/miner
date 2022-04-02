@@ -71,7 +71,7 @@ class PSBTMap:
     def serialize(self):
         m = b""
         for k,v in self.map.items():
-            if isinstance(k, int) and 0 <= k and k <= 255:
+            if isinstance(k, int) and k >= 0 and k <= 255:
                 k = bytes([k])
             m += ser_compact_size(len(k)) + k
             m += ser_compact_size(len(v)) + v
@@ -282,12 +282,12 @@ def nbits_to_target(nbits):
 def target_to_nbits(target):
     tstr = "{0:x}".format(target)
     if len(tstr) < 6:
-        tstr = ("000000"+tstr)[-6:]
+        tstr = f"000000{tstr}"[-6:]
     if len(tstr) % 2 != 0:
-        tstr = "0" + tstr
+        tstr = f"0{tstr}"
     if int(tstr[0],16) >= 0x8:
         # avoid "negative"
-        tstr = "00" + tstr
+        tstr = f"00{tstr}"
     fix = int(tstr[:6], 16)
     sz = len(tstr)//2
     if tstr[6:] != "0"*(sz*2-6):
@@ -301,9 +301,7 @@ def seconds_to_hms(s):
     neg = (s < 0)
     if neg:
         s = -s
-    out = ""
-    if s % 60 > 0:
-        out = "%ds" % (s % 60)
+    out = "%ds" % (s % 60) if s % 60 > 0 else ""
     s //= 60
     if s % 60 > 0:
         out = "%dm%s" % (s % 60, out)
@@ -311,7 +309,7 @@ def seconds_to_hms(s):
     if s > 0:
         out = "%dh%s" % (s, out)
     if neg:
-        out = "-" + out
+        out = f"-{out}"
     return out
 
 def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson):
@@ -371,12 +369,13 @@ def do_generate(args):
             logging.error("Cannot specify --nbits and --min-nbits")
             return 1
         args.nbits = "1e0377ae"
-        logging.info("Using nbits=%s" % (args.nbits))
+        logging.info(f"Using nbits={args.nbits}")
 
-    if args.set_block_time is None:
-        if args.nbits is None or len(args.nbits) != 8:
-            logging.error("Must specify --nbits (use calibrate command to determine value)")
-            return 1
+    if args.set_block_time is None and (
+        args.nbits is None or len(args.nbits) != 8
+    ):
+        logging.error("Must specify --nbits (use calibrate command to determine value)")
+        return 1
 
     if args.multiminer is None:
        my_blocks = (0,1,1)
@@ -466,7 +465,10 @@ def do_generate(args):
                 # mining the next block if it's ours
                 sleep_for = min(20, sleep_for)
             minestr = "mine" if is_mine else "backup"
-            logging.debug("Sleeping for %s, next block due in %s (%s)" % (seconds_to_hms(sleep_for), seconds_to_hms(mine_time - now), minestr))
+            logging.debug(
+                f"Sleeping for {seconds_to_hms(sleep_for)}, next block due in {seconds_to_hms(mine_time - now)} ({minestr})"
+            )
+
             time.sleep(sleep_for)
             continue
 
@@ -495,7 +497,7 @@ def do_generate(args):
         psbt = generate_psbt(tmpl, reward_spk, blocktime=mine_time)
         psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=psbt.encode('utf8')))
         if not psbt_signed.get("complete",False):
-            logging.debug("Generated PSBT: %s" % (psbt,))
+            logging.debug(f"Generated PSBT: {psbt}")
             sys.stderr.write("PSBT signing failed")
             return 1
         block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
@@ -620,9 +622,8 @@ def main():
 
     if hasattr(args, "fn"):
         return args.fn(args)
-    else:
-        logging.error("Must specify command")
-        return 1
+    logging.error("Must specify command")
+    return 1
 
 if __name__ == "__main__":
     main()

@@ -32,8 +32,8 @@ def module_name(path):
         return path[:-4]
     return None
 
-files = dict()
-deps: Dict[str, Set[str]] = dict()
+files = {}
+deps: Dict[str, Set[str]] = {}
 
 RE = re.compile("^#include <(.*)>")
 
@@ -52,8 +52,7 @@ for arg in sorted(files.keys()):
     module = files[arg]
     with open(arg, 'r', encoding="utf8") as f:
         for line in f:
-            match = RE.match(line)
-            if match:
+            if match := RE.match(line):
                 include = match.group(1)
                 included_module = module_name(include)
                 if included_module is not None and included_module in deps and included_module != module:
@@ -65,9 +64,7 @@ while True:
     shortest_cycle = None
     for module in sorted(deps.keys()):
         # Build the transitive closure of dependencies of module
-        closure: Dict[str, List[str]] = dict()
-        for dep in deps[module]:
-            closure[dep] = []
+        closure: Dict[str, List[str]] = {dep: [] for dep in deps[module]}
         while True:
             old_size = len(closure)
             old_closure_keys = sorted(closure.keys())
@@ -84,7 +81,7 @@ while True:
         break
     # We have the shortest circular dependency; report it
     module = shortest_cycle[0]
-    print("Circular dependency: %s" % (" -> ".join(shortest_cycle + [module])))
+    print(f'Circular dependency: {" -> ".join(shortest_cycle + [module])}')
     # And then break the dependency to avoid repeating in other cycles
     deps[shortest_cycle[-1]] = deps[shortest_cycle[-1]] - set([module])
     have_cycle = True

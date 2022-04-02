@@ -83,15 +83,13 @@ def pushd(new_dir) -> None:
 def download_binary(tag, args) -> int:
     if Path(tag).is_dir():
         if not args.remove_dir:
-            print('Using cached {}'.format(tag))
+            print(f'Using cached {tag}')
             return 0
         shutil.rmtree(tag)
     Path(tag).mkdir()
-    bin_path = 'bin/bitcoin-core-{}'.format(tag[1:])
-    match = re.compile('v(.*)(rc[0-9]+)$').search(tag)
-    if match:
-        bin_path = 'bin/bitcoin-core-{}/test.{}'.format(
-            match.group(1), match.group(2))
+    bin_path = f'bin/bitcoin-core-{tag[1:]}'
+    if match := re.compile('v(.*)(rc[0-9]+)$').search(tag):
+        bin_path = f'bin/bitcoin-core-{match.group(1)}/test.{match.group(2)}'
     tarball = 'bitcoin-{tag}-{platform}.tar.gz'.format(
         tag=tag[1:], platform=args.platform)
     tarballUrl = 'https://bitcoincore.org/{bin_path}/{tarball}'.format(
@@ -110,8 +108,7 @@ def download_binary(tag, args) -> int:
     ]
 
     for cmd in curlCmds:
-        ret = subprocess.run(cmd).returncode
-        if ret:
+        if ret := subprocess.run(cmd).returncode:
             return ret
 
     hasher = hashlib.sha256()
@@ -128,11 +125,17 @@ def download_binary(tag, args) -> int:
         return 1
     print("Checksum matched")
 
-    # Extract tarball
-    ret = subprocess.run(['tar', '-zxf', tarball, '-C', tag,
-                          '--strip-components=1',
-                          'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
-    if ret:
+    if ret := subprocess.run(
+        [
+            'tar',
+            '-zxf',
+            tarball,
+            '-C',
+            tag,
+            '--strip-components=1',
+            'bitcoin-{tag}'.format(tag=tag[1:]),
+        ]
+    ).returncode:
         return ret
 
     Path(tarball).unlink()
@@ -141,52 +144,41 @@ def download_binary(tag, args) -> int:
 
 def build_release(tag, args) -> int:
     githubUrl = "https://github.com/bitcoin/bitcoin"
-    if args.remove_dir:
-        if Path(tag).is_dir():
-            shutil.rmtree(tag)
+    if args.remove_dir and Path(tag).is_dir():
+        shutil.rmtree(tag)
     if not Path(tag).is_dir():
         # fetch new tags
         subprocess.run(
             ["git", "fetch", githubUrl, "--tags"])
         output = subprocess.check_output(['git', 'tag', '-l', tag])
         if not output:
-            print('Tag {} not found'.format(tag))
+            print(f'Tag {tag} not found')
             return 1
-    ret = subprocess.run([
-        'git', 'clone', githubUrl, tag
-    ]).returncode
-    if ret:
+    if ret := subprocess.run(['git', 'clone', githubUrl, tag]).returncode:
         return ret
     with pushd(tag):
-        ret = subprocess.run(['git', 'checkout', tag]).returncode
-        if ret:
+        if ret := subprocess.run(['git', 'checkout', tag]).returncode:
             return ret
         host = args.host
         if args.depends:
             with pushd('depends'):
-                ret = subprocess.run(['make', 'NO_QT=1']).returncode
-                if ret:
+                if ret := subprocess.run(['make', 'NO_QT=1']).returncode:
                     return ret
                 host = os.environ.get(
                     'HOST', subprocess.check_output(['./config.guess']))
         config_flags = '--prefix={pwd}/depends/{host} '.format(
             pwd=os.getcwd(),
             host=host) + args.config_flags
-        cmds = [
-            './autogen.sh',
-            './configure {}'.format(config_flags),
-            'make',
-        ]
+        cmds = ['./autogen.sh', f'./configure {config_flags}', 'make']
         for cmd in cmds:
-            ret = subprocess.run(cmd.split()).returncode
-            if ret:
+            if ret := subprocess.run(cmd.split()).returncode:
                 return ret
         # Move binaries, so they're in the same place as in the
         # release download
         Path('bin').mkdir(exist_ok=True)
         files = ['bitcoind', 'bitcoin-cli', 'bitcoin-tx']
         for f in files:
-            Path('src/'+f).rename('bin/'+f)
+            Path(f'src/{f}').rename(f'bin/{f}')
     return 0
 
 
@@ -205,30 +197,27 @@ def check_host(args) -> int:
             if fnmatch(args.host, pattern):
                 args.platform = target
         if not args.platform:
-            print('Not sure which binary to download for {}'.format(args.host))
+            print(f'Not sure which binary to download for {args.host}')
             return 1
     return 0
 
 
 def main(args) -> int:
     Path(args.target_dir).mkdir(exist_ok=True, parents=True)
-    print("Releases directory: {}".format(args.target_dir))
-    ret = check_host(args)
-    if ret:
+    print(f"Releases directory: {args.target_dir}")
+    if ret := check_host(args):
         return ret
     if args.download_binary:
         with pushd(args.target_dir):
             for tag in args.tags:
-                ret = download_binary(tag, args)
-                if ret:
+                if ret := download_binary(tag, args):
                     return ret
         return 0
     args.config_flags = os.environ.get('CONFIG_FLAGS', '')
     args.config_flags += ' --without-gui --disable-tests --disable-bench'
     with pushd(args.target_dir):
         for tag in args.tags:
-            ret = build_release(tag, args)
-            if ret:
+            if ret := build_release(tag, args):
                 return ret
     return 0
 

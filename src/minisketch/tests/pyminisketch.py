@@ -210,7 +210,7 @@ def poly_divmod(poly, mod, gf):
             for x in range(len(mod) - 1):
                 val[1 + x - len(mod)] ^= gf.mul(term, mod[x])
     # Prune trailing zero coefficients.
-    while len(val) > 0 and val[-1] == 0:
+    while val and val[-1] == 0:
         val.pop()
     return div, val
 
