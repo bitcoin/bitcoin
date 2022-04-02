@@ -38,9 +38,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
     }
 
     // Minimum confirmations
-    int min_depth = 1;
-    if (!params[1].isNull())
-        min_depth = params[1].get_int();
+    const int min_depth{params[1].isNull() ? 1 : params[1].get_int()};
 
     const bool include_immature_coinbase{params[2].isNull() ? false : params[2].get_bool()};
 
@@ -198,10 +196,7 @@ RPCHelpMan getbalance()
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
     }
 
-    int min_depth = 0;
-    if (!request.params[1].isNull()) {
-        min_depth = request.params[1].get_int();
-    }
+    const int min_depth{request.params[1].isNull() ? 0 : request.params[1].get_int()};
 
     bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
 
@@ -293,7 +288,7 @@ RPCHelpMan lockunspent()
 
     RPCTypeCheckArgument(request.params[0], UniValue::VBOOL);
 
-    bool fUnlock = request.params[0].get_bool();
+    const bool fUnlock{request.params[0].get_bool()};
 
     const bool persistent{request.params[2].isNull() ? false : request.params[2].get_bool()};
 

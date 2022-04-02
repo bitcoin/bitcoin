@@ -71,14 +71,10 @@ struct tallyitem
 static UniValue ListReceived(const CWallet& wallet, const UniValue& params, const bool by_label, const bool include_immature_coinbase) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     // Minimum confirmations
-    int nMinDepth = 1;
-    if (!params[0].isNull())
-        nMinDepth = params[0].get_int();
+    const int nMinDepth{params[0].isNull() ? 1 : params[0].get_int()};
 
     // Whether to include empty labels
-    bool fIncludeEmpty = false;
-    if (!params[1].isNull())
-        fIncludeEmpty = params[1].get_bool();
+    const bool fIncludeEmpty{params[1].isNull() ? false : params[1].get_bool()};
 
     isminefilter filter = ISMINE_SPENDABLE;
 
@@ -511,12 +507,9 @@ RPCHelpMan listtransactions()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
         }
     }
-    int nCount = 10;
-    if (!request.params[1].isNull())
-        nCount = request.params[1].get_int();
-    int nFrom = 0;
-    if (!request.params[2].isNull())
-        nFrom = request.params[2].get_int();
+    int nCount{request.params[1].isNull() ? 10 : request.params[1].get_int()};
+    int nFrom{request.params[2].isNull() ? 0 : request.params[2].get_int()};
+
     isminefilter filter = ISMINE_SPENDABLE;
 
     if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
@@ -625,7 +618,6 @@ RPCHelpMan listsinceblock()
 
     std::optional<int> height;    // Height of the specified block or the common ancestor, if the block provided was in a deactivated chain.
     std::optional<int> altheight; // Height of the specified block, even if it's in a deactivated chain.
-    int target_confirms = 1;
     isminefilter filter = ISMINE_SPENDABLE;
 
     uint256 blockId;
@@ -638,21 +630,19 @@ RPCHelpMan listsinceblock()
         }
     }
 
-    if (!request.params[1].isNull()) {
-        target_confirms = request.params[1].get_int();
+    int target_confirms{request.params[1].isNull() ? 1 : request.params[1].get_int()};
 
-        if (target_confirms < 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-        }
+    if (target_confirms < 1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
     if (ParseIncludeWatchonly(request.params[2], wallet)) {
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
+    const bool include_removed{request.params[3].isNull() || request.params[3].get_bool()};
 
-    int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
+    const int depth{height ? wallet.GetLastBlockHeight() + 1 - *height : -1};
 
     UniValue transactions(UniValue::VARR);
 
@@ -771,7 +761,7 @@ RPCHelpMan gettransaction()
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
+    const bool verbose{request.params[2].isNull() ? false : request.params[2].get_bool()};
 
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);

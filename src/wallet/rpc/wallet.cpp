@@ -269,8 +269,8 @@ static RPCHelpMan setwalletflag()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
-    std::string flag_str = request.params[0].get_str();
-    bool value = request.params[1].isNull() || request.params[1].get_bool();
+    const std::string flag_str{request.params[0].get_str()};
+    const bool value{request.params[1].isNull() || request.params[1].get_bool()};
 
     if (!WALLET_FLAG_MAP.count(flag_str)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown wallet flag: %s", flag_str));
@@ -497,10 +497,7 @@ static RPCHelpMan sethdseed()
 
     EnsureWalletIsUnlocked(*pwallet);
 
-    bool flush_key_pool = true;
-    if (!request.params[0].isNull()) {
-        flush_key_pool = request.params[0].get_bool();
-    }
+    const bool flush_key_pool{request.params[0].isNull() ? true : request.params[0].get_bool()};
 
     CPubKey master_pub_key;
     if (request.params[1].isNull()) {
@@ -557,10 +554,8 @@ static RPCHelpMan upgradewallet()
 
     EnsureWalletIsUnlocked(*pwallet);
 
-    int version = 0;
-    if (!request.params[0].isNull()) {
-        version = request.params[0].get_int();
-    }
+    const int version{request.params[0].isNull() ? 0 : request.params[0].get_int()};
+
     bilingual_str error;
     const int previous_version{pwallet->GetVersion()};
     const bool wallet_upgraded{pwallet->UpgradeWallet(version, error)};

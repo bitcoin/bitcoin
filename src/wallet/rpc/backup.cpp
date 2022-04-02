@@ -133,20 +133,16 @@ RPCHelpMan importprivkey()
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
     WalletRescanReserver reserver(*pwallet);
-    bool fRescan = true;
+
+    // Whether to perform rescan after import
+    const bool fRescan{request.params[2].isNull() ? true : request.params[2].get_bool()};
     {
         LOCK(pwallet->cs_wallet);
 
         EnsureWalletIsUnlocked(*pwallet);
 
-        std::string strSecret = request.params[0].get_str();
-        std::string strLabel = "";
-        if (!request.params[1].isNull())
-            strLabel = request.params[1].get_str();
-
-        // Whether to perform rescan after import
-        if (!request.params[2].isNull())
-            fRescan = request.params[2].get_bool();
+        const std::string strSecret = request.params[0].get_str();
+        const std::string strLabel{request.params[1].isNull() ? "" : request.params[1].get_str()};
 
         if (fRescan && pwallet->chain().havePruned()) {
             // Exit early and print an error.
@@ -230,14 +226,10 @@ RPCHelpMan importaddress()
 
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
-    std::string strLabel;
-    if (!request.params[1].isNull())
-        strLabel = request.params[1].get_str();
+    const std::string strLabel{request.params[1].isNull() ? "" : request.params[1].get_str()};
 
     // Whether to perform rescan after import
-    bool fRescan = true;
-    if (!request.params[2].isNull())
-        fRescan = request.params[2].get_bool();
+    const bool fRescan{request.params[2].isNull() ? true : request.params[2].get_bool()};
 
     if (fRescan && pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -252,9 +244,7 @@ RPCHelpMan importaddress()
     }
 
     // Whether to import a p2sh version, too
-    bool fP2SH = false;
-    if (!request.params[3].isNull())
-        fP2SH = request.params[3].get_bool();
+    const bool fP2SH{request.params[3].isNull() ? false : request.params[3].get_bool()};
 
     {
         LOCK(pwallet->cs_wallet);
@@ -424,14 +414,10 @@ RPCHelpMan importpubkey()
 
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
-    std::string strLabel;
-    if (!request.params[1].isNull())
-        strLabel = request.params[1].get_str();
+    const std::string strLabel{request.params[1].isNull() ? "" : request.params[1].get_str()};
 
     // Whether to perform rescan after import
-    bool fRescan = true;
-    if (!request.params[2].isNull())
-        fRescan = request.params[2].get_bool();
+    const bool fRescan{request.params[2].isNull() ? true : request.params[2].get_bool()};
 
     if (fRescan && pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -1771,7 +1757,7 @@ RPCHelpMan listdescriptors()
         throw JSONRPCError(RPC_WALLET_ERROR, "listdescriptors is not available for non-descriptor wallets");
     }
 
-    const bool priv = !request.params[0].isNull() && request.params[0].get_bool();
+    const bool priv{!request.params[0].isNull() && request.params[0].get_bool()};
     if (priv) {
         EnsureWalletIsUnlocked(*wallet);
     }
