@@ -87,7 +87,8 @@ const std::string judicialVerifierPvtKeys[] =
         "cVWYLhVS2ppfQDVmvPgppw84Wo69gkBqP7Z3g8HFcRHFNZF1rAg9"
     };
 
-const std::string bitcoinSignPrivKey = "cS55U7eMUB7rXfPa5xPyGEacUtenbU346keSv8Js3rJLLQEVBH2M";
+//const std::string bitcoinSignPrivKey = "cS55U7eMUB7rXfPa5xPyGEacUtenbU346keSv8Js3rJLLQEVBH2M";
+const std::string bitcoinSignPrivKey = "KxF4mbL7EoHgqhCan5DrC9bHdwfnGNK7vK9m9zRLZvj2y8RxuWns";
 
 
 CTransaction juratSign(CTransaction& tx, std::string& srcAddr,
