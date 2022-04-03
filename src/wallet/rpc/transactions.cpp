@@ -496,6 +496,7 @@ RPCHelpMan listtransactions()
                             {RPCResult::Type::NUM, "vout", "the vout value"},
                             {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                  "'send' category of transactions."},
+                            {RPCResult::Type::ANY, "systx", /*optional=*/true, "The systx metadata for asset based transaction"},
                         },
                         TransactionDescriptionString()),
                         {
@@ -609,6 +610,7 @@ RPCHelpMan listsinceblock()
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
                                 {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
+                                {RPCResult::Type::ANY, "systx", /*optional=*/true, "The systx metadata for asset based transaction"},
                             },
                             TransactionDescriptionString()),
                             {
@@ -754,6 +756,7 @@ RPCHelpMan gettransaction()
                                     "'send' category of transactions."},
                                 {RPCResult::Type::BOOL, "abandoned", /*optional=*/true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
+                                {RPCResult::Type::ANY, "systx", /*optional=*/true, "The systx metadata for asset based transaction"},
                             }},
                         }},
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},

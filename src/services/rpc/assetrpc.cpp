@@ -389,7 +389,7 @@ static RPCHelpMan syscoindecoderawtransaction()
                     {RPCResult::Type::OBJ, "", "",
                     {
                             {RPCResult::Type::STR, "address", "The address of the receiver"},
-                            {RPCResult::Type::NUM, "amount", "The amount of the transaction"},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "The amount of the transaction"},
                     }},
                 }},
             {RPCResult::Type::NUM, "total", "The total amount in this transaction"},
@@ -512,16 +512,37 @@ static RPCHelpMan assetinfo()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
+              {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
                 {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
-                {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
+                {RPCResult::Type::OBJ, "public_value", "The public value attached to this asset",
+                {
+                    {RPCResult::Type::STR, "desc", /*optional=*/true, "Public description"},
+                }},
                 {RPCResult::Type::STR_HEX, "contract", "The nevm contract address"},
                 {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
                 {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                 {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                 {RPCResult::Type::NUM, "precision", "The precision of this asset"},
-                {RPCResult::Type::STR, "NFTID", "The NFT ID of the asset if applicable"},
+                {RPCResult::Type::STR, "NFTID", /*optional=*/true, "The NFT ID of the asset if applicable"},
+                {RPCResult::Type::STR, "notary_address", "Notary address if specified"},
+                {RPCResult::Type::OBJ, "notary_details", /*optional=*/true, "",
+                    {
+                        {RPCResult::Type::STR, "endpoint", "Notary endpoint"},
+                        {RPCResult::Type::NUM, "instant_transfers", "If notary supports instant confirmations"},
+                        {RPCResult::Type::NUM, "hd_required", "If notary requires HD xpub"},
+                    }},
+                {RPCResult::Type::OBJ, "auxfee", /*optional=*/true, "",
+                    {
+                        {RPCResult::Type::STR, "auxfee_address", "AuxFee address"},
+                        {RPCResult::Type::ARR, "fee_struct", "",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_AMOUNT, "bound", "AuxFee bound"},
+                                {RPCResult::Type::STR, "percentage", "AuxFee percentage"},
+                            }},
+                        }},
+                    }},
             }},
         RPCExamples{
             HelpExampleCli("assetinfo", "\"assetguid\"")
@@ -569,14 +590,38 @@ static RPCHelpMan listassets()
                     {
                         {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
                         {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                        {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
+                        {RPCResult::Type::OBJ, "public_value", "The public value attached to this asset",
+                        {
+                            {RPCResult::Type::STR, "desc", /*optional=*/true, "Public description"},
+                        }},
                         {RPCResult::Type::STR_HEX, "contract", "The nevm contract address"},
                         {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
                         {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                         {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                         {RPCResult::Type::NUM, "precision", "The precision of this asset"},
+                        {RPCResult::Type::STR, "NFTID", /*optional=*/true, "The NFT ID of the asset if applicable"},
+                        {RPCResult::Type::STR, "notary_address", "Notary address if specified"},
+                        {RPCResult::Type::OBJ, "notary_details", /*optional=*/true, "",
+                            {
+                                {RPCResult::Type::STR, "endpoint", "Notary endpoint"},
+                                {RPCResult::Type::NUM, "instant_transfers", "If notary supports instant confirmations"},
+                                {RPCResult::Type::NUM, "hd_required", "If notary requires HD xpub"},
+                            }},
+                        {RPCResult::Type::OBJ, "auxfee", /*optional=*/true, "",
+                            {
+                                {RPCResult::Type::STR, "auxfee_address", "AuxFee address"},
+                                {RPCResult::Type::ARR, "fee_struct", "",
+                                {
+                                    {RPCResult::Type::OBJ, "", "",
+                                    {
+                                        {RPCResult::Type::STR_AMOUNT, "bound", "AuxFee bound"},
+                                        {RPCResult::Type::STR, "percentage", "AuxFee percentage"},
+                                    }},
+                                }},
+                            },
+                        },
                     }},
-                }
+                },
             },
             RPCExamples{
             HelpExampleCli("listassets", "0")

@@ -307,8 +307,26 @@ static RPCHelpMan syscoinburntoassetallocation()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            }},
+                {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded raw transaction with signature(s)"},
+                {RPCResult::Type::BOOL, "complete", /*optional=*/true, "If the transaction has a complete set of signatures"},
+                {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                        {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                        {RPCResult::Type::ARR, "witness", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "witness", ""},
+                        }},
+                        {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                        {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                        {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                    }},
+                }},
+                {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+            },
+        },
         RPCExamples{
             HelpExampleCli("syscoinburntoassetallocation", "\"asset_guid\" \"amount\"")
             + HelpExampleRpc("syscoinburntoassetallocation", "\"asset_guid\", \"amount\"")
@@ -430,7 +448,6 @@ static RPCHelpMan syscoinburntoassetallocation()
     };
 } 
 
-
 RPCHelpMan assetnew()
 {
     return RPCHelpMan{"assetnew",
@@ -472,9 +489,27 @@ RPCHelpMan assetnew()
     RPCResult{
         RPCResult::Type::OBJ, "", "",
         {
-            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"}
-        }},
+            {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded raw transaction with signature(s)"},
+            {RPCResult::Type::BOOL, "complete", /*optional=*/true, "If the transaction has a complete set of signatures"},
+            {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                    {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                    {RPCResult::Type::ARR, "witness", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "witness", ""},
+                    }},
+                    {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                    {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                    {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                }},
+            }},
+            {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+            {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"},
+        },
+    },
     RPCExamples{
     HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
     + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
@@ -734,9 +769,27 @@ static RPCHelpMan assetnewtest()
     RPCResult{
         RPCResult::Type::OBJ, "", "",
         {
-            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"}
-        }},
+            {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded raw transaction with signature(s)"},
+            {RPCResult::Type::BOOL, "complete", /*optional=*/true, "If the transaction has a complete set of signatures"},
+            {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                    {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                    {RPCResult::Type::ARR, "witness", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "witness", ""},
+                    }},
+                    {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                    {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                    {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                }},
+            }},
+            {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+            {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"},
+        },
+    },
     RPCExamples{
     HelpExampleCli("assetnewtest", "123456 1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
     + HelpExampleRpc("assetnewtest", "123456, 1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 1000, 127, \"notary_address\", {}, {}")
@@ -1141,7 +1194,21 @@ static RPCHelpMan assetsendmany()
         RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-        }},
+            {RPCResult::Type::NUM, "assets_issued_count", "Number of assets created"},
+            {RPCResult::Type::ARR, "assets_issued", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "asset_guid", "The asset guid"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "Amount of asset sent"},
+                        {RPCResult::Type::STR_AMOUNT, "sys_amount", "Amount of SYS sent"},
+                        {RPCResult::Type::STR, "base_asset_guid", /*optional=*/true, "The base asset guid"},
+                        {RPCResult::Type::STR, "NFTID", /*optional=*/true, "The NFT ID of the asset if applicable"},
+                    }
+                }},
+            }
+        },
+    },
     RPCExamples{
         HelpExampleCli("assetsendmany", "\"asset_guid\" '[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\'")
         + HelpExampleCli("assetsendmany", "\"asset_guid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
@@ -1270,7 +1337,6 @@ static RPCHelpMan assetsendmany()
 },
     };
 }
-
 static RPCHelpMan assetsend()
 {
     return RPCHelpMan{"assetsend",
@@ -1290,7 +1356,21 @@ static RPCHelpMan assetsend()
         RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-        }},
+            {RPCResult::Type::NUM, "assets_issued_count", "Number of assets created"},
+            {RPCResult::Type::ARR, "assets_issued", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "asset_guid", "The asset guid"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "Amount of asset sent"},
+                        {RPCResult::Type::STR_AMOUNT, "sys_amount", "Amount of SYS sent"},
+                        {RPCResult::Type::STR, "base_asset_guid", /*optional=*/true, "The base asset guid"},
+                        {RPCResult::Type::STR, "NFTID", /*optional=*/true, "The NFT ID of the asset if applicable"},
+                    }
+                }},
+            }
+        },
+    },
     RPCExamples{
         HelpExampleCli("assetsend", "\"asset_guid\" \"address\" \"amount\" \"sys_amount\" \"NFTID\"")
         + HelpExampleRpc("assetsend", "\"asset_guid\", \"address\", \"amount\",  \"sys_amount\", \"NFTID\"")
@@ -1353,8 +1433,38 @@ static RPCHelpMan assetallocationsendmany()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            }},
+                {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded raw transaction with signature(s)"},
+                {RPCResult::Type::BOOL, "complete", /*optional=*/true, "If the transaction has a complete set of signatures"},
+                {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                        {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                        {RPCResult::Type::ARR, "witness", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "witness", ""},
+                        }},
+                        {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                        {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                        {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                    }},
+                }},
+                {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+                {RPCResult::Type::NUM, "assetallocations_sent_count", /*optional=*/true, "Number of asset allocations sent"},
+                {RPCResult::Type::ARR, "assetallocations_sent", /*optional=*/true, "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "asset_guid", "The asset guid"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "Amount of asset sent"},
+                        {RPCResult::Type::STR_AMOUNT, "sys_amount", "Amount of SYS sent"},
+                        {RPCResult::Type::STR, "base_asset_guid", /*optional=*/true, "The base asset guid"},
+                        {RPCResult::Type::STR, "NFTID", /*optional=*/true, "The NFT ID of the asset if applicable"},
+                    }},
+                }},
+            },
+        },
         RPCExamples{
             HelpExampleCli("assetallocationsendmany", "\'[{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress2\",\"amount\":200}]\' \"false\"")
             + HelpExampleCli("assetallocationsendmany", "\"[{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"true\"")
@@ -1611,7 +1721,6 @@ static RPCHelpMan assetallocationsendmany()
 },
     };
 }
-
 static RPCHelpMan assetallocationburn()
 {
     return RPCHelpMan{"assetallocationburn",
@@ -1625,11 +1734,29 @@ static RPCHelpMan assetallocationburn()
                 "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                 "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
         },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
+    RPCResult{
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded raw transaction with signature(s)"},
+            {RPCResult::Type::BOOL, "complete", /*optional=*/true, "If the transaction has a complete set of signatures"},
+            {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
             {
-                {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                    {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                    {RPCResult::Type::ARR, "witness", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "witness", ""},
+                    }},
+                    {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                    {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                    {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                }},
             }},
+            {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+        },
+    },
         RPCExamples{
             HelpExampleCli("assetallocationburn", "\"asset_guid\" \"amount\" \"nevm_destination_address\"")
             + HelpExampleRpc("assetallocationburn", "\"asset_guid\", \"amount\", \"nevm_destination_address\"")
@@ -1779,7 +1906,6 @@ std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
          arrayOfByte[1 - i] = (paramShort >> (i * 8));
      return arrayOfByte;
 }
-
 static RPCHelpMan assetallocationmint()
 { 
     return RPCHelpMan{"assetallocationmint",
@@ -1801,8 +1927,26 @@ static RPCHelpMan assetallocationmint()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            }},
+                {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded raw transaction with signature(s)"},
+                {RPCResult::Type::BOOL, "complete", /*optional=*/true, "If the transaction has a complete set of signatures"},
+                {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                        {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                        {RPCResult::Type::ARR, "witness", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "witness", ""},
+                        }},
+                        {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                        {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                        {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                    }},
+                }},
+                {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+            },
+        },
         RPCExamples{
             HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blockhash\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
             + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blockhash\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
@@ -1976,8 +2120,38 @@ static RPCHelpMan assetallocationsend()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            }},
+                {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded raw transaction with signature(s)"},
+                {RPCResult::Type::BOOL, "complete", /*optional=*/true, "If the transaction has a complete set of signatures"},
+                {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                        {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                        {RPCResult::Type::ARR, "witness", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "witness", ""},
+                        }},
+                        {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                        {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                        {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                    }},
+                }},
+                {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id"},
+                {RPCResult::Type::NUM, "assetallocations_sent_count", /*optional=*/true, "Number of asset allocations sent"},
+                {RPCResult::Type::ARR, "assetallocations_sent", /*optional=*/true, "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "asset_guid", "The asset guid"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "Amount of asset sent"},
+                        {RPCResult::Type::STR_AMOUNT, "sys_amount", "Amount of SYS sent"},
+                        {RPCResult::Type::STR, "base_asset_guid", /*optional=*/true, "The base asset guid"},
+                        {RPCResult::Type::STR, "NFTID", /*optional=*/true, "The NFT ID of the asset if applicable"},
+                    }},
+                }},
+            },
+        },
         RPCExamples{
             HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"sys_amount\" \"false\"")
             + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\", \"sys_amount\", \"false\"")
@@ -2135,25 +2309,29 @@ static RPCHelpMan listunspentasset()
             {
                 {RPCResult::Type::STR_HEX, "txid", "the transaction id"},
                 {RPCResult::Type::NUM, "vout", "the vout value"},
-                {RPCResult::Type::STR, "address", "the syscoin address"},
-                {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
+                {RPCResult::Type::STR, "address", /*optional=*/true, "the syscoin address"},
+                {RPCResult::Type::STR, "label", /*optional=*/true, "The associated label, or \"\" for the default label"},
                 {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                 {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
-                {RPCResult::Type::STR, "asset_guid", "the transaction output asset guid if asset output"},
-                {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount in satoshis if asset output"},
+                // SYSCOIN
+                {RPCResult::Type::STR, "asset_guid", /*optional=*/true, "the transaction output asset guid if asset output"},
+                {RPCResult::Type::STR_AMOUNT, "asset_amount", /*optional=*/true, "the transaction output asset amount in satoshis if asset output"},
                 {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
-                {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
-                {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
+                {RPCResult::Type::NUM, "ancestorcount", /*optional=*/true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
+                {RPCResult::Type::NUM, "ancestorsize", /*optional=*/true, "The virtual transaction size of in-mempool ancestors, including this one (if transaction is in the mempool)"},
+                {RPCResult::Type::STR_AMOUNT, "ancestorfees", /*optional=*/true, "The total fees of in-mempool ancestors (including this one) with fee deltas used for mining priority in " + CURRENCY_ATOM + " (if transaction is in the mempool)"},
+                {RPCResult::Type::STR_HEX, "redeemScript", /*optional=*/true, "The redeemScript if scriptPubKey is P2SH"},
+                {RPCResult::Type::STR, "witnessScript", /*optional=*/true, "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
                 {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
                 {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
-                {RPCResult::Type::BOOL, "reused", "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
-                {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
+                {RPCResult::Type::BOOL, "reused", /*optional=*/true, "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
+                {RPCResult::Type::STR, "desc", /*optional=*/true, "(only when solvable) A descriptor for spending this output"},
                 {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions\n"
                                                 "from outside keys and unconfirmed replacement transactions are considered unsafe\n"
                                                 "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
             }},
         }
-    },		
+    },	
     RPCExamples{	
         HelpExampleCli("listunspentasset", "2328882 0")	
         + HelpExampleRpc("listunspentasset", "2328882 0")	
@@ -2203,7 +2381,7 @@ static RPCHelpMan addressbalance() {
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::NUM, "amount", "Syscoin balance of the addressn"},
+                {RPCResult::Type::STR_AMOUNT, "amount", "Syscoin balance of the addressn"},
             }},	
         RPCExamples{	
             HelpExampleCli("addressbalance", "\"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\" 6 9999999")
@@ -2269,17 +2447,39 @@ static RPCHelpMan assetallocationbalance() {
                 {
                     {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
                     {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                    {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
-                    {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
+                    {RPCResult::Type::OBJ, "public_value", "The public value attached to this asset",
+                    {
+                        {RPCResult::Type::STR, "desc", /*optional=*/true, "Public description"},
+                    }},
                     {RPCResult::Type::STR_HEX, "contract", "The nevm contract address"},
                     {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
                     {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                     {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                     {RPCResult::Type::NUM, "precision", "The precision of this asset"},
-                    {RPCResult::Type::STR_AMOUNT, "amount", "the balance output amount in " + CURRENCY_UNIT},
-                    {RPCResult::Type::STR_AMOUNT, "asset_amount", "the balance asset amount in satoshis"},
+                    {RPCResult::Type::STR, "NFTID", /*optional=*/true, "The NFT ID of the asset if applicable"},
+                    {RPCResult::Type::STR, "notary_address", "Notary address if specified"},
+                    {RPCResult::Type::STR_AMOUNT, "amount", "SYS balance"},
+                    {RPCResult::Type::STR_AMOUNT, "asset_amount", "Asset balance"},
+                    {RPCResult::Type::OBJ, "notary_details", /*optional=*/true, "",
+                        {
+                            {RPCResult::Type::STR, "endpoint", "Notary endpoint"},
+                            {RPCResult::Type::NUM, "instant_transfers", "If notary supports instant confirmations"},
+                            {RPCResult::Type::NUM, "hd_required", "If notary requires HD xpub"},
+                        }},
+                    {RPCResult::Type::OBJ, "auxfee", /*optional=*/true, "",
+                        {
+                            {RPCResult::Type::STR, "auxfee_address", "AuxFee address"},
+                            {RPCResult::Type::ARR, "fee_struct", "",
+                            {
+                                {RPCResult::Type::OBJ, "", "",
+                                {
+                                    {RPCResult::Type::STR_AMOUNT, "bound", "AuxFee bound"},
+                                    {RPCResult::Type::STR, "percentage", "AuxFee percentage"},
+                                }},
+                            }},
+                        }},
+                    },
                 }
-            }
         },	
         RPCExamples{	
             HelpExampleCli("assetallocationbalance", "552723762 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\" 6 9999999")

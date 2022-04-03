@@ -122,6 +122,13 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                 }},
             }},
         }},
+        {RPCResult::Type::ANY, "sysx", /*optional=*/true, ""},
+        {RPCResult::Type::ANY, "proRegTx", /*optional=*/true, ""},
+        {RPCResult::Type::ANY, "proUpServTx", /*optional=*/true, ""},
+        {RPCResult::Type::ANY, "proUpRegTx", /*optional=*/true, ""},
+        {RPCResult::Type::ANY, "proUpRevTx", /*optional=*/true, ""},
+        {RPCResult::Type::ANY, "cbTx", /*optional=*/true, ""},
+        {RPCResult::Type::ANY, "qcTx", /*optional=*/true, ""},
     };
 }
 
