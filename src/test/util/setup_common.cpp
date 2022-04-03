@@ -134,7 +134,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
     m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.mempool, false);
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-    g_chainstate = MakeUnique<CChainState>();
+
+    g_chainman.InitializeChainstate();
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -178,8 +179,8 @@ TestingSetup::~TestingSetup()
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
     UnloadBlockIndex();
-    g_chainstate.reset();
     llmq::DestroyLLMQSystem();
+    m_node.chainman->Reset();
     pblocktree.reset();
 }
 
