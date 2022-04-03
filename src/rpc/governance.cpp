@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <consensus/validation.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
@@ -244,10 +243,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     // -- send the tx to the network
-    CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, state)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
-    }
+    pwallet->CommitTransaction(tx, {}, {});
 
     LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());
