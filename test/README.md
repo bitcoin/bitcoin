@@ -303,6 +303,13 @@ Use the `-v` option for verbose output.
 
 #### Dependencies
 
+##### Bash
+
+Several lint tests require a `bash` shell version 4 or higher.
+macOS systems require upgrading the system provided `bash`.
+
+##### Python
+
 | Lint test | Dependency |
 |-----------|:----------:|
 | [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8)
