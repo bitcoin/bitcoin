@@ -1318,7 +1318,7 @@ RPCHelpMan sendall()
         "Spend all UTXOs with a fee rate of 1.3 " + CURRENCY_ATOM + "/vB using named arguments and sending a 0.25 " + CURRENCY_UNIT + " to another recipient\n"
         + HelpExampleCli("-named sendall", "recipients='[{\"" + EXAMPLE_ADDRESS[1] + "\": 0.25}, \""+ EXAMPLE_ADDRESS[0] + "\"]' fee_rate=1.3\n")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
         {
             RPCTypeCheck(request.params, {
                 UniValue::VARR, // recipients
@@ -1401,13 +1401,13 @@ RPCHelpMan sendall()
             } else {
                 AvailableCoins(*pwallet, all_the_utxos, &coin_control, /*nMinimumAmount=*/0);
                 for (const COutput& output : all_the_utxos) {
-                    CHECK_NONFATAL(output.input_bytes > 0);
-                    if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
+                    CHECK_NONFATAL(output.nInputBytes > 0);
+                    if (send_max && fee_rate.GetFee(output.nInputBytes) > output.GetInputCoin().txout.nValue) {
                         continue;
                     }
-                    CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL);
+                    CTxIn input(output.GetInputCoin().outpoint.hash, output.GetInputCoin().outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL);
                     rawTx.vin.push_back(input);
-                    total_input_value += output.txout.nValue;
+                    total_input_value += output.GetInputCoin().txout.nValue;
                 }
             }
 
