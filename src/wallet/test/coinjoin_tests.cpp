@@ -102,7 +102,7 @@ public:
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         auto locked_chain = wallet->chain().lock();
         LOCK(wallet->cs_wallet);
-        it->second.SetMerkleBranch(::ChainActive().Tip()->GetBlockHash(), 1);
+        it->second.SetConf(CWalletTx::Status::CONFIRMED, ::ChainActive().Tip()->GetBlockHash(), 1);
         return it->second;
     }
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)

@@ -100,7 +100,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
     bool fLocked = llmq::quorumInstantSendManager->IsLocked(wtx.GetHash());
     bool chainlock = false;
     if (confirms > 0) {
-        chainlock = llmq::chainLocksHandler->HasChainLock(::BlockIndex()[wtx.hashBlock]->nHeight, wtx.hashBlock);
+        chainlock = llmq::chainLocksHandler->HasChainLock(::BlockIndex()[wtx.m_confirm.hashBlock]->nHeight, wtx.m_confirm.hashBlock);
     }
     entry.pushKV("confirmations", confirms);
     entry.pushKV("instantlock", fLocked || chainlock);
@@ -110,10 +110,10 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
         entry.pushKV("generated", true);
     if (confirms > 0)
     {
-        entry.pushKV("blockhash", wtx.hashBlock.GetHex());
-        entry.pushKV("blockindex", wtx.nIndex);
+        entry.pushKV("blockhash", wtx.m_confirm.hashBlock.GetHex());
+        entry.pushKV("blockindex", wtx.m_confirm.nIndex);
         int64_t block_time;
-        bool found_block = chain.findBlock(wtx.hashBlock, nullptr /* block */, &block_time);
+        bool found_block = chain.findBlock(wtx.m_confirm.hashBlock, nullptr /* block */, &block_time);
         CHECK_NONFATAL(found_block);
         entry.pushKV("blocktime", block_time);
     } else {

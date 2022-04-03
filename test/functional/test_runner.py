@@ -140,6 +140,7 @@ BASE_SCRIPTS = [
     'wallet_multiwallet.py',
     'wallet_createwallet.py',
     'wallet_createwallet.py --usecli',
+    'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
     'rpc_psbt.py',
