@@ -31,8 +31,10 @@ const int N_JURAT_KEYS = 2;
 const std::string judicialVerifierPubKeys[] = {"024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c",
     "02b5efb6fa70adbe1aa9a70347699ed6948a660bf8eca9826cb4824b644a1484bb"};
 
-const std::string bitcoinSignPubKey = "03432e525e798fb76f96b0596fc5e6bd4b78fb628b2debece5be146b9e467d7f1f";
+//const std::string bitcoinSignPubKey = "03432e525e798fb76f96b0596fc5e6bd4b78fb628b2debece5be146b9e467d7f1f";
+const std::string bitcoinSignPubKey = "02675b5ef4ef8b704c3a0ab9a3964c0e60a77b89a09575d6f8886abbe92b584043";
 
+    
 ///declarations
 
 ///jurat verifier
