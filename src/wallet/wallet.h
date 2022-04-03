@@ -696,7 +696,7 @@ private:
      * to have seen all transactions in the chain, but is only used to track
      * live BlockConnected callbacks.
      */
-    uint256 m_last_block_processed;
+    uint256 m_last_block_processed GUARDED_BY(cs_wallet);
 
     /** Pulled from wallet DB ("ps_salt") and used when mixing a random number of rounds.
      *  This salt is needed to prevent an attacker from learning how many extra times
