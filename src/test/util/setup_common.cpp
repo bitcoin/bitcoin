@@ -144,7 +144,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     g_txindex->Start();
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
     llmq::InitLLMQSystem(*evoDb, *m_node.connman, true);
-    ::ChainstateActive().InitCoinsCache();
+    ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
