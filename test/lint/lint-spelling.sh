@@ -12,6 +12,9 @@ export LC_ALL=C
 if ! command -v codespell > /dev/null; then
     echo "Skipping spell check linting since codespell is not installed."
     exit 0
+elif [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+    echo "Skipping spell check linting since your bash version is less than 4."
+    exit 0
 fi
 
 IGNORE_WORDS_FILE=test/lint/lint-spelling.ignore-words.txt

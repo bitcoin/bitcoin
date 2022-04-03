@@ -11,6 +11,9 @@ export LC_ALL=C
 if ! command -v vulture > /dev/null; then
     echo "Skipping Python dead code linting since vulture is not installed. Install by running \"pip3 install vulture\""
     exit 0
+elif [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+    echo "Skipping Python dead code linting since your bash version is less than 4."
+    exit 0
 fi
 
 # --min-confidence 100 will only report code that is guaranteed to be unused within the analyzed files.

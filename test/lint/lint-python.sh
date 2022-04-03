@@ -88,6 +88,9 @@ if ! command -v flake8 > /dev/null; then
 elif PYTHONWARNINGS="ignore" flake8 --version | grep -q "Python 2"; then
     echo "Skipping Python linting since flake8 is running under Python 2. Install the Python 3 version of flake8."
     exit 0
+elif [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+    echo "Skipping Python linting since your bash version is less than 4."
+    exit 0
 fi
 
 EXIT_CODE=0

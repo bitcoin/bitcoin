@@ -18,6 +18,9 @@ EXIT_CODE=0
 if ! command -v shellcheck > /dev/null; then
     echo "Skipping shell linting since shellcheck is not installed."
     exit $EXIT_CODE
+elif [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+    echo "Skipping shell linting since your bash version is less than 4."
+    exit $EXIT_CODE
 fi
 
 SHELLCHECK_CMD=(shellcheck --external-sources --check-sourced --source-path=SCRIPTDIR)
