@@ -113,7 +113,7 @@ void TxList::List_Credit(std::vector<WalletTxRecord>& tx_records, const CWalletT
             } else {
                 // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
                 sub.type = WalletTxRecord::Type::RecvFromOther;
-                sub.address = wtx.mapValue.at("from");
+                sub.address = wtx.mapValue.count("from") > 0 ? wtx.mapValue.at("from") : "";
             }
 
             if (wtx.IsCoinBase()) {
@@ -174,7 +174,7 @@ void TxList::List_Debit(std::vector<WalletTxRecord>& tx_records, const CWalletTx
         } else {
             // Sent to IP, or other non-address transaction like OP_EVAL
             tx_record.type = WalletTxRecord::Type::SendToOther;
-            tx_record.address = wtx.mapValue.at("to");
+            tx_record.address = wtx.mapValue.count("to") > 0 ? wtx.mapValue.at("to") : "";
         }
 
         /* Add fee to first output */
