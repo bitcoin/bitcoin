@@ -23,10 +23,12 @@ struct pooled_secure_allocator : public std::allocator<T> {
     typedef std::allocator<T> base;
     typedef typename base::size_type size_type;
     typedef typename base::difference_type difference_type;
+#if !defined __cplusplus || __cplusplus < 202002L
     typedef typename base::pointer pointer;
     typedef typename base::const_pointer const_pointer;
     typedef typename base::reference reference;
     typedef typename base::const_reference const_reference;
+#endif
     typedef typename base::value_type value_type;
     pooled_secure_allocator(const size_type nrequested_size = 32,
                             const size_type nnext_size = 32,
