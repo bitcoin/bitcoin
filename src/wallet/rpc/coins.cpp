@@ -540,8 +540,8 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
                             // SYSCOIN
-                            {RPCResult::Type::STR, "asset_guid", "the transaction output asset guid if asset output"},
-                            {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount in satoshis if asset output"},
+                            {RPCResult::Type::STR, "asset_guid", /*optional=*/true, "the transaction output asset guid if asset output"},
+                            {RPCResult::Type::STR_AMOUNT, "asset_amount", /*optional=*/true, "the transaction output asset amount in satoshis if asset output"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::NUM, "ancestorcount", /*optional=*/true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
                             {RPCResult::Type::NUM, "ancestorsize", /*optional=*/true, "The virtual transaction size of in-mempool ancestors, including this one (if transaction is in the mempool)"},
@@ -765,7 +765,6 @@ RPCHelpMan listunspent()
         entry.pushKV("safe", out.fSafe);
         results.push_back(entry);
     }
-
     return results;
 },
     };
