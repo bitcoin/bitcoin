@@ -411,19 +411,21 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             // We just created an aggregated CLSIG, relay it
             peerman.RelayTransactionOther(clsigAggInv);
         } else {
-            LOCK(cs_main);
-            CInv clsigInv(MSG_CLSIG, ::SerializeHash(clsig));
-            // Relay partial CLSIGs to full nodes only, SPV wallets should wait for the aggregated CLSIG.
-            connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-                AssertLockHeld(::cs_main);
-                bool fSPV{pnode->m_bloom_filter_loaded.load()};
-                if (!fSPV && pnode->CanRelay()) {
-                    PeerRef peer = peerman.GetPeerRef(pnode->GetId());
-                    if(peer) {
-                        peerman.PushTxInventoryOther(*peer, clsigInv);
+            {
+                LOCK(cs_main);
+                CInv clsigInv(MSG_CLSIG, ::SerializeHash(clsig));
+                // Relay partial CLSIGs to full nodes only, SPV wallets should wait for the aggregated CLSIG.
+                connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+                    AssertLockHeld(::cs_main);
+                    bool fSPV{pnode->m_bloom_filter_loaded.load()};
+                    if (!fSPV && pnode->CanRelay()) {
+                        PeerRef peer = peerman.GetPeerRef(pnode->GetId());
+                        if(peer) {
+                            peerman.PushTxInventoryOther(*peer, clsigInv);
+                        }
                     }
-                }
-            });
+                });
+            }
             // Try signing the tip ourselves
             TrySignChainTip();
         }
