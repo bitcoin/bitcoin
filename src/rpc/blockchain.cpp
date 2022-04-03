@@ -646,6 +646,10 @@ static RPCHelpMan getblockheader()
                             {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                             {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
                             {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
+                            // SYSCOIN
+                            {RPCResult::Type::STR, "asset_guid", /*optional=*/true, "the transaction output asset guid if asset output"},
+                            {RPCResult::Type::STR_AMOUNT, "asset_amount", /*optional=*/true, "the transaction output asset amount in satoshis if asset output"},
+                            {RPCResult::Type::BOOL, "chainlock", /*optional=*/true, "Is block chainlocked?"},
                         }},
                     RPCResult{"for verbose=false",
                         RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
