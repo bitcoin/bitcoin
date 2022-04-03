@@ -1341,7 +1341,6 @@ static RPCHelpMan estimaterawfee()
 }
 /* ************************************************************************** */
 /* Merge mining.  */
-
 static RPCHelpMan createauxblock()
 {
     return RPCHelpMan{"createauxblock",
@@ -1359,7 +1358,6 @@ static RPCHelpMan createauxblock()
                         {RPCResult::Type::NUM, "coinbasevalue", "value of the block's coinbase"},
                         {RPCResult::Type::STR, "bits", "compressed target of the block"},
                         {RPCResult::Type::NUM, "height", "height of the block"},
-                        {RPCResult::Type::STR, "chain", "current network name (main, test, regtest)"},
                         {RPCResult::Type::STR_HEX, "_target", "target in reversed byte order, deprecated"},
                     }},
                 RPCExamples{
