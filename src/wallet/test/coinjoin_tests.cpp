@@ -8,6 +8,7 @@
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/options.h>
+#include <node/context.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
@@ -73,6 +74,7 @@ public:
         {
             LOCK(wallet->cs_wallet);
             wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+            wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
         }
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
@@ -102,7 +104,9 @@ public:
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         auto locked_chain = wallet->chain().lock();
         LOCK(wallet->cs_wallet);
-        it->second.SetConf(CWalletTx::Status::CONFIRMED, ::ChainActive().Tip()->GetBlockHash(), 1);
+        wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 1);
+        it->second.m_confirm = confirm;
         return it->second;
     }
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)
