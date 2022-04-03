@@ -1,0 +1,80 @@
+# syntax=docker/dockerfile:1.3
+
+FROM --platform=$BUILDPLATFORM ubuntu:focal as builder
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends \
+    automake \
+    autotools-dev \
+    bsdmainutils \
+    build-essential \
+    ca-certificates \
+    curl \
+    g++-arm-linux-gnueabihf \
+    libtool \
+    pkg-config \
+    python3 \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /dash
+
+COPY . .
+
+ARG TARGETPLATFORM
+
+RUN case "$TARGETPLATFORM" in \
+  "linux/arm64") make HOST=arm-linux-gnueabihf -C depends -j`nproc | awk '{x=$1/2; print x}'` ;; \
+  "linux/amd64") make HOST=x86_64-pc-linux-gnu -C depends -j`nproc | awk '{x=$1/2; print x}'` ;; \
+  *) exit 1 ;; \
+esac
+
+RUN ./autogen.sh && \
+  case "$TARGETPLATFORM" in \
+  "linux/arm64") ./configure --prefix=`pwd`/depends/arm-linux-gnueabihf ;; \
+  "linux/amd64") ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu ;; \
+esac
+
+RUN make -j`nproc | awk '{x=$1/2; print x}'` && make install
+
+RUN mkdir built-target && \
+  case "$TARGETPLATFORM" in \
+  "linux/arm64") cp depends/arm-linux-gnueabihf/bin/dash* /dash/built-target ;; \
+  "linux/amd64") cp depends/x86_64-pc-linux-gnu/bin/dash* /dash/built-target ;; \
+esac
+
+FROM ubuntu:focal
+LABEL maintainer="Dash Developers <dev@dash.org>"
+LABEL description="Dockerised DashCore"
+
+ARG USER_ID
+ARG GROUP_ID
+ARG TAG
+
+ENV HOME /dash
+
+# add user with specified (or default) user/group ids
+ENV USER_ID ${USER_ID:-1000}
+ENV GROUP_ID ${GROUP_ID:-1000}
+RUN groupadd -g ${GROUP_ID} dash && \
+    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /dash dash  && \
+    mkdir /dash/.dashcore && \
+    chown dash:dash -R /dash
+
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /dash/built-target/dash* /usr/local/bin
+
+USER dash
+
+VOLUME ["/dash"]
+
+COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+EXPOSE 9998 9999 19998 19999
+
+WORKDIR /dash
