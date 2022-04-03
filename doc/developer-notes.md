@@ -95,7 +95,6 @@ code.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
   - Align pointers and references to the left i.e. use `type& var` and not `type &var`.
-  - `enum class` is preferred over `enum` where possible. Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to int, and name clashes due to enumerators being exported to the surrounding scope.
 
 Block style example:
 ```c++
@@ -257,6 +256,7 @@ $ valgrind --suppressions=contrib/valgrind.supp src/test/test_dash
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
       --show-leak-kinds=all src/test/test_dash --log_level=test_suite
 $ valgrind -v --leak-check=full src/dashd -printtoconsole
+$ ./test/functional/test_runner.py --valgrind
 ```
 
 ### Compiling for test coverage
@@ -581,6 +581,34 @@ class A
    - *Rationale*: When signed ints are mixed with unsigned ints, the signed int is converted to a unsigned
    int. If the signed int is some negative `N`, it'll become `INT_MAX - N`  which might cause unexpected consequences.
 
+
+- Prefer `enum class` (scoped enumerations) over `enum` (traditional enumerations) where possible.
+
+  - *Rationale*: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to `int`, and name clashes due to enumerators being exported to the surrounding scope.
+
+- `switch` statement on an enumeration example:
+
+```cpp
+enum class Tabs {
+    INFO,
+    CONSOLE,
+    GRAPH,
+    PEERS
+};
+
+int GetInt(Tabs tab)
+{
+    switch (tab) {
+    case Tabs::INFO: return 0;
+    case Tabs::CONSOLE: return 1;
+    case Tabs::GRAPH: return 2;
+    case Tabs::PEERS: return 3;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+```
+
+*Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
 
 Strings and formatting
 ------------------------
