@@ -297,10 +297,9 @@ static RPCHelpMan getchainlocks()
             RPCResult{
                 RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::STR_HEX, "blockhash", "The block hash hex encoded"},
-                    {RPCResult::Type::NUM, "height", "Block height"},
-                    {RPCResult::Type::STR_HEX, "signature", "The chainlock's BLS signature"},
-                    {RPCResult::Type::BOOL, "known_block", "True if the block is known by our node"},
+                    {RPCResult::Type::ANY, "recent_chainlock", "Most recent chainlock share"},
+                    {RPCResult::Type::ANY, "active_chainlock", "Most active chainlock"},
+                    
                 }},
             RPCExamples{
                 HelpExampleCli("getchainlocks", "")
