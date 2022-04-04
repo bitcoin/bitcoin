@@ -81,30 +81,22 @@ bool IsHexNumber(const std::string& str)
     return (str.size() > starting_location);
 }
 
-std::vector<unsigned char> ParseHex(const char* psz)
+std::vector<unsigned char> ParseHex(std::string_view str)
 {
     // convert hex dump to vector
     std::vector<unsigned char> vch;
-    while (true)
-    {
-        while (IsSpace(*psz))
-            psz++;
-        signed char c = HexDigit(*psz++);
-        if (c == (signed char)-1)
-            break;
-        auto n{uint8_t(c << 4)};
-        c = HexDigit(*psz++);
-        if (c == (signed char)-1)
-            break;
-        n |= c;
-        vch.push_back(n);
+    auto it = str.begin();
+    while (it != str.end() && it + 1 != str.end()) {
+        if (IsSpace(*it)) {
+            ++it;
+            continue;
+        }
+        auto c1 = HexDigit(*(it++));
+        auto c2 = HexDigit(*(it++));
+        if (c1 < 0 || c2 < 0) break;
+        vch.push_back(uint8_t(c1 << 4) | c2);
     }
     return vch;
-}
-
-std::vector<unsigned char> ParseHex(const std::string& str)
-{
-    return ParseHex(str.c_str());
 }
 
 void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
