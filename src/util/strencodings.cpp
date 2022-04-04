@@ -24,15 +24,15 @@ static const std::string SAFE_CHARS[] =
     CHARS_ALPHA_NUM + "!*'();:@&=+$,/?#[]-_.~%", // SAFE_CHARS_URI
 };
 
-std::string SanitizeString(const std::string& str, int rule)
+std::string SanitizeString(std::string_view str, int rule)
 {
-    std::string strResult;
-    for (std::string::size_type i = 0; i < str.size(); i++)
-    {
-        if (SAFE_CHARS[rule].find(str[i]) != std::string::npos)
-            strResult.push_back(str[i]);
+    std::string result;
+    for (char c : str) {
+        if (SAFE_CHARS[rule].find(c) != std::string::npos) {
+            result.push_back(c);
+        }
     }
-    return strResult;
+    return result;
 }
 
 const signed char p_util_hexdigit[256] =
