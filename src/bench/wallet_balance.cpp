@@ -50,10 +50,10 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     });
 }
 
-static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ true, /* add_mine */ true, 2500); }
-static void WalletBalanceClean(benchmark::Bench& bench) {WalletBalance(bench, /* set_dirty */ false, /* add_mine */ true, 8000); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_mine */ true, 16000); }
-static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_mine */ false, 8000); }
+static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/true, /*add_mine=*/true, 2500); }
+static void WalletBalanceClean(benchmark::Bench& bench) {WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true, 8000); }
+static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true, 16000); }
+static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/false, 8000); }
 
 BENCHMARK(WalletBalanceDirty);
 BENCHMARK(WalletBalanceClean);

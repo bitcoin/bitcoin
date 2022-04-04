@@ -900,7 +900,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
                                               0);           /*nMaximumCount*/
 
     // Choose coins to use
-    std::optional<SelectionResult> result = SelectCoins(wallet, available_coins, /* nTargetValue */ selection_target, coin_control, coin_selection_params);
+    std::optional<SelectionResult> result = SelectCoins(wallet, available_coins, /*nTargetValue=*/selection_target, coin_control, coin_selection_params);
     if (!result) {
         if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
             return util::Error{_("Unable to locate enough non-denominated funds for this transaction.")};
