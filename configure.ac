@@ -1466,6 +1466,9 @@ if test x$want_boost = xno; then
     AC_MSG_ERROR([[only libdashconsensus can be built without boost]])
 fi
 
+  dnl we don't use multi_index serialization
+  BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_MULTI_INDEX_DISABLE_SERIALIZATION"
+
 dnl Prevent use of std::unary_function, which was removed in C++17,
 dnl and will generate warnings with newer compilers for Boost
 dnl older than 1.80.
