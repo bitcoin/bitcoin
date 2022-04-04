@@ -29,6 +29,7 @@
              (gnu packages shells)
              (gnu packages tls)
              (gnu packages version-control)
+             (gnu packages xml)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
@@ -607,7 +608,8 @@ inspecting signatures in Mach-O binaries.")
                                                       #:base-libc glibc-2.27/bitcoin-patched
                                                       #:base-kernel-headers linux-libre-headers-4.19))
                        (else
-                        (make-bitcoin-cross-toolchain target)))))
+                        (make-bitcoin-cross-toolchain target)))
+                 expat))
           ((string-contains target "darwin")
            (list ;; Native GCC 10 toolchain
                  gcc-toolchain-10

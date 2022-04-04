@@ -4,6 +4,8 @@
 print-%: FORCE
 	@echo '$*'='$($*)'
 
+SYSTEM_PKG_CONFIG_PATH := $(PKG_CONFIG_PATH)
+
 # When invoking a sub-make, keep only the command line variable definitions
 # matching the pattern in the filter function.
 #
@@ -146,6 +148,7 @@ $(host_arch)_$(host_os)_id:=$(shell env CC='$(host_CC)' CXX='$(host_CXX)' AR='$(
 qrencode_packages_$(NO_QR) = $(qrencode_$(host_os)_packages)
 
 qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages) $(qrencode_packages_)
+qt_native_packages_$(NO_QT) = $(qt_native_packages) $(qt_$(host_os)_native_packages) $(qt_$(host_arch)_$(host_os)_native_packages)
 
 bdb_packages_$(NO_BDB) = $(bdb_packages)
 sqlite_packages_$(NO_SQLITE) = $(sqlite_packages)
@@ -159,7 +162,7 @@ multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
 usdt_packages_$(NO_USDT) = $(usdt_$(host_os)_packages)
 
 packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(natpmp_packages_) $(usdt_packages_)
-native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
+native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages) $(qt_native_packages_)
 
 ifneq ($(zmq_packages_),)
 packages += $(zmq_packages)
