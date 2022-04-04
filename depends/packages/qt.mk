@@ -28,8 +28,12 @@ $(package)_qttranslations_sha256_hash=5d7869f670a135ad0986e266813b9dd5bbae2b0957
 $(package)_qttools_file_name=qttools-$($(package)_suffix)
 $(package)_qttools_sha256_hash=463b2fe71a085e7ab4e39333ae360ab0ec857b966d7a08f752c427e5df55f90d
 
+$(package)_qtwayland_file_name = qtwayland-$($(package)_suffix)
+$(package)_qtwayland_sha256_hash = 686ada6c5525bfa7f39aa37e2a811a381374c2c4137a7d9883a19ff24209240b
+
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
+$(package)_extra_sources += $($(package)_qtwayland_file_name)
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
@@ -42,7 +46,6 @@ $(package)_config_opts += -confirm-license
 $(package)_config_opts += -hostprefix $(build_prefix)
 $(package)_config_opts += -no-compile-examples
 $(package)_config_opts += -no-cups
-$(package)_config_opts += -no-egl
 $(package)_config_opts += -no-eglfs
 $(package)_config_opts += -no-evdev
 $(package)_config_opts += -no-gif
@@ -124,6 +127,7 @@ $(package)_config_opts += -no-feature-wizard
 $(package)_config_opts += -no-feature-xml
 
 $(package)_config_opts_darwin = -no-dbus
+$(package)_config_opts_darwin += -no-egl
 $(package)_config_opts_darwin += -no-opengl
 $(package)_config_opts_darwin += -pch
 $(package)_config_opts_darwin += -no-feature-corewlan
@@ -149,9 +153,22 @@ $(package)_config_opts_linux += -no-xcb-xlib
 $(package)_config_opts_linux += -no-feature-xlib
 $(package)_config_opts_linux += -system-freetype
 $(package)_config_opts_linux += -fontconfig
-$(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_linux += -no-feature-vulkan
 $(package)_config_opts_linux += -dbus-runtime
+
+# Wayland-specific options:
+$(package)_config_opts_linux += -egl
+$(package)_config_opts_linux += -opengl es2
+$(package)_config_opts_linux += -no-opengles3
+$(package)_config_opts_linux += -no-feature-wayland-drm-egl-server-buffer
+$(package)_config_opts_linux += -no-feature-wayland-shm-emulation-server-buffer
+$(package)_config_opts_linux += -no-feature-wayland-client-fullscreen-shell-v1
+$(package)_config_opts_linux += -no-feature-wayland-client-ivi-shell
+$(package)_config_opts_linux += -no-feature-wayland-client-wl-shell
+$(package)_config_opts_linux += -no-feature-wayland-client-xdg-shell-v5
+$(package)_config_opts_linux += -no-feature-wayland-client-xdg-shell-v6
+$(package)_config_opts_linux += -no-feature-wayland-server
+
 $(package)_config_opts_arm_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 ifneq (,$(findstring -stdlib=libc++,$($(1)_cxx)))
@@ -166,6 +183,7 @@ $(package)_config_opts_riscv64_linux = -platform linux-g++ -xplatform bitcoin-li
 $(package)_config_opts_s390x_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
 
 $(package)_config_opts_mingw32 = -no-opengl
+$(package)_config_opts_mingw32 += -no-egl
 $(package)_config_opts_mingw32 += -no-dbus
 $(package)_config_opts_mingw32 += -no-freetype
 $(package)_config_opts_mingw32 += -xplatform win32-g++
@@ -198,7 +216,8 @@ endef
 define $(package)_fetch_cmds
 $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
 $(call fetch_file,$(package),$($(package)_download_path),$($(package)_qttranslations_file_name),$($(package)_qttranslations_file_name),$($(package)_qttranslations_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path),$($(package)_qttools_file_name),$($(package)_qttools_file_name),$($(package)_qttools_sha256_hash))
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_qttools_file_name),$($(package)_qttools_file_name),$($(package)_qttools_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_qtwayland_file_name),$($(package)_qtwayland_file_name),$($(package)_qtwayland_sha256_hash))
 endef
 
 define $(package)_extract_cmds
@@ -206,13 +225,16 @@ define $(package)_extract_cmds
   echo "$($(package)_sha256_hash)  $($(package)_source)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qttranslations_sha256_hash)  $($(package)_source_dir)/$($(package)_qttranslations_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qttools_sha256_hash)  $($(package)_source_dir)/$($(package)_qttools_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  echo "$($(package)_qtwayland_sha256_hash)  $($(package)_source_dir)/$($(package)_qtwayland_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   mkdir qtbase && \
   $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source) -C qtbase && \
   mkdir qttranslations && \
   $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttranslations_file_name) -C qttranslations && \
   mkdir qttools && \
-  $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttools_file_name) -C qttools
+  $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttools_file_name) -C qttools && \
+  mkdir qtwayland && \
+  $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qtwayland_file_name) -C qtwayland
 endef
 
 # Preprocessing steps work as follows:
@@ -278,6 +300,10 @@ define $(package)_stage_cmds
   $(MAKE) -C qttools/src/linguist INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_linguist_tools))) && \
   $(MAKE) -C qttranslations INSTALL_ROOT=$($(package)_staging_dir) install_subtargets
 endef
+
+ifeq ($(host_os),linux)
+  $(package)_stage_cmds += && $(MAKE) -C qtwayland/src INSTALL_ROOT=$($(package)_staging_dir) sub-plugins-install_subtargets
+endif
 
 define $(package)_postprocess_cmds
   rm -rf native/mkspecs/ native/lib/ lib/cmake/ && \

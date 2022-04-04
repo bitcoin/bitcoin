@@ -96,12 +96,11 @@ ELF_ALLOWED_LIBRARIES = {
 'ld64.so.2', # POWER64 ABIv2 dynamic linker
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
-'libxcb.so.1', # part of X11
-'libxkbcommon.so.0', # keyboard keymapping
-'libxkbcommon-x11.so.0', # keyboard keymapping
+'libdl.so.2', # programming interface to dynamic linker
+# Minimal platform plugin (QMinimalIntegrationPlugin)
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
-'libdl.so.2', # programming interface to dynamic linker
+# XCB platform plugin (QXcbIntegrationPlugin)
 'libxcb-icccm.so.4',
 'libxcb-image.so.0',
 'libxcb-shm.so.0',
@@ -114,6 +113,16 @@ ELF_ALLOWED_LIBRARIES = {
 'libxcb-xfixes.so.0',
 'libxcb-xinerama.so.0',
 'libxcb-xkb.so.1',
+'libxcb.so.1', # part of X11
+'libxkbcommon-x11.so.0', # keyboard keymapping
+'libxkbcommon.so.0', # keyboard keymapping
+# Wayland platform plugin (QWaylandIntegrationPlugin)
+"libwayland-client.so.0",
+"libwayland-cursor.so.0",
+# Wayland OpenGL integration plugin (QWaylandEglClientBufferPlugin)
+'libEGL.so.1',
+'libGLESv2.so.2',
+'libwayland-egl.so.1',
 }
 
 MACHO_ALLOWED_LIBRARIES = {
