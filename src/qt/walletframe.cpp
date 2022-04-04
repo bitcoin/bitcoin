@@ -198,12 +198,12 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
 
     if (from_clipboard) {
         std::string raw = QApplication::clipboard()->text().toStdString();
-        bool invalid;
-        data = DecodeBase64(raw, &invalid);
-        if (invalid) {
+        auto result = DecodeBase64(raw);
+        if (!result) {
             Q_EMIT message(tr("Error"), tr("Unable to decode PSBT from clipboard (invalid base64)"), CClientUIInterface::MSG_ERROR);
             return;
         }
+        data = std::move(*result);
     } else {
         QString filename = GUIUtil::getOpenFileName(this,
             tr("Load Transaction Data"), QString(),
