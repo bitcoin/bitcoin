@@ -309,7 +309,7 @@ Use the `-v` option for verbose output.
 | [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy)
 | [`lint-python.sh`](lint/lint-python.sh) | [pyzmq](https://github.com/zeromq/pyzmq)
 | [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck)
-| [`lint-spelling.sh`](lint/lint-spelling.sh) | [codespell](https://github.com/codespell-project/codespell)
+| [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
 
 In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
 
@@ -320,7 +320,7 @@ Please be aware that on Linux distributions all dependencies are usually availab
 Individual tests can be run by directly calling the test script, e.g.:
 
 ```
-test/lint/lint-files.sh
+test/lint/lint-files.py
 ```
 
 You can run all the shell-based lint tests by running:
