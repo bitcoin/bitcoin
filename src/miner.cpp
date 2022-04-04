@@ -229,7 +229,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 // - transaction finality (locktime)
 // - premature witness (in case segwit transactions are added to mempool before
 //   segwit activation)
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package, const CTxMemPool::setEntries& failedTxs)
 {
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
@@ -239,14 +239,17 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
         if (!fIncludeMWEB && it->GetTx().HasMWEBTx()) {
             return false;
         }
+        if (failedTxs.count(it) > 0) {
+            return false;
+        }
     }
     return true;
 }
 
-void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
+bool BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 {
     if (iter->GetTx().HasMWEBTx() && !mweb_miner.AddMWEBTransaction(iter)) {
-        return;
+        return false;
     }
 
     CTransactionRef pTx = iter->GetSharedTx();
@@ -277,6 +280,8 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
                   CFeeRate(iter->GetModifiedFee(), iter->GetTxSize(), iter->GetMWEBWeight()).ToString(),
                   iter->GetTx().GetHash().ToString());
     }
+
+    return true;
 }
 
 int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
@@ -445,8 +450,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         onlyUnconfirmed(ancestors);
         ancestors.insert(iter);
 
-        // Test if all tx's are Final
-        if (!TestPackageTransactions(ancestors)) {
+        // Test if all tx's are Final, and none have failed
+        if (!TestPackageTransactions(ancestors, failedTx)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);
@@ -461,16 +466,28 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         std::vector<CTxMemPool::txiter> sortedEntries;
         SortForBlock(ancestors, sortedEntries);
 
+        bool failed = false;
         for (size_t i=0; i<sortedEntries.size(); ++i) {
-            AddToBlock(sortedEntries[i]);
+            failed = !AddToBlock(sortedEntries[i]);
+            if (failed) {
+                for (size_t j = i; j < sortedEntries.size(); j++) {
+                    failedTx.insert(sortedEntries[j]);
+                    mapModifiedTx.erase(sortedEntries[j]);
+                }
+
+                break;
+            }
+
             // Erase from the modified set, if present
             mapModifiedTx.erase(sortedEntries[i]);
         }
 
         ++nPackagesSelected;
 
-        // Update transactions that depend on each of these
-        nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+        if (!failed) {
+            // Update transactions that depend on each of these
+            nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+        }
     }
 }
 

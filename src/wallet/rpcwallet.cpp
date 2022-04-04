@@ -1096,8 +1096,10 @@ static UniValue ListReceived(const CWallet* const pwallet, const UniValue& param
         if (nDepth < nMinDepth)
             continue;
 
-        for (const CTxOutput& txout : wtx.tx->GetOutputs())
+        std::vector<CTxOutput> outputs = wtx.tx->GetOutputs();
+        for (size_t i = 0; i < outputs.size(); i++)
         {
+            const CTxOutput& txout = outputs[i];
             CTxDestination address;
             if (!pwallet->ExtractOutputDestination(txout, address))
                 continue;
@@ -1110,8 +1112,40 @@ static UniValue ListReceived(const CWallet* const pwallet, const UniValue& param
             if(!(mine & filter))
                 continue;
 
+            
+            // Skip displaying hog-ex outputs when we have the MWEB transaction that contains the pegout.
+            // The original MWEB transaction will be displayed instead.
+            if (wtx.IsHogEx() && wtx.pegout_indices.size() > i) {
+                mw::Hash kernel_id = wtx.pegout_indices[i].first;
+                if (pwallet->FindWalletTxByKernelId(kernel_id) != nullptr) {
+                    continue;
+                }
+            }
+
             tallyitem& item = mapTally[address];
             item.nAmount += pwallet->GetValue(txout);
+            item.nConf = std::min(item.nConf, nDepth);
+            item.txids.push_back(wtx.GetHash());
+            if (mine & ISMINE_WATCH_ONLY)
+                item.fIsWatchonly = true;
+        }
+
+        for (const PegOutCoin& pegout : wtx.tx->mweb_tx.GetPegOuts())
+        {
+            CTxDestination address;
+            if (!::ExtractDestination(pegout.GetScriptPubKey(), address))
+                continue;
+
+            if (has_filtered_address && !(filtered_address == address)) {
+                continue;
+            }
+
+            isminefilter mine = pwallet->IsMine(address);
+            if(!(mine & filter))
+                continue;
+
+            tallyitem& item = mapTally[address];
+            item.nAmount += pegout.GetAmount();
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)

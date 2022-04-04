@@ -20,7 +20,7 @@ public:
     /// <param name="view">The CoinsView representing the latest state of the active chain. Must not be null.</param>
     /// <returns>A non-null BlockBuilder</returns>
     BlockBuilder(const uint64_t height, const mw::ICoinsView::Ptr& pCoinsView)
-        : m_height(height), m_weight(0), m_pCoinsView(std::make_shared<mw::CoinsViewCache>(pCoinsView)), m_pAggregated(nullptr){ }
+        : m_height(height), m_weight(0), m_pCoinsView(std::make_shared<mw::CoinsViewCache>(pCoinsView)) { }
 
     bool AddTransaction(const Transaction::CPtr& pTransaction, const std::vector<PegInCoin>& pegins);
 
@@ -30,7 +30,9 @@ private:
     uint64_t m_height;
     uint64_t m_weight;
     mw::CoinsViewCache::Ptr m_pCoinsView;
-    Transaction::CPtr m_pAggregated;
+
+    std::vector<Transaction::CPtr> m_stagedTxs;
+    std::set<Hash> m_stagedOutputs;
 };
 
 END_NAMESPACE // mw

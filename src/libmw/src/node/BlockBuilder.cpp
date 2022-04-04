@@ -1,5 +1,4 @@
 #include <mw/node/BlockBuilder.h>
-#include <mw/consensus/Aggregation.h>
 #include <mw/consensus/KernelSumValidator.h>
 #include <mw/consensus/Params.h>
 #include <mw/consensus/Weight.h>
@@ -62,7 +61,12 @@ bool BlockBuilder::AddTransaction(const Transaction::CPtr& pTransaction, const s
 
     // Make sure all inputs are available.
     for (const Input& input : pTransaction->GetInputs()) {
-        if (!m_pCoinsView->HasCoin(input.GetOutputID())) {
+        //if (m_stagedInputs.count(input.GetOutputID()) > 0) { // MW: TODO - Is this necessary, or are duplicate output checks enough?
+        //    LOG_ERROR_F("Input {} already staged", input.GetOutputID());
+        //    return false;
+        //}
+
+        if (!m_pCoinsView->HasCoin(input.GetOutputID()) && m_stagedOutputs.count(input.GetOutputID()) == 0) {
             LOG_ERROR_F("Input {} not found on chain", input.GetOutputID());
             return false;
         }
@@ -74,35 +78,27 @@ bool BlockBuilder::AddTransaction(const Transaction::CPtr& pTransaction, const s
             LOG_ERROR_F("Output {} already on chain", output.GetOutputID());
             return false;
         }
+
+        if (m_stagedOutputs.count(output.GetOutputID()) > 0) {
+            LOG_ERROR_F("Output {} already staged", output.GetOutputID());
+            return false;
+        }
     }
 
-    // Aggregate transactions
-    auto pAggregated = pTransaction;
-    if (m_pAggregated != nullptr) {
-        pAggregated = Aggregation::Aggregate({ m_pAggregated, pTransaction });
-    }
+    m_stagedTxs.push_back(pTransaction);
+    m_weight += weight;
 
-    if (pAggregated == nullptr) {
-        LOG_ERROR("Failed to aggregate transaction");
-        return false;
+    for (const Output& output : pTransaction->GetOutputs()) {
+        auto inserted = m_stagedOutputs.insert(output.GetOutputID());
+        assert(inserted.second);
     }
-
-    m_pAggregated = pAggregated;
-    m_weight = Weight::Calculate(pAggregated->GetBody());
 
     return true;
 }
 
 mw::Block::Ptr BlockBuilder::BuildBlock() const
 {
-    mw::CoinsViewCache cache(m_pCoinsView);
-
-    std::vector<mw::Transaction::CPtr> txs;
-    if (m_pAggregated != nullptr) {
-        txs.push_back(m_pAggregated);
-    }
-
-    return cache.BuildNextBlock(m_height, txs);
+    return mw::CoinsViewCache(m_pCoinsView).BuildNextBlock(m_height, m_stagedTxs);
 }
 
 END_NAMESPACE

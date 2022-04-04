@@ -78,16 +78,16 @@ static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 void CoinsViewCache::AddTx(const mw::Transaction::CPtr& pTx)
 {
     std::for_each(
-        pTx->GetInputs().cbegin(), pTx->GetInputs().cend(),
-        [this](const Input& input) {
-            SpendUTXO(input.GetOutputID());
+        pTx->GetOutputs().cbegin(), pTx->GetOutputs().cend(),
+        [this](const Output& output) {
+            AddUTXO(MEMPOOL_HEIGHT, output);
         }
     );
 
     std::for_each(
-        pTx->GetOutputs().cbegin(), pTx->GetOutputs().cend(),
-        [this](const Output& output) {
-            AddUTXO(MEMPOOL_HEIGHT, output);
+        pTx->GetInputs().cbegin(), pTx->GetInputs().cend(),
+        [this](const Input& input) {
+            SpendUTXO(input.GetOutputID());
         }
     );
 }

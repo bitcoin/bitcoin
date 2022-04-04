@@ -74,7 +74,7 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         tx2_id = node1.sendtoaddress(n2_addr, 15)
         self.sync_mempools()
 
-        self.log.info("Verify node1's wallet lists the transaction as spent")
+        self.log.info("Verify node1's wallet lists the transactions as spent")
         n1_tx2 = node1.gettransaction(txid=tx2_id)
         assert_equal(n1_tx2['confirmations'], 0)
         assert_equal(n1_tx2['amount'], -15)
@@ -86,17 +86,6 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         assert_equal(n2_tx2['confirmations'], 0)
         assert tx2_id in node1.getrawmempool()
 
-        self.log.info("Mine next block to make sure the transaction confirms successfully")
-        node0.generate(1)
-        self.sync_all()
-        assert tx2_id not in node1.getrawmempool()
-
-        self.log.info("Verify node2's wallet receives the first pegout transaction")
-        n2_addr_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr)
-        assert_equal(len(n2_addr_coins), 1)
-        assert_equal(n2_addr_coins[0]['amount'], 15)
-        assert_equal(n2_addr_coins[0]['confirmations'], 1)
-        
         #
         # Pegout to node2 using subtract fee from amount
         #
@@ -104,27 +93,30 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         n2_addr2 = node2.getnewaddress(address_type='bech32')
         tx3_id = node1.sendtoaddress(address=n2_addr2, amount=5, subtractfeefromamount=True)
         self.sync_mempools()
-
-        self.log.info("Verify node1's wallet lists the transaction as spent")
+        
         n1_tx3 = node1.gettransaction(txid=tx3_id)
         assert_equal(n1_tx3['confirmations'], 0)
         assert n1_tx3['amount'] > -5 and n1_tx3['amount'] < -4.9
         assert n1_tx3['fee'] < 0 and n1_tx3['fee'] > -0.1
 
-        assert tx3_id in node1.getrawmempool()
-
-        self.log.info("Mine next block so node2 sees the transaction")
-        node0.generate(1)
-        self.sync_all()
-        
-        assert tx3_id not in node1.getrawmempool()
-        
         self.log.info("Verify node2's wallet receives the second pegout transaction")
         n2_addr2_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr2)
         assert_equal(len(n2_addr2_coins), 1)
         assert n2_addr2_coins[0]['amount'] < 5 and n2_addr2_coins[0]['amount'] > 4.9
+        assert_equal(n2_addr2_coins[0]['confirmations'], 0)
+        assert tx3_id in node1.getrawmempool()
+
+        self.log.info("Mine next block to make sure the transactions confirm successfully")
+        node0.generate(1)
+        self.sync_all()
+        assert tx2_id not in node1.getrawmempool()
+        assert tx3_id not in node1.getrawmempool()        
+
+        n2_addr2_coins = node2.listreceivedbyaddress(minconf=0, address_filter=n2_addr2)
+        assert_equal(len(n2_addr2_coins), 1)
+        assert n2_addr2_coins[0]['amount'] < 5 and n2_addr2_coins[0]['amount'] > 4.9
         assert_equal(n2_addr2_coins[0]['confirmations'], 1)
-        
+
         n2_balances = node2.getbalances()['mine']
         assert n2_balances['immature'] > 19.9 and n2_balances['immature'] < 20
         assert_equal(n2_balances['untrusted_pending'], 0)
