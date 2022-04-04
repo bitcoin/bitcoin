@@ -823,7 +823,6 @@ bool SetupSyscallSandbox(bool log_syscall_violation_before_terminating)
             return false;
         }
     }
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION);
     return true;
 }
 
