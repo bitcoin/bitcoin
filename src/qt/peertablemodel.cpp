@@ -80,7 +80,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
                                //: An Outbound Connection to a Peer.
                                tr("Outbound"));
         case ConnectionType:
-            return GUIUtil::ConnectionTypeToQString(rec->nodeStats.m_conn_type, /* prepend_direction */ false);
+            return GUIUtil::ConnectionTypeToQString(rec->nodeStats.m_conn_type, /*prepend_direction=*/false);
         case Network:
             return GUIUtil::NetworkToQString(rec->nodeStats.m_network);
         case Ping:
