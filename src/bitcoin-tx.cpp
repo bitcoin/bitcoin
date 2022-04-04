@@ -240,7 +240,7 @@ static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInId
 template <typename T>
 static T TrimAndParse(const std::string& int_str, const std::string& err)
 {
-    const auto parsed{ToIntegral<T>(TrimString(int_str))};
+    const auto parsed{ToIntegral<T>(TrimStringView(int_str))};
     if (!parsed.has_value()) {
         throw std::runtime_error(err + " '" + int_str + "'");
     }
