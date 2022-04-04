@@ -811,7 +811,7 @@ static RPCHelpMan getblock()
                                         {
                                             {RPCResult::Type::STR, "asm", "The asm"},
                                             {RPCResult::Type::STR, "hex", "The hex"},
-                                            {RPCResult::Type::STR, "address", /* optional */ true, "The Syscoin address (only if a well-defined address exists)"},
+                                            {RPCResult::Type::STR, "address", /*optional=*/true, "The Syscoin address (only if a well-defined address exists)"},
                                             {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
                                         }},
                                     }},
@@ -1111,7 +1111,7 @@ static RPCHelpMan gettxout()
                     {RPCResult::Type::STR, "asm", ""},
                     {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
                     {RPCResult::Type::STR_HEX, "hex", ""},
-                    {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
+                    {RPCResult::Type::NUM, "reqSigs", /*optional=*/true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                     {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},
                     {RPCResult::Type::STR, "address", /*optional=*/true, "The Syscoin address (only if a well-defined address exists)"},
                 }},

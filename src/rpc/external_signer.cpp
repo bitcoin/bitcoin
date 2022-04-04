@@ -22,7 +22,7 @@ static RPCHelpMan enumeratesigners()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::ARR, "signers", /* optional */ false, "",
+                {RPCResult::Type::ARR, "signers", /*optional=*/false, "",
                 {
                     {RPCResult::Type::OBJ, "", "",
                     {

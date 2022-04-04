@@ -239,7 +239,7 @@ RPCHelpMan addmultisigaddress()
                         {RPCResult::Type::STR, "address", "The value of the new multisig address"},
                         {RPCResult::Type::STR_HEX, "redeemScript", "The string value of the hex-encoded redemption script"},
                         {RPCResult::Type::STR, "descriptor", "The descriptor for this multisig"},
-                        {RPCResult::Type::ARR, "warnings", /* optional */ true, "Any warnings resulting from the creation of this multisig",
+                        {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Any warnings resulting from the creation of this multisig",
                         {
                             {RPCResult::Type::STR, "", ""},
                         }},
@@ -597,7 +597,7 @@ RPCHelpMan getaddressinfo()
     DescriptorScriptPubKeyMan* desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
     if (desc_spk_man) {
         std::string desc_str;
-        if (desc_spk_man->GetDescriptorString(desc_str, /* priv */ false)) {
+        if (desc_spk_man->GetDescriptorString(desc_str, /*priv=*/false)) {
             ret.pushKV("parent_desc", desc_str);
         }
     }

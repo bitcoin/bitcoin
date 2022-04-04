@@ -573,7 +573,7 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
                 // Not ours, and we don't have solving data.
                 return false;
             }
-            input_bytes = CalculateMaximumSignedInputSize(txout, &coin_control.m_external_provider, /* use_max_sig */ true);
+            input_bytes = CalculateMaximumSignedInputSize(txout, &coin_control.m_external_provider, /*use_max_sig=*/true);
         }
         // If available, override calculated size with coin control specified size
         if (coin_control.HasInputWeight(outpoint)) {

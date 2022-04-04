@@ -86,7 +86,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
     if (bench.complexityN() > 1) {
         childTxs = static_cast<int>(bench.complexityN());
     }
-    std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /* min_ancestors */ 1);
+    std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /*min_ancestors=*/1);
     const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN);
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
@@ -103,7 +103,7 @@ static void MempoolCheck(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
     const int childTxs = bench.complexityN() > 1 ? static_cast<int>(bench.complexityN()) : 2000;
-    const std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /* min_ancestors */ 5);
+    const std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /*min_ancestors=*/5);
     const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN, {"-checkmempool=1"});
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
@@ -111,7 +111,7 @@ static void MempoolCheck(benchmark::Bench& bench)
     for (auto& tx : ordered_coins) AddTx(tx, pool);
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.check(coins_tip, /* spendheight */ 2);
+        pool.check(coins_tip, /*spendheight=*/2);
     });
 }
 
