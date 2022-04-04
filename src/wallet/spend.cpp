@@ -382,9 +382,10 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     // Vector of results. We will choose the best one based on waste.
     std::vector<SelectionResult> results;
 
+    const auto cost_of_extra_input = coin_selection_params.m_effective_feerate.GetFee(DUMMY_NESTED_P2WPKH_INPUT_SIZE);
     // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
     std::vector<OutputGroup> positive_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, true /* positive_only */);
-    if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
+    if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change + cost_of_extra_input)}) {
         results.push_back(*bnb_result);
     }
 

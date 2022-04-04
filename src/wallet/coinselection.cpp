@@ -62,7 +62,7 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
+std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& upper_bound)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB, /*force_no_change=*/true);
     CAmount curr_value = 0;
@@ -92,7 +92,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
         // Conditions for starting a backtrack
         bool backtrack = false;
         if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
+            curr_value > selection_target + upper_bound || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && (utxo_pool.at(0).fee - utxo_pool.at(0).long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
