@@ -59,7 +59,7 @@ std::vector<unsigned char> ParseHex(std::string_view str);
 signed char HexDigit(char c);
 /* Returns true if each character in str is a hex character, and has an even
  * number of hex digits.*/
-bool IsHex(const std::string& str);
+bool IsHex(std::string_view str);
 /**
 * Return true if the string is a hex number, optionally prefixed with "0x"
 */

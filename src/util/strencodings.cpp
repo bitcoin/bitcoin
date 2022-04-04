@@ -58,12 +58,10 @@ signed char HexDigit(char c)
     return p_util_hexdigit[(unsigned char)c];
 }
 
-bool IsHex(const std::string& str)
+bool IsHex(std::string_view str)
 {
-    for(std::string::const_iterator it(str.begin()); it != str.end(); ++it)
-    {
-        if (HexDigit(*it) < 0)
-            return false;
+    for (char c : str) {
+        if (HexDigit(c) < 0) return false;
     }
     return (str.size() > 0) && (str.size()%2 == 0);
 }
