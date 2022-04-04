@@ -36,7 +36,7 @@ MessageVerificationResult MessageVerify(
     }
 
     bool invalid = false;
-    std::vector<unsigned char> signature_bytes = DecodeBase64(signature.c_str(), &invalid);
+    std::vector<unsigned char> signature_bytes = DecodeBase64(signature, &invalid);
     if (invalid) {
         return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
     }

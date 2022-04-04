@@ -20,9 +20,9 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
         std::string strEnc = EncodeBase64(vstrIn[i]);
         BOOST_CHECK_EQUAL(strEnc, vstrOut[i]);
         bool invalid;
-        std::string strDec = DecodeBase64(strEnc, &invalid);
+        auto dec = DecodeBase64(strEnc, &invalid);
         BOOST_CHECK(!invalid);
-        BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
+        BOOST_CHECK_MESSAGE(MakeByteSpan(dec) == MakeByteSpan(vstrIn[i]), vstrOut[i]);
     }
 
     {

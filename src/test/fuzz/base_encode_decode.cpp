@@ -37,16 +37,16 @@ FUZZ_TARGET_INIT(base_encode_decode, initialize_base_encode_decode)
     }
 
     bool pf_invalid;
-    std::string decoded_string = DecodeBase32(random_encoded_string, &pf_invalid);
+    decoded = DecodeBase32(random_encoded_string, &pf_invalid);
     if (!pf_invalid) {
-        const std::string encoded_string = EncodeBase32(decoded_string);
+        const std::string encoded_string = EncodeBase32(decoded);
         assert(encoded_string == TrimString(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
 
-    decoded_string = DecodeBase64(random_encoded_string, &pf_invalid);
+    decoded = DecodeBase64(random_encoded_string, &pf_invalid);
     if (!pf_invalid) {
-        const std::string encoded_string = EncodeBase64(decoded_string);
+        const std::string encoded_string = EncodeBase64(decoded);
         assert(encoded_string == TrimString(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }

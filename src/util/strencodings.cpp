@@ -172,14 +172,13 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
     return ret;
 }
 
-std::string DecodeBase64(const std::string& str, bool* pf_invalid)
+std::vector<unsigned char> DecodeBase64(const std::string& str, bool* pf_invalid)
 {
     if (!ValidAsCString(str)) {
         *pf_invalid = true;
         return {};
     }
-    std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
-    return std::string((const char*)vchRet.data(), vchRet.size());
+    return DecodeBase64(str.c_str(), pf_invalid);
 }
 
 std::string EncodeBase32(Span<const unsigned char> input, bool pad)
@@ -248,14 +247,13 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
     return ret;
 }
 
-std::string DecodeBase32(const std::string& str, bool* pf_invalid)
+std::vector<unsigned char> DecodeBase32(const std::string& str, bool* pf_invalid)
 {
     if (!ValidAsCString(str)) {
         *pf_invalid = true;
         return {};
     }
-    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
-    return std::string((const char*)vchRet.data(), vchRet.size());
+    return DecodeBase32(str.c_str(), pf_invalid);
 }
 
 namespace {
