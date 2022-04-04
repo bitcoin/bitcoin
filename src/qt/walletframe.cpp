@@ -194,7 +194,7 @@ void WalletFrame::gotoVerifyMessageTab(QString addr)
 
 void WalletFrame::gotoLoadPSBT(bool from_clipboard)
 {
-    std::string data;
+    std::vector<unsigned char> data;
 
     if (from_clipboard) {
         std::string raw = QApplication::clipboard()->text().toStdString();
@@ -214,12 +214,12 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
             return;
         }
         std::ifstream in{filename.toLocal8Bit().data(), std::ios::binary};
-        data = std::string(std::istreambuf_iterator<char>{in}, {});
+        data.assign(std::istream_iterator<unsigned char>{in}, {});
     }
 
     std::string error;
     PartiallySignedTransaction psbtx;
-    if (!DecodeRawPSBT(psbtx, data, error)) {
+    if (!DecodeRawPSBT(psbtx, MakeByteSpan(data), error)) {
         Q_EMIT message(tr("Error"), tr("Unable to decode PSBT") + "\n" + QString::fromStdString(error), CClientUIInterface::MSG_ERROR);
         return;
     }

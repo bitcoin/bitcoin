@@ -65,12 +65,12 @@ bool IsHex(std::string_view str);
 */
 bool IsHexNumber(std::string_view str);
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid);
-std::string DecodeBase64(const std::string& str, bool* pf_invalid);
+std::vector<unsigned char> DecodeBase64(const std::string& str, bool* pf_invalid);
 std::string EncodeBase64(Span<const unsigned char> input);
 inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
 inline std::string EncodeBase64(const std::string& str) { return EncodeBase64(MakeUCharSpan(str)); }
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid);
-std::string DecodeBase32(const std::string& str, bool* pf_invalid);
+std::vector<unsigned char> DecodeBase32(const std::string& str, bool* pf_invalid);
 
 /**
  * Base32 encode.
