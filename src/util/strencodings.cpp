@@ -126,7 +126,7 @@ std::string EncodeBase64(Span<const unsigned char> input)
     return str;
 }
 
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
+std::optional<std::vector<unsigned char>> DecodeBase64(const char* p)
 {
     static const int8_t decode64_table[256]{
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -167,18 +167,17 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
         ++p;
     }
     valid = valid && (p - e) % 4 == 0 && p - q < 4;
-    *pf_invalid = !valid;
+    if (!valid) return {};
 
     return ret;
 }
 
-std::vector<unsigned char> DecodeBase64(const std::string& str, bool* pf_invalid)
+std::optional<std::vector<unsigned char>> DecodeBase64(const std::string& str)
 {
     if (!ValidAsCString(str)) {
-        *pf_invalid = true;
         return {};
     }
-    return DecodeBase64(str.c_str(), pf_invalid);
+    return DecodeBase64(str.c_str());
 }
 
 std::string EncodeBase32(Span<const unsigned char> input, bool pad)
@@ -201,7 +200,7 @@ std::string EncodeBase32(const std::string& str, bool pad)
     return EncodeBase32(MakeUCharSpan(str), pad);
 }
 
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
+std::optional<std::vector<unsigned char>> DecodeBase32(const char* p)
 {
     static const int8_t decode32_table[256]{
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -242,18 +241,17 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
         ++p;
     }
     valid = valid && (p - e) % 8 == 0 && p - q < 8;
-    *pf_invalid = !valid;
+    if (!valid) return {};
 
     return ret;
 }
 
-std::vector<unsigned char> DecodeBase32(const std::string& str, bool* pf_invalid)
+std::optional<std::vector<unsigned char>> DecodeBase32(const std::string& str)
 {
     if (!ValidAsCString(str)) {
-        *pf_invalid = true;
         return {};
     }
-    return DecodeBase32(str.c_str(), pf_invalid);
+    return DecodeBase32(str.c_str());
 }
 
 namespace {
