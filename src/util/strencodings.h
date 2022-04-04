@@ -64,13 +64,11 @@ bool IsHex(std::string_view str);
 * Return true if the string is a hex number, optionally prefixed with "0x"
 */
 bool IsHexNumber(std::string_view str);
-std::optional<std::vector<unsigned char>> DecodeBase64(const char* p);
-std::optional<std::vector<unsigned char>> DecodeBase64(const std::string& str);
+std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str);
 std::string EncodeBase64(Span<const unsigned char> input);
 inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
 inline std::string EncodeBase64(const std::string& str) { return EncodeBase64(MakeUCharSpan(str)); }
-std::optional<std::vector<unsigned char>> DecodeBase32(const char* p);
-std::optional<std::vector<unsigned char>> DecodeBase32(const std::string& str);
+std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str);
 
 /**
  * Base32 encode.
