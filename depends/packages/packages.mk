@@ -5,7 +5,7 @@ qrencode_android_packages = qrencode
 qrencode_darwin_packages = qrencode
 qrencode_mingw32_packages = qrencode
 
-qt_linux_packages := qt expat libxcb xcb_proto libXau xproto freetype fontconfig libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm libffi
+qt_linux_packages := qt expat libxcb xcb_proto libXau xproto freetype fontconfig libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm libffi wayland
 qt_linux_native_packages := native_wayland_scanner
 
 qt_android_packages=qt
