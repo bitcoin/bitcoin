@@ -23,7 +23,8 @@ FUZZ_TARGET(psbt)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     PartiallySignedTransaction psbt_mut;
     std::string error;
-    if (!DecodeRawPSBT(psbt_mut, fuzzed_data_provider.ConsumeRandomLengthString(), error)) {
+    auto str = fuzzed_data_provider.ConsumeRandomLengthString();
+    if (!DecodeRawPSBT(psbt_mut, MakeByteSpan(str), error)) {
         return;
     }
     const PartiallySignedTransaction psbt = psbt_mut;
@@ -70,7 +71,8 @@ FUZZ_TARGET(psbt)
     }
 
     PartiallySignedTransaction psbt_merge;
-    if (!DecodeRawPSBT(psbt_merge, fuzzed_data_provider.ConsumeRandomLengthString(), error)) {
+    str = fuzzed_data_provider.ConsumeRandomLengthString();
+    if (!DecodeRawPSBT(psbt_merge, MakeByteSpan(str), error)) {
         psbt_merge = psbt;
     }
     psbt_mut = psbt;

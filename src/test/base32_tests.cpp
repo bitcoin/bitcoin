@@ -23,9 +23,9 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
         strEnc = EncodeBase32(vstrIn[i], false);
         BOOST_CHECK_EQUAL(strEnc, vstrOutNoPadding[i]);
         bool invalid;
-        std::string strDec = DecodeBase32(vstrOut[i], &invalid);
+        auto dec = DecodeBase32(vstrOut[i], &invalid);
         BOOST_CHECK(!invalid);
-        BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
+        BOOST_CHECK_MESSAGE(MakeByteSpan(dec) == MakeByteSpan(vstrIn[i]), vstrOut[i]);
     }
 
     // Decoding strings with embedded NUL characters should fail
