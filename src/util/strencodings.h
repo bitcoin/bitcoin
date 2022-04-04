@@ -249,15 +249,26 @@ bool TimingResistantEqual(const T& a, const T& b)
  */
 [[nodiscard]] bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out);
 
+namespace {
+/** Helper class for the default infn argument to ConvertBits (just returns the input). */
+struct IntIdentity
+{
+    [[maybe_unused]] int operator()(int x) const { return x; }
+};
+
+} // namespace
+
 /** Convert from one power-of-2 number base to another. */
-template<int frombits, int tobits, bool pad, typename O, typename I>
-bool ConvertBits(const O& outfn, I it, I end) {
+template<int frombits, int tobits, bool pad, typename O, typename It, typename I = IntIdentity>
+bool ConvertBits(O outfn, It it, It end, I infn = {}) {
     size_t acc = 0;
     size_t bits = 0;
     constexpr size_t maxv = (1 << tobits) - 1;
     constexpr size_t max_acc = (1 << (frombits + tobits - 1)) - 1;
     while (it != end) {
-        acc = ((acc << frombits) | *it) & max_acc;
+        int v = infn(*it);
+        if (v < 0) return false;
+        acc = ((acc << frombits) | v) & max_acc;
         bits += frombits;
         while (bits >= tobits) {
             bits -= tobits;
