@@ -66,17 +66,14 @@ bool IsHex(std::string_view str)
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
-bool IsHexNumber(const std::string& str)
+bool IsHexNumber(std::string_view str)
 {
-    size_t starting_location = 0;
-    if (str.size() > 2 && *str.begin() == '0' && *(str.begin()+1) == 'x') {
-        starting_location = 2;
-    }
-    for (const char c : str.substr(starting_location)) {
+    if (str.substr(0, 2) == "0x") str.remove_prefix(2);
+    for (char c : str) {
         if (HexDigit(c) < 0) return false;
     }
     // Return false for empty string or "0x".
-    return (str.size() > starting_location);
+    return str.size() > 0;
 }
 
 std::vector<unsigned char> ParseHex(std::string_view str)
