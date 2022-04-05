@@ -522,7 +522,6 @@ crypto_libbitcoin_crypto_sse41_la_LDFLAGS = $(AM_LDFLAGS) -static
 crypto_libbitcoin_crypto_sse41_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
 crypto_libbitcoin_crypto_sse41_la_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libbitcoin_crypto_sse41_la_CXXFLAGS += $(SSE41_CXXFLAGS)
-crypto_libbitcoin_crypto_sse41_la_CPPFLAGS += -DENABLE_SSE41
 crypto_libbitcoin_crypto_sse41_la_SOURCES = crypto/sha256_sse41.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
