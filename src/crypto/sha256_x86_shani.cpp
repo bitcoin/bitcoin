@@ -6,6 +6,10 @@
 // Written and placed in public domain by Jeffrey Walton.
 // Based on code from Intel, and by Sean Gulley for the miTLS project.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif //HAVE_CONFIG_H
+
 #ifdef ENABLE_X86_SHANI
 
 #include <stdint.h>
