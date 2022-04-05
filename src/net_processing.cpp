@@ -2362,16 +2362,15 @@ std::string RejectCodeToString(const unsigned char code)
     return "";
 }
 
-bool static ValidateDSTX(CCoinJoinBroadcastTx dstx, uint256 hashTx, bool &bReturn)
+std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CCoinJoinBroadcastTx dstx, uint256 hashTx)
 {
-    bReturn = true;
     if (!dstx.IsValidStructure()) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
-        return false;
+        return {false, true};
     }
-    if(CCoinJoin::GetDSTX(hashTx)) {
+    if (CCoinJoin::GetDSTX(hashTx)) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
-        return true; // not an error
+        return {true, true}; // not an error
     }
 
     const CBlockIndex* pindex{nullptr};
@@ -2387,29 +2386,28 @@ bool static ValidateDSTX(CCoinJoinBroadcastTx dstx, uint256 hashTx, bool &bRetur
         if (dmn) break;
         pindex = pindex->pprev;
     }
-    if(!dmn) {
+    if (!dmn) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
-        return false;
+        return {false, true};
     }
 
     if (!mmetaman.GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
-        return true;
+        return {true, true};
         // TODO: Not an error? Could it be that someone is relaying old DSTXes
         // we have no idea about (e.g we were offline)? How to handle them?
     }
 
     if (!dstx.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
         LogPrint(BCLog::COINJOIN, "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
-        return false;
+        return {false, true};
     }
 
     LogPrint(BCLog::COINJOIN, "DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
     mempool.PrioritiseTransaction(hashTx, 0.1*COIN);
     mmetaman.DisallowMixing(dmn->proTxHash);
 
-    bReturn = false;
-    return true;
+    return {true, false};
 }
 
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
@@ -3199,11 +3197,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (nInvType == MSG_DSTX) {
-
            // Validate DSTX and return bRet if we need to return from here
-           bool bDoReturn = false;
            uint256 hashTx = tx.GetHash();
-           bool bRet = ValidateDSTX(dstx, hashTx, bDoReturn);
+           const auto& [bRet, bDoReturn] = ValidateDSTX(dstx, hashTx);
            if (bDoReturn) {
                return bRet;
            }
