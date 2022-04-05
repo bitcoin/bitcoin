@@ -8,6 +8,10 @@
 // Barry O'Rourke for the mbedTLS project.
 // Variant specialized for 64-byte inputs added by Pieter Wuille.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif //HAVE_CONFIG_H
+
 #ifdef ENABLE_ARM_SHANI
 
 #include <array>
