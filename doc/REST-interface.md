@@ -76,17 +76,7 @@ Given a height: returns hash of block in best-block-chain at height provided.
 
 Returns various state info regarding block chain processing.
 Only supports JSON as output format.
-* chain : (string) current network name (main, test, signet, regtest)
-* blocks : (numeric) the current number of blocks processed in the server
-* headers : (numeric) the current number of headers we have validated
-* bestblockhash : (string) the hash of the currently best block
-* difficulty : (numeric) the current difficulty
-* mediantime : (numeric) the median time of the 11 blocks before the most recent block on the blockchain
-* verificationprogress : (numeric) estimate of verification progress [0..1]
-* chainwork : (string) total amount of work in active chain, in hexadecimal
-* pruned : (boolean) if the blocks are subject to pruning
-* pruneheight : (numeric) highest block available
-* softforks : (array) status of softforks in progress
+Refer to the `getblockchaininfo` RPC help for details.
 
 #### Query UTXO set
 `GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
