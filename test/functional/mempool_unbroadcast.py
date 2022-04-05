@@ -9,20 +9,18 @@ import time
 
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    create_confirmed_utxos,
-    MAX_INITIAL_BROADCAST_DELAY,
-)
+from test_framework.util import assert_equal
+from test_framework.wallet import MiniWallet
 
 class MempoolUnbroadcastTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
+        if self.is_wallet_compiled():
+            self.requires_wallet = True
 
     def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
         self.test_broadcast()
         self.test_txn_removal()
 
@@ -30,30 +28,25 @@ class MempoolUnbroadcastTest(SyscoinTestFramework):
         self.log.info("Test that mempool reattempts delivery of locally submitted transaction")
         node = self.nodes[0]
 
-        min_relay_fee = node.getnetworkinfo()["relayfee"]
-        utxos = create_confirmed_utxos(self, min_relay_fee, node, 10)
-
         self.disconnect_nodes(0, 1)
 
         self.log.info("Generate transactions that only node 0 knows about")
 
-        # generate a wallet txn
-        addr = node.getnewaddress()
-        wallet_tx_hsh = node.sendtoaddress(addr, 0.0001)
+        if self.is_wallet_compiled():
+            # generate a wallet txn
+            addr = node.getnewaddress()
+            wallet_tx_hsh = node.sendtoaddress(addr, 0.0001)
 
         # generate a txn using sendrawtransaction
-        us0 = utxos.pop()
-        inputs = [{"txid": us0["txid"], "vout": us0["vout"]}]
-        outputs = {addr: 0.0001}
-        tx = node.createrawtransaction(inputs, outputs)
-        node.settxfee(min_relay_fee)
-        txF = node.fundrawtransaction(tx)
-        txFS = node.signrawtransactionwithwallet(txF["hex"])
+        txFS = self.wallet.create_self_transfer(from_node=node)
         rpc_tx_hsh = node.sendrawtransaction(txFS["hex"])
 
         # check transactions are in unbroadcast using rpc
         mempoolinfo = self.nodes[0].getmempoolinfo()
-        assert_equal(mempoolinfo['unbroadcastcount'], 2)
+        unbroadcast_count = 1
+        if self.is_wallet_compiled():
+            unbroadcast_count += 1
+        assert_equal(mempoolinfo['unbroadcastcount'], unbroadcast_count)
         mempool = self.nodes[0].getrawmempool(True)
         for tx in mempool:
             assert_equal(mempool[tx]['unbroadcast'], True)
@@ -61,7 +54,8 @@ class MempoolUnbroadcastTest(SyscoinTestFramework):
         # check that second node doesn't have these two txns
         mempool = self.nodes[1].getrawmempool()
         assert rpc_tx_hsh not in mempool
-        assert wallet_tx_hsh not in mempool
+        if self.is_wallet_compiled():
+            assert wallet_tx_hsh not in mempool
 
         # ensure that unbroadcast txs are persisted to mempool.dat
         self.restart_node(0)
@@ -74,7 +68,8 @@ class MempoolUnbroadcastTest(SyscoinTestFramework):
         self.sync_mempools(timeout=30)
         mempool = self.nodes[1].getrawmempool()
         assert rpc_tx_hsh in mempool
-        assert wallet_tx_hsh in mempool
+        if self.is_wallet_compiled():
+            assert wallet_tx_hsh in mempool
 
         # check that transactions are no longer in first node's unbroadcast set
         mempool = self.nodes[0].getrawmempool(True)
@@ -101,8 +96,7 @@ class MempoolUnbroadcastTest(SyscoinTestFramework):
 
         # since the node doesn't have any connections, it will not receive
         # any GETDATAs & thus the transaction will remain in the unbroadcast set.
-        addr = node.getnewaddress()
-        txhsh = node.sendtoaddress(addr, 0.0001)
+        txhsh = self.wallet.send_self_transfer(from_node=node)["txid"]
 
         # check transaction was removed from unbroadcast set due to presence in
         # a block
