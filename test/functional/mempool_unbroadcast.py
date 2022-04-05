@@ -9,7 +9,7 @@ import time
 
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, MAX_INITIAL_BROADCAST_DELAY
 from test_framework.wallet import MiniWallet
 
 class MempoolUnbroadcastTest(SyscoinTestFramework):
