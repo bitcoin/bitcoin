@@ -91,11 +91,6 @@ static constexpr bool IsSmallInteger(opcodetype opcode)
     return opcode >= OP_1 && opcode <= OP_16;
 }
 
-static constexpr bool IsPushdataOp(opcodetype opcode)
-{
-    return opcode > OP_FALSE && opcode <= OP_PUSHDATA4;
-}
-
 /** Retrieve a minimally-encoded number in range [min,max] from an (opcode, data) pair,
  *  whether it's OP_n or through a push. */
 static std::optional<int> GetScriptNumber(opcodetype opcode, valtype data, int min, int max)
