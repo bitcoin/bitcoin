@@ -101,15 +101,15 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     QT_QPA_PLATFORM=xcb     src/qt/test/test_dash-qt  # Linux
 //     QT_QPA_PLATFORM=windows src/qt/test/test_dash-qt  # Windows
 //     QT_QPA_PLATFORM=cocoa   src/qt/test/test_dash-qt  # macOS
-void TestGUI()
+void TestGUI(interfaces::Node& node)
 {
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    auto chain = interfaces::MakeChain();
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), CreateMockWalletDatabase());
+    node.context()->connman = std::move(test.m_node.connman);
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), CreateMockWalletDatabase());
     AddWallet(wallet);
     bool firstRun;
     wallet->LoadWallet(firstRun);
@@ -136,10 +136,9 @@ void TestGUI()
     // Create widgets for sending coins and listing transactions.
     SendCoinsDialog sendCoinsDialog;
     TransactionView transactionView;
-    auto node = interfaces::MakeNode();
-    OptionsModel optionsModel(*node);
-    ClientModel clientModel(*node, &optionsModel);
-    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &optionsModel);;
+    OptionsModel optionsModel(node);
+    ClientModel clientModel(node, &optionsModel);
+    WalletModel walletModel(interfaces::MakeWallet(wallet), node, &optionsModel);;
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -232,5 +231,5 @@ void WalletTests::walletTests()
         return;
     }
 #endif
-    TestGUI();
+    TestGUI(m_node);
 }

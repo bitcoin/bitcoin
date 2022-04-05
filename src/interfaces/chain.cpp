@@ -11,6 +11,7 @@
 #include <interfaces/wallet.h>
 #include <net.h>
 #include <node/coin.h>
+#include <node/context.h>
 #include <node/transaction.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -239,6 +240,7 @@ public:
 class ChainImpl : public Chain
 {
 public:
+    explicit ChainImpl(NodeContext& node) : m_node(node) {}
     std::unique_ptr<Chain::Lock> lock(bool try_lock) override
     {
         auto lock = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
@@ -281,7 +283,7 @@ public:
     }
     bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
     {
-        const TransactionError err = BroadcastTransaction(tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
+        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
         // that Chain clients do not need to know about.
@@ -325,7 +327,7 @@ public:
         LOCK(cs_main);
         return ::fHavePruned;
     }
-    bool p2pEnabled() override { return g_connman != nullptr; }
+    bool p2pEnabled() override { return m_node.connman != nullptr; }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !::ChainstateActive().IsInitialBlockDownload(); }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
@@ -366,9 +368,10 @@ public:
             notifications.TransactionAddedToMempool(entry.GetSharedTx(), 0);
         }
     }
+    NodeContext& m_node;
 };
 } // namespace
 
-std::unique_ptr<Chain> MakeChain() { return MakeUnique<ChainImpl>(); }
+std::unique_ptr<Chain> MakeChain(NodeContext& node) { return MakeUnique<ChainImpl>(node); }
 
 } // namespace interfaces

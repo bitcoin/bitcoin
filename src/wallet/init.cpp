@@ -7,6 +7,7 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <net.h>
+#include <node/context.h>
 #include <util/error.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -30,8 +31,8 @@ public:
     //! Wallets parameter interaction
     bool ParameterInteraction() const override;
 
-    //! Add wallets that should be opened to list of init interfaces.
-    void Construct(InitInterfaces& interfaces) const override;
+    //! Add wallets that should be opened to list of chain clients.
+    void Construct(NodeContext& node) const override;
 
     // Dash Specific Wallet Init
     void AutoLockMasternodeCollaterals() const override;
@@ -165,14 +166,14 @@ bool WalletInit::ParameterInteraction() const
     return true;
 }
 
-void WalletInit::Construct(InitInterfaces& interfaces) const
+void WalletInit::Construct(NodeContext& node) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
         return;
     }
     gArgs.SoftSetArg("-wallet", "");
-    interfaces.chain_clients.emplace_back(interfaces::MakeWalletClient(*interfaces.chain, gArgs.GetArgs("-wallet")));
+    node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet")));
 }
 
 

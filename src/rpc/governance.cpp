@@ -13,7 +13,9 @@
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
+#include <node/context.h>
 #include <net.h>
+#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/system.h>
@@ -410,9 +412,9 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     if (fMissingConfirmations) {
         governance.AddPostponedObject(govobj);
-        govobj.Relay(*g_connman);
+        govobj.Relay(*g_rpc_node->connman);
     } else {
-        governance.AddGovernanceObject(govobj, *g_connman);
+        governance.AddGovernanceObject(govobj, *g_rpc_node->connman);
     }
 
     return govobj.GetHash().ToString();
@@ -510,7 +512,7 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if (governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+    if (governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
         nSuccessful++;
         statusObj.pushKV("result", "success");
     } else {
@@ -571,7 +573,7 @@ static UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         }
 
         CGovernanceException exception;
-        if (governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+        if (governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -1143,7 +1145,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if (governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+    if (governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
