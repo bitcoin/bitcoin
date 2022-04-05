@@ -13,74 +13,93 @@
 #include <optional>
 
 namespace wallet {
-//! target minimum change amount
-static constexpr CAmount MIN_CHANGE{COIN / 100};
-//! final minimum change amount after paying for fees
-static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
+//! lower bound for randomly-chosen target change amount
+static constexpr CAmount CHANGE_LOWER{50000};
+//! upper bound for randomly-chosen target change amount
+static constexpr CAmount CHANGE_UPPER{1000000};
 
 /** A UTXO under consideration for use in funding a new transaction. */
-class CInputCoin {
-public:
-    CInputCoin(const CTransactionRef& tx, unsigned int i)
-    {
-        if (!tx)
-            throw std::invalid_argument("tx should not be null");
-        if (i >= tx->vout.size())
-            throw std::out_of_range("The output index is out of range");
-
-        outpoint = COutPoint(tx->GetHash(), i);
-        txout = tx->vout[i];
-        effective_value = txout.nValue;
-    }
-
-    CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(tx, i)
-    {
-        m_input_bytes = input_bytes;
-    }
-
-    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in)
-    {
-        outpoint = outpoint_in;
-        txout = txout_in;
-        effective_value = txout.nValue;
-    }
-
-    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in, int input_bytes) : CInputCoin(outpoint_in, txout_in)
-    {
-        m_input_bytes = input_bytes;
-    }
-
+struct COutput {
+    /** The outpoint identifying this UTXO */
     COutPoint outpoint;
+
+    /** The output itself */
     CTxOut txout;
-    CAmount effective_value;
-    CAmount m_fee{0};
-    CAmount m_long_term_fee{0};
+
+    /**
+     * Depth in block chain.
+     * If > 0: the tx is on chain and has this many confirmations.
+     * If = 0: the tx is waiting confirmation.
+     * If < 0: a conflicting tx is on chain and has this many confirmations. */
+    int depth;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
-    int m_input_bytes{-1};
+    int input_bytes;
 
-    bool operator<(const CInputCoin& rhs) const {
+    /** Whether we have the private keys to spend this output */
+    bool spendable;
+
+    /** Whether we know how to spend this output, ignoring the lack of keys */
+    bool solvable;
+
+    /**
+     * Whether this output is considered safe to spend. Unconfirmed transactions
+     * from outside keys and unconfirmed replacement transactions are considered
+     * unsafe and will not be used to fund new spending transactions.
+     */
+    bool safe;
+
+    /** The time of the transaction containing this output as determined by CWalletTx::nTimeSmart */
+    int64_t time;
+
+    /** Whether the transaction containing this output is sent from the owning wallet */
+    bool from_me;
+
+    /** The output's value minus fees required to spend it. Initialized as the output's absolute value. */
+    CAmount effective_value;
+
+    /** The fee required to spend this output at the transaction's target feerate. */
+    CAmount fee{0};
+
+    /** The fee required to spend this output at the consolidation feerate. */
+    CAmount long_term_fee{0};
+
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
+        : outpoint{outpoint},
+          txout{txout},
+          depth{depth},
+          input_bytes{input_bytes},
+          spendable{spendable},
+          solvable{solvable},
+          safe{safe},
+          time{time},
+          from_me{from_me},
+          effective_value{txout.nValue}
+    {}
+
+    std::string ToString() const;
+
+    bool operator<(const COutput& rhs) const
+    {
         return outpoint < rhs.outpoint;
-    }
-
-    bool operator!=(const CInputCoin& rhs) const {
-        return outpoint != rhs.outpoint;
-    }
-
-    bool operator==(const CInputCoin& rhs) const {
-        return outpoint == rhs.outpoint;
     }
 };
 
 /** Parameters for one iteration of Coin Selection. */
-struct CoinSelectionParams
-{
+struct CoinSelectionParams {
+    /** Randomness to use in the context of coin selection. */
+    FastRandomContext& rng_fast;
     /** Size of a change output in bytes, determined by the output type. */
     size_t change_output_size = 0;
     /** Size of the input to spend a change output in virtual bytes. */
     size_t change_spend_size = 0;
+    /** Mininmum change to target in Knapsack solver: select coins to cover the payment and
+     * at least this value of change. */
+    CAmount m_min_change_target{0};
     /** Cost of creating the change output. */
     CAmount m_change_fee{0};
+    /** The pre-determined minimum value to target when funding a change output. */
+    CAmount m_change_target{0};
     /** Cost of creating the change output + cost of spending the change output in the future. */
     CAmount m_cost_of_change{0};
     /** The targeted feerate of the transaction being built. */
@@ -100,17 +119,22 @@ struct CoinSelectionParams
      * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
     bool m_avoid_partial_spends = false;
 
-    CoinSelectionParams(size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial) :
-        change_output_size(change_output_size),
-        change_spend_size(change_spend_size),
-        m_effective_feerate(effective_feerate),
-        m_long_term_feerate(long_term_feerate),
-        m_discard_feerate(discard_feerate),
-        tx_noinputs_size(tx_noinputs_size),
-        m_avoid_partial_spends(avoid_partial)
-    {}
-    CoinSelectionParams() {}
+    CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
+                        CAmount min_change_target, CFeeRate effective_feerate,
+                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
+        : rng_fast{rng_fast},
+          change_output_size(change_output_size),
+          change_spend_size(change_spend_size),
+          m_min_change_target(min_change_target),
+          m_effective_feerate(effective_feerate),
+          m_long_term_feerate(long_term_feerate),
+          m_discard_feerate(discard_feerate),
+          tx_noinputs_size(tx_noinputs_size),
+          m_avoid_partial_spends(avoid_partial)
+    {
+    }
+    CoinSelectionParams(FastRandomContext& rng_fast)
+        : rng_fast{rng_fast} {}
 };
 
 /** Parameters for filtering which OutputGroups we may use in coin selection.
@@ -139,7 +163,7 @@ struct CoinEligibilityFilter
 struct OutputGroup
 {
     /** The list of UTXOs contained in this output group. */
-    std::vector<CInputCoin> m_outputs;
+    std::vector<COutput> m_outputs;
     /** Whether the UTXOs were sent by the wallet to itself. This is relevant because we may want at
      * least a certain number of confirmations on UTXOs received from outside wallets while trusting
      * our own UTXOs more. */
@@ -176,7 +200,7 @@ struct OutputGroup
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
     {}
 
-    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only);
+    void Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
     CAmount GetSelectionAmount() const;
 };
@@ -198,13 +222,28 @@ struct OutputGroup
  * @param[in] use_effective_value Whether to use the input's effective value (when true) or the real value (when false).
  * @return The waste
  */
-[[nodiscard]] CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
+[[nodiscard]] CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value = true);
+
+
+/** Chooose a random change target for each transaction to make it harder to fingerprint the Core
+ * wallet based on the change output values of transactions it creates.
+ * The random value is between 50ksat and min(2 * payment_value, 1milsat)
+ * When payment_value <= 25ksat, the value is just 50ksat.
+ *
+ * Making change amounts similar to the payment value may help disguise which output(s) are payments
+ * are which ones are change. Using double the payment value may increase the number of inputs
+ * needed (and thus be more expensive in fees), but breaks analysis techniques which assume the
+ * coins selected are just sufficient to cover the payment amount ("unnecessary input" heuristic).
+ *
+ * @param[in]   payment_value   Average payment value of the transaction output(s).
+ */
+[[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng);
 
 struct SelectionResult
 {
 private:
     /** Set of inputs selected by the algorithm to use in the transaction */
-    std::set<CInputCoin> m_selected_inputs;
+    std::set<COutput> m_selected_inputs;
     /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
     const CAmount m_target;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
@@ -230,9 +269,9 @@ public:
     [[nodiscard]] CAmount GetWaste() const;
 
     /** Get m_selected_inputs */
-    const std::set<CInputCoin>& GetInputSet() const;
-    /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
-    std::vector<CInputCoin> GetShuffledInputVector() const;
+    const std::set<COutput>& GetInputSet() const;
+    /** Get the vector of COutputs that will be used to fill in a CTransaction's vin */
+    std::vector<COutput> GetShuffledInputVector() const;
 
     bool operator<(SelectionResult other) const;
 };
@@ -246,10 +285,11 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
  * @param[in]  target_value The target value to select for
  * @returns If successful, a SelectionResult, otherwise, std::nullopt
  */
-std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value);
+std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng);
 
 // Original coin selection algorithm as a fallback
-std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue);
+std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
+                                              CAmount change_target, FastRandomContext& rng);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_COINSELECTION_H

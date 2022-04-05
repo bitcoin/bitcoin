@@ -188,8 +188,7 @@ BASE_SCRIPTS = [
     'rpc_decodescript.py',
     'rpc_blockchain.py',
     'rpc_deprecated.py',
-    'wallet_disable.py --legacy-wallet',
-    'wallet_disable.py --descriptors',
+    'wallet_disable.py',
     'p2p_addr_relay.py',
     'p2p_getaddr_caching.py',
     'p2p_getdata.py',
@@ -225,8 +224,7 @@ BASE_SCRIPTS = [
     'feature_rbf.py --descriptors',
     'mempool_packages.py',
     'mempool_package_onemore.py',
-    'rpc_createmultisig.py --legacy-wallet',
-    'rpc_createmultisig.py --descriptors',
+    'rpc_createmultisig.py',
     'rpc_packages.py',
     'mempool_package_limits.py',
     'feature_versionbits_warning.py',
@@ -237,7 +235,6 @@ BASE_SCRIPTS = [
     'p2p_eviction.py',
     'wallet_signmessagewithaddress.py',
     'rpc_signmessagewithprivkey.py',
-    'rpc_generateblock.py',
     'rpc_generate.py',
     'wallet_balance.py --legacy-wallet',
     'wallet_balance.py --descriptors',
@@ -280,6 +277,8 @@ BASE_SCRIPTS = [
     'wallet_create_tx.py --legacy-wallet',
     'wallet_send.py --legacy-wallet',
     'wallet_send.py --descriptors',
+    'wallet_sendall.py --legacy-wallet',
+    'wallet_sendall.py --descriptors',
     'wallet_create_tx.py --descriptors',
     'wallet_taproot.py',
     'wallet_inactive_hdchains.py',
@@ -309,8 +308,7 @@ BASE_SCRIPTS = [
     'feature_txindex_compatibility.py',
     'feature_logging.py',
     'feature_anchors.py',
-    'feature_coinstatsindex.py --legacy-wallet',
-    'feature_coinstatsindex.py --descriptors',
+    'feature_coinstatsindex.py',
     'wallet_orphanedreward.py',
     'wallet_timelock.py',
     'p2p_node_network_limited.py',
@@ -589,10 +587,11 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     # Clean up dangling processes if any. This may only happen with --failfast option.
     # Killing the process group will also terminate the current process but that is
     # not an issue
-    if len(job_queue.jobs):
+    if not os.getenv("CI_FAILFAST_TEST_LEAVE_DANGLING") and len(job_queue.jobs):
         os.killpg(os.getpgid(0), signal.SIGKILL)
 
     sys.exit(not all_passed)
+
 
 def print_results(test_results, max_len_name, runtime):
     results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS   ", "DURATION") + BOLD[0]

@@ -167,6 +167,14 @@ std::unique_ptr<interfaces::Handler> HandleLoadWallet(WalletContext& context, Lo
     return interfaces::MakeHandler([&context, it] { LOCK(context.wallets_mutex); context.wallet_load_fns.erase(it); });
 }
 
+void NotifyWalletLoaded(WalletContext& context, const std::shared_ptr<CWallet>& wallet)
+{
+    LOCK(context.wallets_mutex);
+    for (auto& load_wallet : context.wallet_load_fns) {
+        load_wallet(interfaces::MakeWallet(context, wallet));
+    }
+}
+
 static Mutex g_loading_wallet_mutex;
 static Mutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
@@ -232,6 +240,8 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
             status = DatabaseStatus::FAILED_LOAD;
             return nullptr;
         }
+
+        NotifyWalletLoaded(context, wallet);
         AddWallet(context, wallet);
         wallet->postInitProcess();
 
@@ -348,6 +358,8 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             wallet->Lock();
         }
     }
+
+    NotifyWalletLoaded(context, wallet);
     AddWallet(context, wallet);
     wallet->postInitProcess();
 
@@ -366,6 +378,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
+    ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
 
     if (!fs::exists(backup_file)) {
@@ -2901,13 +2914,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
     if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
         return nullptr;
-    }
-
-    {
-        LOCK(context.wallets_mutex);
-        for (auto& load_wallet : context.wallet_load_fns) {
-            load_wallet(interfaces::MakeWallet(context, walletInstance));
-        }
     }
 
     {

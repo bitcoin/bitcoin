@@ -1,46 +1,9 @@
 Fix compiling with GCC 11
 
-See: https://bugreports.qt.io/browse/QTBUG-90395.
+Upstream:
+ - bug report: https://bugreports.qt.io/browse/QTBUG-89977
+ - fix in Qt 6.1: 813a928c7c3cf98670b6043149880ed5c955efb9
 
-Upstream commits:
- - Qt 5.15 -- unavailable as open source
- - Qt 6.0: b2af6332ea37e45ab230a7a5d2d278f86d961b83
- - Qt 6.1: 9c56d4da2ff631a8c1c30475bd792f6c86bda53c
-
---- old/qtbase/src/corelib/global/qendian.h
-+++ new/qtbase/src/corelib/global/qendian.h
-@@ -44,6 +44,8 @@
- #include <QtCore/qfloat16.h>
- #include <QtCore/qglobal.h>
- 
-+#include <limits>
-+
- // include stdlib.h and hope that it defines __GLIBC__ for glibc-based systems
- #include <stdlib.h>
- #include <string.h>
-
---- old/qtbase/src/corelib/global/qfloat16.h
-+++ new/qtbase/src/corelib/global/qfloat16.h
-@@ -43,6 +43,7 @@
- 
- #include <QtCore/qglobal.h>
- #include <QtCore/qmetatype.h>
-+#include <limits>
- #include <string.h>
- 
- #if defined(QT_COMPILER_SUPPORTS_F16C) && defined(__AVX2__) && !defined(__F16C__)
-
---- old/qtbase/src/tools/moc/generator.cpp
-+++ new/qtbase/src/tools/moc/generator.cpp
-@@ -40,6 +40,8 @@
- #include <QtCore/qplugin.h>
- #include <QtCore/qstringview.h>
- 
-+#include <limits>
-+
- #include <math.h>
- #include <stdio.h>
- 
 --- old/qtbase/src/corelib/text/qbytearraymatcher.h
 +++ new/qtbase/src/corelib/text/qbytearraymatcher.h
 @@ -42,6 +42,8 @@
@@ -52,6 +15,12 @@ Upstream commits:
  QT_BEGIN_NAMESPACE
  
  
+
+Upstream fix and backports:
+ - Qt 6.1: 3eab20ad382569cb2c9e6ccec2322c3d08c0f716
+ - Qt 6.2: 380294a5971da85010a708dc23b0edec192cbf27
+ - Qt 6.3: 2b2b3155d9f6ba1e4f859741468fbc47db09292b
+
 --- old/qtbase/src/corelib/tools/qoffsetstringarray_p.h
 +++ new/qtbase/src/corelib/tools/qoffsetstringarray_p.h
 @@ -55,6 +55,7 @@

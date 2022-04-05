@@ -8,9 +8,9 @@ print-%: FORCE
 
 DIST_SUBDIRS = secp256k1
 
-AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS)
-AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS)
-AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
+AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS) $(CORE_LDFLAGS)
+AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS) $(CORE_CXXFLAGS)
+AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS) $(CORE_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
@@ -378,6 +378,7 @@ libbitcoin_node_a_SOURCES = \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
   rpc/server_util.cpp \
+  rpc/txoutproof.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   signet.cpp \
@@ -605,7 +606,6 @@ libbitcoin_util_a_SOURCES = \
   chainparamsbase.cpp \
   clientversion.cpp \
   compat/glibcxx_sanity.cpp \
-  compat/strnlen.cpp \
   fs.cpp \
   interfaces/echo.cpp \
   interfaces/handler.cpp \
@@ -620,6 +620,7 @@ libbitcoin_util_a_SOURCES = \
   util/asmap.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
+  util/check.cpp \
   util/error.cpp \
   util/fees.cpp \
   util/getuniquepath.cpp \
@@ -838,6 +839,7 @@ bitcoin_chainstate_SOURCES = \
   uint256.cpp \
   util/asmap.cpp \
   util/bytevectorhash.cpp \
+  util/check.cpp \
   util/getuniquepath.cpp \
   util/hasher.cpp \
   util/moneystr.cpp \

@@ -113,16 +113,6 @@
    fun:GetCoin
 }
 {
-   Suppress boost warning
-   Memcheck:Leak
-   fun:_Znwm
-   ...
-   fun:_ZN5boost9unit_test9framework5state17execute_test_treeEmjPKNS2_23random_generator_helperE
-   fun:_ZN5boost9unit_test9framework3runEmb
-   fun:_ZN5boost9unit_test14unit_test_mainEPFbvEiPPc
-   fun:main
-}
-{
    Suppress LogInstance still reachable memory warning
    Memcheck:Leak
    match-leak-kinds: reachable

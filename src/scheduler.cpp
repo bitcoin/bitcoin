@@ -111,7 +111,7 @@ static void Repeat(CScheduler& s, CScheduler::Function f, std::chrono::milliseco
 
 void CScheduler::scheduleEvery(CScheduler::Function f, std::chrono::milliseconds delta)
 {
-    scheduleFromNow([=] { Repeat(*this, f, delta); }, delta);
+    scheduleFromNow([this, f, delta] { Repeat(*this, f, delta); }, delta);
 }
 
 size_t CScheduler::getQueueInfo(std::chrono::system_clock::time_point& first,

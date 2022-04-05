@@ -444,7 +444,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion)", defaultBaseParams->OnionServiceTargetPort(), testnetBaseParams->OnionServiceTargetPort(), signetBaseParams->OnionServiceTargetPort(), regtestBaseParams->OnionServiceTargetPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-cjdnsreachable", "If set then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-cjdnsreachable", "If set, then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network, see doc/cjdns.md) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-connect=<ip>", "Connect only to the specified node; -noconnect disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-dns", strprintf("Allow DNS lookups for -addnode, -seednode and -connect (default: %u)", DEFAULT_NAME_LOOKUP), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -853,12 +853,14 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
     }
 
-    // if using block pruning, then disallow txindex and coinstatsindex
     if (args.GetIntArg("-prune", 0)) {
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX))
             return InitError(_("Prune mode is incompatible with -coinstatsindex."));
+        if (args.GetBoolArg("-reindex-chainstate", false)) {
+            return InitError(_("Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead."));
+        }
     }
 
     // If -forcednsseed is set to true, ensure -dnsseed has not been set to false
@@ -1300,6 +1302,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         for (int n = 0; n < NET_MAX; n++) {
             enum Network net = (enum Network)n;
+            assert(IsReachable(net));
             if (!nets.count(net))
                 SetReachable(net, false);
         }
@@ -1538,7 +1541,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        if (const auto error{CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db))}) {
+        if (const auto error{WITH_LOCK(cs_main, return CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db)))}) {
             return InitError(*error);
         }
 

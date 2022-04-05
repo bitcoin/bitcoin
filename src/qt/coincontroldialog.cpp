@@ -16,10 +16,11 @@
 #include <qt/platformstyle.h>
 #include <qt/walletmodel.h>
 
-#include <wallet/coincontrol.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <policy/policy.h>
+#include <wallet/coincontrol.h>
+#include <wallet/coinselection.h>
 #include <wallet/wallet.h>
 
 #include <QApplication>
@@ -32,7 +33,6 @@
 #include <QTreeWidget>
 
 using wallet::CCoinControl;
-using wallet::MIN_CHANGE;
 
 QList<CAmount> CoinControlDialog::payAmounts;
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
@@ -485,11 +485,10 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
             if (!CoinControlDialog::fSubtractFeeFromAmount)
                 nChange -= nPayFee;
 
-            // Never create dust outputs; if we would, just add the dust to the fee.
-            if (nChange > 0 && nChange < MIN_CHANGE)
-            {
+            if (nChange > 0) {
                 // Assumes a p2pkh script size
                 CTxOut txout(nChange, CScript() << std::vector<unsigned char>(24, 0));
+                // Never create dust outputs; if we would, just add the dust to the fee.
                 if (IsDust(txout, model->node().getDustRelayFee()))
                 {
                     nPayFee += nChange;

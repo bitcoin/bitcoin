@@ -8,6 +8,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/translation.h>
+#include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
@@ -55,7 +56,7 @@ static RPCHelpMan getwalletinfo()
                         {
                             {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
                             {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
-                        }},
+                        }, /*skip_type_check=*/true},
                         {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
                         {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
                     }},
@@ -220,6 +221,7 @@ static RPCHelpMan loadwallet()
 
     DatabaseOptions options;
     DatabaseStatus status;
+    ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
@@ -381,6 +383,7 @@ static RPCHelpMan createwallet()
 
     DatabaseOptions options;
     DatabaseStatus status;
+    ReadDatabaseArgs(*context.args, options);
     options.require_create = true;
     options.create_flags = flags;
     options.create_passphrase = passphrase;
@@ -641,6 +644,7 @@ RPCHelpMan fundrawtransaction();
 RPCHelpMan bumpfee();
 RPCHelpMan psbtbumpfee();
 RPCHelpMan send();
+RPCHelpMan sendall();
 RPCHelpMan walletprocesspsbt();
 RPCHelpMan walletcreatefundedpsbt();
 RPCHelpMan signrawtransactionwithwallet();
@@ -720,6 +724,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &setwalletflag,                  },
     { "wallet",             &signmessage,                    },
     { "wallet",             &signrawtransactionwithwallet,   },
+    { "wallet",             &sendall,                        },
     { "wallet",             &unloadwallet,                   },
     { "wallet",             &upgradewallet,                  },
     { "wallet",             &walletcreatefundedpsbt,         },
