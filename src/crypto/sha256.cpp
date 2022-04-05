@@ -586,13 +586,9 @@ std::string SHA256AutoDetect()
     bool have_sse4 = false;
     bool have_xsave = false;
     bool have_avx = false;
-    bool have_avx2 = false;
-    bool have_x86_shani = false;
-    bool enabled_avx = false;
-
-    (void)have_avx2;
-    (void)have_x86_shani;
-    (void)enabled_avx;
+    [[maybe_unused]] bool have_avx2 = false;
+    [[maybe_unused]] bool have_x86_shani = false;
+    [[maybe_unused]] bool enabled_avx = false;
 
     uint32_t eax, ebx, ecx, edx;
     GetCPUID(1, 0, eax, ebx, ecx, edx);
