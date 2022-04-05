@@ -79,7 +79,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/commitment -> llmq/utils -> llmq/commitment"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"
     "evo/deterministicmns -> validationinterface -> txmempool -> evo/deterministicmns"
-    "llmq/chainlocks -> llmq/instantsend -> validation -> llmq/chainlocks"
+    "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
     "policy/fees -> txmempool -> validation -> policy/fees"
