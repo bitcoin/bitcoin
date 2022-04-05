@@ -22,6 +22,7 @@ bench_syscoin/bench_syscoin.vcxproj
 libtest_util/libtest_util.vcxproj
 
 /syscoin_config.h
+/common.init.vcxproj
 
 */Win32
 libsyscoin_qt/QtGeneratedFiles/*
