@@ -306,6 +306,7 @@ BASE_SCRIPTS = [
     'p2p_ping.py',
     'rpc_scantxoutset.py',
     'feature_txindex_compatibility.py',
+    'feature_unsupported_utxo_db.py',
     'feature_logging.py',
     'feature_anchors.py',
     'feature_coinstatsindex.py',
