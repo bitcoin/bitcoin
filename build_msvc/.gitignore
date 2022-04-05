@@ -22,6 +22,7 @@ bench_bitcoin/bench_bitcoin.vcxproj
 libtest_util/libtest_util.vcxproj
 
 /bitcoin_config.h
+/common.init.vcxproj
 
 */Win32
 libbitcoin_qt/QtGeneratedFiles/*
