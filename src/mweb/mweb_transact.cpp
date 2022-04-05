@@ -140,6 +140,10 @@ void Transact::AddMWEBTx(InProcessTx& new_tx)
         m_wallet.GetMWWallet()->SaveToWallet(output_coins);
     }
 
+    // TxBuilder::BuildTx only builds partial coins.
+    // We still need to rewind them to populate any remaining fields, like address index.
+    m_wallet.GetMWWallet()->RewindOutputs(CTransaction(new_tx.tx));
+
     // Update pegin output
     auto pegins = new_tx.tx.mweb_tx.GetPegIns();
     if (!pegins.empty()) {

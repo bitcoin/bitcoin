@@ -927,17 +927,14 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const boost::optional<MWEB::
 
     if (!fInsertedNew)
     {
-        if (confirm.status != wtx.m_confirm.status) {
+        if (confirm != wtx.m_confirm) {
             wtx.m_confirm.status = confirm.status;
             wtx.m_confirm.nIndex = confirm.nIndex;
             wtx.m_confirm.hashBlock = confirm.hashBlock;
             wtx.m_confirm.block_height = confirm.block_height;
             fUpdated = true;
-        } else {
-            assert(wtx.m_confirm.nIndex == confirm.nIndex);
-            assert(wtx.m_confirm.hashBlock == confirm.hashBlock);
-            assert(wtx.m_confirm.block_height == confirm.block_height);
         }
+
         // If we have a witness-stripped version of this transaction, and we
         // see a new version with a witness, then we must be upgrading a pre-segwit
         // wallet.  Store the new version of the transaction with the witness,
@@ -945,6 +942,13 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const boost::optional<MWEB::
         // TODO: Store all versions of the transaction, instead of just one.
         if (tx->HasWitness() && !wtx.tx->HasWitness()) {
             wtx.SetTx(tx);
+            fUpdated = true;
+        }
+
+        // MWEB: If we have only a partial transaction, and tx is not partial, replace it.
+        if (wtx.tx->IsNull() && !tx->IsNull()) {
+            wtx.SetTx(tx);
+            wtx.mweb_wtx_info = mweb_wtx_info;
             fUpdated = true;
         }
     }
@@ -995,7 +999,7 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
 
     uint256 wtx_hash = wtx_tmp.GetHash();
     if (mapWallet.count(wtx_hash) > 0 && wtx_tmp.tx->IsNull()) {
-        LogPrintf("%s already exists\n", wtx_hash.ToString());
+        WalletLogPrintf("%s already exists\n", wtx_hash.ToString());
         return true;
     }
 
@@ -2086,7 +2090,12 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 for (const Kernel& kernel : block.mweb_block.m_block->GetKernels()) {
                     const CWalletTx* wtx = FindWalletTxByKernelId(kernel.GetKernelID());
                     if (wtx) {
-                        SyncTransaction(wtx->tx, wtx->mweb_wtx_info, {CWalletTx::Status::CONFIRMED, block_height, block_hash, wtx->m_confirm.nIndex}, fUpdate);
+                        SyncTransaction(
+                            wtx->tx,
+                            wtx->mweb_wtx_info,
+                            {CWalletTx::Status::CONFIRMED, block_height, block_hash, wtx->m_confirm.nIndex},
+                            fUpdate
+                        );
                     }
                 }
 
@@ -2095,7 +2104,12 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     if (mweb_wallet->RewindOutput(output, mweb_coin)) {
                         const CWalletTx* wtx = FindWalletTx(mweb_coin.output_id);
                         if (wtx) {
-                            SyncTransaction(wtx->tx, wtx->mweb_wtx_info, {CWalletTx::Status::CONFIRMED, block_height, block_hash, wtx->m_confirm.nIndex}, fUpdate);
+                            SyncTransaction(
+                                wtx->tx,
+                                wtx->mweb_wtx_info,
+                                {CWalletTx::Status::CONFIRMED, block_height, block_hash, wtx->m_confirm.nIndex},
+                                fUpdate
+                            );
                         } else {
                             AddToWallet(
                                 MakeTransactionRef(),
@@ -2117,7 +2131,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                                 SyncTransaction(
                                     tx_iter->second.tx,
                                     tx_iter->second.mweb_wtx_info,
-                                    {CWalletTx::Status::CONFIRMED, block_height, block_hash, 0},
+                                    {CWalletTx::Status::CONFIRMED, block_height, block_hash, tx_iter->second.m_confirm.nIndex},
                                     fUpdate
                                 );
                             }

@@ -171,6 +171,26 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
     entry.pushKV("walletconflicts", conflicts);
     entry.pushKV("time", wtx.GetTxTime());
     entry.pushKV("timereceived", (int64_t)wtx.nTimeReceived);
+    
+    if (wtx.mweb_wtx_info) {
+        UniValue partial_mweb(UniValue::VOBJ);
+
+        if (wtx.mweb_wtx_info->received_coin) {
+            UniValue received_entry(UniValue::VOBJ);
+            const mw::Coin& received = *wtx.mweb_wtx_info->received_coin;
+            received_entry.pushKV("output_id", received.output_id.ToHex());
+            received_entry.pushKV("amount", received.amount);
+            partial_mweb.pushKV("received", received_entry);
+        }
+
+        if (wtx.mweb_wtx_info->spent_input) {
+            UniValue spent_entry(UniValue::VOBJ);
+            spent_entry.pushKV("output_id", wtx.mweb_wtx_info->spent_input->ToHex());
+            partial_mweb.pushKV("spent", spent_entry);
+        }
+
+        entry.pushKV("partial_mweb", partial_mweb);
+    }
 
     // Add opt-in RBF status
     std::string rbfStatus = "no";

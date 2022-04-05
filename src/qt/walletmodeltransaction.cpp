@@ -44,24 +44,27 @@ void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
 void WalletModelTransaction::reassignAmounts(interfaces::Wallet& wallet, int nChangePosRet)
 {
     std::vector<CTxOutput> outputs = wtx->GetOutputs();
+    std::vector<PegOutCoin> pegouts = wtx->mweb_tx.GetPegOuts();
 
-    if (nChangePosRet == -1) {
-        for (size_t i = 0; i < outputs.size(); i++) {
-            if (wallet.isChange(outputs[i])) {
-                nChangePosRet = i;
-                break;
-            }
-        }
-    }
-
-    int i = 0;
+    size_t i = 0;
     for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
         SendCoinsRecipient& rcp = (*it);
         {
-            if (i == nChangePosRet)
-                i++;
-            rcp.amount = wallet.getValue(outputs[i]);
+            while (i < outputs.size()) {
+                if (wallet.isChange(outputs[i]) || (!outputs[i].IsMWEB() && outputs[i].GetScriptPubKey().IsMWEBPegin())) {
+                    i++;
+                } else {
+                    break;
+                }
+            }
+
+            if (i < outputs.size()) {
+                rcp.amount = wallet.getValue(outputs[i]);
+            } else if (pegouts.size() > (i - outputs.size())) {
+                rcp.amount = pegouts[i - outputs.size()].GetAmount();
+            }
+
             i++;
         }
     }

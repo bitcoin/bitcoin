@@ -96,14 +96,14 @@ void CoinsViewCache::UndoBlock(const mw::BlockUndo::CPtr& pUndo)
 {
     assert(pUndo != nullptr);
 
-    for (const mw::Hash& coinToRemove : pUndo->GetCoinsAdded()) {
-        m_pUpdates->SpendUTXO(coinToRemove);
-    }
-
     std::vector<mmr::LeafIndex> leavesToAdd;
     for (const UTXO& coinToAdd : pUndo->GetCoinsSpent()) {
         leavesToAdd.push_back(coinToAdd.GetLeafIndex());
         m_pUpdates->AddUTXO(std::make_shared<UTXO>(coinToAdd));
+    }
+
+    for (const mw::Hash& coinToRemove : pUndo->GetCoinsAdded()) {
+        m_pUpdates->SpendUTXO(coinToRemove);
     }
 
     auto pHeader = pUndo->GetPreviousHeader();

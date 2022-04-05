@@ -394,6 +394,7 @@ public:
         uint256 hashBlock;
         int nIndex;
         Confirmation(Status s = UNCONFIRMED, int b = 0, uint256 h = uint256(), int i = 0) : status(s), block_height(b), hashBlock(h), nIndex(i) {}
+        bool operator!=(const Confirmation& c) const { return status != c.status || block_height != c.block_height || hashBlock != c.hashBlock || nIndex != c.nIndex; }
     };
 
     Confirmation m_confirm;
