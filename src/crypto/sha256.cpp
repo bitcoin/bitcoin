@@ -590,10 +590,6 @@ std::string SHA256AutoDetect()
     bool have_x86_shani = false;
     bool enabled_avx = false;
 
-    (void)AVXEnabled;
-    (void)have_sse4;
-    (void)have_avx;
-    (void)have_xsave;
     (void)have_avx2;
     (void)have_x86_shani;
     (void)enabled_avx;
@@ -641,7 +637,7 @@ std::string SHA256AutoDetect()
         ret += ",avx2(8way)";
     }
 #endif
-#endif
+#endif // defined(USE_ASM) && defined(HAVE_GETCPUID)
 
 #if defined(ENABLE_ARM_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
     bool have_arm_shani = false;
