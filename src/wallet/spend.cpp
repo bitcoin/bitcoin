@@ -397,10 +397,13 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
     std::vector<OutputGroup> all_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, false /* positive_only */);
+    CAmount target_with_change = nTargetValue;
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
-    // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    if (auto knapsack_result{KnapsackSolver(all_groups, nTargetValue + coin_selection_params.m_change_fee,
-                                            coin_selection_params.m_min_change_target, coin_selection_params.rng_fast)}) {
+    // So we need to include that for KnapsackSolver and SRD as well, as we are expecting to create a change output.
+    if (!coin_selection_params.m_subtract_fee_outputs) {
+        target_with_change += coin_selection_params.m_change_fee;
+    }
+    if (auto knapsack_result{KnapsackSolver(all_groups, target_with_change, coin_selection_params.m_min_change_target, coin_selection_params.rng_fast)}) {
         knapsack_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*knapsack_result);
     }
@@ -409,7 +412,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     // barely meets the target. Just use the lower bound change target instead of the randomly
     // generated one, since SRD will result in a random change amount anyway; avoid making the
     // target needlessly large.
-    const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + CHANGE_LOWER;
+    const CAmount srd_target = target_with_change + CHANGE_LOWER;
     if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target, coin_selection_params.rng_fast)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*srd_result);
