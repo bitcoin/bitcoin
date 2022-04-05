@@ -91,8 +91,8 @@ def base58_to_byte(s):
             break
     res = b'\x00' * pad + res
 
-    # Assert if the checksum is invalid
-    assert_equal(hash256(res[:-4])[:4], res[-4:])
+    if hash256(res[:-4])[:4] != res[-4:]:
+        raise ValueError('Invalid Base58Check checksum')
 
     return res[1:-4], int(res[0])
 

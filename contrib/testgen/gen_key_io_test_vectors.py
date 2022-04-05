@@ -111,7 +111,7 @@ def is_valid(v):
     try:
         payload, version = base58_to_byte(v)
         result = bytes([version]) + payload
-    except AssertionError:  # thrown if checksum doesn't match
+    except ValueError:  # thrown if checksum doesn't match
         return is_valid_bech32(v)
     for template in templates:
         prefix = bytearray(template[0])
