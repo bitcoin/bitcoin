@@ -9,7 +9,7 @@ Before every minor and major release:
 * [ ] Review ["Needs backport" labels](https://github.com/dashpay/dash/labels?q=backport).
 * [ ] Update DIPs with any changes introduced by this release (see [this pull request](https://github.com/dashpay/dips/pull/142) for an example)
 * [ ] Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
-* [ ] Write release notes (see below)
+* [ ] Write release notes (see below). To clear the release notes: `cp doc/release-notes-empty-template.md doc/release-notes.md`
 * [ ] Update `src/chainparams.cpp` `nMinimumChainWork` with information from the `getblockchaininfo` rpc.
 * [ ] Update `src/chainparams.cpp` `defaultAssumeValid` with information from the `getblockhash` rpc.
   - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
