@@ -19,8 +19,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 ################
 
 check_tools cat env basename mkdir diff sort
+
 if [ -z "$NO_SIGN" ]; then
-    check_tools gpg
+    # make it possible to override the gpg binary
+    GPG=${GPG:-gpg}
+
+    # $GPG can contain extra arguments passed to the binary
+    # so let's check only the existence of arg[0]
+    # shellcheck disable=SC2206
+    GPG_ARRAY=($GPG)
+    check_tools "${GPG_ARRAY[0]}"
 fi
 
 ################
@@ -90,7 +98,7 @@ if [ -z "${signer_name}" ]; then
     signer_name="$gpg_key_name"
 fi
 
-if [ -z "$NO_SIGN" ] && ! gpg --dry-run --list-secret-keys "${gpg_key_name}" >/dev/null 2>&1; then
+if [ -z "$NO_SIGN" ] && ! ${GPG} --dry-run --list-secret-keys "${gpg_key_name}" >/dev/null 2>&1; then
     echo "ERR: GPG can't seem to find any key named '${gpg_key_name}'"
     exit 1
 fi
@@ -239,11 +247,11 @@ mkdir -p "$outsigdir"
         echo "Signing SHA256SUMS to produce SHA256SUMS.asc"
         for i in *.SHA256SUMS; do
             if [ ! -e "$i".asc ]; then
-                gpg --detach-sign \
-                    --digest-algo sha256 \
-                    --local-user "$gpg_key_name" \
-                    --armor \
-                    --output "$i".asc "$i"
+                ${GPG} --detach-sign \
+                       --digest-algo sha256 \
+                       --local-user "$gpg_key_name" \
+                       --armor \
+                       --output "$i".asc "$i"
             else
                 echo "Signature already there"
             fi
