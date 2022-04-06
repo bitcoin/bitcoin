@@ -637,6 +637,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             std::ostringstream streamFull;
             streamFull << std::setw(18) <<
                            dmnToStatus(dmn) << " " <<
+                           dmn.pdmnState->nPoSePenalty << " " <<
                            payeeStr << " " << std::setw(10) <<
                            dmnToLastPaidTime(dmn) << " "  << std::setw(6) <<
                            dmn.pdmnState->nLastPaidHeight << " " <<
@@ -649,6 +650,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             std::ostringstream streamInfo;
             streamInfo << std::setw(18) <<
                            dmnToStatus(dmn) << " " <<
+                           dmn.pdmnState->nPoSePenalty << " " <<
                            payeeStr << " " <<
                            dmn.pdmnState->addr.ToString();
             std::string strInfo = streamInfo.str();
@@ -661,6 +663,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
                            dmn.pdmnState->addr.ToString() << " " <<
                            payeeStr << " " <<
                            dmnToStatus(dmn) << " " <<
+                           dmn.pdmnState->nPoSePenalty << " " <<
                            dmnToLastPaidTime(dmn) << " " <<
                            dmn.pdmnState->nLastPaidHeight << " " <<
                            EncodeDestination(dmn.pdmnState->keyIDOwner) << " " <<
@@ -675,6 +678,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             objMN.pushKV("address", dmn.pdmnState->addr.ToString());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
+            objMN.pushKV("pospenaltyscore", dmn.pdmnState->nPoSePenalty);
             objMN.pushKV("lastpaidtime", dmnToLastPaidTime(dmn));
             objMN.pushKV("lastpaidblock", dmn.pdmnState->nLastPaidHeight);
             objMN.pushKV("owneraddress", EncodeDestination(dmn.pdmnState->keyIDOwner));
