@@ -8,12 +8,12 @@ export LC_ALL=C.UTF-8
 
 export DOCKER_NAME_TAG="ubuntu:22.04"
 export CONTAINER_NAME=ci_native_tidy
-export PACKAGES="clang llvm clang-tidy bear libevent-dev libboost-dev"
+export PACKAGES="clang llvm clang-tidy bear libevent-dev libboost-dev libminiupnpc-dev libnatpmp-dev libzmq3-dev systemtap-sdt-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev libsqlite3-dev libdb++-dev"
 export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=false
 export RUN_TIDY=true
 export GOAL="install"
-export BITCOIN_CONFIG="CC=clang CXX=clang++ --disable-hardening CFLAGS='-O0 -g0' CXXFLAGS='-O0 -g0'"
+export BITCOIN_CONFIG="CC=clang CXX=clang++ --with-incompatible-bdb --disable-hardening CFLAGS='-O0 -g0' CXXFLAGS='-O0 -g0'"
 export CCACHE_SIZE=200M
