@@ -62,12 +62,16 @@ if test -z "$with_natpmp" && test -n "@no_natpmp@"; then
   with_natpmp=no
 fi
 
-if test -z "$with_gui" && test -n "@no_qt@"; then
-  with_gui=no
+if test -z "$with_gui"; then
+  if test -z "@no_qt@"; then
+    with_gui=qt6
+  else
+    with_gui=no
+  fi
 fi
 
 if test -n "@debug@" && test -z "@no_qt@" && test "$with_gui" != "no"; then
-  with_gui=qt5_debug
+  with_gui=qt6_debug
 fi
 
 if test -z "$enable_zmq" && test -n "@no_zmq@"; then

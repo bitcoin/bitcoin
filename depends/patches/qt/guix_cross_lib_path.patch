@@ -4,7 +4,7 @@ See discussion in https://github.com/bitcoin/bitcoin/pull/15277.
 
 --- a/qtbase/mkspecs/features/toolchain.prf
 +++ b/qtbase/mkspecs/features/toolchain.prf
-@@ -231,8 +231,8 @@ isEmpty($${target_prefix}.INCDIRS) {
+@@ -236,8 +236,8 @@ isEmpty($${target_prefix}.INCDIRS) {
              add_libraries = false
              for (line, output) {
                  line ~= s/^[ \\t]*//  # remove leading spaces

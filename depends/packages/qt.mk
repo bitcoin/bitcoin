@@ -1,47 +1,40 @@
 package=qt
-$(package)_version=5.15.5
-$(package)_download_path=https://download.qt.io/official_releases/qt/5.15/$($(package)_version)/submodules
-$(package)_suffix=everywhere-opensource-src-$($(package)_version).tar.xz
+$(package)_version=6.2.4
+$(package)_download_path=https://download.qt.io/official_releases/qt/6.2/$($(package)_version)/submodules
+$(package)_suffix=everywhere-src-$($(package)_version).tar.xz
 $(package)_file_name=qtbase-$($(package)_suffix)
-$(package)_sha256_hash=0c42c799aa7c89e479a07c451bf5a301e291266ba789e81afc18f95049524edc
+$(package)_sha256_hash=d9924d6fd4fa5f8e24458c87f73ef3dfc1e7c9b877a5407c040d89e6736e2634
 $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_linguist_tools = lrelease lupdate lconvert
-$(package)_patches = qt.pro
-$(package)_patches += qttools_src.pro
+$(package)_patches = root_CMakeLists.txt
+$(package)_patches += cmake_pkgconfig.patch
 $(package)_patches += mac-qmake.conf
-$(package)_patches += fix_qt_pkgconfig.patch
 $(package)_patches += no-xlib.patch
-$(package)_patches += dont_hardcode_x86_64.patch
-$(package)_patches += fix_montery_include.patch
 $(package)_patches += fix_android_jni_static.patch
 $(package)_patches += dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch
 $(package)_patches += use_android_ndk23.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
-$(package)_patches += duplicate_lcqpafonts.patch
 $(package)_patches += fast_fixed_dtoa_no_optimize.patch
 $(package)_patches += guix_cross_lib_path.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
-$(package)_qttranslations_sha256_hash=c92af4171397a0ed272330b4fa0669790fcac8d050b07c8b8cc565ebeba6735e
+$(package)_qttranslations_sha256_hash=bd1aac74a892c60b2f147b6d53bb5b55ab7a6409e63097d38198933f8024fa51
 
 $(package)_qttools_file_name=qttools-$($(package)_suffix)
-$(package)_qttools_sha256_hash=6d0778b71b2742cb527561791d1d3d255366163d54a10f78c683a398f09ffc6c
+$(package)_qttools_sha256_hash=17f40689c4a1706a1b7db22fa92f6ab79f7b698a89e100cab4d10e19335f8267
 
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
-$(package)_config_opts_release += -silent
 $(package)_config_opts_debug = -debug
 $(package)_config_opts_debug += -optimized-tools
-$(package)_config_opts += -bindir $(build_prefix)/bin
+$(package)_config_opts += -libexecdir $(build_prefix)/bin
 $(package)_config_opts += -c++std c++17
 $(package)_config_opts += -confirm-license
-$(package)_config_opts += -hostprefix $(build_prefix)
-$(package)_config_opts += -no-compile-examples
 $(package)_config_opts += -no-cups
 $(package)_config_opts += -no-egl
 $(package)_config_opts += -no-eglfs
@@ -50,7 +43,6 @@ $(package)_config_opts += -no-gif
 $(package)_config_opts += -no-glib
 $(package)_config_opts += -no-icu
 $(package)_config_opts += -no-ico
-$(package)_config_opts += -no-iconv
 $(package)_config_opts += -no-kms
 $(package)_config_opts += -no-linuxfb
 $(package)_config_opts += -no-libjpeg
@@ -63,21 +55,11 @@ $(package)_config_opts += -no-reduce-relocations
 $(package)_config_opts += -no-schannel
 $(package)_config_opts += -no-sctp
 $(package)_config_opts += -no-securetransport
-$(package)_config_opts += -no-sql-db2
-$(package)_config_opts += -no-sql-ibase
-$(package)_config_opts += -no-sql-oci
-$(package)_config_opts += -no-sql-tds
-$(package)_config_opts += -no-sql-mysql
-$(package)_config_opts += -no-sql-odbc
-$(package)_config_opts += -no-sql-psql
-$(package)_config_opts += -no-sql-sqlite
-$(package)_config_opts += -no-sql-sqlite2
 $(package)_config_opts += -no-system-proxies
 $(package)_config_opts += -no-use-gold-linker
 $(package)_config_opts += -no-zstd
 $(package)_config_opts += -nomake examples
 $(package)_config_opts += -nomake tests
-$(package)_config_opts += -nomake tools
 $(package)_config_opts += -opensource
 $(package)_config_opts += -pkg-config
 $(package)_config_opts += -prefix $(host_prefix)
@@ -86,14 +68,10 @@ $(package)_config_opts += -qt-pcre
 $(package)_config_opts += -qt-harfbuzz
 $(package)_config_opts += -qt-zlib
 $(package)_config_opts += -static
-$(package)_config_opts += -v
-$(package)_config_opts += -no-feature-bearermanagement
 $(package)_config_opts += -no-feature-colordialog
-$(package)_config_opts += -no-feature-commandlineparser
 $(package)_config_opts += -no-feature-concurrent
 $(package)_config_opts += -no-feature-dial
 $(package)_config_opts += -no-feature-fontcombobox
-$(package)_config_opts += -no-feature-ftp
 $(package)_config_opts += -no-feature-http
 $(package)_config_opts += -no-feature-image_heuristic_mask
 $(package)_config_opts += -no-feature-keysequenceedit
@@ -108,8 +86,6 @@ $(package)_config_opts += -no-feature-printpreviewwidget
 $(package)_config_opts += -no-feature-sessionmanager
 $(package)_config_opts += -no-feature-socks5
 $(package)_config_opts += -no-feature-sql
-$(package)_config_opts += -no-feature-sqlmodel
-$(package)_config_opts += -no-feature-statemachine
 $(package)_config_opts += -no-feature-syntaxhighlighter
 $(package)_config_opts += -no-feature-textbrowser
 $(package)_config_opts += -no-feature-textmarkdownwriter
@@ -122,12 +98,10 @@ $(package)_config_opts += -no-feature-undostack
 $(package)_config_opts += -no-feature-undoview
 $(package)_config_opts += -no-feature-vnc
 $(package)_config_opts += -no-feature-wizard
-$(package)_config_opts += -no-feature-xml
 
 $(package)_config_opts_darwin = -no-dbus
 $(package)_config_opts_darwin += -no-opengl
 $(package)_config_opts_darwin += -pch
-$(package)_config_opts_darwin += -no-feature-corewlan
 $(package)_config_opts_darwin += -no-freetype
 $(package)_config_opts_darwin += QMAKE_MACOSX_DEPLOYMENT_TARGET=$(OSX_MIN_VERSION)
 
@@ -148,6 +122,10 @@ endif
 $(package)_config_opts_linux = -xcb
 $(package)_config_opts_linux += -no-xcb-xlib
 $(package)_config_opts_linux += -no-feature-xlib
+
+# https://bugreports.qt.io/browse/QTBUG-99957
+$(package)_config_opts_linux += -no-pch
+
 $(package)_config_opts_linux += -system-freetype
 $(package)_config_opts_linux += -fontconfig
 $(package)_config_opts_linux += -no-opengl
@@ -240,18 +218,14 @@ endef
 # 7. Adjust a regex in toolchain.prf, to accommodate Guix's usage of
 # CROSS_LIBRARY_PATH. See #15277.
 define $(package)_preprocess_cmds
-  cp $($(package)_patch_dir)/qt.pro qt.pro && \
-  cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
+  cp $($(package)_patch_dir)/root_CMakeLists.txt CMakeLists.txt && \
+  patch -p1 -i $($(package)_patch_dir)/cmake_pkgconfig.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
-  patch -p1 -i $($(package)_patch_dir)/dont_hardcode_x86_64.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
   patch -p1 -i $($(package)_patch_dir)/use_android_ndk23.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
-  patch -p1 -i $($(package)_patch_dir)/duplicate_lcqpafonts.patch && \
   patch -p1 -i $($(package)_patch_dir)/fast_fixed_dtoa_no_optimize.patch && \
   patch -p1 -i $($(package)_patch_dir)/guix_cross_lib_path.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
@@ -279,12 +253,12 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) -C qtbase/src INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_qt_libs))) && \
-  $(MAKE) -C qttools/src/linguist INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_linguist_tools))) && \
-  $(MAKE) -C qttranslations INSTALL_ROOT=$($(package)_staging_dir) install_subtargets
+  DESTDIR=$($(package)_staging_dir) cmake --install .
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf native/mkspecs/ native/lib/ lib/cmake/ && \
-  rm -f lib/lib*.la
+  rm -rf doc/ bin/ lib/cmake/ lib/metatypes/ mkspecs/ modules/ && \
+  rm lib/*.prl plugins/*/*.prl && \
+  rm native/bin/android_emulator_launcher.sh native/bin/cmake_automoc_parser native/bin/ensure_pro_file.cmake && \
+  rm native/bin/qlalr native/bin/qt-internal-configure-tests native/bin/qvkgen native/bin/syncqt.pl native/bin/tracegen
 endef

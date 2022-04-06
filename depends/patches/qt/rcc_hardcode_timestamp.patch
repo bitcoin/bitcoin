@@ -6,7 +6,7 @@ the SOURCE_DATE_EPOCH variable set, e.g., for Guix builds.
 
 --- old/qtbase/src/tools/rcc/rcc.cpp
 +++ new/qtbase/src/tools/rcc/rcc.cpp
-@@ -227,14 +227,7 @@ void RCCFileInfo::writeDataInfo(RCCResourceLibrary &lib)
+@@ -229,14 +229,7 @@ void RCCFileInfo::writeDataInfo(RCCResourceLibrary &lib)
  
      if (lib.formatVersion() >= 2) {
          // last modified time stamp

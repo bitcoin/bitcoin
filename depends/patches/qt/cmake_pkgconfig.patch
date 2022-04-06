@@ -1,0 +1,360 @@
+From 5b07f14a4ff6b08887473b1b583ee2f71dec6f76 Mon Sep 17 00:00:00 2001
+From: Martin Reboredo <yakoyoku@gmail.com>
+Date: Thu, 11 Nov 2021 14:39:53 -0300
+Subject: [PATCH] CMake build: generate pkgconfig for public modules
+
+After the update to the CMake based build system the ability to
+generate pkgconfig files, like it was with QMake, was lost.
+
+Task-number: QTBUG-86080
+Change-Id: I0690bb3ca729eec328500f227261db9b7e7628f6
+
+The original patch has been modified to enable this
+functionality for static builds.
+
+
+--- /dev/null
++++ b/qtbase/cmake/PkgConfigLibrary.pc.in
+@@ -0,0 +1,13 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=${prefix}
++bindir=${prefix}/@INSTALL_BINDIR@
++libdir=${prefix}/@INSTALL_LIBDIR@
++includedir=${prefix}/@INSTALL_INCLUDEDIR@
++$<$<BOOL:@contains_mkspecs@>:mkspecsdir=${prefix}/@INSTALL_MKSPECSDIR@>
++$<1: >
++Name: @pkgconfig_name@
++Description: @pkgconfig_description@
++Version: @PROJECT_VERSION@
++Libs: $<$<NOT:@is_interface_library@>:-L${libdir} -l@pkgconfig_file@> @link_options@
++Cflags: @include_dirs@ @compile_defs@
++Requires: $<JOIN:$<REMOVE_DUPLICATES:@target_requires@>, >
+
+--- a/qtbase/cmake/QtBaseGlobalTargets.cmake
++++ b/qtbase/cmake/QtBaseGlobalTargets.cmake
+@@ -205,6 +205,7 @@ qt_install(FILES
+ # They can only be used while building Qt itself.
+ qt_copy_or_install(FILES
+                    cmake/ModuleDescription.json.in
++                   cmake/PkgConfigLibrary.pc.in
+                    cmake/Qt3rdPartyLibraryConfig.cmake.in
+                    cmake/Qt3rdPartyLibraryHelpers.cmake
+                    cmake/QtAndroidHelpers.cmake
+@@ -227,6 +228,7 @@ qt_copy_or_install(FILES
+                    cmake/QtFindPackageHelpers.cmake
+                    cmake/QtFindWrapConfigExtra.cmake.in
+                    cmake/QtFindWrapHelper.cmake
++                   cmake/QtFinishPkgConfigFile.cmake
+                    cmake/QtFinishPrlFile.cmake
+                    cmake/QtFlagHandlingHelpers.cmake
+                    cmake/QtFrameworkHelpers.cmake
+@@ -245,6 +247,7 @@ qt_copy_or_install(FILES
+                    cmake/QtModuleToolsDependencies.cmake.in
+                    cmake/QtModuleToolsVersionlessTargets.cmake.in
+                    cmake/QtNoLinkTargetHelpers.cmake
++                   cmake/QtPkgConfigHelpers.cmake
+                    cmake/QtPlatformAndroid.cmake
+                    cmake/QtPlatformSupport.cmake
+                    cmake/QtPluginConfig.cmake.in
+
+--- a/qtbase/cmake/QtBuild.cmake
++++ b/qtbase/cmake/QtBuild.cmake
+@@ -534,6 +534,7 @@ include(QtModuleHelpers)
+ include(QtNoLinkTargetHelpers)
+ include(QtPluginHelpers)
+ include(QtPrecompiledHeadersHelpers)
++include(QtPkgConfigHelpers)
+ include(QtPriHelpers)
+ include(QtPrlHelpers)
+ include(QtQmakeHelpers)
+
+--- /dev/null
++++ b/qtbase/cmake/QtFinishPkgConfigFile.cmake
+@@ -0,0 +1,28 @@
++# Finish a preliminary .pc file.
++#
++# - Appends to each requirement the proper configuration postfix.
++# - Strips empty PkgConfig fields.
++#
++# This file is to be used in CMake script mode with the following variables set:
++# IN_FILE: path to the step 2 preliminary .pc file.
++# OUT_FILE: path to the .pc file that is going to be created.
++# POSTFIX: postfix for each requirement (optional).
++
++cmake_policy(SET CMP0057 NEW)
++file(STRINGS "${IN_FILE}" lines)
++set(content "")
++set(emptied "Libs:" "Cflags:" "Requires:")
++foreach(line ${lines})
++    if(POSTFIX)
++        if(line MATCHES "^Libs:")
++            string(REGEX REPLACE "( -lQt[^ ]+)" "\\1${POSTFIX}" line "${line}")
++        elseif(line MATCHES "^Requires:")
++            string(REGEX REPLACE "( Qt[^ ]+)" "\\1${POSTFIX}" line "${line}")
++        endif()
++    endif()
++    string(REGEX REPLACE " +$" "" line "${line}")
++    if(NOT line IN_LIST emptied)
++        string(APPEND content "${line}\n")
++    endif()
++endforeach()
++file(WRITE "${OUT_FILE}" "${content}")
+
+--- a/qtbase/cmake/QtModuleHelpers.cmake
++++ b/qtbase/cmake/QtModuleHelpers.cmake
+@@ -761,6 +761,7 @@ function(qt_finalize_module target)
+     qt_finalize_framework_headers_copy(${target})
+     qt_generate_prl_file(${target} "${INSTALL_LIBDIR}")
+     qt_generate_module_pri_file("${target}" ${ARGN})
++    qt_internal_generate_pkg_config_file(${target})
+ endfunction()
+ 
+ # Get a set of Qt module related values based on the target.
+
+--- /dev/null
++++ b/qtbase/cmake/QtPkgConfigHelpers.cmake
+@@ -0,0 +1,142 @@
++function(qt_internal_collect_direct_target_dependencies target targets_out_var)
++    __qt_internal_walk_libs("${target}" "${targets_out_var}" _rcc_objects
++                            "qt_direct_targets_dict" "direct_targets")
++    set("${targets_out_var}" "${${targets_out_var}}" PARENT_SCOPE)
++endfunction()
++
++macro(qt_internal_set_pkg_config_cpp_flags var options flag)
++    set(tmpopts "${options}")
++    list(FILTER tmpopts EXCLUDE REGEX "\\$<BUILD_INTERFACE:[^,>]+>")
++    list(FILTER tmpopts EXCLUDE REGEX "\\$<TARGET_PROPERTY:[^,>]+>")
++    list(TRANSFORM tmpopts REPLACE "\\$<INSTALL_INTERFACE:([^,>]+)>" "\\1")
++    list(TRANSFORM tmpopts REPLACE ">" "$<ANGLE-R>")
++    list(TRANSFORM tmpopts REPLACE "," "$<COMMA>")
++    set(${var} "$<$<BOOL:${tmpopts}>:${flag}$<JOIN:$<REMOVE_DUPLICATES:${tmpopts}>, ${flag}>>")
++    unset(tmpopts)
++endmacro()
++
++# Create a Qt6*.pc file intended for pkg-config consumption.
++function(qt_internal_generate_pkg_config_file module)
++    # TODO: PkgConfig is supported under MSVC with pkgconf (github.com/pkgconf/pkgconf)
++    if((NOT UNIX OR QT_FEATURE_framework) AND NOT MINGW OR CMAKE_VERSION VERSION_LESS "3.20")
++        return()
++    endif()
++    #if(NOT BUILD_SHARED_LIBS)
++    #    return()
++    #endif()
++
++    set(pkgconfig_file "${QT_CMAKE_EXPORT_NAMESPACE}${module}")
++    set(pkgconfig_name "${QT_CMAKE_EXPORT_NAMESPACE} ${module}")
++    set(pkgconfig_description "Qt ${module} module")
++    set(target "${QT_CMAKE_EXPORT_NAMESPACE}::${module}")
++    set(is_interface_library "$<STREQUAL:$<TARGET_PROPERTY:${target},TYPE>,INTERFACE_LIBRARY>")
++    # The flags macro expanded this variables so it's better to set them at
++    # their corresponding PkgConfig string.
++    set(includedir "\${includedir}")
++    set(mkspecsdir "\${mkspecsdir}")
++
++    get_target_property(is_internal_module ${target} _qt_is_internal_module)
++    if(is_internal_module)
++        return()
++    endif()
++
++    get_target_property(loose_link_options ${target} INTERFACE_LINK_OPTIONS)
++    get_target_property(loose_compile_defs ${target} INTERFACE_COMPILE_DEFINITIONS)
++    get_target_property(loose_include_dirs ${target} INTERFACE_INCLUDE_DIRECTORIES)
++    list(TRANSFORM loose_include_dirs REPLACE "${INSTALL_INCLUDEDIR}" "\${includedir}")
++    list(TRANSFORM loose_include_dirs REPLACE "${INSTALL_MKSPECSDIR}" "\${mkspecsdir}")
++
++    qt_internal_set_pkg_config_cpp_flags(link_options "${loose_link_options}" "")
++    qt_internal_set_pkg_config_cpp_flags(compile_defs "${loose_compile_defs}" -D)
++    qt_internal_set_pkg_config_cpp_flags(include_dirs "${loose_include_dirs}" -I)
++    if("${include_dirs}" MATCHES "\\${mkspecsdir}")
++        set(contains_mkspecs TRUE)
++    endif()
++
++    # TODO: Handle macOS framework builds
++    qt_internal_collect_direct_target_dependencies(${target} loose_target_requires)
++    foreach(dep IN LISTS loose_target_requires)
++        if(dep MATCHES "^Qt::")
++            string(REGEX REPLACE "Qt" "${QT_CMAKE_EXPORT_NAMESPACE}" dep ${dep})
++        else()
++            # TODO: Figure out a way to get non-Qt requirements PkgConfig files.
++            continue()
++        endif()
++        if(NOT TARGET ${dep})
++            continue()
++        endif()
++        get_target_property(is_internal_module ${dep} _qt_is_internal_module)
++        if(is_internal_module OR dep MATCHES ".*Platform.*Internal")
++            continue()
++        endif()
++        get_target_property(type ${dep} TYPE)
++        if(type STREQUAL "INTERFACE_LIBRARY")
++            if(dep MATCHES "(.*)Private")
++                set(dep "${CMAKE_MATCH_1}")
++            endif()
++            get_target_property(type ${dep} TYPE)
++        endif()
++        string(REGEX REPLACE "::" "" req ${dep})
++        if(type STREQUAL "STATIC_LIBRARY")
++            list(APPEND target_libs -l${req})
++        else()
++            list(APPEND target_requires ${req})
++        endif()
++    endforeach()
++    string(APPEND link_options " $<JOIN:$<REMOVE_DUPLICATES:${target_libs}>, >")
++
++    qt_path_join(path_suffix "${INSTALL_LIBDIR}" pkgconfig)
++    qt_path_join(build_dir "${QT_BUILD_DIR}" "${path_suffix}")
++    qt_path_join(install_dir "${QT_INSTALL_DIR}" "${path_suffix}")
++
++    set(step_prefix "preliminary_pc_for_${pkgconfig_file}")
++    qt_path_join(template_pc "${QT_CMAKE_DIR}" PkgConfigLibrary.pc.in)
++    qt_path_join(pc_step1_path "${build_dir}" ${step_prefix}_step1.pc)
++    qt_path_join(pc_step2_path "${build_dir}" ${step_prefix}_$<CONFIG>_step2.pc)
++
++    configure_file("${template_pc}" "${pc_step1_path}" @ONLY)
++
++    file(GENERATE OUTPUT "${pc_step2_path}" INPUT "${pc_step1_path}")
++
++    if(QT_GENERATOR_IS_MULTI_CONFIG)
++        set(configs ${CMAKE_CONFIGURATION_TYPES})
++        set(rels ${configs})
++        list(FILTER rels INCLUDE REGEX "(Release|RelWithDebInfo|MinSizeRel)")
++        if(rels)
++            list(GET rels 0 release)
++        endif()
++    else()
++        set(configs ${CMAKE_BUILD_TYPE})
++        set(release ${configs})
++    endif()
++
++    foreach(config ${configs})
++        if(config STREQUAL "Debug" AND CMAKE_DEBUG_POSTFIX)
++            set(postfix ${CMAKE_DEBUG_POSTFIX})
++        elseif(NOT config STREQUAL release)
++            string(TOLOWER "_${config}" postfix)
++        else()
++            set(postfix "")
++        endif()
++        qt_path_join(pc_step2_path "${build_dir}" ${step_prefix}_${config}_step2.pc)
++        qt_path_join(final_pc_path "${build_dir}" ${pkgconfig_file}${postfix}.pc)
++
++        add_custom_command(
++            OUTPUT  "${final_pc_path}"
++            DEPENDS "${pc_step2_path}"
++                    "${QT_CMAKE_DIR}/QtFinishPkgConfigFile.cmake"
++            COMMAND ${CMAKE_COMMAND}
++                    "-DIN_FILE=${pc_step2_path}"
++                    "-DOUT_FILE=${final_pc_path}"
++                    "$<$<BOOL:${postfix}>:-DPOSTFIX=${postfix}>"
++                    -P "${QT_CMAKE_DIR}/QtFinishPkgConfigFile.cmake"
++            VERBATIM
++            COMMENT "Generating pc file for target ${target}"
++            )
++
++        # This is inspired by https://gitlab.kitware.com/cmake/cmake/-/issues/20842
++        target_sources(${module} PRIVATE "${final_pc_path}")
++
++        qt_install(FILES "${final_pc_path}" DESTINATION "${install_dir}")
++    endforeach()
++endfunction()
+
+--- a/qtbase/cmake/QtPlatformTargetHelpers.cmake
++++ b/qtbase/cmake/QtPlatformTargetHelpers.cmake
+@@ -32,4 +32,7 @@ function(qt_internal_setup_public_platform_target)
+ 
+     # By default enable unicode on WIN32 platforms for both Qt and Qt consumers. Can be opted out.
+     qt_internal_enable_unicode_defines(Platform)
++
++    # Generate a pkgconfig for Qt::Platform.
++    qt_internal_generate_pkg_config_file(Platform)
+ endfunction()
+
+--- a/qtbase/cmake/QtPublicWalkLibsHelpers.cmake
++++ b/qtbase/cmake/QtPublicWalkLibsHelpers.cmake
+@@ -73,6 +73,8 @@ endfunction()
+ #                           Used for prl file generation.
+ #            'promote_global' promotes walked imported targets to global scope.
+ #            'collect_targets' collects all target names (discards framework or link flags)
++#            'direct_targets' collects only the direct target names (discards framework or link
++#                             flags)
+ #
+ #
+ function(__qt_internal_walk_libs
+@@ -83,6 +85,12 @@ function(__qt_internal_walk_libs
+     endif()
+     list(APPEND collected ${target})
+ 
++    if(operation MATCHES "^direct")
++        set(direct TRUE)
++    else()
++        set(direct FALSE)
++    endif()
++
+     if(target STREQUAL "${QT_CMAKE_EXPORT_NAMESPACE}::EntryPointPrivate")
+         # We can't (and don't need to) process EntryPointPrivate because it brings in
+         # $<TARGET_PROPERTY:prop> genexes which get replaced with
+@@ -184,21 +192,25 @@ function(__qt_internal_walk_libs
+                 endif()
+                 get_target_property(lib_target_type ${lib_target} TYPE)
+                 if(lib_target_type STREQUAL "INTERFACE_LIBRARY")
+-                    __qt_internal_walk_libs(
+-                        ${lib_target}
+-                        lib_libs_${target}
+-                        lib_rcc_objects_${target}
+-                        "${dict_name}" "${operation}" ${collected})
+-                    if(lib_libs_${target})
+-                        __qt_internal_merge_libs(libs ${lib_libs_${target}})
+-                        set(is_module 0)
+-                    endif()
+-                    if(lib_rcc_objects_${target})
+-                        __qt_internal_merge_libs(rcc_objects ${lib_rcc_objects_${target}})
++                    if(NOT ${direct})
++                        __qt_internal_walk_libs(
++                            ${lib_target}
++                            lib_libs_${target}
++                            lib_rcc_objects_${target}
++                            "${dict_name}" "${operation}" ${collected})
++                        if(lib_libs_${target})
++                            __qt_internal_merge_libs(libs ${lib_libs_${target}})
++                            set(is_module 0)
++                        endif()
++                        if(lib_rcc_objects_${target})
++                            __qt_internal_merge_libs(rcc_objects ${lib_rcc_objects_${target}})
++                        endif()
++                    else()
++                        __qt_internal_merge_libs(libs ${lib})
+                     endif()
+                 elseif(NOT lib_target_type STREQUAL "OBJECT_LIBRARY")
+ 
+-                    if(operation STREQUAL "collect_targets")
++                    if(operation MATCHES "^(collect|direct)_targets$")
+                         __qt_internal_merge_libs(libs ${lib_target})
+                     else()
+                         __qt_internal_merge_libs(libs "$<TARGET_LINKER_FILE:${lib_target}>")
+@@ -209,11 +221,13 @@ function(__qt_internal_walk_libs
+                         __qt_internal_merge_libs(rcc_objects ${target_rcc_objects})
+                     endif()
+ 
+-                    __qt_internal_walk_libs(
+-                        ${lib_target}
+-                        lib_libs_${target}
+-                        lib_rcc_objects_${target}
+-                        "${dict_name}" "${operation}" ${collected})
++                    if(NOT ${direct})
++                        __qt_internal_walk_libs(
++                            ${lib_target}
++                            lib_libs_${target}
++                            lib_rcc_objects_${target}
++                            "${dict_name}" "${operation}" ${collected})
++                    endif()
+                     if(lib_libs_${target})
+                         __qt_internal_merge_libs(libs ${lib_libs_${target}})
+                     endif()
+@@ -242,7 +256,7 @@ function(__qt_internal_walk_libs
+                 message(FATAL_ERROR "The ${CMAKE_MATCH_1} target is mentioned as a dependency for \
+ ${target}, but not declared.")
+             else()
+-                if(NOT operation STREQUAL "collect_targets")
++                if(NOT operation MATCHES "^(collect|direct)_targets$")
+                     set(final_lib_name_to_merge "${lib_target}")
+                     if(lib_target MATCHES "/([^/]+).framework$")
+                         set(final_lib_name_to_merge "-framework ${CMAKE_MATCH_1}")
