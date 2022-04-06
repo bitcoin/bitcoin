@@ -26,7 +26,8 @@
 #include <tuple>
 #include <string>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include <univalue.h>
 

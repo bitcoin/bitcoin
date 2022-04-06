@@ -31,7 +31,8 @@
 #include <memory>
 #include <stdio.h>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;

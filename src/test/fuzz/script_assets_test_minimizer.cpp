@@ -12,7 +12,9 @@
 #include <univalue.h>
 #include <util/strencodings.h>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+
 #include <cstdint>
 #include <string>
 #include <vector>
