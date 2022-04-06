@@ -45,9 +45,6 @@ void SetSyscallSandboxPolicy(SyscallSandboxPolicy syscall_policy);
 
 #if defined(USE_SYSCALL_SANDBOX)
 //! Setup and enable the experimental syscall sandbox for the running process.
-//!
-//! SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION) is called as part of
-//! SetupSyscallSandbox(...).
 [[nodiscard]] bool SetupSyscallSandbox(bool log_syscall_violation_before_terminating);
 
 //! Invoke a disallowed syscall. Use for testing purposes.

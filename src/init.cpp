@@ -934,7 +934,7 @@ bool AppInitBasicSetup(const ArgsManager& args)
     return true;
 }
 
-bool AppInitParameterInteraction(const ArgsManager& args)
+bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandbox)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
@@ -1232,6 +1232,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         }
         if (!SetupSyscallSandbox(log_syscall_violation_before_terminating)) {
             return InitError(Untranslated("Installation of the syscall sandbox failed."));
+        }
+        if (use_syscall_sandbox) {
+            SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION);
         }
         LogPrintf("Experimental syscall sandbox enabled (-sandbox=%s): syscoind will terminate if an unexpected (not allowlisted) syscall is invoked.\n", sandbox_arg);
     }
