@@ -47,17 +47,23 @@ The HTTP request and response are both handled entirely in-memory.
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
 #### Blockheaders
-`GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+`GET /rest/headers/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 Returns empty if the block doesn't exist or it isn't in the active chain.
 
+*Deprecated (but not removed) since 24.0:*
+`GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+
 #### Blockfilter Headers
-`GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
+`GET /rest/blockfilterheaders/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>`
 
 Given a block hash: returns <COUNT> amount of blockfilter headers in upward
 direction for the filter type <FILTERTYPE>.
 Returns empty if the block doesn't exist or it isn't in the active chain.
+
+*Deprecated (but not removed) since 24.0:*
+`GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 #### Blockfilters
 `GET /rest/blockfilter/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>`

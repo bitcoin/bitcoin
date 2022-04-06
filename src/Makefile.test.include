@@ -109,6 +109,7 @@ SYSCOIN_TESTS =\
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
+  test/httpserver_tests.cpp \
   test/i2p_tests.cpp \
   test/interfaces_tests.cpp \
   test/key_tests.cpp \
@@ -129,6 +130,7 @@ SYSCOIN_TESTS =\
   test/prevector_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
+  test/rest_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
