@@ -29,8 +29,7 @@ static constexpr uint32_t UNKNOWN_INDEX{std::numeric_limits<uint32_t>::max()};
 /// Represents an output owned by the wallet, and the keys necessary to spend it.
 /// </summary>
 struct Coin : public Traits::ISerializable {
-    // Version byte to more easily support adding new fields to the object.
-    uint8_t version{2};
+    static constexpr uint8_t LATEST_VERSION = 2;
 
     // Index of the subaddress this coin was received at.
     uint32_t address_index{UNKNOWN_INDEX};
@@ -73,7 +72,6 @@ struct Coin : public Traits::ISerializable {
 
     void Reset()
     {
-        version = 2;
         address_index = UNKNOWN_INDEX;
         spend_key = boost::none;
         blind = boost::none;
@@ -84,21 +82,49 @@ struct Coin : public Traits::ISerializable {
         shared_secret = boost::none;
     }
 
+    //
+    // Basic serialization format (v0):
+    //  - byte version
+    //  - varint address_index
+    //  - bool has_spend_key
+    //    * byte[32] spend_key - skip if has_spend_key is false
+    //  - bool has_blind
+    //    * byte[32] blind - skip if has_blind is false
+    //  - varint amount
+    //  - byte[32] output_id
+    //
+    // If version >= 1, format extended to include:
+    //  - bool has_sender_key
+    //    * byte[32] sender_key - skip if has_sender_key is false
+    //  - bool has_address
+    //    * byte[33] address.scan_key - skip if has_address is false
+    //    * byte[33] address.spend_key - skip if has_address is false
+    //
+    // If version >= 2, format extended to include:
+    //  - bool has_shared_secret
+    //    * byte[32] shared_secret - skip if has_shared_secret is false
+    //
     IMPL_SERIALIZABLE(Coin, obj)
     {
-        READWRITE(obj.version);
+        // Always serialize using the latest version
+        uint8_t version = LATEST_VERSION;
+        READWRITE(version);
+        if (version > LATEST_VERSION) {
+            throw std::ios_base::failure("Unsupported Coin version");
+        }
+
         READWRITE(VARINT(obj.address_index));
         READWRITE(obj.spend_key);
         READWRITE(obj.blind);
         READWRITE(VARINT_MODE(obj.amount, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(obj.output_id);
 
-        if (obj.version >= 1) {
+        if (version >= 1) {
             READWRITE(obj.sender_key);
             READWRITE(obj.address);
         }
 
-        if (obj.version >= 2) {
+        if (version >= 2) {
             READWRITE(obj.shared_secret);
         }
     }
