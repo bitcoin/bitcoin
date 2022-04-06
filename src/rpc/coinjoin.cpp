@@ -64,7 +64,7 @@ static UniValue coinjoin(const JSONRPCRequest& request)
         }
 
         bool result = it->second->DoAutomaticDenominating(*g_connman);
-        return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses() + ", will retry"));
+        return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses().original + ", will retry"));
     }
 
     if (request.params[0].get_str() == "stop") {

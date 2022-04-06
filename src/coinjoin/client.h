@@ -7,6 +7,7 @@
 
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
+#include <util/translation.h>
 
 #include <utility>
 #include <atomic>
@@ -71,8 +72,8 @@ class CCoinJoinClientSession : public CCoinJoinBaseSession
 private:
     std::vector<COutPoint> vecOutPointLocked;
 
-    std::string strLastMessage;
-    std::string strAutoDenomResult;
+    bilingual_str strLastMessage;
+    bilingual_str strAutoDenomResult;
 
     CDeterministicMNCPtr mixingMasternode;
     CMutableTransaction txMyCollateral; // client side collateral
@@ -128,7 +129,7 @@ public:
 
     void ResetPool();
 
-    std::string GetStatus(bool fWaitForBlock) const;
+    bilingual_str GetStatus(bool fWaitForBlock) const;
 
     bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
 
@@ -171,7 +172,7 @@ private:
 
     int nCachedLastSuccessBlock{0};
     int nMinBlocksToWait{1}; // how many blocks to wait for after one successful mixing tx in non-multisession mode
-    std::string strAutoDenomResult;
+    bilingual_str strAutoDenomResult;
 
     CWallet& mixingWallet;
 
@@ -201,7 +202,7 @@ public:
     bool IsMixing() const;
     void ResetPool();
 
-    std::string GetStatuses();
+    bilingual_str GetStatuses();
     std::string GetSessionDenoms();
 
     bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;

@@ -375,55 +375,55 @@ std::string CCoinJoin::DenominationToString(int nDenom)
     return "to-string-error";
 }
 
-std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)
+bilingual_str CCoinJoin::GetMessageByID(PoolMessage nMessageID)
 {
     switch (nMessageID) {
     case ERR_ALREADY_HAVE:
-        return _("Already have that input.").translated;
+        return _("Already have that input.");
     case ERR_DENOM:
-        return _("No matching denominations found for mixing.").translated;
+        return _("No matching denominations found for mixing.");
     case ERR_ENTRIES_FULL:
-        return _("Entries are full.").translated;
+        return _("Entries are full.");
     case ERR_EXISTING_TX:
-        return _("Not compatible with existing transactions.").translated;
+        return _("Not compatible with existing transactions.");
     case ERR_FEES:
-        return _("Transaction fees are too high.").translated;
+        return _("Transaction fees are too high.");
     case ERR_INVALID_COLLATERAL:
-        return _("Collateral not valid.").translated;
+        return _("Collateral not valid.");
     case ERR_INVALID_INPUT:
-        return _("Input is not valid.").translated;
+        return _("Input is not valid.");
     case ERR_INVALID_SCRIPT:
-        return _("Invalid script detected.").translated;
+        return _("Invalid script detected.");
     case ERR_INVALID_TX:
-        return _("Transaction not valid.").translated;
+        return _("Transaction not valid.");
     case ERR_MAXIMUM:
-        return _("Entry exceeds maximum size.").translated;
+        return _("Entry exceeds maximum size.");
     case ERR_MN_LIST:
-        return _("Not in the Masternode list.").translated;
+        return _("Not in the Masternode list.");
     case ERR_MODE:
-        return _("Incompatible mode.").translated;
+        return _("Incompatible mode.");
     case ERR_QUEUE_FULL:
-        return _("Masternode queue is full.").translated;
+        return _("Masternode queue is full.");
     case ERR_RECENT:
-        return _("Last queue was created too recently.").translated;
+        return _("Last queue was created too recently.");
     case ERR_SESSION:
-        return _("Session not complete!").translated;
+        return _("Session not complete!");
     case ERR_MISSING_TX:
-        return _("Missing input transaction information.").translated;
+        return _("Missing input transaction information.");
     case ERR_VERSION:
-        return _("Incompatible version.").translated;
+        return _("Incompatible version.");
     case MSG_NOERR:
-        return _("No errors detected.").translated;
+        return _("No errors detected.");
     case MSG_SUCCESS:
-        return _("Transaction created successfully.").translated;
+        return _("Transaction created successfully.");
     case MSG_ENTRIES_ADDED:
-        return _("Your entries added successfully.").translated;
+        return _("Your entries added successfully.");
     case ERR_SIZE_MISMATCH:
-        return _("Inputs vs outputs size mismatch.").translated;
+        return _("Inputs vs outputs size mismatch.");
     case ERR_NON_STANDARD_PUBKEY:
     case ERR_NOT_A_MN:
     default:
-        return _("Unknown response.").translated;
+        return _("Unknown response.");
     }
 }
 
