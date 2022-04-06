@@ -4837,7 +4837,7 @@ bool ChainstateManager::ActivateSnapshot(
 
     auto snapshot_chainstate = WITH_LOCK(::cs_main,
         return std::make_unique<CChainState>(
-            /* mempool */ nullptr, m_blockman, *this, base_blockhash));
+            /*mempool=*/nullptr, m_blockman, *this, base_blockhash));
 
     {
         LOCK(::cs_main);
