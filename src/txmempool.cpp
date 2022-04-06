@@ -1070,6 +1070,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
 
 void CTxMemPool::_clear()
 {
+    vTxHashes.clear();
     mapTx.clear();
     mapNextTx.clear();
     totalTxSize = 0;
