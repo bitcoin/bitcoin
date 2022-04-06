@@ -1503,27 +1503,27 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
         }
         case DecodeContext::AND_V: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::AND_V, constructed, /* reverse */ true);
+            BuildBack(Fragment::AND_V, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::AND_B: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::AND_B, constructed, /* reverse */ true);
+            BuildBack(Fragment::AND_B, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_B: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::OR_B, constructed, /* reverse */ true);
+            BuildBack(Fragment::OR_B, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_C: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::OR_C, constructed, /* reverse */ true);
+            BuildBack(Fragment::OR_C, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_D: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::OR_D, constructed, /* reverse */ true);
+            BuildBack(Fragment::OR_D, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::ANDOR: {
@@ -1607,7 +1607,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             if (in >= last) return {};
             if (in[0].first == OP_IF) {
                 ++in;
-                BuildBack(Fragment::OR_I, constructed, /* reverse */ true);
+                BuildBack(Fragment::OR_I, constructed, /*reverse=*/true);
             } else if (in[0].first == OP_NOTIF) {
                 ++in;
                 to_parse.emplace_back(DecodeContext::ANDOR, -1, -1);

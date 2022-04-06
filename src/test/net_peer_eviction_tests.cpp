@@ -478,8 +478,8 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
                 c.m_network = NET_IPV6;
             }
         },
-        /* protected_peer_ids */ {0, 4},
-        /* unprotected_peer_ids */ {1, 2, 3},
+        /*protected_peer_ids=*/{0, 4},
+        /*unprotected_peer_ids=*/{1, 2, 3},
         random_context));
 
     // Combined test: expect having 1 CJDNS, 1 I2P, 1 localhost and 1 onion peer

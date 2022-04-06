@@ -657,7 +657,6 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
     CBlockIndex* blockindex = nullptr;
-    uint256 hashBlock = uint256();
     const node::NodeContext* const node = GetNodeContext(context, req);
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
@@ -671,6 +670,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         }
     }
     if (!node) return false;
+    uint256 hashBlock = uint256();
     // SYSCOIN
     const CTransactionRef tx = GetTransaction(blockindex, node->mempool.get(), hash, Params().GetConsensus(), hashBlock);
     if (!tx) {
