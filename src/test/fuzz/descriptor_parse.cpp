@@ -19,6 +19,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     FlatSigningProvider signing_provider;
     std::string error;
     for (const bool require_checksum : {true, false}) {
-        Parse(descriptor, signing_provider, error);
+        Parse(descriptor, signing_provider, error, require_checksum);
     }
 }
