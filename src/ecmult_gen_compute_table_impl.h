@@ -4,16 +4,16 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 
-#ifndef SECP256K1_ECMULT_GEN_PREC_IMPL_H
-#define SECP256K1_ECMULT_GEN_PREC_IMPL_H
+#ifndef SECP256K1_ECMULT_GEN_COMPUTE_TABLE_IMPL_H
+#define SECP256K1_ECMULT_GEN_COMPUTE_TABLE_IMPL_H
 
-#include "ecmult_gen_prec.h"
+#include "ecmult_gen_compute_table.h"
 #include "group_impl.h"
 #include "field_impl.h"
 #include "ecmult_gen.h"
 #include "util.h"
 
-static void secp256k1_ecmult_gen_create_prec_table(secp256k1_ge_storage* table, const secp256k1_ge* gen, int bits) {
+static void secp256k1_ecmult_gen_compute_table(secp256k1_ge_storage* table, const secp256k1_ge* gen, int bits) {
     int g = ECMULT_GEN_PREC_G(bits);
     int n = ECMULT_GEN_PREC_N(bits);
 
@@ -78,4 +78,4 @@ static void secp256k1_ecmult_gen_create_prec_table(secp256k1_ge_storage* table, 
     free(prec);
 }
 
-#endif /* SECP256K1_ECMULT_GEN_PREC_IMPL_H */
+#endif /* SECP256K1_ECMULT_GEN_COMPUTE_TABLE_IMPL_H */
