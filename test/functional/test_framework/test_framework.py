@@ -9,6 +9,7 @@ from enum import Enum
 import argparse
 import logging
 import os
+import platform
 import pdb
 import random
 import re
@@ -847,6 +848,29 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
     def skip_if_no_syscoind_zmq(self):
         """Skip the running test if syscoind has not been compiled with zmq support."""
+    def skip_if_no_python_bcc(self):
+        """Attempt to import the bcc package and skip the tests if the import fails."""
+        try:
+            import bcc  # type: ignore[import] # noqa: F401
+        except ImportError:
+            raise SkipTest("bcc python module not available")
+
+    def skip_if_no_syscoind_tracepoints(self):
+        """Skip the running test if syscoind has not been compiled with USDT tracepoint support."""
+        if not self.is_usdt_compiled():
+            raise SkipTest("syscoind has not been built with USDT tracepoints enabled.")
+
+    def skip_if_no_bpf_permissions(self):
+        """Skip the running test if we don't have permissions to do BPF syscalls and load BPF maps."""
+        # check for 'root' permissions
+        if os.geteuid() != 0:
+            raise SkipTest("no permissions to use BPF (please review the tests carefully before running them with higher privileges)")
+
+    def skip_if_platform_not_linux(self):
+        """Skip the running test if we are not on a Linux platform"""
+        if platform.system() != "Linux":
+            raise SkipTest("not on a Linux system")
+
         if not self.is_zmq_compiled():
             raise SkipTest("syscoind has not been built with zmq enabled.")
 
@@ -925,6 +949,10 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
         return self.config["components"].getboolean("ENABLE_ZMQ")
+
+    def is_usdt_compiled(self):
+        """Checks whether the USDT tracepoints were compiled."""
+        return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
 
     def is_sqlite_compiled(self):
         """Checks whether the wallet module was compiled with Sqlite support."""
