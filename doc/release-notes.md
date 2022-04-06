@@ -56,6 +56,26 @@ Changes to wallet related RPCs can be found in the Wallet section below.
 New RPCs
 --------
 
+Updated REST APIs
+-----------------
+
+- The `/headers/` and `/blockfilterheaders/` endpoints have been updated to use
+  a query parameter instead of path parameter to specify the result count. The
+  count parameter is now optional, and defaults to 5 for both endpoints. The old
+  endpoints are still functional, and have no documented behaviour change.
+
+  For `/headers`, use
+  `GET /rest/headers/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>`
+  instead of
+  `GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>` (deprecated)
+
+  For `/blockfilterheaders/`, use
+  `GET /rest/blockfilterheaders/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>`
+  instead of
+  `GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>` (deprecated)
+
+  (#24098)
+
 Build System
 ------------
 
@@ -73,6 +93,21 @@ Tools and Utilities
 
 Wallet
 ------
+
+- The `sendall` RPC spends specific UTXOs to one or more recipients
+  without creating change. By default, the `sendall` RPC will spend
+  every UTXO in the wallet. `sendall` is useful to empty wallets or to
+  create a changeless payment from select UTXOs. When creating a payment
+  from a specific amount for which the recipient incurs the transaction
+  fee, continue to use the `subtractfeefromamount` option via the
+  `send`, `sendtoaddress`, or `sendmany` RPCs. (#24118)
+
+- The `listtransactions`, `gettransaction`, and `listsinceblock`
+  RPC methods now include a wtxid field (hash of serialized transaction,
+  including witness data) for each transaction. (#24198)
+
+- To help prevent fingerprinting transactions created by the Bitcoin Core
+  wallet, change output amounts are now randomized. (#24494)
 
 GUI changes
 -----------
