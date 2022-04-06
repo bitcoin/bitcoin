@@ -340,9 +340,6 @@ ServiceFlags GetDesirableServiceFlags(ServiceFlags services);
 /** Set the current IBD status in order to figure out the desirable service flags */
 void SetServiceFlagsIBDCache(bool status);
 
-bool GetDesireMWEBFlag();
-void SetDesireMWEBFlag(const bool val);
-
 /**
  * A shortcut for (services & GetDesirableServiceFlags(services))
  * == GetDesirableServiceFlags(services), ie determines whether the given

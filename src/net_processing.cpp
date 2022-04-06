@@ -1360,10 +1360,6 @@ void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInde
     const int nNewHeight = pindexNew->nHeight;
     m_connman.SetBestHeight(nNewHeight);
 
-    if (!GetDesireMWEBFlag() && IsMWEBEnabled(pindexNew, m_chainparams.GetConsensus())) {
-        SetDesireMWEBFlag(true);
-    }
-
     SetServiceFlagsIBDCache(!fInitialDownload);
     if (!fInitialDownload) {
         // Find the hashes of all blocks that weren't previously in the best chain.
