@@ -361,6 +361,10 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request("/chaininfo")
         assert_equal(json_obj['bestblockhash'], bb_hash)
 
+        # Compare with normal RPC getblockchaininfo response
+        blockchain_info = self.nodes[0].getblockchaininfo()
+        assert_equal(blockchain_info, json_obj)
+
         # Test compatibility of deprecated and newer endpoints
         self.log.info("Test compatibility of deprecated and newer endpoints")
         assert_equal(self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/headers/1/{bb_hash}"))

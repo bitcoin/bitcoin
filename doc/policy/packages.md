@@ -72,3 +72,48 @@ test accepts):
      a competing package or transaction with a mutated witness, even though the two
      same-txid-different-witness transactions are conflicting and cannot replace each other, the
      honest package should still be considered for acceptance.
+
+### Package Fees and Feerate
+
+*Package Feerate* is the total modified fees (base fees + any fee delta from
+`prioritisetransaction`) divided by the total virtual size of all transactions in the package.
+If any transactions in the package are already in the mempool, they are not submitted again
+("deduplicated") and are thus excluded from this calculation.
+
+To meet the two feerate requirements of a mempool, i.e., the pre-configured minimum relay feerate
+(`minRelayTxFee`) and the dynamic mempool minimum feerate, the total package feerate is used instead
+of the individual feerate. The individual transactions are allowed to be below the feerate
+requirements if the package meets the feerate requirements. For example, the parent(s) in the
+package can pay no fees but be paid for by the child.
+
+*Rationale*: This can be thought of as "CPFP within a package," solving the issue of a parent not
+meeting minimum fees on its own. This would allow contracting applications to adjust their fees at
+broadcast time instead of overshooting or risking becoming stuck or pinned.
+
+*Rationale*: It would be incorrect to use the fees of transactions that are already in the mempool, as
+we do not want a transaction's fees to be double-counted.
+
+Implementation Note: Transactions within a package are always validated individually first, and
+package validation is used for the transactions that failed. Since package feerate is only
+calculated using transactions that are not in the mempool, this implementation detail affects the
+outcome of package validation.
+
+*Rationale*: Packages are intended for incentive-compatible fee-bumping: transaction B is a
+"legitimate" fee-bump for transaction A only if B is a descendant of A and has a *higher* feerate
+than A. We want to prevent "parents pay for children" behavior; fees of parents should not help
+their children, since the parents can be mined without the child.  More generally, if transaction A
+is not needed in order for transaction B to be mined, A's fees cannot help B. In a
+child-with-parents package, simply excluding any parent transactions that meet feerate requirements
+individually is sufficient to ensure this.
+
+*Rationale*: We must not allow a low-feerate child to prevent its parent from being accepted; fees
+of children should not negatively impact their parents, since they are not necessary for the parents
+to be mined. More generally, if transaction B is not needed in order for transaction A to be mined,
+B's fees cannot harm A. In a child-with-parents package, simply validating parents individually
+first is sufficient to ensure this.
+
+*Rationale*: As a principle, we want to avoid accidentally restricting policy in order to be
+backward-compatible for users and applications that rely on p2p transaction relay. Concretely,
+package validation should not prevent the acceptance of a transaction that would otherwise be
+policy-valid on its own. By always accepting a transaction that passes individual validation before
+trying package validation, we prevent any unintentional restriction of policy.
