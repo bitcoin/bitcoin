@@ -25,7 +25,7 @@ while read fingerprint keyholder_name; do gpg --keyserver hkps://keys.openpgp.or
 ```
 
 
-using Windows (tested with Gpg4win 4.0.0, and FAILS with Gp4win 3.1.13, so make sure you're up to date!):
+using Windows (requires Gpg4win >= 4.0.0):
 ```
 FOR /F "tokens=1" %i IN (keys.txt) DO gpg --keyserver hkps://keys.openpgp.org --recv-keys %i
 ```
