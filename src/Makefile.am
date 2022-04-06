@@ -206,6 +206,7 @@ BITCOIN_CORE_H = \
   psbt.h \
   random.h \
   randomenv.h \
+  rest.h \
   reverse_iterator.h \
   rpc/blockchain.h \
   rpc/client.h \
