@@ -1,0 +1,21 @@
+Core i7-7700 @ 3.6GHz
+                    BN254      BLS12_381
+G1::mul        185.863Kclk   360.723Kclk
+G1::add        812.01 clk      1.540Kclk
+G1::dbl        837.24 clk      1.977Kclk
+G2::mul        340.125Kclk   642.457Kclk
+G2::add          2.233Kclk     4.368Kclk
+G2::dbl          2.134Kclk     4.088Kclk
+GT::pow        615.052Kclk     1.055Mclk
+G1::setStr chk   1.546Kclk   534.376Kclk
+G1::setStr       1.592Kclk     4.000Kclk
+G2::setStr chk 609.195Kclk     1.402Mclk
+G2::setStr       5.444Kclk     8.282Kclk
+hashAndMapToG1  26.997Kclk   336.207Kclk
+hashAndMapToG2 212.800Kclk   775.072Kclk
+pairing        909.076Kclk     2.367Mclk
+millerLoop     549.957Kclk   983.935Kclk
+finalExp       375.203Kclk     1.404Mclk
+precomputeG2   126.000Kclk   236.912Kclk
+precomputedML  427.272Kclk   729.234Kclk
+
