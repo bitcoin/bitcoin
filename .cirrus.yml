@@ -73,6 +73,19 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
+  name: 'tidy [jammy]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:jammy
+    cpu: 2
+    memory: 5G
+  # For faster CI feedback, immediately schedule the linters
+  << : *CREDITS_TEMPLATE
+  env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
+
+task:
   name: "Win64 native [msvc]"
   << : *FILTER_TEMPLATE
   windows_container:
