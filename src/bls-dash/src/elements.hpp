@@ -56,7 +56,7 @@ public:
     void ToNative(g1_t output) const;
     G1Element Negate() const;
     GTElement Pair(const G2Element &b) const;
-    uint32_t GetFingerprint() const;
+    uint32_t GetFingerprint(bool fLegacy = false) const;
     std::vector<uint8_t> Serialize(bool fLegacy = false) const;
 
     friend bool operator==(const G1Element &a, const G1Element &b);

@@ -149,11 +149,11 @@ G1Element G1Element::Negate() const
 
 GTElement G1Element::Pair(const G2Element& b) const { return (*this) & b; }
 
-uint32_t G1Element::GetFingerprint() const
+uint32_t G1Element::GetFingerprint(const bool fLegacy) const
 {
     uint8_t buffer[G1Element::SIZE];
     uint8_t hash[32];
-    memcpy(buffer, Serialize().data(), G1Element::SIZE);
+    memcpy(buffer, Serialize(fLegacy).data(), G1Element::SIZE);
     Util::Hash256(hash, buffer, G1Element::SIZE);
     return Util::FourBytesToInt(hash);
 }
