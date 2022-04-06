@@ -86,32 +86,32 @@ int main(int argc, char* argv[])
     app.setApplicationName("Bitcoin-Qt-test");
     app.createNode(*init);
 
-    int fInvalid{0};
+    int num_test_failures{0};
 
     AppTests app_tests(app);
-    fInvalid += QTest::qExec(&app_tests);
+    num_test_failures += QTest::qExec(&app_tests);
 
     OptionTests options_tests(app.node());
-    fInvalid += QTest::qExec(&options_tests);
+    num_test_failures += QTest::qExec(&options_tests);
 
     URITests test1;
-    fInvalid += QTest::qExec(&test1);
+    num_test_failures += QTest::qExec(&test1);
 
     RPCNestedTests test3(app.node());
-    fInvalid += QTest::qExec(&test3);
+    num_test_failures += QTest::qExec(&test3);
 
 #ifdef ENABLE_WALLET
     WalletTests test5(app.node());
-    fInvalid += QTest::qExec(&test5);
+    num_test_failures += QTest::qExec(&test5);
 
     AddressBookTests test6(app.node());
-    fInvalid += QTest::qExec(&test6);
+    num_test_failures += QTest::qExec(&test6);
 #endif
 
-    if (fInvalid) {
-        qWarning("\nFailed tests: %d\n", fInvalid);
+    if (num_test_failures) {
+        qWarning("\nFailed tests: %d\n", num_test_failures);
     } else {
         qDebug("\nAll tests passed.\n");
     }
-    return fInvalid;
+    return num_test_failures;
 }
