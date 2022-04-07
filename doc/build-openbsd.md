@@ -11,7 +11,7 @@ Run the following as root to install the base dependencies for building.
 
 ```bash
 pkg_add bash git gmake libevent libtool boost
-# Select the newest version of the follow packages:
+# Select the newest version of the following packages:
 pkg_add autoconf automake python
 ```
 

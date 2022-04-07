@@ -11,9 +11,9 @@ ${CI_RETRY_EXE} apt-get install -y clang-format-9 python3-pip curl git gawk jq
 update-alternatives --install /usr/bin/clang-format      clang-format      "$(which clang-format-9     )" 100
 update-alternatives --install /usr/bin/clang-format-diff clang-format-diff "$(which clang-format-diff-9)" 100
 
-${CI_RETRY_EXE} pip3 install codespell==2.0.0
-${CI_RETRY_EXE} pip3 install flake8==3.8.3
-${CI_RETRY_EXE} pip3 install mypy==0.910
+${CI_RETRY_EXE} pip3 install codespell==2.1.0
+${CI_RETRY_EXE} pip3 install flake8==4.0.1
+${CI_RETRY_EXE} pip3 install mypy==0.942
 ${CI_RETRY_EXE} pip3 install pyzmq==22.3.0
 ${CI_RETRY_EXE} pip3 install vulture==2.3
 
