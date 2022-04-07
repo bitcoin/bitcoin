@@ -675,16 +675,14 @@ private:
          EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Compare a package's feerate against minimum allowed.
-    // SYSCOIN
-    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state, const bool& IsZdagTx) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs)
+    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs)
     {
         CAmount mempoolRejectFee = m_pool.GetMinFee(gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(package_size);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
-        // SYSCOIN
-        if (package_fee < ::minRelayTxFee.GetFee(IsZdagTx? package_size*2: package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(IsZdagTx? package_size*2: package_size)));
+        if (package_fee < ::minRelayTxFee.GetFee(package_size)) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(package_size)));
         }
         return true;
     }
@@ -896,12 +894,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(),
             fSpendsCoinbase, nSigOpsCost, lp));
-    ws.m_vsize = entry->GetTxSize();
-
-    if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
-        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
-                strprintf("%d", nSigOpsCost));
-
     // SYSCOIN only double fee-rate requirement for allocation spends if not RBF
     const bool& isZDAGNoRBF = IsZTx && !SignalsOptInRBF(tx);
     if (isZDAGNoRBF) {
@@ -910,10 +902,17 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool-zdag-too-large", strprintf("%d > %d", txTotalSize, MAX_STANDARD_ZDAG_TX_SIZE));
         }
     }
+    // ensure we apply double the bandwidth costs for zdag to account for 1 double-spend allowance per zdag tx
+    ws.m_vsize = isZDAGNoRBF? entry->GetTxSize()*2: entry->GetTxSize();
+
+    if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
+                strprintf("%d", nSigOpsCost));
+
     // No individual transactions are allowed below minRelayTxFee and mempool min fee except from
     // disconnected blocks and transactions in a package. Package transactions will be checked using
     // package feerate later.
-    if (!bypass_limits && !args.m_package_feerates && !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state, isZDAGNoRBF)) return false;
+    if (!bypass_limits && !args.m_package_feerates && !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state)) return false;
 
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
     // Calculate in-mempool ancestors, up to a limit.
