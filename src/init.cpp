@@ -1559,7 +1559,10 @@ bool AppInitParameterInteraction()
     }
 
     if (gArgs.IsArgSet("-litemode")) {
-        InitWarning(strprintf(_("-litemode is deprecated.%s"), (gArgs.GetBoolArg("-litemode", false) ? (" "  + _("Its replacement -disablegovernance has been forced instead.").translated) : ( " " + _("It has been replaced by -disablegovernance.").translated))));
+        InitWarning(_("-litemode is deprecated.") +
+            (gArgs.GetBoolArg("-litemode", false) ?
+                (Untranslated(" ") + _("Its replacement -disablegovernance has been forced instead.")) :
+                (Untranslated(" ") + _("It has been replaced by -disablegovernance."))));
         gArgs.ForceRemoveArg("-litemode");
     }
 
@@ -1567,7 +1570,10 @@ bool AppInitParameterInteraction()
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
     if (fDisableGovernance) {
-        InitWarning(strprintf(_("You are starting with governance validation disabled.%s"), (fPruneMode ? " " + _("This is expected because you are running a pruned node.").translated : "")));
+        InitWarning(_("You are starting with governance validation disabled.") +
+            (fPruneMode ?
+                Untranslated(" ") + _("This is expected because you are running a pruned node.") :
+                Untranslated("")));
     }
 
     return true;
