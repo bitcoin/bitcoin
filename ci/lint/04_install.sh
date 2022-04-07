@@ -13,7 +13,7 @@ update-alternatives --install /usr/bin/clang-format-diff clang-format-diff "$(wh
 
 ${CI_RETRY_EXE} pip3 install codespell==2.1.0
 ${CI_RETRY_EXE} pip3 install flake8==4.0.1
-${CI_RETRY_EXE} pip3 install mypy==0.910
+${CI_RETRY_EXE} pip3 install mypy==0.942
 ${CI_RETRY_EXE} pip3 install pyzmq==22.3.0
 ${CI_RETRY_EXE} pip3 install vulture==2.3
 
