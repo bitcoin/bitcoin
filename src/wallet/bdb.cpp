@@ -7,6 +7,7 @@
 #include <wallet/db.h>
 
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <stdint.h>
 
@@ -291,7 +292,7 @@ BerkeleyBatch::SafeDbt::operator Dbt*()
     return &m_dbt;
 }
 
-bool BerkeleyDatabase::Verify(std::string& errorStr)
+bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
 {
     fs::path walletDir = env->Directory();
     fs::path file_path = walletDir / strFile;

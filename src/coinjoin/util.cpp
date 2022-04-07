@@ -10,6 +10,7 @@
 #include <validation.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
+#include <util/translation.h>
 
 #include <numeric>
 
@@ -254,7 +255,7 @@ bool CTransactionBuilder::IsDust(CAmount nAmount) const
     return ::IsDust(CTxOut(nAmount, ::GetScriptForDestination(tallyItem.txdest)), coinControl.m_discard_feerate.get());
 }
 
-bool CTransactionBuilder::Commit(std::string& strResult)
+bool CTransactionBuilder::Commit(bilingual_str& strResult)
 {
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
@@ -278,13 +279,13 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     bool fDust = IsDust(nAmountLeft);
     // If there is a either remainder which is considered to be dust (will be added to fee in this case) or no amount left there should be no change output, return if there is a change output.
     if (nChangePosRet != -1 && fDust) {
-        strResult = strprintf("Unexpected change output %s at position %d", tx->vout[nChangePosRet].ToString(), nChangePosRet);
+        strResult = Untranslated(strprintf("Unexpected change output %s at position %d", tx->vout[nChangePosRet].ToString(), nChangePosRet));
         return false;
     }
 
     // If there is a remainder which is not considered to be dust it should end up in a change output, return if not.
     if (nChangePosRet == -1 && !fDust) {
-        strResult = strprintf("Change output missing: %d", nAmountLeft);
+        strResult = Untranslated(strprintf("Change output missing: %d", nAmountLeft));
         return false;
     }
 
@@ -301,7 +302,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     // If the calculated fee does not match the fee returned by CreateTransaction aka if this check fails something is wrong!
     CAmount nFeeCalc = GetFee(GetBytesTotal() + nBytesAdditional) + nFeeAdditional;
     if (nFeeRet != nFeeCalc) {
-        strResult = strprintf("Fee validation failed -> nFeeRet: %d, nFeeCalc: %d, nFeeAdditional: %d, nBytesAdditional: %d, %s", nFeeRet, nFeeCalc, nFeeAdditional, nBytesAdditional, ToString());
+        strResult = Untranslated(strprintf("Fee validation failed -> nFeeRet: %d, nFeeCalc: %d, nFeeAdditional: %d, nBytesAdditional: %d, %s", nFeeRet, nFeeCalc, nFeeAdditional, nBytesAdditional, ToString()));
         return false;
     }
 
@@ -309,7 +310,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
 
     fKeepKeys = true;
 
-    strResult = tx->GetHash().ToString();
+    strResult = Untranslated(tx->GetHash().ToString());
 
     return true;
 }

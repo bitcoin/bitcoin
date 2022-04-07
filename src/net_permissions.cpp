@@ -3,8 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <net_permissions.h>
-#include <util/system.h>
 #include <netbase.h>
+#include <util/error.h>
+#include <util/system.h>
+#include <util/translation.h>
 
 // The parse the following format "perm1,perm2@xxxxxx"
 bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, std::string& error)
@@ -38,7 +40,7 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
             else if (permission == "relay") NetPermissions::AddFlag(flags, PF_RELAY);
             else if (permission.length() == 0); // Allow empty entries
             else {
-                error = strprintf(_("Invalid P2P permission: '%s'"), permission);
+                error = strprintf(_("Invalid P2P permission: '%s'").translated, permission);
                 return false;
             }
         }
@@ -70,11 +72,11 @@ bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermis
     const std::string strBind = str.substr(offset);
     CService addrBind;
     if (!Lookup(strBind.c_str(), addrBind, 0, false)) {
-        error = strprintf(_("Cannot resolve -%s address: '%s'"), "whitebind", strBind);
+        error = ResolveErrMsg("whitebind", strBind);
         return false;
     }
     if (addrBind.GetPort() == 0) {
-        error = strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind);
+        error = strprintf(_("Need to specify a port with -whitebind: '%s'").translated, strBind);
         return false;
     }
 
@@ -94,7 +96,7 @@ bool NetWhitelistPermissions::TryParse(const std::string str, NetWhitelistPermis
     CSubNet subnet;
     LookupSubNet(net.c_str(), subnet);
     if (!subnet.IsValid()) {
-        error = strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net);
+        error = strprintf(_("Invalid netmask specified in -whitelist: '%s'").translated, net);
         return false;
     }
 

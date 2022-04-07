@@ -45,7 +45,7 @@ bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& ca
     if (!fSecure) {
         LogPrintf("%s%s\n", strCaption, message);
     }
-    tfm::format(std::cerr, "%s%s\n", strCaption.c_str(), message.c_str());
+    tfm::format(std::cerr, "%s%s\n", strCaption, message);
     return false;
 }
 

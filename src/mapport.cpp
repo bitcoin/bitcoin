@@ -179,7 +179,7 @@ static bool ProcessUpnp()
                 if (externalIPAddress[0]) {
                     CNetAddr resolved;
                     if (LookupHost(externalIPAddress, resolved, false)) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString().c_str());
+                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString());
                         AddLocal(resolved, LOCAL_MAPPED);
                     }
                 } else {

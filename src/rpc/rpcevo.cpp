@@ -20,6 +20,7 @@
 #include <rpc/util.h>
 #include <util/moneystr.h>
 #include <util/validation.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #ifdef ENABLE_WALLET
@@ -229,10 +230,10 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     CTransactionRef newTx;
     CAmount nFee;
     int nChangePos = -1;
-    std::string strFailReason;
+    bilingual_str strFailReason;
 
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason.original);
     }
 
     tx.vin = newTx->vin;

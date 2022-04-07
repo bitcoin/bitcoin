@@ -17,6 +17,7 @@
 #include <txmempool.h>
 #include <util/moneystr.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <string>
@@ -374,7 +375,7 @@ std::string CCoinJoin::DenominationToString(int nDenom)
     return "to-string-error";
 }
 
-std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)
+bilingual_str CCoinJoin::GetMessageByID(PoolMessage nMessageID)
 {
     switch (nMessageID) {
     case ERR_ALREADY_HAVE:

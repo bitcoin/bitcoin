@@ -11,6 +11,7 @@
 #include <shutdown.h>
 #include <ui_interface.h>
 #include <validation.h>
+#include <util/translation.h>
 
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
@@ -87,9 +88,9 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 std::string CMasternodeSync::GetSyncStatus() const
 {
     switch (nCurrentAsset) {
-        case MASTERNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...");
-        case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
-        case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished");
+        case MASTERNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...").translated;
+        case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...").translated;
+        case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished").translated;
         default:                            return "";
     }
 }

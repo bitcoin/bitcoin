@@ -15,6 +15,8 @@
 #include <memory>
 #include <string>
 
+struct bilingual_str;
+
 /** Given a wallet directory path or legacy file path, return path to main data file in the wallet database. */
 fs::path WalletDataFilePath(const fs::path& wallet_path);
 void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
@@ -145,7 +147,7 @@ public:
     int64_t nLastWalletUpdate;
 
     /** Verifies the environment and database file */
-    virtual bool Verify(std::string& error) = 0;
+    virtual bool Verify(bilingual_str& error) = 0;
 
     std::string m_file_path;
 
@@ -189,7 +191,7 @@ public:
     bool PeriodicFlush() override { return true; }
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
     void ReloadDbEnv() override {}
-    bool Verify(std::string& errorStr) override { return true; }
+    bool Verify(bilingual_str& errorStr) override { return true; }
     std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) override { return MakeUnique<DummyBatch>(); }
 };
 

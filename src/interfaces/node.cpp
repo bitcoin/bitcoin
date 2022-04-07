@@ -28,6 +28,7 @@
 #include <primitives/block.h>
 #include <rpc/server.h>
 #include <shutdown.h>
+#include <support/allocators/secure.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
@@ -48,7 +49,8 @@ class CWallet;
 fs::path GetWalletDir();
 std::vector<fs::path> ListWalletDir();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning);
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings);
+WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::shared_ptr<CWallet>& result);
 
 namespace interfaces {
 
@@ -175,6 +177,7 @@ public:
     MasternodeSyncImpl m_masternodeSync;
     CoinJoinOptionsImpl m_coinjoin;
 
+    void initError(const std::string& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
         return gArgs.ParseParameters(argc, argv, error);
@@ -379,9 +382,9 @@ public:
         }
         return wallets;
     }
-    std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) override
+    std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
-        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warning));
+        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warnings));
     }
 
     EVO& evo() override { return m_evo; }
@@ -390,6 +393,13 @@ public:
     Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
     CoinJoin::Options& coinJoinOptions() override { return m_coinjoin; }
 
+    WalletCreationStatus createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::unique_ptr<Wallet>& result) override
+    {
+        std::shared_ptr<CWallet> wallet;
+        WalletCreationStatus status = CreateWallet(*m_interfaces.chain, passphrase, wallet_creation_flags, name, error, warnings, wallet);
+        result = MakeWallet(wallet);
+        return status;
+    }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage_connect(fn));

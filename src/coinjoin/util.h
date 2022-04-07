@@ -8,6 +8,7 @@
 #include <wallet/wallet.h>
 
 class CTransactionBuilder;
+struct bilingual_str;
 
 class CKeyHolder
 {
@@ -116,7 +117,7 @@ public:
     /// Get the total number of added outputs
     int CountOutputs() const { LOCK(cs_outputs); return vecOutputs.size(); }
     /// Create and Commit the transaction to the wallet
-    bool Commit(std::string& strResult);
+    bool Commit(bilingual_str& strResult);
     /// Convert to a string
     std::string ToString() const;
 

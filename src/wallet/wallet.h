@@ -38,6 +38,8 @@
 #include <utility>
 #include <vector>
 
+struct bilingual_str;
+
 //! Explicitly unload and delete the wallet.
 //  Blocks the current thread after signaling the unload intent so that all
 //  wallet clients release the wallet.
@@ -50,7 +52,15 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet);
 bool HasWallets();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning);
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings);
+
+enum class WalletCreationStatus {
+    SUCCESS,
+    CREATION_FAILED,
+    ENCRYPTION_FAILED
+};
+
+WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::shared_ptr<CWallet>& result);
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
@@ -984,7 +994,7 @@ public:
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
     bool SignTransaction(CMutableTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
@@ -993,7 +1003,7 @@ public:
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
     bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0);
+                           bilingual_str& error, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0);
     /**
      * Submit the transaction to the node's mempool and then relay to peers.
      * Should be called after CreateTransaction unless you want to abort
@@ -1175,10 +1185,10 @@ public:
     bool AbandonTransaction(interfaces::Chain::Lock& locked_chain, const uint256& hashTx);
 
     //! Verify wallet naming and perform salvage on the wallet if required
-    static bool Verify(interfaces::Chain& chain, const WalletLocation& location, std::string& error_string, std::string& warning_string);
+    static bool Verify(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags = 0);
+    static std::shared_ptr<CWallet> CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings, uint64_t wallet_creation_flags = 0);
 
     /**
      * Wallet post-init setup
@@ -1188,7 +1198,7 @@ public:
 
     /* AutoBackup functionality */
     static bool InitAutoBackup();
-    bool AutoBackupWallet(const fs::path& wallet_path, std::string& strBackupWarningRet, std::string& strBackupErrorRet);
+    bool AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
 
     bool BackupWallet(const std::string& strDest);
 

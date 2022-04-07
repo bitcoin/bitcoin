@@ -113,7 +113,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
         if (i.first == mismatch.second) {
             strOutput += " (2)";
         }
-        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
+        strOutput += strprintf(" %s\n", i.second.ToString());
     }
 
     std::string mutex_a, mutex_b;
@@ -127,13 +127,13 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
             strOutput += " (2)";
             mutex_b = i.second.Name();
         }
-        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
+        strOutput += strprintf(" %s\n", i.second.ToString());
     }
 
-    LogPrintf("%s\n", strOutput.c_str());
+    LogPrintf("%s\n", strOutput);
 
     if (g_debug_lockorder_abort) {
-        tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString().c_str());
+        tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString());
         abort();
     }
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
@@ -236,7 +236,7 @@ template <typename MutexType>
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs)
 {
     if (LockHeld(cs)) return;
-    tfm::format(std::cerr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+    tfm::format(std::cerr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
     abort();
 }
 template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
@@ -245,7 +245,7 @@ template void AssertLockHeldInternal(const char*, const char*, int, CCriticalSec
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
     if (!LockHeld(cs)) return;
-    tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+    tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
     abort();
 }
 

@@ -21,6 +21,8 @@
 #include <util/fees.h>
 #include <util/system.h>
 #include <util/moneystr.h>
+#include <util/string.h>
+#include <util/translation.h>
 #include <util/url.h>
 #include <util/validation.h>
 #include <util/vector.h>
@@ -297,16 +299,16 @@ static CTransactionRef SendMoney(interfaces::Chain::Lock& locked_chain, CWallet 
 
     // Create and send the transaction
     CAmount nFeeRequired = 0;
-    std::string strError;
+    bilingual_str error;
     std::vector<CRecipient> vecSend;
     int nChangePosRet = -1;
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     return tx;
@@ -946,11 +948,11 @@ static UniValue sendmany(const JSONRPCRequest& request)
     // Send
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
-    std::string strFailReason;
+    bilingual_str error;
     CTransactionRef tx;
-    bool fCreated = pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strFailReason, coin_control);
+    bool fCreated = pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control);
     if (!fCreated)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     return tx->GetHash().GetHex();
 }
@@ -2724,13 +2726,14 @@ static UniValue loadwallet(const JSONRPCRequest& request)
         }
     }
 
-    std::string error, warning;
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_interfaces->chain, location, error, warning);
-    if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error);
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_interfaces->chain, location, error, warnings);
+    if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error.original);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", warning);
+    obj.pushKV("warning", Join(warnings, "\n", OpOriginal));
 
     return obj;
 }
@@ -2762,81 +2765,42 @@ static UniValue createwallet(const JSONRPCRequest& request)
     if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(help.ToString());
     }
-    std::string error;
-    std::string warning;
 
     uint64_t flags = 0;
     if (!request.params[1].isNull() && request.params[1].get_bool()) {
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
 
-    bool create_blank = false; // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
     if (!request.params[2].isNull() && request.params[2].get_bool()) {
-        create_blank = true;
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
     SecureString passphrase;
     passphrase.reserve(100);
+    std::vector<bilingual_str> warnings;
     if (!request.params[3].isNull()) {
         passphrase = request.params[3].get_str().c_str();
         if (passphrase.empty()) {
-            // Empty string is invalid
-            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Cannot encrypt a wallet with a blank password");
-        }
-        // Born encrypted wallets need to be blank first so that wallet creation doesn't make any unencrypted keys
-        flags |= WALLET_FLAG_BLANK_WALLET;
-    }
-
-    WalletLocation location(request.params[0].get_str());
-    if (location.Exists()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + location.GetName() + " already exists.");
-    }
-
-    // Wallet::Verify will check if we're trying to create a wallet with a duplication name.
-    if (!CWallet::Verify(*g_rpc_interfaces->chain, location, error, warning)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
-    }
-
-    const auto wallet = CWallet::CreateWalletFromFile(*g_rpc_interfaces->chain, location, flags);
-    if (!wallet) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed.");
-    }
-
-    // Encrypt the wallet if there's a passphrase
-    if (!passphrase.empty() && !(flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        if (!wallet->EncryptWallet(passphrase)) {
-            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Wallet created but failed to encrypt.");
-        }
-
-        if (!create_blank) {
-            // Unlock the wallet
-            if (!wallet->Unlock(passphrase)) {
-                throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Wallet was encrypted but could not be unlocked");
-            }
-
-            // Set a HD chain for the wallet
-            // TODO: re-enable this and `keypoolsize_hd_internal` check in `wallet_createwallet.py`
-            // when HD is the default mode (make sure this actually works!)...
-            // if (!wallet->GenerateNewHDChainEncrypted("", "", passphrase)) {
-            //     throw JSONRPCError(RPC_WALLET_ERROR, "Failed to generate encrypted HD wallet");
-            // }
-            // ... and drop this
-            wallet->UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
-            wallet->NewKeyPool();
-            // end TODO
-
-            // Relock the wallet
-            wallet->Lock();
+            // Empty string means unencrypted
+            warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
         }
     }
 
-    AddWallet(wallet);
-
-    wallet->postInitProcess();
+    bilingual_str error;
+    std::shared_ptr<CWallet> wallet;
+    WalletCreationStatus status = CreateWallet(*g_rpc_interfaces->chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
+    switch (status) {
+        case WalletCreationStatus::CREATION_FAILED:
+            throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+        case WalletCreationStatus::ENCRYPTION_FAILED:
+            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, error.original);
+        case WalletCreationStatus::SUCCESS:
+            break;
+        // no default case, so the compiler can warn about missing cases
+    }
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", warning);
+    obj.pushKV("warning", Join(warnings, "\n", OpOriginal));
 
     return obj;
 }
@@ -3185,10 +3149,10 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         setSubtractFeeFromOutputs.insert(pos);
     }
 
-    std::string strFailReason;
+    bilingual_str error;
 
-    if (!pwallet->FundTransaction(tx, fee_out, change_position, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+    if (!pwallet->FundTransaction(tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
 }
 

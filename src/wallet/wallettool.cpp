@@ -4,6 +4,7 @@
 
 #include <fs.h>
 #include <interfaces/chain.h>
+#include <util/translation.h>
 #include <util/system.h>
 #include <wallet/salvage.h>
 #include <wallet/wallet.h>
@@ -112,14 +113,14 @@ static bool SalvageWallet(const fs::path& path)
     std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(path);
 
     // Initialize the environment before recovery
-    std::string error_string;
+    bilingual_str error_string;
     try {
         database->Verify(error_string);
     } catch (const fs::filesystem_error& e) {
-        error_string = strprintf("Error loading wallet. %s", fsbridge::get_filesystem_error_message(e));
+        error_string = Untranslated(strprintf("Error loading wallet. %s", fsbridge::get_filesystem_error_message(e)));
     }
-    if (!error_string.empty()) {
-        tfm::format(std::cerr, "Failed to open wallet for salvage :%s\n", error_string);
+    if (!error_string.original.empty()) {
+        tfm::format(std::cerr, "Failed to open wallet for salvage :%s\n", error_string.translated);
         return false;
     }
 

@@ -4,7 +4,9 @@
 
 #include <util/error.h>
 
+#include <tinyformat.h>
 #include <util/system.h>
+#include <util/translation.h>
 
 std::string TransactionErrorString(const TransactionError err)
 {
@@ -34,12 +36,17 @@ std::string TransactionErrorString(const TransactionError err)
     assert(false);
 }
 
-std::string AmountHighWarn(const std::string& optname)
+std::string ResolveErrMsg(const std::string& optname, const std::string& strBind)
 {
-    return strprintf(_("%s is set very high!"), optname);
+    return strprintf(_("Cannot resolve -%s address: '%s'").translated, optname, strBind);
 }
 
-std::string AmountErrMsg(const char* const optname, const std::string& strValue)
+std::string AmountHighWarn(const std::string& optname)
 {
-    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
+    return strprintf(_("%s is set very high!").translated, optname);
+}
+
+std::string AmountErrMsg(const std::string& optname, const std::string& strValue)
+{
+    return strprintf(_("Invalid amount for -%s=<amount>: '%s'").translated, optname, strValue);
 }
