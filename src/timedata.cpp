@@ -74,7 +74,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
     // a timing cleanup that strengthens it in a number of other ways.
     //
     if (g_time_offsets.size() >= 5 && g_time_offsets.size() % 2 == 1) {
-        int64_t nMedian = g_time_offsets.median();
+        const int64_t nMedian{g_time_offsets.median()};
         std::vector<int64_t> vSorted = g_time_offsets.sorted();
         // Only let other nodes change our time by so much
         int64_t max_adjustment = std::max<int64_t>(0, gArgs.GetIntArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT));
@@ -104,7 +104,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
             for (const int64_t n : vSorted) {
                 log_message += strprintf("%+d  ", n);
             }
-            log_message += strprintf("|  median offset = %+d  (%+d minutes)", nTimeOffset, nTimeOffset / 60);
+            log_message += strprintf("|  median offset = %+d seconds (%+d minutes)", nMedian, nMedian / 60);
             LogPrint(BCLog::NET, "%s\n", log_message);
         }
     }
