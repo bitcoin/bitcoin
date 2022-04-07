@@ -17,6 +17,7 @@
 
 class UniValue;
 class CInv;
+class CConnman;
 
 namespace llmq
 {
@@ -255,6 +256,7 @@ private:
 
     uint256 myProTxHash;
     CBLSId myId;
+    CConnman& connman;
     std::optional<size_t> myIdx;
 
     // all indexed by msg hash
@@ -274,8 +276,8 @@ private:
     std::set<uint256> validCommitments GUARDED_BY(invCs);
 
 public:
-    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
-        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
+    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
+        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager), connman(_connman) {}
 
     bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash, int _quorumIndex);
 

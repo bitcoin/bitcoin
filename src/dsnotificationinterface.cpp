@@ -109,9 +109,9 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
     CCoinJoin::BlockDisconnected(pblock, pindexDisconnected);
 }
 
-void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
+void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)
 {
-    CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff);
+    CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
     governance.UpdateCachesAndClean();
 }
 

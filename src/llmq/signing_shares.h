@@ -374,14 +374,16 @@ private:
 
     FastRandomContext rnd GUARDED_BY(cs);
 
+    CConnman& connman;
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    CSigSharesManager()
+    explicit CSigSharesManager(CConnman& _connman) : connman(_connman)
     {
         workInterrupt.reset();
     };
+    CSigSharesManager() = delete;
     ~CSigSharesManager() override = default;
 
     void StartWorkerThread();

@@ -7,6 +7,7 @@
 
 #include <test/util/setup_common.h>
 
+#include <net.h>
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
 #include <wallet/wallet.h>

@@ -15,6 +15,7 @@
 #include <vector>
 
 class CBlock;
+class CConnman;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;

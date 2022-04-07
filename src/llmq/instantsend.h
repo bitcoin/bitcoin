@@ -175,6 +175,7 @@ class CInstantSendManager : public CRecoveredSigsListener
 private:
     mutable CCriticalSection cs;
     CInstantSendDb db;
+    CConnman& connman;
 
     std::atomic<bool> fUpgradedDB{false};
 
@@ -214,7 +215,7 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs);
 
 public:
-    explicit CInstantSendManager(bool unitTests, bool fWipe) : db(unitTests, fWipe) { workInterrupt.reset(); }
+    explicit CInstantSendManager(CConnman& _connman, bool unitTests, bool fWipe) : db(unitTests, fWipe), connman(_connman) { workInterrupt.reset(); }
     ~CInstantSendManager() = default;
 
     void Start();
@@ -248,7 +249,7 @@ private:
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock);
-    static void AskNodesForLockedTx(const uint256& txid);
+    static void AskNodesForLockedTx(const uint256& txid, const CConnman& connman);
     void ProcessPendingRetryLockTxs();
 
     void WorkThreadMain();

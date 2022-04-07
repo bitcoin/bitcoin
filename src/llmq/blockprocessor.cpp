@@ -33,8 +33,8 @@ static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT_Q_INDEXED = "q_m
 
 static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
 
-CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb) :
-    evoDb(_evoDb)
+CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb, CConnman& _connman) :
+    evoDb(_evoDb), connman(_connman)
 {
     CLLMQUtils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }

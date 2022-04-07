@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+class CConnman;
 class CScheduler;
 
 namespace interfaces {

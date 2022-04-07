@@ -580,7 +580,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
     // Don't hold cs while calling signals
     if (diff.HasChanges()) {
-        GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff);
+        GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff, connman);
         uiInterface.NotifyMasternodeListChanged(newList);
     }
 
@@ -621,7 +621,7 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
 
     if (diff.HasChanges()) {
         auto inversedDiff = curList.BuildDiff(prevList);
-        GetMainSignals().NotifyMasternodeListChanged(true, curList, inversedDiff);
+        GetMainSignals().NotifyMasternodeListChanged(true, curList, inversedDiff, connman);
         uiInterface.NotifyMasternodeListChanged(prevList);
     }
 

@@ -18,6 +18,7 @@
 
 class CNode;
 
+class CConnman;
 class CBlockIndex;
 
 class CDeterministicMN;
@@ -188,6 +189,7 @@ class CQuorumManager
 {
 private:
     CEvoDB& evoDb;
+    CConnman& connman;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
@@ -199,7 +201,7 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
+    CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
     ~CQuorumManager() { Stop(); };
 
     void Start();

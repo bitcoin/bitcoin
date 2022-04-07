@@ -62,6 +62,10 @@
 #include <validationinterface.h>
 
 #include <masternode/node.h>
+#ifdef ENABLE_WALLET
+#include <coinjoin/client.h>
+#include <coinjoin/options.h>
+#endif // ENABLE_WALLET
 #include <coinjoin/server.h>
 #include <dsnotificationinterface.h>
 #include <flat-database.h>
@@ -1971,11 +1975,11 @@ bool AppInitMain(InitInterfaces& interfaces)
                 evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
                 deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *g_connman));
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
 
-                llmq::InitLLMQSystem(*evoDb, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, *g_connman, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2244,7 +2248,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     if(fMasternodeMode) {
         // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = new CActiveMasternodeManager();
+        activeMasternodeManager = new CActiveMasternodeManager(*g_connman);
         RegisterValidationInterface(activeMasternodeManager);
     }
 
@@ -2334,6 +2338,10 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (fMasternodeMode) {
         scheduler.scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(coinJoinServer), std::ref(*g_connman)), 1 * 1000);
         scheduler.scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*llmq::quorumDKGSessionManager)), 60 * 60 * 1000);
+#ifdef ENABLE_WALLET
+    } else if(CCoinJoinClientOptions::IsEnabled()) {
+        scheduler.scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*g_connman)), 1 * 1000);
+#endif // ENABLE_WALLET
     }
 
     if (gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {

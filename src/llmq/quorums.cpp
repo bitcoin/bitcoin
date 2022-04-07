@@ -158,7 +158,8 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
     return true;
 }
 
-CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+    connman(_connman),
     evoDb(_evoDb),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager)
@@ -290,7 +291,7 @@ void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqPa
     }
 
     for (const auto& quorum : lastQuorums) {
-        if (CLLMQUtils::EnsureQuorumConnections(llmqParams, quorum->m_quorum_base_block_index, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash))) {
+        if (CLLMQUtils::EnsureQuorumConnections(llmqParams, quorum->m_quorum_base_block_index, connman, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash))) {
             continue;
         }
         if (connmanQuorumsToDelete.count(quorum->qc->quorumHash) > 0) {

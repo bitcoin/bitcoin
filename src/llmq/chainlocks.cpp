@@ -22,8 +22,9 @@ namespace llmq
 {
 CChainLocksHandler* chainLocksHandler;
 
-CChainLocksHandler::CChainLocksHandler() :
-    scheduler(std::make_unique<CScheduler>())
+CChainLocksHandler::CChainLocksHandler(CConnman& _connman) :
+    scheduler(std::make_unique<CScheduler>()),
+    connman(_connman)
 {
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler.get());
     scheduler_thread = std::make_unique<std::thread>(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));

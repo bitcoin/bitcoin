@@ -1447,7 +1447,7 @@ void CSigSharesManager::WorkThreadMain()
     int64_t lastSendTime = 0;
 
     while (!workInterrupt) {
-        if (!quorumSigningManager || !g_connman) {
+        if (!quorumSigningManager) {
             if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
                 return;
             }
@@ -1458,7 +1458,7 @@ void CSigSharesManager::WorkThreadMain()
 
         RemoveBannedNodeStates();
         fMoreWork |= quorumSigningManager->ProcessPendingRecoveredSigs();
-        fMoreWork |= ProcessPendingSigShares(*g_connman);
+        fMoreWork |= ProcessPendingSigShares(connman);
         SignPendingSigShares();
 
         if (GetTimeMillis() - lastSendTime > 100) {
@@ -1495,7 +1495,7 @@ void CSigSharesManager::SignPendingSigShares()
 
         if (sigShare.sigShare.Get().IsValid()) {
 
-            ProcessSigShare(sigShare, *g_connman, pQuorum);
+            ProcessSigShare(sigShare, connman, pQuorum);
 
             if (CLLMQUtils::IsAllMembersConnectedEnabled(pQuorum->params.type)) {
                 LOCK(cs);
