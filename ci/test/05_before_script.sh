@@ -13,7 +13,7 @@ OSX_SDK_PATH="depends/sdk-sources/${OSX_SDK_BASENAME}"
 mkdir -p depends/SDKs depends/sdk-sources
 
 if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
-  curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
+  DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
 fi
 if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
   DOCKER_EXEC tar -C "depends/SDKs" -xf "$OSX_SDK_PATH"

@@ -39,6 +39,7 @@ else
     bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
   }
 fi
+export -f DOCKER_EXEC
 
 DOCKER_EXEC free -m -h
 DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)

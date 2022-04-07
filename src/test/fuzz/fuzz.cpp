@@ -12,6 +12,7 @@
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
+#if defined(PROVIDE_MAIN_FUNCTION)
 static bool read_stdin(std::vector<uint8_t>& data)
 {
     uint8_t buffer[1024];
@@ -21,6 +22,7 @@ static bool read_stdin(std::vector<uint8_t>& data)
     }
     return length == 0;
 }
+#endif
 
 // Default initialization: Override using a non-weak initialize().
 __attribute__((weak)) void initialize()
@@ -42,8 +44,7 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
     return 0;
 }
 
-// Declare main(...) "weak" to allow for libFuzzer linking. libFuzzer provides
-// the main(...) function.
+#if defined(PROVIDE_MAIN_FUNCTION)
 __attribute__((weak)) int main(int argc, char** argv)
 {
     initialize();
@@ -72,3 +73,4 @@ __attribute__((weak)) int main(int argc, char** argv)
 #endif
     return 0;
 }
+#endif

@@ -15,7 +15,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    const int64_t random_time = fuzzed_data_provider.ConsumeIntegral<int64_t>();
+    const int64_t random_time = fuzzed_data_provider.ConsumeIntegral<int32_t>();
     const std::string random_string = fuzzed_data_provider.ConsumeRemainingBytesAsString();
 
     const std::string iso8601_datetime = FormatISO8601DateTime(random_time);
