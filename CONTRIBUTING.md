@@ -27,15 +27,15 @@ facilitates social contribution, easy testing and peer review.
 
 To contribute a patch, the workflow is as follows:
 
-  1. Fork repository ([only the first time](https://help.github.com/en/articles/fork-a-repo)).
+  1. Fork repository ([only for the first time](https://help.github.com/en/articles/fork-a-repo))
   1. Create topic branch
   1. Commit patches
 
 The project coding conventions in the [developer notes](doc/developer-notes.md)
-must be adhered to.
+must be followed.
 
-In general [commits should be atomic](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention)
-and diffs should be easy to read. For this reason do not mix any formatting
+In general, [commits should be atomic](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention)
+and diffs should be easy to read. For this reason, do not mix any formatting
 fixes or code moves with actual code changes.
 
 Commit messages should be verbose by default consisting of a short subject line
@@ -80,7 +80,7 @@ Examples:
     Qt: Add feed bump button
     Log: Fix typo in log message
 
-Note that translations should not be submitted as pull requests, please see
+Note that translations should not be submitted as pull requests. Please see
 [Translation Process](https://github.com/dashpay/dash/blob/master/doc/translation_process.md)
 for more information on helping with translations.
 
@@ -93,7 +93,7 @@ patch does together with any justification/reasoning. You should include
 references to any discussions (for example other tickets or mailing list
 discussions).
 
-At this stage one should expect comments and review from other contributors. You
+At this stage, one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
 to your fork until you have satisfied all feedback.
 
@@ -113,8 +113,8 @@ before it will be reviewed. The basic squashing workflow is shown below.
     # Save and quit.
     git push -f # (force push to GitHub)
 
-Please update the resulting commit message if needed, it should read as a
-coherent message. In most cases this means that you should not just list the
+Please update the resulting commit message if needed. It should read as a
+coherent message. In most cases, this means that you should not just list the
 interim commits.
 
 If you have problems with squashing (or other workflows with `git`), you can
@@ -167,9 +167,9 @@ in the future, they may be removed by the Repository Maintainer.
 Refactoring is a necessary part of any software project's evolution. The
 following guidelines cover refactoring pull requests for the project.
 
-There are three categories of refactoring, code only moves, code style fixes,
-code refactoring. In general refactoring pull requests should not mix these
-three kinds of activity in order to make refactoring pull requests easy to
+There are three categories of refactoring: code-only moves, code style fixes, and
+code refactoring. In general, refactoring pull requests should not mix these
+three kinds of activities in order to make refactoring pull requests easy to
 review and uncontroversial. In all cases, refactoring PRs must not change the
 behaviour of code within the pull request (bugs must be preserved as is).
 
