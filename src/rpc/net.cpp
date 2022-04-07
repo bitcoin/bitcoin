@@ -156,7 +156,7 @@ static RPCHelpMan getpeerinfo()
                         {RPCResult::Type::NUM, "msg", "The total bytes received aggregated by message type\n"
                                                       "When a message type is not listed in this json object, the bytes received are 0.\n"
                                                       "Only known message types can appear as keys in the object and all bytes received\n"
-                                                      "of unknown message types are listed under '"+NET_MESSAGE_COMMAND_OTHER+"'."}
+                                                      "of unknown message types are listed under '"+NET_MESSAGE_TYPE_OTHER+"'."}
                     }},
                     {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
                                                               "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
@@ -243,19 +243,19 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("permissions", permissions);
         obj.pushKV("minfeefilter", ValueFromAmount(stats.minFeeFilter));
 
-        UniValue sendPerMsgCmd(UniValue::VOBJ);
-        for (const auto& i : stats.mapSendBytesPerMsgCmd) {
+        UniValue sendPerMsgType(UniValue::VOBJ);
+        for (const auto& i : stats.mapSendBytesPerMsgType) {
             if (i.second > 0)
-                sendPerMsgCmd.pushKV(i.first, i.second);
+                sendPerMsgType.pushKV(i.first, i.second);
         }
-        obj.pushKV("bytessent_per_msg", sendPerMsgCmd);
+        obj.pushKV("bytessent_per_msg", sendPerMsgType);
 
-        UniValue recvPerMsgCmd(UniValue::VOBJ);
-        for (const auto& i : stats.mapRecvBytesPerMsgCmd) {
+        UniValue recvPerMsgType(UniValue::VOBJ);
+        for (const auto& i : stats.mapRecvBytesPerMsgType) {
             if (i.second > 0)
-                recvPerMsgCmd.pushKV(i.first, i.second);
+                recvPerMsgType.pushKV(i.first, i.second);
         }
-        obj.pushKV("bytesrecv_per_msg", recvPerMsgCmd);
+        obj.pushKV("bytesrecv_per_msg", recvPerMsgType);
         obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
 
         ret.push_back(obj);
