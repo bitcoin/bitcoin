@@ -21,6 +21,7 @@
 #include <key_io.h>
 #include <ui_interface.h>
 #include <util/system.h> // for GetBoolArg
+#include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
@@ -249,11 +250,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     }
 
     CAmount nFeeRequired = 0;
-    std::string strFailReason;
+    bilingual_str error;
     int nChangePosRet = -1;
 
     auto& newTx = transaction.getWtx();
-    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason);
+    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, error);
     transaction.setTransactionFee(nFeeRequired);
     if (fSubtractFeeFromAmount && newTx)
         transaction.reassignAmounts();
@@ -264,7 +265,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         {
             return SendCoinsReturn(AmountWithFeeExceedsBalance);
         }
-        Q_EMIT message(tr("Send Coins"), QString::fromStdString(strFailReason),
+        Q_EMIT message(tr("Send Coins"), QString::fromStdString(error.translated),
                      CClientUIInterface::MSG_ERROR);
         return TransactionCreationFailed;
     }
@@ -429,11 +430,11 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 
 bool WalletModel::autoBackupWallet(QString& strBackupWarningRet, QString& strBackupErrorRet)
 {
-    std::string strBackupError;
-    std::vector<std::string> warnings;
+    bilingual_str strBackupError;
+    std::vector<bilingual_str> warnings;
     bool result = m_wallet->autoBackupWallet("", strBackupError, warnings);
-    strBackupWarningRet = QString::fromStdString(Join(warnings, "\n"));
-    strBackupErrorRet = QString::fromStdString(strBackupError);
+    strBackupWarningRet = QString::fromStdString(Join(warnings, "\n", OpTranslated));
+    strBackupErrorRet = QString::fromStdString(strBackupError.translated);
     return result;
 }
 

@@ -173,7 +173,7 @@ public:
     }
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
-    bool autoBackupWallet(const fs::path& wallet_path, std::string& error_string, std::vector<std::string>& warnings) override
+    bool autoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings) override
     {
         return m_wallet->AutoBackupWallet(wallet_path, error_string, warnings);
     }
@@ -276,7 +276,7 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        std::string& fail_reason) override
+        bilingual_str& fail_reason) override
     {
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);

@@ -14,6 +14,7 @@
 #include <policy/policy.h>
 #include <rpc/server.h>
 #include <test/util/setup_common.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>
@@ -365,7 +366,7 @@ public:
         CTransactionRef tx;
         CAmount fee;
         int changePos = -1;
-        std::string error;
+        bilingual_str error;
         CCoinControl dummy;
         {
             auto locked_chain = m_chain->lock();
@@ -525,11 +526,11 @@ public:
         CTransactionRef tx;
         CAmount nFeeRet;
         int nChangePos = nChangePosRequest;
-        std::string strError;
+        bilingual_str strError;
 
         auto locked_chain = wallet->chain().lock();
         bool fCreationSucceeded = wallet->CreateTransaction(*locked_chain, GetRecipients(vecEntries), tx, nFeeRet, nChangePos, strError, coinControl);
-        bool fHitMaxTries = strError == strExceededMaxTries;
+        bool fHitMaxTries = strError.original == strExceededMaxTries;
         // This should never happen.
         if (fHitMaxTries) {
             BOOST_CHECK(!fHitMaxTries);
@@ -540,7 +541,7 @@ public:
             return false;
         }
         //  Verify the expected error string if there is one provided
-        if (strErrorExpected.size() && !CheckEqual(strErrorExpected, strError)) {
+        if (strErrorExpected.size() && !CheckEqual(strErrorExpected, strError.original)) {
             return false;
         }
         if (!fCreateShouldSucceed) {
@@ -577,7 +578,7 @@ public:
         CTransactionRef tx;
         CAmount nFeeRet;
         int nChangePosRet = -1;
-        std::string strError;
+        bilingual_str strError;
         CCoinControl coinControl;
         BOOST_CHECK(wallet->CreateTransaction(*wallet->chain().lock(), GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl));
         wallet->CommitTransaction(tx, {}, {});
@@ -912,7 +913,7 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     CTransactionRef tx2;
     CAmount fee;
     int changePos = -1;
-    std::string error;
+    bilingual_str error;
     CCoinControl dummy;
     {
         auto locked_chain = wallet->chain().lock();

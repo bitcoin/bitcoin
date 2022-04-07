@@ -28,6 +28,7 @@ class CWallet;
 enum isminetype : unsigned int;
 enum class FeeReason;
 typedef uint8_t isminefilter;
+struct bilingual_str;
 struct CRecipient;
 
 namespace interfaces {
@@ -95,7 +96,7 @@ public:
     virtual bool backupWallet(const std::string& filename) = 0;
 
     //! Automatically backup up wallet.
-    virtual bool autoBackupWallet(const fs::path& wallet_path, std::string& error_string, std::vector<std::string>& warnings) = 0;
+    virtual bool autoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings) = 0;
 
     //! Get the number of keys since the last auto backup
     virtual int64_t getKeysLeftSinceAutoBackup() = 0;
@@ -164,7 +165,7 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        std::string& fail_reason) = 0;
+        bilingual_str& fail_reason) = 0;
 
     //! Commit transaction.
     virtual void commitTransaction(CTransactionRef tx,

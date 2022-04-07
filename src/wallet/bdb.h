@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+struct bilingual_str;
+
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-override"
@@ -145,7 +147,7 @@ public:
     void ReloadDbEnv() override;
 
     /** Verifies the environment and database file */
-    bool Verify(std::string& error) override;
+    bool Verify(bilingual_str& error) override;
 
     /**
      * Pointer to shared database environment.

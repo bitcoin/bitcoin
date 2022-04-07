@@ -292,7 +292,7 @@ BerkeleyBatch::SafeDbt::operator Dbt*()
     return &m_dbt;
 }
 
-bool BerkeleyDatabase::Verify(std::string& errorStr)
+bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
 {
     fs::path walletDir = env->Directory();
     fs::path file_path = walletDir / strFile;
@@ -301,14 +301,14 @@ bool BerkeleyDatabase::Verify(std::string& errorStr)
     LogPrintf("Using wallet %s\n", file_path.string());
 
     if (!env->Open(true /* retry */)) {
-        errorStr = strprintf(_("Error initializing wallet database environment %s!").translated, walletDir);
+        errorStr = strprintf(_("Error initializing wallet database environment %s!"), walletDir);
         return false;
     }
 
     if (fs::exists(file_path))
     {
         if (!env->Verify(strFile)) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.").translated, file_path);
+            errorStr = strprintf(_("%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup."), file_path);
             return false;
         }
     }
