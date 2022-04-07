@@ -616,17 +616,17 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     const CAmount child_value{parent_value - COIN};
 
     Package package_cpfp;
-    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[0], /*vout=*/ 0,
-                                                    /*input_height=*/ 0, /*input_signing_key=*/ coinbaseKey,
-                                                    /*output_destination=*/ parent_spk,
-                                                    /*output_amount=*/ parent_value, /*submit=*/ false);
+    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                    /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                    /*output_destination=*/parent_spk,
+                                                    /*output_amount=*/parent_value, /*submit=*/false);
     CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
     package_cpfp.push_back(tx_parent);
 
-    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/ tx_parent, /*vout=*/ 0,
-                                                   /*input_height=*/ 101, /*input_signing_key=*/ child_key,
-                                                   /*output_destination=*/ child_spk,
-                                                   /*output_amount=*/ child_value, /*submit=*/ false);
+    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent, /*input_vout=*/0,
+                                                   /*input_height=*/101, /*input_signing_key=*/child_key,
+                                                   /*output_destination=*/child_spk,
+                                                   /*output_amount=*/child_value, /*submit=*/false);
     CTransactionRef tx_child = MakeTransactionRef(mtx_child);
     package_cpfp.push_back(tx_child);
 
@@ -688,17 +688,17 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     // This package just pays 200 satoshis total. This would be enough to pay for the child alone,
     // but isn't enough for the entire package to meet the 1sat/vbyte minimum.
     Package package_still_too_low;
-    auto mtx_parent_cheap = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[1], /*vout=*/ 0,
-                                                          /*input_height=*/ 0, /*input_signing_key=*/ coinbaseKey,
-                                                          /*output_destination=*/ parent_spk,
-                                                          /*output_amount=*/ coinbase_value, /*submit=*/ false);
+    auto mtx_parent_cheap = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
+                                                          /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                          /*output_destination=*/parent_spk,
+                                                          /*output_amount=*/coinbase_value, /*submit=*/false);
     CTransactionRef tx_parent_cheap = MakeTransactionRef(mtx_parent_cheap);
     package_still_too_low.push_back(tx_parent_cheap);
 
-    auto mtx_child_cheap = CreateValidMempoolTransaction(/*input_transaction=*/ tx_parent_cheap, /*vout=*/ 0,
-                                                         /*input_height=*/ 101, /* input_signing_key */ child_key,
-                                                         /*output_destination=*/ child_spk,
-                                                         /*output_amount=*/ coinbase_value - 200, /*submit=*/ false);
+    auto mtx_child_cheap = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent_cheap, /*input_vout=*/0,
+                                                         /*input_height=*/101, /*input_signing_key=*/child_key,
+                                                         /*output_destination=*/child_spk,
+                                                         /*output_amount=*/coinbase_value - 200, /*submit=*/false);
     CTransactionRef tx_child_cheap = MakeTransactionRef(mtx_child_cheap);
     package_still_too_low.push_back(tx_child_cheap);
 
@@ -706,7 +706,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     {
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const auto submit_package_too_low = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                   package_still_too_low, /* test_accept */ false);
+                                                   package_still_too_low, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_package_too_low.m_state.IsInvalid(), "Package validation unexpectedly succeeded");
         BOOST_CHECK_EQUAL(submit_package_too_low.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(submit_package_too_low.m_state.GetRejectReason(), "package-fee-too-low");
@@ -728,7 +728,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     // Now that the child's fees have "increased" by 1 BTC, the cheap package should succeed.
     {
         const auto submit_prioritised_package = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                                  package_still_too_low, /*test_accept=*/ false);
+                                                                  package_still_too_low, /*test_accept=*/false);
         expected_pool_size += 2;
         BOOST_CHECK_MESSAGE(submit_prioritised_package.m_state.IsValid(),
                 "Package validation unexpectedly failed" << submit_prioritised_package.m_state.GetRejectReason());
@@ -747,17 +747,17 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     // the parent from being accepted.
     Package package_rich_parent;
     const CAmount high_parent_fee{1 * COIN};
-    auto mtx_parent_rich = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[2], /*vout=*/ 0,
-                                                         /*input_height=*/ 0, /*input_signing_key=*/ coinbaseKey,
-                                                         /*output_destination=*/ parent_spk,
-                                                         /*output_amount=*/ coinbase_value - high_parent_fee, /*submit=*/ false);
+    auto mtx_parent_rich = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[2], /*input_vout=*/0,
+                                                         /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                         /*output_destination=*/parent_spk,
+                                                         /*output_amount=*/coinbase_value - high_parent_fee, /*submit=*/false);
     CTransactionRef tx_parent_rich = MakeTransactionRef(mtx_parent_rich);
     package_rich_parent.push_back(tx_parent_rich);
 
-    auto mtx_child_poor = CreateValidMempoolTransaction(/*input_transaction=*/ tx_parent_rich, /*vout=*/ 0,
-                                                        /*input_height=*/ 101, /*input_signing_key=*/ child_key,
-                                                        /*output_destination=*/ child_spk,
-                                                        /*output_amount=*/ coinbase_value - high_parent_fee, /*submit=*/ false);
+    auto mtx_child_poor = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent_rich, /*input_vout=*/0,
+                                                        /*input_height=*/101, /*input_signing_key=*/child_key,
+                                                        /*output_destination=*/child_spk,
+                                                        /*output_amount=*/coinbase_value - high_parent_fee, /*submit=*/false);
     CTransactionRef tx_child_poor = MakeTransactionRef(mtx_child_poor);
     package_rich_parent.push_back(tx_child_poor);
 
@@ -765,7 +765,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     {
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const auto submit_rich_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                          package_rich_parent, /* test_accept */ false);
+                                                          package_rich_parent, /*test_accept=*/false);
         expected_pool_size += 1;
         BOOST_CHECK_MESSAGE(submit_rich_parent.m_state.IsInvalid(), "Package validation unexpectedly succeeded");
 
