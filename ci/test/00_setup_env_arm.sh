@@ -14,10 +14,11 @@ export QEMU_USER_CMD="${QEMU_USER_CMD:"qemu-arm -L /usr/arm-linux-gnueabihf/"}"
 # the target is required, so install both.
 export DPKG_ADD_ARCH="armhf"
 export PACKAGES="python3 g++-arm-linux-gnueabihf busybox qemu-user libc6:armhf libstdc++6:armhf libfontconfig1:armhf libxcb1:armhf"
+export CHECK_DOC=1
 export USE_BUSY_BOX=true
-export RUN_UNIT_TESTS=true
-export RUN_INTEGRATION_TESTS=true
+export RUN_UNIT_TESTS=false
+export RUN_INTEGRATION_TESTS=false
 export GOAL="install"
 # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
 # This could be removed once the ABI change warning does not show up by default
-export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
+export BITCOIN_CONFIG="--enable-reduce-exports --enable-suppress-external-warnings --enable-werror CXXFLAGS=-Wno-psabi"

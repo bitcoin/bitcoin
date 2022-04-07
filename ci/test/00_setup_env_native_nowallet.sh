@@ -9,4 +9,4 @@ export LC_ALL=C.UTF-8
 export PACKAGES="python3-zmq"
 export DEP_OPTS="NO_WALLET=1"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+export BITCOIN_CONFIG="--enable-reduce-exports"

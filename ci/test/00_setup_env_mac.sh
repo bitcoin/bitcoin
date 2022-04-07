@@ -12,5 +12,5 @@ export XCODE_VERSION=11.3.1
 export XCODE_BUILD_ID=11C505
 export RUN_UNIT_TESTS=false
 export RUN_INTEGRATION_TESTS=false
-export GOAL="deploy"
-export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
+export GOAL="all deploy"
+export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner --enable-werror"

@@ -6,9 +6,11 @@
 
 export LC_ALL=C.UTF-8
 
-export DOCKER_NAME_TAG=ubuntu:16.04
 export PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-filesystem-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev"
-export NO_DEPENDS=1
-export RUN_INTEGRATION_TESTS=false # Disabled for now. TODO identify suppressions or exclude specific tests
+export DEP_OPTS="NO_UPNP=1 DEBUG=1"
+export FUNCTIONAL_TESTS_CONFIG="--exclude wallet_multiwallet.py" # Temporarily suppress ASan heap-use-after-free (see issue #14163)
+export RUN_BENCH=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
+export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=thread"
+export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
+export PYZMQ=true
