@@ -10,6 +10,7 @@
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <tuple>
 
@@ -816,7 +817,7 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
     if (err_string.length() > 0) {
         return JSONRPCError(RPCErrorFromTransactionError(terr), err_string);
     } else {
-        return JSONRPCError(RPCErrorFromTransactionError(terr), TransactionErrorString(terr));
+        return JSONRPCError(RPCErrorFromTransactionError(terr), TransactionErrorString(terr).original);
     }
 }
 
