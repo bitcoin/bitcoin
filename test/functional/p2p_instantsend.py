@@ -63,10 +63,10 @@ class InstantSendTest(DashTestFramework):
         reconnect_isolated_node(isolated, 0)
         # check doublespend block is rejected by other nodes
         timeout = 10
-        for i in range(0, self.num_nodes):
-            if i == self.isolated_idx:
+        for idx, node in enumerate(self.nodes):
+            if idx == self.isolated_idx:
                 continue
-            res = self.nodes[i].waitforblock(wrong_block, timeout)
+            res = node.waitforblock(wrong_block, timeout)
             assert res['hash'] != wrong_block
             # wait for long time only for first node
             timeout = 1

@@ -39,9 +39,9 @@ class DIP3Test(BitcoinTestFramework):
     def start_controller_node(self):
         self.log.info("starting controller node")
         self.start_node(0, extra_args=self.extra_args)
-        for i in range(1, self.num_nodes):
-            if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None:
-                connect_nodes(self.nodes[i], 0)
+        for node in self.nodes[1:]:
+            if node is not None and node.process is not None:
+                connect_nodes(node, 0)
 
     def run_test(self):
         self.log.info("funding controller node")
@@ -78,7 +78,7 @@ class DIP3Test(BitcoinTestFramework):
         self.start_mn(before_dip3_mn)
 
         self.log.info("registering MNs")
-        for i in range(0, self.num_initial_mn):
+        for i in range(self.num_initial_mn):
             mn = self.prepare_mn(self.nodes[0], i + 2, "mn-%d" % i)
             mns.append(mn)
 
@@ -153,7 +153,7 @@ class DIP3Test(BitcoinTestFramework):
         multisig = self.nodes[0].createmultisig(1, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
         self.update_mn_payee(mns[0], multisig)
         found_multisig_payee = False
-        for i in range(len(mns)):
+        for _ in range(len(mns)):
             bt = self.nodes[0].getblocktemplate()
             expected_payee = bt['masternode'][0]['payee']
             expected_amount = bt['masternode'][0]['amount']
@@ -169,7 +169,7 @@ class DIP3Test(BitcoinTestFramework):
         assert found_multisig_payee
 
         self.log.info("testing reusing of collaterals for replaced MNs")
-        for i in range(0, 5):
+        for i in range(5):
             mn = mns[i]
             # a few of these will actually refer to old ProRegTx internal collaterals,
             # which should work the same as external collaterals
@@ -225,7 +225,7 @@ class DIP3Test(BitcoinTestFramework):
     def create_mn_collateral(self, node, mn):
         mn.collateral_address = node.getnewaddress()
         mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
-        mn.collateral_vout = -1
+        mn.collateral_vout = None
         node.generate(1)
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
@@ -233,7 +233,7 @@ class DIP3Test(BitcoinTestFramework):
             if txout['value'] == Decimal(1000):
                 mn.collateral_vout = txout['n']
                 break
-        assert mn.collateral_vout != -1
+        assert mn.collateral_vout is not None
 
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn):
@@ -243,14 +243,14 @@ class DIP3Test(BitcoinTestFramework):
 
         mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
         mn.collateral_txid = mn.protx_hash
-        mn.collateral_vout = -1
+        mn.collateral_vout = None
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
             if txout['value'] == Decimal(1000):
                 mn.collateral_vout = txout['n']
                 break
-        assert mn.collateral_vout != -1
+        assert mn.collateral_vout is not None
 
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn):
@@ -261,10 +261,10 @@ class DIP3Test(BitcoinTestFramework):
         node.generate(1)
 
     def start_mn(self, mn):
-        while len(self.nodes) <= mn.idx:
-            self.add_nodes(1)
-        extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
-        self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
+        if len(self.nodes) <= mn.idx:
+            self.add_nodes(mn.idx - len(self.nodes) + 1)
+            assert len(self.nodes) == mn.idx + 1
+        self.start_node(mn.idx, extra_args = self.extra_args + ['-masternodeblsprivkey=%s' % mn.blsMnkey])
         force_finish_mnsync(self.nodes[mn.idx])
         mn.node = self.nodes[mn.idx]
         connect_nodes(mn.node, 0)
@@ -313,8 +313,7 @@ class DIP3Test(BitcoinTestFramework):
         mnlist = node.masternode('list', 'status')
         for mn in mns:
             s = '%s-%d' % (mn.collateral_txid, mn.collateral_vout)
-            in_list = s in mnlist
-            if not in_list:
+            if s not in mnlist:
                 return False
             mnlist.pop(s, None)
         if len(mnlist) != 0:
