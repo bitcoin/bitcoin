@@ -11,6 +11,7 @@ Developer Notes
     - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
+        - [Show sources in debugging](#show-sources-in-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
         - [`debug.log`](#debuglog)
         - [Testnet and Regtest modes](#testnet-and-regtest-modes)
@@ -84,6 +85,10 @@ code.
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
   - Constant names are all uppercase, and use `_` to separate words.
+  - Enumerator constants may be `snake_case`, `PascalCase` or `ALL_CAPS`.
+    This is a more tolerant policy than the [C++ Core
+    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
+    which recommend using `snake_case`.  Please use what seems appropriate.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`.
   - Test suite naming convention: The Boost test suite in file
@@ -210,6 +215,35 @@ Development tips and tricks
 
 Run configure with `--enable-debug` to add additional compiler flags that
 produce better debugging builds.
+
+### Show sources in debugging
+
+If you have ccache enabled, absolute paths are stripped from debug information
+with the -fdebug-prefix-map and -fmacro-prefix-map options (if supported by the
+compiler). This might break source file detection in case you move binaries
+after compilation, debug from the directory other than the project root or use
+an IDE that only supports absolute paths for debugging.
+
+There are a few possible fixes:
+
+1. Configure source file mapping.
+
+For `gdb` create or append to `.gdbinit` file:
+```
+set substitute-path ./src /path/to/project/root/src
+```
+
+For `lldb` create or append to `.lldbinit` file:
+```
+settings set target.source-map ./src /path/to/project/root/src
+```
+
+2. Add a symlink to the `./src` directory:
+```
+ln -s /path/to/project/root/src src
+```
+
+3. Use `debugedit` to modify debug information in the binary.
 
 ### Compiling for gprof profiling
 
@@ -603,19 +637,19 @@ Foo(vec);
 
 ```cpp
 enum class Tabs {
-    INFO,
-    CONSOLE,
-    GRAPH,
-    PEERS
+    info,
+    console,
+    network_graph,
+    peers
 };
 
 int GetInt(Tabs tab)
 {
     switch (tab) {
-    case Tabs::INFO: return 0;
-    case Tabs::CONSOLE: return 1;
-    case Tabs::GRAPH: return 2;
-    case Tabs::PEERS: return 3;
+    case Tabs::info: return 0;
+    case Tabs::console: return 1;
+    case Tabs::network_graph: return 2;
+    case Tabs::peers: return 3;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

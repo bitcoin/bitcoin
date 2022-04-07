@@ -921,11 +921,8 @@ if ENABLE_BIP70
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
 endif
 
-if EMBEDDED_LEVELDB
 include Makefile.crc32c.include
 include Makefile.leveldb.include
-endif
-
 include Makefile.test_util.include
 
 if ENABLE_TESTS
