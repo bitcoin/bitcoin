@@ -32,7 +32,7 @@ list(APPEND CMAKE_MODULE_PATH "${__qt6_qtbase_src_path}/cmake/3rdparty/kwin")
 set(QT_NO_CREATE_TARGETS TRUE)
 set(QT_SUPERBUILD TRUE)
 
-set(QT_BUILD_SUBMODULES "qtbase;qttools;qttranslations" CACHE STRING "Submodules to build")
+set(QT_BUILD_SUBMODULES "qtbase;qttranslations" CACHE STRING "Submodules to build")
 
 foreach(module IN LISTS QT_BUILD_SUBMODULES)
     message(NOTICE "Configuring '${module}'")
