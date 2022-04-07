@@ -14,12 +14,11 @@ namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction.
  * use_max_sig indicates whether to use the maximum sized, 72 byte signature when calculating the
  * size of the input spend. This should only be set when watch-only outputs are allowed */
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig = false);
+int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, const CCoinControl* coin_control = nullptr);
 
 //Get the marginal bytes of spending the specified output
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* pwallet, bool use_max_sig = false);
-
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, const CCoinControl* coin_control = nullptr);
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* pwallet, const CCoinControl* coin_control = nullptr);
 struct TxSize {
     int64_t vsize{-1};
     int64_t weight{-1};
