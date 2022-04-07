@@ -124,7 +124,7 @@ bool RecoverDatabaseFile(const fs::path& file_path)
 
     auto chain = interfaces::MakeChain();
     DbTxn* ptxn = env->TxnBegin();
-    CWallet dummyWallet(*chain, WalletLocation(), CreateDummyWalletDatabase());
+    CWallet dummyWallet(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
     for (KeyValPair& row : salvagedData)
     {
         /* Filter for only private key type KV pairs to be added to the salvaged wallet */

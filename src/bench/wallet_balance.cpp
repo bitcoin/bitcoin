@@ -15,7 +15,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     const auto& ADDRESS_WATCHONLY = ADDRESS_B58T_UNSPENDABLE;
 
     std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain();
-    CWallet wallet{*chain.get(), WalletLocation(), CreateMockWalletDatabase()};
+    CWallet wallet{chain.get(), WalletLocation(), CreateMockWalletDatabase()};
     {
         bool first_run;
         if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
