@@ -29,7 +29,7 @@ FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS=(
 )
 
 EXIT_CODE=0
-if ! python3 -m doctest test/lint/lint-format-strings.py; then
+if ! python3 -m doctest "test/lint/run-lint-format-strings.py"; then
     EXIT_CODE=1
 fi
 for S in "${FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS[@]}"; do
@@ -37,7 +37,7 @@ for S in "${FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS[@]}"; do
     for MATCHING_FILE in $(git grep --full-name -l "${FUNCTION_NAME}" -- "*.c" "*.cpp" "*.h" | sort | grep -vE "^src/(leveldb|secp256k1|minisketch|tinyformat|univalue|test/fuzz/strprintf.cpp)"); do
         MATCHING_FILES+=("${MATCHING_FILE}")
     done
-    if ! test/lint/lint-format-strings.py --skip-arguments "${SKIP_ARGUMENTS}" "${FUNCTION_NAME}" "${MATCHING_FILES[@]}"; then
+    if ! "test/lint/run-lint-format-strings.py" --skip-arguments "${SKIP_ARGUMENTS}" "${FUNCTION_NAME}" "${MATCHING_FILES[@]}"; then
         EXIT_CODE=1
     fi
 done
