@@ -25,6 +25,7 @@ LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
+LIBMCL=bls/mcl/lib/libmcl.a
 LIBBLS=bls/lib/libbls384_256.a
 
 if ENABLE_ZMQ
@@ -61,6 +62,9 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 
 $(LIBBLS):
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
+
+$(LIBMCL):
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -685,6 +689,7 @@ bitcoin_bin_ldadd = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1)
 
 bitcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
@@ -737,6 +742,7 @@ bitcoin_tx_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1)
 #
 
@@ -755,6 +761,7 @@ bitcoin_wallet_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1) \
   $(BDB_LIBS) \
   $(SQLITE_LIBS)
@@ -781,6 +788,7 @@ bitcoin_util_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1)
 #
 
@@ -872,6 +880,7 @@ bitcoin_chainstate_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBUNIVALUE) \
   $(LIBBLS) \
+  $(LIBMCL) \
   $(LIBSECP256K1) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
@@ -888,7 +897,10 @@ include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBBLS) $(LIBSECP256K1)
+libbitcoinconsensus_la_LIBADD = \
+  $(LIBBLS) \
+  $(LIBMCL) \
+  $(LIBSECP256K1)
 libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
