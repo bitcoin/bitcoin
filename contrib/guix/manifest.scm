@@ -150,7 +150,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc gcc-7)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-without-ssp glibc-2.24))
+                                       (base-libc (make-glibc-without-ssp (make-glibc-without-werror glibc-2.24)))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -518,6 +518,9 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
+(define (make-glibc-without-werror glibc)
+  (package-with-extra-configure-variable glibc "enable_werror" "no"))
+
 (define-public glibc-2.24
   (package
     (inherit glibc-2.31)
@@ -604,7 +607,7 @@ inspecting signatures in Mach-O binaries.")
                  (list gcc-toolchain-7 "static")
                  (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
-                                                      #:base-libc glibc-2.27/bitcoin-patched
+                                                      #:base-libc (make-glibc-without-werror glibc-2.27/bitcoin-patched)
                                                       #:base-kernel-headers base-linux-kernel-headers))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
