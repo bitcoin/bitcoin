@@ -40,6 +40,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
   export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST/"
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
           " src/compat"\
+          " src/consensus/tx_verify.cpp"\
           " src/init"\
           " src/policy/feerate.cpp"\
           " src/policy/packages.cpp"\
