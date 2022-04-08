@@ -6,6 +6,7 @@
 
 #include <util/translation.h>
 #include <sync.h>
+#include <atomic>
 class CMasternodeSync;
 class PeerManager;
 class CBlockIndex;

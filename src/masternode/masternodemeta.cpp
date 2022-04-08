@@ -5,6 +5,7 @@
 #include <masternode/masternodemeta.h>
 
 #include <timedata.h>
+#include <util/string.h>
 
 CMasternodeMetaMan mmetaman;
 
