@@ -1,5 +1,6 @@
 #include <wallet/txassembler.h>
 
+#include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <util/check.h>
@@ -56,6 +57,11 @@ AssembledTx TxAssembler::CreateTransaction(
     // Limit size
     if (GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT) {
         throw CreateTxError(_("Transaction too large"));
+    }
+
+    TxValidationState validation_state;
+    if (!CheckTransaction(*tx, validation_state)) {
+        throw CreateTxError(_("Transaction is invalid"));
     }
 
     if (new_tx.total_fee > m_wallet.m_default_max_tx_fee) {
