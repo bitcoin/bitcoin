@@ -5,7 +5,7 @@ dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcoin_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "$bitcoin_qt_want_version" = "auto" && test "$bitcoin_qt_force" != "yes"; then
+  if test "$bitcoin_qt_want_version" = "auto"; then
     if test "$bitcoin_enable_qt" != "no"; then
       AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
     fi
@@ -53,21 +53,21 @@ dnl CAUTION: Do not use this inside of a conditional.
 AC_DEFUN([BITCOIN_QT_INIT],[
   dnl enable qt support
   AC_ARG_WITH([gui],
-    [AS_HELP_STRING([--with-gui@<:@=no|qt5|auto@:>@],
+    [AS_HELP_STRING([--with-gui@<:@=no|qt5|qt6|auto@:>@],
     [build bitcoin-qt GUI (default=auto)])],
-    [
-     bitcoin_qt_want_version=$withval
-     if test "$bitcoin_qt_want_version" = "yes"; then
-       bitcoin_qt_force=yes
-       bitcoin_qt_want_version=auto
-     fi
-    ],
+    [bitcoin_qt_want_version=$withval],
     [bitcoin_qt_want_version=auto])
 
   AS_IF([test "$with_gui" = "qt5_debug"],
         [AS_CASE([$host],
                  [*darwin*], [qt_lib_suffix=_debug],
                  [qt_lib_suffix= ]); bitcoin_qt_want_version=qt5],
+        [qt_lib_suffix= ])
+
+  AS_IF([test "$with_gui" = "qt6_debug"],
+        [AS_CASE([$host],
+                 [*darwin*], [qt_lib_suffix=_debug],
+                 [qt_lib_suffix= ]); bitcoin_qt_want_version=qt6],
         [qt_lib_suffix= ])
 
   AS_CASE([$host], [*android*], [qt_lib_suffix=_$ANDROID_ARCH])
@@ -106,71 +106,8 @@ dnl Outputs: bitcoin_enable_qt, bitcoin_enable_qt_dbus, bitcoin_enable_qt_test
 AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   qt_version=">= $1"
   qt_lib_prefix="Qt5"
-  BITCOIN_QT_CHECK([_BITCOIN_QT_FIND_LIBS])
-
-  dnl This is ugly and complicated. Yuck. Works as follows:
-  dnl We check a header to find out whether Qt is built statically.
-  dnl When Qt is built statically, some plugins must be linked into
-  dnl the final binary as well. _BITCOIN_QT_CHECK_STATIC_PLUGIN does
-  dnl a quick link-check and appends the results to QT_LIBS.
-  BITCOIN_QT_CHECK([
-  TEMP_CPPFLAGS=$CPPFLAGS
-  TEMP_CXXFLAGS=$CXXFLAGS
-  CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
-  CXXFLAGS="$PIC_FLAGS $CORE_CXXFLAGS $CXXFLAGS"
-  _BITCOIN_QT_IS_STATIC
-  if test "$bitcoin_cv_static_qt" = "yes"; then
-    _BITCOIN_QT_CHECK_STATIC_LIBS
-
-    if test "$qt_plugin_path" != ""; then
-      if test -d "$qt_plugin_path/platforms"; then
-        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
-      fi
-      if test -d "$qt_plugin_path/styles"; then
-        QT_LIBS="$QT_LIBS -L$qt_plugin_path/styles"
-      fi
-      if test -d "$qt_plugin_path/accessible"; then
-        QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
-      fi
-      if test -d "$qt_plugin_path/platforms/android"; then
-        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms/android -lqtfreetype -lEGL"
-      fi
-    fi
-
-    AC_DEFINE([QT_STATICPLUGIN], [1], [Define this symbol if qt plugins are static])
-    if test "$TARGET_OS" != "android"; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMinimalIntegrationPlugin], [-lqminimal])
-      AC_DEFINE([QT_QPA_PLATFORM_MINIMAL], [1], [Define this symbol if the minimal qt platform exists])
-    fi
-    if test "$TARGET_OS" = "windows"; then
-      dnl Linking against wtsapi32 is required. See #17749 and
-      dnl https://bugreports.qt.io/browse/QTBUG-27097.
-      AX_CHECK_LINK_FLAG([-lwtsapi32], [QT_LIBS="$QT_LIBS -lwtsapi32"], [AC_MSG_ERROR([could not link against -lwtsapi32])])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsIntegrationPlugin], [-lqwindows])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsVistaStylePlugin], [-lqwindowsvistastyle])
-      AC_DEFINE([QT_QPA_PLATFORM_WINDOWS], [1], [Define this symbol if the qt platform is windows])
-    elif test "$TARGET_OS" = "linux"; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb])
-      AC_DEFINE([QT_QPA_PLATFORM_XCB], [1], [Define this symbol if the qt platform is xcb])
-    elif test "$TARGET_OS" = "darwin"; then
-      AX_CHECK_LINK_FLAG([-framework Carbon], [QT_LIBS="$QT_LIBS -framework Carbon"], [AC_MSG_ERROR(could not link against Carbon framework)])
-      AX_CHECK_LINK_FLAG([-framework IOSurface], [QT_LIBS="$QT_LIBS -framework IOSurface"], [AC_MSG_ERROR(could not link against IOSurface framework)])
-      AX_CHECK_LINK_FLAG([-framework Metal], [QT_LIBS="$QT_LIBS -framework Metal"], [AC_MSG_ERROR(could not link against Metal framework)])
-      AX_CHECK_LINK_FLAG([-framework QuartzCore], [QT_LIBS="$QT_LIBS -framework QuartzCore"], [AC_MSG_ERROR(could not link against QuartzCore framework)])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QCocoaIntegrationPlugin], [-lqcocoa])
-      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMacStylePlugin], [-lqmacstyle])
-      AC_DEFINE([QT_QPA_PLATFORM_COCOA], [1], [Define this symbol if the qt platform is cocoa])
-    elif test "$TARGET_OS" = "android"; then
-      QT_LIBS="-Wl,--export-dynamic,--undefined=JNI_OnLoad -lplugins_platforms_qtforandroid${qt_lib_suffix} -ljnigraphics -landroid -lqtfreetype${qt_lib_suffix} $QT_LIBS"
-      AC_DEFINE([QT_QPA_PLATFORM_ANDROID], [1], [Define this symbol if the qt platform is android])
-    fi
-  fi
-  CPPFLAGS=$TEMP_CPPFLAGS
-  CXXFLAGS=$TEMP_CXXFLAGS
-  ])
-
-  if test "$qt_bin_path" = ""; then
-    qt_bin_path="`$PKG_CONFIG --variable=host_bins ${qt_lib_prefix}Core 2>/dev/null`"
+  if test "$bitcoin_qt_want_version" = "qt6"; then
+    qt_lib_prefix="Qt6"
   fi
 
   if test "$use_hardening" != "no"; then
@@ -218,6 +155,78 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     )
     CPPFLAGS=$TEMP_CPPFLAGS
     ])
+  fi
+
+  BITCOIN_QT_CHECK([_BITCOIN_QT_FIND_LIBS])
+
+  dnl This is ugly and complicated. Yuck. Works as follows:
+  dnl We check a header to find out whether Qt is built statically.
+  dnl When Qt is built statically, some plugins must be linked into
+  dnl the final binary as well. _BITCOIN_QT_CHECK_STATIC_PLUGIN does
+  dnl a quick link-check and appends the results to QT_LIBS.
+  BITCOIN_QT_CHECK([
+  TEMP_CPPFLAGS=$CPPFLAGS
+  TEMP_CXXFLAGS=$CXXFLAGS
+  CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
+  CXXFLAGS="$PIC_FLAGS $CORE_CXXFLAGS $CXXFLAGS"
+  _BITCOIN_QT_IS_STATIC
+  if test "$bitcoin_cv_static_qt" = "yes"; then
+    if test "$bitcoin_qt_want_version" != "qt6"; then
+      _BITCOIN_QT_CHECK_STATIC_LIBS
+    fi
+
+    if test "$qt_plugin_path" != ""; then
+      if test -d "$qt_plugin_path/platforms"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
+      fi
+      if test -d "$qt_plugin_path/styles"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/styles"
+      fi
+      if test -d "$qt_plugin_path/accessible"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
+      fi
+      if test -d "$qt_plugin_path/platforms/android"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms/android -lqtfreetype -lEGL"
+      fi
+    fi
+
+    AC_DEFINE([QT_STATICPLUGIN], [1], [Define this symbol if qt plugins are static])
+    if test "$TARGET_OS" != "android"; then
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMinimalIntegrationPlugin], [-lqminimal])
+      AC_DEFINE([QT_QPA_PLATFORM_MINIMAL], [1], [Define this symbol if the minimal qt platform exists])
+    fi
+    if test "$TARGET_OS" = "windows"; then
+      dnl Linking against wtsapi32 is required. See #17749 and
+      dnl https://bugreports.qt.io/browse/QTBUG-27097.
+      AX_CHECK_LINK_FLAG([-lwtsapi32], [QT_LIBS="$QT_LIBS -lwtsapi32"], [AC_MSG_ERROR([could not link against -lwtsapi32])])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsIntegrationPlugin], [-lqwindows])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsVistaStylePlugin], [-lqwindowsvistastyle])
+      AC_DEFINE([QT_QPA_PLATFORM_WINDOWS], [1], [Define this symbol if the qt platform is windows])
+    elif test "$TARGET_OS" = "linux"; then
+      if test "$bitcoin_qt_want_version" = "qt6"; then
+        QT_LIBS="${qt_lib_path}/libQt6XcbQpa.a -lxkbcommon-x11 -lxkbcommon -lxcb-icccm -lxcb-image -lxcb-keysyms -lxcb-randr -lxcb-render-util -lxcb-shm -lxcb-sync -lxcb-xfixes -lxcb-render -lxcb-shape -lxcb-xkb -lxcb $QT_LIBS"
+      fi
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb])
+      AC_DEFINE([QT_QPA_PLATFORM_XCB], [1], [Define this symbol if the qt platform is xcb])
+    elif test "$TARGET_OS" = "darwin"; then
+      AX_CHECK_LINK_FLAG([-framework Carbon], [QT_LIBS="$QT_LIBS -framework Carbon"], [AC_MSG_ERROR(could not link against Carbon framework)])
+      AX_CHECK_LINK_FLAG([-framework IOSurface], [QT_LIBS="$QT_LIBS -framework IOSurface"], [AC_MSG_ERROR(could not link against IOSurface framework)])
+      AX_CHECK_LINK_FLAG([-framework Metal], [QT_LIBS="$QT_LIBS -framework Metal"], [AC_MSG_ERROR(could not link against Metal framework)])
+      AX_CHECK_LINK_FLAG([-framework QuartzCore], [QT_LIBS="$QT_LIBS -framework QuartzCore"], [AC_MSG_ERROR(could not link against QuartzCore framework)])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QCocoaIntegrationPlugin], [-lqcocoa])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMacStylePlugin], [-lqmacstyle])
+      AC_DEFINE([QT_QPA_PLATFORM_COCOA], [1], [Define this symbol if the qt platform is cocoa])
+    elif test "$TARGET_OS" = "android"; then
+      QT_LIBS="-Wl,--export-dynamic,--undefined=JNI_OnLoad -lplugins_platforms_qtforandroid${qt_lib_suffix} -ljnigraphics -landroid -lqtfreetype${qt_lib_suffix} $QT_LIBS"
+      AC_DEFINE([QT_QPA_PLATFORM_ANDROID], [1], [Define this symbol if the qt platform is android])
+    fi
+  fi
+  CPPFLAGS=$TEMP_CPPFLAGS
+  CXXFLAGS=$TEMP_CXXFLAGS
+  ])
+
+  if test "$qt_bin_path" = ""; then
+    qt_bin_path="`$PKG_CONFIG --variable=host_bins ${qt_lib_prefix}Core 2>/dev/null`"
   fi
 
   BITCOIN_QT_PATH_PROGS([MOC], [moc-qt5 moc5 moc], $qt_bin_path)
@@ -363,6 +372,36 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
   fi
 ])
 
+dnl Internal. Check whether Qt application can be initialized.
+dnl
+dnl _BITCOIN_QT_CHECK_APP(APPLICATION_CLASS)
+dnl ----------------------------------------
+dnl
+dnl dnl Requires: QT_INCLUDES and QT_LIBS must be populated as necessary.
+dnl Inputs: $1: QCoreApplication, QGuiApplication, or QApplication.
+AC_DEFUN([_BITCOIN_QT_CHECK_APP], [
+  AC_MSG_CHECKING([for $1 initialization])
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  TEMP_CXXFLAGS="$CXXFLAGS"
+  TEMP_LIBS="$LIBS"
+  CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
+  CXXFLAGS="$QT_PIE_FLAGS $CORE_CXXFLAGS $CXXFLAGS"
+  LIBS="$QT_LIBS"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+      #include <$1>
+    ]],
+    [[
+      int argc = 1;
+      const char* argv = "core";
+      $1 app(argc, const_cast<char**>(&argv));
+    ]])],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no]); BITCOIN_QT_FAIL([$1 failed to initialize.])])
+  CXXFLAGS="$TEMP_CXXFLAGS"
+  LIBS="$TEMP_LIBS"
+  CPPFLAGS="$TEMP_CPPFLAGS"
+])
+
 dnl Internal. Find Qt libraries using pkg-config.
 dnl
 dnl _BITCOIN_QT_FIND_LIBS
@@ -372,16 +411,34 @@ dnl Outputs: All necessary QT_* variables are set.
 dnl Outputs: have_qt_test and have_qt_dbus are set (if applicable) to yes|no.
 AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
   BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_CORE], [${qt_lib_prefix}Core${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_CORE_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_CORE_LIBS $QT_LIBS"],
+    PKG_CHECK_MODULES([QT_CORE], [${qt_lib_prefix}Core${qt_lib_suffix} $qt_version], [],
                       [BITCOIN_QT_FAIL([${qt_lib_prefix}Core${qt_lib_suffix} $qt_version not found])])
+    if test "$bitcoin_qt_want_version" = "qt6"; then
+      QT_CORE_LIBS="$QT_CORE_LIBS -lm ${qt_lib_path}/libQt6BundledPcre2.a -ldl -lrt"
+    fi
+    QT_INCLUDES="$QT_CORE_CFLAGS $QT_INCLUDES"
+    QT_LIBS="$QT_CORE_LIBS $QT_LIBS"
+    _BITCOIN_QT_CHECK_APP([QCoreApplication])
   ])
   BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_GUI], [${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_GUI_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_GUI_LIBS $QT_LIBS"],
+    PKG_CHECK_MODULES([QT_GUI], [${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version], [],
                       [BITCOIN_QT_FAIL([${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version not found])])
+    if test "$bitcoin_qt_want_version" = "qt6"; then
+      QT_GUI_LIBS="$QT_GUI_LIBS ${qt_lib_path}/libQt6BundledLibpng.a ${qt_lib_path}/libQt6BundledHarfbuzz.a -lfreetype -lfontconfig -lxkbcommon"
+    fi
+    QT_INCLUDES="$QT_GUI_CFLAGS $QT_INCLUDES"
+    QT_LIBS="$QT_GUI_LIBS $QT_LIBS"
+    _BITCOIN_QT_CHECK_APP([QGuiApplication])
   ])
   BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_WIDGETS], [${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_WIDGETS_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_WIDGETS_LIBS $QT_LIBS"],
+    PKG_CHECK_MODULES([QT_WIDGETS], [${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version], [],
                       [BITCOIN_QT_FAIL([${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version not found])])
+    if test "$bitcoin_qt_want_version" = "qt6"; then
+      QT_WIDGETS_LIBS="$QT_WIDGETS_LIBS ${qt_lib_path}/objects-Release/Widgets_resources_1/.rcc/qrc_qstyle.cpp.o ${qt_lib_path}/objects-Release/Widgets_resources_2/.rcc/qrc_qstyle1.cpp.o ${qt_lib_path}/objects-Release/Widgets_resources_3/.rcc/qrc_qmessagebox.cpp.o"
+    fi
+    QT_INCLUDES="$QT_WIDGETS_CFLAGS $QT_INCLUDES"
+    QT_LIBS="$QT_WIDGETS_LIBS $QT_LIBS"
+    _BITCOIN_QT_CHECK_APP([QApplication])
   ])
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_NETWORK], [${qt_lib_prefix}Network${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_NETWORK_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_NETWORK_LIBS $QT_LIBS"],
