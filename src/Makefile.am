@@ -367,6 +367,7 @@ BITCOIN_CORE_H = \
   util/overloaded.h \
   util/ranges.h \
   util/readwritefile.h \
+  util/result.h \
   util/underlying.h \
   util/serfloat.h \
   util/settings.h \
