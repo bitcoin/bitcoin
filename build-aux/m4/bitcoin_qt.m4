@@ -391,7 +391,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_TEST], [${qt_lib_prefix}Test${qt_lib_suffix} $qt_version], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
     if test "$use_dbus" != "no"; then
-      PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
+      PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_INCLUDES="$QT_DBUS_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_LIBS $QT_DBUS_LIBS" QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
     fi
   ])
 ])
