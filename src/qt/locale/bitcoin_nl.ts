@@ -137,7 +137,7 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Laat wachtwoordzin zien</translation>
+        <translation type="unfinished">Toon wachtwoordzin</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -356,36 +356,36 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n seconde(n)</numerusform>
+            <numerusform>%n seconde(n)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minu(u)t(en)</numerusform>
+            <numerusform>%n minu(u)t(en)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n u(u)r(en)</numerusform>
+            <numerusform>%n u(u)r(en)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dag(en)</numerusform>
+            <numerusform>%n dag(en)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n we(e)k(en)</numerusform>
+            <numerusform>%n we(e)k(en)</numerusform>
         </translation>
     </message>
     <message>
@@ -395,8 +395,8 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n ja(a)r(en)</numerusform>
+            <numerusform>%n ja(a)r(en)</numerusform>
         </translation>
     </message>
     <message>
@@ -614,6 +614,30 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation type="unfinished">Mag niet schrijven naar gegevensmap '%s'; controleer bestandsrechten.</translation>
+    </message>
+    <message>
+        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation type="unfinished">De -txindex upgrade die door een eerdere versie is gestart, kan niet worden voltooid. Herstart opnieuw met de vorige versie of voer een volledige -reindex uit.</translation>
+    </message>
+    <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%s verzoekt om te luisteren op poort %u. Deze poort wordt als "slecht" beschouwd en het is daarom onwaarschijnlijk dat Bitcoin Core peers er verbinding mee maken. Zie doc/p2p-bad-ports.md voor details en een volledige lijst.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation type="unfinished">Kan geen specifieke verbindingen verstrekken en addrman tegelijkertijd uitgaande verbindingen laten vinden.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation type="unfinished">Fout bij laden %s: Portemonnee voor externe ondertekenaars wordt geladen zonder gecompileerde ondersteuning voor externe ondertekenaars</translation>
+    </message>
+    <message>
+        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
+        <translation type="unfinished">Kan de naam van het ongeldige peers.dat bestand niet hernoemen. Verplaats of verwijder het en probeer het opnieuw.</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided (no -proxy= and no -onion= given) or it is explicitly forbidden (-onion=0)</source>
+        <translation type="unfinished">Uitgaande verbindingen beperkt tot Tor (-onlynet=onion) maar de proxy voor het bereiken van het Tor netwerk is niet verstrekt (geen -proxy= en geen -onion= opgegeven) of het is expliciet verboden (-onion=0)</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -964,6 +988,10 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
         <translation type="unfinished">Transactiebedragen moeten positief zijn</translation>
     </message>
     <message>
+        <source>Transaction change output index out of range</source>
+        <translation type="unfinished">Transactie change output is buiten bereik</translation>
+    </message>
+    <message>
         <source>Transaction has too long of a mempool chain</source>
         <translation type="unfinished">Transactie heeft een te lange mempoolketen</translation>
     </message>
@@ -1258,8 +1286,8 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n blok(ken) aan transactiegeschiedenis verwerkt.</numerusform>
+            <numerusform>%n blok(ken) aan transactiegeschiedenis verwerkt.</numerusform>
         </translation>
     </message>
     <message>
@@ -1370,12 +1398,20 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
         <source>Main Window</source>
         <translation type="unfinished">Hoofdscherm</translation>
     </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;Verbergen</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">T&amp;oon</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n actieve verbinding(en) met het Bitcoin netwerk.</numerusform>
+            <numerusform>%n actieve verbinding(en) met het Bitcoin netwerk.</numerusform>
         </translation>
     </message>
     <message>
@@ -1857,6 +1893,10 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
 <context>
     <name>Intro</name>
     <message>
+        <source>%1 GB of space available</source>
+        <translation type="unfinished">%1 GB beschikbare ruimte </translation>
+    </message>
+    <message>
         <source>(of %1 GB needed)</source>
         <translation type="unfinished">(van %1 GB nodig)</translation>
     </message>
@@ -1876,8 +1916,8 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(voldoende om back-ups van %n dag(en) oud te herstellen)</numerusform>
+            <numerusform>(voldoende om back-ups van %n dag(en) oud te herstellen)</numerusform>
         </translation>
     </message>
     <message>
@@ -2007,7 +2047,7 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation type="unfinished">Geschatte tijd totdat uw portemonnee gelijk loopt met het bitcoin netwerk.</translation>
+        <translation type="unfinished">Geschatte resterende tijd tot synchronisatie is voltooid</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -2024,6 +2064,10 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
 </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation type="unfinished">Open bitcoin-URI</translation>
+    </message>
     <message>
         <source>Paste address from clipboard</source>
         <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
@@ -3576,8 +3620,8 @@ Vb. een offline %1 portemonee, of een PSBT-combatiebele hardware portemonee.</tr
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Naar schatting begint de bevestiging binnen %n blok(ken).</numerusform>
+            <numerusform>Naar schatting begint de bevestiging binnen %n blok(ken).</numerusform>
         </translation>
     </message>
     <message>
@@ -3898,8 +3942,8 @@ Vb. een offline %1 portemonee, of een PSBT-combatiebele hardware portemonee.</tr
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>komt beschikbaar na %n nieuwe blokken</numerusform>
+            <numerusform>komt beschikbaar na %n nieuwe blokken</numerusform>
         </translation>
     </message>
     <message>

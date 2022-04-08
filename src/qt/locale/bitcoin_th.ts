@@ -315,6 +315,46 @@
         <translation type="unfinished">เกิดข้อผิดพลาดในการโหลด %s: กำลังโหลดวอลเล็ตผู้ลงนามภายนอกโดยไม่มีการรวบรวมการสนับสนุนผู้ลงนามภายนอก</translation>
     </message>
     <message>
+        <source>Could not find asmap file %s</source>
+        <translation type="unfinished">ไม่ตรวจพบไฟล์ asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation type="unfinished">ไม่สามารถแยกวิเคราะห์ไฟล์ asmap %s</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation type="unfinished">พื้นที่ว่างดิสก์เหลือน้อยเกินไป!</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">คุณต้องการาร้างฐานข้อมูลบล็อกใหม่ตอนนี้หรือไม่?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">การโหลดเสร็จสิ้น</translation>
+    </message>
+    <message>
+        <source>Dump file %s does not exist.</source>
+        <translation type="unfinished"> ไม่มีไฟล์ดัมพ์ %s </translation>
+    </message>
+    <message>
+        <source>Error creating %s</source>
+        <translation type="unfinished">เกิดข้อผิดพลาดในการสร้าง%s</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">เกิดข้อผิดพลาดในการเริ่มต้นฐานข้อมูลบล็อก</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">การโหลดเกิดข้อผิดพลาด %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished">การโหลดเกิดข้อผิดพลาด %s: Private keys สามารถปิดการใช้งานระหว่างการสร้างขึ้นเท่านั้น</translation>
+    </message>
+    <message>
         <source>Error loading %s: Wallet corrupted</source>
         <translation type="unfinished">เกิดข้อผิดพลาดในการโหลด %s: วอลเล็ตเกิดความเสียหาย</translation>
     </message>

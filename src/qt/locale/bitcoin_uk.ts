@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Клацніть правою кнопкою миші для редагування адреси або мітки</translation>
+        <translation type="unfinished">Клацніть правою кнопкою миші, щоб змінити адресу або мітку</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Копіювати виділену адресу в буфер обміну</translation>
+        <translation type="unfinished">Скопіюйте поточну вибрану адресу в системний буфер обміну</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,15 +27,15 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Вилучити вибрану адресу з переліку</translation>
+        <translation type="unfinished">Видалити поточну вибрану адресу зі списку </translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Введіть адресу чи мітку для пошуку</translation>
+        <translation type="unfinished">Введіть адресу або мітку для пошуку</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Експортувати дані з поточної вкладки в файл</translation>
+        <translation type="unfinished">Експортувати дані з поточної вкладки у файл</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -657,12 +657,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Оновлення -txindex, що було почате попередньою версією, не вдалося завершити. Перезапустить попередню версію або виконайте повний -reindex.</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">1 %s запит на прослуховування порту 2 %u . Цей порт вважається «поганим», і тому малоймовірно, що будь-які однорангові Bitcoin Core підключаються до нього. Дивіться doc/p2p-bad-ports.md для отримання детальної інформації та повного списку</translation>
+    </message>
+    <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
         <translation type="unfinished">Не вдалося встановити визначені з'єднання і одночасно використовувати addrman для встановлення вихідних з'єднань.</translation>
     </message>
     <message>
         <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
         <translation type="unfinished">Помилка завантаження %s: Завантаження гаманця зі зовнішнім підписувачем, але скомпільовано без підтримки зовнішнього підписування</translation>
+    </message>
+    <message>
+        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
+        <translation type="unfinished">Не вдалося перейменувати недійсний файл peers.dat. Будь ласка, перемістіть його та повторіть спробу </translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided (no -proxy= and no -onion= given) or it is explicitly forbidden (-onion=0)</source>
+        <translation type="unfinished">Вихідні з'єднання обмежені Tor (-onlynet=onion), але проксі-сервер для доступу до мережі Tor не надається (не надано -proxy= і -onion=) або це явно заборонено (-onion=0)
+ </translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -1242,15 +1255,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">Закрити Гаманець…</translation>
+        <translation type="unfinished">Закрити гаманець…</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">Створити Гаманець…</translation>
+        <translation type="unfinished">Створити гаманець…</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
-        <translation type="unfinished">Закрити Всі Гаманці…</translation>
+        <translation type="unfinished">Закрити всі гаманці…</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -1349,8 +1362,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Синхронізовано</translation>
     </message>
     <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation type="unfinished">Завантажити частково підписану біткоїн-транзакцію (PSBT) з файлу</translation>
+    </message>
+    <message>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation type="unfinished">Завантажити PSBT-транзакцію з &amp;буфера обміну…</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation type="unfinished">Завантажити частково підписану біткоїн-транзакцію (PSBT) з буфера обміну</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -1362,11 +1383,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
-        <translation type="unfinished">&amp;Адреси для відправлення</translation>
+        <translation type="unfinished">Адреси для &amp;відправлення</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;Адреси для отримання</translation>
+        <translation type="unfinished">Адреси для &amp;отримання</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
@@ -1394,7 +1415,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation type="unfinished">&amp;Приховати значення</translation>
+        <translation type="unfinished">При&amp;ховати значення</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
@@ -2235,7 +2256,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Subtract &amp;fee from amount by default</source>
         <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
-        <translation type="unfinished">За замовчуванням віднімати &amp;комісію від суми відправлення.</translation>
+        <translation type="unfinished">За замовчуванням віднімати &amp;комісію від суми відправлення</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -2962,7 +2983,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>Node window</source>
-        <translation type="unfinished">Вікно вузлів</translation>
+        <translation type="unfinished">Вікно вузла</translation>
     </message>
     <message>
         <source>Current block height</source>
