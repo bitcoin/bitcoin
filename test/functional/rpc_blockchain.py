@@ -69,7 +69,14 @@ class BlockchainTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.mine_chain()
         self._test_max_future_block_time()
-        self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1'])  # Set extra args with pruning after rescan is complete
+        self.restart_node(
+            0,
+            extra_args=[
+                "-stopatheight=207",
+                "-checkblocks=-1",  # Check all blocks
+                "-prune=1",  # Set pruning after rescan is complete
+            ],
+        )
 
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
@@ -193,7 +200,7 @@ class BlockchainTest(BitcoinTestFramework):
                     'timeout': 0x7fffffffffffffff,  # testdummy does not have a timeout so is set to the max int64 value
                     'min_activation_height': 0,
                     'status': 'started',
-                    'status-next': status_next,
+                    'status_next': status_next,
                     'since': 144,
                     'statistics': {
                         'period': 144,
@@ -213,7 +220,7 @@ class BlockchainTest(BitcoinTestFramework):
                     'timeout': 9223372036854775807,
                     'min_activation_height': 0,
                     'status': 'active',
-                    'status-next': 'active',
+                    'status_next': 'active',
                     'since': 0,
                 },
                 'height': 0,

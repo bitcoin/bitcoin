@@ -68,6 +68,10 @@ bool g_syscall_sandbox_log_violation_before_terminating{false};
 #define __NR_copy_file_range 326
 #endif
 
+#ifndef  __NR_rseq
+#define __NR_rseq 334
+#endif
+
 // This list of syscalls in LINUX_SYSCALLS is only used to map syscall numbers to syscall names in
 // order to be able to print user friendly error messages which include the syscall name in addition
 // to the syscall number.
@@ -327,6 +331,7 @@ const std::map<uint32_t, std::string> LINUX_SYSCALLS{
     {__NR_request_key, "request_key"},
     {__NR_restart_syscall, "restart_syscall"},
     {__NR_rmdir, "rmdir"},
+    {__NR_rseq, "rseq"},
     {__NR_rt_sigaction, "rt_sigaction"},
     {__NR_rt_sigpending, "rt_sigpending"},
     {__NR_rt_sigprocmask, "rt_sigprocmask"},
@@ -600,6 +605,7 @@ public:
         allowed_syscalls.insert(__NR_statfs);          // get filesystem statistics
         allowed_syscalls.insert(__NR_statx);           // get file status (extended)
         allowed_syscalls.insert(__NR_unlink);          // delete a name and possibly the file it refers to
+        allowed_syscalls.insert(__NR_unlinkat);        // delete relative to a directory file descriptor
     }
 
     void AllowFutex()
@@ -722,6 +728,7 @@ public:
         allowed_syscalls.insert(__NR_fork);       // create a child process
         allowed_syscalls.insert(__NR_tgkill);     // send a signal to a thread
         allowed_syscalls.insert(__NR_wait4);      // wait for process to change state, BSD style
+        allowed_syscalls.insert(__NR_rseq);       // register restartable sequence for thread
     }
 
     void AllowScheduling()
@@ -814,7 +821,6 @@ bool SetupSyscallSandbox(bool log_syscall_violation_before_terminating)
             return false;
         }
     }
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION);
     return true;
 }
 

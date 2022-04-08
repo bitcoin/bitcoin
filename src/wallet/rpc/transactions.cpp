@@ -34,6 +34,7 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     }
     uint256 hash = wtx.GetHash();
     entry.pushKV("txid", hash.GetHex());
+    entry.pushKV("wtxid", wtx.GetWitnessHash().GetHex());
     UniValue conflicts(UniValue::VARR);
     for (const uint256& conflict : wallet.GetTxConflicts(wtx))
         conflicts.push_back(conflict.GetHex());
@@ -431,6 +432,7 @@ static const std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::NUM, "blockindex", /*optional=*/true, "The index of the transaction in the block that includes it."},
            {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
+           {RPCResult::Type::STR_HEX, "wtxid", "The hash of serialized transaction, including witness data."},
            {RPCResult::Type::ARR, "walletconflicts", "Conflicting transaction ids.",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
@@ -798,7 +800,7 @@ RPCHelpMan gettransaction()
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, uint256(), decoded, false);
+        TxToUniv(*wtx.tx, /*block_hash=*/uint256(), /*entry=*/decoded, /*include_hex=*/false);
         entry.pushKV("decoded", decoded);
     }
 

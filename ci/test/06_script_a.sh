@@ -14,7 +14,7 @@ if [ -n "$ANDROID_TOOLS_URL" ]; then
   exit 0
 fi
 
-BITCOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
+BITCOIN_CONFIG_ALL="--enable-external-signer --enable-suppress-external-warnings --disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
 if [ -z "$NO_WERROR" ]; then
   BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-werror"
 fi
@@ -48,7 +48,12 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   CI_EXEC 'grep -v HAVE_SYS_GETRANDOM src/config/bitcoin-config.h > src/config/bitcoin-config.h.tmp && mv src/config/bitcoin-config.h.tmp src/config/bitcoin-config.h'
 fi
 
-CI_EXEC make "$MAKEJOBS" "$GOAL" || ( echo "Build failure. Verbose build follows." && CI_EXEC make "$GOAL" V=1 ; false )
+if [[ "${RUN_TIDY}" == "true" ]]; then
+  MAYBE_BEAR="bear"
+  MAYBE_TOKEN="--"
+fi
+
+CI_EXEC "${MAYBE_BEAR}" "${MAYBE_TOKEN}" make "$MAKEJOBS" "$GOAL" || ( echo "Build failure. Verbose build follows." && CI_EXEC make "$GOAL" V=1 ; false )
 
 CI_EXEC "ccache --version | head -n 1 && ccache --show-stats"
 CI_EXEC du -sh "${DEPENDS_DIR}"/*/

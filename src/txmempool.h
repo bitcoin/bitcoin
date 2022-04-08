@@ -101,7 +101,7 @@ private:
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
-    int64_t feeDelta{0};            //!< Used for determining the priority of the transaction for mining in a block
+    CAmount feeDelta{0};            //!< Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints;     //!< Track the height and time at which tx was final
 
     // Information about descendants of this transaction that are in the
@@ -131,7 +131,7 @@ public:
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
     int64_t GetSigOpCost() const { return sigOpCost; }
-    int64_t GetModifiedFee() const { return nFee + feeDelta; }
+    CAmount GetModifiedFee() const { return nFee + feeDelta; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }
 
@@ -140,8 +140,8 @@ public:
     // Adjusts the ancestor state
     void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
     // Updates the fee delta used for mining priority score, and the
-    // modified fees with descendants.
-    void UpdateFeeDelta(int64_t feeDelta);
+    // modified fees with descendants/ancestors.
+    void UpdateFeeDelta(CAmount newFeeDelta);
     // Update the LockPoints after a reorg
     void UpdateLockPoints(const LockPoints& lp);
 

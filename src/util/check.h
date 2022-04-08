@@ -47,14 +47,26 @@ class NonFatalCheckError : public std::runtime_error
 #endif
 
 /** Helper for Assert() */
-template <typename T>
-T get_pure_r_value(T&& val)
+void assertion_fail(const char* file, int line, const char* func, const char* assertion);
+
+/** Helper for Assert()/Assume() */
+template <bool IS_ASSERT, typename T>
+T&& inline_assertion_check(T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
+    if constexpr (IS_ASSERT
+#ifdef ABORT_ON_FAILED_ASSUME
+                  || true
+#endif
+    ) {
+        if (!val) {
+            assertion_fail(file, line, func, assertion);
+        }
+    }
     return std::forward<T>(val);
 }
 
 /** Identity function. Abort if the value compares equal to zero */
-#define Assert(val) ([&]() -> decltype(get_pure_r_value(val)) { auto&& check = (val); assert(#val && check); return std::forward<decltype(get_pure_r_value(val))>(check); }())
+#define Assert(val) inline_assertion_check<true>(val, __FILE__, __LINE__, __func__, #val)
 
 /**
  * Assume is the identity function.
@@ -66,10 +78,6 @@ T get_pure_r_value(T&& val)
  * - For non-fatal errors in interactive sessions (e.g. RPC or command line
  *   interfaces), CHECK_NONFATAL() might be more appropriate.
  */
-#ifdef ABORT_ON_FAILED_ASSUME
-#define Assume(val) Assert(val)
-#else
-#define Assume(val) ([&]() -> decltype(get_pure_r_value(val)) { auto&& check = (val); return std::forward<decltype(get_pure_r_value(val))>(check); }())
-#endif
+#define Assume(val) inline_assertion_check<false>(val, __FILE__, __LINE__, __func__, #val)
 
 #endif // BITCOIN_UTIL_CHECK_H

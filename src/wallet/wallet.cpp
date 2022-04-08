@@ -167,6 +167,14 @@ std::unique_ptr<interfaces::Handler> HandleLoadWallet(WalletContext& context, Lo
     return interfaces::MakeHandler([&context, it] { LOCK(context.wallets_mutex); context.wallet_load_fns.erase(it); });
 }
 
+void NotifyWalletLoaded(WalletContext& context, const std::shared_ptr<CWallet>& wallet)
+{
+    LOCK(context.wallets_mutex);
+    for (auto& load_wallet : context.wallet_load_fns) {
+        load_wallet(interfaces::MakeWallet(context, wallet));
+    }
+}
+
 static Mutex g_loading_wallet_mutex;
 static Mutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
@@ -232,6 +240,8 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
             status = DatabaseStatus::FAILED_LOAD;
             return nullptr;
         }
+
+        NotifyWalletLoaded(context, wallet);
         AddWallet(context, wallet);
         wallet->postInitProcess();
 
@@ -348,11 +358,18 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             wallet->Lock();
         }
     }
+
+    NotifyWalletLoaded(context, wallet);
     AddWallet(context, wallet);
     wallet->postInitProcess();
 
     // Write the wallet settings
     UpdateWalletSetting(*context.chain, name, load_on_start, warnings);
+
+    // Legacy wallets are being deprecated, warn if a newly created wallet is legacy
+    if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
+        warnings.push_back(_("Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."));
+    }
 
     status = DatabaseStatus::SUCCESS;
     return wallet;
@@ -361,6 +378,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
+    ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
 
     if (!fs::exists(backup_file)) {
@@ -1027,7 +1045,8 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     if (!fill_wtx(wtx, ins.second)) {
         return false;
     }
-    // If wallet doesn't have a chain (e.g wallet-tool), don't bother to update txn.
+    // If wallet doesn't have a chain (e.g when using bitcoin-wallet tool),
+    // don't bother to update txn.
     if (HaveChain()) {
         bool active;
         auto lookup_block = [&](const uint256& hash, int& height, TxState& state) {
@@ -2692,6 +2711,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, PACKAGE_NAME);
             return nullptr;
         }
+        else if (nLoadWalletRet == DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED) {
+            error = strprintf(_("Error loading %s: External signer wallet being loaded without external signer support compiled"), walletFile);
+            return nullptr;
+        }
         else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
         {
             error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), PACKAGE_NAME);
@@ -2891,13 +2914,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
     if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
         return nullptr;
-    }
-
-    {
-        LOCK(context.wallets_mutex);
-        for (auto& load_wallet : context.wallet_load_fns) {
-            load_wallet(interfaces::MakeWallet(context, walletInstance));
-        }
     }
 
     {

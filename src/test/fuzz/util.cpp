@@ -225,7 +225,7 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman,
     const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
     const NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     const int32_t version = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max());
-    const bool filter_txs = fuzzed_data_provider.ConsumeBool();
+    const bool relay_txs{fuzzed_data_provider.ConsumeBool()};
 
     const CNetMsgMaker mm{0};
 
@@ -241,7 +241,7 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman,
                 uint64_t{1},                                    // dummy nonce
                 std::string{},                                  // dummy subver
                 int32_t{},                                      // dummy starting_height
-                filter_txs),
+                relay_txs),
     };
 
     (void)connman.ReceiveMsgFrom(node, msg_version);
@@ -255,10 +255,9 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman,
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
     assert(node.nServices == remote_services);
-    if (node.m_tx_relay != nullptr) {
-        LOCK(node.m_tx_relay->cs_filter);
-        assert(node.m_tx_relay->fRelayTxes == filter_txs);
-    }
+    CNodeStateStats statestats;
+    assert(peerman.GetNodeStateStats(node.GetId(), statestats));
+    assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
     node.m_permissionFlags = permission_flags;
     if (successfully_connected) {
         CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
@@ -566,7 +565,7 @@ ssize_t FuzzedFileProvider::write(void* cookie, const char* buf, size_t size)
     SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
     const ssize_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<ssize_t>(0, size);
     if (AdditionOverflow(fuzzed_file->m_offset, (int64_t)n)) {
-        return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+        return 0;
     }
     fuzzed_file->m_offset += n;
     return n;

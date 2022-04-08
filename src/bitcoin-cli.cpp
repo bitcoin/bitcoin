@@ -69,8 +69,13 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC getnewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-generate",
+                   strprintf("Generate blocks, equivalent to RPC getnewaddress followed by RPC generatetoaddress. Optional positional integer "
+                             "arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to "
+                             "RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000",
+                             DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES),
+                   ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total, after filtering for quality and recency. The total number of addresses known to the node may be higher.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
@@ -128,7 +133,10 @@ static int AppInitRPC(int argc, char* argv[])
     }
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         std::string strUsage = PACKAGE_NAME " RPC client version " + FormatFullVersion() + "\n";
-        if (!gArgs.IsArgSet("-version")) {
+
+        if (gArgs.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
             strUsage += "\n"
                 "Usage:  bitcoin-cli [options] <command> [params]  Send command to " PACKAGE_NAME "\n"
                 "or:     bitcoin-cli [options] -named <command> [name=value]...  Send command to " PACKAGE_NAME " (with named arguments)\n"
@@ -176,7 +184,6 @@ struct HTTPReply
 static std::string http_errorstring(int code)
 {
     switch(code) {
-#if LIBEVENT_VERSION_NUMBER >= 0x02010300
     case EVREQ_HTTP_TIMEOUT:
         return "timeout reached";
     case EVREQ_HTTP_EOF:
@@ -189,7 +196,6 @@ static std::string http_errorstring(int code)
         return "request was canceled";
     case EVREQ_HTTP_DATA_TOO_LONG:
         return "response body is larger than allowed";
-#endif
     default:
         return "unknown";
     }
@@ -220,13 +226,11 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
     }
 }
 
-#if LIBEVENT_VERSION_NUMBER >= 0x02010300
 static void http_error_cb(enum evhttp_request_error err, void *ctx)
 {
     HTTPReply *reply = static_cast<HTTPReply*>(ctx);
     reply->error = err;
 }
-#endif
 
 /** Class that handles the conversion from a command-line to a JSON-RPC request,
  * as well as converting back to a JSON object that can be shown as result.
@@ -606,8 +610,9 @@ public:
         "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
         "Arguments:\n"
         + strprintf("1. level (integer 0-%d, optional)  Specify the info level of the peers dashboard (default 0):\n", MAX_DETAIL_LEVEL) +
-        "                                  0 - Connection counts and local addresses\n"
-        "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
+        "                                  0 - Peer counts for each reachable network as well as for block relay peers\n"
+        "                                      and manual peers, and the list of local addresses and ports\n"
+        "                                  1 - Like 0 but preceded by a peers listing (without address and version columns)\n"
         "                                  2 - Like 1 but with an address column\n"
         "                                  3 - Like 1 but with a version column\n"
         "                                  4 - Like 1 but with both address and version columns\n"
@@ -645,13 +650,13 @@ public:
         "  id       Peer index, in increasing order of peer connections since node startup\n"
         "  address  IP address and port of the peer\n"
         "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
-        "* The connection counts table displays the number of peers by direction, network, and the totals\n"
-        "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
+        "* The peer counts table displays the number of peers for each reachable network as well as\n"
+        "  the number of block relay peers and manual peers.\n\n"
         "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
         "Examples:\n\n"
-        "Connection counts and local addresses only\n"
+        "Peer counts table of reachable networks and list of local addresses\n"
         "> bitcoin-cli -netinfo\n\n"
-        "Compact peers listing\n"
+        "The same, preceded by a peers listing without address and version columns\n"
         "> bitcoin-cli -netinfo 1\n\n"
         "Full dashboard\n"
         + strprintf("> bitcoin-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
@@ -736,11 +741,11 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
     HTTPReply response;
     raii_evhttp_request req = obtain_evhttp_request(http_request_done, (void*)&response);
-    if (req == nullptr)
+    if (req == nullptr) {
         throw std::runtime_error("create http request failed");
-#if LIBEVENT_VERSION_NUMBER >= 0x02010300
+    }
+
     evhttp_request_set_error_cb(req.get(), http_error_cb);
-#endif
 
     // Get credentials
     std::string strRPCUserColonPass;

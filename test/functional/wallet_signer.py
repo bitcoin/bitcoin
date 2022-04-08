@@ -72,10 +72,12 @@ class WalletSignerTest(BitcoinTestFramework):
 
         self.nodes[1].createwallet(wallet_name='hww', disable_private_keys=True, descriptors=True, external_signer=True)
         hww = self.nodes[1].get_wallet_rpc('hww')
+        assert_equal(hww.getwalletinfo()["external_signer"], True)
 
         # Flag can't be set afterwards (could be added later for non-blank descriptor based watch-only wallets)
         self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
+        assert_equal(not_hww.getwalletinfo()["external_signer"], False)
         assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
 
         # assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=True)
@@ -189,6 +191,12 @@ class WalletSignerTest(BitcoinTestFramework):
         self.log.info('Test send using hww1')
 
         res = hww.send(outputs={dest:0.5},options={"add_to_wallet": False})
+        assert(res["complete"])
+        assert_equal(res["hex"], mock_tx)
+
+        self.log.info('Test sendall using hww1')
+
+        res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()],options={"add_to_wallet": False})
         assert(res["complete"])
         assert_equal(res["hex"], mock_tx)
 

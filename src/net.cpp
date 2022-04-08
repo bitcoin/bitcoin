@@ -126,6 +126,31 @@ void CConnman::AddAddrFetch(const std::string& strDest)
 
 uint16_t GetListenPort()
 {
+    // If -bind= is provided with ":port" part, use that (first one if multiple are provided).
+    for (const std::string& bind_arg : gArgs.GetArgs("-bind")) {
+        CService bind_addr;
+        constexpr uint16_t dummy_port = 0;
+
+        if (Lookup(bind_arg, bind_addr, dummy_port, /*fAllowLookup=*/false)) {
+            if (bind_addr.GetPort() != dummy_port) {
+                return bind_addr.GetPort();
+            }
+        }
+    }
+
+    // Otherwise, if -whitebind= without NetPermissionFlags::NoBan is provided, use that
+    // (-whitebind= is required to have ":port").
+    for (const std::string& whitebind_arg : gArgs.GetArgs("-whitebind")) {
+        NetWhitebindPermissions whitebind;
+        bilingual_str error;
+        if (NetWhitebindPermissions::TryParse(whitebind_arg, whitebind, error)) {
+            if (!NetPermissions::HasFlag(whitebind.m_flags, NetPermissionFlags::NoBan)) {
+                return whitebind.m_service.GetPort();
+            }
+        }
+    }
+
+    // Otherwise, if -port= is provided, use that. Otherwise use the default port.
     return static_cast<uint16_t>(gArgs.GetIntArg("-port", Params().GetDefaultPort()));
 }
 
@@ -221,7 +246,17 @@ std::optional<CAddress> GetLocalAddrForPeer(CNode *pnode)
     if (IsPeerAddrLocalGood(pnode) && (!addrLocal.IsRoutable() ||
          rng.randbits((GetnScore(addrLocal) > LOCAL_MANUAL) ? 3 : 1) == 0))
     {
-        addrLocal.SetIP(pnode->GetAddrLocal());
+        if (pnode->IsInboundConn()) {
+            // For inbound connections, assume both the address and the port
+            // as seen from the peer.
+            addrLocal = CAddress{pnode->GetAddrLocal(), addrLocal.nServices};
+        } else {
+            // For outbound connections, assume just the address as seen from
+            // the peer and leave the port in `addrLocal` as returned by
+            // `GetLocalAddress()` above. The peer has no way to observe our
+            // listening port when we have initiated the connection.
+            addrLocal.SetIP(pnode->GetAddrLocal());
+        }
     }
     if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false))
     {
@@ -449,7 +484,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     // Connect
     bool connected = false;
     std::unique_ptr<Sock> sock;
-    proxyType proxy;
+    Proxy proxy;
     CAddress addr_bind;
     assert(!addr_bind.IsValid());
 
@@ -591,12 +626,6 @@ void CNode::CopyStats(CNodeStats& stats)
     X(addr);
     X(addrBind);
     stats.m_network = ConnectedThroughNetwork();
-    if (m_tx_relay != nullptr) {
-        LOCK(m_tx_relay->cs_filter);
-        stats.fRelayTxes = m_tx_relay->fRelayTxes;
-    } else {
-        stats.fRelayTxes = false;
-    }
     X(m_last_send);
     X(m_last_recv);
     X(m_last_tx_time);
@@ -623,11 +652,6 @@ void CNode::CopyStats(CNodeStats& stats)
         X(nRecvBytes);
     }
     X(m_permissionFlags);
-    if (m_tx_relay != nullptr) {
-        stats.minFeeFilter = m_tx_relay->minFeeFilter;
-    } else {
-        stats.minFeeFilter = 0;
-    }
 
     X(m_last_ping_time);
     X(m_min_ping_time);
@@ -878,7 +902,7 @@ static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEviction
 {
     // There is a fall-through here because it is common for a node to have more than a few peers that have not yet relayed txn.
     if (a.m_last_tx_time != b.m_last_tx_time) return a.m_last_tx_time < b.m_last_tx_time;
-    if (a.fRelayTxes != b.fRelayTxes) return b.fRelayTxes;
+    if (a.m_relay_txs != b.m_relay_txs) return b.m_relay_txs;
     if (a.fBloomFilter != b.fBloomFilter) return a.fBloomFilter;
     return a.m_connected > b.m_connected;
 }
@@ -886,7 +910,7 @@ static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEviction
 // Pick out the potential block-relay only peers, and sort them by last block time.
 static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
-    if (a.fRelayTxes != b.fRelayTxes) return a.fRelayTxes;
+    if (a.m_relay_txs != b.m_relay_txs) return a.m_relay_txs;
     if (a.m_last_block_time != b.m_last_block_time) return a.m_last_block_time < b.m_last_block_time;
     if (a.fRelevantServices != b.fRelevantServices) return b.fRelevantServices;
     return a.m_connected > b.m_connected;
@@ -928,17 +952,17 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
     // To favorise the diversity of our peer connections, reserve up to half of these protected
-    // spots for Tor/onion, localhost and I2P peers, even if they're not longest uptime overall.
-    // This helps protect these higher-latency peers that tend to be otherwise
+    // spots for Tor/onion, localhost, I2P, and CJDNS peers, even if they're not longest uptime
+    // overall. This helps protect these higher-latency peers that tend to be otherwise
     // disadvantaged under our eviction criteria.
     const size_t initial_size = eviction_candidates.size();
     const size_t total_protect_size{initial_size / 2};
 
-    // Disadvantaged networks to protect: I2P, localhost, Tor/onion. In case of equal counts, earlier
-    // array members have first opportunity to recover unused slots from the previous iteration.
+    // Disadvantaged networks to protect. In the case of equal counts, earlier array members
+    // have the first opportunity to recover unused slots from the previous iteration.
     struct Net { bool is_local; Network id; size_t count; };
-    std::array<Net, 3> networks{
-        {{false, NET_I2P, 0}, {/* localhost */ true, NET_MAX, 0}, {false, NET_ONION, 0}}};
+    std::array<Net, 4> networks{
+        {{false, NET_CJDNS, 0}, {false, NET_I2P, 0}, {/*localhost=*/true, NET_MAX, 0}, {false, NET_ONION, 0}}};
 
     // Count and store the number of eviction candidates per network.
     for (Net& n : networks) {
@@ -1011,7 +1035,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     EraseLastKElements(vEvictionCandidates, CompareNodeTXTime, 4);
     // Protect up to 8 non-tx-relay peers that have sent us novel blocks.
     EraseLastKElements(vEvictionCandidates, CompareNodeBlockRelayOnlyTime, 8,
-                       [](const NodeEvictionCandidate& n) { return !n.fRelayTxes && n.fRelevantServices; });
+                       [](const NodeEvictionCandidate& n) { return !n.m_relay_txs && n.fRelevantServices; });
 
     // Protect 4 nodes that most recently sent us novel blocks.
     // An attacker cannot manipulate this metric without performing useful work.
@@ -1077,18 +1101,11 @@ bool CConnman::AttemptToEvictConnection()
                 continue;
             if (node->fDisconnect)
                 continue;
-            bool peer_relay_txes = false;
-            bool peer_filter_not_null = false;
-            if (node->m_tx_relay != nullptr) {
-                LOCK(node->m_tx_relay->cs_filter);
-                peer_relay_txes = node->m_tx_relay->fRelayTxes;
-                peer_filter_not_null = node->m_tx_relay->pfilter != nullptr;
-            }
             NodeEvictionCandidate candidate = {node->GetId(), node->m_connected, node->m_min_ping_time,
                                                node->m_last_block_time, node->m_last_tx_time,
                                                HasAllDesirableServiceFlags(node->nServices),
-                                               peer_relay_txes, peer_filter_not_null, node->nKeyedNetGroup,
-                                               node->m_prefer_evict, node->addr.IsLocal(),
+                                               node->m_relays_txs.load(), node->m_bloom_filter_loaded.load(),
+                                               node->nKeyedNetGroup, node->m_prefer_evict, node->addr.IsLocal(),
                                                node->ConnectedThroughNetwork()};
             vEvictionCandidates.push_back(candidate);
         }
@@ -2120,12 +2137,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 continue;
             }
 
-            // Do not allow non-default ports, unless after 50 invalid
-            // addresses selected already. This is to prevent malicious peers
-            // from advertising themselves as a service on another host and
-            // port, causing a DoS attack as nodes around the network attempt
-            // to connect to it fruitlessly.
-            if (addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && nTries < 50) {
+            // Do not connect to bad ports, unless 50 invalid addresses have been selected already.
+            if (nTries < 50 && (addr.IsIPv4() || addr.IsIPv6()) && IsBadPort(addr.GetPort())) {
                 continue;
             }
 
@@ -2559,7 +2572,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
 
-    proxyType i2p_sam;
+    Proxy i2p_sam;
     if (GetProxy(NET_I2P, i2p_sam)) {
         m_i2p_sam_session = std::make_unique<i2p::sam::Session>(gArgs.GetDataDirNet() / "i2p_private_key",
                                                                 i2p_sam.proxy, &interruptNet);
@@ -2620,7 +2633,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
         if (m_client_interface) {
             m_client_interface->ThreadSafeMessageBox(
-                _("Cannot provide specific connections and have addrman find outgoing connections at the same."),
+                _("Cannot provide specific connections and have addrman find outgoing connections at the same time."),
                 "", CClientUIInterface::MSG_ERROR);
         }
         return false;
@@ -2769,7 +2782,7 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     auto r = m_addr_response_caches.emplace(cache_id, CachedAddrResponse{});
     CachedAddrResponse& cache_entry = r.first->second;
     if (cache_entry.m_cache_entry_expiration < current_time) { // If emplace() added new one it has expiration 0.
-        cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct, /* network */ std::nullopt);
+        cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct, /*network=*/std::nullopt);
         // Choosing a proper cache lifetime is a trade-off between the privacy leak minimization
         // and the usefulness of ADDR responses to honest users.
         //
@@ -3000,9 +3013,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> s
       nLocalServices(nLocalServicesIn)
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
-    if (conn_type_in != ConnectionType::BLOCK_RELAY) {
-        m_tx_relay = std::make_unique<TxRelay>();
-    }
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
@@ -3089,7 +3099,10 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }
 
-void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming)
+void CaptureMessageToFile(const CAddress& addr,
+                          const std::string& msg_type,
+                          Span<const unsigned char> data,
+                          bool is_incoming)
 {
     // Note: This function captures the message at the time of processing,
     // not at socket receive/send time.
@@ -3097,7 +3110,7 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
     // layer (processing) perspective.
     auto now = GetTime<std::chrono::microseconds>();
 
-    // Windows folder names can not include a colon
+    // Windows folder names cannot include a colon
     std::string clean_addr = addr.ToString();
     std::replace(clean_addr.begin(), clean_addr.end(), ':', '_');
 
@@ -3116,3 +3129,9 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
     ser_writedata32(f, size);
     f.write(AsBytes(data));
 }
+
+std::function<void(const CAddress& addr,
+                   const std::string& msg_type,
+                   Span<const unsigned char> data,
+                   bool is_incoming)>
+    CaptureMessage = CaptureMessageToFile;

@@ -201,7 +201,7 @@ struct CMutableTransaction;
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - if (flags & 1):
- *   - CTxWitness wit;
+ *   - CScriptWitness scriptWitness; (deserialized into CTxIn)
  * - uint32_t nLockTime
  */
 template<typename Stream, typename TxType>

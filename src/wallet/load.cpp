@@ -57,6 +57,7 @@ bool VerifyWallets(WalletContext& context)
     if (!args.IsArgSet("wallet")) {
         DatabaseOptions options;
         DatabaseStatus status;
+        ReadDatabaseArgs(args, options);
         bilingual_str error_string;
         options.require_existing = true;
         options.verify = false;
@@ -84,6 +85,7 @@ bool VerifyWallets(WalletContext& context)
 
         DatabaseOptions options;
         DatabaseStatus status;
+        ReadDatabaseArgs(args, options);
         options.require_existing = true;
         options.verify = true;
         bilingual_str error_string;
@@ -112,6 +114,7 @@ bool LoadWallets(WalletContext& context)
             }
             DatabaseOptions options;
             DatabaseStatus status;
+            ReadDatabaseArgs(*context.args, options);
             options.require_existing = true;
             options.verify = false; // No need to verify, assuming verified earlier in VerifyWallets()
             bilingual_str error;
@@ -127,6 +130,8 @@ bool LoadWallets(WalletContext& context)
                 chain.initError(error);
                 return false;
             }
+
+            NotifyWalletLoaded(context, pwallet);
             AddWallet(context, pwallet);
         }
         return true;

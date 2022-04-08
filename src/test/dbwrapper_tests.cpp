@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 {
     // We're going to share this fs::path between two wrappers
     fs::path ph = m_args.GetDataDirBase() / "existing_data_no_obfuscate";
-    create_directories(ph);
+    fs::create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
     std::unique_ptr<CDBWrapper> dbw = std::make_unique<CDBWrapper>(ph, (1 << 10), false, false, false);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 {
     // We're going to share this fs::path between two wrappers
     fs::path ph = m_args.GetDataDirBase() / "existing_data_reindex";
-    create_directories(ph);
+    fs::create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
     std::unique_ptr<CDBWrapper> dbw = std::make_unique<CDBWrapper>(ph, (1 << 10), false, false, false);

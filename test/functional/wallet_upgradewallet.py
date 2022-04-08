@@ -345,5 +345,16 @@ class UpgradeWalletTest(BitcoinTestFramework):
             desc_wallet = self.nodes[0].get_wallet_rpc("desc_upgrade")
             self.test_upgradewallet(desc_wallet, previous_version=169900, expected_version=169900)
 
+            self.log.info("Checking that descriptor wallets without privkeys do nothing, successfully")
+            self.nodes[0].createwallet(wallet_name="desc_upgrade_nopriv", descriptors=True, disable_private_keys=True)
+            desc_wallet = self.nodes[0].get_wallet_rpc("desc_upgrade_nopriv")
+            self.test_upgradewallet(desc_wallet, previous_version=169900, expected_version=169900)
+
+        if self.is_bdb_compiled():
+            self.log.info("Upgrading a wallet with private keys disabled")
+            self.nodes[0].createwallet(wallet_name="privkeys_disabled_upgrade", disable_private_keys=True, descriptors=False)
+            disabled_wallet = self.nodes[0].get_wallet_rpc("privkeys_disabled_upgrade")
+            self.test_upgradewallet(disabled_wallet, previous_version=169900, expected_version=169900)
+
 if __name__ == '__main__':
     UpgradeWalletTest().main()

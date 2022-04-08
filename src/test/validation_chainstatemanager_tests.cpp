@@ -99,8 +99,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 
     // Let scheduler events finish running to avoid accessing memory that is going to be unloaded
     SyncWithValidationInterfaceQueue();
-
-    WITH_LOCK(::cs_main, manager.Unload());
 }
 
 //! Test rebalancing the caches associated with each chainstate.

@@ -91,54 +91,81 @@ static constexpr bool IsSmallInteger(opcodetype opcode)
     return opcode >= OP_1 && opcode <= OP_16;
 }
 
-static constexpr bool IsPushdataOp(opcodetype opcode)
+/** Retrieve a minimally-encoded number in range [min,max] from an (opcode, data) pair,
+ *  whether it's OP_n or through a push. */
+static std::optional<int> GetScriptNumber(opcodetype opcode, valtype data, int min, int max)
 {
-    return opcode > OP_FALSE && opcode <= OP_PUSHDATA4;
-}
-
-static constexpr bool IsValidMultisigKeyCount(int n_keys)
-{
-    return n_keys > 0 && n_keys <= MAX_PUBKEYS_PER_MULTISIG;
-}
-
-static bool GetMultisigKeyCount(opcodetype opcode, valtype data, int& count)
-{
+    int count;
     if (IsSmallInteger(opcode)) {
         count = CScript::DecodeOP_N(opcode);
-        return IsValidMultisigKeyCount(count);
-    }
-
-    if (IsPushdataOp(opcode)) {
-        if (!CheckMinimalPush(data, opcode)) return false;
+    } else if (IsPushdataOp(opcode)) {
+        if (!CheckMinimalPush(data, opcode)) return {};
         try {
             count = CScriptNum(data, /* fRequireMinimal = */ true).getint();
-            return IsValidMultisigKeyCount(count);
         } catch (const scriptnum_error&) {
-            return false;
+            return {};
         }
+    } else {
+        return {};
     }
-
-    return false;
+    if (count < min || count > max) return {};
+    return count;
 }
 
 static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector<valtype>& pubkeys)
 {
     opcodetype opcode;
     valtype data;
-    int num_keys;
 
     CScript::const_iterator it = script.begin();
     if (script.size() < 1 || script.back() != OP_CHECKMULTISIG) return false;
 
-    if (!script.GetOp(it, opcode, data) || !GetMultisigKeyCount(opcode, data, required_sigs)) return false;
+    if (!script.GetOp(it, opcode, data)) return false;
+    auto req_sigs = GetScriptNumber(opcode, data, 1, MAX_PUBKEYS_PER_MULTISIG);
+    if (!req_sigs) return false;
+    required_sigs = *req_sigs;
     while (script.GetOp(it, opcode, data) && CPubKey::ValidSize(data)) {
         pubkeys.emplace_back(std::move(data));
     }
-    if (!GetMultisigKeyCount(opcode, data, num_keys)) return false;
-
-    if (pubkeys.size() != static_cast<unsigned long>(num_keys) || num_keys < required_sigs) return false;
+    auto num_keys = GetScriptNumber(opcode, data, required_sigs, MAX_PUBKEYS_PER_MULTISIG);
+    if (!num_keys) return false;
+    if (pubkeys.size() != static_cast<unsigned long>(*num_keys)) return false;
 
     return (it + 1 == script.end());
+}
+
+std::optional<std::pair<int, std::vector<Span<const unsigned char>>>> MatchMultiA(const CScript& script)
+{
+    std::vector<Span<const unsigned char>> keyspans;
+
+    // Redundant, but very fast and selective test.
+    if (script.size() == 0 || script[0] != 32 || script.back() != OP_NUMEQUAL) return {};
+
+    // Parse keys
+    auto it = script.begin();
+    while (script.end() - it >= 34) {
+        if (*it != 32) return {};
+        ++it;
+        keyspans.emplace_back(&*it, 32);
+        it += 32;
+        if (*it != (keyspans.size() == 1 ? OP_CHECKSIG : OP_CHECKSIGADD)) return {};
+        ++it;
+    }
+    if (keyspans.size() == 0 || keyspans.size() > MAX_PUBKEYS_PER_MULTI_A) return {};
+
+    // Parse threshold.
+    opcodetype opcode;
+    std::vector<unsigned char> data;
+    if (!script.GetOp(it, opcode, data)) return {};
+    if (it == script.end()) return {};
+    if (*it != OP_NUMEQUAL) return {};
+    ++it;
+    if (it != script.end()) return {};
+    auto threshold = GetScriptNumber(opcode, data, 1, (int)keyspans.size());
+    if (!threshold) return {};
+
+    // Construct result.
+    return std::pair{*threshold, std::move(keyspans)};
 }
 
 TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet)
@@ -366,13 +393,7 @@ void TaprootSpendData::Merge(TaprootSpendData other)
         merkle_root = other.merkle_root;
     }
     for (auto& [key, control_blocks] : other.scripts) {
-        // Once P0083R3 is supported by all our targeted platforms,
-        // this loop body can be replaced with:
-        // scripts[key].merge(std::move(control_blocks));
-        auto& target = scripts[key];
-        for (auto& control_block: control_blocks) {
-            target.insert(std::move(control_block));
-        }
+        scripts[key].merge(std::move(control_blocks));
     }
 }
 

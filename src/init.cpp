@@ -135,7 +135,7 @@ static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
 
 static fs::path GetPidFile(const ArgsManager& args)
 {
-    return AbsPathForConfigVal(fs::PathFromString(args.GetArg("-pid", BITCOIN_PID_FILENAME)));
+    return AbsPathForConfigVal(args.GetPathArg("-pid", BITCOIN_PID_FILENAME));
 }
 
 [[nodiscard]] static bool CreatePidFile(const ArgsManager& args)
@@ -395,7 +395,7 @@ void SetupServerArgs(ArgsManager& argsman)
 
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
-    argsman.AddArg("-alertnotify=<cmd>", "Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-alertnotify=<cmd>", "Execute command when an alert is raised (%s in cmd is replaced by message)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
     argsman.AddArg("-assumevalid=<hex>", strprintf("If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s, signet: %s)", defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnetChainParams->GetConsensus().defaultAssumeValid.GetHex(), signetChainParams->GetConsensus().defaultAssumeValid.GetHex()), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blocksdir=<dir>", "Specify directory to hold blocks subdirectory for *.dat files (default: <datadir>)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -444,7 +444,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion)", defaultBaseParams->OnionServiceTargetPort(), testnetBaseParams->OnionServiceTargetPort(), signetBaseParams->OnionServiceTargetPort(), regtestBaseParams->OnionServiceTargetPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-cjdnsreachable", "If set then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-cjdnsreachable", "If set, then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network, see doc/cjdns.md) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-connect=<ip>", "Connect only to the specified node; -noconnect disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-dns", strprintf("Allow DNS lookups for -addnode, -seednode and -connect (default: %u)", DEFAULT_NAME_LOOKUP), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -457,15 +457,17 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-maxconnections=<n>", strprintf("Maintain at most <n> connections to peers (default: %u). This limit does not apply to connections manually added via -addnode or the addnode RPC, which have a separate limit of %u.", DEFAULT_MAX_PEER_CONNECTIONS, MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxreceivebuffer=<n>", strprintf("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXRECEIVEBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxsendbuffer=<n>", strprintf("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXSENDBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-maxtimeadjustment", strprintf("Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)", DEFAULT_MAX_TIME_ADJUSTMENT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-maxtimeadjustment", strprintf("Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by outbound peers forward or backward by this amount (default: %u seconds).", DEFAULT_MAX_TIME_ADJUSTMENT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxuploadtarget=<n>", strprintf("Tries to keep outbound traffic under the given target per 24h. Limit does not apply to peers with 'download' permission or blocks created within past week. 0 = no limit (default: %s). Optional suffix units [k|K|m|M|g|G|t|T] (default: M). Lowercase is 1000 base while uppercase is 1024 base", DEFAULT_MAX_UPLOAD_TARGET), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-onion=<ip:port>", "Use separate SOCKS5 proxy to reach peers via Tor onion services, set -noonion to disable (default: -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-i2psam=<ip:port>", "I2P SAM proxy to reach I2P peers and accept I2P connections (default: none)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-i2pacceptincoming", "If set and -i2psam is also set then incoming I2P connections are accepted via the SAM proxy. If this is not set but -i2psam is set then only outgoing connections will be made to the I2P network. Ignored if -i2psam is not set. Listening for incoming I2P connections is done through the SAM proxy, not by binding to a local address and port (default: 1)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-onlynet=<net>", "Make outgoing connections only through network <net> (" + Join(GetNetworkNames(), ", ") + "). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks. Warning: if it is used with non-onion networks and the -onion or -proxy option is set, then outbound onion connections will still be made; use -noonion or -onion=0 to disable outbound onion connections in this case.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-onlynet=<net>", "Make automatic outbound connections only to network <net> (" + Join(GetNetworkNames(), ", ") + "). Inbound and manual connections are not affected by this option. It can be specified multiple times to allow multiple networks.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerbloomfilters", strprintf("Support filtering of blocks and transaction with bloom filters (default: %u)", DEFAULT_PEERBLOOMFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerblockfilters", strprintf("Serve compact block filters to peers per BIP 157 (default: %u)", DEFAULT_PEERBLOCKFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-permitbaremultisig", strprintf("Relay non-P2SH multisig (default: %u)", DEFAULT_PERMIT_BAREMULTISIG), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    // TODO: remove the sentence "Nodes not using ... incoming connections." once the changes from
+    // https://github.com/bitcoin/bitcoin/pull/23542 have become widespread.
     argsman.AddArg("-port=<port>", strprintf("Listen for connections on <port>. Nodes not using the default ports (default: %u, testnet: %u, signet: %u, regtest: %u) are unlikely to get incoming connections. Not relevant for I2P (see doc/i2p.md).", defaultChainParams->GetDefaultPort(), testnetChainParams->GetDefaultPort(), signetChainParams->GetDefaultPort(), regtestChainParams->GetDefaultPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-proxy=<ip:port>", "Connect through SOCKS5 proxy, set -noproxy to disable (default: disabled)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-proxyrandomize", strprintf("Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)", DEFAULT_PROXYRANDOMIZE), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -592,25 +594,6 @@ void SetupServerArgs(ArgsManager& argsman)
 
     // Add the hidden options
     argsman.AddHiddenArgs(hidden_args);
-}
-
-std::string LicenseInfo()
-{
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
-
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2009, COPYRIGHT_YEAR) + " ") + "\n" +
-           "\n" +
-           strprintf(_("Please contribute if you find %s useful. "
-                       "Visit %s for further information about the software.").translated,
-               PACKAGE_NAME, "<" PACKAGE_URL ">") +
-           "\n" +
-           strprintf(_("The source code is available from %s.").translated,
-               URL_SOURCE_CODE) +
-           "\n" +
-           "\n" +
-           _("This is experimental software.").translated + "\n" +
-           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>") +
-           "\n";
 }
 
 static bool fHaveGenesis = false;
@@ -809,7 +792,7 @@ bool AppInitBasicSetup(const ArgsManager& args)
     return true;
 }
 
-bool AppInitParameterInteraction(const ArgsManager& args)
+bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandbox)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
@@ -870,12 +853,14 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
     }
 
-    // if using block pruning, then disallow txindex and coinstatsindex
     if (args.GetIntArg("-prune", 0)) {
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX))
             return InitError(_("Prune mode is incompatible with -coinstatsindex."));
+        if (args.GetBoolArg("-reindex-chainstate", false)) {
+            return InitError(_("Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead."));
+        }
     }
 
     // If -forcednsseed is set to true, ensure -dnsseed has not been set to false
@@ -1073,6 +1058,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!SetupSyscallSandbox(log_syscall_violation_before_terminating)) {
             return InitError(Untranslated("Installation of the syscall sandbox failed."));
         }
+        if (use_syscall_sandbox) {
+            SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION);
+        }
         LogPrintf("Experimental syscall sandbox enabled (-sandbox=%s): bitcoind will terminate if an unexpected (not allowlisted) syscall is invoked.\n", sandbox_arg);
     }
 #endif // USE_SYSCALL_SANDBOX
@@ -1246,10 +1234,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Read asmap file if configured
         std::vector<bool> asmap;
         if (args.IsArgSet("-asmap")) {
-            fs::path asmap_path = fs::PathFromString(args.GetArg("-asmap", ""));
-            if (asmap_path.empty()) {
-                asmap_path = fs::PathFromString(DEFAULT_ASMAP_FILENAME);
-            }
+            fs::path asmap_path = args.GetPathArg("-asmap", DEFAULT_ASMAP_FILENAME);
             if (!asmap_path.is_absolute()) {
                 asmap_path = gArgs.GetDataDirNet() / asmap_path;
             }
@@ -1320,6 +1305,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         for (int n = 0; n < NET_MAX; n++) {
             enum Network net = (enum Network)n;
+            assert(IsReachable(net));
             if (!nets.count(net))
                 SetReachable(net, false);
         }
@@ -1336,27 +1322,27 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = args.GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
+    Proxy onion_proxy;
+
     bool proxyRandomize = args.GetBoolArg("-proxyrandomize", DEFAULT_PROXYRANDOMIZE);
     // -proxy sets a proxy for all outgoing network traffic
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
     std::string proxyArg = args.GetArg("-proxy", "");
-    SetReachable(NET_ONION, false);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
         }
 
-        proxyType addrProxy = proxyType(proxyAddr, proxyRandomize);
+        Proxy addrProxy = Proxy(proxyAddr, proxyRandomize);
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
-        SetProxy(NET_ONION, addrProxy);
         SetProxy(NET_CJDNS, addrProxy);
         SetNameProxy(addrProxy);
-        SetReachable(NET_ONION, true); // by default, -proxy sets onion as reachable, unless -noonion later
+        onion_proxy = addrProxy;
     }
 
     // -onion can be used to set only a proxy for .onion, or override normal proxy for .onion addresses
@@ -1365,18 +1351,26 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     std::string onionArg = args.GetArg("-onion", "");
     if (onionArg != "") {
         if (onionArg == "0") { // Handle -noonion/-onion=0
-            SetReachable(NET_ONION, false);
+            onion_proxy = Proxy{};
         } else {
-            CService onionProxy;
-            if (!Lookup(onionArg, onionProxy, 9050, fNameLookup)) {
+            CService addr;
+            if (!Lookup(onionArg, addr, 9050, fNameLookup) || !addr.IsValid()) {
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
             }
-            proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
-            if (!addrOnion.IsValid())
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
-            SetProxy(NET_ONION, addrOnion);
-            SetReachable(NET_ONION, true);
+            onion_proxy = Proxy{addr, proxyRandomize};
         }
+    }
+
+    if (onion_proxy.IsValid()) {
+        SetProxy(NET_ONION, onion_proxy);
+    } else {
+        if (args.IsArgSet("-onlynet") && IsReachable(NET_ONION)) {
+            return InitError(
+                _("Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
+                  "reaching the Tor network is not provided (no -proxy= and no -onion= given) or "
+                  "it is explicitly forbidden (-onion=0)"));
+        }
+        SetReachable(NET_ONION, false);
     }
 
     for (const std::string& strAddr : args.GetArgs("-externalip")) {
@@ -1462,8 +1456,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 strLoadError = _("Error initializing block database");
                 break;
             case ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED:
-                strLoadError = _("Error upgrading chainstate database");
-                break;
+                return InitError(_("Unsupported chainstate database format found. "
+                                   "Please restart with -reindex-chainstate. This will "
+                                   "rebuild the chainstate database."));
             case ChainstateLoadingError::ERROR_REPLAYBLOCKS_FAILED:
                 strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
                 break;
@@ -1550,7 +1545,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        if (const auto error{CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db))}) {
+        if (const auto error{WITH_LOCK(cs_main, return CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db)))}) {
             return InitError(*error);
         }
 
@@ -1677,8 +1672,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     LogPrintf("nBestHeight = %d\n", chain_active_height);
     if (node.peerman) node.peerman->SetBestHeight(chain_active_height);
 
-    Discover();
-
     // Map ports with UPnP or NAT-PMP.
     StartMapPort(args.GetBoolArg("-upnp", DEFAULT_UPNP), gArgs.GetBoolArg("-natpmp", DEFAULT_NATPMP));
 
@@ -1698,12 +1691,27 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
+    // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
+    const uint16_t default_bind_port =
+        static_cast<uint16_t>(args.GetIntArg("-port", Params().GetDefaultPort()));
+
+    const auto BadPortWarning = [](const char* prefix, uint16_t port) {
+        return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
+                           "thus it is unlikely that any Bitcoin Core peers connect to it. See "
+                           "doc/p2p-bad-ports.md for details and a full list."),
+                         prefix,
+                         port);
+    };
+
     for (const std::string& bind_arg : args.GetArgs("-bind")) {
         CService bind_addr;
         const size_t index = bind_arg.rfind('=');
         if (index == std::string::npos) {
-            if (Lookup(bind_arg, bind_addr, GetListenPort(), false)) {
+            if (Lookup(bind_arg, bind_addr, default_bind_port, /*fAllowLookup=*/false)) {
                 connOptions.vBinds.push_back(bind_addr);
+                if (IsBadPort(bind_addr.GetPort())) {
+                    InitWarning(BadPortWarning("-bind", bind_addr.GetPort()));
+                }
                 continue;
             }
         } else {
@@ -1730,6 +1738,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // on any address - 0.0.0.0 (IPv4) and :: (IPv6).
     connOptions.bind_on_any = args.GetArgs("-bind").empty() && args.GetArgs("-whitebind").empty();
 
+    // Emit a warning if a bad port is given to -port= but only if -bind and -whitebind are not
+    // given, because if they are, then -port= is ignored.
+    if (connOptions.bind_on_any && args.IsArgSet("-port")) {
+        const uint16_t port_arg = args.GetIntArg("-port", 0);
+        if (IsBadPort(port_arg)) {
+            InitWarning(BadPortWarning("-port", port_arg));
+        }
+    }
+
     CService onion_service_target;
     if (!connOptions.onion_binds.empty()) {
         onion_service_target = connOptions.onion_binds.front();
@@ -1745,6 +1762,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                   onion_service_target.ToStringIPPort()));
         }
         StartTorControl(onion_service_target);
+    }
+
+    if (connOptions.bind_on_any) {
+        // Only add all IP addresses of the machine if we would be listening on
+        // any address - 0.0.0.0 (IPv4) and :: (IPv6).
+        Discover();
     }
 
     for (const auto& net : args.GetArgs("-whitelist")) {
@@ -1771,8 +1794,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!Lookup(i2psam_arg, addr, 7656, fNameLookup) || !addr.IsValid()) {
             return InitError(strprintf(_("Invalid -i2psam address or hostname: '%s'"), i2psam_arg));
         }
-        SetReachable(NET_I2P, true);
-        SetProxy(NET_I2P, proxyType{addr});
+        SetProxy(NET_I2P, Proxy{addr});
     } else {
         SetReachable(NET_I2P, false);
     }

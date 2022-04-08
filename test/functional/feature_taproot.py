@@ -1182,15 +1182,11 @@ def spenders_taproot_inactive():
     ]
     tap = taproot_construct(pub, scripts)
 
-    # Test that keypath spending is valid & non-standard, regardless of validity.
+    # Test that valid spending is standard.
     add_spender(spenders, "inactive/keypath_valid", key=sec, tap=tap, standard=Standard.V23)
-    add_spender(spenders, "inactive/keypath_invalidsig", key=sec, tap=tap, standard=False, sighash=bitflipper(default_sighash))
-    add_spender(spenders, "inactive/keypath_empty", key=sec, tap=tap, standard=False, witness=[])
-
-    # Same for scriptpath spending (and features like annex, leaf versions, or OP_SUCCESS don't change this)
     add_spender(spenders, "inactive/scriptpath_valid", key=sec, tap=tap, leaf="pk", standard=Standard.V23, inputs=[getter("sign")])
-    add_spender(spenders, "inactive/scriptpath_invalidsig", key=sec, tap=tap, leaf="pk", standard=False, inputs=[getter("sign")], sighash=bitflipper(default_sighash))
-    add_spender(spenders, "inactive/scriptpath_invalidcb", key=sec, tap=tap, leaf="pk", standard=False, inputs=[getter("sign")], controlblock=bitflipper(default_controlblock))
+
+    # Test that features like annex, leaf versions, or OP_SUCCESS are valid but non-standard
     add_spender(spenders, "inactive/scriptpath_valid_unkleaf", key=sec, tap=tap, leaf="future_leaf", standard=False, inputs=[getter("sign")])
     add_spender(spenders, "inactive/scriptpath_invalid_unkleaf", key=sec, tap=tap, leaf="future_leaf", standard=False, inputs=[getter("sign")], sighash=bitflipper(default_sighash))
     add_spender(spenders, "inactive/scriptpath_valid_opsuccess", key=sec, tap=tap, leaf="op_success", standard=False, inputs=[getter("sign")])

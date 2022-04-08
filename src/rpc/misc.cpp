@@ -116,7 +116,7 @@ static RPCHelpMan createmultisig()
                         {RPCResult::Type::STR, "address", "The value of the new multisig address."},
                         {RPCResult::Type::STR_HEX, "redeemScript", "The string value of the hex-encoded redemption script."},
                         {RPCResult::Type::STR, "descriptor", "The descriptor for this multisig"},
-                        {RPCResult::Type::ARR, "warnings", /* optional */ true, "Any warnings resulting from the creation of this multisig",
+                        {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Any warnings resulting from the creation of this multisig",
                         {
                             {RPCResult::Type::STR, "", ""},
                         }},
@@ -426,7 +426,7 @@ static RPCHelpMan setmocktime()
     RPCTypeCheck(request.params, {UniValue::VNUM});
     const int64_t time{request.params[0].get_int64()};
     if (time < 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime can not be negative: %s.", time));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime cannot be negative: %s.", time));
     }
     SetMockTime(time);
     auto node_context = util::AnyPtr<NodeContext>(request.context);
@@ -646,17 +646,8 @@ static RPCHelpMan logging()
     uint32_t changed_log_categories = original_log_categories ^ updated_log_categories;
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
-    // If the library version doesn't allow it, UpdateHTTPServerLogging() returns false,
-    // in which case we should clear the BCLog::LIBEVENT flag.
-    // Throw an error if the user has explicitly asked to change only the libevent
-    // flag and it failed.
     if (changed_log_categories & BCLog::LIBEVENT) {
-        if (!UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT))) {
-            LogInstance().DisableCategory(BCLog::LIBEVENT);
-            if (changed_log_categories == BCLog::LIBEVENT) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "libevent logging cannot be updated when using libevent before v2.1.1.");
-            }
-        }
+        UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT));
     }
 
     UniValue result(UniValue::VOBJ);

@@ -47,6 +47,7 @@
 #include <QGuiApplication>
 #include <QJsonObject>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QLatin1String>
 #include <QLineEdit>
 #include <QList>
@@ -414,7 +415,7 @@ void bringToFront(QWidget* w)
 
 void handleCloseWindowShortcut(QWidget* w)
 {
-    QObject::connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), w), &QShortcut::activated, w, &QWidget::close);
+    QObject::connect(new QShortcut(QKeySequence(QObject::tr("Ctrl+W")), w), &QShortcut::activated, w, &QWidget::close);
 }
 
 void openDebugLogfile()
@@ -713,23 +714,18 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
 
 QString formatDurationStr(std::chrono::seconds dur)
 {
-    const auto secs = count_seconds(dur);
-    QStringList strList;
-    int days = secs / 86400;
-    int hours = (secs % 86400) / 3600;
-    int mins = (secs % 3600) / 60;
-    int seconds = secs % 60;
-
-    if (days)
-        strList.append(QObject::tr("%1 d").arg(days));
-    if (hours)
-        strList.append(QObject::tr("%1 h").arg(hours));
-    if (mins)
-        strList.append(QObject::tr("%1 m").arg(mins));
-    if (seconds || (!days && !hours && !mins))
-        strList.append(QObject::tr("%1 s").arg(seconds));
-
-    return strList.join(" ");
+    using days = std::chrono::duration<int, std::ratio<86400>>; // can remove this line after C++20
+    const auto d{std::chrono::duration_cast<days>(dur)};
+    const auto h{std::chrono::duration_cast<std::chrono::hours>(dur - d)};
+    const auto m{std::chrono::duration_cast<std::chrono::minutes>(dur - d - h)};
+    const auto s{std::chrono::duration_cast<std::chrono::seconds>(dur - d - h - m)};
+    QStringList str_list;
+    if (auto d2{d.count()}) str_list.append(QObject::tr("%1 d").arg(d2));
+    if (auto h2{h.count()}) str_list.append(QObject::tr("%1 h").arg(h2));
+    if (auto m2{m.count()}) str_list.append(QObject::tr("%1 m").arg(m2));
+    const auto s2{s.count()};
+    if (s2 || str_list.empty()) str_list.append(QObject::tr("%1 s").arg(s2));
+    return str_list.join(" ");
 }
 
 QString formatServicesStr(quint64 mask)
@@ -888,11 +884,7 @@ void PolishProgressDialog(QProgressDialog* dialog)
 
 int TextWidth(const QFontMetrics& fm, const QString& text)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
     return fm.horizontalAdvance(text);
-#else
-    return fm.width(text);
-#endif
 }
 
 void LogQtInfo()
@@ -984,7 +976,7 @@ void PrintSlotException(
     PrintExceptionContinue(exception, description.c_str());
 }
 
-void ShowModalDialogAndDeleteOnClose(QDialog* dialog)
+void ShowModalDialogAsynchronously(QDialog* dialog)
 {
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::ApplicationModal);

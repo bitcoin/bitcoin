@@ -35,7 +35,7 @@ class AddressType(enum.Enum):
     legacy = 'legacy'  # P2PKH
 
 
-chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 
 def create_deterministic_address_bcrt1_p2tr_op_true():
@@ -55,17 +55,15 @@ def create_deterministic_address_bcrt1_p2tr_op_true():
 
 def byte_to_base58(b, version):
     result = ''
-    str = b.hex()
-    str = chr(version).encode('latin-1').hex() + str
-    checksum = hash256(bytes.fromhex(str)).hex()
-    str += checksum[:8]
-    value = int('0x' + str, 0)
+    b = bytes([version]) + b  # prepend version
+    b += hash256(b)[:4]       # append checksum
+    value = int.from_bytes(b, 'big')
     while value > 0:
-        result = chars[value % 58] + result
+        result = b58chars[value % 58] + result
         value //= 58
-    while (str[:2] == '00'):
-        result = chars[0] + result
-        str = str[2:]
+    while b[0] == 0:
+        result = b58chars[0] + result
+        b = b[1:]
     return result
 
 
@@ -78,8 +76,8 @@ def base58_to_byte(s):
     n = 0
     for c in s:
         n *= 58
-        assert c in chars
-        digit = chars.index(c)
+        assert c in b58chars
+        digit = b58chars.index(c)
         n += digit
     h = '%x' % n
     if len(h) % 2:
@@ -87,14 +85,14 @@ def base58_to_byte(s):
     res = n.to_bytes((n.bit_length() + 7) // 8, 'big')
     pad = 0
     for c in s:
-        if c == chars[0]:
+        if c == b58chars[0]:
             pad += 1
         else:
             break
     res = b'\x00' * pad + res
 
-    # Assert if the checksum is invalid
-    assert_equal(hash256(res[:-4])[:4], res[-4:])
+    if hash256(res[:-4])[:4] != res[-4:]:
+        raise ValueError('Invalid Base58Check checksum')
 
     return res[1:-4], int(res[0])
 

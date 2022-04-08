@@ -18,7 +18,7 @@ std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxs
     std::string retval;
     char buffer[128];
     do {
-        const size_t n = fread(buffer, 1, sizeof(buffer), f);
+        const size_t n = fread(buffer, 1, std::min(sizeof(buffer), maxsize - retval.size()), f);
         // Check for reading errors so we don't return any data if we couldn't
         // read the entire file (or up to maxsize)
         if (ferror(f)) {
@@ -26,7 +26,7 @@ std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxs
             return std::make_pair(false,"");
         }
         retval.append(buffer, buffer+n);
-    } while (!feof(f) && retval.size() <= maxsize);
+    } while (!feof(f) && retval.size() < maxsize);
     fclose(f);
     return std::make_pair(true,retval);
 }

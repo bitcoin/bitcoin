@@ -91,7 +91,7 @@ mkdir -p "$DISTSRC"
                       -- -volume_date all_file_dates ="$SOURCE_DATE_EPOCH"
 
             # Compress uncompressed.dmg and output to OUTDIR
-            ./dmg dmg uncompressed.dmg "${OUTDIR}/${DISTNAME}-osx-signed.dmg"
+            ./dmg dmg uncompressed.dmg "${OUTDIR}/${DISTNAME}-${HOST}.dmg"
             ;;
         *)
             exit 1

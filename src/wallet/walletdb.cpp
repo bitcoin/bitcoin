@@ -557,9 +557,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 }
                 if (internal) {
                     chain.nVersion = CHDChain::VERSION_HD_CHAIN_SPLIT;
-                    chain.nInternalChainCounter = std::max(chain.nInternalChainCounter, index);
+                    chain.nInternalChainCounter = std::max(chain.nInternalChainCounter, index + 1);
                 } else {
-                    chain.nExternalChainCounter = std::max(chain.nExternalChainCounter, index);
+                    chain.nExternalChainCounter = std::max(chain.nExternalChainCounter, index + 1);
                 }
             }
         } else if (strType == DBKeys::WATCHMETA) {
@@ -788,7 +788,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 #ifndef ENABLE_EXTERNAL_SIGNER
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
             pwallet->WalletLogPrintf("Error: External signer wallet being loaded without external signer support compiled\n");
-            return DBErrors::TOO_NEW;
+            return DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED;
         }
 #endif
 
@@ -850,10 +850,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man_pair : wss.m_active_external_spks) {
-        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ false);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /*internal=*/false);
     }
     for (auto spk_man_pair : wss.m_active_internal_spks) {
-        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ true);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /*internal=*/true);
     }
 
     // Set the descriptor caches
@@ -1189,10 +1189,11 @@ std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
 /** Return object for accessing temporary in-memory database. */
 std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
 {
+    DatabaseOptions options;
 #ifdef USE_SQLITE
-    return std::make_unique<SQLiteDatabase>("", "", true);
+    return std::make_unique<SQLiteDatabase>("", "", options, true);
 #elif USE_BDB
-    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
+    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "", options);
 #endif
 }
 } // namespace wallet

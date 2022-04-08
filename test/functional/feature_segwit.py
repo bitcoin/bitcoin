@@ -86,18 +86,18 @@ class SegWitTest(BitcoinTestFramework):
             [
                 "-acceptnonstdtxn=1",
                 "-rpcserialversion=0",
-                "-testactivationheight=segwit@432",
+                "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
             [
                 "-acceptnonstdtxn=1",
                 "-rpcserialversion=1",
-                "-testactivationheight=segwit@432",
+                "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
             [
                 "-acceptnonstdtxn=1",
-                "-testactivationheight=segwit@432",
+                "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
         ]
@@ -115,12 +115,6 @@ class SegWitTest(BitcoinTestFramework):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
         block = self.generate(node, 1)
         assert_equal(len(node.getblock(block[0])["tx"]), 2)
-        self.sync_blocks()
-
-    def skip_mine(self, node, txid, sign, redeem_script=""):
-        send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
-        block = self.generate(node, 1)
-        assert_equal(len(node.getblock(block[0])["tx"]), 1)
         self.sync_blocks()
 
     def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
@@ -197,23 +191,21 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 20 * Decimal("49.999"))
         assert_equal(self.nodes[2].getbalance(), 20 * Decimal("49.999"))
 
-        self.generate(self.nodes[0], 260)  # block 423
-
-        self.log.info("Verify witness txs are skipped for mining before the fork")
-        self.skip_mine(self.nodes[2], wit_ids[NODE_2][P2WPKH][0], True)  # block 424
-        self.skip_mine(self.nodes[2], wit_ids[NODE_2][P2WSH][0], True)  # block 425
-        self.skip_mine(self.nodes[2], p2sh_ids[NODE_2][P2WPKH][0], True)  # block 426
-        self.skip_mine(self.nodes[2], p2sh_ids[NODE_2][P2WSH][0], True)  # block 427
-
         self.log.info("Verify unsigned p2sh witness txs without a redeem script are invalid")
         self.fail_accept(self.nodes[2], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_2][P2WPKH][1], sign=False)
         self.fail_accept(self.nodes[2], "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)", p2sh_ids[NODE_2][P2WSH][1], sign=False)
 
-        self.generate(self.nodes[2], 4)  # blocks 428-431
+        self.generate(self.nodes[0], 1)  # block 164
 
-        self.log.info("Verify previous witness txs skipped for mining can now be mined")
+        self.log.info("Verify witness txs are mined as soon as segwit activates")
+
+        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WPKH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(wit_ids[NODE_2][P2WSH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(p2sh_ids[NODE_2][P2WPKH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+        send_to_witness(1, self.nodes[2], getutxo(p2sh_ids[NODE_2][P2WSH][0]), self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=True)
+
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
-        blockhash = self.generate(self.nodes[2], 1)[0]  # block 432 (first block with new rules; 432 = 144 * 3)
+        blockhash = self.generate(self.nodes[2], 1)[0]  # block 165 (first block with new rules)
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
         segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"]
         assert_equal(len(segwit_tx_list), 5)
@@ -255,10 +247,10 @@ class SegWitTest(BitcoinTestFramework):
         self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program was passed an empty witness)', p2sh_ids[NODE_2][P2WSH][2], sign=False, redeem_script=witness_script(True, self.pubkey[2]))
 
         self.log.info("Verify default node can now use witness txs")
-        self.success_mine(self.nodes[0], wit_ids[NODE_0][P2WPKH][0], True)  # block 432
-        self.success_mine(self.nodes[0], wit_ids[NODE_0][P2WSH][0], True)  # block 433
-        self.success_mine(self.nodes[0], p2sh_ids[NODE_0][P2WPKH][0], True)  # block 434
-        self.success_mine(self.nodes[0], p2sh_ids[NODE_0][P2WSH][0], True)  # block 435
+        self.success_mine(self.nodes[0], wit_ids[NODE_0][P2WPKH][0], True)
+        self.success_mine(self.nodes[0], wit_ids[NODE_0][P2WSH][0], True)
+        self.success_mine(self.nodes[0], p2sh_ids[NODE_0][P2WPKH][0], True)
+        self.success_mine(self.nodes[0], p2sh_ids[NODE_0][P2WSH][0], True)
 
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)

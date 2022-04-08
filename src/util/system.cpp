@@ -6,7 +6,16 @@
 #include <util/system.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
+#if defined(__GNUC__)
+// Boost 1.78 requires the following workaround.
+// See: https://github.com/boostorg/process/issues/235
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnarrowing"
+#endif
 #include <boost/process.hpp>
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 #endif // ENABLE_EXTERNAL_SIGNER
 
 #include <chainparamsbase.h>
@@ -74,6 +83,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <system_error>
 #include <thread>
 #include <typeinfo>
 
@@ -386,9 +396,12 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return std::nullopt;
 }
 
-fs::path ArgsManager::GetPathArg(std::string pathlike_arg) const
+fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
 {
-    auto result = fs::PathFromString(GetArg(pathlike_arg, "")).lexically_normal();
+    if (IsArgNegated(arg)) return fs::path{};
+    std::string path_str = GetArg(arg, "");
+    if (path_str.empty()) return default_value;
+    fs::path result = fs::PathFromString(path_str).lexically_normal();
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();
 }
@@ -515,12 +528,12 @@ bool ArgsManager::InitSettings(std::string& error)
 
 bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp) const
 {
-    if (IsArgNegated("-settings")) {
+    fs::path settings = GetPathArg("-settings", fs::path{BITCOIN_SETTINGS_FILENAME});
+    if (settings.empty()) {
         return false;
     }
     if (filepath) {
-        std::string settings = GetArg("-settings", BITCOIN_SETTINGS_FILENAME);
-        *filepath = fsbridge::AbsPathJoin(GetDataDirNet(), fs::PathFromString(temp ? settings + ".tmp" : settings));
+        *filepath = fsbridge::AbsPathJoin(GetDataDirNet(), temp ? settings + ".tmp" : settings);
     }
     return true;
 }
@@ -587,7 +600,7 @@ bool ArgsManager::IsArgNegated(const std::string& strArg) const
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
     const util::SettingsValue value = GetSetting(strArg);
-    return value.isNull() ? strDefault : value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str();
+    return value.isNull() ? strDefault : value.isFalse() ? "0" : value.isTrue() ? "1" : value.isNum() ? value.getValStr() : value.get_str();
 }
 
 int64_t ArgsManager::GetIntArg(const std::string& strArg, int64_t nDefault) const
@@ -1061,13 +1074,20 @@ void ArgsManager::LogArgs() const
 
 bool RenameOver(fs::path src, fs::path dest)
 {
-#ifdef WIN32
+#ifdef __MINGW64__
+    // This is a workaround for a bug in libstdc++ which
+    // implements std::filesystem::rename with _wrename function.
+    // This bug has been fixed in upstream:
+    //  - GCC 10.3: 8dd1c1085587c9f8a21bb5e588dfe1e8cdbba79e
+    //  - GCC 11.1: 1dfd95f0a0ca1d9e6cbc00e6cbfd1fa20a98f312
+    // For more details see the commits mentioned above.
     return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),
                        MOVEFILE_REPLACE_EXISTING) != 0;
 #else
-    int rc = std::rename(src.c_str(), dest.c_str());
-    return (rc == 0);
-#endif /* WIN32 */
+    std::error_code error;
+    fs::rename(src, dest, error);
+    return !error;
+#endif
 }
 
 /**
@@ -1332,18 +1352,6 @@ bool SetupNetworking()
 int GetNumCores()
 {
     return std::thread::hardware_concurrency();
-}
-
-std::string CopyrightHolders(const std::string& strPrefix)
-{
-    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
-    std::string strCopyrightHolders = strPrefix + copyright_devs;
-
-    // Make sure Bitcoin Core copyright is not removed by accident
-    if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
-    }
-    return strCopyrightHolders;
 }
 
 // Obtain the application startup time (used for uptime calculation)

@@ -65,13 +65,9 @@ logging` for more information.
 -onlynet=i2p
 ```
 
-Make outgoing connections only to I2P addresses. Incoming connections are not
-affected by this option. It can be specified multiple times to allow multiple
-network types, e.g. onlynet=ipv4, onlynet=ipv6, onlynet=onion, onlynet=i2p.
-
-Warning: if you use -onlynet with values other than onion, and the -onion or
--proxy option is set, then outgoing onion connections will still be made; use
--noonion or -onion=0 to disable outbound onion connections in this case.
+Make automatic outbound connections only to I2P addresses. Inbound and manual
+connections are not affected by this option. It can be specified multiple times
+to allow multiple networks, e.g. onlynet=onion, onlynet=i2p.
 
 I2P support was added to Bitcoin Core in version 22.0 and there may be fewer I2P
 peers than Tor or IP ones. Therefore, using I2P alone without other networks may
@@ -84,15 +80,15 @@ phase when syncing up a new node can be very slow. This phase can be sped up by
 using other networks, for instance `onlynet=onion`, at the same time.
 
 In general, a node can be run with both onion and I2P hidden services (or
-any/all of IPv4/IPv6/onion/I2P), which can provide a potential fallback if one
-of the networks has issues.
+any/all of IPv4/IPv6/onion/I2P/CJDNS), which can provide a potential fallback if
+one of the networks has issues.
 
 ## I2P-related information in Bitcoin Core
 
 There are several ways to see your I2P address in Bitcoin Core:
-- in the debug log (grep for `AddLocal`, the I2P address ends in `.b32.i2p`)
-- in the output of the `getnetworkinfo` RPC in the "localaddresses" section
-- in the output of `bitcoin-cli -netinfo` peer connections dashboard
+- in the "Local addresses" output of CLI `-netinfo`
+- in the "localaddresses" output of RPC `getnetworkinfo`
+- in the debug log (grep for `AddLocal`; the I2P address ends in `.b32.i2p`)
 
 To see which I2P peers your node is connected to, use `bitcoin-cli -netinfo 4`
 or the `getpeerinfo` RPC (e.g. `bitcoin-cli getpeerinfo`).

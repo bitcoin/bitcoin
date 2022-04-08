@@ -82,17 +82,17 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
     for (CChainState* chainstate : chainman.GetAll()) {
         chainstate->InitCoinsDB(
-            /* cache_size_bytes */ nCoinDBCache,
-            /* in_memory */ coins_db_in_memory,
-            /* should_wipe */ fReset || fReindexChainState);
+            /*cache_size_bytes=*/nCoinDBCache,
+            /*in_memory=*/coins_db_in_memory,
+            /*should_wipe=*/fReset || fReindexChainState);
 
         if (coins_error_cb) {
             chainstate->CoinsErrorCatcher().AddReadErrCallback(coins_error_cb);
         }
 
-        // If necessary, upgrade from older database format.
+        // Refuse to load unsupported database format.
         // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-        if (!chainstate->CoinsDB().Upgrade()) {
+        if (chainstate->CoinsDB().NeedsUpgrade()) {
             return ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED;
         }
 
@@ -129,8 +129,8 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 bool fReset,
                                                                 bool fReindexChainState,
                                                                 const Consensus::Params& consensus_params,
-                                                                unsigned int check_blocks,
-                                                                unsigned int check_level,
+                                                                int check_blocks,
+                                                                int check_level,
                                                                 std::function<int64_t()> get_unix_time_seconds)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {

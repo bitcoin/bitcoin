@@ -48,6 +48,7 @@ enum class DBErrors
     CORRUPT,
     NONCRITICAL_ERROR,
     TOO_NEW,
+    EXTERNAL_SIGNER_SUPPORT_REQUIRED,
     LOAD_FAIL,
     NEED_REWRITE,
     NEED_RESCAN
@@ -92,6 +93,8 @@ public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
     CKeyID seed_id; //!< seed hash160
+    int64_t m_next_external_index{0}; // Next index in the keypool to be used. Memory only.
+    int64_t m_next_internal_index{0}; // Next index in the keypool to be used. Memory only.
 
     static const int VERSION_HD_BASE        = 1;
     static const int VERSION_HD_CHAIN_SPLIT = 2;

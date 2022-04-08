@@ -211,6 +211,11 @@ bool BaseIndex::Commit()
 bool BaseIndex::CommitInternal(CDBBatch& batch)
 {
     LOCK(cs_main);
+    // Don't commit anything if we haven't indexed any block yet
+    // (this could happen if init is interrupted).
+    if (m_best_block_index == nullptr) {
+        return false;
+    }
     GetDB().WriteBestBlock(batch, m_chainstate->m_chain.GetLocator(m_best_block_index));
     return true;
 }

@@ -6,13 +6,14 @@ Release Process
 ### Before every release candidate
 
 * Update translations see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
-* Update manpages, see [gen-manpages.sh](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`).
+* Update manpages (after rebuilding the binaries), see [gen-manpages.py](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagespy).
 
 ### Before every major and minor release
 
 * Update [bips.md](bips.md) to account for changes since the last release (don't forget to bump the version number on the first line).
 * Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_RC` to `0`).
+* Update manpages (see previous section)
 * Write release notes (see "Write the release notes" below).
 
 ### Before every major release
@@ -46,13 +47,15 @@ Release Process
 #### After branch-off (on the major release branch)
 
 - Update the versions.
+- Create the draft, named "*version* Release Notes Draft", as a [collaborative wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/_new).
+- Clear the release notes: `cp doc/release-notes-empty-template.md doc/release-notes.md`
 - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
 - Translations on Transifex
     - Change the auto-update URL for the new major version's resource away from `master` and to the branch, e.g. `https://raw.githubusercontent.com/bitcoin/bitcoin/<branch>/src/qt/locale/bitcoin_en.xlf`. Do not forget this or it will keep tracking the translations on master instead, drifting away from the specific major release.
 
 #### Before final release
 
-- Merge the release notes from the wiki into the branch.
+- Merge the release notes from [the wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/) into the branch.
 - Ensure the "Needs release note" label is removed from all relevant pull requests and issues.
 
 #### Tagging a release (candidate)
@@ -97,7 +100,7 @@ Checkout the Bitcoin Core version you'd like to build:
 pushd ./bitcoin
 SIGNER='(your builder key, ie bluematt, sipa, etc)'
 VERSION='(new version without v-prefix, e.g. 0.20.0)'
-git fetch "v${VERSION}"
+git fetch origin "v${VERSION}"
 git checkout "v${VERSION}"
 popd
 ```
@@ -109,28 +112,24 @@ against other `guix-attest` signatures.
 git -C ./guix.sigs pull
 ```
 
-### Create the macOS SDK tarball: (first time, or when SDK version changes)
+### Create the macOS SDK tarball (first time, or when SDK version changes)
 
 Create the macOS SDK tarball, see the [macdeploy
 instructions](/contrib/macdeploy/README.md#deterministic-macos-dmg-notes) for
 details.
 
-### Build and attest to build outputs:
+### Build and attest to build outputs
 
 Follow the relevant Guix README.md sections:
-- [Performing a build](/contrib/guix/README.md#performing-a-build)
+- [Building](/contrib/guix/README.md#building)
 - [Attesting to build outputs](/contrib/guix/README.md#attesting-to-build-outputs)
 
-### Verify other builders' signatures to your own. (Optional)
+### Verify other builders' signatures to your own (optional)
 
-Add other builders keys to your gpg keyring, and/or refresh keys: See `../bitcoin/contrib/builder-keys/README.md`.
-
-Follow the relevant Guix README.md sections:
+- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
 - [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
 
-### Next steps:
-
-Commit your signature to guix.sigs:
+### Commit your non codesigned signature to guix.sigs
 
 ```sh
 pushd ./guix.sigs
@@ -140,29 +139,27 @@ git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
 
-Codesigner only: Create Windows/macOS detached signatures:
-- Only one person handles codesigning. Everyone else should skip to the next step.
-- Only once the Windows/macOS builds each have 3 matching signatures may they be signed with their respective release keys.
+## Codesigning
 
-Codesigner only: Sign the macOS binary:
+### macOS codesigner only: Create detached macOS signatures (assuming [signapple](https://github.com/achow101/signapple/) is installed and up to date with master branch)
 
-    transfer bitcoin-osx-unsigned.tar.gz to macOS for signing
     tar xf bitcoin-osx-unsigned.tar.gz
-    ./detached-sig-create.sh -s "Key ID"
+    ./detached-sig-create.sh /path/to/codesign.p12
     Enter the keychain password and authorize the signature
-    Move signature-osx.tar.gz back to the guix-build host
+    signature-osx.tar.gz will be created
 
-Codesigner only: Sign the windows binaries:
+### Windows codesigner only: Create detached Windows signatures
 
     tar xf bitcoin-win-unsigned.tar.gz
     ./detached-sig-create.sh -key /path/to/codesign.key
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
-Code-signer only: It is advised to test that the code signature attaches properly prior to tagging by performing the `guix-codesign` step.
+### Windows and macOS codesigners only: test code signatures
+It is advised to test that the code signature attaches properly prior to tagging by performing the `guix-codesign` step.
 However if this is done, once the release has been tagged in the bitcoin-detached-sigs repo, the `guix-codesign` step must be performed again in order for the guix attestation to be valid when compared against the attestations of non-codesigner builds.
 
-Codesigner only: Commit the detached codesign payloads:
+### Windows and macOS codesigners only: Commit the detached codesign payloads
 
 ```sh
 pushd ./bitcoin-detached-sigs
@@ -177,16 +174,21 @@ git push the current branch and new tag
 popd
 ```
 
-Non-codesigners: wait for Windows/macOS detached signatures:
+### Non-codesigners: wait for Windows and macOS detached signatures
 
-- Once the Windows/macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
+- Once the Windows and macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
 - Detached signatures will then be committed to the [bitcoin-detached-sigs](https://github.com/bitcoin-core/bitcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
-Create (and optionally verify) the codesigned outputs:
+### Create the codesigned build outputs
 
-- [Codesigning](/contrib/guix/README.md#codesigning)
+- [Codesigning build outputs](/contrib/guix/README.md#codesigning-build-outputs)
 
-Commit your signature for the signed macOS/Windows binaries:
+### Verify other builders' signatures to your own (optional)
+
+- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
+- [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
+
+### Commit your codesigned signature to guix.sigs (for the signed macOS/Windows binaries)
 
 ```sh
 pushd ./guix.sigs
@@ -196,7 +198,7 @@ git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
 
-### After 3 or more people have guix-built and their results match:
+## After 3 or more people have guix-built and their results match
 
 Combine the `all.SHA256SUMS.asc` file from all signers into `SHA256SUMS.asc`:
 

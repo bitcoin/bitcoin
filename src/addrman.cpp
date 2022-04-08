@@ -246,12 +246,18 @@ void AddrManImpl::Unserialize(Stream& s_)
 
     uint8_t compat;
     s >> compat;
+    if (compat < INCOMPATIBILITY_BASE) {
+        throw std::ios_base::failure(strprintf(
+            "Corrupted addrman database: The compat value (%u) "
+            "is lower than the expected minimum value %u.",
+            compat, INCOMPATIBILITY_BASE));
+    }
     const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
     if (lowest_compatible > FILE_FORMAT) {
-        throw std::ios_base::failure(strprintf(
+        throw InvalidAddrManVersionError(strprintf(
             "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
             "but the maximum supported by this version of %s is %u.",
-            uint8_t{format}, uint8_t{lowest_compatible}, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
+            uint8_t{format}, lowest_compatible, PACKAGE_NAME, uint8_t{FILE_FORMAT}));
     }
 
     s >> nKey;
@@ -940,16 +946,16 @@ std::optional<AddressPosition> AddrManImpl::FindAddressEntry_(const CAddress& ad
 
     if(addr_info->fInTried) {
         int bucket{addr_info->GetTriedBucket(nKey, m_asmap)};
-        return AddressPosition(/*tried=*/true,
-                               /*multiplicity=*/1,
-                               /*bucket=*/bucket,
-                               /*position=*/addr_info->GetBucketPosition(nKey, false, bucket));
+        return AddressPosition(/*tried_in=*/true,
+                               /*multiplicity_in=*/1,
+                               /*bucket_in=*/bucket,
+                               /*position_in=*/addr_info->GetBucketPosition(nKey, false, bucket));
     } else {
         int bucket{addr_info->GetNewBucket(nKey, m_asmap)};
-        return AddressPosition(/*tried=*/false,
-                               /*multiplicity=*/addr_info->nRefCount,
-                               /*bucket=*/bucket,
-                               /*position=*/addr_info->GetBucketPosition(nKey, true, bucket));
+        return AddressPosition(/*tried_in=*/false,
+                               /*multiplicity_in=*/addr_info->nRefCount,
+                               /*bucket_in=*/bucket,
+                               /*position_in=*/addr_info->GetBucketPosition(nKey, true, bucket));
     }
 }
 

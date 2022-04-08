@@ -4,42 +4,6 @@
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on macOS
 
-**Note:** The following is for Intel Macs only!
-
-## Dependencies
-
-The following dependencies are **required**:
-
-Library                                                    | Purpose    | Description
------------------------------------------------------------|------------|----------------------
-[automake](https://formulae.brew.sh/formula/automake)      | Build      | Generate makefile
-[libtool](https://formulae.brew.sh/formula/libtool)        | Build      | Shared library support
-[pkg-config](https://formulae.brew.sh/formula/pkg-config)  | Build      | Configure compiler and linker flags
-[boost](https://formulae.brew.sh/formula/boost)            | Utility    | Library for threading, data structures, etc
-[libevent](https://formulae.brew.sh/formula/libevent)      | Networking | OS independent asynchronous networking
-
-The following dependencies are **optional**:
-
-Library                                                         | Purpose          | Description
---------------------------------------------------------------- |------------------|----------------------
-[berkeley-db@4](https://formulae.brew.sh/formula/berkeley-db@4) | Berkeley DB      | Wallet storage (only needed when wallet enabled)
-[qt@5](https://formulae.brew.sh/formula/qt@5)                   | GUI              | GUI toolkit (only needed when GUI enabled)
-[qrencode](https://formulae.brew.sh/formula/qrencode)           | QR codes in GUI  | Generating QR codes (only needed when GUI enabled)
-[zeromq](https://formulae.brew.sh/formula/zeromq)               | ZMQ notification | Allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
-[sqlite](https://formulae.brew.sh/formula/sqlite)               | SQLite DB        | Wallet storage (only needed when wallet enabled)
-[miniupnpc](https://formulae.brew.sh/formula/miniupnpc)         | UPnP Support     | Firewall-jumping support (needed for port mapping support)
-[libnatpmp](https://formulae.brew.sh/formula/libnatpmp)         | NAT-PMP Support  | Firewall-jumping support (needed for port mapping support)
-[python3](https://formulae.brew.sh/formula/python@3.9)          | Testing          | Python Interpreter (only needed when running the test suite)
-
-The following dependencies are **optional** packages required for deploying:
-
-Library                                             | Purpose          | Description
-----------------------------------------------------|------------------|----------------------
-[ds_store](https://pypi.org/project/ds-store/)      | Deploy Dependency| Examine and modify .DS_Store files
-[mac_alias](https://pypi.org/project/mac-alias/)    | Deploy Dependency| Generate/Read binary alias and bookmark records
-
-See [dependencies.md](dependencies.md) for a complete overview.
-
 ## Preparation
 
 The commands in this guide should be executed in a Terminal application.
@@ -78,6 +42,9 @@ Note: If you run into issues while installing Homebrew or pulling packages, refe
 
 The first step is to download the required dependencies.
 These dependencies represent the packages required to get a barebones installation up and running.
+
+See [dependencies.md](dependencies.md) for a complete overview.
+
 To install, run the following from your terminal:
 
 ``` bash
@@ -99,29 +66,21 @@ git clone https://github.com/bitcoin/bitcoin.git
 #### Wallet Dependencies
 
 It is not necessary to build wallet functionality to run `bitcoind` or  `bitcoin-qt`.
-To enable legacy wallets, you must install `berkeley-db@4`.
-To enable [descriptor wallets](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md), `sqlite` is required.
-Skip `berkeley-db@4` if you intend to *exclusively* use descriptor wallets.
+
+###### Descriptor Wallet Support
+
+`sqlite` is required to support for descriptor wallets.
+
+macOS ships with a useable `sqlite` package, meaning you don't need to
+install anything.
 
 ###### Legacy Wallet Support
 
-`berkeley-db@4` is required to enable support for legacy wallets.
+`berkeley-db@4` is only required to support for legacy wallets.
 Skip if you don't intend to use legacy wallets.
 
 ``` bash
 brew install berkeley-db@4
-```
-
-###### Descriptor Wallet Support
-
-Note: Apple has included a useable `sqlite` package since macOS 10.14.
-You may not need to install this package.
-
-`sqlite` is required to enable support for descriptor wallets.
-Skip if you don't intend to use descriptor wallets.
-
-``` bash
-brew install sqlite
 ```
 ---
 

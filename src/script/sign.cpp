@@ -174,6 +174,29 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
             result = Vector(std::move(sig));
             return true;
         }
+        return false;
+    }
+
+    // multi_a scripts (<key> OP_CHECKSIG <key> OP_CHECKSIGADD <key> OP_CHECKSIGADD <k> OP_NUMEQUAL)
+    if (auto match = MatchMultiA(script)) {
+        std::vector<std::vector<unsigned char>> sigs;
+        int good_sigs = 0;
+        for (size_t i = 0; i < match->second.size(); ++i) {
+            XOnlyPubKey pubkey{*(match->second.rbegin() + i)};
+            std::vector<unsigned char> sig;
+            bool good_sig = CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion);
+            if (good_sig && good_sigs < match->first) {
+                ++good_sigs;
+                sigs.push_back(std::move(sig));
+            } else {
+                sigs.emplace_back();
+            }
+        }
+        if (good_sigs == match->first) {
+            result = std::move(sigs);
+            return true;
+        }
+        return false;
     }
 
     return false;
@@ -632,7 +655,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         CTxIn& txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
         if (coin == coins.end() || coin->second.IsSpent()) {
-            txdata.Init(txConst, /* spent_outputs */ {}, /* force */ true);
+            txdata.Init(txConst, /*spent_outputs=*/{}, /*force=*/true);
             break;
         } else {
             spent_outputs.emplace_back(coin->second.out.nValue, coin->second.out.scriptPubKey);

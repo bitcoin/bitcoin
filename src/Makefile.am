@@ -8,9 +8,9 @@ print-%: FORCE
 
 DIST_SUBDIRS = secp256k1
 
-AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS)
-AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS)
-AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
+AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS) $(CORE_LDFLAGS)
+AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS) $(CORE_CXXFLAGS)
+AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS) $(CORE_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
@@ -46,9 +46,13 @@ if ENABLE_AVX2
 LIBBITCOIN_CRYPTO_AVX2 = crypto/libbitcoin_crypto_avx2.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
 endif
-if ENABLE_SHANI
-LIBBITCOIN_CRYPTO_SHANI = crypto/libbitcoin_crypto_shani.a
-LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
+if ENABLE_X86_SHANI
+LIBBITCOIN_CRYPTO_X86_SHANI = crypto/libbitcoin_crypto_x86_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_X86_SHANI)
+endif
+if ENABLE_ARM_SHANI
+LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libbitcoin_crypto_arm_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -100,6 +104,10 @@ endif
 
 if BUILD_BITCOIN_UTIL
   bin_PROGRAMS += bitcoin-util
+endif
+
+if BUILD_BITCOIN_CHAINSTATE
+  bin_PROGRAMS += bitcoin-chainstate
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -198,9 +206,11 @@ BITCOIN_CORE_H = \
   psbt.h \
   random.h \
   randomenv.h \
+  rest.h \
   reverse_iterator.h \
   rpc/blockchain.h \
   rpc/client.h \
+  rpc/mempool.h \
   rpc/mining.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
@@ -212,6 +222,7 @@ BITCOIN_CORE_H = \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
+  script/miniscript.h \
   script/sigcache.h \
   script/sign.h \
   script/signingprovider.h \
@@ -362,12 +373,14 @@ libbitcoin_node_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/mempool.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
   rpc/server_util.cpp \
+  rpc/txoutproof.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   signet.cpp \
@@ -498,11 +511,17 @@ crypto_libbitcoin_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
 crypto_libbitcoin_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
 crypto_libbitcoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
-crypto_libbitcoin_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcoin_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libbitcoin_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libbitcoin_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libbitcoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+crypto_libbitcoin_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libbitcoin_crypto_x86_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_x86_shani_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+crypto_libbitcoin_crypto_x86_shani_a_CPPFLAGS += -DENABLE_X86_SHANI
+crypto_libbitcoin_crypto_x86_shani_a_SOURCES = crypto/sha256_x86_shani.cpp
+
+crypto_libbitcoin_crypto_arm_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libbitcoin_crypto_arm_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_arm_shani_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+crypto_libbitcoin_crypto_arm_shani_a_CPPFLAGS += -DENABLE_ARM_SHANI
+crypto_libbitcoin_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -573,6 +592,7 @@ libbitcoin_common_a_SOURCES = \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
+  script/miniscript.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
@@ -589,7 +609,6 @@ libbitcoin_util_a_SOURCES = \
   chainparamsbase.cpp \
   clientversion.cpp \
   compat/glibcxx_sanity.cpp \
-  compat/strnlen.cpp \
   fs.cpp \
   interfaces/echo.cpp \
   interfaces/handler.cpp \
@@ -604,6 +623,7 @@ libbitcoin_util_a_SOURCES = \
   util/asmap.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
+  util/check.cpp \
   util/error.cpp \
   util/fees.cpp \
   util/getuniquepath.cpp \
@@ -665,7 +685,7 @@ bitcoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+bitcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
 bitcoind_SOURCES = $(bitcoin_daemon_sources) init/bitcoind.cpp
 bitcoind_CPPFLAGS = $(bitcoin_bin_cppflags)
@@ -695,7 +715,7 @@ bitcoin_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-bitcoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
+bitcoin_cli_LDADD += $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
@@ -715,8 +735,6 @@ bitcoin_tx_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
-
-bitcoin_tx_LDADD += $(BOOST_LIBS)
 #
 
 # bitcoin-wallet binary #
@@ -734,7 +752,6 @@ bitcoin_wallet_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1) \
-  $(BOOST_LIBS) \
   $(BDB_LIBS) \
   $(SQLITE_LIBS)
 
@@ -760,8 +777,103 @@ bitcoin_util_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
+#
 
-bitcoin_util_LDADD += $(BOOST_LIBS)
+# bitcoin-chainstate binary #
+bitcoin_chainstate_SOURCES = \
+  bitcoin-chainstate.cpp \
+  arith_uint256.cpp \
+  blockfilter.cpp \
+  chain.cpp \
+  chainparamsbase.cpp \
+  chainparams.cpp \
+  clientversion.cpp \
+  coins.cpp \
+  compat/glibcxx_sanity.cpp \
+  compressor.cpp \
+  consensus/merkle.cpp \
+  consensus/tx_check.cpp \
+  consensus/tx_verify.cpp \
+  core_read.cpp \
+  dbwrapper.cpp \
+  deploymentinfo.cpp \
+  deploymentstatus.cpp \
+  flatfile.cpp \
+  fs.cpp \
+  hash.cpp \
+  index/base.cpp \
+  index/blockfilterindex.cpp \
+  index/coinstatsindex.cpp \
+  init/common.cpp \
+  key.cpp \
+  logging.cpp \
+  netaddress.cpp \
+  node/blockstorage.cpp \
+  node/chainstate.cpp \
+  node/coinstats.cpp \
+  node/ui_interface.cpp \
+  policy/feerate.cpp \
+  policy/fees.cpp \
+  policy/packages.cpp \
+  policy/policy.cpp \
+  policy/rbf.cpp \
+  policy/settings.cpp \
+  pow.cpp \
+  primitives/block.cpp \
+  primitives/transaction.cpp \
+  pubkey.cpp \
+  random.cpp \
+  randomenv.cpp \
+  scheduler.cpp \
+  script/interpreter.cpp \
+  script/script.cpp \
+  script/script_error.cpp \
+  script/sigcache.cpp \
+  script/standard.cpp \
+  shutdown.cpp \
+  signet.cpp \
+  support/cleanse.cpp \
+  support/lockedpool.cpp \
+  sync.cpp \
+  threadinterrupt.cpp \
+  timedata.cpp \
+  txdb.cpp \
+  txmempool.cpp \
+  uint256.cpp \
+  util/asmap.cpp \
+  util/bytevectorhash.cpp \
+  util/check.cpp \
+  util/getuniquepath.cpp \
+  util/hasher.cpp \
+  util/moneystr.cpp \
+  util/rbf.cpp \
+  util/serfloat.cpp \
+  util/settings.cpp \
+  util/strencodings.cpp \
+  util/syscall_sandbox.cpp \
+  util/system.cpp \
+  util/thread.cpp \
+  util/threadnames.cpp \
+  util/time.cpp \
+  util/tokenpipe.cpp \
+  validation.cpp \
+  validationinterface.cpp \
+  versionbits.cpp \
+  warnings.cpp
+bitcoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+bitcoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bitcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+bitcoin_chainstate_LDADD = \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBUNIVALUE) \
+  $(LIBSECP256K1) \
+  $(LIBLEVELDB) \
+  $(LIBLEVELDB_SSE42) \
+  $(LIBMEMENV)
+
+# Required for obj/build.h to be generated first.
+# More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
+bitcoin_chainstate-clientversion.$(OBJEXT): obj/build.h
 #
 
 # bitcoinconsensus library #

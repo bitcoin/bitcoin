@@ -8,6 +8,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/translation.h>
+#include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
@@ -55,8 +56,9 @@ static RPCHelpMan getwalletinfo()
                         {
                             {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
                             {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
-                        }},
+                        }, /*skip_type_check=*/true},
                         {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
+                        {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
                     }},
                 },
                 RPCExamples{
@@ -117,6 +119,7 @@ static RPCHelpMan getwalletinfo()
         obj.pushKV("scanning", false);
     }
     obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+    obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
     return obj;
 },
     };
@@ -218,6 +221,7 @@ static RPCHelpMan loadwallet()
 
     DatabaseOptions options;
     DatabaseStatus status;
+    ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
@@ -313,7 +317,9 @@ static RPCHelpMan createwallet()
             {"blank", RPCArg::Type::BOOL, RPCArg::Default{false}, "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Encrypt the wallet with this passphrase."},
             {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{false}, "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
-            {"descriptors", RPCArg::Type::BOOL, RPCArg::Default{true}, "Create a native descriptor wallet. The wallet will use descriptors internally to handle address creation"},
+            {"descriptors", RPCArg::Type::BOOL, RPCArg::Default{true}, "Create a native descriptor wallet. The wallet will use descriptors internally to handle address creation."
+                                                                       " Setting to \"false\" will create a legacy wallet; however, the legacy wallet type is being deprecated and"
+                                                                       " support for creating and opening legacy wallets will be removed in the future."},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
         },
@@ -377,6 +383,7 @@ static RPCHelpMan createwallet()
 
     DatabaseOptions options;
     DatabaseStatus status;
+    ReadDatabaseArgs(*context.args, options);
     options.require_create = true;
     options.create_flags = flags;
     options.create_passphrase = passphrase;
@@ -637,6 +644,7 @@ RPCHelpMan fundrawtransaction();
 RPCHelpMan bumpfee();
 RPCHelpMan psbtbumpfee();
 RPCHelpMan send();
+RPCHelpMan sendall();
 RPCHelpMan walletprocesspsbt();
 RPCHelpMan walletcreatefundedpsbt();
 RPCHelpMan signrawtransactionwithwallet();
@@ -716,6 +724,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &setwalletflag,                  },
     { "wallet",             &signmessage,                    },
     { "wallet",             &signrawtransactionwithwallet,   },
+    { "wallet",             &sendall,                        },
     { "wallet",             &unloadwallet,                   },
     { "wallet",             &upgradewallet,                  },
     { "wallet",             &walletcreatefundedpsbt,         },

@@ -4,17 +4,23 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <compat.h>
 #include <cstdint>
 #include <net.h>
+#include <net_processing.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <netmessagemaker.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
+#include <timedata.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
+#include <validation.h>
 #include <version.h>
 
 #include <boost/test/unit_test.hpp>
@@ -27,7 +33,7 @@
 
 using namespace std::literals;
 
-BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(net_tests, RegTestingSetup)
 
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {
@@ -607,15 +613,15 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     // set up local addresses; all that's necessary to reproduce the bug is
     // that a normal IPv4 address is among the entries, but if this address is
     // !IsRoutable the undefined behavior is easier to trigger deterministically
+    in_addr raw_addr;
+    raw_addr.s_addr = htonl(0x7f000001);
+    const CNetAddr mapLocalHost_entry = CNetAddr(raw_addr);
     {
         LOCK(g_maplocalhost_mutex);
-        in_addr ipv4AddrLocal;
-        ipv4AddrLocal.s_addr = 0x0100007f;
-        CNetAddr addr = CNetAddr(ipv4AddrLocal);
         LocalServiceInfo lsi;
         lsi.nScore = 23;
         lsi.nPort = 42;
-        mapLocalHost[addr] = lsi;
+        mapLocalHost[mapLocalHost_entry] = lsi;
     }
 
     // create a peer with an IPv4 address
@@ -646,8 +652,79 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
 
     // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
     BOOST_CHECK(1);
+
+    // Cleanup, so that we don't confuse other tests.
+    {
+        LOCK(g_maplocalhost_mutex);
+        mapLocalHost.erase(mapLocalHost_entry);
+    }
 }
 
+BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
+{
+    // Test that GetLocalAddrForPeer() properly selects the address to self-advertise:
+    //
+    // 1. GetLocalAddrForPeer() calls GetLocalAddress() which returns an address that is
+    //    not routable.
+    // 2. GetLocalAddrForPeer() overrides the address with whatever the peer has told us
+    //    he sees us as.
+    // 2.1. For inbound connections we must override both the address and the port.
+    // 2.2. For outbound connections we must override only the address.
+
+    // Pretend that we bound to this port.
+    const uint16_t bind_port = 20001;
+    m_node.args->ForceSetArg("-bind", strprintf("3.4.5.6:%u", bind_port));
+
+    // Our address:port as seen from the peer, completely different from the above.
+    in_addr peer_us_addr;
+    peer_us_addr.s_addr = htonl(0x02030405);
+    const CAddress peer_us{CService{peer_us_addr, 20002}, NODE_NETWORK};
+
+    // Create a peer with a routable IPv4 address (outbound).
+    in_addr peer_out_in_addr;
+    peer_out_in_addr.s_addr = htonl(0x01020304);
+    CNode peer_out{/*id=*/0,
+                   /*nLocalServicesIn=*/NODE_NETWORK,
+                   /*sock=*/nullptr,
+                   /*addrIn=*/CAddress{CService{peer_out_in_addr, 8333}, NODE_NETWORK},
+                   /*nKeyedNetGroupIn=*/0,
+                   /*nLocalHostNonceIn=*/0,
+                   /*addrBindIn=*/CAddress{},
+                   /*addrNameIn=*/std::string{},
+                   /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
+                   /*inbound_onion=*/false};
+    peer_out.fSuccessfullyConnected = true;
+    peer_out.SetAddrLocal(peer_us);
+
+    // Without the fix peer_us:8333 is chosen instead of the proper peer_us:bind_port.
+    auto chosen_local_addr = GetLocalAddrForPeer(&peer_out);
+    BOOST_REQUIRE(chosen_local_addr);
+    const CService expected{peer_us_addr, bind_port};
+    BOOST_CHECK(*chosen_local_addr == expected);
+
+    // Create a peer with a routable IPv4 address (inbound).
+    in_addr peer_in_in_addr;
+    peer_in_in_addr.s_addr = htonl(0x05060708);
+    CNode peer_in{/*id=*/0,
+                  /*nLocalServicesIn=*/NODE_NETWORK,
+                  /*sock=*/nullptr,
+                  /*addrIn=*/CAddress{CService{peer_in_in_addr, 8333}, NODE_NETWORK},
+                  /*nKeyedNetGroupIn=*/0,
+                  /*nLocalHostNonceIn=*/0,
+                  /*addrBindIn=*/CAddress{},
+                  /*addrNameIn=*/std::string{},
+                  /*conn_type_in=*/ConnectionType::INBOUND,
+                  /*inbound_onion=*/false};
+    peer_in.fSuccessfullyConnected = true;
+    peer_in.SetAddrLocal(peer_us);
+
+    // Without the fix peer_us:8333 is chosen instead of the proper peer_us:peer_us.GetPort().
+    chosen_local_addr = GetLocalAddrForPeer(&peer_in);
+    BOOST_REQUIRE(chosen_local_addr);
+    BOOST_CHECK(*chosen_local_addr == peer_us);
+
+    m_node.args->ForceSetArg("-bind", "");
+}
 
 BOOST_AUTO_TEST_CASE(LimitedAndReachable_Network)
 {
@@ -655,26 +732,31 @@ BOOST_AUTO_TEST_CASE(LimitedAndReachable_Network)
     BOOST_CHECK(IsReachable(NET_IPV6));
     BOOST_CHECK(IsReachable(NET_ONION));
     BOOST_CHECK(IsReachable(NET_I2P));
+    BOOST_CHECK(IsReachable(NET_CJDNS));
 
     SetReachable(NET_IPV4, false);
     SetReachable(NET_IPV6, false);
     SetReachable(NET_ONION, false);
     SetReachable(NET_I2P, false);
+    SetReachable(NET_CJDNS, false);
 
     BOOST_CHECK(!IsReachable(NET_IPV4));
     BOOST_CHECK(!IsReachable(NET_IPV6));
     BOOST_CHECK(!IsReachable(NET_ONION));
     BOOST_CHECK(!IsReachable(NET_I2P));
+    BOOST_CHECK(!IsReachable(NET_CJDNS));
 
     SetReachable(NET_IPV4, true);
     SetReachable(NET_IPV6, true);
     SetReachable(NET_ONION, true);
     SetReachable(NET_I2P, true);
+    SetReachable(NET_CJDNS, true);
 
     BOOST_CHECK(IsReachable(NET_IPV4));
     BOOST_CHECK(IsReachable(NET_IPV6));
     BOOST_CHECK(IsReachable(NET_ONION));
     BOOST_CHECK(IsReachable(NET_I2P));
+    BOOST_CHECK(IsReachable(NET_CJDNS));
 }
 
 BOOST_AUTO_TEST_CASE(LimitedAndReachable_NetworkCaseUnroutableAndInternal)
@@ -726,6 +808,110 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 
     RemoveLocal(addr);
     BOOST_CHECK(!IsLocal(addr));
+}
+
+BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
+{
+    // Tests the following scenario:
+    // * -bind=3.4.5.6:20001 is specified
+    // * we make an outbound connection to a peer
+    // * the peer reports he sees us as 2.3.4.5:20002 in the version message
+    //   (20002 is a random port assigned by our OS for the outgoing TCP connection,
+    //   we cannot accept connections to it)
+    // * we should self-advertise to that peer as 2.3.4.5:20001
+
+    // Pretend that we bound to this port.
+    const uint16_t bind_port = 20001;
+    m_node.args->ForceSetArg("-bind", strprintf("3.4.5.6:%u", bind_port));
+    m_node.args->ForceSetArg("-capturemessages", "1");
+
+    // Our address:port as seen from the peer - 2.3.4.5:20002 (different from the above).
+    in_addr peer_us_addr;
+    peer_us_addr.s_addr = htonl(0x02030405);
+    const CService peer_us{peer_us_addr, 20002};
+
+    // Create a peer with a routable IPv4 address.
+    in_addr peer_in_addr;
+    peer_in_addr.s_addr = htonl(0x01020304);
+    CNode peer{/*id=*/0,
+               /*nLocalServicesIn=*/NODE_NETWORK,
+               /*sock=*/nullptr,
+               /*addrIn=*/CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
+               /*nKeyedNetGroupIn=*/0,
+               /*nLocalHostNonceIn=*/0,
+               /*addrBindIn=*/CAddress{},
+               /*addrNameIn=*/std::string{},
+               /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
+               /*inbound_onion=*/false};
+
+    const uint64_t services{NODE_NETWORK | NODE_WITNESS};
+    const int64_t time{0};
+    const CNetMsgMaker msg_maker{PROTOCOL_VERSION};
+
+    // Force CChainState::IsInitialBlockDownload() to return false.
+    // Otherwise PushAddress() isn't called by PeerManager::ProcessMessage().
+    TestChainState& chainstate =
+        *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
+    chainstate.JumpOutOfIbd();
+
+    m_node.peerman->InitializeNode(&peer);
+
+    std::atomic<bool> interrupt_dummy{false};
+    std::chrono::microseconds time_received_dummy{0};
+
+    const auto msg_version =
+        msg_maker.Make(NetMsgType::VERSION, PROTOCOL_VERSION, services, time, services, peer_us);
+    CDataStream msg_version_stream{msg_version.data, SER_NETWORK, PROTOCOL_VERSION};
+
+    m_node.peerman->ProcessMessage(
+        peer, NetMsgType::VERSION, msg_version_stream, time_received_dummy, interrupt_dummy);
+
+    const auto msg_verack = msg_maker.Make(NetMsgType::VERACK);
+    CDataStream msg_verack_stream{msg_verack.data, SER_NETWORK, PROTOCOL_VERSION};
+
+    // Will set peer.fSuccessfullyConnected to true (necessary in SendMessages()).
+    m_node.peerman->ProcessMessage(
+        peer, NetMsgType::VERACK, msg_verack_stream, time_received_dummy, interrupt_dummy);
+
+    // Ensure that peer_us_addr:bind_port is sent to the peer.
+    const CService expected{peer_us_addr, bind_port};
+    bool sent{false};
+
+    const auto CaptureMessageOrig = CaptureMessage;
+    CaptureMessage = [&sent, &expected](const CAddress& addr,
+                                        const std::string& msg_type,
+                                        Span<const unsigned char> data,
+                                        bool is_incoming) -> void {
+        if (!is_incoming && msg_type == "addr") {
+            CDataStream s(data, SER_NETWORK, PROTOCOL_VERSION);
+            std::vector<CAddress> addresses;
+
+            s >> addresses;
+
+            for (const auto& addr : addresses) {
+                if (addr == expected) {
+                    sent = true;
+                    return;
+                }
+            }
+        }
+    };
+
+    {
+        LOCK(peer.cs_sendProcessing);
+        m_node.peerman->SendMessages(&peer);
+    }
+
+    BOOST_CHECK(sent);
+
+    CaptureMessage = CaptureMessageOrig;
+    chainstate.ResetIbd();
+    m_node.args->ForceSetArg("-capturemessages", "0");
+    m_node.args->ForceSetArg("-bind", "");
+    // PeerManager::ProcessMessage() calls AddTimeData() which changes the internal state
+    // in timedata.cpp and later confuses the test "timedata_tests/addtimedata". Thus reset
+    // that state as it was before our test was run.
+    TestOnlyResetTimeData();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

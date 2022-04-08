@@ -137,10 +137,56 @@ public:
 } // namespace foo
 ```
 
+Coding Style (C++ named arguments)
+------------------------------
+
+When passing named arguments, use a format that clang-tidy understands. The
+argument names can otherwise not be verified by clang-tidy.
+
+For example:
+
+```c++
+void function(Addrman& addrman, bool clear);
+
+int main()
+{
+    function(g_addrman, /*clear=*/false);
+}
+```
+
+### Running clang-tidy
+
+To run clang-tidy on Ubuntu/Debian, install the dependencies:
+
+```sh
+apt install clang-tidy bear clang
+```
+
+Then, pass clang as compiler to configure, and use bear to produce the `compile_commands.json`:
+
+```sh
+./autogen.sh && ./configure CC=clang CXX=clang++
+make clean && bear make -j $(nproc)     # For bear 2.x
+make clean && bear -- make -j $(nproc)  # For bear 3.x
+```
+
+To run clang-tidy on all source files:
+
+```sh
+( cd ./src/ && run-clang-tidy  -j $(nproc) )
+```
+
+To run clang-tidy on the changed source lines:
+
+```sh
+git diff | ( cd ./src/ && clang-tidy-diff -p2 -j $(nproc) )
+```
+
 Coding Style (Python)
 ---------------------
 
 Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
+
 
 Coding Style (Doxygen-compatible comments)
 ------------------------------------------
@@ -331,7 +377,7 @@ other input.
   failure, it will throw an exception, which can be caught to recover from the
   error.
    - For example, a nullptr dereference or any other logic bug in RPC code
-     means that the RPC code is faulty and can not be executed. However, the
+     means that the RPC code is faulty and cannot be executed. However, the
      logic bug can be shown to the user and the program can continue to run.
 * `Assume` should be used to document assumptions when program execution can
   safely continue even if the assumption is violated. In debug builds it
@@ -1199,7 +1245,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
 - Don't forget to fill in the argument names correctly in the RPC command table.
 
-  - *Rationale*: If not, the call can not be used with name-based arguments.
+  - *Rationale*: If not, the call cannot be used with name-based arguments.
 
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
 
