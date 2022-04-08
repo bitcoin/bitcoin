@@ -70,7 +70,9 @@ namespace BCLog {
         CHAINLOCKS  = (1 << 30),
         I2P         = (uint64_t)(1ULL << 31),
         IPC         = (uint64_t)(1ULL << 32),
+#ifdef DEBUG_LOCKCONTENTION
         LOCK        = (uint64_t)(1ULL << 33),
+#endif
         UTIL        = (uint64_t)(1ULL << 34),
         BLOCKSTORE  = (uint64_t)(1ULL << 35),
         ALL         = ~(uint64_t)0,
