@@ -94,6 +94,10 @@ bool Wallet::GetStealthAddress(const uint32_t index, StealthAddress& address) co
         return false;
     }
 
+    if (keychain->GetSpendKey().IsNull()) {
+        return false;
+    }
+
     address = keychain->GetStealthAddress(index);
     return true;
 }

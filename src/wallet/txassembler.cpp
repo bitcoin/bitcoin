@@ -129,6 +129,8 @@ void TxAssembler::CreateTransaction_Locked(
             new_tx.coin_selection_params.use_bnb = false;
         }
 
+        new_tx.mweb_type = MWEB::GetTxType(new_tx.recipients, new_tx.selected_coins);
+
         // We already created an output for each non-MWEB recipient, but for pegout transactions,
         // the recipients are funded through the pegout kernel instead of traditional LTC outputs.
         if (new_tx.mweb_type == MWEB::TxType::PEGOUT) {
@@ -397,7 +399,6 @@ bool TxAssembler::AttemptCoinSelection(InProcessTx& new_tx, const CAmount& nTarg
         mweb_to_mweb.tx_noinputs_size = 0;
 
         if (SelectCoins(new_tx, nTargetValue, mweb_to_mweb)) {
-            new_tx.mweb_type = MWEB::TxType::MWEB_TO_MWEB;
             return true;
         }
 
@@ -411,7 +412,6 @@ bool TxAssembler::AttemptCoinSelection(InProcessTx& new_tx, const CAmount& nTarg
         params_pegin.change_spend_size = change_on_mweb ? 0 : new_tx.coin_selection_params.change_spend_size;
 
         if (SelectCoins(new_tx, nTargetValue, params_pegin)) {
-            new_tx.mweb_type = MWEB::TxType::PEGIN;
             return std::any_of(new_tx.selected_coins.cbegin(), new_tx.selected_coins.cend(), is_ltc);
         }
     } else {
@@ -422,7 +422,6 @@ bool TxAssembler::AttemptCoinSelection(InProcessTx& new_tx, const CAmount& nTarg
         mweb_to_mweb.mweb_nochange_weight = 0;
 
         if (SelectCoins(new_tx, nTargetValue, mweb_to_mweb)) {
-            new_tx.mweb_type = MWEB::TxType::LTC_TO_LTC;
             return true;
         }
 
@@ -441,7 +440,6 @@ bool TxAssembler::AttemptCoinSelection(InProcessTx& new_tx, const CAmount& nTarg
         new_tx.tx.vout.clear();
 
         if (SelectCoins(new_tx, nTargetValue, params_pegout)) {
-            new_tx.mweb_type = MWEB::TxType::PEGOUT;
             return std::any_of(new_tx.selected_coins.cbegin(), new_tx.selected_coins.cend(), is_mweb);
         }
     }

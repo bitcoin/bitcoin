@@ -20,6 +20,7 @@ enum class TxType {
     PEGOUT // NOTE: It's possible pegout transactions will also have pegins, but they will still be classified as PEGOUT
 };
 
+TxType GetTxType(const std::vector<CRecipient>& recipients, const std::set<CInputCoin>& input_coins);
 bool ContainsPegIn(const TxType& mweb_type, const std::set<CInputCoin>& input_coins);
 bool IsChangeOnMWEB(const CWallet& wallet, const MWEB::TxType& mweb_type, const std::vector<CRecipient>& recipients, const CTxDestination& dest_change);
 uint64_t CalcMWEBWeight(const MWEB::TxType& mweb_type, const bool change_on_mweb, const std::vector<CRecipient>& recipients);
