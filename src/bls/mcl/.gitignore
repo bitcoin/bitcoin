@@ -1,0 +1,16 @@
+CVS
+java/*_wrap.cxx
+lib/*.so
+lib/*.a
+*.class
+GPATH
+GRTAGS
+GTAGS
+*.o
+*.d
+*.exe
+*.swp
+.cvsignore
+build/
+external/
+Testing/

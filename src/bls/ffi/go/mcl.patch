@@ -1,0 +1,8 @@
+--- ../../../mcl/ffi/go/mcl/mcl.go	2019-10-30 11:23:02.000000000 +0900
++++ bls/mcl.go	2019-10-31 19:23:47.000000000 +0900
+@@ -1,4 +1,4 @@
+-package mcl
++package bls
+ 
+ /*
+ #cgo bn256 CFLAGS:-DMCLBN_FP_UNIT_SIZE=4

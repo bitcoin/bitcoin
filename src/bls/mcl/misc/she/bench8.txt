@@ -1,0 +1,99 @@
+ctest:module=log
+CurveFp462
+ctest:module=HashTable
+ctest:module=GTHashTable
+ctest:module=enc_dec
+ctest:module=add_sub_mul
+ctest:module=add_mul_add_sub
+ctest:module=innerProduct
+ctest:module=io
+ctest:module=bench
+enc   5.095Mclk
+add  36.280Kclk
+mul  30.163Mclk
+dec  12.974Mclk
+add after mul  76.646Kclk
+ctest:module=saveHash
+ctest:module=hashBench
+Kclk
+m=000fffff decG1 1.44e+03
+m=001fffff decG1 1.45e+03
+m=003fffff decG1 1.45e+03
+m=007fffff decG1 1.47e+03
+m=00ffffff decG1 1.54e+03
+m=01ffffff decG1 1.70e+03
+m=03ffffff decG1 2.03e+03
+m=07ffffff decG1 2.64e+03
+m=0fffffff decG1 3.88e+03
+m=1fffffff decG1 6.32e+03
+m=3fffffff decG1 1.12e+04
+m=7fffffff decG1 2.11e+04
+
+m=000fffff decG2 2.99e+03
+m=001fffff decG2 3.01e+03
+m=003fffff decG2 2.99e+03
+m=007fffff decG2 3.05e+03
+m=00ffffff decG2 3.15e+03
+m=01ffffff decG2 3.41e+03
+m=03ffffff decG2 3.93e+03
+m=07ffffff decG2 4.95e+03
+m=0fffffff decG2 6.97e+03
+m=1fffffff decG2 1.10e+04
+m=3fffffff decG2 1.91e+04
+m=7fffffff decG2 3.54e+04
+
+m=000fffff decGT 1.31e+04
+m=001fffff decGT 1.31e+04
+m=003fffff decGT 1.31e+04
+m=007fffff decGT 1.31e+04
+m=00ffffff decGT 1.32e+04
+m=01ffffff decGT 1.33e+04
+m=03ffffff decGT 1.36e+04
+m=07ffffff decGT 1.43e+04
+m=0fffffff decGT 1.56e+04
+m=1fffffff decGT 1.82e+04
+m=3fffffff decGT 2.34e+04
+m=7fffffff decGT 3.39e+04
+large m
+G1::add  3.40e+00
+G1::mul  1.41e+03
+G2::add  1.38e+01
+G2::mul  2.93e+03
+GT::mul  1.94e+01
+GT::pow  4.30e+03
+G1window 1.59e+02
+G2window 4.89e+02
+GTwindow 8.96e+02
+miller   4.99e+03
+finalExp 3.26e+03
+precomML 3.71e+03
+small m = 2097151
+G1::mul  1.53e+02
+G2::mul  3.85e+02
+GT::pow  4.88e+02
+G1window 6.96e+00
+G2window 2.17e+01
+GTwindow 5.83e+01
+encG1    1.62e+03
+encG2    3.48e+03
+encGT    1.79e+04
+encG1pre 3.67e+02
+encG2pre 1.09e+03
+encGTpre 3.88e+03
+decG1    1.45e+03
+decG2    3.02e+03
+degGT    1.31e+04
+mul      3.02e+04
+addG1    7.08e+00
+addG2    2.03e+01
+addGT    7.68e+01
+reRandG1 1.63e+03
+reRandG2 3.48e+03
+reRandGT 1.79e+04
+reRandG1pre 3.65e+02
+reRandG2pre 1.08e+03
+reRandGTpre 3.79e+03
+mulG1    3.08e+02
+mulG2    7.65e+02
+mulGT    1.95e+03
+ctest:name=she_test, module=11, total=2879, ok=2879, ng=0, exception=0
