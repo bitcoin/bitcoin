@@ -17,21 +17,19 @@ Type SanitizeType(Type e) {
     int num_types = (e << "K"_mst) + (e << "V"_mst) + (e << "B"_mst) + (e << "W"_mst);
     if (num_types == 0) return ""_mst; // No valid type, don't care about the rest
     assert(num_types == 1); // K, V, B, W all conflict with each other
-    bool ok = // Work around a GCC 4.8 bug that breaks user-defined literals in macro calls.
-        (!(e << "z"_mst) || !(e << "o"_mst)) && // z conflicts with o
-        (!(e << "n"_mst) || !(e << "z"_mst)) && // n conflicts with z
-        (!(e << "n"_mst) || !(e << "W"_mst)) && // n conflicts with W
-        (!(e << "V"_mst) || !(e << "d"_mst)) && // V conflicts with d
-        (!(e << "K"_mst) ||  (e << "u"_mst)) && // K implies u
-        (!(e << "V"_mst) || !(e << "u"_mst)) && // V conflicts with u
-        (!(e << "e"_mst) || !(e << "f"_mst)) && // e conflicts with f
-        (!(e << "e"_mst) ||  (e << "d"_mst)) && // e implies d
-        (!(e << "V"_mst) || !(e << "e"_mst)) && // V conflicts with e
-        (!(e << "d"_mst) || !(e << "f"_mst)) && // d conflicts with f
-        (!(e << "V"_mst) ||  (e << "f"_mst)) && // V implies f
-        (!(e << "K"_mst) ||  (e << "s"_mst)) && // K implies s
-        (!(e << "z"_mst) ||  (e << "m"_mst)); // z implies m
-    assert(ok);
+    assert(!(e << "z"_mst) || !(e << "o"_mst)); // z conflicts with o
+    assert(!(e << "n"_mst) || !(e << "z"_mst)); // n conflicts with z
+    assert(!(e << "n"_mst) || !(e << "W"_mst)); // n conflicts with W
+    assert(!(e << "V"_mst) || !(e << "d"_mst)); // V conflicts with d
+    assert(!(e << "K"_mst) ||  (e << "u"_mst)); // K implies u
+    assert(!(e << "V"_mst) || !(e << "u"_mst)); // V conflicts with u
+    assert(!(e << "e"_mst) || !(e << "f"_mst)); // e conflicts with f
+    assert(!(e << "e"_mst) ||  (e << "d"_mst)); // e implies d
+    assert(!(e << "V"_mst) || !(e << "e"_mst)); // V conflicts with e
+    assert(!(e << "d"_mst) || !(e << "f"_mst)); // d conflicts with f
+    assert(!(e << "V"_mst) ||  (e << "f"_mst)); // V implies f
+    assert(!(e << "K"_mst) ||  (e << "s"_mst)); // K implies s
+    assert(!(e << "z"_mst) ||  (e << "m"_mst)); // z implies m
     return e;
 }
 
