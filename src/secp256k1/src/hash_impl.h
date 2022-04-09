@@ -28,12 +28,6 @@
     (h) = t1 + t2; \
 } while(0)
 
-#if defined(SECP256K1_BIG_ENDIAN)
-#define BE32(x) (x)
-#elif defined(SECP256K1_LITTLE_ENDIAN)
-#define BE32(p) ((((p) & 0xFF) << 24) | (((p) & 0xFF00) << 8) | (((p) & 0xFF0000) >> 8) | (((p) & 0xFF000000) >> 24))
-#endif
-
 static void secp256k1_sha256_initialize(secp256k1_sha256 *hash) {
     hash->s[0] = 0x6a09e667ul;
     hash->s[1] = 0xbb67ae85ul;
@@ -47,26 +41,26 @@ static void secp256k1_sha256_initialize(secp256k1_sha256 *hash) {
 }
 
 /** Perform one SHA-256 transformation, processing 16 big endian 32-bit words. */
-static void secp256k1_sha256_transform(uint32_t* s, const uint32_t* chunk) {
+static void secp256k1_sha256_transform(uint32_t* s, const unsigned char* buf) {
     uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];
     uint32_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;
 
-    Round(a, b, c, d, e, f, g, h, 0x428a2f98, w0 = BE32(chunk[0]));
-    Round(h, a, b, c, d, e, f, g, 0x71374491, w1 = BE32(chunk[1]));
-    Round(g, h, a, b, c, d, e, f, 0xb5c0fbcf, w2 = BE32(chunk[2]));
-    Round(f, g, h, a, b, c, d, e, 0xe9b5dba5, w3 = BE32(chunk[3]));
-    Round(e, f, g, h, a, b, c, d, 0x3956c25b, w4 = BE32(chunk[4]));
-    Round(d, e, f, g, h, a, b, c, 0x59f111f1, w5 = BE32(chunk[5]));
-    Round(c, d, e, f, g, h, a, b, 0x923f82a4, w6 = BE32(chunk[6]));
-    Round(b, c, d, e, f, g, h, a, 0xab1c5ed5, w7 = BE32(chunk[7]));
-    Round(a, b, c, d, e, f, g, h, 0xd807aa98, w8 = BE32(chunk[8]));
-    Round(h, a, b, c, d, e, f, g, 0x12835b01, w9 = BE32(chunk[9]));
-    Round(g, h, a, b, c, d, e, f, 0x243185be, w10 = BE32(chunk[10]));
-    Round(f, g, h, a, b, c, d, e, 0x550c7dc3, w11 = BE32(chunk[11]));
-    Round(e, f, g, h, a, b, c, d, 0x72be5d74, w12 = BE32(chunk[12]));
-    Round(d, e, f, g, h, a, b, c, 0x80deb1fe, w13 = BE32(chunk[13]));
-    Round(c, d, e, f, g, h, a, b, 0x9bdc06a7, w14 = BE32(chunk[14]));
-    Round(b, c, d, e, f, g, h, a, 0xc19bf174, w15 = BE32(chunk[15]));
+    Round(a, b, c, d, e, f, g, h, 0x428a2f98,  w0 = secp256k1_read_be32(&buf[0]));
+    Round(h, a, b, c, d, e, f, g, 0x71374491,  w1 = secp256k1_read_be32(&buf[4]));
+    Round(g, h, a, b, c, d, e, f, 0xb5c0fbcf,  w2 = secp256k1_read_be32(&buf[8]));
+    Round(f, g, h, a, b, c, d, e, 0xe9b5dba5,  w3 = secp256k1_read_be32(&buf[12]));
+    Round(e, f, g, h, a, b, c, d, 0x3956c25b,  w4 = secp256k1_read_be32(&buf[16]));
+    Round(d, e, f, g, h, a, b, c, 0x59f111f1,  w5 = secp256k1_read_be32(&buf[20]));
+    Round(c, d, e, f, g, h, a, b, 0x923f82a4,  w6 = secp256k1_read_be32(&buf[24]));
+    Round(b, c, d, e, f, g, h, a, 0xab1c5ed5,  w7 = secp256k1_read_be32(&buf[28]));
+    Round(a, b, c, d, e, f, g, h, 0xd807aa98,  w8 = secp256k1_read_be32(&buf[32]));
+    Round(h, a, b, c, d, e, f, g, 0x12835b01,  w9 = secp256k1_read_be32(&buf[36]));
+    Round(g, h, a, b, c, d, e, f, 0x243185be, w10 = secp256k1_read_be32(&buf[40]));
+    Round(f, g, h, a, b, c, d, e, 0x550c7dc3, w11 = secp256k1_read_be32(&buf[44]));
+    Round(e, f, g, h, a, b, c, d, 0x72be5d74, w12 = secp256k1_read_be32(&buf[48]));
+    Round(d, e, f, g, h, a, b, c, 0x80deb1fe, w13 = secp256k1_read_be32(&buf[52]));
+    Round(c, d, e, f, g, h, a, b, 0x9bdc06a7, w14 = secp256k1_read_be32(&buf[56]));
+    Round(b, c, d, e, f, g, h, a, 0xc19bf174, w15 = secp256k1_read_be32(&buf[60]));
 
     Round(a, b, c, d, e, f, g, h, 0xe49b69c1, w0 += sigma1(w14) + w9 + sigma0(w1));
     Round(h, a, b, c, d, e, f, g, 0xefbe4786, w1 += sigma1(w15) + w10 + sigma0(w2));
@@ -136,7 +130,7 @@ static void secp256k1_sha256_write(secp256k1_sha256 *hash, const unsigned char *
     while (len >= 64 - bufsize) {
         /* Fill the buffer, and process it. */
         size_t chunk_len = 64 - bufsize;
-        memcpy(((unsigned char*)hash->buf) + bufsize, data, chunk_len);
+        memcpy(hash->buf + bufsize, data, chunk_len);
         data += chunk_len;
         len -= chunk_len;
         secp256k1_sha256_transform(hash->s, hash->buf);
@@ -149,19 +143,19 @@ static void secp256k1_sha256_write(secp256k1_sha256 *hash, const unsigned char *
 }
 
 static void secp256k1_sha256_finalize(secp256k1_sha256 *hash, unsigned char *out32) {
-    static const unsigned char pad[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    uint32_t sizedesc[2];
-    uint32_t out[8];
-    int i = 0;
-    sizedesc[0] = BE32(hash->bytes >> 29);
-    sizedesc[1] = BE32(hash->bytes << 3);
+    static const unsigned char pad[64] = {0x80};
+    unsigned char sizedesc[8];
+    int i;
+    /* The maximum message size of SHA256 is 2^64-1 bits. */
+    VERIFY_CHECK(hash->bytes < ((uint64_t)1 << 61));
+    secp256k1_write_be32(&sizedesc[0], hash->bytes >> 29);
+    secp256k1_write_be32(&sizedesc[4], hash->bytes << 3);
     secp256k1_sha256_write(hash, pad, 1 + ((119 - (hash->bytes % 64)) % 64));
-    secp256k1_sha256_write(hash, (const unsigned char*)sizedesc, 8);
+    secp256k1_sha256_write(hash, sizedesc, 8);
     for (i = 0; i < 8; i++) {
-        out[i] = BE32(hash->s[i]);
+        secp256k1_write_be32(&out32[4*i], hash->s[i]);
         hash->s[i] = 0;
     }
-    memcpy(out32, (const unsigned char*)out, 32);
 }
 
 /* Initializes a sha256 struct and writes the 64 byte string
@@ -285,7 +279,6 @@ static void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256
     rng->retry = 0;
 }
 
-#undef BE32
 #undef Round
 #undef sigma1
 #undef sigma0
