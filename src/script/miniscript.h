@@ -408,6 +408,26 @@ private:
         ));
     }
 
+    /** Compare two miniscript subtrees, using a non-recursive algorithm. */
+    friend int Compare(const Node<Key>& node1, const Node<Key>& node2)
+    {
+        std::vector<std::pair<const Node<Key>&, const Node<Key>&>> queue;
+        queue.emplace_back(node1, node2);
+        while (!queue.empty()) {
+            const auto& [a, b] = queue.back();
+            queue.pop_back();
+            if (std::tie(a.fragment, a.k, a.keys, a.data) < std::tie(b.fragment, b.k, b.keys, b.data)) return -1;
+            if (std::tie(b.fragment, b.k, b.keys, b.data) < std::tie(a.fragment, a.k, a.keys, a.data)) return 1;
+            if (a.subs.size() < b.subs.size()) return -1;
+            if (b.subs.size() < a.subs.size()) return 1;
+            size_t n = a.subs.size();
+            for (size_t i = 0; i < n; ++i) {
+                queue.emplace_back(*a.subs[n - 1 - i], *b.subs[n - 1 - i]);
+            }
+        }
+        return 0;
+    }
+
     //! Compute the type for this miniscript.
     Type CalcType() const {
         using namespace internal;
@@ -765,20 +785,7 @@ public:
     bool IsSaneTopLevel() const { return IsValidTopLevel() && IsSane() && NeedsSignature(); }
 
     //! Equality testing.
-    bool operator==(const Node<Key>& arg) const
-    {
-        if (fragment != arg.fragment) return false;
-        if (k != arg.k) return false;
-        if (data != arg.data) return false;
-        if (keys != arg.keys) return false;
-        if (subs.size() != arg.subs.size()) return false;
-        for (size_t i = 0; i < subs.size(); ++i) {
-            if (!(*subs[i] == *arg.subs[i])) return false;
-        }
-        assert(scriptlen == arg.scriptlen);
-        assert(typ == arg.typ);
-        return true;
-    }
+    bool operator==(const Node<Key>& arg) const { return Compare(*this, arg) == 0; }
 
     // Constructors with various argument combinations.
     Node(Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
