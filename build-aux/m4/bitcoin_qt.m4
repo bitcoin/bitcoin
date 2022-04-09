@@ -364,6 +364,36 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
   fi
 ])
 
+dnl Internal. Check whether Qt application can be initialized.
+dnl
+dnl _BITCOIN_QT_CHECK_APP(APPLICATION_CLASS)
+dnl ----------------------------------------
+dnl
+dnl dnl Requires: QT_INCLUDES and QT_LIBS must be populated as necessary.
+dnl Inputs: $1: QCoreApplication, QGuiApplication, or QApplication.
+AC_DEFUN([_BITCOIN_QT_CHECK_APP], [
+  AC_MSG_CHECKING([for $1 initialization])
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  TEMP_CXXFLAGS="$CXXFLAGS"
+  TEMP_LIBS="$LIBS"
+  CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
+  CXXFLAGS="$QT_PIE_FLAGS $CORE_CXXFLAGS $CXXFLAGS"
+  LIBS="$QT_LIBS"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+      #include <$1>
+    ]],
+    [[
+      int argc = 1;
+      const char* argv = "core";
+      $1 app(argc, const_cast<char**>(&argv));
+    ]])],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no]); BITCOIN_QT_FAIL([$1 failed to initialize])])
+  CPPFLAGS="$TEMP_CPPFLAGS"
+  CXXFLAGS="$TEMP_CXXFLAGS"
+  LIBS="$TEMP_LIBS"
+])
+
 dnl Internal. Find Qt libraries using pkg-config.
 dnl
 dnl _BITCOIN_QT_FIND_LIBS
@@ -375,14 +405,17 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_CORE], [${qt_lib_prefix}Core${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_CORE_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_CORE_LIBS $QT_LIBS"],
                       [BITCOIN_QT_FAIL([${qt_lib_prefix}Core${qt_lib_suffix} $qt_version not found])])
+    _BITCOIN_QT_CHECK_APP([QCoreApplication])
   ])
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_GUI], [${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_GUI_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_GUI_LIBS $QT_LIBS"],
                       [BITCOIN_QT_FAIL([${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version not found])])
+    _BITCOIN_QT_CHECK_APP([QGuiApplication])
   ])
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_WIDGETS], [${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_WIDGETS_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_WIDGETS_LIBS $QT_LIBS"],
                       [BITCOIN_QT_FAIL([${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version not found])])
+    _BITCOIN_QT_CHECK_APP([QApplication])
   ])
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_NETWORK], [${qt_lib_prefix}Network${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_NETWORK_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_NETWORK_LIBS $QT_LIBS"],
