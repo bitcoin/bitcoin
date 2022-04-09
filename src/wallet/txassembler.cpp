@@ -579,7 +579,7 @@ int64_t TxAssembler::CalculateMaximumTxSize(const InProcessTx& new_tx) const
     }
 
     int64_t bytes = 0;
-    if (new_tx.mweb_type != MWEB::TxType::MWEB_TO_MWEB) {
+    if (new_tx.mweb_type != MWEB::TxType::MWEB_TO_MWEB && (new_tx.mweb_type != MWEB::TxType::PEGOUT || !tmp_tx.vin.empty())) {
         bytes = CalculateMaximumSignedTxSize(CTransaction(tmp_tx), &m_wallet, new_tx.coin_control.fAllowWatchOnly);
         if (bytes < 0) {
             throw CreateTxError(_("Signing transaction failed"));
