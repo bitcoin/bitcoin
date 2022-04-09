@@ -17,6 +17,10 @@ ac_tool_prefix="${host_alias}-"
 if test -z "$with_boost"; then
   with_boost="$depends_prefix"
 fi
+
+if test -z "$with_qt_libdir"; then
+  with_qt_libdir="${depends_prefix}/lib"
+fi
 if test -z "$with_qt_plugindir"; then
   with_qt_plugindir="${depends_prefix}/plugins"
 fi
