@@ -19,6 +19,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -138,8 +139,7 @@ static RPCHelpMan masternode_winner()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman);
-    return GetNextMasternodeForPayment(chainman.ActiveChain(), *node.dmnman, 10);
+    return GetNextMasternodeForPayment(chainman.ActiveChain(), *CHECK_NONFATAL(node.dmnman), 10);
 },
     };
 }
@@ -159,8 +159,7 @@ static RPCHelpMan masternode_current()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman);
-    return GetNextMasternodeForPayment(chainman.ActiveChain(), *node.dmnman, 1);
+    return GetNextMasternodeForPayment(chainman.ActiveChain(), *CHECK_NONFATAL(node.dmnman), 1);
 },
     };
 }
@@ -212,7 +211,7 @@ static RPCHelpMan masternode_status()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CHECK_NONFATAL(node.dmnman);
+
     if (!node.mn_activeman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This node does not run an active masternode.");
     }
@@ -221,7 +220,7 @@ static RPCHelpMan masternode_status()
     // keep compatibility with legacy status for now (might get deprecated/removed later)
     mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
     mnObj.pushKV("service", node.mn_activeman->GetService().ToStringAddrPort());
-    CDeterministicMNCPtr dmn = node.dmnman->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
+    CDeterministicMNCPtr dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
@@ -243,12 +242,12 @@ static std::string GetRequiredPaymentsString(CGovernanceManager& govman, const C
     if (payee) {
         CTxDestination dest;
         if (!ExtractDestination(payee->pdmnState->scriptPayout, dest)) {
-            CHECK_NONFATAL(false);
+            NONFATAL_UNREACHABLE();
         }
         strPayments = EncodeDestination(dest);
         if (payee->nOperatorReward != 0 && payee->pdmnState->scriptOperatorPayout != CScript()) {
             if (!ExtractDestination(payee->pdmnState->scriptOperatorPayout, dest)) {
-                CHECK_NONFATAL(false);
+                NONFATAL_UNREACHABLE();
             }
             strPayments += ", " + EncodeDestination(dest);
         }
@@ -310,14 +309,11 @@ static RPCHelpMan masternode_winners()
     int nChainTipHeight = pindexTip->nHeight;
     int nStartHeight = std::max(nChainTipHeight - nCount, 1);
 
-    CHECK_NONFATAL(node.dmnman);
-    CHECK_NONFATAL(node.govman);
-
-    const auto tip_mn_list = node.dmnman->GetListAtChainTip();
+    const auto tip_mn_list = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
         const CBlockIndex* pIndex = pindexTip->GetAncestor(h - 1);
         auto payee = node.dmnman->GetListForBlock(pIndex).GetMNPayee(pIndex);
-        std::string strPayments = GetRequiredPaymentsString(*node.govman, tip_mn_list, h, payee);
+        std::string strPayments = GetRequiredPaymentsString(*CHECK_NONFATAL(node.govman), tip_mn_list, h, payee);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
         obj.pushKV(strprintf("%d", h), strPayments);
     }
@@ -558,11 +554,10 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman);
 
     UniValue obj(UniValue::VOBJ);
 
-    const auto mnList = node.dmnman->GetListAtChainTip();
+    const auto mnList = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
     const auto dmnToStatus = [&](const auto& dmn) {
         if (mnList.IsMNValid(dmn)) {
             return "ENABLED";

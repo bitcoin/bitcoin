@@ -21,6 +21,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <timedata.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
@@ -194,12 +195,11 @@ static RPCHelpMan gobject_prepare()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman);
 
     {
         LOCK(cs_main);
         std::string strError = "";
-        if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), chainman, strError, false))
+        if (!govobj.IsValidLocally(CHECK_NONFATAL(node.dmnman)->GetListAtChainTip(), chainman, strError, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
     }
 
@@ -303,14 +303,12 @@ static RPCHelpMan gobject_submit()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman);
-    CHECK_NONFATAL(node.govman);
 
     if(!node.mn_sync->IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
 
-    auto mnList = node.dmnman->GetListAtChainTip();
+    auto mnList = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
 
     if (node.mn_activeman) {
         const bool fMnFound = mnList.HasValidMNByCollateral(node.mn_activeman->GetOutPoint());
@@ -373,7 +371,6 @@ static RPCHelpMan gobject_submit()
         }
 
         LOCK2(cs_main, mempool.cs);
-        CHECK_NONFATAL(node.dmnman);
 
         std::string strError;
         if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), chainman, strError, fMissingConfirmations, true) && !fMissingConfirmations) {
@@ -384,7 +381,7 @@ static RPCHelpMan gobject_submit()
 
     // RELAY THIS OBJECT
     // Reject if rate check fails but don't update buffer
-    if (!node.govman->MasternodeRateCheck(govobj)) {
+    if (!CHECK_NONFATAL(node.govman)->MasternodeRateCheck(govobj)) {
         LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure - hash = %s\n", strHash);
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
     }
@@ -393,9 +390,8 @@ static RPCHelpMan gobject_submit()
 
     PeerManager& peerman = EnsurePeerman(node);
     if (fMissingConfirmations) {
-        CHECK_NONFATAL(node.mn_sync);
         node.govman->AddPostponedObject(govobj);
-        govobj.Relay(peerman, *node.mn_sync);
+        govobj.Relay(peerman, *CHECK_NONFATAL(node.mn_sync));
     } else {
         node.govman->AddGovernanceObject(govobj, peerman);
     }
@@ -452,7 +448,7 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const CWallet
     int nSuccessful = 0;
     int nFailed = 0;
 
-    auto mnList = node.dmnman->GetListAtChainTip();
+    auto mnList = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
 
     UniValue resultsObj(UniValue::VOBJ);
 
@@ -529,7 +525,6 @@ static RPCHelpMan gobject_vote_many()
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CHECK_NONFATAL(node.dmnman);
 
     uint256 hash(ParseHashV(request.params[0], "Object hash"));
     std::string strVoteSignal = request.params[1].get_str();
@@ -551,7 +546,7 @@ static RPCHelpMan gobject_vote_many()
 
     std::map<uint256, CKeyID> votingKeys;
 
-    auto mnList = node.dmnman->GetListAtChainTip();
+    auto mnList = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
     mnList.ForEachMN(true, [&](auto& dmn) {
         const bool is_mine = CheckWalletOwnsKey(*wallet, dmn.pdmnState->keyIDVoting);
         if (is_mine) {
@@ -583,7 +578,6 @@ static RPCHelpMan gobject_vote_alias()
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CHECK_NONFATAL(node.dmnman);
 
     uint256 hash(ParseHashV(request.params[0], "Object hash"));
     std::string strVoteSignal = request.params[1].get_str();
@@ -604,7 +598,7 @@ static RPCHelpMan gobject_vote_alias()
     EnsureWalletIsUnlocked(*wallet);
 
     uint256 proTxHash(ParseHashV(request.params[3], "protx-hash"));
-    auto dmn = node.dmnman->GetListAtChainTip().GetValidMN(proTxHash);
+    auto dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetValidMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
     }
@@ -718,11 +712,10 @@ static RPCHelpMan gobject_list_helper(const bool make_a_diff)
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman);
-    CHECK_NONFATAL(node.govman);
 
     const int64_t last_time = make_a_diff ? node.govman->GetLastDiffTime() : 0;
-    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), chainman, strCachedSignal, strType, last_time);
+    return ListObjects(*CHECK_NONFATAL(node.govman), CHECK_NONFATAL(node.dmnman)->GetListAtChainTip(), chainman,
+                       strCachedSignal, strType, last_time);
 },
     };
 }
@@ -759,8 +752,8 @@ static RPCHelpMan gobject_get()
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman && node.govman);
 
+    CHECK_NONFATAL(node.govman);
     LOCK2(cs_main, node.govman->cs);
     const CGovernanceObject* pGovObj = node.govman->FindConstGovernanceObject(hash);
 
@@ -785,7 +778,7 @@ static RPCHelpMan gobject_get()
     // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
     // -- FUNDING VOTING RESULTS
 
-    auto tip_mn_list = node.dmnman->GetListAtChainTip();
+    auto tip_mn_list = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
 
     UniValue objFundingResult(UniValue::VOBJ);
     objFundingResult.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
@@ -858,8 +851,8 @@ static RPCHelpMan gobject_getcurrentvotes()
 
     // FIND OBJECT USER IS LOOKING FOR
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CHECK_NONFATAL(node.govman);
 
+    CHECK_NONFATAL(node.govman);
     LOCK(node.govman->cs);
     const CGovernanceObject* pGovObj = node.govman->FindConstGovernanceObject(hash);
 
@@ -872,10 +865,9 @@ static RPCHelpMan gobject_getcurrentvotes()
     UniValue bResult(UniValue::VOBJ);
 
     // GET MATCHING VOTES BY HASH, THEN SHOW USERS VOTE INFORMATION
-    CHECK_NONFATAL(node.dmnman);
     std::vector<CGovernanceVote> vecVotes = node.govman->GetCurrentVotes(hash, mnCollateralOutpoint);
     for (const auto& vote : vecVotes) {
-        bResult.pushKV(vote.GetHash().ToString(), vote.ToString(node.dmnman->GetListAtChainTip()));
+        bResult.pushKV(vote.GetHash().ToString(), vote.ToString(CHECK_NONFATAL(node.dmnman)->GetListAtChainTip()));
     }
 
     return bResult;
@@ -975,8 +967,7 @@ static RPCHelpMan voteraw()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
 
-    CHECK_NONFATAL(node.dmnman);
-    const auto tip_mn_list = node.dmnman->GetListAtChainTip();
+    const auto tip_mn_list = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
     auto dmn = tip_mn_list.GetValidMNByCollateral(outpoint);
 
     if (!dmn) {
@@ -1034,7 +1025,6 @@ static RPCHelpMan getgovernanceinfo()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    CHECK_NONFATAL(node.dmnman);
 
     const auto* pindex = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int nBlockHeight = pindex->nHeight;
@@ -1048,7 +1038,7 @@ static RPCHelpMan getgovernanceinfo()
     obj.pushKV("superblockmaturitywindow", Params().GetConsensus().nSuperblockMaturityWindow);
     obj.pushKV("lastsuperblock", nLastSuperblock);
     obj.pushKV("nextsuperblock", nNextSuperblock);
-    obj.pushKV("fundingthreshold", int(node.dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10));
+    obj.pushKV("fundingthreshold", int(CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetValidWeightedMNsCount() / 10));
     obj.pushKV("governancebudget", ValueFromAmount(CSuperblock::GetPaymentsLimit(chainman.ActiveChain(), nNextSuperblock)));
 
     return obj;

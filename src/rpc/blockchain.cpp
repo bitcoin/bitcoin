@@ -39,6 +39,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <undo.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -1359,8 +1360,7 @@ static RPCHelpMan pruneblockchain()
     }
 
     PruneBlockFilesManual(active_chainstate, height);
-    const CBlockIndex* block = active_chain.Tip();
-    CHECK_NONFATAL(block);
+    const CBlockIndex* block = CHECK_NONFATAL(active_chain.Tip());
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
         block = block->pprev;
     }
@@ -1635,14 +1635,13 @@ static RPCHelpMan verifychain()
     const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].get_int()};
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CHECK_NONFATAL(node.evodb);
 
     ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
 
     CChainState& active_chainstate = chainman.ActiveChainstate();
     return CVerifyDB().VerifyDB(
-        active_chainstate, Params(), active_chainstate.CoinsTip(), *node.evodb, check_level, check_depth);
+        active_chainstate, Params(), active_chainstate.CoinsTip(), *CHECK_NONFATAL(node.evodb), check_level, check_depth);
 },
     };
 }
@@ -1782,13 +1781,11 @@ RPCHelpMan getblockchaininfo()
 
     LOCK(cs_main);
     CChainState& active_chainstate = chainman.ActiveChainstate();
-    const CBlockIndex* tip = active_chainstate.m_chain.Tip();
 
-    CHECK_NONFATAL(tip);
+    const CBlockIndex* tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
     const int height = tip->nHeight;
 
-    CHECK_NONFATAL(node.mnhf_manager);
-    const auto ehfSignals = node.mnhf_manager->GetSignalsStage(tip);
+    const auto ehfSignals = CHECK_NONFATAL(node.mnhf_manager)->GetSignalsStage(tip);
 
     UniValue obj(UniValue::VOBJ);
     if (args.IsArgSet("-devnet")) {
@@ -1808,8 +1805,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned", fPruneMode);
     if (fPruneMode) {
-        const CBlockIndex* block = tip;
-        CHECK_NONFATAL(block);
+        const CBlockIndex* block = CHECK_NONFATAL(tip);
         while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
             block = block->pprev;
         }
@@ -2863,10 +2859,8 @@ static RPCHelpMan scantxoutset()
             LOCK(cs_main);
             CChainState& active_chainstate = chainman.ActiveChainstate();
             active_chainstate.ForceFlushStateToDisk();
-            pcursor = active_chainstate.CoinsDB().Cursor();
-            CHECK_NONFATAL(pcursor);
-            tip = active_chainstate.m_chain.Tip();
-            CHECK_NONFATAL(tip);
+            pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
+            tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
         bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);
         result.pushKV("success", res);
@@ -3061,8 +3055,7 @@ UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFil
         }
 
         pcursor = chainstate.CoinsDB().Cursor();
-        tip = chainstate.m_blockman.LookupBlockIndex(stats.hashBlock);
-        CHECK_NONFATAL(tip);
+        tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(stats.hashBlock));
     }
 
     SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
