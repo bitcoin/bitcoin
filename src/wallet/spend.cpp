@@ -490,12 +490,13 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     }
 
     // remove preset inputs from vCoins so that Coin Selection doesn't pick them.
-    for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coin_control.HasSelected();)
-    {
-        if (preset_coins.count(it->outpoint))
-            it = vCoins.erase(it);
-        else
-            ++it;
+    if (coin_control.HasSelected()) {
+        std::vector<COutput> vCoins_filtered;
+        for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end(); ++it) {
+            if (!preset_coins.count(it->outpoint))
+                vCoins_filtered.push_back(*it);
+        }
+        std::swap(vCoins_filtered, vCoins);
     }
 
     unsigned int limit_ancestor_count = 0;
