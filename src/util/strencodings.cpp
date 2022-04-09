@@ -167,7 +167,7 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
         ++p;
     }
     valid = valid && (p - e) % 4 == 0 && p - q < 4;
-    if (pf_invalid) *pf_invalid = !valid;
+    *pf_invalid = !valid;
 
     return ret;
 }
@@ -175,9 +175,7 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 {
     if (!ValidAsCString(str)) {
-        if (pf_invalid) {
-            *pf_invalid = true;
-        }
+        *pf_invalid = true;
         return {};
     }
     std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
@@ -245,7 +243,7 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
         ++p;
     }
     valid = valid && (p - e) % 8 == 0 && p - q < 8;
-    if (pf_invalid) *pf_invalid = !valid;
+    *pf_invalid = !valid;
 
     return ret;
 }
@@ -253,9 +251,7 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
     if (!ValidAsCString(str)) {
-        if (pf_invalid) {
-            *pf_invalid = true;
-        }
+        *pf_invalid = true;
         return {};
     }
     std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
