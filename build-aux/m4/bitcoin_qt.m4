@@ -313,12 +313,12 @@ AC_DEFUN([_BITCOIN_QT_IS_STATIC],[
 
 dnl Internal. Check if the link-requirements for a static plugin are met.
 dnl
-dnl _BITCOIN_QT_CHECK_STATIC_PLUGIN(PLUGIN, LIBRARIES)
-dnl --------------------------------------------------
+dnl _BITCOIN_QT_CHECK_STATIC_PLUGIN(PLUGIN_NAME, PLUGIN_LIBRARY)
+dnl ------------------------------------------------------------
 dnl
 dnl Requires: INCLUDES and LIBS must be populated as necessary.
 dnl Inputs: $1: A static plugin name.
-dnl Inputs: $2: The libraries that resolve $1.
+dnl Inputs: $2: The library that resolves $1.
 dnl Output: QT_LIBS is prepended or configure exits.
 AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_PLUGIN], [
   AC_MSG_CHECKING([for $1 ($2)])
@@ -329,7 +329,7 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_PLUGIN], [
       Q_IMPORT_PLUGIN($1)
     ]])],
     [AC_MSG_RESULT([yes]); QT_LIBS="$2${qt_lib_suffix} $QT_LIBS"],
-    [AC_MSG_RESULT([no]); BITCOIN_QT_FAIL([$1 not found.])])
+    [AC_MSG_RESULT([no]); BITCOIN_QT_FAIL([$1 not found])])
   LIBS="$CHECK_STATIC_PLUGINS_TEMP_LIBS"
 ])
 
