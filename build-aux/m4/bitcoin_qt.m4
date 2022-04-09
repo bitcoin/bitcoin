@@ -106,6 +106,54 @@ dnl Outputs: bitcoin_enable_qt, bitcoin_enable_qt_dbus, bitcoin_enable_qt_test
 AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   qt_version=">= $1"
   qt_lib_prefix="Qt5"
+
+  if test "$use_hardening" != "no"; then
+    BITCOIN_QT_CHECK([
+    AC_MSG_CHECKING([whether -fPIE can be used with this Qt config])
+    TEMP_CPPFLAGS=$CPPFLAGS
+    TEMP_CXXFLAGS=$CXXFLAGS
+    CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
+    CXXFLAGS="$PIE_FLAGS $CORE_CXXFLAGS $CXXFLAGS"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <QtCore/qconfig.h>
+        #ifndef QT_VERSION
+        #  include <QtCore/qglobal.h>
+        #endif
+      ]],
+      [[
+        #if defined(QT_REDUCE_RELOCATIONS)
+        choke
+        #endif
+      ]])],
+      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIE_FLAGS ],
+      [ AC_MSG_RESULT([no]); QT_PIE_FLAGS=$PIC_FLAGS]
+    )
+    CPPFLAGS=$TEMP_CPPFLAGS
+    CXXFLAGS=$TEMP_CXXFLAGS
+    ])
+  else
+    BITCOIN_QT_CHECK([
+    AC_MSG_CHECKING([whether -fPIC is needed with this Qt config])
+    TEMP_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <QtCore/qconfig.h>
+        #ifndef QT_VERSION
+        #  include <QtCore/qglobal.h>
+        #endif
+      ]],
+      [[
+        #if defined(QT_REDUCE_RELOCATIONS)
+        choke
+        #endif
+      ]])],
+      [ AC_MSG_RESULT([no])],
+      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIC_FLAGS]
+    )
+    CPPFLAGS=$TEMP_CPPFLAGS
+    ])
+  fi
+
   BITCOIN_QT_CHECK([_BITCOIN_QT_FIND_LIBS])
 
   dnl This is ugly and complicated. Yuck. Works as follows:
@@ -171,53 +219,6 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
 
   if test "$qt_bin_path" = ""; then
     qt_bin_path="`$PKG_CONFIG --variable=host_bins ${qt_lib_prefix}Core 2>/dev/null`"
-  fi
-
-  if test "$use_hardening" != "no"; then
-    BITCOIN_QT_CHECK([
-    AC_MSG_CHECKING([whether -fPIE can be used with this Qt config])
-    TEMP_CPPFLAGS=$CPPFLAGS
-    TEMP_CXXFLAGS=$CXXFLAGS
-    CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
-    CXXFLAGS="$PIE_FLAGS $CORE_CXXFLAGS $CXXFLAGS"
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <QtCore/qconfig.h>
-        #ifndef QT_VERSION
-        #  include <QtCore/qglobal.h>
-        #endif
-      ]],
-      [[
-        #if defined(QT_REDUCE_RELOCATIONS)
-        choke
-        #endif
-      ]])],
-      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIE_FLAGS ],
-      [ AC_MSG_RESULT([no]); QT_PIE_FLAGS=$PIC_FLAGS]
-    )
-    CPPFLAGS=$TEMP_CPPFLAGS
-    CXXFLAGS=$TEMP_CXXFLAGS
-    ])
-  else
-    BITCOIN_QT_CHECK([
-    AC_MSG_CHECKING([whether -fPIC is needed with this Qt config])
-    TEMP_CPPFLAGS=$CPPFLAGS
-    CPPFLAGS="$QT_INCLUDES $CORE_CPPFLAGS $CPPFLAGS"
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <QtCore/qconfig.h>
-        #ifndef QT_VERSION
-        #  include <QtCore/qglobal.h>
-        #endif
-      ]],
-      [[
-        #if defined(QT_REDUCE_RELOCATIONS)
-        choke
-        #endif
-      ]])],
-      [ AC_MSG_RESULT([no])],
-      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIC_FLAGS]
-    )
-    CPPFLAGS=$TEMP_CPPFLAGS
-    ])
   fi
 
   BITCOIN_QT_PATH_PROGS([MOC], [moc-qt5 moc5 moc], $qt_bin_path)
