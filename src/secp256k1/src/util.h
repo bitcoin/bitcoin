@@ -173,31 +173,6 @@ static SECP256K1_INLINE void *checked_realloc(const secp256k1_callback* cb, void
 # define SECP256K1_GNUC_EXT
 #endif
 
-/* If SECP256K1_{LITTLE,BIG}_ENDIAN is not explicitly provided, infer from various other system macros. */
-#if !defined(SECP256K1_LITTLE_ENDIAN) && !defined(SECP256K1_BIG_ENDIAN)
-/* Inspired by https://github.com/rofl0r/endianness.h/blob/9853923246b065a3b52d2c43835f3819a62c7199/endianness.h#L52L73 */
-# if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || \
-     defined(_X86_) || defined(__x86_64__) || defined(__i386__) || \
-     defined(__i486__) || defined(__i586__) || defined(__i686__) || \
-     defined(__MIPSEL) || defined(_MIPSEL) || defined(MIPSEL) || \
-     defined(__ARMEL__) || defined(__AARCH64EL__) || \
-     (defined(__LITTLE_ENDIAN__) && __LITTLE_ENDIAN__ == 1) || \
-     (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN == 1) || \
-     defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM) /* MSVC */
-#  define SECP256K1_LITTLE_ENDIAN
-# endif
-# if (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || \
-     defined(__MIPSEB) || defined(_MIPSEB) || defined(MIPSEB) || \
-     defined(__MICROBLAZEEB__) || defined(__ARMEB__) || defined(__AARCH64EB__) || \
-     (defined(__BIG_ENDIAN__) && __BIG_ENDIAN__ == 1) || \
-     (defined(_BIG_ENDIAN) && _BIG_ENDIAN == 1)
-#  define SECP256K1_BIG_ENDIAN
-# endif
-#endif
-#if defined(SECP256K1_LITTLE_ENDIAN) == defined(SECP256K1_BIG_ENDIAN)
-# error Please make sure that either SECP256K1_LITTLE_ENDIAN or SECP256K1_BIG_ENDIAN is set, see src/util.h.
-#endif
-
 /* Zero memory if flag == 1. Flag must be 0 or 1. Constant time. */
 static SECP256K1_INLINE void secp256k1_memczero(void *s, size_t len, int flag) {
     unsigned char *p = (unsigned char *)s;
@@ -336,6 +311,22 @@ static SECP256K1_INLINE int secp256k1_ctz64_var(uint64_t x) {
     /* If no suitable CTZ builtin is available, use a (variable time) software emulation. */
     return secp256k1_ctz64_var_debruijn(x);
 #endif
+}
+
+/* Read a uint32_t in big endian */
+SECP256K1_INLINE static uint32_t secp256k1_read_be32(const unsigned char* p) {
+    return (uint32_t)p[0] << 24 |
+           (uint32_t)p[1] << 16 |
+           (uint32_t)p[2] << 8  |
+           (uint32_t)p[3];
+}
+
+/* Write a uint32_t in big endian */
+SECP256K1_INLINE static void secp256k1_write_be32(unsigned char* p, uint32_t x) {
+    p[3] = x;
+    p[2] = x >>  8;
+    p[1] = x >> 16;
+    p[0] = x >> 24;
 }
 
 #endif /* SECP256K1_UTIL_H */

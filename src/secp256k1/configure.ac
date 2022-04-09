@@ -1,30 +1,47 @@
 AC_PREREQ([2.60])
-AC_INIT([libsecp256k1],[0.1])
+
+# The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
+# the API. All changes in experimental modules are treated as
+# backwards-compatible and therefore at most increase the minor version.
+define(_PKG_VERSION_MAJOR, 0)
+define(_PKG_VERSION_MINOR, 1)
+define(_PKG_VERSION_BUILD, 0)
+define(_PKG_VERSION_IS_RELEASE, false)
+
+# The library version is based on libtool versioning of the ABI. The set of
+# rules for updating the version can be found here:
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# All changes in experimental modules are treated as if they don't affect the
+# interface and therefore only increase the revision.
+define(_LIB_VERSION_CURRENT, 0)
+define(_LIB_VERSION_REVISION, 0)
+define(_LIB_VERSION_AGE, 0)
+
+AC_INIT([libsecp256k1],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_BUILD)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-pre]),[https://github.com/bitcoin-core/secp256k1/issues],[libsecp256k1],[https://github.com/bitcoin-core/secp256k1])
+
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 AC_CANONICAL_HOST
 AH_TOP([#ifndef LIBSECP256K1_CONFIG_H])
 AH_TOP([#define LIBSECP256K1_CONFIG_H])
 AH_BOTTOM([#endif /*LIBSECP256K1_CONFIG_H*/])
-AM_INIT_AUTOMAKE([foreign subdir-objects])
 
-LT_INIT([win32-dll])
+# Require Automake 1.11.2 for AM_PROG_AR
+AM_INIT_AUTOMAKE([1.11.2 foreign subdir-objects])
 
 # Make the compilation flags quiet unless V=1 is used.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-PKG_PROG_PKG_CONFIG
-
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-
-AM_PROG_CC_C_O
-AC_PROG_CC_C89
+AC_PROG_CC
 if test x"$ac_cv_prog_cc_c89" = x"no"; then
   AC_MSG_ERROR([c89 compiler support required])
 fi
 AM_PROG_AS
+AM_PROG_AR
+
+LT_INIT([win32-dll])
+
+build_windows=no
 
 case $host_os in
   *darwin*)
@@ -48,6 +65,9 @@ case $host_os in
          fi
        fi
      fi
+   ;;
+   cygwin*|mingw*)
+     build_windows=yes
    ;;
 esac
 
@@ -91,55 +111,54 @@ SECP_TRY_APPEND_DEFAULT_CFLAGS(SECP_CFLAGS)
 ### Define config arguments
 ###
 
+# In dev mode, we enable all binaries and modules by default but individual options can still be overridden explicitly.
+# Check for dev mode first because SECP_SET_DEFAULT needs enable_dev_mode set.
+AC_ARG_ENABLE(dev_mode, [], [],
+    [enable_dev_mode=no])
+
 AC_ARG_ENABLE(benchmark,
-    AS_HELP_STRING([--enable-benchmark],[compile benchmark [default=yes]]),
-    [use_benchmark=$enableval],
-    [use_benchmark=yes])
+    AS_HELP_STRING([--enable-benchmark],[compile benchmark [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_benchmark], [yes], [yes])])
 
 AC_ARG_ENABLE(coverage,
-    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis [default=no]]),
-    [enable_coverage=$enableval],
-    [enable_coverage=no])
+    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_coverage], [no], [no])])
 
 AC_ARG_ENABLE(tests,
-    AS_HELP_STRING([--enable-tests],[compile tests [default=yes]]),
-    [use_tests=$enableval],
-    [use_tests=yes])
+    AS_HELP_STRING([--enable-tests],[compile tests [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_tests], [yes], [yes])])
 
 AC_ARG_ENABLE(experimental,
-    AS_HELP_STRING([--enable-experimental],[allow experimental configure options [default=no]]),
-    [use_experimental=$enableval],
-    [use_experimental=no])
+    AS_HELP_STRING([--enable-experimental],[allow experimental configure options [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_experimental], [no], [yes])])
 
 AC_ARG_ENABLE(exhaustive_tests,
-    AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests [default=yes]]),
-    [use_exhaustive_tests=$enableval],
-    [use_exhaustive_tests=yes])
+    AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_exhaustive_tests], [yes], [yes])])
+
+AC_ARG_ENABLE(examples,
+    AS_HELP_STRING([--enable-examples],[compile the examples [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_examples], [no], [yes])])
 
 AC_ARG_ENABLE(module_ecdh,
-    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation]),
-    [enable_module_ecdh=$enableval],
-    [enable_module_ecdh=no])
+    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_ecdh], [no], [yes])])
 
 AC_ARG_ENABLE(module_recovery,
-    AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module [default=no]]),
-    [enable_module_recovery=$enableval],
-    [enable_module_recovery=no])
+    AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_recovery], [no], [yes])])
 
 AC_ARG_ENABLE(module_extrakeys,
-    AS_HELP_STRING([--enable-module-extrakeys],[enable extrakeys module (experimental)]),
-    [enable_module_extrakeys=$enableval],
-    [enable_module_extrakeys=no])
+    AS_HELP_STRING([--enable-module-extrakeys],[enable extrakeys module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_extrakeys], [no], [yes])])
 
 AC_ARG_ENABLE(module_schnorrsig,
-    AS_HELP_STRING([--enable-module-schnorrsig],[enable schnorrsig module (experimental)]),
-    [enable_module_schnorrsig=$enableval],
-    [enable_module_schnorrsig=no])
+    AS_HELP_STRING([--enable-module-schnorrsig],[enable schnorrsig module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_schnorrsig], [no], [yes])])
 
 AC_ARG_ENABLE(external_default_callbacks,
-    AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]),
-    [use_external_default_callbacks=$enableval],
-    [use_external_default_callbacks=no])
+    AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_external_default_callbacks], [no], [no])])
 
 # Test-only override of the (autodetected by the C code) "widemul" setting.
 # Legal values are int64 (for [u]int64_t), int128 (for [unsigned] __int128), and auto (the default).
@@ -152,7 +171,7 @@ AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE|auto],
 [window size for ecmult precomputation for verification, specified as integer in range [2..24].]
 [Larger values result in possibly better performance at the cost of an exponentially larger precomputed table.]
 [The table will store 2^(SIZE-1) * 64 bytes of data but can be larger in memory due to platform-specific padding and alignment.]
-[A window size larger than 15 will require you delete the prebuilt ecmult_static_pre_g.h file so that it can be rebuilt.]
+[A window size larger than 15 will require you delete the prebuilt precomputed_ecmult.c file so that it can be rebuilt.]
 [For very large window sizes, use "make -j 1" to reduce memory use during compilation.]
 ["auto" is a reasonable setting for desktop machines (currently 15). [default=auto]]
 )],
@@ -229,14 +248,14 @@ else
 fi
 
 # Select assembly optimization
-use_external_asm=no
+enable_external_asm=no
 
 case $set_asm in
 x86_64)
   AC_DEFINE(USE_ASM_X86_64, 1, [Define this symbol to enable x86_64 assembly optimizations])
   ;;
 arm)
-  use_external_asm=yes
+  enable_external_asm=yes
   ;;
 no)
   ;;
@@ -245,7 +264,7 @@ no)
   ;;
 esac
 
-if test x"$use_external_asm" = x"yes"; then
+if test x"$enable_external_asm" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_ASM, 1, [Define this symbol if an external (non-inline) assembly implementation is used])
 fi
 
@@ -333,7 +352,7 @@ if test x"$enable_module_extrakeys" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_EXTRAKEYS, 1, [Define this symbol to enable the extrakeys module])
 fi
 
-if test x"$use_external_default_callbacks" = x"yes"; then
+if test x"$enable_external_default_callbacks" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_DEFAULT_CALLBACKS, 1, [Define this symbol if an external implementation of the default callbacks is used])
 fi
 
@@ -345,16 +364,8 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
   AC_MSG_NOTICE([WARNING: experimental build])
   AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
-  AC_MSG_NOTICE([Building extrakeys module: $enable_module_extrakeys])
-  AC_MSG_NOTICE([Building schnorrsig module: $enable_module_schnorrsig])
   AC_MSG_NOTICE([******])
 else
-  if test x"$enable_module_extrakeys" = x"yes"; then
-    AC_MSG_ERROR([extrakeys module is experimental. Use --enable-experimental to allow.])
-  fi
-  if test x"$enable_module_schnorrsig" = x"yes"; then
-    AC_MSG_ERROR([schnorrsig module is experimental. Use --enable-experimental to allow.])
-  fi
   if test x"$set_asm" = x"arm"; then
     AC_MSG_ERROR([ARM assembly optimization is experimental. Use --enable-experimental to allow.])
   fi
@@ -372,29 +383,30 @@ AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
 AC_SUBST(SECP_CFLAGS)
 AM_CONDITIONAL([ENABLE_COVERAGE], [test x"$enable_coverage" = x"yes"])
-AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
-AM_CONDITIONAL([USE_EXHAUSTIVE_TESTS], [test x"$use_exhaustive_tests" != x"no"])
-AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
+AM_CONDITIONAL([USE_TESTS], [test x"$enable_tests" != x"no"])
+AM_CONDITIONAL([USE_EXHAUSTIVE_TESTS], [test x"$enable_exhaustive_tests" != x"no"])
+AM_CONDITIONAL([USE_EXAMPLES], [test x"$enable_examples" != x"no"])
+AM_CONDITIONAL([USE_BENCHMARK], [test x"$enable_benchmark" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_EXTRAKEYS], [test x"$enable_module_extrakeys" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
-AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$use_external_asm" = x"yes"])
+AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$enable_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm"])
-
-# Make sure nothing new is exported so that we don't break the cache.
-PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
-unset PKG_CONFIG_PATH
-PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
+AM_CONDITIONAL([BUILD_WINDOWS], [test "$build_windows" = "yes"])
+AC_SUBST(LIB_VERSION_CURRENT, _LIB_VERSION_CURRENT)
+AC_SUBST(LIB_VERSION_REVISION, _LIB_VERSION_REVISION)
+AC_SUBST(LIB_VERSION_AGE, _LIB_VERSION_AGE)
 
 AC_OUTPUT
 
 echo
 echo "Build Options:"
-echo "  with external callbacks = $use_external_default_callbacks"
-echo "  with benchmarks         = $use_benchmark"
-echo "  with tests              = $use_tests"
+echo "  with external callbacks = $enable_external_default_callbacks"
+echo "  with benchmarks         = $enable_benchmark"
+echo "  with tests              = $enable_tests"
 echo "  with coverage           = $enable_coverage"
+echo "  with examples           = $enable_examples"
 echo "  module ecdh             = $enable_module_ecdh"
 echo "  module recovery         = $enable_module_recovery"
 echo "  module extrakeys        = $enable_module_extrakeys"

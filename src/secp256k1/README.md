@@ -17,9 +17,7 @@ Features:
 * Suitable for embedded systems.
 * Optional module for public key recovery.
 * Optional module for ECDH key exchange.
-* Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) (experimental).
-
-Experimental features have not received enough scrutiny to satisfy the standard of quality of this library but are made available for testing and review by the community. The APIs of these features should not be considered stable.
+* Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki).
 
 Implementation details
 ----------------------
@@ -35,6 +33,7 @@ Implementation details
   * Optimized implementation of arithmetic modulo the curve's field size (2^256 - 0x1000003D1).
     * Using 5 52-bit limbs (including hand-optimized assembly for x86_64, by Diederik Huys).
     * Using 10 26-bit limbs (including hand-optimized assembly for 32-bit ARM, by Wladimir J. van der Laan).
+      * This is an experimental feature that has not received enough scrutiny to satisfy the standard of quality of this library but is made available for testing and review by the community.
 * Scalar operations
   * Optimized implementation without data-dependent branches of arithmetic modulo the curve's order.
     * Using 4 64-bit limbs (relying on __int128 support in the compiler).
@@ -68,6 +67,16 @@ libsecp256k1 is built using autotools:
     $ make
     $ make check  # run the test suite
     $ sudo make install  # optional
+
+To compile optional modules (such as Schnorr signatures), you need to run `./configure` with additional flags (such as `--enable-module-schnorrsig`). Run `./configure --help` to see the full list of available flags.
+
+Usage examples
+-----------
+  Usage examples can be found in the [examples](examples) directory. To compile them you need to configure with `--enable-examples`.
+  * [ECDSA example](examples/ecdsa.c)
+  * [Schnorr signatures example](examples/schnorr.c)
+  * [Deriving a shared secret (ECDH) example](examples/ecdh.c)
+  To compile the Schnorr signature and ECDH examples, you also need to configure with `--enable-module-schnorrsig` and `--enable-module-ecdh`.
 
 Test coverage
 -----------
