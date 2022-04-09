@@ -37,6 +37,7 @@
 #include <txmempool.h>
 #include <undo.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -786,8 +787,7 @@ static RPCHelpMan pruneblockchain()
     }
 
     PruneBlockFilesManual(active_chainstate, height);
-    const CBlockIndex* block = active_chain.Tip();
-    CHECK_NONFATAL(block);
+    const CBlockIndex* block = CHECK_NONFATAL(active_chain.Tip());
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
         block = block->pprev;
     }
@@ -1201,8 +1201,7 @@ RPCHelpMan getblockchaininfo()
     LOCK(cs_main);
     CChainState& active_chainstate = chainman.ActiveChainstate();
 
-    const CBlockIndex* tip = active_chainstate.m_chain.Tip();
-    CHECK_NONFATAL(tip);
+    const CBlockIndex* tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
     const int height = tip->nHeight;
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain",                 Params().NetworkIDString());
@@ -1218,8 +1217,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned",                node::fPruneMode);
     if (node::fPruneMode) {
-        const CBlockIndex* block = tip;
-        CHECK_NONFATAL(block);
+        const CBlockIndex* block = CHECK_NONFATAL(tip);
         while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
             block = block->pprev;
         }
@@ -1310,8 +1308,7 @@ static RPCHelpMan getdeploymentinfo()
 
             const CBlockIndex* blockindex;
             if (request.params[0].isNull()) {
-                blockindex = active_chainstate.m_chain.Tip();
-                CHECK_NONFATAL(blockindex);
+                blockindex = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
             } else {
                 const uint256 hash(ParseHashV(request.params[0], "blockhash"));
                 blockindex = chainman.m_blockman.LookupBlockIndex(hash);
@@ -2132,10 +2129,8 @@ static RPCHelpMan scantxoutset()
             LOCK(cs_main);
             CChainState& active_chainstate = chainman.ActiveChainstate();
             active_chainstate.ForceFlushStateToDisk();
-            pcursor = active_chainstate.CoinsDB().Cursor();
-            CHECK_NONFATAL(pcursor);
-            tip = active_chainstate.m_chain.Tip();
-            CHECK_NONFATAL(tip);
+            pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
+            tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
         bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);
         result.pushKV("success", res);
@@ -2337,8 +2332,7 @@ UniValue CreateUTXOSnapshot(
         }
 
         pcursor = chainstate.CoinsDB().Cursor();
-        tip = chainstate.m_blockman.LookupBlockIndex(stats.hashBlock);
-        CHECK_NONFATAL(tip);
+        tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(stats.hashBlock));
     }
 
     LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
