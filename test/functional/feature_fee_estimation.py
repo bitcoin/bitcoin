@@ -3,24 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
+from copy import deepcopy
 from decimal import Decimal
 import random
 
 from test_framework.messages import (
     COIN,
-    COutPoint,
-    CTransaction,
-    CTxIn,
-    CTxOut,
-)
-from test_framework.script import (
-    CScript,
-    OP_1,
-    OP_DROP,
-    OP_TRUE,
-)
-from test_framework.script_util import (
-    script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -30,22 +18,14 @@ from test_framework.util import (
     assert_raises_rpc_error,
     satoshi_round,
 )
-
-# Construct 2 trivial P2SH's and the ScriptSigs that spend them
-# So we can create many transactions without needing to spend
-# time signing.
-SCRIPT = CScript([OP_1, OP_DROP])
-P2SH = script_to_p2sh_script(SCRIPT)
-REDEEM_SCRIPT = CScript([OP_TRUE, SCRIPT])
+from test_framework.wallet import MiniWallet
 
 
 def small_txpuzzle_randfee(
-    from_node, conflist, unconflist, amount, min_fee, fee_increment
+    wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment
 ):
-    """Create and send a transaction with a random fee.
+    """Create and send a transaction with a random fee using MiniWallet.
 
-    The transaction pays to a trivial P2SH script, and assumes that its inputs
-    are of the same form.
     The function takes a list of confirmed outputs and unconfirmed outputs
     and attempts to use the confirmed list first for its inputs.
     It adds the newly created outputs to the unconfirmed list.
@@ -57,23 +37,28 @@ def small_txpuzzle_randfee(
     rand_fee = float(fee_increment) * (1.1892 ** random.randint(0, 28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
     fee = min_fee - fee_increment + satoshi_round(rand_fee)
-    tx = CTransaction()
+    utxos_to_spend = []
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
         t = conflist.pop(0)
-        total_in += t["amount"]
-        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), REDEEM_SCRIPT))
+        total_in += t["value"]
+        utxos_to_spend.append(t)
     while total_in <= (amount + fee) and len(unconflist) > 0:
         t = unconflist.pop(0)
-        total_in += t["amount"]
-        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), REDEEM_SCRIPT))
+        total_in += t["value"]
+        utxos_to_spend.append(t)
     if total_in <= amount + fee:
         raise RuntimeError(f"Insufficient funds: need {amount + fee}, have {total_in}")
-    tx.vout.append(CTxOut(int((total_in - amount - fee) * COIN), P2SH))
-    tx.vout.append(CTxOut(int(amount * COIN), P2SH))
+    tx = wallet.create_self_transfer_multi(
+        utxos_to_spend=utxos_to_spend,
+        fee_per_output=0)["tx"]
+    tx.vout[0].nValue = int((total_in - amount - fee) * COIN)
+    tx.vout.append(deepcopy(tx.vout[0]))
+    tx.vout[1].nValue = int(amount * COIN)
+
     txid = from_node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
-    unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
-    unconflist.append({"txid": txid, "vout": 1, "amount": amount})
+    unconflist.append({"txid": txid, "vout": 0, "value": total_in - amount - fee})
+    unconflist.append({"txid": txid, "vout": 1, "value": amount})
 
     return (tx.serialize().hex(), fee)
 
@@ -138,9 +123,6 @@ class EstimateFeeTest(BitcoinTestFramework):
             ["-whitelist=noban@127.0.0.1", "-blockmaxsize=8000"]
         ]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def setup_network(self):
         """
         We'll setup the network to have 3 nodes that all mine with different parameters.
@@ -154,9 +136,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         # (17k is room enough for 110 or so transactions)
         # Node2 is a stingy miner, that
         # produces too small blocks (room for only 55 or so transactions)
-        self.start_nodes()
-        self.import_deterministic_coinbase_privkeys()
-        self.stop_nodes()
 
     def transact_and_mine(self, numblocks, mining_node):
         min_fee = Decimal("0.0001")
@@ -169,6 +148,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             for _ in range(random.randrange(100 - 50, 100 + 50)):
                 from_index = random.randint(1, 2)
                 (txhex, fee) = small_txpuzzle_randfee(
+                    self.wallet,
                     self.nodes[from_index],
                     self.confutxo,
                     self.memutxo,
@@ -191,28 +171,10 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def initial_split(self, node):
         """Split two coinbase UTxOs into many small coins"""
-        utxo_count = 2048
-        self.confutxo = []
-        splitted_amount = Decimal("0.04")
-        fee = Decimal("0.0007")
-        # Calculate change from UTXOs instead of relying on hardcoded amounts
-        coinbase_utxos = node.listunspent()[:2]
-        total_input = sum(Decimal(str(cb["amount"])) for cb in coinbase_utxos)
-        change = total_input - splitted_amount * utxo_count - fee
-
-        tx = CTransaction()
-        tx.vin = [
-            CTxIn(COutPoint(int(cb["txid"], 16), cb["vout"]))
-            for cb in coinbase_utxos
-        ]
-        tx.vout = [CTxOut(int(splitted_amount * COIN), P2SH) for _ in range(utxo_count)]
-        tx.vout.append(CTxOut(int(change * COIN), P2SH))
-        txhex = node.signrawtransactionwithwallet(tx.serialize().hex())["hex"]
-        txid = node.sendrawtransaction(txhex)
-        self.confutxo = [
-            {"txid": txid, "vout": i, "amount": splitted_amount}
-            for i in range(utxo_count)
-        ]
+        self.confutxo = self.wallet.send_self_transfer_multi(
+            from_node=node,
+            utxos_to_spend=[self.wallet.get_utxo() for _ in range(2)],
+            num_outputs=2048)['new_utxos']
         while len(node.getrawmempool()) > 0:
             self.generate(node, 1, sync_fun=self.no_op)
 
@@ -250,7 +212,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         high_val = 3 * self.nodes[1].estimatesmartfee(1)["feerate"]
         self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}"])
         check_estimates(self.nodes[1], self.fees_per_kb)
-        self.stop_node(1, expected_stderr="Warning: -minrelaytxfee is set very high! The wallet will avoid paying less than the minimum relay fee.")
+        self.stop_node(1)
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
@@ -258,6 +220,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Split two coinbases into many small utxos
         self.start_node(0)
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
         self.initial_split(self.nodes[0])
         self.log.info("Finished splitting")
 
