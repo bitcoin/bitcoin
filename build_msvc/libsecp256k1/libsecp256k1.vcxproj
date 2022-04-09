@@ -8,6 +8,8 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\secp256k1\src\precomputed_ecmult.c" />
+    <ClCompile Include="..\..\src\secp256k1\src\precomputed_ecmult_gen.c" />
     <ClCompile Include="..\..\src\secp256k1\src\secp256k1.c" />
   </ItemGroup>
   <ItemDefinitionGroup>
