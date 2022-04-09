@@ -22,7 +22,9 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
         BOOST_CHECK_EQUAL(strEnc, vstrOut[i]);
         strEnc = EncodeBase32(vstrIn[i], false);
         BOOST_CHECK_EQUAL(strEnc, vstrOutNoPadding[i]);
-        std::string strDec = DecodeBase32(vstrOut[i]);
+        bool invalid;
+        std::string strDec = DecodeBase32(vstrOut[i], &invalid);
+        BOOST_CHECK(!invalid);
         BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
     }
 
