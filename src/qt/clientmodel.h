@@ -120,9 +120,6 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
-
-public Q_SLOTS:
-    void updateBanlist();
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H
