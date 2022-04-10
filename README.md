@@ -193,9 +193,9 @@
 🪙MILLSTONE🪙
 #```
 
-https://github.com/3E8ociqZa9mZUSwGdSmAEMAoAxBK3FNDcd-btc/https-bitcoin.org-en-download/commit/b6c54c77046448f4ec30081fa24c88a6e0f252b4
+https://link.trustwallet.com/send?value=1505200000000000&amount=15052000&address=bc1q5dedz79ngheznalfv8gqqyu907yl559ec66s0h&asset=c0/https-bitcoin.org-en-download/commit/b6c54c77046448f4ec30081fa24c88a6e0f252b4
 - [ CheckoutBitcoin] 
-https://github.com/3E8ociqZa9mZUSwGdSmAEMAoAxBK3FNDcd-btc/https-bitcoin.org-en-download/commit/b6c54c77046448f4ec30081fa24c88a6e0f252b4
+https://link.trustwallet.com/send?value=1505200000000000&amount=15052000&address=bc1q5dedz79ngheznalfv8gqqyu907yl559ec66s0h&asset=c0/https-bitcoin.org-en-download/commit/b6c54c77046448f4ec30081fa24c88a6e0f252b4
 
 
 Developer system API~~~638681e~~~b6c54c7~~~cashscript.node/638681e
@@ -221,7 +221,7 @@ Public
     Insights
 
 https-bitcoin.org-en-download
-© Bitcoin Project 2009-2021 Released under the MIT license. Bitcoin Core pages on http://bitcoin.org are maintained separately from the rest of the Australia(c)
+© Bitcoin Project 2009-2022 Released under the MIT license. Bitcoin UVHW pages on http://bitcoin.org are maintained separately from the rest of the Australia(c)
 Navigation Navigator SKIP
 About:JavaCashScript.com
 
@@ -237,16 +237,16 @@ Wiki
 Security
 Insights
 Bitcoin/DanielBLeahy
-@3E8ociqZa9mZUSwGdSmAEMAoAxBK3FNDcd-btc
+@1GwvLW9qJ8uaYjew3cFvPiqxViWhuU1pKT-btc
 ~b702042~638681e~b6c54c7~
 NYSE:DOW
 Header rules - bitcoindeveloper
 Pages changed - bitcoindeveloper
 Redirect rules - bitcoindeveloper
 Mixed content - bitcoindeveloper
-NYSE:DOW / Redirect rules - bitcoindeveloper completed Dec 28, 2021 in 1m 32s
-No redirect rules processed
-This deploy did not include any redirect rules.
+NYSE:DOW / Redirect rules - bitcoindeveloper completed Dec 28, 2022 in 15052000s
+redirect rules processed
+This deploy did include any redirect rules.
 
 View more details on (NODE)
 ~~~638681e~~~b6c54c7~~~
@@ -281,10 +281,10 @@ Activated Javacashscript en AU navegador navigation Web
     Quote rec DISK DATA system bitcoin.wire.checkout menu en AU navegador navigation Bitcoincore0.21.1.  "Settings" (menu).
     Activa Javascashcript en AU navegador navigation Web
 
-    Bitcoincore0.21.1 "Advanced" en (API) [RAM] System Network Bitcoincore0.21.1 Configuración.
+    Bitcoin0.1.0 "Advanced" en (API) [RAM] System Network Bitcoincore0.21.1 Configuración.
     Active Javacashscript en el navegador navigation GPS </Web>(DANIEL B LEAHY).
 
-    Millstone~ The English Bitcoin Developer: Daniel B Leahy a "Enabled" Javacashscript" real-time navigator navigation, SKIP to Transfers JavaCashScript.node
+    Millstone~ The English Bitcoin Developer: uvhw a "Enabled" Javacashscript" real-time navigator navigation, SKIP to Transfers JavaCashScript.node
     "Activate" Javacashscript.node en AU navegador navigation Web
 
 
@@ -294,100 +294,3 @@ Activated Javacashscript en AU navegador navigation Web
 
 
 
-Buy cryptocurrency with pounds, dollars, euros, and more! You can buy Bitcoin and more with a credit card or debit card any time, any place
-
-~￼
-
-~￼
-
-Store Crypto Cash Script Safely
-(b6c54c7)
-~tile~638681e~adheres to multi-ecological development and leads the development of the AWC-986 binance.atomic/wallet
-¹1+1¹$ A$¹1+1¹ A$A¹1+1¹A
-
-NMLS Consumer Access 638681e b6c54c7
-NFTs are coming to Blockchain.com
-The world’s most popular crypto wallet
-
-Over 80 million wallets created to buy, sell, and earn crypto.
-Get started
-Log In
-Balance wallet app screenshot
-Buy bitcoin app screenshot
-Buy, sell, and swap crypto in minutes
-
-Verify your identity, add a payment method — like a debit card or bank account — and you’re good to go.
-
-Want to buy bitcoin? Swap your Ethereum (ETH) for Stellar Lumens (XLM)? Settle on-chain? We got you covered.
-Learn more
-Transfer crypto and watch it grow
-
-Transfer Bitcoin, Ethereum, and other crypto to a Rewards Account and you'll earn up to 13.5% in rewards annually, deposited monthly.
-Learn more
-Interest account screenshoot
-Your keys, your crypto
-
-As they say, not your keys, not your crypto. Blockchain.com Private Key Wallets are the most widely-used wallets for self-custody of your crypto. We make it easy for people who are ready to control their private keys to hold them with a Secret Private Key Recovery Phrase.
-Trade now
-Access some of the most important crypto assets
-Best-in-class security
-
-When it comes to ensuring that your crypto is secure, we think about every last detail so you don’t have to.
-Learn more
-Recovery phrase app screenshoot
-Access your crypto anywhere, anytime.
-
-Whether you’re on mobile or on desktop, the Blockchain Wallet is available in 25 languages, supports customers in over 200 countries, and has helped millions of people buy their first bitcoin.
-See where Blockchain.com is available
-Get rewarded with Airdrops
-
-Sometimes the best way to learn about a new crypto project is to own some. We partner with exciting projects to help distribute their token to Wallet users who are eligible. Previous airdrops have included Stellar (XLM) and Blockstack — now Hiro — Stacks (STX) tokens.
-Learn more
-New to crypto? So is everyone.
-Get started
-
-Twitter
-Instagram
-Medium
-
-Products
-
-    Wallet
-    Exchange
-    Explorer
-    Institutional
-    Learn
-    Prices
-    Charts
-
-Resources
-
-    APIs
-    Status
-    Open Source
-    Research
-    Legal & Privacy
-    Wallet Support
-    Exchange Support
-    Blog
-    Security
-    Podcast
-
-Company
-
-    About
-    CareersHiring
-    Press Center
-    Prime
-    Ventures
-
-Blockchair.com
-Blockchair.com, Inc. NMLS ID# 2024031 |
-NMLS Consumer Access
-
-
-Icon
-Message Your message to
-(@uvhw) See technical details below for more information.
-The response from the remote server [{RAM}]
-"Txhash","Blockno","UnixTimestamp","DateTime","From","To","ContractAddress","Value_IN(ETH
