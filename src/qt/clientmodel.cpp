@@ -21,7 +21,6 @@
 #include <validation.h>
 
 #include <stdint.h>
-#include <functional>
 
 #include <QDebug>
 #include <QMetaObject>
@@ -216,33 +215,26 @@ QString ClientModel::blocksDir() const
     return GUIUtil::PathToQString(gArgs.GetBlocksDirPath());
 }
 
-// Handlers for core signals
-static void BlockTipChanged(ClientModel* clientmodel, SynchronizationState sync_state, interfaces::BlockTip tip, double verificationProgress, bool fHeader)
+void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header)
 {
-    if (fHeader) {
+    if (header) {
         // cache best headers time and height to reduce future cs_main locks
-        clientmodel->cachedBestHeaderHeight = tip.block_height;
-        clientmodel->cachedBestHeaderTime = tip.block_time;
+        cachedBestHeaderHeight = tip.block_height;
+        cachedBestHeaderTime = tip.block_time;
     } else {
-        clientmodel->m_cached_num_blocks = tip.block_height;
-        WITH_LOCK(clientmodel->m_cached_tip_mutex, clientmodel->m_cached_tip_blocks = tip.block_hash;);
+        m_cached_num_blocks = tip.block_height;
+        WITH_LOCK(m_cached_tip_mutex, m_cached_tip_blocks = tip.block_hash;);
     }
 
     // Throttle GUI notifications about (a) blocks during initial sync, and (b) both blocks and headers during reindex.
-    const bool throttle = (sync_state != SynchronizationState::POST_INIT && !fHeader) || sync_state == SynchronizationState::INIT_REINDEX;
+    const bool throttle = (sync_state != SynchronizationState::POST_INIT && !header) || sync_state == SynchronizationState::INIT_REINDEX;
     const int64_t now = throttle ? GetTimeMillis() : 0;
-    int64_t& nLastUpdateNotification = fHeader ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
+    int64_t& nLastUpdateNotification = header ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
     if (throttle && now < nLastUpdateNotification + count_milliseconds(MODEL_UPDATE_DELAY)) {
         return;
     }
 
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
-        Q_ARG(int, tip.block_height),
-        Q_ARG(QDateTime, QDateTime::fromSecsSinceEpoch(tip.block_time)),
-        Q_ARG(double, verificationProgress),
-        Q_ARG(bool, fHeader),
-        Q_ARG(SynchronizationState, sync_state));
-    assert(invoked);
+    Q_EMIT numBlocksChanged(tip.block_height, QDateTime::fromSecsSinceEpoch(tip.block_time), verification_progress, header, sync_state);
     nLastUpdateNotification = now;
 }
 
@@ -271,8 +263,14 @@ void ClientModel::subscribeToCoreSignals()
             qDebug() << "ClienModel: Requesting update for peer banlist";
             QMetaObject::invokeMethod(banTableModel, [this] { banTableModel->refresh(); });
         });
-    m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, false));
-    m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, true));
+    m_handler_notify_block_tip = m_node.handleNotifyBlockTip(
+        [this](SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress) {
+            TipChanged(sync_state, tip, verification_progress, /*header=*/false);
+        });
+    m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(
+        [this](SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress) {
+            TipChanged(sync_state, tip, verification_progress, /*header=*/true);
+        });
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
