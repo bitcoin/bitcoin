@@ -122,7 +122,6 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
-    void updateAlert();
     void updateBanlist();
 };
 
