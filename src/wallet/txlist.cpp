@@ -283,7 +283,7 @@ bool TxList::IsAllToMe(const CWalletTx& wtx)
         mw::Hash kernel_id;
         if (!output.IsMWEB() && output.GetScriptPubKey().IsMWEBPegin(&kernel_id)) {
             if (wtx.tx->HasMWEBTx() && wtx.tx->mweb_tx.GetKernelIDs().count(kernel_id) > 0) {
-                return false;
+                continue;
             }
         }
 
