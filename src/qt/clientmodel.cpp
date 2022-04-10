@@ -148,11 +148,6 @@ uint256 ClientModel::getBestBlockHash()
     return m_cached_tip_blocks;
 }
 
-void ClientModel::updateNumConnections(int numConnections)
-{
-    Q_EMIT numConnectionsChanged(numConnections);
-}
-
 void ClientModel::updateNetworkActive(bool networkActive)
 {
     Q_EMIT networkActiveChanged(networkActive);
@@ -236,14 +231,6 @@ void ClientModel::updateBanlist()
 }
 
 // Handlers for core signals
-static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
-{
-    // Too noisy: qDebug() << "NotifyNumConnectionsChanged: " + QString::number(newNumConnections);
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
-                              Q_ARG(int, newNumConnections));
-    assert(invoked);
-}
-
 static void NotifyNetworkActiveChanged(ClientModel *clientmodel, bool networkActive)
 {
     bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
@@ -301,7 +288,10 @@ void ClientModel::subscribeToCoreSignals()
         [this](const std::string& title, int progress, [[maybe_unused]] bool resume_possible) {
             Q_EMIT showProgress(QString::fromStdString(title), progress);
         });
-    m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(std::bind(NotifyNumConnectionsChanged, this, std::placeholders::_1));
+    m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(
+        [this](int new_num_connections) {
+            Q_EMIT numConnectionsChanged(new_num_connections);
+        });
     m_handler_notify_network_active_changed = m_node.handleNotifyNetworkActiveChanged(std::bind(NotifyNetworkActiveChanged, this, std::placeholders::_1));
     m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(std::bind(NotifyAlertChanged, this));
     m_handler_banned_list_changed = m_node.handleBannedListChanged(std::bind(BannedListChanged, this));
