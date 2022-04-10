@@ -35,7 +35,7 @@ class ASNParser:
                 rowData = re.split(r'\t+',row.rstrip())
                 if(len(rowData) != 5):
                     raise ValueError(f'Input file contains an error on line {idx}')
-                self.ipV46Validator(rowData[0])
+                print(self.ipV46Validator(rowData[0]))
     def ipV46Validator(self, ipaddressString):
         """Calculate the square root of a number.
         Args:
@@ -53,19 +53,31 @@ class ASNParser:
             ipAddress128bit = 0
             intIpAddress = []
             if '::' in ipaddressString:
-                pass
+                intIpAddress = [0]*8
+                fullIpV6Arr = ipaddressString.split('::')
+                if(len(fullIpV6Arr) == 2):#::prefix
+                    if not fullIpV6Arr[0]:
+                        pass
+                    else: #::suffix - most ASN start ranges will be in this format
+                        segments = fullIpV6Arr[0].split(':')
+                        if(len(segments) > 8):
+                            raise ValueError(f'IPV6 Contains too many segments: {ipaddressString}')
+                        for idx, segment in enumerate(segments): #Push segements as into the the defauled int ipv6 array
+                            intIpAddress[idx] = int(segment,16)
+                        for idx, segment in enumerate(intIpAddress): #Sum ipaddress into the int ipAddress
+                            ipAddress128bit += segment << 16*(7-idx)
+                        ipAddressInt = ipAddress128bit
+                else: #for ipv6 address with a split in the middle such as ffff:eeee:dddd::0:1, this format is not commonly used, raise a value error
+                    raise ValueError(f'IPV6 Address format of xxxx::yyyy not supported: {ipaddressString}')
             else:
                 fullIpV6Arr = ipaddressString.split(':')
                 if(len(fullIpV6Arr) == 8):
-                    for i in range(0,8):
-                        intVal = int(fullIpV6Arr[i],16)
+                    for idx in range(0,8):
+                        intVal = int(fullIpV6Arr[idx],16)
                         intIpAddress.append(intVal)
-                        ipAddress128bit += intVal << 16*(7-i)
+                        ipAddress128bit += intVal << 16*(7-idx)
                 else:
                     raise ValueError(f'IPV6 Address contains an incorrect number of segments: {ipaddressString}')
-                print(intIpAddress)
-                print(ipAddress128bit)
-                print(ipaddressString)
         else:
             version = 4
             asciiIPAddress = ipaddressString.split('.')
@@ -96,8 +108,12 @@ class ASNParser:
                     ipAddressInt = ipAddress32bit
                 else:
                     raise ValueError(f'Number of IPV4 segements does not equal 4:{ipaddressString}')
-        return(version,ipAddressArr,ipAddressInt)
-
+        if(version == None or ipAddressInt == None):
+            raise ValueError(f'IP address decoding failed: {ipAddressString}')
+        return {
+            'ver' : version,
+            'ip_int' : ipAddressInt
+        }
     def __del__(self):
         if(self.debug):
             print(f'Finished with {len(self.errors)} errors: {self.errors}')
