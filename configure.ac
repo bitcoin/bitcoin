@@ -361,7 +361,7 @@ case $host in
 esac
 
 if test "$enable_debug" = "yes"; then
-  dnl If debugging is enabled, and the user hasn't overriden CXXFLAGS, clear
+  dnl If debugging is enabled, and the user hasn't overridden CXXFLAGS, clear
   dnl them, to prevent autoconfs "-g -O2" being added. Otherwise we'd end up
   dnl with "-O0 -g3 -g -O2".
   if test "$CXXFLAGS_overridden" = "no"; then
@@ -857,7 +857,7 @@ if test "$use_lcov" = "yes"; then
     [AC_MSG_ERROR([lcov testing requested but --coverage linker flag does not work])])
   AX_CHECK_COMPILE_FLAG([--coverage],[CORE_CXXFLAGS="$CORE_CXXFLAGS --coverage"],
     [AC_MSG_ERROR([lcov testing requested but --coverage flag does not work])])
-  dnl If coverage is enabled, and the user hasn't overriden CXXFLAGS, clear
+  dnl If coverage is enabled, and the user hasn't overridden CXXFLAGS, clear
   dnl them, to prevent autoconfs "-g -O2" being added. Otherwise we'd end up
   dnl with "--coverage -Og -O0 -g -O2".
   if test "$CXXFLAGS_overridden" = "no"; then
@@ -1959,15 +1959,7 @@ LIBS_TEMP="$LIBS"
 unset LIBS
 LIBS="$LIBS_TEMP"
 
-PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
-unset PKG_CONFIG_PATH
-PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
-
-PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
-unset PKG_CONFIG_LIBDIR
-PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
-
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
