@@ -21,9 +21,8 @@ using miniscript::operator""_mst;
 struct Converter {
     typedef CPubKey Key;
 
-    bool ToString(const Key& key, std::string& ret) const {
-        ret = HexStr(key);
-        return true;
+    std::optional<std::string> ToString(const Key& key) const {
+        return HexStr(key);
     }
     const std::vector<unsigned char> ToPKBytes(const Key& key) const {
         return {key.begin(), key.end()};
@@ -34,20 +33,21 @@ struct Converter {
     }
 
     template<typename I>
-    bool FromString(I first, I last, Key& key) const {
+    std::optional<Key> FromString(I first, I last) const {
         const auto bytes = ParseHex(std::string(first, last));
-        key.Set(bytes.begin(), bytes.end());
-        return key.IsValid();
+        Key key{bytes.begin(), bytes.end()};
+        if (key.IsValid()) return key;
+        return {};
     }
     template<typename I>
-    bool FromPKBytes(I first, I last, CPubKey& key) const {
-        key.Set(first, last);
-        return key.IsValid();
+    std::optional<Key> FromPKBytes(I first, I last) const {
+        Key key{first, last};
+        if (key.IsValid()) return key;
+        return {};
     }
     template<typename I>
-    bool FromPKHBytes(I first, I last, CPubKey& key) const {
-        assert(last - first == 20);
-        return false;
+    std::optional<Key> FromPKHBytes(I first, I last) const {
+        return {};
     }
 };
 
@@ -63,8 +63,7 @@ FUZZ_TARGET(miniscript_decode)
     if (!ms) return;
 
     // We can roundtrip it to its string representation.
-    std::string ms_str;
-    assert(ms->ToString(CONVERTER, ms_str));
+    std::string ms_str = *ms->ToString(CONVERTER);
     assert(*miniscript::FromString(ms_str, CONVERTER) == *ms);
     // The Script representation must roundtrip since we parsed it this way the first time.
     const CScript ms_script = ms->ToScript(CONVERTER);

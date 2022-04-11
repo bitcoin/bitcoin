@@ -281,16 +281,15 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
     return 0;
 }
 
-bool DecomposeScript(const CScript& script, std::vector<std::pair<opcodetype, std::vector<unsigned char>>>& out)
+std::optional<std::vector<std::pair<opcodetype, std::vector<unsigned char>>>> DecomposeScript(const CScript& script)
 {
-    out.clear();
+    std::vector<std::pair<opcodetype, std::vector<unsigned char>>> out;
     CScript::const_iterator it = script.begin(), itend = script.end();
     while (it != itend) {
         std::vector<unsigned char> push_data;
         opcodetype opcode;
         if (!script.GetOp(it, opcode, push_data)) {
-            out.clear();
-            return false;
+            return {};
         } else if (opcode >= OP_1 && opcode <= OP_16) {
             // Deal with OP_n (GetOp does not turn them into pushes).
             push_data.assign(1, CScript::DecodeOP_N(opcode));
@@ -307,30 +306,28 @@ bool DecomposeScript(const CScript& script, std::vector<std::pair<opcodetype, st
             out.emplace_back(OP_EQUAL, std::vector<unsigned char>());
             opcode = OP_VERIFY;
         } else if (IsPushdataOp(opcode)) {
-            if (!CheckMinimalPush(push_data, opcode)) return false;
+            if (!CheckMinimalPush(push_data, opcode)) return {};
         } else if (it != itend && (opcode == OP_CHECKSIG || opcode == OP_CHECKMULTISIG || opcode == OP_EQUAL) && (*it == OP_VERIFY)) {
             // Rule out non minimal VERIFY sequences
-            return false;
+            return {};
         }
         out.emplace_back(opcode, std::move(push_data));
     }
     std::reverse(out.begin(), out.end());
-    return true;
+    return out;
 }
 
-bool ParseScriptNumber(const std::pair<opcodetype, std::vector<unsigned char>>& in, int64_t& k) {
+std::optional<int64_t> ParseScriptNumber(const std::pair<opcodetype, std::vector<unsigned char>>& in) {
     if (in.first == OP_0) {
-        k = 0;
-        return true;
+        return 0;
     }
     if (!in.second.empty()) {
-        if (IsPushdataOp(in.first) && !CheckMinimalPush(in.second, in.first)) return false;
+        if (IsPushdataOp(in.first) && !CheckMinimalPush(in.second, in.first)) return {};
         try {
-            k = CScriptNum(in.second, true).GetInt64();
-            return true;
+            return CScriptNum(in.second, true).GetInt64();
         } catch(const scriptnum_error&) {}
     }
-    return false;
+    return {};
 }
 
 int FindNextChar(Span<const char> sp, const char m)
