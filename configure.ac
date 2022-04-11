@@ -361,7 +361,9 @@ case $host in
 esac
 
 if test "$enable_debug" = "yes"; then
-  dnl Clear default -g -O2 flags
+  dnl If debugging is enabled, and the user hasn't overridden CXXFLAGS, clear
+  dnl them, to prevent autoconfs "-g -O2" being added. Otherwise we'd end up
+  dnl with "-O0 -g3 -g -O2".
   if test "$CXXFLAGS_overridden" = "no"; then
   CXXFLAGS=""
   fi
@@ -468,7 +470,7 @@ if test "$CXXFLAGS_overridden" = "no"; then
 fi
 
 dnl Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
-AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CXXFLAGS="$CXXFLAGS -fno-extended-identifiers"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fno-extended-identifiers"], [], [$CXXFLAG_WERROR])
 
 enable_sse42=no
 enable_sse41=no
@@ -617,7 +619,7 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 fi
 
-CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO"
+CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
@@ -699,7 +701,7 @@ case $host in
        AC_MSG_ERROR([windres not found])
      fi
 
-     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -DWIN32_LEAN_AND_MEAN"
+     CORE_CPPFLAGS="$CORE_CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -DWIN32_LEAN_AND_MEAN"
 
      dnl libtool insists upon adding -nostdlib and a list of objects/libs to link against.
      dnl That breaks our ability to build dll's with static libgcc/libstdc++/libssp. Override
@@ -710,7 +712,7 @@ case $host in
      postdeps_CXX=
 
      dnl We require Windows 7 (NT 6.1) or later
-     AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [LDFLAGS="$LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [$LDFLAG_WERROR])
+     AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [$LDFLAG_WERROR])
      ;;
   *darwin*)
      TARGET_OS=darwin
@@ -748,20 +750,20 @@ case $host in
              if test "$use_upnp" != "no" && $BREW list --versions miniupnpc >/dev/null; then
                miniupnpc_prefix=$($BREW --prefix miniupnpc 2>/dev/null)
                if test "$suppress_external_warnings" != "no"; then
-                 CPPFLAGS="$CPPFLAGS -isystem $miniupnpc_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $miniupnpc_prefix/include"
                else
-                 CPPFLAGS="$CPPFLAGS -I$miniupnpc_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -I$miniupnpc_prefix/include"
                fi
-               LDFLAGS="$LDFLAGS -L$miniupnpc_prefix/lib"
+               CORE_LDFLAGS="$CORE_LDFLAGS -L$miniupnpc_prefix/lib"
              fi
              if test "$use_natpmp" != "no" && $BREW list --versions libnatpmp >/dev/null; then
                libnatpmp_prefix=$($BREW --prefix libnatpmp 2>/dev/null)
                if test "$suppress_external_warnings" != "no"; then
-                 CPPFLAGS="$CPPFLAGS -isystem $libnatpmp_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $libnatpmp_prefix/include"
                else
-                 CPPFLAGS="$CPPFLAGS -I$libnatpmp_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -I$libnatpmp_prefix/include"
                fi
-               LDFLAGS="$LDFLAGS -L$libnatpmp_prefix/lib"
+               CORE_LDFLAGS="$CORE_LDFLAGS -L$libnatpmp_prefix/lib"
              fi
              ;;
          esac
@@ -787,8 +789,8 @@ case $host in
        esac
      fi
 
-     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
-     CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
+     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
+     CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
    *android*)
@@ -851,11 +853,17 @@ if test "$use_lcov" = "yes"; then
   AC_SUBST(COV_TOOL_WRAPPER, "cov_tool_wrapper.sh")
   LCOV="$LCOV --gcov-tool $(pwd)/$COV_TOOL_WRAPPER"
 
-  AX_CHECK_LINK_FLAG([--coverage], [LDFLAGS="$LDFLAGS --coverage"],
+  AX_CHECK_LINK_FLAG([--coverage], [CORE_LDFLAGS="$CORE_LDFLAGS --coverage"],
     [AC_MSG_ERROR([lcov testing requested but --coverage linker flag does not work])])
-  AX_CHECK_COMPILE_FLAG([--coverage],[CXXFLAGS="$CXXFLAGS --coverage"],
+  AX_CHECK_COMPILE_FLAG([--coverage],[CORE_CXXFLAGS="$CORE_CXXFLAGS --coverage"],
     [AC_MSG_ERROR([lcov testing requested but --coverage flag does not work])])
-  CXXFLAGS="$CXXFLAGS -Og"
+  dnl If coverage is enabled, and the user hasn't overridden CXXFLAGS, clear
+  dnl them, to prevent autoconfs "-g -O2" being added. Otherwise we'd end up
+  dnl with "--coverage -Og -O0 -g -O2".
+  if test "$CXXFLAGS_overridden" = "no"; then
+  CXXFLAGS=""
+  fi
+  CORE_CXXFLAGS="$CORE_CXXFLAGS -Og -O0"
 fi
 
 if test "$use_lcov_branch" != "no"; then
@@ -878,13 +886,13 @@ AC_FUNC_STRERROR_R
 if test "$ac_cv_sys_file_offset_bits" != "" &&
    test "$ac_cv_sys_file_offset_bits" != "no" &&
    test "$ac_cv_sys_file_offset_bits" != "unknown"; then
-  CPPFLAGS="$CPPFLAGS -D_FILE_OFFSET_BITS=$ac_cv_sys_file_offset_bits"
+  CORE_CPPFLAGS="$CORE_CPPFLAGS -D_FILE_OFFSET_BITS=$ac_cv_sys_file_offset_bits"
 fi
 
 if test "$ac_cv_sys_large_files" != "" &&
    test "$ac_cv_sys_large_files" != "no" &&
    test "$ac_cv_sys_large_files" != "unknown"; then
-  CPPFLAGS="$CPPFLAGS -D_LARGE_FILES=$ac_cv_sys_large_files"
+  CORE_CPPFLAGS="$CORE_CPPFLAGS -D_LARGE_FILES=$ac_cv_sys_large_files"
 fi
 
 AC_SEARCH_LIBS([clock_gettime],[rt])
@@ -968,8 +976,8 @@ dnl These flags are specific to ld64, and may cause issues with other linkers.
 dnl For example: GNU ld will interpret -dead_strip as -de and then try and use
 dnl "ad_strip" as the symbol for the entry point.
 if test "$TARGET_OS" = "darwin"; then
-  AX_CHECK_LINK_FLAG([-Wl,-dead_strip], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"], [], [$LDFLAG_WERROR])
-  AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [LDFLAGS="$LDFLAGS -Wl,-dead_strip_dylibs"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-dead_strip], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip_dylibs"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-bind_at_load], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"], [], [$LDFLAG_WERROR])
 fi
 
@@ -1297,7 +1305,7 @@ if test "$enable_fuzz" = "yes"; then
   AX_CHECK_LINK_FLAG(
     [-fsanitize=$use_sanitizers],
     [AC_MSG_RESULT([no])],
-    [AC_MSG_RESULT([yes]); CPPFLAGS="$CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"],
+    [AC_MSG_RESULT([yes]); CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"],
     [],
     [AC_LANG_PROGRAM([[
       #include <cstdint>
@@ -1321,7 +1329,7 @@ else
     QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
   fi
 
-  CPPFLAGS="$CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"
+  CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"
 fi
 
 if test "$enable_wallet" != "no"; then
@@ -1373,6 +1381,7 @@ if test "$use_usdt" != "no"; then
     [AC_MSG_RESULT([no]); use_usdt=no;]
   )
 fi
+AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
 
 if test "$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nonononononono"; then
   use_upnp=no
@@ -1513,7 +1522,7 @@ AM_CONDITIONAL([ENABLE_SYSCALL_SANDBOX], [test "$use_syscall_sandbox" != "no"])
 
 dnl Check for reduced exports
 if test "$use_reduce_exports" = "yes"; then
-  AX_CHECK_COMPILE_FLAG([-fvisibility=hidden], [CXXFLAGS="$CXXFLAGS -fvisibility=hidden"],
+  AX_CHECK_COMPILE_FLAG([-fvisibility=hidden], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fvisibility=hidden"],
   [AC_MSG_ERROR([Cannot set hidden symbol visibility. Use --disable-reduce-exports.])], [$CXXFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,--exclude-libs,ALL], [RELDFLAGS="-Wl,--exclude-libs,ALL"], [], [$LDFLAG_WERROR])
 fi
@@ -1528,9 +1537,9 @@ fi
 dnl libevent check
 
 if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" != "nonononono"; then
-  PKG_CHECK_MODULES([EVENT], [libevent >= 2.0.21], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.0.21 or greater not found.])])
+  PKG_CHECK_MODULES([EVENT], [libevent >= 2.1.8], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.1.8 or greater not found.])])
   if test "$TARGET_OS" != "windows"; then
-    PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.0.21],, [AC_MSG_ERROR([libevent_pthreads version 2.0.21 or greater not found.])])
+    PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.1.8], [], [AC_MSG_ERROR([libevent_pthreads version 2.1.8 or greater not found.])])
   fi
 
   if test "$suppress_external_warnings" != "no"; then
@@ -1874,6 +1883,9 @@ AC_SUBST(BITCOIN_MP_NODE_NAME)
 AC_SUBST(BITCOIN_MP_GUI_NAME)
 
 AC_SUBST(RELDFLAGS)
+AC_SUBST(CORE_LDFLAGS)
+AC_SUBST(CORE_CPPFLAGS)
+AC_SUBST(CORE_CXXFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
 AC_SUBST(WARN_CXXFLAGS)
 AC_SUBST(NOWARN_CXXFLAGS)
@@ -1926,6 +1938,7 @@ AC_CONFIG_LINKS([contrib/devtools/test-security-check.py:contrib/devtools/test-s
 AC_CONFIG_LINKS([contrib/devtools/test-symbol-check.py:contrib/devtools/test-symbol-check.py])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
 AC_CONFIG_LINKS([contrib/macdeploy/background.tiff:contrib/macdeploy/background.tiff])
+AC_CONFIG_LINKS([src/.clang-tidy:src/.clang-tidy])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/test_runner.py:test/util/test_runner.py])
@@ -1946,15 +1959,7 @@ LIBS_TEMP="$LIBS"
 unset LIBS
 LIBS="$LIBS_TEMP"
 
-PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
-unset PKG_CONFIG_PATH
-PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
-
-PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
-unset PKG_CONFIG_LIBDIR
-PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
-
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
@@ -2005,9 +2010,9 @@ echo "  build os        = $build_os"
 echo
 echo "  CC              = $CC"
 echo "  CFLAGS          = $PTHREAD_CFLAGS $CFLAGS"
-echo "  CPPFLAGS        = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CPPFLAGS"
+echo "  CPPFLAGS        = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CORE_CPPFLAGS $CPPFLAGS"
 echo "  CXX             = $CXX"
-echo "  CXXFLAGS        = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
-echo "  LDFLAGS         = $LTO_LDFLAGS $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
+echo "  CXXFLAGS        = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
+echo "  LDFLAGS         = $LTO_LDFLAGS $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $CORE_LDFLAGS $LDFLAGS"
 echo "  ARFLAGS         = $ARFLAGS"
 echo

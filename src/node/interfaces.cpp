@@ -90,7 +90,7 @@ public:
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        return AppInitBasicSetup(gArgs) && AppInitParameterInteraction(gArgs) && AppInitSanityChecks() &&
+        return AppInitBasicSetup(gArgs) && AppInitParameterInteraction(gArgs, /*use_syscall_sandbox=*/false) && AppInitSanityChecks() &&
                AppInitLockDataDirectory() && AppInitInterfaces(*m_context);
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override

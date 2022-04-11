@@ -96,6 +96,7 @@ BITCOIN_TESTS =\
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
+  test/httpserver_tests.cpp \
   test/i2p_tests.cpp \
   test/interfaces_tests.cpp \
   test/key_io_tests.cpp \
@@ -105,6 +106,7 @@ BITCOIN_TESTS =\
   test/merkle_tests.cpp \
   test/merkleblock_tests.cpp \
   test/miner_tests.cpp \
+  test/miniscript_tests.cpp \
   test/minisketch_tests.cpp \
   test/multisig_tests.cpp \
   test/net_peer_eviction_tests.cpp \
@@ -117,6 +119,7 @@ BITCOIN_TESTS =\
   test/prevector_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
+  test/rest_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
@@ -268,6 +271,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/locale.cpp \
  test/fuzz/merkleblock.cpp \
  test/fuzz/message.cpp \
+ test/fuzz/miniscript_decode.cpp \
  test/fuzz/minisketch.cpp \
  test/fuzz/muhash.cpp \
  test/fuzz/multiplication_overflow.cpp \

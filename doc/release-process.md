@@ -47,13 +47,15 @@ Release Process
 #### After branch-off (on the major release branch)
 
 - Update the versions.
+- Create the draft, named "*version* Release Notes Draft", as a [collaborative wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/_new).
+- Clear the release notes: `cp doc/release-notes-empty-template.md doc/release-notes.md`
 - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
 - Translations on Transifex
     - Change the auto-update URL for the new major version's resource away from `master` and to the branch, e.g. `https://raw.githubusercontent.com/bitcoin/bitcoin/<branch>/src/qt/locale/bitcoin_en.xlf`. Do not forget this or it will keep tracking the translations on master instead, drifting away from the specific major release.
 
 #### Before final release
 
-- Merge the release notes from the wiki into the branch.
+- Merge the release notes from [the wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/) into the branch.
 - Ensure the "Needs release note" label is removed from all relevant pull requests and issues.
 
 #### Tagging a release (candidate)

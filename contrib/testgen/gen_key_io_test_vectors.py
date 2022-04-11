@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (c) 2012-2021 The Bitcoin Core developers
+# Copyright (c) 2012-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Generate valid and invalid base58/bech32(m) address and private key test vectors.
 
 Usage:
-    PYTHONPATH=../../test/functional/test_framework ./gen_key_io_test_vectors.py valid 70 > ../../src/test/data/key_io_valid.json
-    PYTHONPATH=../../test/functional/test_framework ./gen_key_io_test_vectors.py invalid 70 > ../../src/test/data/key_io_invalid.json
+    ./gen_key_io_test_vectors.py valid 70 > ../../src/test/data/key_io_valid.json
+    ./gen_key_io_test_vectors.py invalid 70 > ../../src/test/data/key_io_invalid.json
 '''
-# 2012 Wladimir J. van der Laan
-# Released under MIT License
-import os
+
 from itertools import islice
-from base58 import b58encode_chk, b58decode_chk, b58chars
+import os
 import random
-from segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../test/functional'))
+
+from test_framework.address import base58_to_byte, byte_to_base58, b58chars  # noqa: E402
+from test_framework.script import OP_0, OP_1, OP_2, OP_3, OP_16, OP_DUP, OP_EQUAL, OP_EQUALVERIFY, OP_HASH160, OP_CHECKSIG  # noqa: E402
+from test_framework.segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding  # noqa: E402
 
 # key types
 PUBKEY_ADDRESS = 0
@@ -29,16 +33,6 @@ PRIVKEY_TEST = 239
 PRIVKEY_REGTEST = 239
 
 # script
-OP_0 = 0x00
-OP_1 = 0x51
-OP_2 = 0x52
-OP_3 = 0x53
-OP_16 = 0x60
-OP_DUP = 0x76
-OP_EQUAL = 0x87
-OP_EQUALVERIFY = 0x88
-OP_HASH160 = 0xa9
-OP_CHECKSIG = 0xac
 pubkey_prefix = (OP_DUP, OP_HASH160, 20)
 pubkey_suffix = (OP_EQUALVERIFY, OP_CHECKSIG)
 script_prefix = (OP_HASH160, 20)
@@ -114,8 +108,10 @@ def is_valid(v):
     '''Check vector v for validity'''
     if len(set(v) - set(b58chars)) > 0:
         return is_valid_bech32(v)
-    result = b58decode_chk(v)
-    if result is None:
+    try:
+        payload, version = base58_to_byte(v)
+        result = bytes([version]) + payload
+    except ValueError:  # thrown if checksum doesn't match
         return is_valid_bech32(v)
     for template in templates:
         prefix = bytearray(template[0])
@@ -139,7 +135,8 @@ def gen_valid_base58_vector(template):
     suffix = bytearray(template[2])
     dst_prefix = bytearray(template[4])
     dst_suffix = bytearray(template[5])
-    rv = b58encode_chk(prefix + payload + suffix)
+    assert len(prefix) == 1
+    rv = byte_to_base58(payload + suffix, prefix[0])
     return rv, dst_prefix + payload + dst_suffix
 
 def gen_valid_bech32_vector(template):
@@ -190,7 +187,8 @@ def gen_invalid_base58_vector(template):
     else:
         suffix = bytearray(template[2])
 
-    val = b58encode_chk(prefix + payload + suffix)
+    assert len(prefix) == 1
+    val = byte_to_base58(payload + suffix, prefix[0])
     if random.randint(0,10)<1: # line corruption
         if randbool(): # add random character to end
             val += random.choice(b58chars)
@@ -250,7 +248,6 @@ def gen_invalid_vectors():
                 yield val,
 
 if __name__ == '__main__':
-    import sys
     import json
     iters = {'valid':gen_valid_vectors, 'invalid':gen_invalid_vectors}
     try:
