@@ -11,6 +11,7 @@ import re
 import sys
 import requests
 import gzip
+import dns.resolver
 
 class ASNParser:
     def __init__(self, asnFn = 'ip2asn.tsv.gz', fetchDb = True, asnFailoverLookup = True):
