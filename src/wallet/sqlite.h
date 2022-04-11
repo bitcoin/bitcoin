@@ -15,12 +15,21 @@ struct bilingual_str;
 namespace wallet {
 class SQLiteDatabase;
 
+/** RAII class that provides a database cursor */
 class SQLiteCursor : public DatabaseCursor
 {
 public:
     sqlite3_stmt* m_cursor_stmt{nullptr};
+    // Copies of the prefix things for the prefix cursor.
+    // Prevents SQLite from accessing temp variables for the prefix things.
+    std::vector<std::byte> m_prefix_range_start;
+    std::vector<std::byte> m_prefix_range_end;
 
     explicit SQLiteCursor() {}
+    explicit SQLiteCursor(std::vector<std::byte> start_range, std::vector<std::byte> end_range)
+        : m_prefix_range_start(std::move(start_range)),
+        m_prefix_range_end(std::move(end_range))
+    {}
     ~SQLiteCursor() override;
 
     Status Next(DataStream& key, DataStream& value) override;
@@ -57,6 +66,7 @@ public:
     void Close() override;
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override;
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;
