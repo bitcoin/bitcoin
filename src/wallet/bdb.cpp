@@ -220,17 +220,17 @@ BerkeleyEnvironment::BerkeleyEnvironment() : m_use_shared_memory(false)
     fMockDb = true;
 }
 
-BerkeleyBatch::SafeDbt::SafeDbt()
+SafeDbt::SafeDbt()
 {
     m_dbt.set_flags(DB_DBT_MALLOC);
 }
 
-BerkeleyBatch::SafeDbt::SafeDbt(void* data, size_t size)
+SafeDbt::SafeDbt(void* data, size_t size)
     : m_dbt(data, size)
 {
 }
 
-BerkeleyBatch::SafeDbt::~SafeDbt()
+SafeDbt::~SafeDbt()
 {
     if (m_dbt.get_data() != nullptr) {
         // Clear memory, e.g. in case it was a private key
@@ -244,17 +244,17 @@ BerkeleyBatch::SafeDbt::~SafeDbt()
     }
 }
 
-const void* BerkeleyBatch::SafeDbt::get_data() const
+const void* SafeDbt::get_data() const
 {
     return m_dbt.get_data();
 }
 
-uint32_t BerkeleyBatch::SafeDbt::get_size() const
+uint32_t SafeDbt::get_size() const
 {
     return m_dbt.get_size();
 }
 
-BerkeleyBatch::SafeDbt::operator Dbt*()
+SafeDbt::operator Dbt*()
 {
     return &m_dbt;
 }

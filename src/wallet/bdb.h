@@ -165,29 +165,29 @@ public:
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
 };
 
+/** RAII class that automatically cleanses its data on destruction */
+class SafeDbt final
+{
+    Dbt m_dbt;
+
+public:
+    // construct Dbt with internally-managed data
+    SafeDbt();
+    // construct Dbt with provided data
+    SafeDbt(void* data, size_t size);
+    ~SafeDbt();
+
+    // delegate to Dbt
+    const void* get_data() const;
+    uint32_t get_size() const;
+
+    // conversion operator to access the underlying Dbt
+    operator Dbt*();
+};
+
 /** RAII class that provides access to a Berkeley database */
 class BerkeleyBatch : public DatabaseBatch
 {
-    /** RAII class that automatically cleanses its data on destruction */
-    class SafeDbt final
-    {
-        Dbt m_dbt;
-
-    public:
-        // construct Dbt with internally-managed data
-        SafeDbt();
-        // construct Dbt with provided data
-        SafeDbt(void* data, size_t size);
-        ~SafeDbt();
-
-        // delegate to Dbt
-        const void* get_data() const;
-        uint32_t get_size() const;
-
-        // conversion operator to access the underlying Dbt
-        operator Dbt*();
-    };
-
 private:
     bool ReadKey(CDataStream&& key, CDataStream& value) override;
     bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true) override;
