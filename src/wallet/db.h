@@ -38,8 +38,6 @@ public:
 class DatabaseBatch
 {
 private:
-    std::unique_ptr<DatabaseCursor> m_cursor;
-
     virtual bool ReadKey(CDataStream&& key, CDataStream& value) = 0;
     virtual bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) = 0;
     virtual bool EraseKey(CDataStream&& key) = 0;
@@ -107,20 +105,6 @@ public:
     }
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
-    bool StartCursor()
-    {
-        m_cursor = GetNewCursor();
-        return m_cursor != nullptr;
-    }
-    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete)
-    {
-        if (!m_cursor) return false;
-        return m_cursor->Next(ssKey, ssValue, complete);
-    }
-    void CloseCursor()
-    {
-        m_cursor.reset();
-    }
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;

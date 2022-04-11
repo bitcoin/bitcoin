@@ -399,7 +399,6 @@ void BerkeleyBatch::Close()
         activeTxn->abort();
     activeTxn = nullptr;
     pdb = nullptr;
-    CloseCursor();
 
     if (fFlushOnClose)
         Flush();
@@ -477,12 +476,13 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                         fSuccess = false;
                     }
 
-                    if (db.StartCursor()) {
+                    std::unique_ptr<DatabaseCursor> cursor = db.GetNewCursor();
+                    if (cursor) {
                         while (fSuccess) {
                             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
                             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
                             bool complete;
-                            bool ret1 = db.ReadAtCursor(ssKey, ssValue, complete);
+                            bool ret1 = cursor->Next(ssKey, ssValue, complete);
                             if (complete) {
                                 break;
                             } else if (!ret1) {
@@ -503,7 +503,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                             if (ret2 > 0)
                                 fSuccess = false;
                         }
-                        db.CloseCursor();
+                        cursor.reset();
                     }
                     if (fSuccess) {
                         db.Close();

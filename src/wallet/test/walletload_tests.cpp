@@ -54,12 +54,14 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_unknown_descriptor, TestingSetup)
 bool HasAnyRecordOfType(WalletDatabase& db, const std::string& key)
 {
     std::unique_ptr<DatabaseBatch> batch = db.MakeBatch(false);
-    BOOST_CHECK(batch->StartCursor());
+    BOOST_CHECK(batch);
+    std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
+    BOOST_CHECK(cursor);
     while (true) {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         bool complete;
-        BOOST_CHECK(batch->ReadAtCursor(ssKey, ssValue, complete));
+        BOOST_CHECK(cursor->Next(ssKey, ssValue, complete));
         if (complete) break;
         std::string type;
         ssKey >> type;
