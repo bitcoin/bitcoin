@@ -10,6 +10,7 @@ import re
 import sys
 import dns.resolver
 import collections
+import asndecode
 
 NSEEDS=512
 
@@ -22,6 +23,8 @@ MIN_BLOCKS = 337600
 with open("suspicious_hosts.txt", mode="r", encoding="utf-8") as f:
     SUSPICIOUS_HOSTS = {s.strip() for s in f if s.strip()}
 
+# Local ip address to ASN resolver database.
+ASN_DB = asndecode.ASNParser()
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
@@ -145,7 +148,6 @@ def lookup_asn(net, ip):
     except Exception as e:
         sys.stderr.write(f'ERR: Could not resolve ASN for "{ip}": {e}\n')
         return None
-
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_per_net):
     # Sift out ips by type
@@ -159,7 +161,7 @@ def filterbyasn(ips, max_per_asn, max_per_net):
     for ip in ips_ipv46:
         if net_count[ip['net']] == max_per_net:
             continue
-        asn = lookup_asn(ip['net'], ip['ip'])
+        asn = ASN_DB.lookup_asn(ip['net'], ip['ip'])
         if asn is None or asn_count[asn] == max_per_asn:
             continue
         asn_count[asn] += 1
