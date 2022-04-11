@@ -68,12 +68,13 @@ std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_loo
     while (ai_trav != nullptr) {
         if (ai_trav->ai_family == AF_INET) {
             assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in));
-            resolved_addresses.emplace_back(reinterpret_cast<sockaddr_in*>(ai_trav->ai_addr)->sin_addr);
+            struct sockaddr_in s4 = LoadSockaddrIPv4(*ai_trav->ai_addr);
+            resolved_addresses.emplace_back(s4.sin_addr);
         }
         if (ai_trav->ai_family == AF_INET6) {
             assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in6));
-            const sockaddr_in6* s6{reinterpret_cast<sockaddr_in6*>(ai_trav->ai_addr)};
-            resolved_addresses.emplace_back(s6->sin6_addr, s6->sin6_scope_id);
+            struct sockaddr_in6 s6 = LoadSockaddrIPv6(*ai_trav->ai_addr);
+            resolved_addresses.emplace_back(s6.sin6_addr, s6.sin6_scope_id);
         }
         ai_trav = ai_trav->ai_next;
     }
@@ -488,7 +489,7 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
     // Create a sockaddr from the specified service.
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    if (!address_family.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
+    if (!address_family.GetSockAddr(&sockaddr, &len)) {
         LogPrintf("Cannot create socket for %s: unsupported network\n", address_family.ToString());
         return nullptr;
     }
@@ -553,7 +554,7 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
         LogPrintf("Cannot connect to %s: invalid socket\n", addrConnect.ToString());
         return false;
     }
-    if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
+    if (!addrConnect.GetSockAddr(&sockaddr, &len)) {
         LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToString());
         return false;
     }

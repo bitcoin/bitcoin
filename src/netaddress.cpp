@@ -837,14 +837,14 @@ CService::CService(const struct sockaddr_in6 &addr) : CNetAddr(addr.sin6_addr, a
    assert(addr.sin6_family == AF_INET6);
 }
 
-bool CService::SetSockAddr(const struct sockaddr *paddr)
+bool CService::SetSockAddr(const struct sockaddr_storage &addrIn)
 {
-    switch (paddr->sa_family) {
+    switch (addrIn.ss_family) {
     case AF_INET:
-        *this = CService(*(const struct sockaddr_in*)paddr);
+        *this = CService(LoadSockaddrIPv4(addrIn));
         return true;
     case AF_INET6:
-        *this = CService(*(const struct sockaddr_in6*)paddr);
+        *this = CService(LoadSockaddrIPv6(addrIn));
         return true;
     default:
         return false;
@@ -878,31 +878,25 @@ bool operator<(const CService& a, const CService& b)
  *
  * @returns Whether or not the operation was successful.
  */
-bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
+bool CService::GetSockAddr(struct sockaddr_storage* paddr, socklen_t *addrlen) const
 {
     if (IsIPv4()) {
-        if (*addrlen < (socklen_t)sizeof(struct sockaddr_in))
+        struct sockaddr_in addrin;
+        if (!GetInAddr(&addrin.sin_addr))
             return false;
-        *addrlen = sizeof(struct sockaddr_in);
-        struct sockaddr_in *paddrin = (struct sockaddr_in*)paddr;
-        memset(paddrin, 0, *addrlen);
-        if (!GetInAddr(&paddrin->sin_addr))
-            return false;
-        paddrin->sin_family = AF_INET;
-        paddrin->sin_port = htons(port);
+        addrin.sin_family = AF_INET;
+        addrin.sin_port = htons(port);
+        StoreSockaddrIPv4(addrin, paddr, addrlen);
         return true;
     }
     if (IsIPv6() || IsCJDNS()) {
-        if (*addrlen < (socklen_t)sizeof(struct sockaddr_in6))
+        struct sockaddr_in6 addrin6;
+        if (!GetIn6Addr(&addrin6.sin6_addr))
             return false;
-        *addrlen = sizeof(struct sockaddr_in6);
-        struct sockaddr_in6 *paddrin6 = (struct sockaddr_in6*)paddr;
-        memset(paddrin6, 0, *addrlen);
-        if (!GetIn6Addr(&paddrin6->sin6_addr))
-            return false;
-        paddrin6->sin6_scope_id = m_scope_id;
-        paddrin6->sin6_family = AF_INET6;
-        paddrin6->sin6_port = htons(port);
+        addrin6.sin6_scope_id = m_scope_id;
+        addrin6.sin6_family = AF_INET6;
+        addrin6.sin6_port = htons(port);
+        StoreSockaddrIPv6(addrin6, paddr, addrlen);
         return true;
     }
     return false;
@@ -1140,4 +1134,36 @@ bool operator==(const CSubNet& a, const CSubNet& b)
 bool operator<(const CSubNet& a, const CSubNet& b)
 {
     return (a.network < b.network || (a.network == b.network && memcmp(a.netmask, b.netmask, 16) < 0));
+}
+
+template <typename T>
+static sockaddr_in LoadSockaddrIPv4Internal(const T& src) {
+    sockaddr_in s4;
+    std::memcpy(&s4, &src, sizeof(s4));
+    return s4;
+}
+
+sockaddr_in LoadSockaddrIPv4(const sockaddr& src) {
+    assert(src.sa_family == AF_INET);
+    return LoadSockaddrIPv4Internal(src);
+}
+sockaddr_in LoadSockaddrIPv4(const sockaddr_storage& src) {
+    assert(src.ss_family == AF_INET);
+    return LoadSockaddrIPv4Internal(src);
+}
+
+template <typename T>
+static sockaddr_in6 LoadSockaddrIPv6Internal(const T& src) {
+    sockaddr_in6 s6;
+    std::memcpy(&s6, &src, sizeof(s6));
+    return s6;
+}
+
+sockaddr_in6 LoadSockaddrIPv6(const sockaddr& src) {
+    assert(src.sa_family == AF_INET6);
+    return LoadSockaddrIPv6Internal(src);
+}
+sockaddr_in6 LoadSockaddrIPv6(const sockaddr_storage& src) {
+    assert(src.ss_family == AF_INET6);
+    return LoadSockaddrIPv6Internal(src);
 }

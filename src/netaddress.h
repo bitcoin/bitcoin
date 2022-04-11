@@ -529,8 +529,8 @@ public:
     CService(const struct in_addr& ipv4Addr, uint16_t port);
     explicit CService(const struct sockaddr_in& addr);
     uint16_t GetPort() const;
-    bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
-    bool SetSockAddr(const struct sockaddr* paddr);
+    bool GetSockAddr(struct sockaddr_storage* paddr, socklen_t* addrlen) const;
+    bool SetSockAddr(const struct sockaddr_storage& addr);
     friend bool operator==(const CService& a, const CService& b);
     friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
     friend bool operator<(const CService& a, const CService& b);
@@ -576,5 +576,34 @@ private:
     const uint64_t m_salt_k0;
     const uint64_t m_salt_k1;
 };
+
+/**
+ * Read the generic sockaddr struct `src` safely. Use these
+ * instead of casting `src` and accessing its fields.
+ */
+sockaddr_in LoadSockaddrIPv4(const sockaddr& src);
+sockaddr_in LoadSockaddrIPv4(const sockaddr_storage& src);
+sockaddr_in6 LoadSockaddrIPv6(const sockaddr& src);
+sockaddr_in6 LoadSockaddrIPv6(const sockaddr_storage& src);
+
+/**
+ * Overwrite the provided generic sockaddr struct `ptr` safely. Use these
+ * instead of casting `ptr` and dereferencing it.
+ */
+template <typename T>
+void StoreSockaddrIPv4(const sockaddr_in& src, T* ptr, socklen_t *addrlen) {
+    constexpr size_t sz4 = sizeof(sockaddr_in);
+    assert(*addrlen >= sz4);
+    *addrlen = sz4;
+    std::memcpy(ptr, &src, sz4);
+}
+
+template <typename T>
+void StoreSockaddrIPv6(const sockaddr_in6& src, T* ptr, socklen_t *addrlen) {
+    constexpr size_t sz6 = sizeof(sockaddr_in6);
+    assert(*addrlen >= sz6);
+    *addrlen = sz6;
+    std::memcpy(ptr, &src, sz6);
+}
 
 #endif // BITCOIN_NETADDRESS_H

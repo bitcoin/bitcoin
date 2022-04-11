@@ -428,7 +428,7 @@ static CAddress GetBindAddress(SOCKET sock)
     socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
     if (sock != INVALID_SOCKET) {
         if (!getsockname(sock, (struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
-            addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind);
+            addr_bind.SetSockAddr(sockaddr_bind);
         } else {
             LogPrint(BCLog::NET, "Warning: getsockname failed\n");
         }
@@ -1139,7 +1139,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         return;
     }
 
-    if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
+    if (!addr.SetSockAddr(sockaddr)) {
         LogPrintf("Warning: Unknown socket family\n");
     } else {
         addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
@@ -2389,7 +2389,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     // Create socket for listening for incoming connections
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    if (!addrBind.GetSockAddr((struct sockaddr*)&sockaddr, &len))
+    if (!addrBind.GetSockAddr(&sockaddr, &len))
     {
         strError = strprintf(Untranslated("Error: Bind address family for %s not supported"), addrBind.ToString());
         LogPrintf("%s\n", strError.original);
@@ -2485,15 +2485,15 @@ void Discover()
             if (strcmp(ifa->ifa_name, "lo0") == 0) continue;
             if (ifa->ifa_addr->sa_family == AF_INET)
             {
-                struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
-                CNetAddr addr(s4->sin_addr);
+                struct sockaddr_in s4 = LoadSockaddrIPv4(*ifa->ifa_addr);
+                CNetAddr addr(s4.sin_addr);
                 if (AddLocal(addr, LOCAL_IF))
                     LogPrintf("%s: IPv4 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }
             else if (ifa->ifa_addr->sa_family == AF_INET6)
             {
-                struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
-                CNetAddr addr(s6->sin6_addr);
+                struct sockaddr_in6 s6 = LoadSockaddrIPv6(*ifa->ifa_addr);
+                CNetAddr addr(s6.sin6_addr);
                 if (AddLocal(addr, LOCAL_IF))
                     LogPrintf("%s: IPv6 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }

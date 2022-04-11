@@ -135,10 +135,12 @@ public:
             const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in));
             if (*addr_len >= write_len) {
                 *addr_len = write_len;
-                sockaddr_in* addr_in = reinterpret_cast<sockaddr_in*>(addr);
-                addr_in->sin_family = AF_INET;
-                memset(&addr_in->sin_addr, 0x05, sizeof(addr_in->sin_addr));
-                addr_in->sin_port = htons(6789);
+                sockaddr_in addr_in;
+                memset(&addr_in, 0, sizeof(addr_in));
+                addr_in.sin_family = AF_INET;
+                memset(&addr_in.sin_addr, 0x05, sizeof(addr_in.sin_addr));
+                addr_in.sin_port = htons(6789);
+                StoreSockaddrIPv4(addr_in, addr, addr_len);
             }
         }
         return std::make_unique<StaticContentsSock>("");

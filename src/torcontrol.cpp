@@ -142,7 +142,7 @@ bool TorControlConnection::Connect(const std::string& tor_control_center, const 
 
     struct sockaddr_storage control_address;
     socklen_t control_address_len = sizeof(control_address);
-    if (!control_service.GetSockAddr(reinterpret_cast<struct sockaddr*>(&control_address), &control_address_len)) {
+    if (!control_service.GetSockAddr(&control_address, &control_address_len)) {
         LogPrintf("tor: Error parsing socket address %s\n", tor_control_center);
         return false;
     }
