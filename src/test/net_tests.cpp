@@ -686,7 +686,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     CNode peer_out{/*id=*/0,
                    /*nLocalServicesIn=*/NODE_NETWORK,
                    /*sock=*/nullptr,
-                   /*addrIn=*/CAddress{CService{peer_out_in_addr, 8333}, NODE_NETWORK},
+                   /*addrIn=*/CAddress{CService{peer_out_in_addr, 48484}, NODE_NETWORK},
                    /*nKeyedNetGroupIn=*/0,
                    /*nLocalHostNonceIn=*/0,
                    /*addrBindIn=*/CAddress{},
@@ -696,7 +696,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     peer_out.fSuccessfullyConnected = true;
     peer_out.SetAddrLocal(peer_us);
 
-    // Without the fix peer_us:8333 is chosen instead of the proper peer_us:bind_port.
+    // Without the fix peer_us:48484 is chosen instead of the proper peer_us:bind_port.
     auto chosen_local_addr = GetLocalAddrForPeer(&peer_out);
     BOOST_REQUIRE(chosen_local_addr);
     const CService expected{peer_us_addr, bind_port};
@@ -708,7 +708,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     CNode peer_in{/*id=*/0,
                   /*nLocalServicesIn=*/NODE_NETWORK,
                   /*sock=*/nullptr,
-                  /*addrIn=*/CAddress{CService{peer_in_in_addr, 8333}, NODE_NETWORK},
+                  /*addrIn=*/CAddress{CService{peer_in_in_addr, 48484}, NODE_NETWORK},
                   /*nKeyedNetGroupIn=*/0,
                   /*nLocalHostNonceIn=*/0,
                   /*addrBindIn=*/CAddress{},
@@ -718,7 +718,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     peer_in.fSuccessfullyConnected = true;
     peer_in.SetAddrLocal(peer_us);
 
-    // Without the fix peer_us:8333 is chosen instead of the proper peer_us:peer_us.GetPort().
+    // Without the fix peer_us:48484 is chosen instead of the proper peer_us:peer_us.GetPort().
     chosen_local_addr = GetLocalAddrForPeer(&peer_in);
     BOOST_REQUIRE(chosen_local_addr);
     BOOST_CHECK(*chosen_local_addr == peer_us);
@@ -836,7 +836,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     CNode peer{/*id=*/0,
                /*nLocalServicesIn=*/NODE_NETWORK,
                /*sock=*/nullptr,
-               /*addrIn=*/CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
+               /*addrIn=*/CAddress{CService{peer_in_addr, 48484}, NODE_NETWORK},
                /*nKeyedNetGroupIn=*/0,
                /*nLocalHostNonceIn=*/0,
                /*addrBindIn=*/CAddress{},
