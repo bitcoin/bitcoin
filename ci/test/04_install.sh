@@ -111,6 +111,13 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   CI_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && make $MAKEJOBS cxx"
 fi
 
+if [[ "${RUN_TIDY}" == "true" ]]; then
+  CI_EXEC "mkdir -p ${BASE_SCRATCH_DIR}/iwyu/build/"
+  CI_EXEC "git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_14 ${BASE_SCRATCH_DIR}/iwyu/include-what-you-use"
+  CI_EXEC "cd ${BASE_SCRATCH_DIR}/iwyu/build && cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-14 ../include-what-you-use"
+  CI_EXEC "cd ${BASE_SCRATCH_DIR}/iwyu/build && make install $MAKEJOBS"
+fi
+
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Create $BASE_ROOT_DIR"
   CI_EXEC rsync -a /ro_base/ "$BASE_ROOT_DIR"
