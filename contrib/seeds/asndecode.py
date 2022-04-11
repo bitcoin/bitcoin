@@ -33,7 +33,7 @@ class ASNParser:
         '''
         r = requests.get(self.asnDbURL)
         if(r.status_code != 200):
-            raise ValueError(f'Unable to retreive ASN DB from {self.asnDbURL} with status code {r.status_code}')
+            raise ValueError(f'Unable to retrieve ASN DB from {self.asnDbURL} with status code {r.status_code}')
         with open(f'{os.path.dirname(__file__)}/{self.asnFileName}', 'wb') as f:
             f.write(r.content)
 
@@ -55,8 +55,8 @@ class ASNParser:
 
     def ipV46Validator(self, ipaddressString):
         '''
-        Validates,parses, and converts an ip address string into the folowing data
-            - Detects the ip version as an interger (4/6)
+        Validates,parses, and converts an ip address string into the following data
+            - Detects the ip version as an intrger (4/6)
             - Converts the ip address into an integer 128bit/32bit
         '''
         ret = {
