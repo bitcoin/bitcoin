@@ -7,6 +7,7 @@
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <warnings.h>
 
@@ -15,15 +16,13 @@ constexpr char DB_BEST_BLOCK = 'B';
 constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
 constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
 
-template<typename... Args>
+template <typename... Args>
 static void FatalError(const char* fmt, const Args&... args)
 {
     std::string strMessage = tfm::format(fmt, args...);
     SetMiscWarning(strMessage);
     LogPrintf("*** %s\n", strMessage);
-    uiInterface.ThreadSafeMessageBox(
-        "Error: A fatal internal error occurred, see debug.log for details",
-        "", CClientUIInterface::MSG_ERROR);
+    AbortError(_("A fatal internal error occurred, see debug.log for details"));
     StartShutdown();
 }
 

@@ -56,7 +56,7 @@ static bool AppInit(int argc, char* argv[])
     SetupServerArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        return InitError(strprintf("Error parsing command line arguments: %s\n", error));
+        return InitError(Untranslated(strprintf("Error parsing command line arguments: %s\n", error)));
     }
 
     if (gArgs.IsArgSet("-printcrashinfo")) {
@@ -87,10 +87,10 @@ static bool AppInit(int argc, char* argv[])
         bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
         if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            return InitError(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
+            return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""))));
         }
         if (!gArgs.ReadConfigFiles(error, true)) {
-            return InitError(strprintf("Error reading configuration file: %s\n", error));
+            return InitError(Untranslated(strprintf("Error reading configuration file: %s\n", error)));
         }
         if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
@@ -101,13 +101,13 @@ static bool AppInit(int argc, char* argv[])
         try {
             SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
-            return InitError(strprintf("%s\n", e.what()));
+            return InitError(Untranslated(strprintf("%s\n", e.what())));
         }
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                return InitError(strprintf("Command line contains unexpected token '%s', see dashd -h for a list of options.\n", argv[i]));
+                return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see dashd -h for a list of options.\n", argv[i])));
             }
         }
 
@@ -142,13 +142,13 @@ static bool AppInit(int argc, char* argv[])
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
-                return InitError(strprintf("daemon() failed: %s\n", strerror(errno)));
+                return InitError(Untranslated(strprintf("daemon() failed: %s\n", strerror(errno))));
             }
 #if defined(MAC_OSX)
 #pragma GCC diagnostic pop
 #endif
 #else
-            return InitError("-daemon is not supported on this operating system\n");
+            return InitError(Untranslated("-daemon is not supported on this operating system\n"));
 #endif // HAVE_DECL_DAEMON
         }
         // Lock data directory after daemonization

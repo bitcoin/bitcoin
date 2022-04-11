@@ -740,7 +740,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
             if (!mixingWallet.AutoBackupWallet("", errorString, warnings)) {
                 if (!warnings.empty()) {
                     // There were some issues saving backup but yet more or less safe to continue
-                    LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- WARNING! Something went wrong on automatic backup: %s\n", Join(warnings, "\n", OpTranslated));
+                    LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::CheckAutomaticBackup -- WARNING! Something went wrong on automatic backup: %s\n", Join(warnings, Untranslated("\n")).translated);
                 }
                 if (!errorString.original.empty()) {
                     // Things are really broken

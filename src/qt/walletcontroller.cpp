@@ -229,10 +229,10 @@ void CreateWalletActivity::finish()
 {
     m_progress_dialog->hide();
 
-    if (!m_error_message.original.empty()) {
+    if (!m_error_message.empty()) {
         QMessageBox::critical(m_parent_widget, tr("Create wallet failed"), QString::fromStdString(m_error_message.translated));
     } else if (!m_warning_message.empty()) {
-        QMessageBox::warning(m_parent_widget, tr("Create wallet warning"), QString::fromStdString(Join(m_warning_message, "\n", OpTranslated)));
+        QMessageBox::warning(m_parent_widget, tr("Create wallet warning"), QString::fromStdString(Join(m_warning_message, Untranslated("\n")).translated));
     }
 
     if (m_wallet_model) Q_EMIT created(m_wallet_model);
@@ -270,10 +270,10 @@ void OpenWalletActivity::finish()
 {
     m_progress_dialog->hide();
 
-    if (!m_error_message.original.empty()) {
+    if (!m_error_message.empty()) {
         QMessageBox::critical(m_parent_widget, tr("Open wallet failed"), QString::fromStdString(m_error_message.translated));
     } else if (!m_warning_message.empty()) {
-        QMessageBox::warning(m_parent_widget, tr("Open wallet warning"), QString::fromStdString(Join(m_warning_message, "\n", OpTranslated)));
+        QMessageBox::warning(m_parent_widget, tr("Open wallet warning"), QString::fromStdString(Join(m_warning_message, Untranslated("\n")).translated));
     }
 
     if (m_wallet_model) Q_EMIT opened(m_wallet_model);

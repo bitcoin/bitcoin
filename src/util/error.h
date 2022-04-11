@@ -17,6 +17,8 @@
 
 #include <string>
 
+struct bilingual_str;
+
 enum class TransactionError {
     OK, //!< No error
     MISSING_INPUTS,
@@ -30,12 +32,12 @@ enum class TransactionError {
     MAX_FEE_EXCEEDED,
 };
 
-std::string TransactionErrorString(const TransactionError error);
+bilingual_str TransactionErrorString(const TransactionError error);
 
-std::string ResolveErrMsg(const std::string& optname, const std::string& strBind);
+bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind);
 
-std::string AmountHighWarn(const std::string& optname);
+bilingual_str AmountHighWarn(const std::string& optname);
 
-std::string AmountErrMsg(const std::string& optname, const std::string& strValue);
+bilingual_str AmountErrMsg(const std::string& optname, const std::string& strValue);
 
 #endif // BITCOIN_UTIL_ERROR_H
