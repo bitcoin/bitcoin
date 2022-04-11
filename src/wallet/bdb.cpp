@@ -8,6 +8,7 @@
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -307,7 +308,7 @@ BerkeleyDatabase::~BerkeleyDatabase()
     }
 }
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr), m_database(database)
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_database(database)
 {
     database.AddRef();
     database.Open();
@@ -656,16 +657,18 @@ void BerkeleyDatabase::ReloadDbEnv()
     env->ReloadDbEnv();
 }
 
-bool BerkeleyBatch::StartCursor()
+BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database)
 {
-    assert(!m_cursor);
-    if (!pdb)
-        return false;
-    int ret = pdb->cursor(nullptr, &m_cursor, 0);
-    return ret == 0;
+    if (!database.m_db.get()) {
+        throw std::runtime_error(STR_INTERNAL_BUG("BerkeleyDatabase does not exist"));
+    }
+    int ret = database.m_db->cursor(nullptr, &m_cursor, 0);
+    if (ret != 0) {
+        throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret).c_str()));
+    }
 }
 
-bool BerkeleyBatch::ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete)
+bool BerkeleyCursor::Next(CDataStream& ssKey, CDataStream& ssValue, bool& complete)
 {
     complete = false;
     if (m_cursor == nullptr) return false;
@@ -691,11 +694,17 @@ bool BerkeleyBatch::ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool&
     return true;
 }
 
-void BerkeleyBatch::CloseCursor()
+BerkeleyCursor::~BerkeleyCursor()
 {
     if (!m_cursor) return;
     m_cursor->close();
     m_cursor = nullptr;
+}
+
+std::unique_ptr<DatabaseCursor> BerkeleyBatch::GetNewCursor()
+{
+    if (!pdb) return nullptr;
+    return std::make_unique<BerkeleyCursor>(m_database);
 }
 
 bool BerkeleyBatch::TxnBegin()

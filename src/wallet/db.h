@@ -22,10 +22,24 @@ struct bilingual_str;
 namespace wallet {
 void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
 
+class DatabaseCursor
+{
+public:
+    explicit DatabaseCursor() {}
+    virtual ~DatabaseCursor() {}
+
+    DatabaseCursor(const DatabaseCursor&) = delete;
+    DatabaseCursor& operator=(const DatabaseCursor&) = delete;
+
+    virtual bool Next(CDataStream& key, CDataStream& value, bool& complete) { return false; }
+};
+
 /** RAII class that provides access to a WalletDatabase */
 class DatabaseBatch
 {
 private:
+    std::unique_ptr<DatabaseCursor> m_cursor;
+
     virtual bool ReadKey(CDataStream&& key, CDataStream& value) = 0;
     virtual bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) = 0;
     virtual bool EraseKey(CDataStream&& key) = 0;
@@ -92,9 +106,21 @@ public:
         return HasKey(std::move(ssKey));
     }
 
-    virtual bool StartCursor() = 0;
-    virtual bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) = 0;
-    virtual void CloseCursor() = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
+    bool StartCursor()
+    {
+        m_cursor = GetNewCursor();
+        return m_cursor != nullptr;
+    }
+    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete)
+    {
+        if (!m_cursor) return false;
+        return m_cursor->Next(ssKey, ssValue, complete);
+    }
+    void CloseCursor()
+    {
+        m_cursor.reset();
+    }
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;
@@ -156,6 +182,11 @@ public:
     virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
 };
 
+class DummyCursor : public DatabaseCursor
+{
+    bool Next(CDataStream& key, CDataStream& value, bool& complete) override { return false; }
+};
+
 /** RAII class that provides access to a DummyDatabase. Never fails. */
 class DummyBatch : public DatabaseBatch
 {
@@ -169,9 +200,7 @@ public:
     void Flush() override {}
     void Close() override {}
 
-    bool StartCursor() override { return true; }
-    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override { return true; }
-    void CloseCursor() override {}
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<DummyCursor>(); }
     bool TxnBegin() override { return true; }
     bool TxnCommit() override { return true; }
     bool TxnAbort() override { return true; }
