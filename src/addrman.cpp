@@ -66,8 +66,9 @@ int AddrInfo::GetBucketPosition(const uint256& nKey, bool fNew, int nBucket) con
 
 bool AddrInfo::IsTerrible(int64_t nNow) const
 {
-    if (nLastTry && nLastTry >= nNow - 60) // never remove things tried in the last minute
+    if (nNow - nLastTry <= 60) { // never remove things tried in the last minute
         return false;
+    }
 
     if (nTime > nNow + 10 * 60) // came in a flying DeLorean
         return true;
