@@ -161,6 +161,10 @@ PE_ALLOWED_LIBRARIES = {
 'VERSION.dll', # version checking
 'WINMM.dll', # WinMM audio API
 'WTSAPI32.dll',
+# Direct2D plugin
+'d2d1.dll',
+'d3d11.dll',
+'DWrite.dll',
 }
 
 def check_version(max_versions, version, arch) -> bool:

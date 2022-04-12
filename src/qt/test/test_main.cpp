@@ -33,7 +33,7 @@ Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin);
 #if defined(QT_QPA_PLATFORM_XCB)
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_WINDOWS)
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
+Q_IMPORT_PLUGIN(QWindowsDirect2DIntegrationPlugin)
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_ANDROID)

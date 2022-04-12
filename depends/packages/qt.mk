@@ -175,6 +175,11 @@ $(package)_config_opts_mingw32 += "QMAKE_CXXFLAGS = '$($(package)_cflags) $($(pa
 $(package)_config_opts_mingw32 += "QMAKE_LFLAGS = '$($(package)_ldflags)'"
 $(package)_config_opts_mingw32 += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_mingw32 += -pch
+# The default "windows" platform backend being compiled
+# with GCC 10 in Guix environment is broken.
+# See https://github.com/bitcoin-core/gui/issues/582
+$(package)_config_opts_mingw32 += -direct2d
+$(package)_config_opts_mingw32 += -qpa direct2d
 
 $(package)_config_opts_android = -xplatform android-clang
 $(package)_config_opts_android += -android-sdk $(ANDROID_SDK)
