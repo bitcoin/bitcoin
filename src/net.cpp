@@ -294,9 +294,6 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!fDiscover && nScore < LOCAL_MANUAL)
         return false;
 
-    if (!IsReachable(addr))
-        return false;
-
     LogPrintf("AddLocal(%s,%i)\n", addr.ToString(), nScore);
 
     {
