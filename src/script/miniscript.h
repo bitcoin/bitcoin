@@ -40,7 +40,7 @@ namespace miniscript {
  *   - For example: older(n) = <n> OP_CHECKSEQUENCEVERIFY.
  * - "V" Verify:
  *   - Takes its inputs from the top of the stack.
- *   - When satisfactied, pushes nothing.
+ *   - When satisfied, pushes nothing.
  *   - Cannot be dissatisfied.
  *   - This can be obtained by adding an OP_VERIFY to a B, modifying the last opcode
  *     of a B to its -VERIFY version (only for OP_CHECKSIG, OP_CHECKSIGVERIFY
@@ -329,6 +329,8 @@ private:
      *   computes the result of the node. If std::nullopt is returned by upfn,
      *   TreeEvalMaybe() immediately returns std::nullopt.
      * The return value of TreeEvalMaybe is the result of the root node.
+     *
+     * Result type cannot be bool due to the std::vector<bool> specialization.
      */
     template<typename Result, typename State, typename DownFn, typename UpFn>
     std::optional<Result> TreeEvalMaybe(State root_state, DownFn downfn, UpFn upfn) const
@@ -858,7 +860,7 @@ enum class ParseContext {
 
 int FindNextChar(Span<const char> in, const char m);
 
-/** Parse a key string ending with a ')' or ','. */
+/** Parse a key string ending at the end of the fragment's text representation. */
 template<typename Key, typename Ctx>
 std::optional<std::pair<Key, int>> ParseKeyEnd(Span<const char> in, const Ctx& ctx)
 {
