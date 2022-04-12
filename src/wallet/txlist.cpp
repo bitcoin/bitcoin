@@ -62,7 +62,7 @@ void TxList::List(std::vector<WalletTxRecord>& tx_records, const CWalletTx& wtx,
     CAmount nDebit = wtx.GetDebit(filter_ismine);
     CAmount nNet = nCredit - nDebit;
 
-    if (nCredit == 0 && nDebit == 0) {
+    if (!IsMine(wtx)) {
         return;
     }
 
@@ -304,4 +304,30 @@ bool TxList::IsAllToMe(const CWalletTx& wtx)
     }
 
     return true;
+}
+
+// A few release candidates of v0.21.2 added some transactions to the wallet that didn't actually belong to it.
+// This is a temporary band-aid to filter out these transactions from the list.
+// We can consider removing it after testing, since only a limited number of testnet wallets should've been impacted.
+bool TxList::IsMine(const CWalletTx& wtx)
+{
+    for (const CTxInput& input : wtx.GetInputs()) {
+        if (m_wallet.IsMine(input)) {
+            return true;
+        }
+    }
+
+    for (const CTxOutput& output : wtx.GetOutputs()) {
+        if (m_wallet.IsMine(output)) {
+            return true;
+        }
+    }
+
+    for (const PegOutCoin& pegout : wtx.tx->mweb_tx.GetPegOuts()) {
+        if (m_wallet.IsMine(DestinationAddr{pegout.GetScriptPubKey()})) {
+            return true;
+        }
+    }
+
+    return false;
 }

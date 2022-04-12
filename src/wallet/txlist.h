@@ -37,4 +37,5 @@ private:
     DestinationAddr GetAddress(const CTxOutput& output);
     bool IsAllFromMe(const CWalletTx& wtx);
     bool IsAllToMe(const CWalletTx& wtx);
+    bool IsMine(const CWalletTx& wtx);
 };
