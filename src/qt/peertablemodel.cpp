@@ -71,6 +71,8 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
         switch (column) {
         case NetNodeId:
             return (qint64)rec->nodeStats.nodeid;
+        case Age:
+            return GUIUtil::FormatPeerAge(rec->nodeStats.m_connected);
         case Address:
             return QString::fromStdString(rec->nodeStats.m_addr_name);
         case Direction:
@@ -96,6 +98,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
     } else if (role == Qt::TextAlignmentRole) {
         switch (column) {
         case NetNodeId:
+        case Age:
             return QVariant(Qt::AlignRight | Qt::AlignVCenter);
         case Address:
             return {};
