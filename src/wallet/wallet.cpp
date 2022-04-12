@@ -1313,7 +1313,7 @@ void CWallet::blockConnected(const CBlock& block, int height)
     if (!block.mweb_block.IsNull()) {
         mw::Coin coin;
         for (const mw::Hash& spent_id : block.mweb_block.GetSpentIDs()) {
-            if (GetCoin(spent_id, coin) && !IsSpent(spent_id)) {
+            if (GetCoin(spent_id, coin) && coin.IsMine() && !IsSpent(spent_id)) {
                 AddToWallet(
                     MakeTransactionRef(),
                     boost::make_optional<MWEB::WalletTxInfo>(spent_id),
@@ -1382,7 +1382,7 @@ void CWallet::blockDisconnected(const CBlock& block, int height)
     if (!block.mweb_block.IsNull()) {
         mw::Coin coin;
         for (const mw::Hash& spent_id : block.mweb_block.GetSpentIDs()) {
-            if (GetCoin(spent_id, coin)) {
+            if (GetCoin(spent_id, coin) && coin.IsMine()) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(spent_id);
                 // MWEB: We just choose the first spend. In the future, we may need a better approach for handling conflicted txs
                 if (range.first != range.second) {

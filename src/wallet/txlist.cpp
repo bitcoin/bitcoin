@@ -62,6 +62,10 @@ void TxList::List(std::vector<WalletTxRecord>& tx_records, const CWalletTx& wtx,
     CAmount nDebit = wtx.GetDebit(filter_ismine);
     CAmount nNet = nCredit - nDebit;
 
+    if (nCredit == 0 && nDebit == 0) {
+        return;
+    }
+
     if (nNet > 0 || wtx.IsCoinBase() || wtx.IsHogEx()) {
         // Credit
         List_Credit(tx_records, wtx, filter_ismine);
