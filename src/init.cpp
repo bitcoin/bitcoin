@@ -1130,12 +1130,6 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
 
-    if (gArgs.GetBoolArg("-litemode", false)) {
-        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
-            LogPrintf("%s: parameter interaction: -litemode=true -> setting -disablegovernance=true\n", __func__);
-        }
-    }
-
     int64_t nPruneArg = gArgs.GetArg("-prune", 0);
     if (nPruneArg > 0) {
         if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
@@ -1529,14 +1523,6 @@ bool AppInitParameterInteraction()
         return InitError(Untranslated(e.what()));
     }
 
-    if (gArgs.IsArgSet("-maxorphantx")) {
-        InitWarning(Untranslated("-maxorphantx is not supported anymore. Use -maxorphantxsize instead."));
-    }
-
-    if (gArgs.IsArgSet("-masternode")) {
-        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode."));
-    }
-
     if (gArgs.IsArgSet("-masternodeblsprivkey")) {
         if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) && Params().RequireRoutableExternalIP()) {
             return InitError(Untranslated("Masternode must accept connections from outside, set -listen=1"));
@@ -1556,14 +1542,6 @@ bool AppInitParameterInteraction()
         if (gArgs.GetBoolArg("-disablegovernance", false)) {
             return InitError(_("You can not disable governance validation on a masternode."));
         }
-    }
-
-    if (gArgs.IsArgSet("-litemode")) {
-        InitWarning(_("-litemode is deprecated.") +
-            (gArgs.GetBoolArg("-litemode", false) ?
-                (Untranslated(" ") + _("Its replacement -disablegovernance has been forced instead.")) :
-                (Untranslated(" ") + _("It has been replaced by -disablegovernance."))));
-        gArgs.ForceRemoveArg("-litemode");
     }
 
     fDisableGovernance = gArgs.GetBoolArg("-disablegovernance", false);
