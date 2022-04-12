@@ -803,6 +803,19 @@ static DBErrors LoadMinVersion(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE
     return DBErrors::LOAD_OK;
 }
 
+static DBErrors LoadWalletFlags(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    AssertLockHeld(pwallet->cs_wallet);
+    uint64_t flags;
+    if (batch.Read(DBKeys::FLAGS, flags)) {
+        if (!pwallet->LoadWalletFlags(flags)) {
+            pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found\n");
+            return DBErrors::TOO_NEW;
+        }
+    }
+    return DBErrors::LOAD_OK;
+}
+
 DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 {
     CWalletScanState wss;
@@ -822,13 +835,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
         // Load wallet flags, so they are known when processing other records.
         // The FLAGS key is absent during wallet creation.
-        uint64_t flags;
-        if (m_batch->Read(DBKeys::FLAGS, flags)) {
-            if (!pwallet->LoadWalletFlags(flags)) {
-                pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found\n");
-                return DBErrors::CORRUPT;
-            }
-        }
+        if ((result = LoadWalletFlags(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
 
 #ifndef ENABLE_EXTERNAL_SIGNER
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
@@ -873,9 +880,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 // we assume the user can live with:
                 if (IsKeyType(strType) || strType == DBKeys::DEFAULTKEY) {
                     result = DBErrors::CORRUPT;
-                } else if (strType == DBKeys::FLAGS) {
-                    // reading the wallet flags can only fail if unknown flags are present
-                    result = DBErrors::TOO_NEW;
                 } else if (wss.tx_corrupt) {
                     pwallet->WalletLogPrintf("Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.\n");
                     // Set tx_corrupt back to false so that the error is only printed once (per corrupt tx)
