@@ -2734,7 +2734,9 @@ std::map<CTxDestination, std::vector<COutputCoin>> CWallet::ListCoins() const
                     if (output_idx.type() == typeid(mw::Hash)) {
                         mw::Coin coin;
                         if (GetCoin(boost::get<mw::Hash>(output_idx), coin) && coin.IsMine() && coin.HasSpendKey()) {
-                            result[address].emplace_back(MWOutput{coin, depth, boost::get<StealthAddress>(address), wtx});
+                            StealthAddress stealth_address;
+                            mweb_wallet->GetStealthAddress(coin, stealth_address);
+                            result[address].emplace_back(MWOutput{coin, depth, stealth_address, wtx});
                         }
                     } else {
                         result[address].emplace_back(
@@ -4142,7 +4144,7 @@ int CWalletTx::GetBlocksToMaturity() const
     if (IsCoinBase()) {
         return std::max(0, (COINBASE_MATURITY + 1) - chain_depth);
     } else {
-        return std::max(0, (PEGOUT_MATURITY + 1) - chain_depth);
+        return std::max(0, PEGOUT_MATURITY - chain_depth);
     }
 }
 
