@@ -22,11 +22,14 @@ class ASNParser:
         self.failover = asnFailoverLookup
         if fetchDb:
             self.fetchIpAsnDB()
-        if(os.path.exists(f'{os.path.dirname(__file__)}/{asnFn}')):
+        if os.path.exists(f'{os.path.dirname(__file__)}/{asnFn}'):
             self.asnFile = f'{os.path.dirname(__file__)}/{asnFn}'
         else:
             raise ValueError(f'Input ip46->ASN tsv does not exist at location: {os.path.dirname(__file__)}/{asnFn}')
-        self.buildIpAsnMemoryDB()
+        if self.asnFile is not None or self.fetchDb is True:
+            self.buildIpAsnMemoryDB()
+        else:
+            self.failover = True
 
     def fetchIpAsnDB(self):
         '''
@@ -42,17 +45,20 @@ class ASNParser:
         '''
         Constructs an in memory database that contains the asn directory from a filename
         '''
-        with gzip.open(self.asnFile, 'rt') as asnList:
-            for idx, row in enumerate(asnList.readlines()):
-                rowData = re.split(r'\t+',row.rstrip())
-                if(len(rowData) != 5):
-                    raise ValueError(f'Input file contains an error on line {idx}')
-                self.asnMemDB.append({
-                    'version' : self.ipV46Validator(rowData[0])['version'],
-                    'rangeStart' : self.ipV46Validator(rowData[0])['ip_int'],
-                    'rangeEnd' : self.ipV46Validator(rowData[1])['ip_int'],
-                    'asn' : int(rowData[2])
-                })
+        if(self.asnFile is not None):
+            with gzip.open(self.asnFile, 'rt') as asnList:
+                for idx, row in enumerate(asnList.readlines()):
+                    rowData = re.split(r'\t+',row.rstrip())
+                    if(len(rowData) != 5):
+                        raise ValueError(f'Input file contains an error on line {idx}')
+                    self.asnMemDB.append({
+                        'version' : self.ipV46Validator(rowData[0])['version'],
+                        'rangeStart' : self.ipV46Validator(rowData[0])['ip_int'],
+                        'rangeEnd' : self.ipV46Validator(rowData[1])['ip_int'],
+                        'asn' : int(rowData[2])
+                    })
+        else:
+            sys.stderr.write(f'ERR: No valid file and/or path available\n')
 
     def ipV46Validator(self, ipaddressString):
         '''
@@ -156,14 +162,14 @@ class ASNParser:
                     asn = int(entry['asn'])
                     break
             if(asn is None and self.failover):
-                self.lookup_asn_api(net, ip)
+                self.lookup_asn_failover(net, ip)
             elif(asn is None and not self.failover):
                 sys.stderr.write(f'ERR: Could not resolve ASN for "{ip}"\n')
             return asn
         else:
-            raise ValueError(f'The asn registry database is empty.')
+            self.lookup_asn_failover(net, ip)
 
-    def lookup_asn_api(self, net, ip):
+    def lookup_asn_failover(self, net, ip):
         '''
         Look up the asn for an IP (4 or 6) address by querying cymru.com, or None
         if it could not be found.

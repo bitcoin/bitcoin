@@ -124,30 +124,6 @@ def filtermultiport(ips):
         hist[ip['sortkey']].append(ip)
     return [value[0] for (key,value) in list(hist.items()) if len(value)==1]
 
-def lookup_asn(net, ip):
-    '''
-    Look up the asn for an IP (4 or 6) address by querying cymru.com, or None
-    if it could not be found.
-    '''
-    try:
-        if net == 'ipv4':
-            ipaddr = ip
-            prefix = '.origin'
-        else:                  # http://www.team-cymru.com/IP-ASN-mapping.html
-            res = str()                         # 2001:4860:b002:23::68
-            for nb in ip.split(':')[:4]:  # pick the first 4 nibbles
-                for c in nb.zfill(4):           # right padded with '0'
-                    res += c + '.'              # 2001 4860 b002 0023
-            ipaddr = res.rstrip('.')            # 2.0.0.1.4.8.6.0.b.0.0.2.0.0.2.3
-            prefix = '.origin6'
-
-        asn = int([x.to_text() for x in dns.resolver.resolve('.'.join(
-                   reversed(ipaddr.split('.'))) + prefix + '.asn.cymru.com',
-                   'TXT').response.answer][0].split('\"')[1].split(' ')[0])
-        return asn
-    except Exception as e:
-        sys.stderr.write(f'ERR: Could not resolve ASN for "{ip}": {e}\n')
-        return None
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_per_net):
     # Sift out ips by type
