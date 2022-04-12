@@ -41,6 +41,7 @@
 #include <validation.h>
 
 #include <QAction>
+#include <QActionGroup>
 #include <QApplication>
 #include <QComboBox>
 #include <QCursor>
@@ -373,7 +374,7 @@ void SyscoinGUI::createActions()
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Syscoin command-line options").arg(PACKAGE_NAME));
 
     m_mask_values_action = new QAction(tr("&Mask values"), this);
-    m_mask_values_action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M));
+    m_mask_values_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_M));
     m_mask_values_action->setStatusTip(tr("Mask the values in the Overview tab"));
     m_mask_values_action->setCheckable(true);
     // SYSCOIN
@@ -455,10 +456,10 @@ void SyscoinGUI::createActions()
     }
 #endif // ENABLE_WALLET
 
-    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindowActivateConsole);
-    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindow);
+    connect(new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindowActivateConsole);
+    connect(new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindow);
     // SYSCOIN
-    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R), this), &QShortcut::activated, this, &SyscoinGUI::showRepair);
+    connect(new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R), this), &QShortcut::activated, this, &SyscoinGUI::showRepair);
 }
 
 void SyscoinGUI::createMenuBar()
