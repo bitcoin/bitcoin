@@ -2799,7 +2799,7 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
 {
     auto local_socket_bytes = requestor.addrBind.GetAddrBytes();
     uint64_t cache_id = GetDeterministicRandomizer(RANDOMIZER_ID_ADDRCACHE)
-        .Write(requestor.addr.GetNetwork())
+        .Write(requestor.ConnectedThroughNetwork())
         .Write(local_socket_bytes.data(), local_socket_bytes.size())
         .Finalize();
     const auto current_time = GetTime<std::chrono::microseconds>();
