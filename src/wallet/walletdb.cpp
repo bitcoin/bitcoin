@@ -791,6 +791,18 @@ bool WalletBatch::IsKeyType(const std::string& strType)
             strType == DBKeys::MASTER_KEY || strType == DBKeys::CRYPTED_KEY);
 }
 
+static DBErrors LoadMinVersion(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    AssertLockHeld(pwallet->cs_wallet);
+    int nMinVersion = 0;
+    if (batch.Read(DBKeys::MINVERSION, nMinVersion)) {
+        if (nMinVersion > FEATURE_LATEST)
+            return DBErrors::TOO_NEW;
+        pwallet->LoadMinVersion(nMinVersion);
+    }
+    return DBErrors::LOAD_OK;
+}
+
 DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 {
     CWalletScanState wss;
@@ -806,12 +818,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     pwallet->WalletLogPrintf("Wallet file version = %d, last client version = %d\n", pwallet->GetVersion(), last_client);
 
     try {
-        int nMinVersion = 0;
-        if (m_batch->Read(DBKeys::MINVERSION, nMinVersion)) {
-            if (nMinVersion > FEATURE_LATEST)
-                return DBErrors::TOO_NEW;
-            pwallet->LoadMinVersion(nMinVersion);
-        }
+        if ((result = LoadMinVersion(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
 
         // Load wallet flags, so they are known when processing other records.
         // The FLAGS key is absent during wallet creation.
