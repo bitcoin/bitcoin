@@ -44,6 +44,7 @@
 #include <validation.h>
 
 #include <QAction>
+#include <QActionGroup>
 #include <QApplication>
 #include <QButtonGroup>
 #include <QComboBox>
