@@ -471,21 +471,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             return true;
         }
         if (strType == DBKeys::NAME) {
-            std::string strAddress;
-            ssKey >> strAddress;
-            std::string label;
-            ssValue >> label;
-            pwallet->m_address_book[DecodeDestination(strAddress)].SetLabel(label);
         } else if (strType == DBKeys::PURPOSE) {
-            std::string strAddress;
-            ssKey >> strAddress;
-            std::string purpose_str;
-            ssValue >> purpose_str;
-            std::optional<AddressPurpose> purpose{PurposeFromString(purpose_str)};
-            if (!purpose) {
-                pwallet->WalletLogPrintf("Warning: nonstandard purpose string '%s' for address '%s'\n", purpose_str, strAddress);
-            }
-            pwallet->m_address_book[DecodeDestination(strAddress)].purpose = purpose;
         } else if (strType == DBKeys::TX) {
             uint256 hash;
             ssKey >> hash;
@@ -553,24 +539,6 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::ORDERPOSNEXT) {
             ssValue >> pwallet->nOrderPosNext;
         } else if (strType == DBKeys::DESTDATA) {
-            std::string strAddress, strKey, strValue;
-            ssKey >> strAddress;
-            ssKey >> strKey;
-            ssValue >> strValue;
-            const CTxDestination& dest{DecodeDestination(strAddress)};
-            if (strKey.compare("used") == 0) {
-                // Load "used" key indicating if an IsMine address has
-                // previously been spent from with avoid_reuse option enabled.
-                // The strValue is not used for anything currently, but could
-                // hold more information in the future. Current values are just
-                // "1" or "p" for present (which was written prior to
-                // f5ba424cd44619d9b9be88b8593d69a7ba96db26).
-                pwallet->LoadAddressPreviouslySpent(dest);
-            } else if (strKey.compare(0, 2, "rr") == 0) {
-                // Load "rr##" keys where ## is a decimal number, and strValue
-                // is a serialized RecentRequestEntry object.
-                pwallet->LoadAddressReceiveRequest(dest, strKey.substr(2), strValue);
-            }
         } else if (strType == DBKeys::HDCHAIN) {
         } else if (strType == DBKeys::OLD_KEY) {
             strErr = "Found unsupported 'wkey' record, try loading with version 0.18";
@@ -1083,6 +1051,67 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     return desc_res.m_result;
 }
 
+static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    AssertLockHeld(pwallet->cs_wallet);
+    DBErrors result = DBErrors::LOAD_OK;
+
+    // Load name record
+    LoadResult name_res = LoadRecords(pwallet, batch, DBKeys::NAME,
+        [] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        std::string strAddress;
+        key >> strAddress;
+        std::string label;
+        value >> label;
+        pwallet->m_address_book[DecodeDestination(strAddress)].SetLabel(label);
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, name_res.m_result);
+
+    // Load purpose record
+    LoadResult purpose_res = LoadRecords(pwallet, batch, DBKeys::PURPOSE,
+        [] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        std::string strAddress;
+        key >> strAddress;
+        std::string purpose_str;
+        value >> purpose_str;
+        std::optional<AddressPurpose> purpose{PurposeFromString(purpose_str)};
+        if (!purpose) {
+            pwallet->WalletLogPrintf("Warning: nonstandard purpose string '%s' for address '%s'\n", purpose_str, strAddress);
+        }
+        pwallet->m_address_book[DecodeDestination(strAddress)].purpose = purpose;
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, purpose_res.m_result);
+
+    // Load destination data record
+    LoadResult dest_res = LoadRecords(pwallet, batch, DBKeys::DESTDATA,
+        [] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        std::string strAddress, strKey, strValue;
+        key >> strAddress;
+        key >> strKey;
+        value >> strValue;
+        const CTxDestination& dest{DecodeDestination(strAddress)};
+        if (strKey.compare("used") == 0) {
+            // Load "used" key indicating if an IsMine address has
+            // previously been spent from with avoid_reuse option enabled.
+            // The strValue is not used for anything currently, but could
+            // hold more information in the future. Current values are just
+            // "1" or "p" for present (which was written prior to
+            // f5ba424cd44619d9b9be88b8593d69a7ba96db26).
+            pwallet->LoadAddressPreviouslySpent(dest);
+        } else if (strKey.compare(0, 2, "rr") == 0) {
+            // Load "rr##" keys where ## is a decimal number, and strValue
+            // is a serialized RecentRequestEntry object.
+            pwallet->LoadAddressReceiveRequest(dest, strKey.substr(2), strValue);
+        }
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, dest_res.m_result);
+
+    return result;
+}
+
 DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 {
     CWalletScanState wss;
@@ -1120,6 +1149,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         // may reference the unknown descriptor's ID which can result in a misleading corruption error
         // when in reality the wallet is simply too new.
         if (result == DBErrors::UNKNOWN_DESCRIPTOR) return result;
+
+        // Load address book
+        result = std::max(LoadAddressBookRecords(pwallet, *m_batch), result);
 
         // Get cursor
         std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();

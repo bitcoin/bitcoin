@@ -2929,7 +2929,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         else if (nLoadWalletRet == DBErrors::NONCRITICAL_ERROR)
         {
             warnings.push_back(strprintf(_("Error reading %s! All keys read correctly, but transaction data"
-                                           " or address book entries might be missing or incorrect."),
+                                           " or address metadata may be missing or incorrect."),
                 walletFile));
         }
         else if (nLoadWalletRet == DBErrors::TOO_NEW) {
