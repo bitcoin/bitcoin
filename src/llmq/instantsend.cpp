@@ -1082,11 +1082,11 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     const auto is_det = islock->IsDeterministic();
     CInv inv(is_det ? MSG_ISDLOCK : MSG_ISLOCK, hash);
     if (tx != nullptr) {
-        g_connman->RelayInvFiltered(inv, *tx, is_det ? ISDLOCK_PROTO_VERSION : LLMQS_PROTO_VERSION);
+        g_connman->RelayInvFiltered(inv, *tx, is_det ? ISDLOCK_PROTO_VERSION : MIN_PEER_PROTO_VERSION);
     } else {
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
-        g_connman->RelayInvFiltered(inv, islock->txid, is_det ? ISDLOCK_PROTO_VERSION : LLMQS_PROTO_VERSION);
+        g_connman->RelayInvFiltered(inv, islock->txid, is_det ? ISDLOCK_PROTO_VERSION : MIN_PEER_PROTO_VERSION);
     }
 
     ResolveBlockConflicts(hash, *islock);

@@ -47,17 +47,6 @@ void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand
 
 void CCoinJoinServer::ProcessDSACCEPT(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
-    if (pfrom->nVersion < MIN_COINJOIN_PEER_PROTO_VERSION) {
-        LogPrint(BCLog::COINJOIN, "DSACCEPT -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-        if (enable_bip61) {
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
-                                                                                  REJECT_OBSOLETE, strprintf(
-                                "Version must be %d or greater", MIN_COINJOIN_PEER_PROTO_VERSION)));
-        }
-        PushStatus(pfrom, STATUS_REJECTED, ERR_VERSION, connman);
-        return;
-    }
-
     if (IsSessionReady()) {
         // too many users in this session already, reject new ones
         LogPrint(BCLog::COINJOIN, "DSACCEPT -- queue is already full!\n");
@@ -123,16 +112,6 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode* pfrom, const std::string& strComman
 
 void CCoinJoinServer::ProcessDSQUEUE(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
-    if (pfrom->nVersion < MIN_COINJOIN_PEER_PROTO_VERSION) {
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-        if (enable_bip61) {
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
-                                                                                  REJECT_OBSOLETE, strprintf(
-                                "Version must be %d or greater", MIN_COINJOIN_PEER_PROTO_VERSION)));
-        }
-        return;
-    }
-
     CCoinJoinQueue dsq;
     vRecv >> dsq;
 
@@ -189,17 +168,6 @@ void CCoinJoinServer::ProcessDSQUEUE(CNode* pfrom, const std::string& strCommand
 
 void CCoinJoinServer::ProcessDSVIN(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
-    if (pfrom->nVersion < MIN_COINJOIN_PEER_PROTO_VERSION) {
-        LogPrint(BCLog::COINJOIN, "DSVIN -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-        if (enable_bip61) {
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
-                                                                                  REJECT_OBSOLETE, strprintf(
-                                "Version must be %d or greater", MIN_COINJOIN_PEER_PROTO_VERSION)));
-        }
-        PushStatus(pfrom, STATUS_REJECTED, ERR_VERSION, connman);
-        return;
-    }
-
     //do we have enough users in the current session?
     if (!IsSessionReady()) {
         LogPrint(BCLog::COINJOIN, "DSVIN -- session not complete!\n");
@@ -226,16 +194,6 @@ void CCoinJoinServer::ProcessDSVIN(CNode* pfrom, const std::string& strCommand, 
 
 void CCoinJoinServer::ProcessDSSIGNFINALTX(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
-    if (pfrom->nVersion < MIN_COINJOIN_PEER_PROTO_VERSION) {
-        LogPrint(BCLog::COINJOIN, "DSSIGNFINALTX -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-        if (enable_bip61) {
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
-                                                                                  REJECT_OBSOLETE, strprintf(
-                                "Version must be %d or greater", MIN_COINJOIN_PEER_PROTO_VERSION)));
-        }
-        return;
-    }
-
     std::vector<CTxIn> vecTxIn;
     vRecv >> vecTxIn;
 

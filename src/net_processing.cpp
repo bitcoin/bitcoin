@@ -2683,7 +2683,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                       (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""));
         }
 
-        if (pfrom->nVersion >= LLMQS_PROTO_VERSION && !pfrom->m_masternode_probe_connection) {
+        if (!pfrom->m_masternode_probe_connection) {
             CMNAuth::PushMNAUTH(pfrom, *connman);
         }
 
@@ -2708,14 +2708,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
 
-        if (pfrom->nVersion >= SENDDSQUEUE_PROTO_VERSION) {
-            // Tell our peer that he should send us CoinJoin queue messages
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
-        } else {
-            // older nodes do not support SENDDSQUEUE and expect us to always send CoinJoin queue messages
-            // TODO we can remove this compatibility code in 0.15.0
-            pfrom->fSendDSQueue = true;
-        }
+        // Tell our peer that he should send us CoinJoin queue messages
+        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
 
         if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom->m_masternode_connection) {
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
@@ -4665,7 +4659,6 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
                     const auto islock = llmq::quorumInstantSendManager->GetInstantSendLockByTxid(hash);
                     if (islock == nullptr) continue;
-                    if (pto->nVersion < LLMQS_PROTO_VERSION) continue;
                     if (pto->nVersion < ISDLOCK_PROTO_VERSION && islock->IsDeterministic()) continue;
                     queueAndMaybePushInv(CInv(islock->IsDeterministic() ? MSG_ISDLOCK : MSG_ISLOCK, ::SerializeHash(*islock)));
                 }

@@ -150,7 +150,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
 
     // Note: do not hold cs while calling RelayInv
     AssertLockNotHeld(cs);
-    g_connman->RelayInv(clsigInv, LLMQS_PROTO_VERSION);
+    g_connman->RelayInv(clsigInv);
 
     if (pindex == nullptr) {
         // we don't know the block/header for this CLSIG yet, so bail out for now

@@ -677,7 +677,7 @@ void CGovernanceObject::Relay(CConnman& connman) const
         return;
     }
 
-    int minProtoVersion = MIN_GOVERNANCE_PEER_PROTO_VERSION;
+    int minProtoVersion = MIN_PEER_PROTO_VERSION;
     if (nObjectType == GOVERNANCE_OBJECT_PROPOSAL) {
         // We know this proposal is valid locally, otherwise we would not get to the point we should relay it.
         // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh

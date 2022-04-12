@@ -102,17 +102,13 @@ public:
     std::vector<uint256> deletedMNs;
     std::vector<CSimplifiedMNListEntry> mnList;
 
-    // starting with proto version LLMQS_PROTO_VERSION, we also transfer changes in active quorums
     std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
     std::vector<llmq::CFinalCommitment> newQuorums;
 
     SERIALIZE_METHODS(CSimplifiedMNListDiff, obj)
     {
         READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx, obj.deletedMNs, obj.mnList);
-
-        if (s.GetVersion() >= LLMQS_PROTO_VERSION) {
-            READWRITE(obj.deletedQuorums, obj.newQuorums);
-        }
+        READWRITE(obj.deletedQuorums, obj.newQuorums);
     }
 
     CSimplifiedMNListDiff();

@@ -129,15 +129,8 @@ void CGovernanceVote::Relay(CConnman& connman) const
         return;
     }
 
-    // When this vote is from non-valid (PoSe banned) MN, we should only announce it to v0.14.0.1 nodes as older nodes
-    // will ban us otherwise.
-    int minVersion = MIN_GOVERNANCE_PEER_PROTO_VERSION;
-    if (!CDeterministicMNList::IsMNValid(*dmn)) {
-        minVersion = GOVERNANCE_POSE_BANNED_VOTES_VERSION;
-    }
-
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
-    connman.RelayInv(inv, minVersion);
+    connman.RelayInv(inv);
 }
 
 void CGovernanceVote::UpdateHash() const

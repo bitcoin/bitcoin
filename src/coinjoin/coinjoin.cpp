@@ -74,7 +74,7 @@ bool CCoinJoinQueue::Relay(CConnman& connman)
 {
     connman.ForEachNode([&connman, this](CNode* pnode) {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
-        if (pnode->nVersion >= MIN_COINJOIN_PEER_PROTO_VERSION && pnode->fSendDSQueue) {
+        if (pnode->fSendDSQueue) {
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, (*this)));
         }
     });
