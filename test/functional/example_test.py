@@ -166,6 +166,9 @@ class ExampleTest(BitcoinTestFramework):
 
         height = self.nodes[0].getblockcount()
 
+        self.log.info("-------informacion de bloque--------")
+        self.log.info(self.nodes[0].getblockcount())
+
         for _ in range(10):
             # Use the blocktools functionality to manually build a block.
             # Calling the generate() rpc is easier, but this allows us to exactly
@@ -180,8 +183,18 @@ class ExampleTest(BitcoinTestFramework):
             self.block_time += 1
             height += 1
 
-        self.log.info("Wait for node1 to reach current tip (height 11) using RPC")
-        self.nodes[1].waitforblockheight(11)
+        block_new = create_block(self.tip, create_coinbase(height+1), self.block_time)
+        block_new.solve()
+        block_message = msg_block(block_new)
+        # Send message is used to send a P2P message to the node over our P2PInterface
+        peer_messaging.send_message(block_message)
+        self.tip = block_new.sha256
+        blocks.append(self.tip)
+        self.block_time += 1
+        height += 1
+
+        self.log.info("Wait for node1 to reach current tip (height 12) using RPC")
+        self.nodes[1].waitforblockheight(12)
 
         self.log.info("Connect node2 and node1")
         self.connect_nodes(1, 2)
@@ -212,6 +225,8 @@ class ExampleTest(BitcoinTestFramework):
         with p2p_lock:
             for block in peer_receiving.block_receive_map.values():
                 assert_equal(block, 1)
+        
+            assert_equal(self.nodes[2].getblockcount(), 12)
 
 
 if __name__ == '__main__':
