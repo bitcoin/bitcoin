@@ -15,35 +15,35 @@ You can find installation instructions in the `build-*.md` file for your platfor
 
 ## Required
 
-| Dependency | Version used | Minimum required | Runtime |
-| --- | --- | --- | --- |
-| [Boost](https://www.boost.org/users/download/) | 1.77.0 | [1.64.0](https://github.com/bitcoin/bitcoin/pull/22320) | No |
-| [libevent](https://github.com/libevent/libevent/releases) | 2.1.12-stable | [2.1.8](https://github.com/bitcoin/bitcoin/pull/24681) | No |
-| [glibc](https://www.gnu.org/software/libc/) | N/A | [2.18](https://github.com/bitcoin/bitcoin/pull/23511) | Yes |
+| Dependency | Releases | Version used | Minimum required | Runtime |
+| --- | --- | --- | --- | --- |
+| [Boost](../depends/packages/boost.mk) | [link](https://www.boost.org/users/download/) | [1.77.0](https://github.com/bitcoin/bitcoin/pull/24383) | [1.64.0](https://github.com/bitcoin/bitcoin/pull/22320) | No |
+| [libevent](../depends/packages/libevent.mk) | [link](https://github.com/libevent/libevent/releases) | [2.1.12-stable](https://github.com/bitcoin/bitcoin/pull/21991) | [2.1.8](https://github.com/bitcoin/bitcoin/pull/24681) | No |
+| glibc | [link](https://www.gnu.org/software/libc/) | N/A | [2.18](https://github.com/bitcoin/bitcoin/pull/23511) | Yes |
 
 ## Optional
 
 ### GUI
-| Dependency | Version used | Minimum required | Runtime |
-| --- | --- | --- | --- |
-| [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) | 2.12.6 | 2.6 | Yes |
-| [FreeType](https://freetype.org) | 2.11.0 | 2.3.0 | Yes |
-| [qrencode](https://fukuchi.org/works/qrencode/) | [3.4.4](https://fukuchi.org/works/qrencode) | | No |
-| [Qt](https://www.qt.io) | [5.15.3](https://download.qt.io/official_releases/qt/) | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
+| Dependency | Releases | Version used | Minimum required | Runtime |
+| --- | --- | --- | --- | --- |
+| [Fontconfig](../depends/packages/fontconfig.mk) | [link](https://www.freedesktop.org/wiki/Software/fontconfig/) | [2.12.6](https://github.com/bitcoin/bitcoin/pull/23495) | 2.6 | Yes |
+| [FreeType](../depends/packages/freetype.mk) | [link](https://freetype.org) | [2.11.0](https://github.com/bitcoin/bitcoin/commit/01544dd78ccc0b0474571da854e27adef97137fb) | 2.3.0 | Yes |
+| [qrencode](../depends/packages/qrencode.mk) | [link](https://fukuchi.org/works/qrencode/) | [3.4.4](https://github.com/bitcoin/bitcoin/pull/6373) | | No |
+| [Qt](../depends/packages/qt.mk) | [link](https://download.qt.io/official_releases/qt/) | [5.15.3](https://github.com/bitcoin/bitcoin/pull/24668) | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
 
 ### Networking
-| Dependency | Version used | Minimum required | Runtime |
-| --- | --- | --- | --- |
-| [libnatpmp](https://github.com/miniupnp/libnatpmp/) | commit [4536032...](https://github.com/miniupnp/libnatpmp/tree/4536032ae32268a45c073a4d5e91bbab4534773a) | | No |
-| [MiniUPnPc](https://miniupnp.tuxfamily.org/) | 2.2.2 | 1.9 | No |
+| Dependency | Releases | Version used | Minimum required | Runtime |
+| --- | --- | --- | --- | --- |
+| [libnatpmp](../depends/packages/libnatpmp.mk) | [link](https://github.com/miniupnp/libnatpmp/) | commit [4536032...](https://github.com/bitcoin/bitcoin/pull/21209) | | No |
+| [MiniUPnPc](../depends/packages/miniupnpc.mk) | [link](https://miniupnp.tuxfamily.org/) | [2.2.2](https://github.com/bitcoin/bitcoin/pull/20421) | 1.9 | No |
 
 ### Notifications
-| Dependency | Version used | Minimum required | Runtime |
-| --- | --- | --- | --- |
-| [ZeroMQ](https://zeromq.org) | 4.3.4 | 4.0.0 | No |
+| Dependency | Releases | Version used | Minimum required | Runtime |
+| --- | --- | --- | --- | --- |
+| [ZeroMQ](../depends/packages/zeromq.mk) | [link](https://github.com/zeromq/libzmq/releases) | [4.3.4](https://github.com/bitcoin/bitcoin/pull/23956) | 4.0.0 | No |
 
 ### Wallet
-| Dependency | Version used | Minimum required | Runtime |
-| --- | --- | --- | --- |
-| [Berkeley DB](https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) (legacy wallet) | 4.8.30 | 4.8.x | No |
-| [SQLite](https://sqlite.org) | 3.32.1 | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) | No |
+| Dependency | Releases | Version used | Minimum required | Runtime |
+| --- | --- | --- | --- | --- |
+| [Berkeley DB](../depends/packages/bdb.mk) (legacy wallet) | [link](https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) | 4.8.30 | 4.8.x | No |
+| [SQLite](../depends/packages/sqlite.mk) | [link](https://sqlite.org) | [3.32.1](https://github.com/bitcoin/bitcoin/pull/19077) | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) | No |
