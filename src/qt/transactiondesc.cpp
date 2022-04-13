@@ -274,6 +274,33 @@ QString TransactionDesc::toHTML_Amounts(interfaces::Wallet& wallet, const interf
                     strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, txout.nValue) + "<br>";
             }
 
+            auto pegout_mine = wtx.pegout_is_mine.begin();
+            for (const PegOutCoin& pegout : wtx.pegouts) {
+                isminetype toSelf = *(pegout_mine++);
+                if ((toSelf == ISMINE_SPENDABLE) && (fAllFromMe == ISMINE_SPENDABLE))
+                    continue;
+
+                CTxDestination dest;
+                if (::ExtractDestination(pegout.GetScriptPubKey(), dest)) {
+                    strHTML += "<b>" + tr("To") + ":</b> ";
+                    std::string name;
+                    if (wallet.getAddress(
+                            dest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr) &&
+                        !name.empty())
+                        strHTML += GUIUtil::HtmlEscape(name) + " ";
+                    strHTML += GUIUtil::HtmlEscape(::EncodeDestination(dest));
+                    if (toSelf == ISMINE_SPENDABLE)
+                        strHTML += " (own address)";
+                    else if (toSelf & ISMINE_WATCH_ONLY)
+                        strHTML += " (watch-only)";
+                    strHTML += "<br>";
+                }
+
+                strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -pegout.GetAmount()) + "<br>";
+                if (toSelf)
+                    strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, pegout.GetAmount()) + "<br>";
+            }
+
             if (fAllToMe) {
                 // Payment to self
                 CAmount nValue = wtx.credit - wtx.change;
@@ -294,6 +321,7 @@ QString TransactionDesc::toHTML_Amounts(interfaces::Wallet& wallet, const interf
                     strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet.getDebit(txin, ISMINE_ALL)) + "<br>";
                 }
             }
+
             mine = wtx.txout_is_mine.begin();
             for (const interfaces::WalletTxOut& out : wtx.outputs) {
                 if (*(mine++)) {
@@ -301,7 +329,12 @@ QString TransactionDesc::toHTML_Amounts(interfaces::Wallet& wallet, const interf
                 }
             }
 
-            // MW: TODO - Pegouts?
+            mine = wtx.pegout_is_mine.begin();
+            for (const PegOutCoin& pegout : wtx.pegouts) {
+                if (*(mine++)) {
+                    strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, pegout.GetAmount()) + "<br>";
+                }
+            }
         }
     }
 
