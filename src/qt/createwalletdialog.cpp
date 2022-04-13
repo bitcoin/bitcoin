@@ -25,7 +25,8 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     });
 
     connect(ui->encrypt_wallet_checkbox, &QCheckBox::toggled, [this](bool checked) {
-        // Disable disable_privkeys_checkbox when encrypt is set to true, enable it when encrypt is false
+        // Disable the disable_privkeys_checkbox when isEncryptWalletChecked is
+        // set to true, enable it when isEncryptWalletChecked is false.
         ui->disable_privkeys_checkbox->setEnabled(!checked);
 
         // When the disable_privkeys_checkbox is disabled, uncheck it.
@@ -45,17 +46,17 @@ QString CreateWalletDialog::walletName() const
     return ui->wallet_name_line_edit->text();
 }
 
-bool CreateWalletDialog::encrypt() const
+bool CreateWalletDialog::isEncryptWalletChecked() const
 {
     return ui->encrypt_wallet_checkbox->isChecked();
 }
 
-bool CreateWalletDialog::disablePrivateKeys() const
+bool CreateWalletDialog::isDisablePrivateKeysChecked() const
 {
     return ui->disable_privkeys_checkbox->isChecked();
 }
 
-bool CreateWalletDialog::blank() const
+bool CreateWalletDialog::isMakeBlankWalletChecked() const
 {
     return ui->blank_wallet_checkbox->isChecked();
 }
