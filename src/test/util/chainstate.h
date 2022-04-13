@@ -31,7 +31,11 @@ const auto NoMalleation = [](AutoFile& file, node::SnapshotMetadata& meta){};
  */
 template<typename F = decltype(NoMalleation)>
 static bool
-CreateAndActivateUTXOSnapshot(TestingSetup* fixture, F malleation = NoMalleation, bool reset_chainstate = false)
+CreateAndActivateUTXOSnapshot(
+    TestingSetup* fixture,
+    F malleation = NoMalleation,
+    bool reset_chainstate = false,
+    bool in_memory_chainstate = false)
 {
     node::NodeContext& node = fixture->m_node;
     fs::path root = fixture->m_path_root;
@@ -88,7 +92,7 @@ CreateAndActivateUTXOSnapshot(TestingSetup* fixture, F malleation = NoMalleation
         BOOST_CHECK_EQUAL(node.chainman->ActiveTip()->nHeight, 0);
     }
 
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory=*/true);
+    return node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
 }
 
 
