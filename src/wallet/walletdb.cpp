@@ -320,6 +320,72 @@ public:
     CWalletScanState() = default;
 };
 
+bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        CPubKey vchPubKey;
+        ssKey >> vchPubKey;
+        if (!vchPubKey.IsValid())
+        {
+            strErr = "Error reading wallet database: CPubKey corrupt";
+            return false;
+        }
+        CKey key;
+        CPrivKey pkey;
+        uint256 hash;
+
+        ssValue >> pkey;
+
+        // Old wallets store keys as DBKeys::KEY [pubkey] => [privkey]
+        // ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
+        // using EC operations as a checksum.
+        // Newer wallets store keys as DBKeys::KEY [pubkey] => [privkey][hash(pubkey,privkey)], which is much faster while
+        // remaining backwards-compatible.
+        try
+        {
+            ssValue >> hash;
+        }
+        catch (const std::ios_base::failure&) {}
+
+        bool fSkipCheck = false;
+
+        if (!hash.IsNull())
+        {
+            // hash pubkey/privkey to accelerate wallet load
+            std::vector<unsigned char> vchKey;
+            vchKey.reserve(vchPubKey.size() + pkey.size());
+            vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
+            vchKey.insert(vchKey.end(), pkey.begin(), pkey.end());
+
+            if (Hash(vchKey) != hash)
+            {
+                strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
+                return false;
+            }
+
+            fSkipCheck = true;
+        }
+
+        if (!key.Load(pkey, vchPubKey, fSkipCheck))
+        {
+            strErr = "Error reading wallet database: CPrivKey corrupt";
+            return false;
+        }
+        if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadKey(key, vchPubKey))
+        {
+            strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadKey failed";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
 static bool
 ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
              CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
@@ -410,60 +476,8 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
                 pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadWatchOnly(script);
             }
         } else if (strType == DBKeys::KEY) {
-            CPubKey vchPubKey;
-            ssKey >> vchPubKey;
-            if (!vchPubKey.IsValid())
-            {
-                strErr = "Error reading wallet database: CPubKey corrupt";
-                return false;
-            }
-            CKey key;
-            CPrivKey pkey;
-            uint256 hash;
-
             wss.nKeys++;
-            ssValue >> pkey;
-
-            // Old wallets store keys as DBKeys::KEY [pubkey] => [privkey]
-            // ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
-            // using EC operations as a checksum.
-            // Newer wallets store keys as DBKeys::KEY [pubkey] => [privkey][hash(pubkey,privkey)], which is much faster while
-            // remaining backwards-compatible.
-            try
-            {
-                ssValue >> hash;
-            }
-            catch (const std::ios_base::failure&) {}
-
-            bool fSkipCheck = false;
-
-            if (!hash.IsNull())
-            {
-                // hash pubkey/privkey to accelerate wallet load
-                std::vector<unsigned char> vchKey;
-                vchKey.reserve(vchPubKey.size() + pkey.size());
-                vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
-                vchKey.insert(vchKey.end(), pkey.begin(), pkey.end());
-
-                if (Hash(vchKey) != hash)
-                {
-                    strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
-                    return false;
-                }
-
-                fSkipCheck = true;
-            }
-
-            if (!key.Load(pkey, vchPubKey, fSkipCheck))
-            {
-                strErr = "Error reading wallet database: CPrivKey corrupt";
-                return false;
-            }
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadKey(key, vchPubKey))
-            {
-                strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadKey failed";
-                return false;
-            }
+            if (!LoadKey(pwallet, ssKey, ssValue, strErr)) return false;
         } else if (strType == DBKeys::MASTER_KEY) {
             // Master encryption key is loaded into only the wallet and not any of the ScriptPubKeyMans.
             unsigned int nID;
