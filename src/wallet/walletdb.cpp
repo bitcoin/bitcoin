@@ -470,17 +470,13 @@ bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
 
 static bool
 ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
-             CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+             CWalletScanState &wss, std::string& strType, std::string& strErr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     try {
         // Unserialize
         // Taking advantage of the fact that pair serialization
         // is just the two items serialized one after the other
         ssKey >> strType;
-        // If we have a filter, check if this matches the filter
-        if (filter_fn && !filter_fn(strType)) {
-            return true;
-        }
         // Legacy entries in descriptor wallets are not allowed, abort immediately
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && DBKeys::LEGACY_TYPES.count(strType) > 0) {
             wss.unexpected_legacy_entry = true;
@@ -834,19 +830,6 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
     return true;
 }
 
-bool ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn)
-{
-    CWalletScanState dummy_wss;
-    LOCK(pwallet->cs_wallet);
-    return ReadKeyValue(pwallet, ssKey, ssValue, dummy_wss, strType, strErr, filter_fn);
-}
-
-bool WalletBatch::IsKeyType(const std::string& strType)
-{
-    return (strType == DBKeys::KEY ||
-            strType == DBKeys::MASTER_KEY || strType == DBKeys::CRYPTED_KEY);
-}
-
 static DBErrors LoadMinVersion(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
@@ -934,7 +917,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 }
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:
-                if (IsKeyType(strType) || strType == DBKeys::DEFAULTKEY) {
+                if (strType == DBKeys::KEY ||
+                    strType == DBKeys::MASTER_KEY ||
+                    strType == DBKeys::CRYPTED_KEY ||
+                    strType == DBKeys::DEFAULTKEY) {
                     result = DBErrors::CORRUPT;
                 } else if (wss.tx_corrupt) {
                     pwallet->WalletLogPrintf("Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.\n");

@@ -276,8 +276,6 @@ public:
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTxHashes(std::vector<uint256>& tx_hashes);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
-    /* Function to determine if a certain KV/key-type is a key (cryptographical key) type */
-    static bool IsKeyType(const std::string& strType);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
@@ -299,12 +297,6 @@ private:
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
 void MaybeCompactWalletDB(WalletContext& context);
-
-//! Callback for filtering key types to deserialize in ReadKeyValue
-using KeyFilterFn = std::function<bool(const std::string&)>;
-
-//! Unserialize a given Key-Value pair and load it into the wallet
-bool ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr);
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
