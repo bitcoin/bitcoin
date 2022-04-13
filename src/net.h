@@ -735,7 +735,7 @@ public:
         bool bind_on_any;
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
-        std::vector<std::string> m_added_nodes;
+        std::vector<AddedNodeParams> m_added_nodes;
         bool m_i2p_accept_incoming;
     };
 
@@ -764,9 +764,7 @@ public:
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
             LOCK(m_added_nodes_mutex);
-            for (const auto& added_node : connOptions.m_added_nodes) {
-                m_added_nodes.push_back(AddedNodeParams{added_node, ConnectionType::MANUAL});
-            }
+            m_added_nodes = connOptions.m_added_nodes;
         }
         m_onion_binds = connOptions.onion_binds;
     }
