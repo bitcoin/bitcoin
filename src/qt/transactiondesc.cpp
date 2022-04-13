@@ -225,10 +225,13 @@ QString TransactionDesc::toHTML_Amounts(interfaces::Wallet& wallet, const interf
         for (const isminetype mine : wtx.txin_is_mine) {
             if (fAllFromMe > mine) fAllFromMe = mine;
         }
-        // MW: TODO - Pegouts?
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
         for (const isminetype mine : wtx.txout_is_mine) {
+            if (fAllToMe > mine) fAllToMe = mine;
+        }
+
+        for (const isminetype mine : wtx.pegout_is_mine) {
             if (fAllToMe > mine) fAllToMe = mine;
         }
 
