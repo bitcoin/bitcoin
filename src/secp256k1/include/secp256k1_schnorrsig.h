@@ -116,13 +116,24 @@ typedef struct {
  *                BIP-340 "Default Signing" for a full explanation of this
  *                argument and for guidance if randomness is expensive.
  */
-SECP256K1_API int secp256k1_schnorrsig_sign(
+SECP256K1_API int secp256k1_schnorrsig_sign32(
     const secp256k1_context* ctx,
     unsigned char *sig64,
     const unsigned char *msg32,
     const secp256k1_keypair *keypair,
     const unsigned char *aux_rand32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+/** Same as secp256k1_schnorrsig_sign32, but DEPRECATED. Will be removed in
+ *  future versions. */
+SECP256K1_API int secp256k1_schnorrsig_sign(
+    const secp256k1_context* ctx,
+    unsigned char *sig64,
+    const unsigned char *msg32,
+    const secp256k1_keypair *keypair,
+    const unsigned char *aux_rand32
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4)
+  SECP256K1_DEPRECATED("Use secp256k1_schnorrsig_sign32 instead");
 
 /** Create a Schnorr signature with a more flexible API.
  *

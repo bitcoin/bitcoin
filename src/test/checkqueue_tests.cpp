@@ -19,13 +19,17 @@
 #include <vector>
 
 /**
- * Identical to TestingSetup but excludes lock contention logging, as some of
- * these tests are designed to be heavily contested to trigger race conditions
- * or other issues.
+ * Identical to TestingSetup but excludes lock contention logging if
+ * `DEBUG_LOCKCONTENTION` is defined, as some of these tests are designed to be
+ * heavily contested to trigger race conditions or other issues.
  */
 struct NoLockLoggingTestingSetup : public TestingSetup {
     NoLockLoggingTestingSetup()
+#ifdef DEBUG_LOCKCONTENTION
         : TestingSetup{CBaseChainParams::MAIN, /*extra_args=*/{"-debugexclude=lock"}} {}
+#else
+        : TestingSetup{CBaseChainParams::MAIN} {}
+#endif
 };
 
 BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, NoLockLoggingTestingSetup)
