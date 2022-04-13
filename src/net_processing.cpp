@@ -27,6 +27,7 @@
 #include <tinyformat.h>
 #include <index/txindex.h>
 #include <txmempool.h>
+#include <util/check.h> // For NDEBUG compile time check
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
@@ -57,10 +58,6 @@
 #include <llmq/snapshot.h>
 
 #include <statsd_client.h>
-
-#if defined(NDEBUG)
-# error "Dash Core cannot be compiled without assertions."
-#endif
 
 /** Maximum number of in-flight objects from a peer */
 static constexpr int32_t MAX_PEER_OBJECT_IN_FLIGHT = 100;
