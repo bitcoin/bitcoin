@@ -425,6 +425,33 @@ bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, st
     return true;
 }
 
+bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        // Master encryption key is loaded into only the wallet and not any of the ScriptPubKeyMans.
+        unsigned int nID;
+        ssKey >> nID;
+        CMasterKey kMasterKey;
+        ssValue >> kMasterKey;
+        if(pwallet->mapMasterKeys.count(nID) != 0)
+        {
+            strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
+            return false;
+        }
+        pwallet->mapMasterKeys[nID] = kMasterKey;
+        if (pwallet->nMasterKeyMaxID < nID)
+            pwallet->nMasterKeyMaxID = nID;
+
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
 static bool
 ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
              CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
@@ -518,19 +545,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             wss.nKeys++;
             if (!LoadKey(pwallet, ssKey, ssValue, strErr)) return false;
         } else if (strType == DBKeys::MASTER_KEY) {
-            // Master encryption key is loaded into only the wallet and not any of the ScriptPubKeyMans.
-            unsigned int nID;
-            ssKey >> nID;
-            CMasterKey kMasterKey;
-            ssValue >> kMasterKey;
-            if(pwallet->mapMasterKeys.count(nID) != 0)
-            {
-                strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
-                return false;
-            }
-            pwallet->mapMasterKeys[nID] = kMasterKey;
-            if (pwallet->nMasterKeyMaxID < nID)
-                pwallet->nMasterKeyMaxID = nID;
+            if (!LoadEncryptionKey(pwallet, ssKey, ssValue, strErr)) return false;
         } else if (strType == DBKeys::CRYPTED_KEY) {
             wss.nCKeys++;
             if (!LoadCryptedKey(pwallet, ssKey, ssValue, strErr)) return false;
