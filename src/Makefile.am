@@ -249,6 +249,7 @@ BITCOIN_CORE_H = \
   rpc/server.h \
   rpc/server_util.h \
   rpc/util.h \
+  silentpayment.h \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
@@ -433,6 +434,7 @@ libbitcoin_node_a_SOURCES = \
   rpc/server_util.cpp \
   rpc/signmessage.cpp \
   rpc/txoutproof.cpp \
+  silentpayment.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   signet.cpp \
@@ -473,6 +475,7 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(BDB_CPPFLAGS) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
+  silentpayment.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \
