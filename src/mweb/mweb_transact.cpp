@@ -105,6 +105,10 @@ void Transact::AddMWEBTx(InProcessTx& new_tx)
             recipient_amount -= new_tx.total_fee;
         }
 
+        if (recipient_amount < 0) {
+            throw CreateTxError(_("The transaction amount is too small to pay the fee"));
+        }
+
         if (recipient.IsMWEB()) {
             receivers.push_back(mw::Recipient{recipient_amount, recipient.GetMWEBAddress()});
         } else {

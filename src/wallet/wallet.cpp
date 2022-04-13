@@ -1647,7 +1647,7 @@ CAmount CWallet::GetCredit(const CTransaction& tx, const boost::optional<MWEB::W
     if (!has_my_inputs) {
         for (const PegOutCoin& pegout : tx.mweb_tx.GetPegOuts()) {
             LOCK(cs_wallet);
-            if (IsMine(DestinationAddr(pegout.GetScriptPubKey()))) {
+            if (!(IsMine(DestinationAddr(pegout.GetScriptPubKey())) & filter)) {
                 nCredit += pegout.GetAmount();
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error(std::string(__func__) + ": value out of range");
