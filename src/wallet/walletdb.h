@@ -307,6 +307,7 @@ using KeyFilterFn = std::function<bool(const std::string&)>;
 bool ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr);
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
+bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETDB_H

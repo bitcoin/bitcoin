@@ -386,6 +386,45 @@ bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::stri
     return true;
 }
 
+bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        CPubKey vchPubKey;
+        ssKey >> vchPubKey;
+        if (!vchPubKey.IsValid())
+        {
+            strErr = "Error reading wallet database: CPubKey corrupt";
+            return false;
+        }
+        std::vector<unsigned char> vchPrivKey;
+        ssValue >> vchPrivKey;
+
+        // Get the checksum and check it
+        bool checksum_valid = false;
+        if (!ssValue.eof()) {
+            uint256 checksum;
+            ssValue >> checksum;
+            if (!(checksum_valid = Hash(vchPrivKey) == checksum)) {
+                strErr = "Error reading wallet database: Encrypted key corrupt";
+                return false;
+            }
+        }
+
+        if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid))
+        {
+            strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCryptedKey failed";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
 static bool
 ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
              CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
@@ -493,34 +532,8 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             if (pwallet->nMasterKeyMaxID < nID)
                 pwallet->nMasterKeyMaxID = nID;
         } else if (strType == DBKeys::CRYPTED_KEY) {
-            CPubKey vchPubKey;
-            ssKey >> vchPubKey;
-            if (!vchPubKey.IsValid())
-            {
-                strErr = "Error reading wallet database: CPubKey corrupt";
-                return false;
-            }
-            std::vector<unsigned char> vchPrivKey;
-            ssValue >> vchPrivKey;
-
-            // Get the checksum and check it
-            bool checksum_valid = false;
-            if (!ssValue.eof()) {
-                uint256 checksum;
-                ssValue >> checksum;
-                if (!(checksum_valid = Hash(vchPrivKey) == checksum)) {
-                    strErr = "Error reading wallet database: Encrypted key corrupt";
-                    return false;
-                }
-            }
-
             wss.nCKeys++;
-
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid))
-            {
-                strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCryptedKey failed";
-                return false;
-            }
+            if (!LoadCryptedKey(pwallet, ssKey, ssValue, strErr)) return false;
             wss.fIsEncrypted = true;
         } else if (strType == DBKeys::KEYMETA) {
             CPubKey vchPubKey;
