@@ -47,6 +47,10 @@ struct TestData {
 struct ParserContext {
     typedef CPubKey Key;
 
+    bool KeyCompare(const Key& a, const Key& b) const {
+        return a < b;
+    }
+
     std::optional<std::string> ToString(const Key& key) const
     {
         auto it = TEST_DATA.dummy_key_idx_map.find(key);
@@ -89,6 +93,10 @@ struct ScriptParserContext {
         bool is_hash;
         std::vector<unsigned char> data;
     };
+
+    bool KeyCompare(const Key& a, const Key& b) const {
+        return a.data < b.data;
+    }
 
     const std::vector<unsigned char>& ToPKBytes(const Key& key) const
     {
