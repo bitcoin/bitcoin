@@ -267,13 +267,17 @@ struct NodeInfo {
     std::vector<CPubKey> keys;
     //! The hash value for this node, if it has one
     std::vector<unsigned char> hash;
+    //! The type requirements for the children of this node.
+    std::vector<Type> subtypes;
 
     NodeInfo(Fragment frag): fragment(frag), n_subs(0), k(0) {}
     NodeInfo(Fragment frag, CPubKey key): fragment(frag), n_subs(0), k(0), keys({key}) {}
     NodeInfo(Fragment frag, uint32_t _k): fragment(frag), n_subs(0), k(_k) {}
     NodeInfo(Fragment frag, std::vector<unsigned char> h): fragment(frag), n_subs(0), k(0), hash(std::move(h)) {}
-    NodeInfo(uint8_t subs, Fragment frag): fragment(frag), n_subs(subs), k(0) {}
-    NodeInfo(uint8_t subs, Fragment frag, uint32_t _k): fragment(frag), n_subs(subs), k(_k) {}
+    NodeInfo(uint8_t subs, Fragment frag): fragment(frag), n_subs(subs), k(0), subtypes(subs, ""_mst) {}
+    NodeInfo(uint8_t subs, Fragment frag, uint32_t _k): fragment(frag), n_subs(subs), k(_k), subtypes(subs, ""_mst)  {}
+    NodeInfo(std::vector<Type> subt, Fragment frag): fragment(frag), n_subs(subt.size()), k(0), subtypes(std::move(subt)) {}
+    NodeInfo(std::vector<Type> subt, Fragment frag, uint32_t _k): fragment(frag), n_subs(subt.size()), k(_k), subtypes(std::move(subt))  {}
     NodeInfo(Fragment frag, uint32_t _k, std::vector<CPubKey> _keys): fragment(frag), n_subs(0), k(_k), keys(std::move(_keys)) {}
 };
 
@@ -377,32 +381,359 @@ std::optional<NodeInfo> ConsumeNodeStable(FuzzedDataProvider& provider) {
     return {};
 }
 
+/* This structure contains a table which for each "target" Type a list of recipes
+ * to construct it, automatically inferred from the behavior of ComputeType.
+ * Note that the Types here are not the final types of the constructed Nodes, but
+ * just the subset that are required. For example, a recipe for the "Bo" type
+ * might construct a "Bondu" sha256() NodeInfo, but cannot construct a "Bz" older().
+ * Each recipe is a Fragment together with a list of required types for its subnodes.
+ */
+struct SmartInfo
+{
+    using recipe = std::pair<Fragment, std::vector<Type>>;
+    std::map<Type, std::vector<recipe>> table;
+
+    void Init()
+    {
+        /* Construct a set of interesting type requirements to reason with (sections of BKVWzondu). */
+        std::vector<Type> types;
+        for (int base = 0; base < 4; ++base) { /* select from B,K,V,W */
+            Type type_base = base == 0 ? "B"_mst : base == 1 ? "K"_mst : base == 2 ? "V"_mst : "W"_mst;
+            for (int zo = 0; zo < 3; ++zo) { /* select from z,o,(none) */
+                Type type_zo = zo == 0 ? "z"_mst : zo == 1 ? "o"_mst : ""_mst;
+                for (int n = 0; n < 2; ++n) { /* select from (none),n */
+                    if (zo == 0 && n == 1) continue; /* z conflicts with n */
+                    if (base == 3 && n == 1) continue; /* W conficts with n */
+                    Type type_n = n == 0 ? ""_mst : "n"_mst;
+                    for (int d = 0; d < 2; ++d) { /* select from (none),d */
+                        if (base == 2 && d == 1) continue; /* V conflicts with d */
+                        Type type_d = d == 0 ? ""_mst : "d"_mst;
+                        for (int u = 0; u < 2; ++u) { /* select from (none),u */
+                            if (base == 2 && u == 1) continue; /* V conflicts with u */
+                            Type type_u = u == 0 ? ""_mst : "u"_mst;
+                            Type type = type_base | type_zo | type_n | type_d | type_u;
+                            types.push_back(type);
+                        }
+                    }
+                }
+            }
+        }
+
+        /* We define a recipe a to be a super-recipe of recipe b if they use the same
+         * fragment, the same number of subexpressions, and each of a's subexpression
+         * types is a supertype of the corresponding subexpression type of b.
+         * Within the set of recipes for the construction of a given type requirement,
+         * no recipe should be a super-recipe of another (as the super-recipe is
+         * applicable in every place the sub-recipe is, the sub-recipe is redundant). */
+        auto is_super_of = [](const recipe& a, const recipe& b) {
+            if (a.first != b.first) return false;
+            if (a.second.size() != b.second.size()) return false;
+            for (size_t i = 0; i < a.second.size(); ++i) {
+                if (!(b.second[i] << a.second[i])) return false;
+            }
+            return true;
+        };
+
+        /* Sort the type requirements. Subtypes will always sort later (e.g. Bondu will
+         * sort after Bo or Bu). As we'll be constructing recipes using these types, in
+         * order, in what follows, we'll construct super-recipes before sub-recipes.
+         * That means we never need to go back and delete a sub-recipe because a
+         * super-recipe got added. */
+        std::sort(types.begin(), types.end());
+
+        // Iterate over all possible fragments.
+        for (int fragidx = 0; fragidx <= int(Fragment::MULTI); ++fragidx) {
+            int sub_count = 0; //!< The minimum number of child nodes this recipe has.
+            int sub_range = 1; //!< The maximum number of child nodes for this recipe is sub_count+sub_range-1.
+            size_t data_size = 0;
+            size_t n_keys = 0;
+            uint32_t k = 0;
+            Fragment frag{fragidx};
+
+            // Based on the fragment, determine #subs/data/k/keys to pass to ComputeType. */
+            switch (frag) {
+                case Fragment::PK_K:
+                case Fragment::PK_H:
+                    n_keys = 1;
+                    break;
+                case Fragment::MULTI:
+                    n_keys = 1;
+                    k = 1;
+                    break;
+                case Fragment::OLDER:
+                case Fragment::AFTER:
+                    k = 1;
+                    break;
+                case Fragment::SHA256:
+                case Fragment::HASH256:
+                    data_size = 32;
+                    break;
+                case Fragment::RIPEMD160:
+                case Fragment::HASH160:
+                    data_size = 20;
+                    break;
+                case Fragment::JUST_0:
+                case Fragment::JUST_1:
+                    break;
+                case Fragment::WRAP_A:
+                case Fragment::WRAP_S:
+                case Fragment::WRAP_C:
+                case Fragment::WRAP_D:
+                case Fragment::WRAP_V:
+                case Fragment::WRAP_J:
+                case Fragment::WRAP_N:
+                    sub_count = 1;
+                    break;
+                case Fragment::AND_V:
+                case Fragment::AND_B:
+                case Fragment::OR_B:
+                case Fragment::OR_C:
+                case Fragment::OR_D:
+                case Fragment::OR_I:
+                    sub_count = 2;
+                    break;
+                case Fragment::ANDOR:
+                    sub_count = 3;
+                    break;
+                case Fragment::THRESH:
+                    // Thresh logic is executed for 1 and 2 arguments. Larger numbers use ad-hoc code to extend.
+                    sub_count = 1;
+                    sub_range = 2;
+                    k = 1;
+                    break;
+            }
+
+            // Iterate over the number of subnodes (sub_count...sub_count+sub_range-1).
+            std::vector<Type> subt;
+            for (int subs = sub_count; subs < sub_count + sub_range; ++subs) {
+                // Iterate over the possible subnode types (at most 3).
+                for (Type x : types) {
+                    for (Type y : types) {
+                        for (Type z : types) {
+                            // Compute the resulting type of a node with the selected fragment / subnode types.
+                            subt.clear();
+                            if (subs > 0) subt.push_back(x);
+                            if (subs > 1) subt.push_back(y);
+                            if (subs > 2) subt.push_back(z);
+                            Type res = miniscript::internal::ComputeType(frag, x, y, z, subt, k, data_size, subs, n_keys);
+                            // Continue if the result is not a valid node.
+                            if ((res << "K"_mst) + (res << "V"_mst) + (res << "B"_mst) + (res << "W"_mst) != 1) continue;
+
+                            recipe entry{frag, subt};
+                            auto super_of_entry = [&](const recipe& rec) { return is_super_of(rec, entry); };
+                            // Iterate over all supertypes of res (because if e.g. our selected fragment/subnodes result
+                            // in a Bondu, they can form a recipe that is also applicable for constructing a B, Bou, Bdu, ...).
+                            for (Type s : types) {
+                                if ((res & "BKVWzondu"_mst) << s) {
+                                    auto& recipes = table[s];
+                                    // If we don't already have a super-recipe to the new one, add it.
+                                    if (!std::any_of(recipes.begin(), recipes.end(), super_of_entry)) {
+                                        recipes.push_back(entry);
+                                    }
+                                }
+                            }
+
+                            if (subs <= 2) break;
+                        }
+                        if (subs <= 1) break;
+                    }
+                    if (subs <= 0) break;
+                }
+            }
+        }
+
+        /* Find which types are useful. The fuzzer logic only cares about constructing
+         * B,V,K,W nodes, so any type that isn't needed in any recipe (directly or
+         * indirectly) for the construction of those is uninteresting. */
+        std::set<Type> useful_types{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
+        // Find the transitive closure by adding types until the set of types does not change.
+        while (true) {
+            size_t set_size = useful_types.size();
+            for (const auto& [type, recipes] : table) {
+                if (useful_types.count(type) != 0) {
+                    for (const auto& [_, subtypes] : recipes) {
+                        for (auto subtype : subtypes) useful_types.insert(subtype);
+                    }
+                }
+            }
+            if (useful_types.size() == set_size) break;
+        }
+        // Remove all rules that construct uninteresting types.
+        for (auto type_it = table.begin(); type_it != table.end();) {
+            if (useful_types.count(type_it->first) == 0) {
+                type_it = table.erase(type_it);
+            } else {
+                ++type_it;
+            }
+        }
+
+        /* Find which types are constructible. A type is constructible if there is a leaf
+         * node recipe for constructing it, or a recipe whose subnodes are all constructible.
+         * Types can be non-constructible because they have no recipes to begin with,
+         * because they can only be constructed using recipes that involve otherwise
+         * non-constructible types, or because they require infinite recursion. */
+        std::set<Type> constructible_types{};
+        auto known_constructible = [&](Type type) { return constructible_types.count(type) != 0; };
+        // Find the transitive closure by adding types until the set of types does not change.
+        while (true) {
+            size_t set_size = constructible_types.size();
+            // Iterate over all types we have recipes for.
+            for (const auto& [type, recipes] : table) {
+                if (!known_constructible(type)) {
+                    // For not (yet known to be) constructible types, iterate over their recipes.
+                    for (const auto& [_, subt] : recipes) {
+                        // If any recipe involves only (already known to be) constructible types,
+                        // add the recipe's type to the set.
+                        if (std::all_of(subt.begin(), subt.end(), known_constructible)) {
+                            constructible_types.insert(type);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (constructible_types.size() == set_size) break;
+        }
+        for (auto type_it = table.begin(); type_it != table.end();) {
+            // Remove all recipes which involve non-constructible types.
+            type_it->second.erase(std::remove_if(type_it->second.begin(), type_it->second.end(),
+                [&](const recipe& rec) {
+                    return !std::all_of(rec.second.begin(), rec.second.end(), known_constructible);
+                }), type_it->second.end());
+            // Delete types entirely which have no recipes left.
+            if (type_it->second.empty()) {
+                type_it = table.erase(type_it);
+            } else {
+                ++type_it;
+            }
+        }
+
+        for (auto& [type, recipes] : table) {
+            // Sort recipes for determinism, and place those using fewer subnodes first.
+            // This avoids runaway expansion (when reaching the end of the fuzz input,
+            // all zeroes are read, resulting in the first available recipe being picked).
+            std::sort(recipes.begin(), recipes.end(),
+                [](const recipe& a, const recipe& b) {
+                    if (a.second.size() < b.second.size()) return true;
+                    if (a.second.size() > b.second.size()) return false;
+                    return a < b;
+                }
+            );
+        }
+    }
+} SMARTINFO;
+
+/**
+ * Consume a Miniscript node from the fuzzer's output.
+ *
+ * This is similar to ConsumeNodeStable, but uses a precomputed table with permitted
+ * fragments/subnode type for each required type. It is intended to more quickly explore
+ * interesting miniscripts, at the cost of higher implementation complexity (which could
+ * cause it miss things if incorrect), and with less regard for stability of the seeds
+ * (as improvements to the tables or changes to the typing rules could invalidate
+ * everything).
+ */
+std::optional<NodeInfo> ConsumeNodeSmart(FuzzedDataProvider& provider, Type type_needed) {
+    /** Table entry for the requested type. */
+    auto recipes_it = SMARTINFO.table.find(type_needed);
+    assert(recipes_it != SMARTINFO.table.end());
+    /** Pick one recipe from the available ones for that type. */
+    const auto& [frag, subt] = PickValue(provider, recipes_it->second);
+
+    // Based on the fragment the recipe uses, fill in other data (k, keys, data).
+    switch (frag) {
+        case Fragment::PK_K:
+        case Fragment::PK_H:
+            return {{frag, ConsumePubKey(provider)}};
+        case Fragment::MULTI: {
+            const auto n_keys = provider.ConsumeIntegralInRange<uint8_t>(1, 20);
+            const auto k = provider.ConsumeIntegralInRange<uint8_t>(1, n_keys);
+            std::vector<CPubKey> keys{n_keys};
+            for (auto& key: keys) key = ConsumePubKey(provider);
+            return {{frag, k, std::move(keys)}};
+        }
+        case Fragment::OLDER:
+        case Fragment::AFTER:
+            return {{frag, provider.ConsumeIntegralInRange<uint32_t>(1, 0x7FFFFFF)}};
+        case Fragment::SHA256:
+            return {{frag, PickValue(provider, TEST_DATA.sha256)}};
+        case Fragment::HASH256:
+            return {{frag, PickValue(provider, TEST_DATA.hash256)}};
+        case Fragment::RIPEMD160:
+            return {{frag, PickValue(provider, TEST_DATA.ripemd160)}};
+        case Fragment::HASH160:
+            return {{frag, PickValue(provider, TEST_DATA.hash160)}};
+        case Fragment::JUST_0:
+        case Fragment::JUST_1:
+        case Fragment::WRAP_A:
+        case Fragment::WRAP_S:
+        case Fragment::WRAP_C:
+        case Fragment::WRAP_D:
+        case Fragment::WRAP_V:
+        case Fragment::WRAP_J:
+        case Fragment::WRAP_N:
+        case Fragment::AND_V:
+        case Fragment::AND_B:
+        case Fragment::OR_B:
+        case Fragment::OR_C:
+        case Fragment::OR_D:
+        case Fragment::OR_I:
+        case Fragment::ANDOR:
+            return {{subt, frag}};
+        case Fragment::THRESH: {
+            uint32_t children;
+            if (subt.size() < 2) {
+                children = subt.size();
+            } else {
+                // If we hit a thresh with 2 subnodes, artificially extend it to any number
+                // (2 or larger) by replicating the type of the last subnode.
+                children = provider.ConsumeIntegralInRange<uint32_t>(2, MAX_OPS_PER_SCRIPT / 2);
+            }
+            auto k = provider.ConsumeIntegralInRange<uint32_t>(1, children);
+            std::vector<Type> subs = subt;
+            while (subs.size() < children) subs.push_back(subs.back());
+            return {{std::move(subs), frag, k}};
+        }
+    }
+
+    assert(false);
+}
+
 /**
  * Generate a Miniscript node based on the fuzzer's input.
+ *
+ * - ConsumeNode is a function object taking a Type, and returning an std::optional<NodeInfo>.
+ * - root_type is the required type properties of the constructed NodeRef.
+ * - strict_valid sets whether ConsumeNode is expected to guarantee a NodeInfo that results in
+ *   a NodeRef whose Type() matches the type fed to ConsumeNode.
  */
 template<typename F>
-NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst) {
+NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst, bool strict_valid = false) {
     /** A stack of miniscript Nodes being built up. */
     std::vector<NodeRef> stack;
     /** The queue of instructions. */
-    std::vector<std::optional<NodeInfo>> todo{{}};
+    std::vector<std::pair<Type, std::optional<NodeInfo>>> todo{{root_type, {}}};
 
     while (!todo.empty()) {
         // The expected type we have to construct.
-        auto type_needed = todo.back();
-        if (!todo.back()) {
+        auto type_needed = todo.back().first;
+        if (!todo.back().second) {
             // Fragment/children have not been decided yet. Decide them.
-            auto node_info = ConsumeNode();
+            auto node_info = ConsumeNode(type_needed);
             if (!node_info) return {};
-            uint8_t n_subs = node_info->n_subs;
-            todo.back() = std::move(node_info);
-            for (uint8_t i = 0; i < n_subs; i++) todo.push_back({});
+            auto subtypes = node_info->subtypes;
+            todo.back().second = std::move(node_info);
+            todo.reserve(todo.size() + subtypes.size());
+            // As elements on the todo stack are processed back to front, construct
+            // them in reverse order (so that the first subnode is generated first).
+            for (size_t i = 0; i < subtypes.size(); ++i) {
+                todo.emplace_back(*(subtypes.rbegin() + i), std::nullopt);
+            }
         } else {
             // The back of todo has fragment and number of children decided, and
             // those children have been constructed at the back of stack. Pop
             // that entry off todo, and use it to construct a new NodeRef on
             // stack.
-            const NodeInfo& info = *todo.back();
+            NodeInfo& info = *todo.back().second;
             // Gather children from the back of stack.
             std::vector<NodeRef> sub;
             sub.reserve(info.n_subs);
@@ -420,7 +751,11 @@ NodeRef GenNode(F ConsumeNode, Type root_type = ""_mst) {
                 node = MakeNodeRef(info.fragment, std::move(info.keys), info.k);
             }
             // Verify acceptability.
-            if (!node || !node->IsValid()) return {};
+            if (!node || !(node->GetType() << type_needed)) {
+                assert(!strict_valid);
+                return {};
+            }
+            if (!node->IsValid()) return {};
             // Move it to the stack.
             stack.push_back(std::move(node));
             todo.pop_back();
@@ -573,13 +908,31 @@ void FuzzInit()
     TEST_DATA.Init();
 }
 
+void FuzzInitSmart()
+{
+    FuzzInit();
+    SMARTINFO.Init();
+}
+
 /** Fuzz target that runs TestNode on nodes generated using ConsumeNodeStable. */
 FUZZ_TARGET_INIT(miniscript_stable, FuzzInit)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
-    TestNode(GenNode([&]() {
+    TestNode(GenNode([&](Type) {
         return ConsumeNodeStable(provider);
     }), provider);
+}
+
+/** Fuzz target that runs TestNode on nodes generated using ConsumeNodeSmart. */
+FUZZ_TARGET_INIT(miniscript_smart, FuzzInitSmart)
+{
+    /** The set of types we aim to construct nodes for. Together they cover all. */
+    static constexpr std::array<Type, 4> BASE_TYPES{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
+
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+    TestNode(GenNode([&](Type needed_type) {
+        return ConsumeNodeSmart(provider, needed_type);
+    }, PickValue(provider, BASE_TYPES), true), provider);
 }
 
 /* Fuzz tests that test parsing from a string, and roundtripping via string. */
