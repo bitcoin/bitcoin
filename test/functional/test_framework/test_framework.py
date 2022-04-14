@@ -250,8 +250,14 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             "src",
             "syscoin-cli" + config["environment"]["EXEEXT"],
         )
+        fname_syscoinutil = os.path.join(
+            config["environment"]["BUILDDIR"],
+            "src",
+            "syscoin-util" + config["environment"]["EXEEXT"],
+        )
         self.options.syscoind = os.getenv("SYSCOIND", default=fname_syscoind)
         self.options.syscoincli = os.getenv("SYSCOINCLI", default=fname_syscoincli)
+        self.options.syscoinutil = os.getenv("SYSCOINUTIL", default=fname_syscoinutil)
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -899,6 +905,11 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         if not self.is_wallet_tool_compiled():
             raise SkipTest("syscoin-wallet has not been compiled")
 
+    def skip_if_no_syscoin_util(self):
+        """Skip the running test if syscoin-util has not been compiled."""
+        if not self.is_syscoin_util_compiled():
+            raise SkipTest("syscoin-util has not been compiled")
+
     def skip_if_no_cli(self):
         """Skip the running test if syscoin-cli has not been compiled."""
         if not self.is_cli_compiled():
@@ -945,6 +956,10 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def is_wallet_tool_compiled(self):
         """Checks whether syscoin-wallet was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
+
+    def is_syscoin_util_compiled(self):
+        """Checks whether syscoin-util was compiled."""
+        return self.config["components"].getboolean("ENABLE_SYSCOIN_UTIL")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
