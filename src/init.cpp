@@ -1797,6 +1797,38 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     if(fNEVMConnection) {
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
+        uint64_t nHeightFromGeth;
+        BlockValidationState state;
+        GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, state);
+        if(state.IsValid()) {
+            uint64_t nHeightLocalGeth;
+            {
+                LOCK(cs_main);
+                nHeightLocalGeth = (chainman.ActiveChain().Height() - Params().GetConsensus().nNEVMStartBlock) + 1;
+            }
+            // local height is higher so we need to rollback to geth height
+            if(nHeightFromGeth > 0) {
+                if(nHeightFromGeth < nHeightLocalGeth) {
+                    LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d, rolling back...\n",nHeightFromGeth, nHeightLocalGeth);
+                    nHeightFromGeth += Params().GetConsensus().nNEVMStartBlock;
+                    CBlockIndex *pblockindex;
+                    {
+                        LOCK(cs_main);
+                        pblockindex = chainman.ActiveChain()[(int)nHeightFromGeth];
+                    }
+                    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex, false);
+                    if (state.IsValid()) {
+                        LOCK(cs_main);
+                        chainman.ActiveChainstate().ResetBlockFailureFlags(pblockindex);
+                    }
+                } else if(nHeightFromGeth > nHeightLocalGeth) {
+                    LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d vs nLastKnownHeightOnStart %d, catching up...\n",nHeightFromGeth, nHeightLocalGeth, nHeightFromGeth + Params().GetConsensus().nNEVMStartBlock);
+                    nHeightFromGeth += Params().GetConsensus().nNEVMStartBlock;
+                    // otherwise local height is below so catch up to geth without strict enforcement on geth
+                    nLastKnownHeightOnStart = nHeightFromGeth;
+                }
+            }
+        }
     }
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.

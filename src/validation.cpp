@@ -2048,15 +2048,17 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
     else 
         LogPrintf("ConnectNEVMCommitment: skipping validation result...\n");
     // try to bring connection back alive if its not connected for some reason
-    if(!res && state.GetRejectReason() == "nevm-connect-not-sent") {
-        bool bResponse = false;
-        GetMainSignals().NotifyNEVMComms("status", bResponse);
-        if(!bResponse) {
-            if(RestartGethNode()) {
-                // try again after resetting connection
-                GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
-                if(nHeight > nLastKnownHeightOnStart)
-                    res = state.IsValid();
+    if(!res) {
+        if(state.GetRejectReason() == "nevm-connect-not-sent") {
+            bool bResponse = false;
+            GetMainSignals().NotifyNEVMComms("status", bResponse);
+            if(!bResponse) {
+                if(RestartGethNode()) {
+                    // try again after resetting connection
+                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash);
+                    if(nHeight > nLastKnownHeightOnStart)
+                        res = state.IsValid();
+                }
             }
         }
     }
@@ -2159,7 +2161,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     } 
     BlockValidationState state;
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if(bRegTestContext && !bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
+    if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
         const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
         error(errStr.c_str());
         return DISCONNECT_FAILED; 
@@ -2512,7 +2514,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if (bRegTestContext && !bReverify && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, (uint32_t)pindex->nHeight, fJustCheck)) {
+    if (bRegTestContext && bReverify && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, (uint32_t)pindex->nHeight, fJustCheck)) {
         return false; // state filled by ConnectNEVMCommitment
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -2859,7 +2861,8 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
   * disconnectpool (note that the caller is responsible for mempool consistency
   * in any case).
   */
-bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool)
+ // SYSCOIN
+bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool, bool bReverify)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -2884,7 +2887,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
         auto dbTx = evoDb->BeginTransaction();
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
-        if (DisconnectBlock(block, pindexDelete, view, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDPairs) != DISCONNECT_OK)
+        if (DisconnectBlock(block, pindexDelete, view, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDPairs, bReverify) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
@@ -3452,7 +3455,8 @@ void CChainState::EnforceBlock(BlockValidationState& state, const CBlockIndex *p
         ResetBlockFailureFlags(m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
     }
 }
-bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex *pindex)
+// SYSCOIN
+bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex *pindex, bool bReverify)
 {
     AssertLockNotHeld(m_chainstate_mutex);
 
@@ -3514,7 +3518,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex *pind
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
         DisconnectedBlockTransactions disconnectpool;
-        bool ret = DisconnectTip(state, &disconnectpool);
+        bool ret = DisconnectTip(state, &disconnectpool, bReverify);
         // DisconnectTip will add transactions to disconnectpool.
         // Adjust the mempool to be consistent with the new tip, adding
         // transactions back to the mempool if disconnecting was successful,
@@ -4417,7 +4421,7 @@ bool TestBlockValidity(BlockValidationState& state,
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.ToString());
-    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
+    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, false)) {
         return false;
     }
     assert(state.IsValid());
@@ -4557,7 +4561,7 @@ bool CVerifyDB::VerifyDB(
         if (nCheckLevel >= 3 && curr_coins_usage <= chainstate.m_coinstip_cache_size_bytes) {
             assert(coins.GetBestBlock() == pindex->GetBlockHash());
             // SYSCOIN
-            DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDPairs, true);
+            DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, mapAssets, mapMintKeys, vecNEVMBlocks, vecTXIDPairs, false);
             if (res == DISCONNECT_FAILED) {
                 return error("VerifyDB(): *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             }
@@ -4592,7 +4596,7 @@ bool CVerifyDB::VerifyDB(
             if (!ReadBlockFromDisk(block, pindex, consensus_params))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             // SYSCOIN
-            if (!chainstate.ConnectBlock(block, state, pindex, coins, false, true)) {
+            if (!chainstate.ConnectBlock(block, state, pindex, coins, false, false)) {
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
             }
             if (ShutdownRequested()) return true;
@@ -5851,7 +5855,7 @@ bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &
     }
     if(bDisconnect) {
         batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight-1);
-        nLastKnownHeightOnStart = 0;
+        nLastKnownHeightOnStart = nLastHeight - 1;
     }
     LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
     return WriteBatch(batch, true);	
@@ -5866,7 +5870,9 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
         if(pair.second > nLastHeight)	
             nLastHeight = pair.second;	
     }
+
     batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight);
+    
     LogPrint(BCLog::SYS, "Flush writing %d block indexes, flush to disk: %d\n", blockIndex.size(), !ibd? 1: 0);	
     return WriteBatch(batch, !ibd);	
 }

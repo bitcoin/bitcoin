@@ -44,6 +44,11 @@ class CZMQPublishNEVMCommsNotifier : public CZMQAbstractPublishNotifier
 public:
     bool NotifyNEVMComms(const std::string& commMessage, bool &bResponse) override;
 };
+class CZMQPublishNEVMBlockInfoNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) override;
+};
 class CZMQPublishNEVMBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:

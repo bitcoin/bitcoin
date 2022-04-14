@@ -42,6 +42,7 @@ static const char *MSG_NEVMBLOCKCONNECT  = "nevmconnect";
 static const char *MSG_NEVMCOMMS  = "nevmcomms";
 static const char *MSG_NEVMBLOCKDISCONNECT  = "nevmdisconnect";
 static const char *MSG_NEVMBLOCK  = "nevmblock";
+static const char *MSG_NEVMBLOCKINFO  = "nevmblockinfo";
 static const char *MSG_RAWMEMPOOLTX  = "rawmempooltx";
 static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
@@ -438,6 +439,37 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockVali
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-response-invalid-data");
         }
         return true;
+    } else {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
+    }
+    return true;
+}
+bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state)
+{
+    LOCK(cs_nevm);
+    if(bFirstTime) {
+        bFirstTime = false;
+        bool bResponse = false;
+        GetMainSignals().NotifyNEVMComms("status", bResponse);
+        if(!bResponse) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+        }
+    }
+    LogPrint(BCLog::ZMQ, "zmq: Publish nevm block info to %s, subscriber %s\n", this->address, this->addresssub);
+    if(!SendZmqMessageNEVM(MSG_NEVMBLOCKINFO, MSG_NEVMBLOCKINFO, strlen(MSG_NEVMBLOCKINFO))) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-header-not-sent");
+    }
+    std::vector<std::string> parts;
+    if(ReceiveZmqMessage(parts)) {
+        if(parts.size() != 2) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-parts");
+        }
+        if(parts[0] != MSG_NEVMBLOCKINFO) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
+        }
+        if(!ParseUInt64(parts[1], &nHeight))
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-unserialize");
+            
     } else {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
     }

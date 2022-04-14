@@ -36,6 +36,10 @@ bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state
 {
     return true;
 }
+bool CZMQAbstractNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state)
+{
+    return true;
+}
 bool CZMQAbstractNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state)
 {
     return true;
