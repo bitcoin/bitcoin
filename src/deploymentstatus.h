@@ -10,30 +10,27 @@
 
 #include <limits>
 
-/** Global cache for versionbits deployment status */
-extern VersionBitsCache g_versionbitscache;
-
 /** Determine if a deployment is active for the next block */
-inline bool DeploymentActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::BuriedDeployment dep, [[maybe_unused]] VersionBitsCache& versionbitscache = g_versionbitscache)
+inline bool DeploymentActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::BuriedDeployment dep, [[maybe_unused]] VersionBitsCache& versionbitscache)
 {
     assert(Consensus::ValidDeployment(dep));
     return (pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1) >= params.DeploymentHeight(dep);
 }
 
-inline bool DeploymentActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos dep, VersionBitsCache& versionbitscache = g_versionbitscache)
+inline bool DeploymentActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos dep, VersionBitsCache& versionbitscache)
 {
     assert(Consensus::ValidDeployment(dep));
     return ThresholdState::ACTIVE == versionbitscache.State(pindexPrev, params, dep);
 }
 
 /** Determine if a deployment is active for this block */
-inline bool DeploymentActiveAt(const CBlockIndex& index, const Consensus::Params& params, Consensus::BuriedDeployment dep, [[maybe_unused]] VersionBitsCache& versionbitscache = g_versionbitscache)
+inline bool DeploymentActiveAt(const CBlockIndex& index, const Consensus::Params& params, Consensus::BuriedDeployment dep, [[maybe_unused]] VersionBitsCache& versionbitscache)
 {
     assert(Consensus::ValidDeployment(dep));
     return index.nHeight >= params.DeploymentHeight(dep);
 }
 
-inline bool DeploymentActiveAt(const CBlockIndex& index, const Consensus::Params& params, Consensus::DeploymentPos dep, VersionBitsCache& versionbitscache = g_versionbitscache)
+inline bool DeploymentActiveAt(const CBlockIndex& index, const Consensus::Params& params, Consensus::DeploymentPos dep, VersionBitsCache& versionbitscache)
 {
     assert(Consensus::ValidDeployment(dep));
     return DeploymentActiveAfter(index.pprev, params, dep, versionbitscache);
