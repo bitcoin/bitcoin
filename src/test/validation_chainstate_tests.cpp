@@ -93,7 +93,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(m_node, m_path_root));
 
     // Ensure our active chain is the snapshot chainstate.
-    BOOST_CHECK(chainman.IsSnapshotActive());
+    BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.IsSnapshotActive()));
 
     curr_tip = ::g_best_block;
 
