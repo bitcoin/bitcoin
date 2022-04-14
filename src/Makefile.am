@@ -302,6 +302,7 @@ BITCOIN_CORE_H = \
   util/moneystr.h \
   util/ranges.h \
   util/serfloat.h \
+  util/settings.h \
   util/string.h \
   util/time.h \
   util/threadnames.h \
@@ -703,6 +704,7 @@ libdash_util_a_SOURCES = \
   util/system.cpp \
   util/asmap.cpp \
   util/moneystr.cpp \
+  util/settings.cpp \
   util/spanparsing.cpp \
   util/strencodings.cpp \
   util/time.cpp \
