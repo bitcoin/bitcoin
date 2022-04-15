@@ -51,7 +51,7 @@ def parseline(line: str) -> Union[dict, None]:
     sline = line.split()
     if len(sline) < 11:
         # line too short to be valid, skip it.
-       return None
+        return None
     m = PATTERN_IPV4.match(sline[0])
     sortkey = None
     ip = None
@@ -170,10 +170,14 @@ def filterbyasn(ips: List[Dict], max_per_asn: Dict, max_per_net: int) -> List[Di
     net_count: Dict[str, int] = collections.defaultdict(int)
     asn_count: Dict[int, int] = collections.defaultdict(int)
 
+    msg = 'Look up ASNs and limit results per ASN and per net'
+    ipv46_count = len(ips_ipv46)
+
     for i, ip in enumerate(ips_ipv46):
         if i % 10 == 0:
             # give progress update
-            print(f"{i:6d}/{len(ips_ipv46)} [{100*i/len(ips_ipv46):04.1f}%]\r", file=sys.stderr, end='', flush=True)
+            progress = 100 * i / ipv46_count
+            print(f"                     {msg}: {i:6d} / {ipv46_count} ({progress:03.1f}%)\r", file=sys.stderr, end='', flush=True)
 
         if net_count[ip['net']] == max_per_net:
             # do not add this ip as we already too many
@@ -240,7 +244,7 @@ def main():
     print(f'{ip_stats(ips):s} Filter out hosts with multiple bitcoin ports', file=sys.stderr)
     # Look up ASNs and limit results, both per ASN and globally.
     ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
-    print(f'{ip_stats(ips):s} Look up ASNs and limit results per ASN and per net', file=sys.stderr)
+    print(f'{ip_stats(ips):s} Look up ASNs and limit results per ASN and per net                        ', file=sys.stderr)
     # Sort the results by IP address (for deterministic output).
     ips.sort(key=lambda x: (x['net'], x['sortkey']))
     for ip in ips:
