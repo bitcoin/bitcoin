@@ -8,8 +8,6 @@ default_host_AR = $(host_toolchain)ar
 default_host_RANLIB = $(host_toolchain)ranlib
 default_host_STRIP = $(host_toolchain)strip
 default_host_LIBTOOL = $(host_toolchain)libtool
-default_host_INSTALL_NAME_TOOL = $(host_toolchain)install_name_tool
-default_host_OTOOL = $(host_toolchain)otool
 default_host_NM = $(host_toolchain)nm
 
 define add_host_tool_func

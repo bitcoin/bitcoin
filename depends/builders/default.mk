@@ -5,8 +5,6 @@ default_build_TAR = tar
 default_build_RANLIB = ranlib
 default_build_STRIP = strip
 default_build_NM = nm
-default_build_OTOOL = otool
-default_build_INSTALL_NAME_TOOL = install_name_tool
 
 define add_build_tool_func
 build_$(build_os)_$1 ?= $$(default_build_$1)
