@@ -6,11 +6,13 @@
 # Generate seeds.txt from Pieter's DNS seeder
 #
 
+import argparse
 import re
 import sys
-import dns.resolver
 import collections
 from typing import List, Dict, Union
+
+from asmap import ASMap
 
 NSEEDS=512
 
@@ -123,34 +125,8 @@ def filtermultiport(ips: List[Dict]) -> List[Dict]:
         hist[ip['sortkey']].append(ip)
     return [value[0] for (key,value) in list(hist.items()) if len(value)==1]
 
-def lookup_asn(net: str, ip: str) -> Union[int, None]:
-    """ Look up the asn for an `ip` address by querying cymru.com
-    on network `net` (e.g. ipv4 or ipv6).
-
-    Returns in integer ASN or None if it could not be found.
-    """
-    try:
-        if net == 'ipv4':
-            ipaddr = ip
-            prefix = '.origin'
-        else:                  # http://www.team-cymru.com/IP-ASN-mapping.html
-            res = str()                         # 2001:4860:b002:23::68
-            for nb in ip.split(':')[:4]:  # pick the first 4 nibbles
-                for c in nb.zfill(4):           # right padded with '0'
-                    res += c + '.'              # 2001 4860 b002 0023
-            ipaddr = res.rstrip('.')            # 2.0.0.1.4.8.6.0.b.0.0.2.0.0.2.3
-            prefix = '.origin6'
-
-        asn = int([x.to_text() for x in dns.resolver.resolve('.'.join(
-                   reversed(ipaddr.split('.'))) + prefix + '.asn.cymru.com',
-                   'TXT').response.answer][0].split('\"')[1].split(' ')[0])
-        return asn
-    except Exception as e:
-        sys.stderr.write(f'ERR: Could not resolve ASN for "{ip}": {e}\n')
-        return None
-
 # Based on Greg Maxwell's seed_filter.py
-def filterbyasn(ips: List[Dict], max_per_asn: Dict, max_per_net: int) -> List[Dict]:
+def filterbyasn(asmap: ASMap, ips: List[Dict], max_per_asn: Dict, max_per_net: int) -> List[Dict]:
     """ Prunes `ips` by
     (a) trimming ips to have at most `max_per_net` ips from each net (e.g. ipv4, ipv6); and
     (b) trimming ips to have at most `max_per_asn` ips from each asn in each net.
@@ -173,13 +149,14 @@ def filterbyasn(ips: List[Dict], max_per_asn: Dict, max_per_net: int) -> List[Di
             # do not add this ip as we already too many
             # ips from this network
             continue
-        asn = lookup_asn(ip['net'], ip['ip'])
-        if asn is None or asn_count[asn] == max_per_asn[ip['net']]:
+        asn = asmap.lookup_asn(ip['ip'])
+        if asn is None or asn_count[ip['net'], asn] == max_per_asn[ip['net']]:
             # do not add this ip as we already have too many
             # ips from this ASN on this network
             continue
-        asn_count[asn] += 1
+        asn_count[ip['net'], asn] += 1
         net_count[ip['net']] += 1
+        ip['asn'] = asn
         result.append(ip)
 
     # Add back Onions (up to max_per_net)
@@ -195,7 +172,18 @@ def ip_stats(ips: List[Dict]) -> str:
 
     return f"{hist['ipv4']:6d} {hist['ipv6']:6d} {hist['onion']:6d}"
 
+def parse_args():
+    argparser = argparse.ArgumentParser(description='Generate a list of bitcoin node seed ip addresses.')
+    argparser.add_argument("-a","--asmap", help='the location of the asmap asn database file (required)', required=True)
+    return argparser.parse_args()
+
 def main():
+    args = parse_args()
+
+    print(f'Loading asmap database "{args.asmap}"…', end='', file=sys.stderr, flush=True)
+    asmap = ASMap(args.asmap)
+    print('Done.', file=sys.stderr)
+
     lines = sys.stdin.readlines()
     ips = [parseline(line) for line in lines]
 
@@ -230,15 +218,18 @@ def main():
     ips = filtermultiport(ips)
     print(f'{ip_stats(ips):s} Filter out hosts with multiple bitcoin ports', file=sys.stderr)
     # Look up ASNs and limit results, both per ASN and globally.
-    ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
+    ips = filterbyasn(asmap, ips, MAX_SEEDS_PER_ASN, NSEEDS)
     print(f'{ip_stats(ips):s} Look up ASNs and limit results per ASN and per net', file=sys.stderr)
     # Sort the results by IP address (for deterministic output).
     ips.sort(key=lambda x: (x['net'], x['sortkey']))
     for ip in ips:
         if ip['net'] == 'ipv6':
-            print('[%s]:%i' % (ip['ip'], ip['port']))
+            print(f"[{ip['ip']}]:{ip['port']}", end="")
         else:
-            print('%s:%i' % (ip['ip'], ip['port']))
+            print(f"{ip['ip']}:{ip['port']}", end="")
+        if 'asn' in ip:
+            print(f" # AS{ip['asn']}", end="")
+        print()
 
 if __name__ == '__main__':
     main()
