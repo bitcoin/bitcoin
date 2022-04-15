@@ -86,7 +86,7 @@ fanquake (7):
 - Merge #17825: doc: Update dependencies.md
 - Merge #17688: doc: Add "ci" prefix to CONTRIBUTING.md
 - Merge #17817: build: Add default configure cache file to .gitignore
-- Merge #17869: refactor: Remove unused defines in qt/bitcoinunits.h
+- Merge #17869: refactor: Remove unused defines in qt/syscoinunits.h
 - Merge #17393: doc: Added regtest config for linearize script
 
 practicalswift (1):

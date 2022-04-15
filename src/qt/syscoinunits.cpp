@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,96 +15,83 @@
 #include <rpc/util.h>
 #include <math.h>
 static constexpr auto MAX_DIGITS_SYS = 16;
+
 SyscoinUnits::SyscoinUnits(QObject *parent):
         QAbstractListModel(parent),
         unitlist(availableUnits())
 {
 }
 
-QList<SyscoinUnits::Unit> SyscoinUnits::availableUnits()
+QList<SyscoinUnit> SyscoinUnits::availableUnits()
 {
-    QList<SyscoinUnits::Unit> unitlist;
-    unitlist.append(SYS);
-    unitlist.append(mSYS);
-    unitlist.append(uSYS);
-    unitlist.append(SAT);
+    QList<SyscoinUnit> unitlist;
+    unitlist.append(Unit::SYS);
+    unitlist.append(Unit::mSYS);
+    unitlist.append(Unit::uSYS);
+    unitlist.append(Unit::SAT);
     return unitlist;
 }
 
-bool SyscoinUnits::valid(int unit)
+QString SyscoinUnits::longName(Unit unit)
 {
-    switch(unit)
-    {
-    case SYS:
-    case mSYS:
-    case uSYS:
-    case SAT:
-        return true;
-    default:
-        return false;
-    }
+    switch (unit) {
+    case Unit::SYS: return QString("SYS");
+    case Unit::mSYS: return QString("mSYS");
+    case Unit::uSYS: return QString::fromUtf8("µSYS (bits)");
+    case Unit::SAT: return QString("Satoshi (sat)");
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-QString SyscoinUnits::longName(int unit)
+QString SyscoinUnits::shortName(Unit unit)
 {
-    switch(unit)
-    {
-    case SYS: return QString("SYS");
-    case mSYS: return QString("mSYS");
-    case uSYS: return QString::fromUtf8("µSYS (bits)");
-    case SAT: return QString("Satoshi (sat)");
-    default: return QString("???");
-    }
+    switch (unit) {
+    case Unit::SYS: return longName(unit);
+    case Unit::mSYS: return longName(unit);
+    case Unit::uSYS: return QString("bits");
+    case Unit::SAT: return QString("sat");
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-QString SyscoinUnits::shortName(int unit)
+QString SyscoinUnits::description(Unit unit)
 {
-    switch(unit)
-    {
-    case uSYS: return QString::fromUtf8("bits");
-    case SAT: return QString("sat");
-    default: return longName(unit);
-    }
+    switch (unit) {
+    case Unit::SYS: return QString("Syscoins");
+    case Unit::mSYS: return QString("Milli-Syscoins (1 / 1" THIN_SP_UTF8 "000)");
+    case Unit::uSYS: return QString("Micro-Syscoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case Unit::SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-QString SyscoinUnits::description(int unit)
+qint64 SyscoinUnits::factor(Unit unit)
 {
-    switch(unit)
-    {
-    case SYS: return QString("Syscoins");
-    case mSYS: return QString("Milli-Syscoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uSYS: return QString("Micro-Syscoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    default: return QString("???");
-    }
+    switch (unit) {
+    case Unit::SYS: return 100'000'000;
+    case Unit::mSYS: return 100'000;
+    case Unit::uSYS: return 100;
+    case Unit::SAT: return 1;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-qint64 SyscoinUnits::factor(int unit)
+int SyscoinUnits::decimals(Unit unit)
 {
-    switch(unit)
-    {
-    case SYS: return 100000000;
-    case mSYS: return 100000;
-    case uSYS: return 100;
-    case SAT: return 1;
-    default: return 100000000;
-    }
+    switch (unit) {
+    case Unit::SYS: return 8;
+    case Unit::mSYS: return 5;
+    case Unit::uSYS: return 2;
+    case Unit::SAT: return 0;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
-int SyscoinUnits::decimals(int unit)
+QString SyscoinUnits::format(Unit unit, const CAmount& nIn, const uint64_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
 {
-    switch(unit)
-    {
-    case SYS: return 8;
-    case mSYS: return 5;
-    case uSYS: return 2;
-    case SAT: return 0;
-    default: return 0;
-    }
-}
-
-QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint64_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
-{
+    // Note: not using straight sprintf here because we do NOT want
+    // localized number formatting.
+    qint64 n = (qint64)nIn;
     // SYSCOIN 
     qint64 coin;
     int num_decimals;
@@ -113,20 +100,16 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint64_t &nAsse
         num_decimals = (int)nPrecision;
         coin = (qint64)pow(10.0, num_decimals);
     } else {
-        // Note: not using straight sprintf here because we do NOT want
-        // localized number formatting.
-        if(!valid(unit))
-            return QString(); // Refuse to format invalid unit
         coin = factor(unit);
         num_decimals = decimals(unit);
     }
-    qint64 n = (qint64)nIn;
     qint64 n_abs = (n > 0 ? n : -n);
     qint64 quotient = n_abs / coin;
     QString quotient_str = QString::number(quotient);
     if (justify) {
         quotient_str = quotient_str.rightJustified(MAX_DIGITS_SYS - num_decimals, ' ');
     }
+
     // Use SI-style thin space separators as these are locale independent and can't be
     // confused with the decimal marker.
     QChar thin_sp(THIN_SP_CP);
@@ -157,20 +140,21 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint64_t &nAsse
 //
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
-QString SyscoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+
+QString SyscoinUnits::formatWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     // SYSCOIN
     return format(unit, amount, 0, plussign, separators) + QString(" ") + shortName(unit);
 }
 
-QString SyscoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString SyscoinUnits::formatHtmlWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     QString str(formatWithUnit(unit, amount, plussign, separators));
     str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
     return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
 }
 
-QString SyscoinUnits::formatWithPrivacy(int unit, const CAmount& amount, SeparatorStyle separators, bool privacy)
+QString SyscoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy)
 {
     assert(amount >= 0);
     QString value;
@@ -183,10 +167,11 @@ QString SyscoinUnits::formatWithPrivacy(int unit, const CAmount& amount, Separat
     return value + QString(" ") + shortName(unit);
 }
 
-bool SyscoinUnits::parse(int unit, const QString &value, CAmount *val_out)
+bool SyscoinUnits::parse(Unit unit, const QString& value, CAmount* val_out)
 {
-    if(!valid(unit) || value.isEmpty())
+    if (value.isEmpty()) {
         return false; // Refuse to parse invalid unit or empty string
+    }
     int num_decimals = decimals(unit);
 
     // Ignore spaces and thin spaces when parsing
@@ -222,14 +207,9 @@ bool SyscoinUnits::parse(int unit, const QString &value, CAmount *val_out)
     return ok;
 }
 
-QString SyscoinUnits::getAmountColumnTitle(int unit)
+QString SyscoinUnits::getAmountColumnTitle(Unit unit)
 {
-    QString amountTitle = QObject::tr("Amount");
-    if (SyscoinUnits::valid(unit))
-    {
-        amountTitle += " ("+SyscoinUnits::shortName(unit) + ")";
-    }
-    return amountTitle;
+    return QObject::tr("Amount") + " (" + shortName(unit) + ")";
 }
 
 int SyscoinUnits::rowCount(const QModelIndex &parent) const
@@ -252,7 +232,7 @@ QVariant SyscoinUnits::data(const QModelIndex &index, int role) const
         case Qt::ToolTipRole:
             return QVariant(description(unit));
         case UnitRole:
-            return QVariant(static_cast<int>(unit));
+            return QVariant::fromValue(unit);
         }
     }
     return QVariant();
@@ -261,4 +241,41 @@ QVariant SyscoinUnits::data(const QModelIndex &index, int role) const
 CAmount SyscoinUnits::maxMoney()
 {
     return MAX_MONEY;
+}
+
+namespace {
+qint8 ToQint8(SyscoinUnit unit)
+{
+    switch (unit) {
+    case SyscoinUnits::SYS: return 0;
+    case SyscoinUnits::mSYS: return 1;
+    case SyscoinUnits::uSYS: return 2;
+    case SyscoinUnits::SAT: return 3;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+SyscoinUnit FromQint8(qint8 num)
+{
+    switch (num) {
+    case 0: return SyscoinUnits::SYS;
+    case 1: return SyscoinUnits::mSYS;
+    case 2: return SyscoinUnits::uSYS;
+    case 3: return SyscoinUnits::SAT;
+    }
+    assert(false);
+}
+} // namespace
+
+QDataStream& operator<<(QDataStream& out, const SyscoinUnit& unit)
+{
+    return out << ToQint8(unit);
+}
+
+QDataStream& operator>>(QDataStream& in, SyscoinUnit& unit)
+{
+    qint8 input;
+    in >> input;
+    unit = FromQint8(input);
+    return in;
 }

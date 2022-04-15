@@ -14,6 +14,9 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <QVariant>
+
+#include <cassert>
 
 /** QSpinBox that uses fixed-point numbers internally and uses our own
  * formatting/parsing functions.
@@ -98,7 +101,7 @@ public:
         setValue(val);
     }
 
-    void setDisplayUnit(int unit)
+    void setDisplayUnit(SyscoinUnit unit)
     {
         bool valid = false;
         CAmount val = value(&valid);
@@ -152,7 +155,7 @@ public:
     }
 
 private:
-    int currentUnit{SyscoinUnits::SYS};
+    SyscoinUnit currentUnit{SyscoinUnits::SYS};
     CAmount singleStep{CAmount(100000)}; // satoshis
     mutable QSize cachedMinimumSizeHint;
     bool m_allow_empty{true};
@@ -330,14 +333,14 @@ void SyscoinAmountField::unitChanged(int idx)
     unit->setToolTip(unit->itemData(idx, Qt::ToolTipRole).toString());
 
     // Determine new unit ID
-    int newUnit = unit->itemData(idx, SyscoinUnits::UnitRole).toInt();
-
-    amount->setDisplayUnit(newUnit);
+    QVariant new_unit = unit->currentData(SyscoinUnits::UnitRole);
+    assert(new_unit.isValid());
+    amount->setDisplayUnit(new_unit.value<SyscoinUnit>());
 }
 
-void SyscoinAmountField::setDisplayUnit(int newUnit)
+void BitcoinAmountField::setDisplayUnit(SyscoinUnit new_unit)
 {
-    unit->setValue(newUnit);
+    unit->setValue(QVariant::fromValue(new_unit));
 }
 
 void SyscoinAmountField::setSingleStep(const CAmount& step)

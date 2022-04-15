@@ -5,6 +5,8 @@
 #ifndef SYSCOIN_QT_TRANSACTIONDESC_H
 #define SYSCOIN_QT_TRANSACTIONDESC_H
 
+#include <qt/syscoinunits.h>
+
 #include <QObject>
 #include <QString>
 
@@ -24,7 +26,7 @@ class TransactionDesc: public QObject
     Q_OBJECT
 
 public:
-    static QString toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit);
+    static QString toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord* rec, SyscoinUnit unit);
 
 private:
     TransactionDesc() {}

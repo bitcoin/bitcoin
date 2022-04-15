@@ -178,8 +178,7 @@ bool parseSyscoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!SyscoinUnits::parse(SyscoinUnits::SYS, i->second, &rv.amount))
-                {
+                if (!SyscoinUnits::parse(SyscoinUnits::SYS, i->second, &rv.amount)) {
                     return false;
                 }
             }

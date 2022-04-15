@@ -8,6 +8,8 @@
 #include <consensus/amount.h>
 // SYSCOIN
 #include <qt/masternodelist.h>
+#include <qt/syscoinunits.h>
+
 #include <QStackedWidget>
 
 class ClientModel;
@@ -120,7 +122,7 @@ Q_SIGNALS:
     /** Encryption status of wallet changed */
     void encryptionStatusChanged();
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
+    void incomingTransaction(const QString& date, SyscoinUnit unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
 };

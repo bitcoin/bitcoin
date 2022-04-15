@@ -539,7 +539,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     }
 
     // actually update labels
-    int nDisplayUnit = SyscoinUnits::SYS;
+    SyscoinUnit nDisplayUnit = SyscoinUnits::SYS;
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
@@ -620,7 +620,7 @@ void CoinControlDialog::updateView()
     QFlags<Qt::ItemFlag> flgCheckbox = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
     QFlags<Qt::ItemFlag> flgTristate = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsAutoTristate;
 
-    int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
+    SyscoinUnit nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
     for (const auto& coins : model->wallet().listCoins()) {
         CCoinControlWidgetItem* itemWalletAddress{nullptr};
