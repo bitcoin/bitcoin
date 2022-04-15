@@ -13,7 +13,7 @@
 #include <compat.h> // for Windows API
 #include <wincrypt.h>
 #endif
-#include <logging.h>  // for LogPrintf()
+#include <logging.h>
 #include <randomenv.h>
 #include <support/allocators/secure.h>
 #include <sync.h>     // for Mutex
