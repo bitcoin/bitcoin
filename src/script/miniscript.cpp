@@ -33,51 +33,51 @@ Type SanitizeType(Type e) {
     return e;
 }
 
-Type ComputeType(Fragment nodetype, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k, size_t data_size, size_t n_subs, size_t n_keys) {
+Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k, size_t data_size, size_t n_subs, size_t n_keys) {
     // Sanity check on data
-    if (nodetype == Fragment::SHA256 || nodetype == Fragment::HASH256) {
+    if (fragment == Fragment::SHA256 || fragment == Fragment::HASH256) {
         assert(data_size == 32);
-    } else if (nodetype == Fragment::RIPEMD160 || nodetype == Fragment::HASH160) {
+    } else if (fragment == Fragment::RIPEMD160 || fragment == Fragment::HASH160) {
         assert(data_size == 20);
     } else {
         assert(data_size == 0);
     }
     // Sanity check on k
-    if (nodetype == Fragment::OLDER || nodetype == Fragment::AFTER) {
+    if (fragment == Fragment::OLDER || fragment == Fragment::AFTER) {
         assert(k >= 1 && k < 0x80000000UL);
-    } else if (nodetype == Fragment::MULTI) {
+    } else if (fragment == Fragment::MULTI) {
         assert(k >= 1 && k <= n_keys);
-    } else if (nodetype == Fragment::THRESH) {
+    } else if (fragment == Fragment::THRESH) {
         assert(k >= 1 && k <= n_subs);
     } else {
         assert(k == 0);
     }
     // Sanity check on subs
-    if (nodetype == Fragment::AND_V || nodetype == Fragment::AND_B || nodetype == Fragment::OR_B ||
-        nodetype == Fragment::OR_C || nodetype == Fragment::OR_I || nodetype == Fragment::OR_D) {
+    if (fragment == Fragment::AND_V || fragment == Fragment::AND_B || fragment == Fragment::OR_B ||
+        fragment == Fragment::OR_C || fragment == Fragment::OR_I || fragment == Fragment::OR_D) {
         assert(n_subs == 2);
-    } else if (nodetype == Fragment::ANDOR) {
+    } else if (fragment == Fragment::ANDOR) {
         assert(n_subs == 3);
-    } else if (nodetype == Fragment::WRAP_A || nodetype == Fragment::WRAP_S || nodetype == Fragment::WRAP_C ||
-               nodetype == Fragment::WRAP_D || nodetype == Fragment::WRAP_V || nodetype == Fragment::WRAP_J ||
-               nodetype == Fragment::WRAP_N) {
+    } else if (fragment == Fragment::WRAP_A || fragment == Fragment::WRAP_S || fragment == Fragment::WRAP_C ||
+               fragment == Fragment::WRAP_D || fragment == Fragment::WRAP_V || fragment == Fragment::WRAP_J ||
+               fragment == Fragment::WRAP_N) {
         assert(n_subs == 1);
-    } else if (nodetype != Fragment::THRESH) {
+    } else if (fragment != Fragment::THRESH) {
         assert(n_subs == 0);
     }
     // Sanity check on keys
-    if (nodetype == Fragment::PK_K || nodetype == Fragment::PK_H) {
+    if (fragment == Fragment::PK_K || fragment == Fragment::PK_H) {
         assert(n_keys == 1);
-    } else if (nodetype == Fragment::MULTI) {
+    } else if (fragment == Fragment::MULTI) {
         assert(n_keys >= 1 && n_keys <= 20);
     } else {
         assert(n_keys == 0);
     }
 
-    // Below is the per-nodetype logic for computing the expression types.
+    // Below is the per-fragment logic for computing the expression types.
     // It heavily relies on Type's << operator (where "X << a_mst" means
     // "X has all properties listed in a").
-    switch (nodetype) {
+    switch (fragment) {
         case Fragment::PK_K: return "Konudemsxk"_mst;
         case Fragment::PK_H: return "Knudemsxk"_mst;
         case Fragment::OLDER: return
@@ -248,8 +248,8 @@ Type ComputeType(Fragment nodetype, Type x, Type y, Type z, const std::vector<Ty
     return ""_mst;
 }
 
-size_t ComputeScriptLen(Fragment nodetype, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys) {
-    switch (nodetype) {
+size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys) {
+    switch (fragment) {
         case Fragment::JUST_1:
         case Fragment::JUST_0: return 1;
         case Fragment::PK_K: return 34;
