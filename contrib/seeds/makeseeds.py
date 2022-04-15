@@ -9,11 +9,7 @@
 import re
 import sys
 import collections
-<<<<<<< HEAD
-import asndecode
-=======
 from typing import List, Dict, Union
->>>>>>> master
 
 NSEEDS=512
 
@@ -134,8 +130,6 @@ def filtermultiport(ips: List[Dict]) -> List[Dict]:
         hist[ip['sortkey']].append(ip)
     return [value[0] for (key,value) in list(hist.items()) if len(value)==1]
 
-<<<<<<< HEAD
-=======
 def lookup_asn(net: str, ip: str) -> Union[int, None]:
     """ Look up the asn for an `ip` address by querying cymru.com
     on network `net` (e.g. ipv4 or ipv6).
@@ -162,7 +156,6 @@ def lookup_asn(net: str, ip: str) -> Union[int, None]:
         sys.stderr.write(f'ERR: Could not resolve ASN for "{ip}": {e}\n')
         return None
 
->>>>>>> master
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips: List[Dict], max_per_asn: Dict, max_per_net: int) -> List[Dict]:
     """ Prunes `ips` by
@@ -187,15 +180,10 @@ def filterbyasn(ips: List[Dict], max_per_asn: Dict, max_per_net: int) -> List[Di
             # do not add this ip as we already too many
             # ips from this network
             continue
-<<<<<<< HEAD
-        asn = ASN_DB.lookup_asn(ip['net'], ip['ip'])
-        if asn is None or asn_count[asn] == max_per_asn:
-=======
         asn = lookup_asn(ip['net'], ip['ip'])
         if asn is None or asn_count[asn] == max_per_asn[ip['net']]:
             # do not add this ip as we already have too many
             # ips from this ASN on this network
->>>>>>> master
             continue
         asn_count[asn] += 1
         net_count[ip['net']] += 1
