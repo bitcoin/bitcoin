@@ -47,7 +47,7 @@ def parseline(line: str) -> Union[dict, None]:
     sline = line.split()
     if len(sline) < 11:
         # line too short to be valid, skip it.
-       return None
+        return None
     m = PATTERN_IPV4.match(sline[0])
     sortkey = None
     ip = None
@@ -141,10 +141,6 @@ def filterbyasn(asmap: ASMap, ips: List[Dict], max_per_asn: Dict, max_per_net: i
     asn_count: Dict[int, int] = collections.defaultdict(int)
 
     for i, ip in enumerate(ips_ipv46):
-        if i % 10 == 0:
-            # give progress update
-            print(f"{i:6d}/{len(ips_ipv46)} [{100*i/len(ips_ipv46):04.1f}%]\r", file=sys.stderr, end='', flush=True)
-
         if net_count[ip['net']] == max_per_net:
             # do not add this ip as we already too many
             # ips from this network
@@ -184,8 +180,10 @@ def main():
     asmap = ASMap(args.asmap)
     print('Done.', file=sys.stderr)
 
+    print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
     lines = sys.stdin.readlines()
     ips = [parseline(line) for line in lines]
+    print('Done.', file=sys.stderr)
 
     print('\x1b[7m  IPv4   IPv6  Onion Pass                                               \x1b[0m', file=sys.stderr)
     print(f'{ip_stats(ips):s} Initial', file=sys.stderr)
