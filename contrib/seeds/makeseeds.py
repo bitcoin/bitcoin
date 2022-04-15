@@ -9,6 +9,7 @@
 import re
 import sys
 import collections
+import dns.resolver
 from typing import List, Dict, Union
 
 NSEEDS=512
