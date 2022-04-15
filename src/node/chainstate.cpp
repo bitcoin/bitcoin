@@ -169,7 +169,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         }
     }
     // if coinsview is empty we clear all SYS db's overriding anything we did before
-    if(!fRegTest && coinsViewEmpty && !fReindexGeth) {
+    if(coinsViewEmpty && !fReindexGeth) {
         LogPrintf("coinsViewEmpty recreating LLMQ and asset databases\n");
         passetdb.reset();
         passetnftdb.reset();
