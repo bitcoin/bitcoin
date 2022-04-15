@@ -1220,7 +1220,10 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
   - *Rationale*: Consistency with the existing interface.
 
-- Argument naming: use snake case `fee_delta` (and not, e.g. camel case `feeDelta`)
+- Argument and field naming: please consider whether there is already a naming
+  style or spelling convention in the API for the type of object in question
+  (`blockhash`, for example), and if so, try to use that. If not, use snake case
+  `fee_delta` (and not, e.g. `feedelta` or camel case `feeDelta`).
 
   - *Rationale*: Consistency with the existing interface.
 
