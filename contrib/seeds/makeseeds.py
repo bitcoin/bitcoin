@@ -6,11 +6,13 @@
 # Generate seeds.txt from Pieter's DNS seeder
 #
 
+import os
 import re
 import sys
-import collections
+import argparse
 import asndecode
 import dns.resolver
+import collections
 from typing import List, Dict, Union
 
 NSEEDS=512
@@ -205,7 +207,30 @@ def ip_stats(ips: List[Dict]) -> str:
     return f"{hist['ipv4']:6d} {hist['ipv6']:6d} {hist['onion']:6d}"
 
 def main():
-    lines = sys.stdin.readlines()
+    #Parse Input Arguments
+    argParser = argparse.ArgumentParser(description=f'Generates a list of bitcoin node seed ip addresses.')
+    argParser.add_argument("-i","--ipfile", help=f'The location of the seed ip address file - required')
+    argParser.add_argument("-a","--asfile", help=f'The location of the asn database file - optional')
+    argParser.add_argument("-f","--failover", help=f'Should this script failover to REST parsing if an ip fails to decode with the asn database file.', action='store_true')
+    argParser.add_argument("-g","--geturl", help=f'A url linking to a .gz compressed ip/asn database')
+    args = argParser.parse_args()
+    #Argument Validation and Sanitization
+    if args.ipfile is None:
+        print(f'Error: IP Seed file argument not present. Fix with "-i <ip_seeds.file>"\r\nExiting 1')
+        sys.exit(1)
+    elif not os.path.exists(args.ipfile):
+        print(f'Error: input seed ip file doesn\'t exist.\r\nExiting 1')
+        sys.exit(1)
+    if args.asfile is not None:
+        if os.path.exists(args.asfile):
+            asnFile = args.asfile
+            asnFileFailover = args.failover
+    #Loads the ip seeds file
+    lines = None
+    with open(args.ipfile, encoding = 'utf-8') as f:
+        lines = f.readlines()
+    #Configure the ip->asn database
+    ASN_DB.configure(args.asfile, args.failover, args.geturl)
     ips = [parseline(line) for line in lines]
 
     print('\x1b[7m  IPv4   IPv6  Onion Pass                                               \x1b[0m', file=sys.stderr)

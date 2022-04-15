@@ -31,6 +31,14 @@ class ASNParser:
         else:
             self.failover = True
 
+    def configure(self, asFile = None, failover = True, getAsFileUrl = None):
+        #If the configuration doesn't utilize an asn db file or requests to fetch one default to using the legacy generation methods
+        if asFile is None and failover is False and getAsFileUrl is None:
+            self.failover = True
+        if getAsFileUrl is not None:
+            self.asnDbURL = getAsFileUrl
+            self.fetchIpAsnDB()
+
     def fetchIpAsnDB(self):
         '''
         Fetch the current ASN directory from an external http(s) source
