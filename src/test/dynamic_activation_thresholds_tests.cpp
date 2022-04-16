@@ -73,8 +73,9 @@ struct TestChainDATSetup : public TestChainSetup
             BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(0));
             // Next block should be signaling by default
             const auto pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbasePubKey);
-            BOOST_CHECK_EQUAL(::ChainActive().Tip()->nVersion, 536870912);
-            BOOST_CHECK(pblocktemplate->block.nVersion != 536870912);
+            const uint32_t bitmask = ((uint32_t)1) << consensus_params.vDeployments[deployment_id].bit;
+            BOOST_CHECK_EQUAL(::ChainActive().Tip()->nVersion & bitmask, 0);
+            BOOST_CHECK_EQUAL(pblocktemplate->block.nVersion & bitmask, bitmask);
         }
 
         // Reach activation_index level

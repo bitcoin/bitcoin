@@ -22,11 +22,13 @@ class CFinalCommitment
 {
 public:
     static constexpr uint16_t CURRENT_VERSION = 1;
+    static constexpr uint16_t INDEXED_QUORUM_VERSION = 2;
 
 public:
     uint16_t nVersion{CURRENT_VERSION};
     Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
     uint256 quorumHash;
+    int16_t quorumIndex{0};
     std::vector<bool> signers;
     std::vector<bool> validMembers;
 
@@ -59,7 +61,17 @@ public:
         READWRITE(
                 obj.nVersion,
                 obj.llmqType,
-                obj.quorumHash,
+                obj.quorumHash
+                );
+
+        int16_t _quorumIndex = 0;
+        SER_WRITE(obj, _quorumIndex = obj.quorumIndex);
+        if (obj.nVersion == CFinalCommitment::INDEXED_QUORUM_VERSION) {
+            READWRITE(_quorumIndex);
+        }
+        SER_READ(obj, obj.quorumIndex = _quorumIndex);
+
+        READWRITE(
                 DYNBITSET(obj.signers),
                 DYNBITSET(obj.validMembers),
                 obj.quorumPublicKey,
@@ -91,6 +103,7 @@ public:
         obj.pushKV("version", (int)nVersion);
         obj.pushKV("llmqType", (int)llmqType);
         obj.pushKV("quorumHash", quorumHash.ToString());
+        obj.pushKV("quorumIndex", quorumIndex);
         obj.pushKV("signersCount", CountSigners());
         obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
         obj.pushKV("validMembersCount", CountValidMembers());
@@ -108,10 +121,9 @@ class CFinalCommitmentTxPayload
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_QUORUM_COMMITMENT;
     static constexpr uint16_t CURRENT_VERSION = 1;
-
 public:
     uint16_t nVersion{CURRENT_VERSION};
-    uint32_t nHeight{(uint32_t)-1};
+    uint32_t nHeight{std::numeric_limits<uint32_t>::max()};
     CFinalCommitment commitment;
 
 public:

@@ -828,7 +828,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
             if (!qc.commitment.IsNull()) {
                 const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
-                uint32_t quorumHeight = qc.nHeight - (qc.nHeight % llmq_params.dkgInterval);
+                int qcnHeight = int(qc.nHeight);
+                int quorumHeight = qcnHeight - (qcnHeight % llmq_params.dkgInterval) + int(qc.commitment.quorumIndex);
                 auto pQuorumBaseBlockIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!pQuorumBaseBlockIndex || pQuorumBaseBlockIndex->GetBlockHash() != qc.commitment.quorumHash) {
                     // we should actually never get into this case as validation should have caught it...but let's be sure
@@ -875,7 +876,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
 {
     // The commitment has already been validated at this point, so it's safe to use members of it
 
-    auto members = llmq::CLLMQUtils::GetAllQuorumMembers(llmq::GetLLMQParams(qc.llmqType), pQuorumBaseBlockIndex);
+    auto members = llmq::CLLMQUtils::GetAllQuorumMembers(qc.llmqType, pQuorumBaseBlockIndex);
 
     for (size_t i = 0; i < members.size(); i++) {
         if (!mnList.HasMN(members[i]->proTxHash)) {

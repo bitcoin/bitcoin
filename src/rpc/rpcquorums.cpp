@@ -11,13 +11,14 @@
 #include <masternode/node.h>
 #include <evo/deterministicmns.h>
 
-#include <llmq/quorums.h>
-#include <llmq/commitment.h>
 #include <llmq/blockprocessor.h>
+#include <llmq/commitment.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsession.h>
+#include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
+#include <llmq/snapshot.h>
 
 namespace llmq {
 extern const std::string CLSIG_REQUESTID_PREFIX;
@@ -100,6 +101,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMem
     ret.pushKV("height", quorum->m_quorum_base_block_index->nHeight);
     ret.pushKV("type", std::string(quorum->params.name));
     ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
+    ret.pushKV("quorumIndex", quorum->qc->quorumIndex);
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
 
     if (includeMembers) {
@@ -191,50 +193,71 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     int tipHeight = pindexTip->nHeight;
 
     auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
-    UniValue minableCommitments(UniValue::VOBJ);
-    UniValue quorumConnections(UniValue::VOBJ);
+
+    UniValue minableCommitments(UniValue::VARR);
+    UniValue quorumArrConnections(UniValue::VARR);
     for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
         const auto& llmq_params = llmq::GetLLMQParams(type);
 
-        if (fMasternodeMode) {
-            const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return ::ChainActive()[tipHeight - (tipHeight % llmq_params.dkgInterval)]);
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params, pQuorumBaseBlockIndex, proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params, pQuorumBaseBlockIndex, proTxHash, true);
-            std::map<uint256, CAddress> foundConnections;
-            g_connman->ForEachNode([&](const CNode* pnode) {
-                auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
-                if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
-                    foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
+        for (int quorumIndex = 0; quorumIndex < llmq_params.signingActiveQuorumCount; ++quorumIndex) {
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("llmqType", std::string(llmq_params.name));
+            obj.pushKV("quorumIndex", quorumIndex);
+
+            if (fMasternodeMode) {
+                int quorumHeight = tipHeight - (tipHeight % llmq_params.dkgInterval) + quorumIndex;
+                if (quorumHeight <= tipHeight) {
+                    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return ::ChainActive()[quorumHeight]);
+                    obj.pushKV("pQuorumBaseBlockIndex", pQuorumBaseBlockIndex->nHeight);
+                    obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
+                    obj.pushKV("pindexTip", pindexTip->nHeight);
+
+                    auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params, pQuorumBaseBlockIndex,
+                                                                                 proTxHash, false);
+                    auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(llmq_params,
+                                                                                      pQuorumBaseBlockIndex, proTxHash,
+                                                                                      true);
+                    std::map<uint256, CAddress> foundConnections;
+                    g_connman->ForEachNode([&](const CNode* pnode) {
+                        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+                        if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
+                            foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
+                        }
+                    });
+                    UniValue arr(UniValue::VARR);
+                    for (auto& ec : allConnections) {
+                        UniValue ecj(UniValue::VOBJ);
+                        ecj.pushKV("proTxHash", ec.ToString());
+                        if (foundConnections.count(ec)) {
+                            ecj.pushKV("connected", true);
+                            ecj.pushKV("address", foundConnections[ec].ToString(false));
+                        } else {
+                            ecj.pushKV("connected", false);
+                        }
+                        ecj.pushKV("outbound", outboundConnections.count(ec) != 0);
+                        arr.push_back(ecj);
+                    }
+                    obj.pushKV("quorumConnections", arr);
                 }
-            });
-            UniValue arr(UniValue::VARR);
-            for (auto& ec : allConnections) {
-                UniValue obj(UniValue::VOBJ);
-                obj.pushKV("proTxHash", ec.ToString());
-                if (foundConnections.count(ec)) {
-                    obj.pushKV("connected", true);
-                    obj.pushKV("address", foundConnections[ec].ToString(false));
-                } else {
-                    obj.pushKV("connected", false);
-                }
-                obj.pushKV("outbound", outboundConnections.count(ec) != 0);
-                arr.push_back(obj);
             }
-            quorumConnections.pushKV(std::string(llmq_params.name), arr);
+            quorumArrConnections.push_back(obj);
+            if (!llmq::CLLMQUtils::IsQuorumRotationEnabled(type, pindexTip)) {
+                break;
+            }
         }
 
         LOCK(cs_main);
-        llmq::CFinalCommitment fqc;
-        if (llmq::quorumBlockProcessor->GetMineableCommitment(llmq_params, tipHeight, fqc)) {
-            UniValue obj(UniValue::VOBJ);
-            fqc.ToJson(obj);
-            minableCommitments.pushKV(std::string(llmq_params.name), obj);
+        std::optional<std::vector<llmq::CFinalCommitment>> vfqc = llmq::quorumBlockProcessor->GetMineableCommitments(llmq_params, tipHeight);
+        if (vfqc.has_value()) {
+            for (const auto& fqc : vfqc.value()) {
+                UniValue obj(UniValue::VOBJ);
+                fqc.ToJson(obj);
+                minableCommitments.push_back(obj);
+            }
         }
     }
-
+    ret.pushKV("quorumConnections", quorumArrConnections);
     ret.pushKV("minableCommitments", minableCommitments);
-    ret.pushKV("quorumConnections", quorumConnections);
-
     return ret;
 }
 
@@ -624,31 +647,82 @@ static UniValue quorum_getdata(const JSONRPCRequest& request)
     });
 }
 
+static void quorum_getrotationinfo_help()
+{
+    throw std::runtime_error(
+        RPCHelpMan{
+            "quorum rotationinfo",
+            "Get quorum rotation information\n",
+            {{"blockRequestHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The blockHash of the request."},
+             {"baseBlockHashesNb", RPCArg::Type::NUM, RPCArg::Optional::NO,
+              "Number of baseBlockHashes"},
+             {"extraShare", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Extra share"}},
+            RPCResults{},
+            RPCExamples{""},
+        }
+            .ToString());
+}
+
+static UniValue quorum_getrotationdata(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() < 2)) {
+        quorum_getrotationinfo_help();
+    }
+
+    llmq::CGetQuorumRotationInfo cmd;
+    llmq::CQuorumRotationInfo quorumRotationInfoRet;
+    std::string strError;
+
+    cmd.blockRequestHash = ParseHashV(request.params[1], "blockRequestHash");
+    size_t baseBlockHashesNb = static_cast<uint32_t>(ParseInt32V(request.params[2], "baseBlockHashesNb"));
+    cmd.extraShare = ParseBoolV(request.params[3], "extraShare");
+
+    /*if (request.params.size() - 2 != cmd.baseBlockHashesNb) {
+        quorum_getrotationinfo_help();
+    }*/
+
+    for (auto i = 0; i < baseBlockHashesNb; i++) {
+        cmd.baseBlockHashes.push_back(ParseHashV(request.params[3 + i], "quorumHash"));
+    }
+    LOCK(cs_main);
+    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, strError)) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, strError);
+    }
+
+    UniValue ret(UniValue::VOBJ);
+    quorumRotationInfoRet.ToJson(ret);
+    return ret;
+}
+
 
 [[ noreturn ]] static void quorum_help()
 {
-    RPCHelpMan{"quorum",
-        "Set of commands for quorums/LLMQs.\n"
-        "To get help on individual commands, use \"help quorum command\".\n"
-        "\nAvailable commands:\n"
-        "  list              - List of on-chain quorums\n"
-        "  info              - Return information about a quorum\n"
-        "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
-        "  dkgstatus         - Return the status of the current DKG process\n"
-        "  memberof          - Checks which quorums the given masternode is a member of\n"
-        "  sign              - Threshold-sign a message\n"
-        "  verify            - Test if a quorum signature is valid for a request id and a message hash\n"
-        "  hasrecsig         - Test if a valid recovered signature is present\n"
-        "  getrecsig         - Get a recovered signature\n"
-        "  isconflicting     - Test if a conflict exists\n"
-        "  selectquorum      - Return the quorum that would/should sign a request\n"
-        "  getdata           - Request quorum data from other masternodes in the quorum\n",
-        {
-            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
-        },
-        RPCResults{},
-        RPCExamples{""},
-    }.Throw();
+    throw std::runtime_error(
+        RPCHelpMan{
+            "quorum",
+            "Set of commands for quorums/LLMQs.\n"
+            "To get help on individual commands, use \"help quorum command\".\n"
+            "\nAvailable commands:\n"
+            "  list              - List of on-chain quorums\n"
+            "  info              - Return information about a quorum\n"
+            "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
+            "  dkgstatus         - Return the status of the current DKG process\n"
+            "  memberof          - Checks which quorums the given masternode is a member of\n"
+            "  sign              - Threshold-sign a message\n"
+            "  verify            - Test if a quorum signature is valid for a request id and a message hash\n"
+            "  hasrecsig         - Test if a valid recovered signature is present\n"
+            "  getrecsig         - Get a recovered signature\n"
+            "  isconflicting     - Test if a conflict exists\n"
+            "  selectquorum      - Return the quorum that would/should sign a request\n"
+            "  getdata           - Request quorum data from other masternodes in the quorum\n"
+            "  rotationinfo      - Request quorum rotation information\n",
+            {
+                {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+            },
+            RPCResults{},
+            RPCExamples{""},
+        }
+            .ToString());
 }
 
 static UniValue _quorum(const JSONRPCRequest& request)
@@ -678,6 +752,8 @@ static UniValue _quorum(const JSONRPCRequest& request)
         return quorum_dkgsimerror(request);
     } else if (command == "getdata") {
         return quorum_getdata(request);
+    } else if (command == "rotationinfo") {
+        return quorum_getrotationdata(request);
     } else {
         quorum_help();
     }
@@ -781,8 +857,16 @@ static UniValue verifyislock(const JSONRPCRequest& request)
         signHeight = pindexMined->nHeight;
     }
 
-    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
-
+    CBlockIndex* pBlockIndex;
+    {
+        LOCK(cs_main);
+        if (signHeight == -1) {
+            pBlockIndex = ::ChainActive().Tip();
+        } else {
+            pBlockIndex = ::ChainActive()[signHeight];
+        }
+    }
+    auto llmqType = llmq::CLLMQUtils::GetInstantSendLLMQType(pBlockIndex);
     // First check against the current active set, if it fails check against the last active set
     int signOffset{llmq::GetLLMQParams(llmqType).dkgInterval};
     return llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, txid, sig, 0) ||

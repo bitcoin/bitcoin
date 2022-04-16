@@ -8,8 +8,8 @@
 #include <chain.h>
 #include <consensus/params.h>
 #include <saltedhasher.h>
-#include <unordered_lru_cache.h>
 #include <threadinterrupt.h>
+#include <unordered_lru_cache.h>
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>

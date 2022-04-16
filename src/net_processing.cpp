@@ -46,14 +46,15 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <evo/simplifiedmns.h>
-#include <llmq/quorums.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/commitment.h>
 #include <llmq/chainlocks.h>
+#include <llmq/commitment.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/instantsend.h>
+#include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
+#include <llmq/snapshot.h>
 
 #include <statsd_client.h>
 
@@ -3936,6 +3937,29 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
+    if (strCommand == NetMsgType::GETQUORUMROTATIONINFO) {
+        llmq::CGetQuorumRotationInfo cmd;
+        vRecv >> cmd;
+
+        LOCK(cs_main);
+
+        llmq::CQuorumRotationInfo quorumRotationInfoRet;
+        std::string strError;
+        if (BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, strError)) {
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QUORUMROTATIONINFO, quorumRotationInfoRet));
+        } else {
+            strError = strprintf("getquorumrotationinfo failed for size(baseBlockHashes)=%d, blockRequestHash=%s. error=%s", cmd.baseBlockHashes.size(), cmd.blockRequestHash.ToString(), strError);
+            Misbehaving(pfrom->GetId(), 1, strError);
+        }
+        return true;
+    }
+
+    if (strCommand == NetMsgType::QUORUMROTATIONINFO) {
+        // we have never requested this
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100, strprintf("received not-requested quorumrotationinfo. peer=%d", pfrom->GetId()));
+        return true;
+    }
 
     if (strCommand == NetMsgType::NOTFOUND) {
         // Remove the NOTFOUND transactions from the peer

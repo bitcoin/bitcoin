@@ -50,6 +50,10 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
             if (connman.IsMasternodeQuorumNode(pnode)) {
                 return;
             }
+            // keep _verified_ LLMQ relay connections
+            if (connman.IsMasternodeQuorumRelayMember(pnode->GetVerifiedProRegTxHash())) {
+                return;
+            }
             // keep _verified_ inbound connections
             if (pnode->fInbound) {
                 return;

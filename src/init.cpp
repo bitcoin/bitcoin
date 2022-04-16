@@ -75,10 +75,11 @@
 #include <walletinitinterface.h>
 
 #include <evo/deterministicmns.h>
-#include <llmq/quorums.h>
-#include <llmq/init.h>
 #include <llmq/blockprocessor.h>
+#include <llmq/init.h>
+#include <llmq/quorums.h>
 #include <llmq/signing.h>
+#include <llmq/snapshot.h>
 #include <llmq/utils.h>
 
 #include <statsd_client.h>
@@ -321,6 +322,7 @@ void PrepareShutdown(InitInterfaces& interfaces)
         }
         pblocktree.reset();
         llmq::DestroyLLMQSystem();
+        llmq::quorumSnapshotManager.reset();
         deterministicMNManager.reset();
         evoDb.reset();
     }
@@ -1969,6 +1971,8 @@ bool AppInitMain(InitInterfaces& interfaces)
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+                llmq::quorumSnapshotManager.reset();
+                llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
 
                 llmq::InitLLMQSystem(*evoDb, false, fReset || fReindexChainState);
 

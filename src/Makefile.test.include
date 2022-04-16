@@ -171,6 +171,7 @@ BITCOIN_TESTS =\
   test/evo_instantsend_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/evo_trivialvalidation.cpp \
+  test/evo_utils_tests.cpp \
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \

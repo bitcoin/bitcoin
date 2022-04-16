@@ -10,6 +10,7 @@
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
 
+#include <llmq/commitment.h>
 #include <llmq/utils.h>
 
 #include <optional>
@@ -39,7 +40,7 @@ public:
     template<typename Stream>
     inline void SerializeWithoutSig(Stream& s) const
     {
-        s << llmqType;
+        s << uint8_t(llmqType);
         s << quorumHash;
         s << proTxHash;
         s << *vvec;
@@ -236,6 +237,7 @@ private:
     CDKGSessionManager& dkgManager;
 
     const CBlockIndex* m_quorum_base_block_index{nullptr};
+    int quorumIndex{0};
 
 private:
     std::vector<std::unique_ptr<CDKGMember>> members;
@@ -275,7 +277,7 @@ public:
     CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
         params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
 
-    bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
+    bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash, int _quorumIndex);
 
     std::optional<size_t> GetMyMemberIndex() const { return myIdx; }
 
@@ -337,9 +339,9 @@ class CDKGLogger : public CBatchedLogger
 {
 public:
     CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func) :
-            CDKGLogger(_quorumDkg.params.name, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func) {};
-    CDKGLogger(std::string_view _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func) :
-            CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, height=%d, member=%d, func=%s)", _llmqTypeName, _height, _areWeMember, _func)) {};
+        CDKGLogger(_quorumDkg.params.name, _quorumDkg.quorumIndex, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func){};
+    CDKGLogger(std::string_view _llmqTypeName, int _quorumIndex, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func) :
+        CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, quorumIndex=%d, height=%d, member=%d, func=%s)", _llmqTypeName, _quorumIndex, _height, _areWeMember, _func)){};
 };
 
 void SetSimulatedDKGErrorRate(const std::string& type, double rate);

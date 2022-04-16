@@ -654,4 +654,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     BOOST_ASSERT(CVerifyDB().VerifyDB(Params(), &::ChainstateActive().CoinsTip(), 4, 2));
 }
 
+
+
 BOOST_AUTO_TEST_SUITE_END()

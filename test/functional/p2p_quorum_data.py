@@ -238,7 +238,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             p2p_mn1 = p2p_connection(mn1.node)
             id_p2p_mn1 = get_mininode_id(mn1.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
-            qgetdata_invalid_type = msg_qgetdata(quorum_hash_int, 103, 0x01, protx_hash_int)
+            qgetdata_invalid_type = msg_qgetdata(quorum_hash_int, 105, 0x01, protx_hash_int)
             qgetdata_invalid_block = msg_qgetdata(protx_hash_int, 100, 0x01, protx_hash_int)
             qgetdata_invalid_quorum = msg_qgetdata(int(mn1.node.getblockhash(0), 16), 100, 0x01, protx_hash_int)
             qgetdata_invalid_no_member = msg_qgetdata(quorum_hash_int, 100, 0x02, quorum_hash_int)

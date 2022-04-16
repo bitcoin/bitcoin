@@ -161,12 +161,16 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         gArgs.ForceSetArg("-blockversion", "536870912");
         for (int i = 0; i < window - num_blocks; ++i) {
             CreateAndProcessBlock({}, coinbaseKey);
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         }
         gArgs.ForceRemoveArg("-blockversion");
         if (num_blocks > 0) {
             // Mine signalling blocks
             for (int i = 0; i < num_blocks; ++i) {
                 CreateAndProcessBlock({}, coinbaseKey);
+                LOCK(cs_main);
+                deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
             }
         }
         LOCK(cs_main);
@@ -203,12 +207,15 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         LOCK(cs_main);
         // Advance from DEFINED to STARTED at height = 499
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 499);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
         BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
         BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(0));
         // Next block should be signaling by default
         const auto pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbasePubKey);
-        BOOST_CHECK_EQUAL(::ChainActive().Tip()->nVersion, 536870912);
-        BOOST_CHECK(pblocktemplate->block.nVersion != 536870912);
+        const uint32_t bitmask = ((uint32_t)1) << consensus_params.vDeployments[deployment_id].bit;
+        BOOST_CHECK_EQUAL(::ChainActive().Tip()->nVersion & bitmask, 0);
+        BOOST_CHECK_EQUAL(pblocktemplate->block.nVersion & bitmask, bitmask);
     }
 
     signal(threshold(0) - 1, false); // 1 block short
@@ -217,6 +224,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // Still STARTED but new threshold should be lower at height = 999
         LOCK(cs_main);
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 999);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
         BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
         BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(1));
     }
@@ -227,6 +236,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // Still STARTED but new threshold should be even lower at height = 1499
         LOCK(cs_main);
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 1499);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
         BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
         BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(2));
     }
@@ -237,6 +248,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // Advanced to LOCKED_IN at height = 1999
         LOCK(cs_main);
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 1999);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
         BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::LOCKED_IN);
     }
 
@@ -252,6 +265,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // Advance from LOCKED_IN to ACTIVE at height = 2499
         LOCK(cs_main);
         BOOST_CHECK_EQUAL(::ChainActive().Height(), 2499);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
         BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::ACTIVE);
         BOOST_CHECK_EQUAL(VersionBitsTipStateSinceHeight(consensus_params, deployment_id), 2500);
     }
@@ -261,6 +276,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // This applies even if reallocation was activated right at superblock height like it does here.
         // next block should be signaling by default
         LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
         auto masternode_payment = GetMasternodePayment(::ChainActive().Height(), GetBlockSubsidy(::ChainActive().Tip()->nBits, ::ChainActive().Height(), consensus_params), 2500);
         const auto pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);

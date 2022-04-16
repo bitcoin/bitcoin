@@ -2,8 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/dkgsessionmgr.h>
 #include <llmq/debug.h>
+#include <llmq/dkgsessionmgr.h>
+#include <llmq/quorums.h>
 #include <llmq/utils.h>
 
 #include <evo/deterministicmns.h>
@@ -27,10 +28,14 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, bool unitTests, b
 {
     MigrateDKG();
 
-    for (const auto& params : Params().GetConsensus().llmqs) {
-        dkgSessionHandlers.emplace(std::piecewise_construct,
-                std::forward_as_tuple(params.type),
-                std::forward_as_tuple(params, blsWorker, *this));
+    const Consensus::Params& consensus_params = Params().GetConsensus();
+    for (const auto& params : consensus_params.llmqs) {
+        auto session_count = (params.type == consensus_params.llmqTypeDIP0024InstantSend) ? params.signingActiveQuorumCount : 1;
+        for (int i = 0; i < session_count; ++i) {
+            dkgSessionHandlers.emplace(std::piecewise_construct,
+                                       std::forward_as_tuple(params.type, i),
+                                       std::forward_as_tuple(params, blsWorker, *this, i));
+        }
     }
 }
 
@@ -155,6 +160,9 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 
 void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
+    static Mutex cs_indexedQuorumsCache;
+    static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>> indexedQuorumsCache GUARDED_BY(cs_indexedQuorumsCache);
+
     if (!IsQuorumDKGEnabled())
         return;
 
@@ -177,15 +185,72 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         return;
     }
 
-    // peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)*vRecv.begin();
-    if (!dkgSessionHandlers.count(llmqType)) {
+    Consensus::LLMQType llmqType;
+    uint256 quorumHash;
+    vRecv >> llmqType;
+    vRecv >> quorumHash;
+    vRecv.Rewind(sizeof(uint256));
+    vRecv.Rewind(sizeof(uint8_t));
+
+    if (!Params().HasLLMQ(llmqType)) {
         LOCK(cs_main);
+        LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", uint8_t(llmqType));
         Misbehaving(pfrom->GetId(), 100);
         return;
     }
 
-    dkgSessionHandlers.at(llmqType).ProcessMessage(pfrom, strCommand, vRecv);
+    int quorumIndex{-1};
+
+    // First check cache
+    {
+        LOCK(cs_indexedQuorumsCache);
+        if (indexedQuorumsCache.empty()) {
+            CLLMQUtils::InitQuorumsCache(indexedQuorumsCache);
+        }
+        indexedQuorumsCache[llmqType].get(quorumHash, quorumIndex);
+    }
+
+    // No luck, try to compute
+    if (quorumIndex == -1) {
+        CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
+        if (pQuorumBaseBlockIndex == nullptr) {
+            LOCK(cs_main);
+            LogPrintf("CDKGSessionManager -- unknown quorumHash %s\n", quorumHash.ToString());
+            // NOTE: do not insta-ban for this, we might be lagging behind
+            Misbehaving(pfrom->GetId(), 10);
+            return;
+        }
+
+        if (!CLLMQUtils::IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
+            LOCK(cs_main);
+            LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", uint8_t(llmqType));
+            Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
+
+        const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);
+        quorumIndex = pQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval;
+        int quorumIndexMax = CLLMQUtils::IsQuorumRotationEnabled(llmqType, pQuorumBaseBlockIndex) ?
+                llmqParams.signingActiveQuorumCount - 1 : 0;
+
+        if (quorumIndex > quorumIndexMax) {
+            LOCK(cs_main);
+            LogPrintf("CDKGSessionManager -- invalid quorumHash %s\n", quorumHash.ToString());
+            Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
+
+        if (!dkgSessionHandlers.count(std::make_pair(llmqType, quorumIndex))) {
+            LOCK(cs_main);
+            LogPrintf("CDKGSessionManager -- no session handlers for quorumIndex [%d]\n", quorumIndex);
+            Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
+    }
+
+    assert(quorumIndex != -1);
+    WITH_LOCK(cs_indexedQuorumsCache, indexedQuorumsCache[llmqType].insert(quorumHash, quorumIndex));
+    dkgSessionHandlers.at(std::make_pair(llmqType, quorumIndex)).ProcessMessage(pfrom, strCommand, vRecv);
 }
 
 bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
@@ -307,7 +372,7 @@ void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqTyp
 bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet) const
 {
     LOCK(contributionsCacheCs);
-    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -341,7 +406,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
 
 bool CDKGSessionManager::GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& nProTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const
 {
-    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
 
     vecRet.clear();
     vecRet.reserve(members.size());

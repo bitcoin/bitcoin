@@ -230,13 +230,15 @@ private:
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
     void HandleNewInstantSendLockRecoveredSig(const CRecoveredSig& recoveredSig);
 
-    bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType);
+    bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType, const Consensus::Params& params);
     void TrySignInstantSendLock(const CTransaction& tx);
 
     void ProcessMessageInstantSendLock(const CNode* pfrom, const CInstantSendLockPtr& islock) LOCKS_EXCLUDED(cs);
     static bool PreVerifyInstantSendLock(const CInstantSendLock& islock);
     bool ProcessPendingInstantSendLocks();
-    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
+    bool ProcessPendingInstantSendLocks(bool deterministic);
+
+    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(const Consensus::LLMQType llmqType, int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock);
 
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined);

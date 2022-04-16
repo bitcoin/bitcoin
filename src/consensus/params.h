@@ -13,17 +13,16 @@
 
 namespace Consensus {
 
-enum DeploymentPos
-{
+enum DeploymentPos {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
+    DEPLOYMENT_CSV,     // Deployment of BIP68, BIP112, and BIP113.
     DEPLOYMENT_DIP0001, // Deployment of DIP0001 and lower transaction fees.
-    DEPLOYMENT_BIP147, // Deployment of BIP147 (NULLDUMMY)
+    DEPLOYMENT_BIP147,  // Deployment of BIP147 (NULLDUMMY)
     DEPLOYMENT_DIP0003, // Deployment of DIP0002 and DIP0003 (txv3 and deterministic MN lists)
     DEPLOYMENT_DIP0008, // Deployment of ChainLock enforcement
     DEPLOYMENT_REALLOC, // Deployment of Block Reward Reallocation
     DEPLOYMENT_DIP0020, // Deployment of DIP0020, DIP0021 and LMQ_100_67 quorums
-    DEPLOYMENT_GOV_FEE, // Deployment of decreased governance proposal fee
+    DEPLOYMENT_DIP0024, // Deployment of DIP0024 (Quorum Rotation) and decreased governance proposal fee
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -120,6 +119,7 @@ struct Params {
     std::vector<LLMQParams> llmqs;
     LLMQType llmqTypeChainLocks;
     LLMQType llmqTypeInstantSend{LLMQType::LLMQ_NONE};
+    LLMQType llmqTypeDIP0024InstantSend{LLMQType::LLMQ_NONE};
     LLMQType llmqTypePlatform{LLMQType::LLMQ_NONE};
     LLMQType llmqTypeMnhf{LLMQType::LLMQ_NONE};
 };

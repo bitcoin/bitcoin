@@ -299,6 +299,8 @@ extern const char *MNAUTH;
 extern const char *GETHEADERS2;
 extern const char *SENDHEADERS2;
 extern const char *HEADERS2;
+extern const char *GETQUORUMROTATIONINFO;
+extern const char *QUORUMROTATIONINFO;
 };
 
 /* Get a vector of all valid message types (see above) */

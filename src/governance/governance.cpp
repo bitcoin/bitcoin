@@ -398,7 +398,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         } else {
             // NOTE: triggers are handled via triggerman
             if (pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-                bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+                bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
                 bool fAllowLegacyFormat = !fAllowScript; // reusing the same bit to stop accepting proposals in legacy format
                 CProposalValidator validator(pObj->GetDataAsHexString(), fAllowLegacyFormat, fAllowScript);
                 if (!validator.Validate()) {
@@ -643,7 +643,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing all objects to peer=%d\n", __func__, pnode->GetId());
 
-    bool fAllowScript = WITH_LOCK(cs_main, return VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE) == ThresholdState::ACTIVE);
+    bool fAllowScript = WITH_LOCK(cs_main, return VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
 
     LOCK(cs);
 

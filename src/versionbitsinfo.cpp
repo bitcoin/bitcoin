@@ -48,8 +48,8 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.check_mn_protocol =*/ false,
     },
     {
-        /*.name =*/ "gov_fee",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ false,
-    },
+        /*.name =*/"dip0024",
+        /*.gbt_force =*/true,
+        /*.check_mn_protocol =*/false,
+    }
 };
