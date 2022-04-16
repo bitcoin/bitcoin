@@ -10,8 +10,8 @@
 
 namespace {
 
-// The parse the following format "perm1,perm2@xxxxxx"
-bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, bilingual_str& error)
+// Parse the following format: "perm1,perm2@xxxxxx"
+bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output, size_t& readen, bilingual_str& error)
 {
     NetPermissionFlags flags = PF_NONE;
     const auto atSeparator = str.find('@');
@@ -67,7 +67,7 @@ std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
     return strings;
 }
 
-bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermissions& output, bilingual_str& error)
+bool NetWhitebindPermissions::TryParse(const std::string& str, NetWhitebindPermissions& output, bilingual_str& error)
 {
     NetPermissionFlags flags;
     size_t offset;
@@ -90,7 +90,7 @@ bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermis
     return true;
 }
 
-bool NetWhitelistPermissions::TryParse(const std::string str, NetWhitelistPermissions& output, bilingual_str& error)
+bool NetWhitelistPermissions::TryParse(const std::string& str, NetWhitelistPermissions& output, bilingual_str& error)
 {
     NetPermissionFlags flags;
     size_t offset;
