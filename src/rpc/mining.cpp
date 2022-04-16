@@ -475,7 +475,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     if (AreSuperblocksEnabled()
         && !masternodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME "is syncing with network...");
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is syncing with network...");
 
     static unsigned int nTransactionsUpdatedLast;
 
