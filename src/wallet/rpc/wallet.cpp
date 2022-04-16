@@ -299,6 +299,8 @@ static RPCHelpMan setwalletflag()
 
     if (flag && value && WALLET_FLAG_CAVEATS.count(flag)) {
         res.pushKV("warnings", WALLET_FLAG_CAVEATS.at(flag));
+    } else {
+        res.pushKV("warnings", "");
     }
 
     return res;
