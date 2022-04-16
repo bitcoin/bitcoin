@@ -257,7 +257,7 @@ static RPCHelpMan setwalletflag()
                     {
                         {RPCResult::Type::STR, "flag_name", "The name of the flag that was modified"},
                         {RPCResult::Type::BOOL, "flag_state", "The new state of the flag"},
-                        {RPCResult::Type::STR, "warnings", "Any warnings associated with the change"},
+                        {RPCResult::Type::STR, "warnings", /*optional=*/true, "Any warnings associated with the change"},
                     }
                 },
                 RPCExamples{
