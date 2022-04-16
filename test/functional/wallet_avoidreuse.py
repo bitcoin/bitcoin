@@ -118,6 +118,17 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Wallet flag is already set to false", self.nodes[0].setwalletflag, 'avoid_reuse', False)
         assert_raises_rpc_error(-8, "Wallet flag is already set to true", self.nodes[1].setwalletflag, 'avoid_reuse', True)
 
+        # Create a wallet with avoid reuse, and test that disabling it afterwards persists
+        self.nodes[1].createwallet(wallet_name="avoid_reuse_persist", avoid_reuse=True)
+        w = self.nodes[1].get_wallet_rpc("avoid_reuse_persist")
+        assert_equal(w.getwalletinfo()["avoid_reuse"], True)
+        w.setwalletflag("avoid_reuse", False)
+        assert_equal(w.getwalletinfo()["avoid_reuse"], False)
+        w.unloadwallet()
+        self.nodes[1].loadwallet("avoid_reuse_persist")
+        assert_equal(w.getwalletinfo()["avoid_reuse"], False)
+        w.unloadwallet()
+
     def test_immutable(self):
         '''Test immutable wallet flags'''
         self.log.info("Test immutable wallet flags")
