@@ -575,13 +575,8 @@ def mine_large_block(test_framework, mini_wallet, node):
     # generate a 66k transaction,
     # and 14 of them is close to the 1MB block limit
     txouts = gen_return_txouts()
-    from .messages import COIN
-    fee = 100 * int(node.getnetworkinfo()["relayfee"] * COIN)
-    for _ in range(14):
-        tx = mini_wallet.create_self_transfer(from_node=node, fee_rate=0, mempool_valid=False)['tx']
-        tx.vout[0].nValue -= fee
-        tx.vout.extend(txouts)
-        mini_wallet.sendrawtransaction(from_node=node, tx_hex=tx.serialize().hex())
+    fee = 100 * node.getnetworkinfo()["relayfee"]
+    create_lots_of_big_transactions(mini_wallet, node, fee, 14, txouts)
     test_framework.generate(node, 1)
 
 
