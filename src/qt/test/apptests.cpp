@@ -68,6 +68,7 @@ void AppTests::appTests()
         return GetDataDir() / "blocks";
     }());
 
+    qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
     GUIUtil::loadFonts();
     m_app.createOptionsModel(true /* reset settings */);

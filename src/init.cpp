@@ -27,6 +27,7 @@
 #include <interfaces/chain.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
+#include <interfaces/node.h>
 #include <key.h>
 #include <mapport.h>
 #include <miner.h>
@@ -1611,7 +1612,7 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitMain(NodeContext& node)
+bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -2423,6 +2424,16 @@ bool AppInitMain(NodeContext& node)
         LOCK(cs_main);
         LogPrintf("block tree size = %u\n", ::BlockIndex().size());
         chain_active_height = ::ChainActive().Height();
+        if (tip_info) {
+            tip_info->block_height = chain_active_height;
+            tip_info->block_time = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetBlockTime() : Params().GenesisBlock().GetBlockTime();
+            tip_info->block_hash = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetBlockHash() : Params().GenesisBlock().GetHash();
+            tip_info->verification_progress = GuessVerificationProgress(Params().TxData(), ::ChainActive().Tip());
+        }
+        if (tip_info && ::pindexBestHeader) {
+            tip_info->header_height = ::pindexBestHeader->nHeight;
+            tip_info->header_time = ::pindexBestHeader->GetBlockTime();
+        }
     }
     LogPrintf("::ChainActive().Height() = %d\n",   chain_active_height);
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))

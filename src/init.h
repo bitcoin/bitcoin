@@ -11,6 +11,9 @@
 #include <util/system.h>
 
 struct NodeContext;
+namespace interfaces {
+struct BlockAndHeaderTipInfo;
+} // namespace interfaces
 namespace boost {
 class thread_group;
 } // namespace boost
@@ -51,7 +54,7 @@ bool AppInitLockDataDirectory();
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(NodeContext& node);
+bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 void PrepareShutdown(NodeContext& node);
 
 /**
