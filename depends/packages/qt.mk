@@ -32,7 +32,7 @@ $(package)_qttools_sha256_hash=6d0778b71b2742cb527561791d1d3d255366163d54a10f78c
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
 
-define $(package)_set_vars
+define $(package)_set_vars :=
 $(package)_config_opts_release = -release
 $(package)_config_opts_release += -silent
 $(package)_config_opts_debug = -debug

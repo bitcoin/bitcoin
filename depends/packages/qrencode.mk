@@ -4,7 +4,7 @@ $(package)_download_path=https://fukuchi.org/works/qrencode/
 $(package)_file_name=$(package)-$($(package)_version).tar.bz2
 $(package)_sha256_hash=efe5188b1ddbcbf98763b819b146be6a90481aac30cfc8d858ab78a19cde1fa5
 
-define $(package)_set_vars
+define $(package)_set_vars :=
 $(package)_config_opts=--disable-shared --without-tools --without-tests --disable-sdltest
 $(package)_config_opts += --disable-gprof --disable-gcov --disable-mudflap
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking

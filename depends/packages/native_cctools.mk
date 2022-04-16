@@ -6,7 +6,7 @@ $(package)_sha256_hash=6b73269efdf5c58a070e7357b66ee760501388549d6a12b423723f458
 $(package)_build_subdir=cctools
 $(package)_dependencies=native_libtapi
 
-define $(package)_set_vars
+define $(package)_set_vars :=
   $(package)_config_opts=--target=$(host) --enable-lto-support
   $(package)_config_opts+=--with-llvm-config=$(llvm_config_prog)
   $(package)_ldflags+=-Wl,-rpath=\\$$$$$$$$\$$$$$$$$ORIGIN/../lib

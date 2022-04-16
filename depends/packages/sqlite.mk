@@ -4,7 +4,7 @@ $(package)_download_path=https://sqlite.org/2022/
 $(package)_file_name=sqlite-autoconf-$($(package)_version).tar.gz
 $(package)_sha256_hash=5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373e39869c
 
-define $(package)_set_vars
+define $(package)_set_vars :=
 $(package)_config_opts=--disable-shared --disable-readline --disable-dynamic-extensions --enable-option-checking
 $(package)_config_opts_linux=--with-pic
 $(package)_config_opts_freebsd=--with-pic

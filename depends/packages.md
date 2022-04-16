@@ -54,7 +54,7 @@ After defining the main identifiers, build variables may be added or customized
 before running the build commands. They should be added to a function called
 $(package)_set_vars. For example:
 
-    define $(package)_set_vars
+    define $(package)_set_vars :=
     ...
     endef
 

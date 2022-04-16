@@ -9,7 +9,7 @@ $(package)_dependencies=libxcb
 # with GCC 12.1+. Work around that by turning errors back into warnings.
 # This workaround would be dropped if the package was updated, as that would require
 # a different build system (Meson)
-define $(package)_set_vars
+define $(package)_set_vars :=
 $(package)_config_opts = --enable-option-checking --disable-dependency-tracking
 $(package)_config_opts += --disable-static --disable-docs
 $(package)_cflags += -Wno-error=array-bounds
