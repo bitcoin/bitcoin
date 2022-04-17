@@ -286,6 +286,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         else
             match = (strURI.substr(0, i->prefix.size()) == i->prefix);
         if (match) {
+            hreq->SetPrefix(i->prefix);
             path = strURI.substr(i->prefix.size());
             size_t query_start = path.find("?");
             if (query_start != std::string::npos) path = path.substr(0, query_start);

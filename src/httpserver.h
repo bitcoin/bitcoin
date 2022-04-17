@@ -58,6 +58,7 @@ class HTTPRequest
 private:
     struct evhttp_request* req;
     bool replySent;
+    std::string m_prefix {};  // the first part of the URI that is used to match the endpoint
 
 public:
     explicit HTTPRequest(struct evhttp_request* req, bool replySent = false);
@@ -107,6 +108,14 @@ public:
      * Repeated calls will return an empty string.
      */
     std::string ReadBody();
+
+    /**
+     * Store the prefix part of the URI, so we can later easily distinguish between which
+     * part of the path is used to match the endpoint, and which part is relative to the endpoint.
+     *
+     * For example, in "/rest/headers/some_hash", "/rest/headers/" is the prefix.
+     */
+    void SetPrefix(std::string prefix) { m_prefix = prefix; }
 
     /**
      * Write output header.
