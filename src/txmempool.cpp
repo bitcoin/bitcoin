@@ -481,8 +481,6 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     indexed_transaction_set::iterator newit = mapTx.insert(entry).first;
 
     // Update transaction for any feeDelta created by PrioritiseTransaction
-    // TODO: refactor so that the fee delta is calculated before inserting
-    // into mapTx.
     CAmount delta{0};
     ApplyDelta(entry.GetTx().GetHash(), delta);
     if (delta) {
