@@ -108,29 +108,54 @@ size_t CTxMemPoolEntry::GetTxSize() const
 
 void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
                                       const std::set<uint256>& setExclude, std::set<uint256>& descendants_to_remove,
-                                      uint64_t ancestor_size_limit, uint64_t ancestor_count_limit)
+                                      uint64_t ancestor_size_limit, uint64_t ancestor_count_limit,
+                                      bool skipLookup)
 {
     CTxMemPoolEntry::Children stageEntries, descendants;
     stageEntries = updateIt->GetMemPoolChildrenConst();
+
+    bool hasParents = !updateIt->GetMemPoolParentsConst().empty();
 
     while (!stageEntries.empty()) {
         const CTxMemPoolEntry& descendant = *stageEntries.begin();
         descendants.insert(descendant);
         stageEntries.erase(descendant);
         const CTxMemPoolEntry::Children& children = descendant.GetMemPoolChildrenConst();
-        for (const CTxMemPoolEntry& childEntry : children) {
-            cacheMap::iterator cacheIt = cachedDescendants.find(mapTx.iterator_to(childEntry));
-            if (cacheIt != cachedDescendants.end()) {
-                // We've already calculated this one, just add the entries for this set
-                // but don't traverse again.
-                for (txiter cacheEntry : cacheIt->second) {
-                    descendants.insert(*cacheEntry);
-                }
-            } else if (!descendants.count(childEntry)) {
-                // Schedule for later processing
-                stageEntries.insert(childEntry);
-            }
+
+        // If children is empty, continue to the next iteration of the loop.
+        if (children.empty()) {
+            continue;
         }
+
+        auto insertStage = [&]() {
+            for (const CTxMemPoolEntry& childEntry : children) {
+                if (!descendants.count(childEntry)) {
+                    // Schedule for later processing
+                    stageEntries.insert(childEntry);
+                }
+            }
+        };
+
+        // If skipLookup is set, skip the cachedDescendants lookup as this is an
+        // entry without any children in setExclude.
+        if (skipLookup) {
+            insertStage();
+            continue;
+        }
+
+        cacheMap::iterator cacheIt = cachedDescendants.find(mapTx.iterator_to(descendant));
+        if (cacheIt != cachedDescendants.end()) {
+            // We've already calculated this one, just add the entries for this set
+            // but don't traverse again.
+            for (txiter cacheEntry : cacheIt->second) {
+                descendants.insert(*cacheEntry);
+            }
+            continue;
+        }
+
+        // Since descendant was not cached, add its children to stageEntries if they
+        // do not already exist in the set.
+        insertStage();
     }
     // descendants now contains all in-mempool descendants of updateIt.
     // Update and add to cached descendant map
@@ -142,7 +167,11 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendan
             modifySize += descendant.GetTxSize();
             modifyFee += descendant.GetModifiedFee();
             modifyCount++;
-            cachedDescendants[updateIt].insert(mapTx.iterator_to(descendant));
+            // Only add an entry to cachedDescendants if updateIt has in-mempool parents
+            // since the entry would otherwise be unused.
+            if (hasParents) {
+                cachedDescendants[updateIt].insert(mapTx.iterator_to(descendant));
+            }
             // Update ancestor state for each descendant
             mapTx.modify(mapTx.iterator_to(descendant), update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
             // Don't directly remove the transaction here -- doing so would
@@ -181,6 +210,10 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
         if (it == mapTx.end()) {
             continue;
         }
+        // Determine if cache lookups can be skipped based on whether or not there are
+        // children at this point. This is done before the mapNextTx traversal below
+        // since that will add to the set of in-mempool children.
+        bool skipLookup = it->GetMemPoolChildrenConst().empty();
         auto iter = mapNextTx.lower_bound(COutPoint(hash, 0));
         // First calculate the children, and update CTxMemPool::m_children to
         // include them, and update their CTxMemPoolEntry::m_parents to include this tx.
@@ -199,7 +232,9 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
                 }
             }
         } // release epoch guard for UpdateForDescendants
-        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded, descendants_to_remove, ancestor_size_limit, ancestor_count_limit);
+        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate,
+                             setAlreadyIncluded, descendants_to_remove,
+                             ancestor_size_limit, ancestor_count_limit, skipLookup);
     }
 
     for (const auto& txid : descendants_to_remove) {

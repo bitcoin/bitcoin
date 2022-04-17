@@ -831,10 +831,13 @@ private:
      *     for any descendant
      * @param[in] ancestor_count_limit the max number of ancestor transactions
      *     allowed for any descendant
+     * @param[in] skipLookup whether or not a lookup in cachedDescendants can be
+     *     skipped since there are no children of updateIt in setExclude.
      */
     void UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
                               const std::set<uint256>& setExclude, std::set<uint256>& descendants_to_remove,
-                              uint64_t ancestor_size_limit, uint64_t ancestor_count_limit) EXCLUSIVE_LOCKS_REQUIRED(cs);
+                              uint64_t ancestor_size_limit, uint64_t ancestor_count_limit,
+                              bool skipLookup) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
     void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */
