@@ -17,7 +17,7 @@ with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
-For more information read the original Bitcoin whitepaper.
+For more information, read the original [Bitcoin Whitepaper](https://bitcoin.org/bitcoin.pdf).
 
 License
 -------
@@ -43,7 +43,7 @@ and useful hints for developers can be found in [doc/developer-notes.md](doc/dev
 Testing
 -------
 
-Testing and code review is the bottleneck for development; we get more pull
+Testing and code review are the bottleneck for development; we get more pull
 requests than we can review and test on short notice. Please be patient and help out by testing
 other people's pull requests, and remember this is a security-critical project where any mistake might cost people
 lots of money.
