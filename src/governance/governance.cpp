@@ -19,6 +19,7 @@
 #include <protocol.h>
 #include <shutdown.h>
 #include <spork.h>
+#include <validation.h>
 
 CGovernanceManager governance;
 

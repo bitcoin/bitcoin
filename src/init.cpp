@@ -1767,7 +1767,12 @@ bool AppInitMain(NodeContext& node)
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
 
-    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
+    // Make mempool generally available in the node context. For example the connection manager, wallet, or RPC threads,
+    // which are all started after this, may use it from the node context.
+    assert(!node.mempool);
+    node.mempool = &::mempool;
+
+    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.mempool, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
     RegisterValidationInterface(node.peer_logic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -2173,11 +2178,6 @@ bool AppInitMain(NodeContext& node)
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
-
-    // Now that the chain state is loaded, make mempool generally available in the node context. For example the
-    // connection manager, wallet, or RPC threads, which are all started after this, may use it from the node context.
-    assert(!node.mempool);
-    node.mempool = &::mempool;
 
     fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);

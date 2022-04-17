@@ -18,6 +18,7 @@
 #include <timedata.h>
 #include <util/ranges.h>
 #include <util/validation.h> // for strMessageMagic
+#include <validation.h>
 
 #include <string>
 

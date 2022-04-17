@@ -6,11 +6,12 @@
 #ifndef BITCOIN_NET_PROCESSING_H
 #define BITCOIN_NET_PROCESSING_H
 
-#include <net.h>
-#include <validation.h>
-#include <validationinterface.h>
 #include <consensus/params.h>
+#include <net.h>
 #include <sync.h>
+#include <validationinterface.h>
+
+class CTxMemPool;
 
 extern CCriticalSection cs_main;
 
@@ -27,10 +28,11 @@ class PeerLogicValidation final : public CValidationInterface, public NetEventsI
 private:
     CConnman* const connman;
     BanMan* const m_banman;
+    CTxMemPool& m_mempool;
 
     bool SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 public:
-    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, bool enable_bip61);
+    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, CTxMemPool& pool, bool enable_bip61);
 
     /**
      * Overridden from CValidationInterface.

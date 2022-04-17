@@ -17,6 +17,7 @@
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <util/validation.h>
+#include <validation.h>
 
 namespace llmq
 {

@@ -15,6 +15,7 @@
 #include <masternode/node.h>
 #include <chainparams.h>
 #include <net_processing.h>
+#include <validation.h>
 
 namespace llmq
 {
