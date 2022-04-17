@@ -660,7 +660,8 @@ void InitParameterInteraction(ArgsManager& args)
             LogPrintf("%s: parameter interaction: -connect set -> setting -listen=0\n", __func__);
     }
 
-    if (args.IsArgSet("-proxy")) {
+    std::string proxy_arg = args.GetArg("-proxy", "");
+    if (proxy_arg != "" && proxy_arg != "0") {
         // to protect privacy, do not listen by default if a default proxy server is specified
         if (args.SoftSetBoolArg("-listen", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -listen=0\n", __func__);
