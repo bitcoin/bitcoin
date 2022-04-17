@@ -677,11 +677,48 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
     }
 }
 
+/** Return a copy of the input string without any instances of the specified character at the
+ * beginning or the end.
+ */
+std::string TrimLeadingTrailingCharacter(const std::string& input, char character)
+{
+    size_t first = input.find_first_not_of(character);
+    if (first == std::string::npos) return input;
+    size_t last = input.find_last_not_of(character);
+    return input.substr(first, (last - first + 1));
+}
+
+std::vector<std::string> HTTPRequest::GetPath() const
+{
+    evhttp_uri* uri_parsed{evhttp_uri_parse(CheckMoveFormatToQuery(evhttp_request_get_uri(req)).c_str())};
+    std::string raw_path{evhttp_uri_get_path(uri_parsed)};
+
+    // path excluding the endpoint prefix and excluding leading and trialing forward slashes
+    std::string rel_path {TrimLeadingTrailingCharacter(raw_path.substr(m_prefix.length()), '/')};
+
+    std::vector<std::string> path {};
+    if (rel_path.length() > 0) path = SplitString(rel_path, "/");
+    evhttp_uri_free(uri_parsed);
+
+    return path;
+}
+
+std::optional<std::string> HTTPRequest::GetPathParameter(const size_t index) const
+{
+    return GetParameterFromPath(std::move(GetPath()), index);
+}
+
 std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string& key) const
 {
     std::string uri{CheckMoveFormatToQuery(evhttp_request_get_uri(req))};
 
     return GetQueryParameterFromUri(uri.c_str(), key);
+}
+
+std::optional<std::string> GetParameterFromPath(const std::vector<std::string>& path, const size_t index)
+{
+    if (index >= path.size()) return std::nullopt;
+    return path[index];
 }
 
 std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::string& key)

@@ -84,6 +84,25 @@ public:
      */
     RequestMethod GetRequestMethod() const;
 
+    /** Get the path from request uri, as a vector relative to the endpoint prefix as defined in
+    * uri_prefixes.
+    *
+    * For example: for request uri "localhost:8080/somenendpoint/my/path?key=value" which is mapped
+    * to the "somenendpoint" prefix, the returned path would be a vector of ["my", "path"].
+    */
+    std::vector<std::string> GetPath() const;
+
+    /** Get the path parameter value from request uri for a specified index, or std::nullopt if that
+     * index does not exist.
+     *
+     * The index is relative to the endpoint, as defined by m_prefix. For example, for URI
+     * "/rest/myendpoint/param1/param2", "/rest/myendpoint/" would be the prefix, "param1" would be
+     * at index 0 and "param2" would be at index 1.
+     *
+     * @param[in] index the position
+     */
+    std::optional<std::string> GetPathParameter(const size_t index) const;
+
     /** Get the query parameter value from request uri for a specified key, or std::nullopt if the
      * key is not found.
      *
@@ -93,6 +112,7 @@ public:
      *
      * @param[in] key represents the query parameter of which the value is returned
      */
+
     std::optional<std::string> GetQueryParameter(const std::string& key) const;
 
     /**
@@ -134,6 +154,13 @@ public:
      */
     void WriteReply(int nStatus, const std::string& strReply = "");
 };
+
+/**
+ * Helper function for HTTPRequest::GetPathParameter in case of multiple path parameters, to avoid
+ * reloading the path every time.
+*/
+std::optional<std::string> GetParameterFromPath(const std::vector<std::string>& path, const size_t index);
+
 
 /** Get the query parameter value from request uri for a specified key, or std::nullopt if the key
  * is not found.
