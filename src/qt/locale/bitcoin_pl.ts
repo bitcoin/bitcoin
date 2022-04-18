@@ -2399,7 +2399,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished">$Ruch sieci</translation>
+        <translation type="unfinished">Ruch sieci</translation>
     </message>
     <message>
         <source>Totals</source>
