@@ -539,7 +539,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     }
 
     // actually update labels
-    SyscoinUnit nDisplayUnit = SyscoinUnits::SYS;
+    SyscoinUnit nDisplayUnit = SyscoinUnit::SYS;
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 

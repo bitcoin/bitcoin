@@ -73,13 +73,13 @@ void OptionsModel::Init(bool resetSettings)
 
     // Display
     if (!settings.contains("DisplaySyscoinUnit")) {
-        settings.setValue("DisplaySyscoinUnit", QVariant::fromValue(SyscoinUnits::SYS));
+        settings.setValue("DisplaySyscoinUnit", QVariant::fromValue(SyscoinUnit::SYS));
     }
     QVariant unit = settings.value("DisplaySyscoinUnit");
     if (unit.canConvert<SyscoinUnit>()) {
         m_display_syscoin_unit = unit.value<SyscoinUnit>();
     } else {
-        m_display_syscoin_unit = SyscoinUnits::SYS;
+        m_display_syscoin_unit = SyscoinUnit::SYS;
         settings.setValue("DisplaySyscoinUnit", QVariant::fromValue(m_display_syscoin_unit));
     }
 

@@ -247,10 +247,10 @@ namespace {
 qint8 ToQint8(SyscoinUnit unit)
 {
     switch (unit) {
-    case SyscoinUnits::SYS: return 0;
-    case SyscoinUnits::mSYS: return 1;
-    case SyscoinUnits::uSYS: return 2;
-    case SyscoinUnits::SAT: return 3;
+    case SyscoinUnit::SYS: return 0;
+    case SyscoinUnit::mSYS: return 1;
+    case SyscoinUnit::uSYS: return 2;
+    case SyscoinUnit::SAT: return 3;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -258,10 +258,10 @@ qint8 ToQint8(SyscoinUnit unit)
 SyscoinUnit FromQint8(qint8 num)
 {
     switch (num) {
-    case 0: return SyscoinUnits::SYS;
-    case 1: return SyscoinUnits::mSYS;
-    case 2: return SyscoinUnits::uSYS;
-    case 3: return SyscoinUnits::SAT;
+    case 0: return SyscoinUnit::SYS;
+    case 1: return SyscoinUnit::mSYS;
+    case 2: return SyscoinUnit::uSYS;
+    case 3: return SyscoinUnit::SAT;
     }
     assert(false);
 }

@@ -129,7 +129,7 @@ public:
             const QFontMetrics fm(fontMetrics());
             int h = lineEdit()->minimumSizeHint().height();
             // SYSCOIN
-            int w = GUIUtil::TextWidth(fm, SyscoinUnits::format(SyscoinUnits::SYS, SyscoinUnits::maxMoney(), 0, false, SyscoinUnits::SeparatorStyle::ALWAYS));
+            int w = GUIUtil::TextWidth(fm, SyscoinUnits::format(SyscoinUnit::SYS, SyscoinUnits::maxMoney(), 0, false, SyscoinUnits::SeparatorStyle::ALWAYS));
             w += 2; // cursor blinking space
 
             QStyleOptionSpinBox opt;
@@ -154,7 +154,7 @@ public:
     }
 
 private:
-    SyscoinUnit currentUnit{SyscoinUnits::SYS};
+    SyscoinUnit currentUnit{SyscoinUnit::SYS};
     CAmount singleStep{CAmount(100000)}; // satoshis
     mutable QSize cachedMinimumSizeHint;
     bool m_allow_empty{true};
@@ -337,7 +337,7 @@ void SyscoinAmountField::unitChanged(int idx)
     amount->setDisplayUnit(new_unit.value<SyscoinUnit>());
 }
 
-void BitcoinAmountField::setDisplayUnit(SyscoinUnit new_unit)
+void SyscoinAmountField::setDisplayUnit(SyscoinUnit new_unit)
 {
     unit->setValue(QVariant::fromValue(new_unit));
 }
