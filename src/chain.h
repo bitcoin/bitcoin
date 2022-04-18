@@ -183,14 +183,13 @@ public:
     unsigned int nTx{0};
 
     //! (memory only) Number of transactions in the chain up to and including this block.
-    //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
-    //! Change to 64-bit type before 2024 (assuming worst case of 60 byte transactions).
+    //! This value will be non-zero if, and only if, transactions for this block and all its parents are available.
     //!
     //! Note: this value is faked during use of a UTXO snapshot because we don't
     //! have the underlying block data available during snapshot load.
     //! @sa AssumeutxoData
     //! @sa ActivateSnapshot
-    unsigned int nChainTx{0};
+    uint64_t nChainTx{0};
 
     //! Verification status of this block. See enum BlockStatus
     //!

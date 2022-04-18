@@ -45,7 +45,7 @@ struct AssumeutxoData {
     //!
     //! We need to hardcode the value here because this is computed cumulatively using block data,
     //! which we do not necessarily have at the time of snapshot load.
-    const unsigned int nChainTx;
+    const uint64_t nChainTx;
 };
 
 using MapAssumeutxo = std::map<int, const AssumeutxoData>;
@@ -58,7 +58,7 @@ using MapAssumeutxo = std::map<int, const AssumeutxoData>;
  */
 struct ChainTxData {
     int64_t nTime;    //!< UNIX timestamp of last known number of transactions
-    int64_t nTxCount; //!< total number of transactions between genesis and that timestamp
+    uint64_t nTxCount; //!< total number of transactions between genesis and that timestamp
     double dTxRate;   //!< estimated number of transactions per second after that timestamp
 };
 
