@@ -13,18 +13,17 @@ from subprocess import check_output
 from collections import Counter
 from typing import NoReturn
 
-CMD_GET_TEST_SUITES = r"git grep -E '^BOOST_FIXTURE_TEST_SUITE\(' -- src/test/**.cpp src/wallet/test/**.cpp"  
+CMD_GET_TEST_SUITES = r"git grep -E '^BOOST_FIXTURE_TEST_SUITE\(' -- src/test/**.cpp src/wallet/test/**.cpp"
 
 
 def main() -> NoReturn:
     entries = check_output(CMD_GET_TEST_SUITES, shell=True).decode('utf-8').splitlines()
-    
     check_regex = re.compile(r"/(.*?)\.cpp:BOOST_FIXTURE_TEST_SUITE\(\1, .*\)$")
     inconsistent_test_suits = []
     test_suit_names = []
     for line in entries:
         res = check_regex.search(line)
-        if res: 
+        if res:
             test_suit_names.append(res.group(1))
         else:
             inconsistent_test_suits.append(line)
@@ -50,8 +49,8 @@ def main() -> NoReturn:
         print()
         for line in repeated_test_suit_names:
             print(line)
-        
     sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()
