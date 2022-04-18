@@ -476,22 +476,12 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::KEYMETA) {
         } else if (strType == DBKeys::WATCHMETA) {
         } else if (strType == DBKeys::DEFAULTKEY) {
-            // We don't want or need the default key, but if there is one set,
-            // we want to make sure that it is valid so that we can detect corruption
-            CPubKey vchPubKey;
-            ssValue >> vchPubKey;
-            if (!vchPubKey.IsValid()) {
-                strErr = "Error reading wallet database: Default Key corrupt";
-                return false;
-            }
         } else if (strType == DBKeys::POOL) {
         } else if (strType == DBKeys::CSCRIPT) {
         } else if (strType == DBKeys::ORDERPOSNEXT) {
         } else if (strType == DBKeys::DESTDATA) {
         } else if (strType == DBKeys::HDCHAIN) {
         } else if (strType == DBKeys::OLD_KEY) {
-            strErr = "Found unsupported 'wkey' record, try loading with version 0.18";
-            return false;
         } else if (strType == DBKeys::ACTIVEEXTERNALSPK || strType == DBKeys::ACTIVEINTERNALSPK) {
         } else if (strType == DBKeys::WALLETDESCRIPTOR) {
         } else if (strType == DBKeys::WALLETDESCRIPTORCACHE) {
@@ -793,6 +783,37 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, pool_res.m_result);
+
+    // Deal with old "wkey" and "defaultkey" records.
+    // These are not actually loaded, but we need to check for them
+
+    // We don't want or need the default key, but if there is one set,
+    // we want to make sure that it is valid so that we can detect corruption
+    // Note: There should only be one DEFAULTKEY with nothing trailing the type
+    LoadResult default_key_res = LoadRecords(pwallet, batch, DBKeys::DEFAULTKEY,
+        [] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) {
+        CPubKey default_pubkey;
+        try {
+            value >> default_pubkey;
+        } catch (const std::exception& e) {
+            err = e.what();
+            return DBErrors::CORRUPT;
+        }
+        if (!default_pubkey.IsValid()) {
+            err = "Error reading wallet database: Default Key corrupt";
+            return DBErrors::CORRUPT;
+        }
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, default_key_res.m_result);
+
+    // "wkey" records are unsupported, if we see any, throw an error
+    LoadResult wkey_res = LoadRecords(pwallet, batch, DBKeys::OLD_KEY,
+        [] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) {
+        err = "Found unsupported 'wkey' record, try loading with version 0.18";
+        return DBErrors::LOAD_FAIL;
+    });
+    result = std::max(result, wkey_res.m_result);
 
     if (result <= DBErrors::NONCRITICAL_ERROR) {
         // Only do logging and time first key update if there were no critical errors
@@ -1237,8 +1258,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             {
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:
-                if (strType == DBKeys::MASTER_KEY ||
-                    strType == DBKeys::DEFAULTKEY) {
+                if (strType == DBKeys::MASTER_KEY) {
                     result = DBErrors::CORRUPT;
                 } else {
                     // Leave other errors alone, if we try to fix them we might make things worse.
