@@ -158,7 +158,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     }
 }
 
-void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     static Mutex cs_indexedQuorumsCache;
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>> indexedQuorumsCache GUARDED_BY(cs_indexedQuorumsCache);
@@ -166,15 +166,15 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     if (!IsQuorumDKGEnabled())
         return;
 
-    if (strCommand != NetMsgType::QCONTRIB
-        && strCommand != NetMsgType::QCOMPLAINT
-        && strCommand != NetMsgType::QJUSTIFICATION
-        && strCommand != NetMsgType::QPCOMMITMENT
-        && strCommand != NetMsgType::QWATCH) {
+    if (msg_type != NetMsgType::QCONTRIB
+        && msg_type != NetMsgType::QCOMPLAINT
+        && msg_type != NetMsgType::QJUSTIFICATION
+        && msg_type != NetMsgType::QPCOMMITMENT
+        && msg_type != NetMsgType::QWATCH) {
         return;
     }
 
-    if (strCommand == NetMsgType::QWATCH) {
+    if (msg_type == NetMsgType::QWATCH) {
         pfrom->qwatch = true;
         return;
     }
@@ -250,7 +250,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
     assert(quorumIndex != -1);
     WITH_LOCK(cs_indexedQuorumsCache, indexedQuorumsCache[llmqType].insert(quorumHash, quorumIndex));
-    dkgSessionHandlers.at(std::make_pair(llmqType, quorumIndex)).ProcessMessage(pfrom, strCommand, vRecv);
+    dkgSessionHandlers.at(std::make_pair(llmqType, quorumIndex)).ProcessMessage(pfrom, msg_type, vRecv);
 }
 
 bool CDKGSessionManager::AlreadyHave(const CInv& inv) const

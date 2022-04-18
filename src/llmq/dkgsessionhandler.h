@@ -145,7 +145,7 @@ public:
     ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv);
 
     void StartThread();
     void StopThread();

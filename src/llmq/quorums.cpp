@@ -528,18 +528,18 @@ size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, c
     return nIndex % pQuorum->qc->validMembers.size();
 }
 
-void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand, CDataStream& vRecv)
+void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, CDataStream& vRecv)
 {
     auto strFunc = __func__;
     auto errorHandler = [&](const std::string& strError, int nScore = 10) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, strCommand, strError, pFrom->GetId());
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, msg_type, strError, pFrom->GetId());
         if (nScore > 0) {
             LOCK(cs_main);
             Misbehaving(pFrom->GetId(), nScore);
         }
     };
 
-    if (strCommand == NetMsgType::QGETDATA) {
+    if (msg_type == NetMsgType::QGETDATA) {
 
         if (!fMasternodeMode || pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
             errorHandler("Not a verified masternode or a qwatch connection");
@@ -620,7 +620,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
         return;
     }
 
-    if (strCommand == NetMsgType::QDATA) {
+    if (msg_type == NetMsgType::QDATA) {
         if ((!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) || pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
             errorHandler("Not a verified masternode or a qwatch connection");
             return;

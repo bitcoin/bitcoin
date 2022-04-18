@@ -221,14 +221,14 @@ void CSigSharesManager::InterruptWorkerThread()
     workInterrupt();
 }
 
-void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     // non-masternodes are not interested in sigshares
     if (!fMasternodeMode || WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash.IsNull())) {
         return;
     }
 
-    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED) && strCommand == NetMsgType::QSIGSHARE) {
+    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED) && msg_type == NetMsgType::QSIGSHARE) {
         std::vector<CSigShare> receivedSigShares;
         vRecv >> receivedSigShares;
 
@@ -243,7 +243,7 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
         }
     }
 
-    if (strCommand == NetMsgType::QSIGSESANN) {
+    if (msg_type == NetMsgType::QSIGSESANN) {
         std::vector<CSigSesAnn> msgs;
         vRecv >> msgs;
         if (msgs.size() > MAX_MSGS_CNT_QSIGSESANN) {
@@ -256,7 +256,7 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
             BanNode(pfrom->GetId());
             return;
         }
-    } else if (strCommand == NetMsgType::QSIGSHARESINV) {
+    } else if (msg_type == NetMsgType::QSIGSHARESINV) {
         std::vector<CSigSharesInv> msgs;
         vRecv >> msgs;
         if (msgs.size() > MAX_MSGS_CNT_QSIGSHARESINV) {
@@ -269,7 +269,7 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
             BanNode(pfrom->GetId());
             return;
         }
-    } else if (strCommand == NetMsgType::QGETSIGSHARES) {
+    } else if (msg_type == NetMsgType::QGETSIGSHARES) {
         std::vector<CSigSharesInv> msgs;
         vRecv >> msgs;
         if (msgs.size() > MAX_MSGS_CNT_QGETSIGSHARES) {
@@ -282,7 +282,7 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
             BanNode(pfrom->GetId());
             return;
         }
-    } else if (strCommand == NetMsgType::QBSIGSHARES) {
+    } else if (msg_type == NetMsgType::QBSIGSHARES) {
         std::vector<CBatchedSigShares> msgs;
         vRecv >> msgs;
         size_t totalSigsCount = 0;

@@ -769,14 +769,14 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
     pendingInstantSendLocks.emplace(hash, std::make_pair(-1, islock));
 }
 
-void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     if (!IsInstantSendEnabled()) {
         return;
     }
 
-    if (strCommand == NetMsgType::ISLOCK || strCommand == NetMsgType::ISDLOCK) {
-        const auto islock_version = strCommand == NetMsgType::ISLOCK ? CInstantSendLock::islock_version : CInstantSendLock::isdlock_version;
+    if (msg_type == NetMsgType::ISLOCK || msg_type == NetMsgType::ISDLOCK) {
+        const auto islock_version = msg_type == NetMsgType::ISLOCK ? CInstantSendLock::islock_version : CInstantSendLock::isdlock_version;
         const auto islock = std::make_shared<CInstantSendLock>(islock_version);
         vRecv >> *islock;
         ProcessMessageInstantSendLock(pfrom, islock);

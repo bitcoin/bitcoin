@@ -106,16 +106,16 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
              params.name, quorumIndex, currentHeight, pQuorumBaseBlockIndex->nHeight, int(oldPhase), int(phase));
 }
 
-void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
-    if (strCommand == NetMsgType::QCONTRIB) {
+    if (msg_type == NetMsgType::QCONTRIB) {
         pendingContributions.PushPendingMessage(pfrom->GetId(), vRecv);
-    } else if (strCommand == NetMsgType::QCOMPLAINT) {
+    } else if (msg_type == NetMsgType::QCOMPLAINT) {
         pendingComplaints.PushPendingMessage(pfrom->GetId(), vRecv);
-    } else if (strCommand == NetMsgType::QJUSTIFICATION) {
+    } else if (msg_type == NetMsgType::QJUSTIFICATION) {
         pendingJustifications.PushPendingMessage(pfrom->GetId(), vRecv);
-    } else if (strCommand == NetMsgType::QPCOMMITMENT) {
+    } else if (msg_type == NetMsgType::QPCOMMITMENT) {
         pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), vRecv);
     }
 }

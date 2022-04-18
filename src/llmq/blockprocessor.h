@@ -46,7 +46,7 @@ public:
 
     bool UpgradeDB();
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv);
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

@@ -31,7 +31,7 @@ std::map<const std::string, std::shared_ptr<CCoinJoinClientManager>> coinJoinCli
 CCoinJoinClientQueueManager coinJoinClientQueueManager;
 
 
-void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -42,7 +42,7 @@ void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string
         return;
     }
 
-    if (strCommand == NetMsgType::DSQUEUE) {
+    if (msg_type == NetMsgType::DSQUEUE) {
         CCoinJoinQueue dsq;
         vRecv >> dsq;
 
@@ -108,7 +108,7 @@ void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string
     }
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -121,23 +121,23 @@ void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& str
         return;
     }
 
-    if (strCommand == NetMsgType::DSSTATUSUPDATE ||
-               strCommand == NetMsgType::DSFINALTX ||
-               strCommand == NetMsgType::DSCOMPLETE) {
+    if (msg_type == NetMsgType::DSSTATUSUPDATE ||
+               msg_type == NetMsgType::DSFINALTX ||
+               msg_type == NetMsgType::DSCOMPLETE) {
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(pfrom, strCommand, vRecv, connman, enable_bip61);
+            session.ProcessMessage(pfrom, msg_type, vRecv, connman, enable_bip61);
         }
     }
 }
 
-void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
 
-    if (strCommand == NetMsgType::DSSTATUSUPDATE) {
+    if (msg_type == NetMsgType::DSSTATUSUPDATE) {
         if (!mixingMasternode) return;
         if (mixingMasternode->pdmnState->addr != pfrom->addr) {
             return;
@@ -148,7 +148,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& str
 
         ProcessPoolStateUpdate(psssup);
 
-    } else if (strCommand == NetMsgType::DSFINALTX) {
+    } else if (msg_type == NetMsgType::DSFINALTX) {
         if (!mixingMasternode) return;
         if (mixingMasternode->pdmnState->addr != pfrom->addr) {
             return;
@@ -168,7 +168,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& str
         // check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(txNew, pfrom, connman);
 
-    } else if (strCommand == NetMsgType::DSCOMPLETE) {
+    } else if (msg_type == NetMsgType::DSCOMPLETE) {
         if (!mixingMasternode) return;
         if (mixingMasternode->pdmnState->addr != pfrom->addr) {
             LogPrint(BCLog::COINJOIN, "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n", mixingMasternode->pdmnState->addr.ToString(), pfrom->addr.ToString());

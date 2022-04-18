@@ -86,13 +86,13 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
     return cmapVoteToObject.Get(nHash, pGovobj) && pGovobj->GetVoteFile().SerializeVoteToStream(nHash, ss);
 }
 
-void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fDisableGovernance) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
 
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
-    if (strCommand == NetMsgType::MNGOVERNANCESYNC) {
+    if (msg_type == NetMsgType::MNGOVERNANCESYNC) {
         // Ignore such requests until we are fully synced.
         // We could start processing this after masternode list is synced
         // but this is a heavy one so it's better to finish sync first.
@@ -115,7 +115,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 
     // A NEW GOVERNANCE OBJECT HAS ARRIVED
-    else if (strCommand == NetMsgType::MNGOVERNANCEOBJECT) {
+    else if (msg_type == NetMsgType::MNGOVERNANCEOBJECT) {
         // MAKE SURE WE HAVE A VALID REFERENCE TO THE TIP BEFORE CONTINUING
 
         CGovernanceObject govobj;
@@ -184,7 +184,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 
     // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
-    else if (strCommand == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
+    else if (msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
         CGovernanceVote vote;
         vRecv >> vote;
 

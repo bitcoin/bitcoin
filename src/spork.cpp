@@ -102,15 +102,15 @@ void CSporkManager::CheckAndRemove()
     }
 }
 
-void CSporkManager::ProcessSporkMessages(CNode* pfrom, std::string_view strCommand, CDataStream& vRecv, CConnman& connman)
+void CSporkManager::ProcessSporkMessages(CNode* pfrom, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
 {
-    ProcessSpork(pfrom, strCommand, vRecv, connman);
-    ProcessGetSporks(pfrom, strCommand, connman);
+    ProcessSpork(pfrom, msg_type, vRecv, connman);
+    ProcessGetSporks(pfrom, msg_type, connman);
 }
 
-void CSporkManager::ProcessSpork(const CNode* pfrom, std::string_view strCommand, CDataStream& vRecv, CConnman& connman)
+void CSporkManager::ProcessSpork(const CNode* pfrom, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
 {
-    if (strCommand != NetMsgType::SPORK) return;
+    if (msg_type != NetMsgType::SPORK) return;
 
     CSporkMessage spork;
     vRecv >> spork;
@@ -171,9 +171,9 @@ void CSporkManager::ProcessSpork(const CNode* pfrom, std::string_view strCommand
     spork.Relay(connman);
 }
 
-void CSporkManager::ProcessGetSporks(CNode* pfrom, std::string_view strCommand, CConnman& connman)
+void CSporkManager::ProcessGetSporks(CNode* pfrom, std::string_view msg_type, CConnman& connman)
 {
-    if (strCommand != NetMsgType::GETSPORKS) return;
+    if (msg_type != NetMsgType::GETSPORKS) return;
 
     LOCK(cs); // make sure to not lock this together with cs_main
     for (const auto& pair : mapSporksActive) {
