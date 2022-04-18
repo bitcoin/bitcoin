@@ -273,5 +273,6 @@ Thanks to everyone who directly contributed to this release:
 - Suhas Daftuar
 - Tomas van der Wansem
 - Wladimir J. van der Laan
+- Deiby Mejia
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
