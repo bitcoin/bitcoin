@@ -41,6 +41,8 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::ThreadsScriptVerif: return "par";
     case OptionsModel::SpendZeroConfChange: return "spendzeroconfchange";
     case OptionsModel::ExternalSignerPath: return "signer";
+    case OptionsModel::MapPortUPnP: return "upnp";
+    case OptionsModel::MapPortNatpmp: return "natpmp";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -128,7 +130,8 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
-    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath}) {
+    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
+                            MapPortNatpmp}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
         try {
@@ -165,18 +168,6 @@ bool OptionsModel::Init(bilingual_str& error)
 #endif
 
     // Network
-    if (!settings.contains("fUseUPnP"))
-        settings.setValue("fUseUPnP", DEFAULT_UPNP);
-    if (!gArgs.SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
-        addOverriddenOption("-upnp");
-
-    if (!settings.contains("fUseNatpmp")) {
-        settings.setValue("fUseNatpmp", DEFAULT_NATPMP);
-    }
-    if (!gArgs.SoftSetBoolArg("-natpmp", settings.value("fUseNatpmp").toBool())) {
-        addOverriddenOption("-natpmp");
-    }
-
     if (!settings.contains("fListen"))
         settings.setValue("fListen", DEFAULT_LISTEN);
     const bool listen{settings.value("fListen").toBool()};
@@ -390,13 +381,13 @@ QVariant OptionsModel::getOption(OptionID option) const
         return fMinimizeToTray;
     case MapPortUPnP:
 #ifdef USE_UPNP
-        return settings.value("fUseUPnP");
+        return SettingToBool(setting(), DEFAULT_UPNP);
 #else
         return false;
 #endif // USE_UPNP
     case MapPortNatpmp:
 #ifdef USE_NATPMP
-        return settings.value("fUseNatpmp");
+        return SettingToBool(setting(), DEFAULT_NATPMP);
 #else
         return false;
 #endif // USE_NATPMP
@@ -478,10 +469,16 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
         settings.setValue("fMinimizeToTray", fMinimizeToTray);
         break;
     case MapPortUPnP: // core option - can be changed on-the-fly
-        settings.setValue("fUseUPnP", value.toBool());
+        if (changed()) {
+            update(value.toBool());
+            node().mapPort(value.toBool(), getOption(MapPortNatpmp).toBool());
+        }
         break;
     case MapPortNatpmp: // core option - can be changed on-the-fly
-        settings.setValue("fUseNatpmp", value.toBool());
+        if (changed()) {
+            update(value.toBool());
+            node().mapPort(getOption(MapPortUPnP).toBool(), value.toBool());
+        }
         break;
     case MinimizeOnClose:
         fMinimizeOnClose = value.toBool();
@@ -698,4 +695,6 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(SpendZeroConfChange, "bSpendZeroConfChange");
     migrate_setting(ExternalSignerPath, "external_signer_path");
 #endif
+    migrate_setting(MapPortUPnP, "fUseUPnP");
+    migrate_setting(MapPortNatpmp, "fUseNatpmp");
 }

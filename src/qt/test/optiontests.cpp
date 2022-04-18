@@ -34,6 +34,7 @@ void OptionTests::migrateSettings()
     QSettings settings;
     settings.setValue("nDatabaseCache", 600);
     settings.setValue("nThreadsScriptVerif", 12);
+    settings.setValue("fUseUPnP", false);
 
     settings.sync();
 
@@ -42,6 +43,7 @@ void OptionTests::migrateSettings()
     QVERIFY(options.Init(error));
     QVERIFY(!settings.contains("nDatabaseCache"));
     QVERIFY(!settings.contains("nThreadsScriptVerif"));
+    QVERIFY(!settings.contains("fUseUPnP"));
 
     std::ifstream file(gArgs.GetDataDirNet() / "settings.json");
     QCOMPARE(std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()).c_str(), "{\n"
