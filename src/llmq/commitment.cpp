@@ -23,9 +23,9 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 {
 }
 
-#define LogPrintfFinalCommitment(...) do { \
+#define LogPrintfFinalCommitment(...) if (LogAcceptCategory(BCLog::LLMQ)) { \
     LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
-} while(0)
+}
 
 bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const
 {
@@ -88,7 +88,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         ss2 << "s[" << i << "]=" << signers[i];
     }
 
-    LogPrintf("CFinalCommitment::%s mns[%d] validMembers[%s] signers[%s]\n", __func__, members.size(), ss.str(), ss2.str());
+    LogPrintfFinalCommitment("CFinalCommitment::%s mns[%d] validMembers[%s] signers[%s]\n", __func__, members.size(), ss.str(), ss2.str());
     for (size_t i = members.size(); i < size_t(llmq_params.size); i++) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("q[%s] invalid validMembers bitset. bit %d should not be set\n", quorumHash.ToString(), i);
@@ -107,7 +107,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         for (const auto& mn : members) {
             ss3 << mn->proTxHash.ToString().substr(0, 4) << " | ";
         }
-        LogPrintf("CFinalCommitment::%s members[%s] quorumPublicKey[%s] commitmentHash[%s]\n", __func__, ss3.str(), quorumPublicKey.ToString(), commitmentHash.ToString());
+        LogPrintfFinalCommitment("CFinalCommitment::%s members[%s] quorumPublicKey[%s] commitmentHash[%s]\n", __func__, ss3.str(), quorumPublicKey.ToString(), commitmentHash.ToString());
         std::vector<CBLSPublicKey> memberPubKeys;
         for (size_t i = 0; i < members.size(); i++) {
             if (!signers[i]) {
@@ -171,7 +171,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
     for (size_t i = 0; i < llmq_params.size; i++) {
         ss << "v[" << i << "]=" << qcTx.commitment.validMembers[i];
     }
-    LogPrintf("%s llmqType[%d] validMembers[%s] signers[]\n", __func__, int(qcTx.commitment.llmqType), ss.str());
+    LogPrintfFinalCommitment("%s llmqType[%d] validMembers[%s] signers[]\n", __func__, int(qcTx.commitment.llmqType), ss.str());
 
     if (qcTx.nVersion == 0 || qcTx.nVersion > CFinalCommitmentTxPayload::CURRENT_VERSION) {
         LogPrintfFinalCommitment("h[%d] invalid qcTx.nVersion[%d]\n", pindexPrev->nHeight, qcTx.nVersion);
