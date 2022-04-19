@@ -79,7 +79,7 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
 
     return CONTINUE_EXECUTION;
 }
-
+RecursiveMutex cs_head;
 static void grind_task(uint32_t nBits, CBlockHeader& header_orig, uint32_t offset, uint32_t step, std::atomic<bool>& found)
 {
     arith_uint256 target;
@@ -97,6 +97,7 @@ static void grind_task(uint32_t nBits, CBlockHeader& header_orig, uint32_t offse
         do {
             if (UintToArith256(header.GetHash()) <= target) {
                 if (!found.exchange(true)) {
+                    LOCK(cs_head);
                     header_orig.nNonce = header.nNonce;
                 }
                 return;
