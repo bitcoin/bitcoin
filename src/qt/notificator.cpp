@@ -14,8 +14,9 @@
 #include <QTemporaryFile>
 #include <QVariant>
 #ifdef USE_DBUS
-#include <stdint.h>
+#include <QDBusMetaType>
 #include <QtDBus>
+#include <stdint.h>
 #endif
 #ifdef Q_OS_MAC
 #include <qt/macnotificationhandler.h>
@@ -72,8 +73,6 @@ class FreedesktopImage
 public:
     FreedesktopImage() {}
     explicit FreedesktopImage(const QImage &img);
-
-    static int metaType();
 
     // Image to variant that can be marshalled over DBus
     static QVariant toVariant(const QImage &img);
@@ -136,15 +135,10 @@ const QDBusArgument &operator>>(const QDBusArgument &a, FreedesktopImage &i)
     return a;
 }
 
-int FreedesktopImage::metaType()
-{
-    return qDBusRegisterMetaType<FreedesktopImage>();
-}
-
 QVariant FreedesktopImage::toVariant(const QImage &img)
 {
     FreedesktopImage fimg(img);
-    return QVariant(FreedesktopImage::metaType(), &fimg);
+    return QVariant(qDBusRegisterMetaType<FreedesktopImage>(), &fimg);
 }
 
 void Notificator::notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
