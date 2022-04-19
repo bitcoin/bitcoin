@@ -604,11 +604,9 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             // be sure to remove any children that are in the pool. This can
             // happen during chain re-orgs if origTx isn't re-accepted into
             // the mempool for any reason.
-            for (unsigned int i = 0; i < origTx.vout.size(); i++) {
-                auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
-                if (it == mapNextTx.end())
-                    continue;
-                txiter nextit = mapTx.find(it->second->GetHash());
+            auto iter = mapNextTx.lower_bound(COutPoint(origTx.GetHash(), 0));
+            for (; iter != mapNextTx.end() && iter->first->hash == origTx.GetHash(); ++iter) {
+                txiter nextit = mapTx.find(iter->second->GetHash());
                 assert(nextit != mapTx.end());
                 txToRemove.insert(nextit);
             }
