@@ -794,6 +794,22 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
+     * Check if a block is one of the tips or one of the ancestor of one of the
+     * tips in the given chain tip set.
+     */
+    bool IsBlockInChainTipSet(const CNode& node, const CBlockIndex& index)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Lookup a block index for a peer in a privacy preserving manner.
+     *
+     * The block index will only be returned if it exists in our global index
+     * and if the peer is allowed to know about it.
+     */
+    const CBlockIndex* LookupBlockIndexForPeer(const CNode& node, const uint256& hash)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
      * Filter for transactions that were recently rejected by the mempool.
      * These are not rerequested until the chain tip changes, at which point
      * the entire filter is reset.
@@ -1132,6 +1148,18 @@ void PeerManagerImpl::UpdateChainTipSet(const CNode& node, const CBlockIndex& po
     // The new blockhash is either replacing an existing tip or we are adding a
     // new fork to the tip set.
     chain_tips.insert(&potential_new_tip);
+}
+
+bool PeerManagerImpl::IsBlockInChainTipSet(const CNode& node, const CBlockIndex& index)
+{
+    AssertLockHeld(cs_main);
+
+    const auto& chain_tips{GetChainTipSetForPeerNetwork(node)};
+
+    // `index` is in the chain tip set if one the tips has `index` as an ancestor.
+    return std::any_of(chain_tips.cbegin(), chain_tips.cend(), [&index](const CBlockIndex* tip_index) {
+        return tip_index->GetAncestor(index.nHeight) == &index;
+    });
 }
 
 std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
@@ -2018,6 +2046,21 @@ std::set<const CBlockIndex*>& PeerManagerImpl::GetChainTipSetForPeerNetwork(cons
     return m_chain_tip_sets.emplace(GetUniqueNetworkID(m_connman, node), std::set<const CBlockIndex*>()).first->second;
 }
 
+const CBlockIndex* PeerManagerImpl::LookupBlockIndexForPeer(const CNode& node, const uint256& hash)
+{
+    AssertLockHeld(cs_main);
+
+    const CBlockIndex* index{m_chainman.m_blockman.LookupBlockIndex(hash)};
+    if (!index) return nullptr;
+
+    if (IsAncestorOfBestHeaderOrTip(index) ||
+        IsBlockInChainTipSet(node, *index)) {
+        return index;
+    }
+
+    return nullptr;
+}
+
 bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
 {
     if (m_chainman.ActiveChain().Tip()->GetBlockHash() != hashRecentRejectsChainTip) {
@@ -2851,10 +2894,21 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         have_headers_sync = !!peer.m_headers_sync;
     }
 
-    // Do these headers connect to something in our block index?
-    const CBlockIndex *chain_start_header{WITH_LOCK(::cs_main, return m_chainman.m_blockman.LookupBlockIndex(headers[0].hashPrevBlock))};
-    bool headers_connect_blockindex{chain_start_header != nullptr};
-    if (!headers_connect_blockindex) {
+    // Do these headers connect to something in our blockindex and should this
+    // peer be allowed to know abut the connecting header (i.e.
+    // headers.front().hashPrevBlock)?
+    const CBlockIndex* chain_start_header{WITH_LOCK(::cs_main, return LookupBlockIndexForPeer(pfrom, headers.front().hashPrevBlock))};
+    bool headers_connect{chain_start_header != nullptr};
+    if (!headers_connect) {
+        const CBlockIndex* prev_block_index{WITH_LOCK(::cs_main, return m_chainman.m_blockman.LookupBlockIndex(headers.front().hashPrevBlock))};
+        if (prev_block_index) {
+            // The headers connect to something in our blockindex but this peer
+            // is not allowed to know about the existence of the connecting
+            // header. The peer might be probing for stale blocks in our index
+            // but this could also just happen randomly.
+            LogPrint(BCLog::NET, "treating received headers from peer=%d as unconnecting headers to prevent fingerprinting\n", pfrom.GetId());
+        }
+
         if (nCount <= MAX_BLOCKS_TO_ANNOUNCE) {
             // If this looks like it could be a BIP 130 block announcement, use
             // special logic for handling headers that don't connect, as this
