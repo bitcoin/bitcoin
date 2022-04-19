@@ -83,17 +83,7 @@ Responds with 404 if block not found.
 
 Returns various state info regarding block chain processing.
 Only supports JSON as output format.
-* chain : (string) current network name (main, test, regtest)
-* blocks : (numeric) the current number of blocks processed in the server
-* headers : (numeric) the current number of headers we have validated
-* bestblockhash : (string) the hash of the currently best block
-* difficulty : (numeric) the current difficulty
-* mediantime : (numeric) the median time of the 11 blocks before the most recent block on the blockchain
-* verificationprogress : (numeric) estimate of verification progress [0..1]
-* chainwork : (string) total amount of work in active chain, in hexadecimal
-* pruned : (boolean) if the blocks are subject to pruning
-* pruneheight : (numeric) highest block available
-* softforks : (array) status of softforks in progress
+Refer to the `getblockchaininfo` RPC help for details.
 
 #### Query UTXO set
 - `GET /rest/getutxos/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.<bin|hex|json>`
@@ -130,13 +120,13 @@ $ curl localhost:19998/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 #### Memory pool
 `GET /rest/mempool/info.json`
 
-Returns various information about the TX mempool.
+Returns various information about the transaction mempool.
 Only supports JSON as output format.
-Refer to the `getmempoolinfo` RPC for documentation of the fields.
+Refer to the `getmempoolinfo` RPC help for details.
 
 `GET /rest/mempool/contents.json`
 
-Returns transactions in the TX mempool.
+Returns the transactions in the mempool.
 Only supports JSON as output format.
 Refer to the `getrawmempool` RPC help for details.
 
