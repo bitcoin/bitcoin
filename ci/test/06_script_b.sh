@@ -35,7 +35,7 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
-  export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST/src/"
+  export P_CI_DIR="${BASE_BUILD_DIR}/syscoin-$HOST/src/"
   CI_EXEC run-clang-tidy "${MAKEJOBS}"
 fi
 
