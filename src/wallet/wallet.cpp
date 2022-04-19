@@ -1327,10 +1327,23 @@ void CWallet::blockConnected(const CBlock& block, int height)
             hogex_wtx->pegout_indices.clear();
             hogex_wtx->pegout_indices.push_back({mw::Hash(), 0}); // HogAddr doesn't have a corresponding kernel
 
+            std::multimap<PegOutCoin, std::pair<mw::Hash, size_t>> pegout_kernels;
             for (const Kernel& kernel : block.mweb_block.m_block->GetKernels()) {
                 const auto& kernel_pegouts = kernel.GetPegOuts();
                 for (size_t pegout_idx = 0; pegout_idx < kernel_pegouts.size(); pegout_idx++) {
-                    hogex_wtx->pegout_indices.push_back({kernel.GetKernelID(), pegout_idx});
+                    pegout_kernels.insert({kernel_pegouts[pegout_idx], {kernel.GetKernelID(), pegout_idx}});
+                }
+            }
+
+            for (size_t i = 1; i < hogex_wtx->tx->vout.size(); i++) {
+                const auto& hogex_out = hogex_wtx->tx->vout[i];
+                PegOutCoin pegout{hogex_out.nValue, hogex_out.scriptPubKey};
+                auto iter = pegout_kernels.find(pegout);
+                if (iter != pegout_kernels.end()) {
+                    hogex_wtx->pegout_indices.push_back(iter->second);
+                    pegout_kernels.erase(iter);
+                } else {
+                    assert(false);
                 }
             }
 
@@ -1396,7 +1409,16 @@ void CWallet::blockDisconnected(const CBlock& block, int height)
             }
         }
 
-        // MW: TODO - Pegout kernels?
+        for (const mw::Hash& kernel_id : block.mweb_block.GetKernelIDs()) {
+            auto wtx = FindWalletTxByKernelId(kernel_id);
+            if (wtx != nullptr) {
+                SyncTransaction(
+                    wtx->tx,
+                    wtx->mweb_wtx_info,
+                    {CWalletTx::Status::UNCONFIRMED, /* block height */ 0, /* block hash */ {}, /* index */ 0}
+                );
+            }
+        }
 
         for (const Output& output : block.mweb_block.m_block->GetOutputs()) {
             if (mweb_wallet->RewindOutput(output, coin)) {
