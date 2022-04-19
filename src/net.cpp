@@ -1190,7 +1190,11 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     // According to the internet TCP_NODELAY is not carried into accepted sockets
     // on all platforms.  Set it again here just to be sure.
-    SetSocketNoDelay(sock->Get());
+    const int on{1};
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+        LogPrint(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
+                 addr.ToString());
+    }
 
     // Don't accept connections from banned peers.
     bool banned = m_banman && m_banman->IsBanned(addr);
@@ -2395,17 +2399,26 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 
     // Allow binding if the port is still in TIME_WAIT state after
     // the program was closed and restarted.
-    setsockopt(sock->Get(), SOL_SOCKET, SO_REUSEADDR, (sockopt_arg_type)&nOne, sizeof(int));
+    if (sock->SetSockOpt(SOL_SOCKET, SO_REUSEADDR, (sockopt_arg_type)&nOne, sizeof(int)) == SOCKET_ERROR) {
+        strError = strprintf(Untranslated("Error setting SO_REUSEADDR on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
+        LogPrintf("%s\n", strError.original);
+    }
 
     // some systems don't have IPV6_V6ONLY but are always v6only; others do have the option
     // and enable it by default or not. Try to enable it, if possible.
     if (addrBind.IsIPv6()) {
 #ifdef IPV6_V6ONLY
-        setsockopt(sock->Get(), IPPROTO_IPV6, IPV6_V6ONLY, (sockopt_arg_type)&nOne, sizeof(int));
+        if (sock->SetSockOpt(IPPROTO_IPV6, IPV6_V6ONLY, (sockopt_arg_type)&nOne, sizeof(int)) == SOCKET_ERROR) {
+            strError = strprintf(Untranslated("Error setting IPV6_V6ONLY on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
+            LogPrintf("%s\n", strError.original);
+        }
 #endif
 #ifdef WIN32
         int nProtLevel = PROTECTION_LEVEL_UNRESTRICTED;
-        setsockopt(sock->Get(), IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int));
+        if (sock->SetSockOpt(IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int)) == SOCKET_ERROR) {
+            strError = strprintf(Untranslated("Error setting IPV6_PROTECTION_LEVEL on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
+            LogPrintf("%s\n", strError.original);
+        }
 #endif
     }
 

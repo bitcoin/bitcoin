@@ -115,6 +115,16 @@ public:
                                          void* opt_val,
                                          socklen_t* opt_len) const;
 
+    /**
+     * setsockopt(2) wrapper. Equivalent to
+     * `setsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int SetSockOpt(int level,
+                                         int opt_name,
+                                         const void* opt_val,
+                                         socklen_t opt_len) const;
+
     using Event = uint8_t;
 
     /**
