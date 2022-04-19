@@ -989,7 +989,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
             continue;
         }
 
-        if (signedSession.attempt > signedSession.quorum->params.recoveryMembers) {
+        if (signedSession.attempt >= signedSession.quorum->params.recoveryMembers) {
             continue;
         }
 
