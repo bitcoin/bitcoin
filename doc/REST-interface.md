@@ -111,13 +111,13 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 #### Memory pool
 `GET /rest/mempool/info.json`
 
-Returns various information about the TX mempool.
+Returns various information about the transaction mempool.
 Only supports JSON as output format.
-Refer to the `getmempoolinfo` RPC for documentation of the fields.
+Refer to the `getmempoolinfo` RPC help for details.
 
 `GET /rest/mempool/contents.json`
 
-Returns transactions in the TX mempool.
+Returns the transactions in the mempool.
 Only supports JSON as output format.
 
 Risks
