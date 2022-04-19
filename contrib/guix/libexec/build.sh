@@ -255,10 +255,15 @@ case "$HOST" in
 esac
 
 # LDFLAGS
-# Syscoin: linux - strip-all, windows - strip-debug (or security check will fail)
 case "$HOST" in
-    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2 -s" ;;
-    *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp -Wl,-S" ;;
+    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2" ;;
+    *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
+esac
+
+# LDFLAGS Syscoin
+# since gcc-10: only for mingw 'strip-debug' still passes security checks
+case "$HOST" in
+    *mingw*)  HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,-S" ;;
 esac
 
 # Using --no-tls-get-addr-optimize retains compatibility with glibc 2.18, by
@@ -299,7 +304,7 @@ mkdir -p "$DISTSRC"
 
     # Build Syscoin Core
     # Sycoin: add '-O --no-print-directory' (see Depends Building)
-   make -O --no-print-directory --jobs="$JOBS" ${V:+V=1}
+    make -O --no-print-directory --jobs="$JOBS" ${V:+V=1}
 
     # Check that symbol/security checks tools are sane.
     make test-security-check ${V:+V=1}
