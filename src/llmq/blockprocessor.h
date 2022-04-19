@@ -13,6 +13,7 @@
 #include <saltedhasher.h>
 #include <streams.h>
 #include <sync.h>
+#include <optional>
 
 #include <unordered_map>
 

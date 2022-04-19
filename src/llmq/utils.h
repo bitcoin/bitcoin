@@ -11,6 +11,7 @@
 #include <random.h>
 #include <set>
 #include <sync.h>
+#include <optional>
 #include <vector>
 #include <versionbits.h>
 
