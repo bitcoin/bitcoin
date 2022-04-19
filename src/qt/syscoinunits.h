@@ -114,4 +114,4 @@ typedef SyscoinUnits::Unit SyscoinUnit;
 QDataStream& operator<<(QDataStream& out, const SyscoinUnit& unit);
 QDataStream& operator>>(QDataStream& in, SyscoinUnit& unit);
 
-#endif // SYSCOIN_QT_BITCOINUNITS_H
+#endif // SYSCOIN_QT_SYSCOINUNITS_H
