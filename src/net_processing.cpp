@@ -774,6 +774,26 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex);
 
     /**
+     * Map of seen chain tip sets keyed by unique network ID.
+     *
+     * The size of each chain tip set is limited to the number of chain tips in
+     * our global block index.
+     */
+    std::map<uint64_t, std::set<const CBlockIndex*>> m_chain_tip_sets GUARDED_BY(cs_main);
+
+    /** Get the chain tip set for pfrom's network. */
+    std::set<const CBlockIndex*>& GetChainTipSetForPeerNetwork(const CNode& node)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Update the chain tip set for a given peer and new block hash by
+     * replacing an existing tip if it is an ancestor of the new block or by
+     * adding a new tip if none of the existing chain tips were replaced.
+     */
+    void UpdateChainTipSet(const CNode& node, const CBlockIndex& potential_new_tip)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
      * Filter for transactions that were recently rejected by the mempool.
      * These are not rerequested until the chain tip changes, at which point
      * the entire filter is reset.
@@ -1084,6 +1104,34 @@ static bool IsLimitedPeer(const Peer& peer)
 static bool CanServeWitnesses(const Peer& peer)
 {
     return peer.m_their_services & NODE_WITNESS;
+}
+
+void PeerManagerImpl::UpdateChainTipSet(const CNode& node, const CBlockIndex& potential_new_tip)
+{
+    AssertLockHeld(cs_main);
+
+    auto& chain_tips{GetChainTipSetForPeerNetwork(node)};
+
+    for (const CBlockIndex* tip_index : chain_tips) {
+        assert(tip_index);
+
+        if (tip_index->GetAncestor(potential_new_tip.nHeight) == &potential_new_tip) {
+            // We ignore the new blockhash if one of the tips in the tip set
+            // had the new block as an ancestor.
+            return;
+        }
+
+        if (potential_new_tip.GetAncestor(tip_index->nHeight) == tip_index) {
+            // If one of the tips is the ancestor of the new block then we
+            // replace the tip with the new block.
+            chain_tips.erase(tip_index);
+            break;
+        }
+    }
+
+    // The new blockhash is either replacing an existing tip or we are adding a
+    // new fork to the tip set.
+    chain_tips.insert(&potential_new_tip);
 }
 
 std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
@@ -1964,6 +2012,11 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
 // Messages
 //
 
+std::set<const CBlockIndex*>& PeerManagerImpl::GetChainTipSetForPeerNetwork(const CNode& node)
+{
+    // Insert an empty set or return the existing one.
+    return m_chain_tip_sets.emplace(GetUniqueNetworkID(m_connman, node), std::set<const CBlockIndex*>()).first->second;
+}
 
 bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
 {
@@ -2593,6 +2646,12 @@ bool PeerManagerImpl::MaybeSendGetHeaders(CNode& pfrom, const CBlockLocator& loc
     if (current_time - peer.m_last_getheaders_timestamp > HEADERS_RESPONSE_TIME) {
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETHEADERS, locator, uint256()));
         peer.m_last_getheaders_timestamp = current_time;
+
+        if (locator.vHave.size() > 0) {
+            LOCK(cs_main);
+            const CBlockIndex* block_index{m_chainman.m_blockman.LookupBlockIndex(locator.vHave.front())};
+            if (block_index) UpdateChainTipSet(pfrom, *block_index);
+        }
         return true;
     }
     return false;
@@ -2682,6 +2741,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom,
 
     assert(pindexLast);
     UpdateBlockAvailability(pfrom.GetId(), pindexLast->GetBlockHash());
+    UpdateChainTipSet(pfrom, *pindexLast);
 
     // From here, pindexBestKnownBlock should be guaranteed to be non-null,
     // because it is set in UpdateBlockAvailability. Some nullptr checks
@@ -2794,7 +2854,6 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     // Do these headers connect to something in our block index?
     const CBlockIndex *chain_start_header{WITH_LOCK(::cs_main, return m_chainman.m_blockman.LookupBlockIndex(headers[0].hashPrevBlock))};
     bool headers_connect_blockindex{chain_start_header != nullptr};
-
     if (!headers_connect_blockindex) {
         if (nCount <= MAX_BLOCKS_TO_ANNOUNCE) {
             // If this looks like it could be a BIP 130 block announcement, use
@@ -2850,6 +2909,15 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     if (!m_chainman.ProcessNewBlockHeaders(headers, /*min_pow_checked=*/true, state, &pindexLast)) {
         if (state.IsInvalid()) {
             MaybePunishNodeForBlock(pfrom.GetId(), state, via_compact_block, "invalid header received");
+
+            if (pindexLast) {
+                // The received headers chain could contain valid headers
+                // followed by invalid headers. We still want to update the
+                // chain tip set with the last valid header in the chain.
+                // `pindexLast` will point to block index of the last valid
+                // header.
+                WITH_LOCK(cs_main, UpdateChainTipSet(pfrom, *pindexLast));
+            }
             return;
         }
     }
@@ -3122,7 +3190,17 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, CDataStream& 
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
 {
     bool new_block{false};
-    m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
+    if (m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block)) {
+        LOCK(cs_main);
+        // The block might not be a tip but it's possible that the header was
+        // not previously received on this peer's network and so we invoke
+        // UpdateChainTipSet to ensure that the header is observable by any
+        // peer on the same network. (Ancestors of existings tips are ignored
+        // by UpdateChainTipSet)
+        const CBlockIndex* block_index{m_chainman.m_blockman.LookupBlockIndex(block->GetHash())};
+        if (block_index) UpdateChainTipSet(node, *block_index);
+    }
+
     if (new_block) {
         node.m_last_block_time = GetTime<std::chrono::seconds>();
     } else {
@@ -4138,6 +4216,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // If AcceptBlockHeader returned true, it set pindex
         assert(pindex);
         UpdateBlockAvailability(pfrom.GetId(), pindex->GetBlockHash());
+        UpdateChainTipSet(pfrom, *pindex);
 
         CNodeState *nodestate = State(pfrom.GetId());
 
