@@ -652,11 +652,11 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         CoinSelectionParams coin_selection_params_knapsack(rand, /* use_bnb= */ false, /* change_output_size= */ 34,
                                                            /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                            /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                                           /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                                           /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
         CoinSelectionParams coin_selection_params_bnb(rand, /* use_bnb= */ true, /* change_output_size= */ 34,
                                                       /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                       /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                                      /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
+                                                      /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
         CoinSet out_set;
         CAmount out_value = 0;
         CCoinControl cc;
