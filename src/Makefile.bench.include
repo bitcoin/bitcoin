@@ -74,6 +74,7 @@ endif
 if ENABLE_WALLET
 bench_bench_bitcoin_SOURCES += bench/coin_selection.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_balance.cpp
+bench_bench_bitcoin_SOURCES += bench/wallet_loading.cpp
 endif
 
 bench_bench_bitcoin_LDADD += $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS)
