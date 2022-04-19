@@ -499,10 +499,11 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
         return nullptr;
     }
 
+    auto sock = std::make_unique<Sock>(hSocket);
+
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
-    if (!IsSelectableSocket(hSocket)) {
-        CloseSocket(hSocket);
+    if (!IsSelectableSocket(sock->Get())) {
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
         return nullptr;
     }
@@ -511,19 +512,24 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
     int set = 1;
     // Set the no-sigpipe option on the socket for BSD systems, other UNIXes
     // should use the MSG_NOSIGNAL flag for every send.
-    setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
+    if (sock->SetSockOpt(SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int)) == SOCKET_ERROR) {
+        LogPrintf("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway\n",
+                  NetworkErrorString(WSAGetLastError()));
+    }
 #endif
 
     // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
-    SetSocketNoDelay(hSocket);
+    const int on{1};
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+        LogPrint(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
+    }
 
     // Set the non-blocking option on the socket.
-    if (!SetSocketNonBlocking(hSocket)) {
-        CloseSocket(hSocket);
+    if (!SetSocketNonBlocking(sock->Get())) {
         LogPrintf("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
         return nullptr;
     }
-    return std::make_unique<Sock>(hSocket);
+    return sock;
 }
 
 std::function<std::unique_ptr<Sock>(const CService&)> CreateSock = CreateSockTCP;
@@ -724,13 +730,6 @@ bool SetSocketNonBlocking(const SOCKET& hSocket)
     }
 
     return true;
-}
-
-bool SetSocketNoDelay(const SOCKET& hSocket)
-{
-    int set = 1;
-    int rc = setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
-    return rc == 0;
 }
 
 void InterruptSocks5(bool interrupt)
