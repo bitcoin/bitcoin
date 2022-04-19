@@ -116,7 +116,8 @@ Type ComputeType(Fragment nodetype, Type x, Type y, Type z, const std::vector<Ty
             "e"_mst.If(x << "f"_mst) | // e=f_x
             (x & "ghijk"_mst) | // g=g_x, h=h_x, i=i_x, j=j_x, k=k_x
             (x & "ms"_mst) | // m=m_x, s=s_x
-            "nudx"_mst; // n, u, d, x
+            // NOTE: 'd:' is not 'u' under P2WSH as MINIMALIF is only a policy rule there.
+            "ndx"_mst; // n, d, x
         case Fragment::WRAP_V: return
             "V"_mst.If(x << "B"_mst) | // V=B_x
             (x & "ghijk"_mst) | // g=g_x, h=h_x, i=i_x, j=j_x, k=k_x
