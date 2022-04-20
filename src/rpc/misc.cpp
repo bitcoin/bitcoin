@@ -8,6 +8,8 @@
 #include <consensus/consensus.h>
 #include <evo/mnauth.h>
 #include <httpserver.h>
+#include <init.h>
+#include <interfaces/chain.h>
 #include <key_io.h>
 #include <net.h>
 #include <node/context.h>
@@ -524,7 +526,13 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    SetMockTime(request.params[0].get_int64());
+    int64_t time = request.params[0].get_int64();
+    SetMockTime(time);
+    if (g_rpc_node) {
+        for (const auto& chain_client : g_rpc_node->chain_clients) {
+            chain_client->setMockTime(time);
+        }
+    }
 
     return NullUniValue;
 }
