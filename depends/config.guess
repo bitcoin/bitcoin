@@ -141,7 +141,7 @@ set_cc_for_build() {
 # This is needed to find uname on a Pyramid OSx when run in the BSD universe.
 # (ghazi@noc.rutgers.edu 1994-08-24)
 if test -f /.attbin/uname ; then
-	PATH=$PATH:/.attbin ; export PATH
+	PATH="$PATH:/.attbin" ; export PATH
 fi
 
 UNAME_MACHINE=`(uname -m) 2>/dev/null` || UNAME_MACHINE=unknown
