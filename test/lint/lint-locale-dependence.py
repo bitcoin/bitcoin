@@ -46,9 +46,10 @@ from subprocess import check_output, CalledProcessError
 KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
     "src/test/dbwrapper_tests.cpp:.*snprintf",
-    "src/test/fuzz/locale.cpp",
-    "src/test/fuzz/string.cpp",
-    "src/test/util_tests.cpp"
+    "src/test/fuzz/locale.cpp:.*setlocale",
+    "src/test/fuzz/string.cpp:.*strtol",
+    "src/test/fuzz/string.cpp:.*strtoul",
+    "src/test/util_tests.cpp:.*strtoll"
 ]
 
 REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
