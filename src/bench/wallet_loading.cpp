@@ -69,7 +69,7 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
     // reload the wallet for the actual benchmark
     BenchUnloadWallet(std::move(wallet));
 
-    bench.run([&] {
+    bench.epochs(5).run([&] {
         wallet = BenchLoadWallet(context, options);
 
         // Cleanup
