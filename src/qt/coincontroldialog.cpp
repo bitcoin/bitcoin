@@ -671,7 +671,7 @@ void CoinControlDialog::updateView()
             CTxDestination outputAddress;
             QString sAddress = "";
             if (out.address.IsMWEB()) {
-                sAddress = QString::fromStdString(EncodeDestination(coins.first));
+                sAddress = QString::fromStdString(out.address.Encode());
             } else {
                 // scriptpubkey index
                 CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
