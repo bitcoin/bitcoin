@@ -35,7 +35,7 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* walle
  * method for concatenating and returning all COutputs as one vector.
  *
  * clear(), size() methods are implemented so that one can interact with
- * the CoinsResult struct as if it were a vector
+ * the CoinsResult struct as if it was a vector
  */
 struct CoinsResult {
     /** Vectors for each OutputType */
@@ -100,26 +100,42 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
  * param@[in]  wallet                 The wallet which provides solving data for the coins
  * param@[in]  nTargetValue           The target value
  * param@[in]  eligilibity_filter     A filter containing rules for which coins are allowed to be included in this selection
- * param@[in]  coins                  The vector of coins available for selection prior to filtering
+ * param@[in]  available_coins        The struct of coins, organized by OutputType, available for selection prior to filtering
  * param@[in]  coin_selection_params  Parameters for the coin selection
  * returns                            If successful, a SelectionResult containing the input set
  *                                    If failed, a nullopt
  */
-std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
+std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const CoinsResult& available_coins,
+                        const CoinSelectionParams& coin_selection_params);
+
+/**
+ * Attempt to find a valid input set that meets the provided eligibility filter and target.
+ * Multiple coin selection algorithms will be run and the input set that produces the least waste
+ * (according to the waste metric) will be chosen.
+ *
+ * param@[in]  wallet                    The wallet which provides solving data for the coins
+ * param@[in]  nTargetValue              The target value
+ * param@[in]  eligilibity_filter        A filter containing rules for which coins are allowed to be included in this selection
+ * param@[in]  available_coins           The struct of coins, organized by OutputType, available for selection prior to filtering
+ * param@[in]  coin_selection_params     Parameters for the coin selection
+ * returns                               If successful, a SelectionResult containing the input set
+ *                                       If failed, a nullopt
+ */
+std::optional<SelectionResult> ChooseSelectionResult(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::vector<COutput>& available_coins,
                         const CoinSelectionParams& coin_selection_params);
 
 /**
  * Select a set of coins such that nTargetValue is met and at least
  * all coins from coin_control are selected; never select unconfirmed coins if they are not ours
  * param@[in]   wallet                 The wallet which provides data necessary to spend the selected coins
- * param@[in]   vAvailableCoins        The vector of coins available to be spent
+ * param@[in]   available_coins        The struct of coins, organized by OutputType, available for selection prior to filtering
  * param@[in]   nTargetValue           The target value
  * param@[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
  *                                     and whether to subtract the fee from the outputs.
  * returns                             If successful, a SelectionResult containing the selected coins
  *                                     If failed, a nullopt.
  */
-std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 struct CreatedTransactionResult
