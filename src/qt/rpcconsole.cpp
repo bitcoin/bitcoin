@@ -529,7 +529,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     pageButtons->addButton(ui->btnRepair, pageButtons->buttons().size());
     connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &RPCConsole::showPage);
 
-    showPage(TAB_INFO);
+    showPage(int(TabTypes::INFO));
 
     reloadThemedWidgets();
 }
@@ -1429,10 +1429,23 @@ void RPCConsole::showOrHideBanTableIfRequired()
 
 void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
-    showPage(tabType);
+    showPage(int(tabType));
 }
 
 QString RPCConsole::tabTitle(TabTypes tab_type) const
 {
-    return pageButtons->button(tab_type)->text();
+    return pageButtons->button(int(tab_type))->text();
+}
+
+QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
+{
+    switch (tab_type) {
+    case TabTypes::INFO: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_I);
+    case TabTypes::CONSOLE: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C);
+    case TabTypes::GRAPH: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
+    case TabTypes::PEERS: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_P);
+    case TabTypes::REPAIR: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R);
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
 }
