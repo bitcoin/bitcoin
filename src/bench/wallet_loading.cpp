@@ -122,8 +122,12 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
     });
 }
 
+#ifdef USE_BDB
 static void WalletLoadingLegacy(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/true); }
-static void WalletLoadingDescriptors(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/false); }
-
 BENCHMARK(WalletLoadingLegacy);
+#endif
+
+#ifdef USE_SQLITE
+static void WalletLoadingDescriptors(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/false); }
 BENCHMARK(WalletLoadingDescriptors);
+#endif
