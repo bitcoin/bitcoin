@@ -19,6 +19,7 @@
 #include <noui.h>
 #include <shutdown.h>
 #include <util/check.h>
+#include <util/syserror.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
@@ -212,7 +213,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
                 }
                 break;
             case -1: // Error happened.
-                return InitError(Untranslated(strprintf("fork_daemon() failed: %s\n", strerror(errno))));
+                return InitError(Untranslated(strprintf("fork_daemon() failed: %s\n", SysErrorString(errno))));
             default: { // Parent: wait and exit.
                 int token = daemon_ep.TokenRead();
                 if (token) { // Success
