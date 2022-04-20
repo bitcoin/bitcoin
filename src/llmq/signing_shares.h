@@ -119,7 +119,6 @@ public:
     }
 
     void Init(size_t size);
-    [[nodiscard]] bool IsSet(uint16_t quorumMember) const;
     void Set(uint16_t quorumMember, bool v);
     void SetAll(bool v);
     void Merge(const CSigSharesInv& inv2);

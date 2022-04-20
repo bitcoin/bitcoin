@@ -12,24 +12,27 @@
 namespace llmq
 {
 
-    extern const std::string CLSIG_REQUESTID_PREFIX;
+extern const std::string CLSIG_REQUESTID_PREFIX;
 
-    class CChainLockSig
+class CChainLockSig
+{
+public:
+    int32_t nHeight{-1};
+    uint256 blockHash;
+    CBLSSignature sig;
+
+public:
+    SERIALIZE_METHODS(CChainLockSig, obj)
     {
-    public:
-        int32_t nHeight{-1};
-        uint256 blockHash;
-        CBLSSignature sig;
+        READWRITE(obj.nHeight, obj.blockHash, obj.sig);
+    }
 
-    public:
-        SERIALIZE_METHODS(CChainLockSig, obj)
-        {
-            READWRITE(obj.nHeight, obj.blockHash, obj.sig);
-        }
-
-        bool IsNull() const;
-        std::string ToString() const;
-    };
+    bool IsNull() const
+    {
+        return nHeight == -1 && blockHash == uint256();
+    }
+    std::string ToString() const;
+};
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_CLSIG_H

@@ -396,15 +396,6 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
     }
 }
 
-// Completely remove any traces of the recovered sig
-void CRecoveredSigsDb::RemoveRecoveredSig(Consensus::LLMQType llmqType, const uint256& id)
-{
-    LOCK(cs);
-    CDBBatch batch(*db);
-    RemoveRecoveredSig(batch, llmqType, id, true, true);
-    db->WriteBatch(batch);
-}
-
 // Remove the recovered sig itself and all keys required to get from id -> recSig
 // This will leave the byHash key in-place so that HasRecoveredSigForHash still returns true
 void CRecoveredSigsDb::TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id)
@@ -983,11 +974,6 @@ bool CSigningManager::IsConflicting(Consensus::LLMQType llmqType, const uint256&
 
     // all good
     return false;
-}
-
-bool CSigningManager::HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id) const
-{
-    return db.HasVotedOnId(llmqType, id);
 }
 
 bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet) const

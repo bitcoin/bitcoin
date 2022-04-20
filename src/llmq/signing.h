@@ -126,7 +126,6 @@ public:
     bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret) const;
     bool GetRecoveredSigById(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
     void WriteRecoveredSig(const CRecoveredSig& recSig);
-    void RemoveRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
     void CleanupOldRecoveredSigs(int64_t maxAge);
@@ -220,7 +219,6 @@ public:
     bool GetRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& retRecSig) const;
     bool IsConflicting(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
 
-    bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id) const;
     bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet) const;
 
     static std::vector<CQuorumCPtr> GetActiveQuorumSet(Consensus::LLMQType llmqType, int signHeight);
