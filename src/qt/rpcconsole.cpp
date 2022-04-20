@@ -1091,11 +1091,11 @@ void RPCConsole::browseHistory(int offset)
 
 void RPCConsole::startExecutor()
 {
-    RPCExecutor *executor = new RPCExecutor(m_node);
-    executor->moveToThread(&thread);
+    m_executor = new RPCExecutor(m_node);
+    m_executor->moveToThread(&thread);
 
     // Replies from executor object must go to this object
-    connect(executor, &RPCExecutor::reply, this, [this](int category, const QString& command) {
+    connect(m_executor, &RPCExecutor::reply, this, [this](int category, const QString& command) {
         // Remove "Executing…" message.
         ui->messagesWidget->undo();
         message(category, command);
@@ -1104,15 +1104,15 @@ void RPCConsole::startExecutor()
     });
 
     // Requests from this object must go to executor
-    connect(this, &RPCConsole::cmdRequest, executor, &RPCExecutor::request);
+    connect(this, &RPCConsole::cmdRequest, m_executor, &RPCExecutor::request);
 
     // Make sure executor object is deleted in its own thread
-    connect(&thread, &QThread::finished, executor, &RPCExecutor::deleteLater);
+    connect(&thread, &QThread::finished, m_executor, &RPCExecutor::deleteLater);
 
     // Default implementation of QThread::run() simply spins up an event loop in the thread,
     // which is what we want.
     thread.start();
-    QTimer::singleShot(0, executor, []() {
+    QTimer::singleShot(0, m_executor, []() {
         util::ThreadRename("qt-rpcconsole");
     });
 }

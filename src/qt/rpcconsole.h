@@ -21,6 +21,7 @@
 
 class ClientModel;
 class PlatformStyle;
+class RPCExecutor;
 class RPCTimerInterface;
 class WalletModel;
 
@@ -173,6 +174,7 @@ private:
     int consoleFontSize = 0;
     QCompleter *autoCompleter = nullptr;
     QThread thread;
+    RPCExecutor* m_executor{nullptr};
     WalletModel* m_last_wallet_model{nullptr};
     bool m_is_executing{false};
     QByteArray m_peer_widget_header_state;
