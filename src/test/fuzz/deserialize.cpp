@@ -112,10 +112,6 @@ void AssertEqualAfterSerializeDeserialize(const T& obj, const int version = INIT
 
 } // namespace
 
-FUZZ_TARGET_DESERIALIZE(block_filter_deserialize, {
-    BlockFilter block_filter;
-    DeserializeFromFuzzingInput(buffer, block_filter);
-})
 FUZZ_TARGET_DESERIALIZE(addr_info_deserialize, {
     AddrInfo addr_info;
     DeserializeFromFuzzingInput(buffer, addr_info);

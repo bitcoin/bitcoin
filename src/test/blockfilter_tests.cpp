@@ -52,6 +52,19 @@ BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
     BOOST_CHECK_EQUAL(params.m_M, 1U);
 }
 
+template <typename Stream>
+static BlockFilter UnserializeBlockFilter(Stream& s)
+{
+    std::vector<unsigned char> encoded_filter;
+    uint8_t filter_type_uint8;
+    uint256 block_hash;
+
+    s >> filter_type_uint8 >> block_hash >> encoded_filter;
+
+    const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_uint8);
+    return BlockFilter{filter_type, block_hash, std::move(encoded_filter)};
+}
+
 BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
 {
     CScript included_scripts[5], excluded_scripts[4];
@@ -108,11 +121,9 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     }
 
     // Test serialization/unserialization.
-    BlockFilter block_filter2;
-
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << block_filter;
-    stream >> block_filter2;
+    BlockFilter block_filter2{UnserializeBlockFilter(stream)};
 
     BOOST_CHECK_EQUAL(block_filter.GetFilterType(), block_filter2.GetFilterType());
     BOOST_CHECK_EQUAL(block_filter.GetBlockHash(), block_filter2.GetBlockHash());

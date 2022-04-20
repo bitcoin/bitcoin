@@ -159,7 +159,7 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256&
         uint256 result;
         CHash256().Write(encoded_filter).Finalize(result);
         if (result != hash) return error("Checksum mismatch in filter decode.");
-        filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter), /*skip_decode_check=*/true);
+        filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter));
     }
     catch (const std::exception& e) {
         return error("%s: Failed to deserialize block filter from disk: %s", __func__, e.what());
