@@ -232,8 +232,17 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
         *chainman.ActiveChainstate().m_from_snapshot_blockhash,
         *chainman.SnapshotBlockhash());
 
-    // Ensure that the genesis block was not marked assumed-valid.
-    BOOST_CHECK(WITH_LOCK(::cs_main, return !chainman.ActiveChain().Genesis()->IsAssumedValid()));
+    {
+        LOCK(::cs_main);
+
+        // Note: WriteSnapshotBaseBlockhash() is implicitly tested above.
+        BOOST_CHECK_EQUAL(
+            *node::ReadSnapshotBaseBlockhash(m_args.GetDataDirNet() / "chainstate_snapshot"),
+            *chainman.SnapshotBlockhash());
+
+        // Ensure that the genesis block was not marked assumed-valid.
+        BOOST_CHECK(!chainman.ActiveChain().Genesis()->IsAssumedValid());
+    }
 
     const AssumeutxoData& au_data = *ExpectedAssumeutxo(snapshot_height, ::Params());
     const CBlockIndex* tip = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
