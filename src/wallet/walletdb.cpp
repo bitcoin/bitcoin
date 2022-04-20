@@ -1203,7 +1203,7 @@ std::unique_ptr<WalletDatabase> CreateMockWalletDatabase(DatabaseOptions& option
 
     if (format == DatabaseFormat::SQLITE) {
 #ifdef USE_SQLITE
-        return std::make_unique<SQLiteDatabase>("", "", options, true);
+        return std::make_unique<SQLiteDatabase>(":memory:", "", options, true);
 #endif
         assert(false);
     }
