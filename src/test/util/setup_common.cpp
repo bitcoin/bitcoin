@@ -43,6 +43,7 @@
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 
@@ -355,6 +356,52 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     }
 
     return mempool_txn;
+}
+
+std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit)
+{
+    std::vector<CTransactionRef> mempool_transactions;
+    std::deque<std::pair<COutPoint, CAmount>> unspent_prevouts;
+    std::transform(m_coinbase_txns.begin(), m_coinbase_txns.end(), std::back_inserter(unspent_prevouts),
+        [](const auto& tx){ return std::make_pair(COutPoint(tx->GetHash(), 0), tx->vout[0].nValue); });
+    while (num_transactions > 0 && !unspent_prevouts.empty()) {
+        // The number of inputs and outputs are random, between 1 and 24.
+        CMutableTransaction mtx = CMutableTransaction();
+        const size_t num_inputs = det_rand.randrange(24) + 1;
+        CAmount total_in{0};
+        for (size_t n{0}; n < num_inputs; ++n) {
+            if (unspent_prevouts.empty()) break;
+            const auto& [prevout, amount] = unspent_prevouts.front();
+            mtx.vin.push_back(CTxIn(prevout, CScript()));
+            total_in += amount;
+            unspent_prevouts.pop_front();
+        }
+        const size_t num_outputs = det_rand.randrange(24) + 1;
+        // Approximately 1000sat "fee," equal output amounts.
+        const CAmount amount_per_output = (total_in - 1000) / num_outputs;
+        for (size_t n{0}; n < num_outputs; ++n) {
+            CScript spk = CScript() << CScriptNum(num_transactions + n);
+            mtx.vout.push_back(CTxOut(amount_per_output, spk));
+        }
+        CTransactionRef ptx = MakeTransactionRef(mtx);
+        mempool_transactions.push_back(ptx);
+        if (amount_per_output > 2000) {
+            // If the value is high enough to fund another transaction + fees, keep track of it so
+            // it can be used to build a more complex transaction graph. Insert randomly into
+            // unspent_prevouts for extra randomness in the resulting structures.
+            for (size_t n{0}; n < num_outputs; ++n) {
+                unspent_prevouts.push_back(std::make_pair(COutPoint(ptx->GetHash(), n), amount_per_output));
+                std::swap(unspent_prevouts.back(), unspent_prevouts[det_rand.randrange(unspent_prevouts.size())]);
+            }
+        }
+        if (submit) {
+            LOCK2(m_node.mempool->cs, cs_main);
+            LockPoints lp;
+            m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, 1000, 0, 1, false, 4, lp));
+        }
+        --num_transactions;
+    }
+    return mempool_transactions;
 }
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const
