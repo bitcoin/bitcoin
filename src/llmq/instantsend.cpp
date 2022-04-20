@@ -883,18 +883,27 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks(bool deterministic)
         // only process a max 32 locks at a time to avoid duplicate verification of recovered signatures which have been
         // verified by CSigningManager in parallel
         const size_t maxCount = 32;
-        if (pendingInstantSendLocks.size() <= maxCount) {
-            pend = std::move(pendingInstantSendLocks);
-        } else {
-            for (auto it = pendingInstantSendLocks.begin(); it != pendingInstantSendLocks.end() && pend.size() < maxCount;) {
-                if (it->second.second->IsDeterministic() == deterministic) {
-                    pend.emplace(it->first, std::move(it->second));
-                    pendingInstantSendLocks.erase(it);
-                } else {
-                    ++it;
-                }
+        // The keys of the removed values are temporaily stored here to avoid invalidating an iterator
+        std::vector<uint256> removed;
+        removed.reserve(maxCount);
+
+        for (const auto& [islockHash, nodeid_islptr_pair] : pendingInstantSendLocks) {
+            const auto& [_, islock_ptr] = nodeid_islptr_pair;
+            // Check if we've reached max count
+            if (pend.size() >= maxCount) {
+                fMoreWork = true;
+                break;
             }
-            fMoreWork = true;
+            // Check if we care about this islock on this run
+            if (islock_ptr->IsDeterministic() != deterministic) {
+                continue;
+            }
+            pend.emplace(islockHash, std::move(nodeid_islptr_pair));
+            removed.emplace_back(islockHash);
+        }
+
+        for (const auto& islockHash : removed) {
+            pendingInstantSendLocks.erase(islockHash);
         }
     }
 
