@@ -76,7 +76,7 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
     auto wallet = BenchLoadWallet(context, options);
 
     // Generate a bunch of transactions and addresses to put into the wallet
-    for (int i = 0; i < 5000; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         AddTx(*wallet);
     }
 
