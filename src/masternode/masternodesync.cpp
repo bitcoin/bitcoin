@@ -345,13 +345,13 @@ void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitia
     }
 }
 
-void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload)
+void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, ChainstateManager& chainman, bool fInitialDownload)
 {
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
 
     nTimeLastUpdateBlockTip = GetAdjustedTime();
-    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return pindexBestHeader);
+    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.m_best_header);
 
     if (IsSynced() || !pindexTip || !pindexNew)
         return;

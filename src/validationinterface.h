@@ -21,6 +21,7 @@ class CValidationInterface;
 class uint256;
 class CScheduler;
 // SYSCOIN
+class ChainstateManager;
 class CGovernanceVote;
 class CGovernanceObject;
 class CDeterministicMNList;
@@ -97,7 +98,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, ChainstateManager& chainman, bool fInitialDownload) {}
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
@@ -217,7 +218,7 @@ public:
     size_t CallbacksPending();
 
 
-    void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, ChainstateManager&, bool fInitialDownload);
     // SYSCOIN
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);

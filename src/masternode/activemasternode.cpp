@@ -150,7 +150,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     state = MASTERNODE_READY;
 }
 
-void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
+void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, ChainstateManager& chainman, bool fInitialDownload)
 {
     LOCK2(cs_main, activeMasternodeInfoCs);
 

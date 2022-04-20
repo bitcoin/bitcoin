@@ -20,7 +20,7 @@ void CDSNotificationInterface::InitializeCurrentBlockTip(ChainstateManager& chai
 {
     LOCK(cs_main);
     SynchronousUpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman.ActiveChainstate().IsInitialBlockDownload());
-    UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman.ActiveChainstate().IsInitialBlockDownload());
+    UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman, chainman.ActiveChainstate().IsInitialBlockDownload());
 }
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
@@ -42,12 +42,12 @@ void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pin
     if(deterministicMNManager)
         deterministicMNManager->UpdatedBlockTip(pindexNew);
 }
-void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, ChainstateManager& chainman, bool fInitialDownload)
 {
     if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones
         return;
 
-    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload);
+    masternodeSync.UpdatedBlockTip(pindexNew, chainman, fInitialDownload);
 
     if (fInitialDownload)
         return;

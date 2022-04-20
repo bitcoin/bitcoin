@@ -15,7 +15,8 @@
 #include <future>
 #include <unordered_map>
 #include <utility>
-
+// SYSCOIN
+#include <node/blockstorage.h>
 //! The MainSignalsInstance manages a list of shared_ptr<CValidationInterface>
 //! callbacks.
 //!
@@ -186,13 +187,13 @@ void SyncWithValidationInterfaceQueue()
 #define LOG_EVENT(fmt, ...) \
     LogPrint(BCLog::VALIDATION, fmt "\n", __VA_ARGS__)
 
-void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
+void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, ChainstateManager& chainman, bool fInitialDownload) {
     // Dependencies exist that require UpdatedBlockTip events to be delivered in the order in which
     // the chain actually updates. One way to ensure this is for the caller to invoke this signal
     // in the same critical section where the chain is updated
 
-    auto event = [pindexNew, pindexFork, fInitialDownload, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload); });
+    auto event = [pindexNew, pindexFork, &chainman, fInitialDownload, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.UpdatedBlockTip(pindexNew, pindexFork, chainman, fInitialDownload); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: new block hash=%s fork block hash=%s (in IBD=%s)", __func__,
                           pindexNew->GetBlockHash().ToString(),

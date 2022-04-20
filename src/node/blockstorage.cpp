@@ -29,7 +29,6 @@
 namespace node {
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
-bool fHavePruned = false;
 bool fPruneMode = false;
 uint64_t nPruneTarget = 0;
 
@@ -91,7 +90,7 @@ std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> BlockManager::LookupBlo
     AssertLockHeld(cs_main);
     return m_prev_block_index.equal_range(hash);
 }
-CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus)
+CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header, enum BlockStatus nStatus)
 {
     // SYSCOIN
     assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks allowed
@@ -119,9 +118,10 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum Block
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     // SYSCOIN
     if (nStatus & BLOCK_VALID_MASK) {
-        pindexNew->RaiseValidity(nStatus);
-        if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
-            pindexBestHeader = pindexNew;
+        pindexNew->RaiseValidity(BLOCK_VALID_TREE);
+        if (best_header == nullptr || best_header->nChainWork < pindexNew->nChainWork) {
+            best_header = pindexNew;
+        }
     } else {
         pindexNew->RaiseValidity(BLOCK_VALID_TREE); // required validity level
         pindexNew->nStatus |= nStatus;
@@ -308,8 +308,6 @@ bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
             m_prev_block_index.emplace(pindex->pprev->GetBlockHash(), pindex);
             pindex->BuildSkip();
         }
-        if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
-            pindexBestHeader = pindex;
     }
 
     return true;
@@ -327,6 +325,8 @@ void BlockManager::Unload()
     m_last_blockfile = 0;
     m_dirty_blockindex.clear();
     m_dirty_fileinfo.clear();
+
+    m_have_pruned = false;
 }
 
 bool BlockManager::WriteBlockIndexDB()
@@ -389,8 +389,8 @@ bool BlockManager::LoadBlockIndexDB()
     }
 
     // Check whether we have ever pruned block & undo files
-    m_block_tree_db->ReadFlag("prunedblockfiles", fHavePruned);
-    if (fHavePruned) {
+    m_block_tree_db->ReadFlag("prunedblockfiles", m_have_pruned);
+    if (m_have_pruned) {
         LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
     }
 
@@ -416,10 +416,10 @@ const CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
     return nullptr;
 }
 
-bool IsBlockPruned(const CBlockIndex* pblockindex)
+bool BlockManager::IsBlockPruned(const CBlockIndex* pblockindex)
 {
     AssertLockHeld(::cs_main);
-    return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
+    return (m_have_pruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the

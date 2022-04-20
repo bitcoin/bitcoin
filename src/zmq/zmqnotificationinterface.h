@@ -16,6 +16,7 @@ class CNEVMBlock;
 class CNEVMHeader;
 class CBlock;
 class uint256;
+class ChainstateManager;
 class CZMQNotificationInterface final : public CValidationInterface
 {
 public:
@@ -34,7 +35,7 @@ protected:
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) override;
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, ChainstateManager& chainman, bool fInitialDownload) override;
     // SYSCOIN
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;

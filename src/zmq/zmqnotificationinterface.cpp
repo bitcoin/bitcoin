@@ -242,7 +242,7 @@ void CZMQNotificationInterface::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockVa
         return notifier->NotifyGetNEVMBlock(evmBlock, state);
     });
 }
-void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, ChainstateManager& chainman, bool fInitialDownload)
 {
     if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
         return;

@@ -27,7 +27,6 @@ extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations = nullptr, bool forcelegacy = false);
 
 using node::ReadBlockFromDisk;
-using node::IsBlockPruned;
 using node::GetTransaction;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
     oAsset.__pushKV("asset_guid", UniValue(nBaseAsset).write());
@@ -468,7 +467,7 @@ static RPCHelpMan getnevmblockchaininfo()
         if (!pblockindex) {
             throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not found");
         }
-        if (IsBlockPruned(pblockindex)) {
+        if (chainman.m_blockman.IsBlockPruned(pblockindex)) {
             throw JSONRPCError(RPC_MISC_ERROR, tip->GetBlockHash().ToString() + " not available (pruned data)");
         }
         if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
@@ -711,7 +710,7 @@ static RPCHelpMan syscoingetspvproof()
     CBlock block;
     {
         LOCK(cs_main);
-        if (IsBlockPruned(pblockindex)) {
+        if (node.chainman->m_blockman.IsBlockPruned(pblockindex)) {
             throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
         }
     }

@@ -13,6 +13,7 @@ class CBlockIndex;
 class CConnman;
 class CNode;
 class CDataStream;
+class ChainstateManager;
 
 static constexpr int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static constexpr int MASTERNODE_SYNC_GOVERNANCE      = 4;
@@ -75,7 +76,7 @@ public:
     void ProcessTick(CConnman& connman, const PeerManager& peerman);
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, ChainstateManager& chainman, bool fInitialDownload);
 
     void DoMaintenance(CConnman &connman, const PeerManager& peerman);
 };

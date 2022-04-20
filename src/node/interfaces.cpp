@@ -259,9 +259,10 @@ public:
     bool getHeaderTip(int& height, int64_t& block_time) override
     {
         LOCK(::cs_main);
-        if (::pindexBestHeader) {
-            height = ::pindexBestHeader->nHeight;
-            block_time = ::pindexBestHeader->GetBlockTime();
+        auto best_header = chainman().m_best_header;
+        if (best_header) {
+            height = best_header->nHeight;
+            block_time = best_header->GetBlockTime();
             return true;
         }
         return false;
@@ -430,7 +431,7 @@ public:
     {
         m_notifications->blockDisconnected(*block, index->nHeight);
     }
-    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
+    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, ChainstateManager& chainman, bool is_ibd) override
     {
         m_notifications->updatedBlockTip();
     }
@@ -694,7 +695,7 @@ public:
     bool havePruned() override
     {
         LOCK(cs_main);
-        return node::fHavePruned;
+        return m_node.chainman->m_blockman.m_have_pruned;
     }
     bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {
