@@ -5,6 +5,10 @@
 #ifndef BITCOIN_QT_RPCCONSOLE_H
 #define BITCOIN_QT_RPCCONSOLE_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
 
@@ -49,8 +53,11 @@ public:
     }
 
     void setClientModel(ClientModel *model = nullptr, int bestblock_height = 0, int64_t bestblock_date = 0, double verification_progress = 0.0);
-    void addWallet(WalletModel * const walletModel);
+
+#ifdef ENABLE_WALLET
+    void addWallet(WalletModel* const walletModel);
     void removeWallet(WalletModel* const walletModel);
+#endif // ENABLE_WALLET
 
     enum MessageClass {
         MC_ERROR,
