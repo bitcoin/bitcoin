@@ -15,15 +15,21 @@ std::string SysErrorString(int err)
 {
     char buf[256];
     buf[0] = 0;
-    /* Too bad there are two incompatible implementations of the
+    /* Too bad there are three incompatible implementations of the
      * thread-safe strerror. */
     const char *s;
+#ifdef WIN32
+    s = buf;
+    if (strerror_s(buf, sizeof(buf), err) != 0)
+        buf[0] = 0;
+#else
 #ifdef STRERROR_R_CHAR_P /* GNU variant can return a pointer outside the passed buffer */
     s = strerror_r(err, buf, sizeof(buf));
 #else /* POSIX variant always returns message in buffer */
     s = buf;
     if (strerror_r(err, buf, sizeof(buf)))
         buf[0] = 0;
+#endif
 #endif
     return strprintf("%s (%d)", s, err);
 }
