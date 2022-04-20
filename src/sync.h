@@ -244,12 +244,26 @@ public:
 template<typename MutexArg>
 using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove_pointer<MutexArg>::type>::type>;
 
-#define LOCK(cs) DebugLock<decltype(cs)> UNIQUE_NAME(criticalblock)(cs, #cs, __FILE__, __LINE__)
+// When locking a Mutex, require negative capability to ensure the lock
+// is not already held
+inline Mutex& MaybeCheckNotHeld(Mutex& cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) LOCK_RETURNED(cs) { return cs; }
+inline Mutex* MaybeCheckNotHeld(Mutex* cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) LOCK_RETURNED(cs) { return cs; }
+
+// When locking a GlobalMutex, just check it is not locked in the surrounding scope
+inline GlobalMutex& MaybeCheckNotHeld(GlobalMutex& cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
+inline GlobalMutex* MaybeCheckNotHeld(GlobalMutex* cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
+
+// When locking a RecursiveMutex, it's okay to already hold the lock
+// but check that it is not known to be locked in the surrounding scope anyway
+inline RecursiveMutex& MaybeCheckNotHeld(RecursiveMutex& cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
+inline RecursiveMutex* MaybeCheckNotHeld(RecursiveMutex* cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
+
+#define LOCK(cs) DebugLock<decltype(cs)> UNIQUE_NAME(criticalblock)(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__)
 #define LOCK2(cs1, cs2)                                               \
-    DebugLock<decltype(cs1)> criticalblock1(cs1, #cs1, __FILE__, __LINE__); \
-    DebugLock<decltype(cs2)> criticalblock2(cs2, #cs2, __FILE__, __LINE__);
-#define TRY_LOCK(cs, name) DebugLock<decltype(cs)> name(cs, #cs, __FILE__, __LINE__, true)
-#define WAIT_LOCK(cs, name) DebugLock<decltype(cs)> name(cs, #cs, __FILE__, __LINE__)
+    DebugLock<decltype(cs1)> criticalblock1(MaybeCheckNotHeld(cs1), #cs1, __FILE__, __LINE__); \
+    DebugLock<decltype(cs2)> criticalblock2(MaybeCheckNotHeld(cs2), #cs2, __FILE__, __LINE__);
+#define TRY_LOCK(cs, name) DebugLock<decltype(cs)> name(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__, true)
+#define WAIT_LOCK(cs, name) DebugLock<decltype(cs)> name(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__)
 
 #define ENTER_CRITICAL_SECTION(cs)                            \
     {                                                         \
@@ -288,7 +302,7 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 //!
 //! The above is detectable at compile-time with the -Wreturn-local-addr flag in
 //! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
-#define WITH_LOCK(cs, code) [&]() -> decltype(auto) { LOCK(cs); code; }()
+#define WITH_LOCK(cs, code) (MaybeCheckNotHeld(cs), [&]() -> decltype(auto) { LOCK(cs); code; }())
 
 class CSemaphore
 {
