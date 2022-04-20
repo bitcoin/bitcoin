@@ -305,9 +305,9 @@ Use the `-v` option for verbose output.
 
 | Lint test | Dependency |
 |-----------|:----------:|
-| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8)
-| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy)
-| [`lint-python.sh`](lint/lint-python.sh) | [pyzmq](https://github.com/zeromq/pyzmq)
+| [`lint-python.py`](lint/lint-python.py) | [flake8](https://gitlab.com/pycqa/flake8)
+| [`lint-python.py`](lint/lint-python.py) | [mypy](https://github.com/python/mypy)
+| [`lint-python.py`](lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
 | [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
 | [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck)
 | [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)

@@ -223,8 +223,6 @@ bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_
 
 /** Enable non-blocking mode for a socket */
 bool SetSocketNonBlocking(const SOCKET& hSocket);
-/** Set the TCP_NODELAY flag on a socket */
-bool SetSocketNoDelay(const SOCKET& hSocket);
 void InterruptSocks5(bool interrupt);
 
 /**
