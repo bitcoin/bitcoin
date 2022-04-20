@@ -242,8 +242,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 }
 
-TestChain100Setup::TestChain100Setup(const std::vector<const char*>& extra_args)
-    : TestingSetup{CBaseChainParams::REGTEST, extra_args}
+TestChain100Setup::TestChain100Setup(const std::string& chain_name, const std::vector<const char*>& extra_args)
+    : TestingSetup{chain_name, extra_args}
 {
     SetMockTime(1598887952);
     constexpr std::array<unsigned char, 32> vchKey = {
