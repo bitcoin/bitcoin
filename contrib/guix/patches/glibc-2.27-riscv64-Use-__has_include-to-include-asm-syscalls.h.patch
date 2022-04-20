@@ -1,3 +1,7 @@
+Note that this has been modified from the original commit, to use __has_include
+instead of __has_include__, as the later was causing build failures with GCC 10.
+See also: http://lists.busybox.net/pipermail/buildroot/2020-July/590376.html.
+
 https://sourceware.org/git/?p=glibc.git;a=commit;h=0b9c84906f653978fb8768c7ebd0ee14a47e662e
 
 From 562c52cc81a4e456a62e6455feb32732049e9070 Mon Sep 17 00:00:00 2001
@@ -59,7 +63,7 @@ index d612ef4c6c..0b2042620b 100644
  #include <atomic.h>
  #include <sys/cachectl.h>
 -#include <asm/syscalls.h>
-+#if __has_include__ (<asm/syscalls.h>)
++#if __has_include (<asm/syscalls.h>)
 +# include <asm/syscalls.h>
 +#else
 +# include <asm/unistd.h>

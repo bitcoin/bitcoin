@@ -553,7 +553,7 @@ inspecting signatures in Mach-O binaries.")
                (base32
                 "1b2n1gxv9f4fd5yy68qjbnarhf8mf4vmlxk10i3328c1w5pmp0ca"))
               (patches (search-our-patches "glibc-ldd-x86_64.patch"
-                                           "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch"))))))
+                                           "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"))))))
 
 (packages->manifest
  (append
