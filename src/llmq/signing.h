@@ -32,21 +32,49 @@ using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 static constexpr int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE{60 * 60 * 24 * 7};
 
 
-class CRecoveredSig
+class CSigBase
+{
+protected:
+    Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
+    uint256 quorumHash;
+    uint256 id;
+    uint256 msgHash;
+
+    CSigBase(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
+            : llmqType(llmqType), quorumHash(quorumHash), id(id), msgHash(msgHash) {};
+    CSigBase() = default;
+
+public:
+    [[nodiscard]] constexpr auto getLlmqType() const {
+        return llmqType;
+    }
+
+    [[nodiscard]] constexpr auto getQuorumHash() const -> const uint256& {
+        return quorumHash;
+    }
+
+    [[nodiscard]] constexpr auto getId() const -> const uint256& {
+        return id;
+    }
+
+    [[nodiscard]] constexpr auto getMsgHash() const -> const uint256& {
+        return msgHash;
+    }
+
+    [[nodiscard]] uint256 buildSignHash() const;
+};
+
+class CRecoveredSig : virtual public CSigBase
 {
 public:
-    const Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
-    const uint256 quorumHash;
-    const uint256 id;
-    const uint256 msgHash;
     const CBLSLazySignature sig;
 
     CRecoveredSig() = default;
 
     CRecoveredSig(Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSLazySignature& _sig) :
-                  llmqType(_llmqType), quorumHash(_quorumHash), id(_id), msgHash(_msgHash), sig(_sig) {UpdateHash();};
+                  CSigBase(_llmqType, _quorumHash, _id, _msgHash), sig(_sig) {UpdateHash();};
     CRecoveredSig(Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSSignature& _sig) :
-                  llmqType(_llmqType), quorumHash(_quorumHash), id(_id), msgHash(_msgHash) {const_cast<CBLSLazySignature&>(sig).Set(_sig); UpdateHash();};
+                  CSigBase(_llmqType, _quorumHash, _id, _msgHash) {const_cast<CBLSLazySignature&>(sig).Set(_sig); UpdateHash();};
 
 private:
     // only in-memory

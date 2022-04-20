@@ -14,6 +14,7 @@
 #include <sync.h>
 #include <uint256.h>
 
+#include <optional>
 #include <thread>
 #include <unordered_map>
 #include <utility>
@@ -31,17 +32,28 @@ using SigShareKey = std::pair<uint256, uint16_t>;
 
 constexpr uint32_t UNINITIALIZED_SESSION_ID{std::numeric_limits<uint32_t>::max()};
 
-class CSigShare
+class CSigShare : virtual public CSigBase
 {
-public:
-    Consensus::LLMQType llmqType;
-    uint256 quorumHash;
+protected:
     uint16_t quorumMember;
-    uint256 id;
-    uint256 msgHash;
+public:
     CBLSLazySignature sigShare;
 
     SigShareKey key;
+
+    [[nodiscard]] auto getQuorumMember() const {
+        return quorumMember;
+    }
+
+    CSigShare(Consensus::LLMQType llmqType, const uint256 &quorumHash, const uint256 &id, const uint256 &msgHash,
+              uint16_t quorumMember, const CBLSLazySignature &sigShare) :
+                    CSigBase(llmqType, quorumHash, id, msgHash),
+                    quorumMember(quorumMember),
+                    sigShare(sigShare) {};
+
+    // This should only be used for serialization
+    CSigShare() = default;
+
 
 public:
     void UpdateKey();
@@ -65,14 +77,22 @@ public:
 // Nodes will first announce a signing session with a sessionId to be used in all future P2P messages related to that
 // session. We locally keep track of the mapping for each node. We also assign new sessionIds for outgoing sessions
 // and send QSIGSESANN messages appropriately. All values except the max value for uint32_t are valid as sessionId
-class CSigSesAnn
+class CSigSesAnn : virtual public CSigBase
 {
-public:
+private:
     uint32_t sessionId{UNINITIALIZED_SESSION_ID};
-    Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
-    uint256 quorumHash;
-    uint256 id;
-    uint256 msgHash;
+
+public:
+    CSigSesAnn(uint32_t sessionId, Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id,
+               const uint256& msgHash) : CSigBase(llmqType, quorumHash, id, msgHash), sessionId(sessionId) {};
+    // ONLY FOR SERIALIZATION
+    CSigSesAnn() = default;
+
+
+
+    [[nodiscard]] auto getSessionId() const {
+        return sessionId;
+    }
 
     SERIALIZE_METHODS(CSigSesAnn, obj)
     {
@@ -395,7 +415,7 @@ public:
     void ProcessMessage(const CNode* pnode, const std::string& msg_type, CDataStream& vRecv);
 
     void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
-    CSigShare CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
+    std::optional<CSigShare> CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
     void ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;

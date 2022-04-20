@@ -269,10 +269,10 @@ bool CZMQPublishHashInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpend
 
 bool CZMQPublishHashRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashrecoveredsig %s\n", sig->msgHash.ToString());
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashrecoveredsig %s\n", sig->getMsgHash().ToString());
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
-        data[31 - i] = sig->msgHash.begin()[i];
+        data[31 - i] = sig->getMsgHash().begin()[i];
     return SendZmqMessage(MSG_HASHRECSIG, data, 32);
 }
 
@@ -398,7 +398,7 @@ bool CZMQPublishRawInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpendA
 
 bool CZMQPublishRawRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawrecoveredsig %s\n", sig->msgHash.ToString());
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawrecoveredsig %s\n", sig->getMsgHash().ToString());
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *sig;

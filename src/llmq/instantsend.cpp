@@ -651,10 +651,10 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
     bool isInstantSendLock = false;
     {
         LOCK(cs);
-        if (inputRequestIds.count(recoveredSig.id)) {
-            txid = recoveredSig.msgHash;
+        if (inputRequestIds.count(recoveredSig.getId())) {
+            txid = recoveredSig.getMsgHash();
         }
-        if (creatingInstantSendLocks.count(recoveredSig.id)) {
+        if (creatingInstantSendLocks.count(recoveredSig.getId())) {
             isInstantSendLock = true;
         }
     }
@@ -680,7 +680,7 @@ void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& re
     if (LogAcceptCategory(BCLog::INSTANTSEND)) {
         for (auto& in : tx->vin) {
             auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
-            if (id == recoveredSig.id) {
+            if (id == recoveredSig.getId()) {
                 LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: got recovered sig for input %s\n", __func__,
                          txid.ToString(), in.prevout.ToStringShort());
                 break;
@@ -743,7 +743,7 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
 
     {
         LOCK(cs);
-        auto it = creatingInstantSendLocks.find(recoveredSig.id);
+        auto it = creatingInstantSendLocks.find(recoveredSig.getId());
         if (it == creatingInstantSendLocks.end()) {
             return;
         }
@@ -753,9 +753,9 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
         txToCreatingInstantSendLocks.erase(islock->txid);
     }
 
-    if (islock->txid != recoveredSig.msgHash) {
+    if (islock->txid != recoveredSig.getMsgHash()) {
         LogPrintf("CInstantSendManager::%s -- txid=%s: islock conflicts with %s, dropping own version\n", __func__,
-                islock->txid.ToString(), recoveredSig.msgHash.ToString());
+                islock->txid.ToString(), recoveredSig.getMsgHash().ToString());
         return;
     }
 
@@ -1024,7 +1024,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         auto it = recSigs.find(hash);
         if (it != recSigs.end()) {
             auto recSig = std::make_shared<CRecoveredSig>(std::move(it->second));
-            if (!quorumSigningManager->HasRecoveredSigForId(llmqType, recSig->id)) {
+            if (!quorumSigningManager->HasRecoveredSigForId(llmqType, recSig->getId())) {
                 LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: passing reconstructed recSig to signing mgr, peer=%d\n", __func__,
                          islock->txid.ToString(), hash.ToString(), nodeId);
                 quorumSigningManager->PushReconstructedRecoveredSig(recSig);

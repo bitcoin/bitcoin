@@ -461,20 +461,20 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
             }
 
-            llmq::CSigShare sigShare = llmq::quorumSigSharesManager->CreateSigShare(pQuorum, id, msgHash);
+            auto sigShare = llmq::quorumSigSharesManager->CreateSigShare(pQuorum, id, msgHash);
 
-            if (!sigShare.sigShare.Get().IsValid()) {
+            if (!sigShare.has_value() || !sigShare->sigShare.Get().IsValid()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "failed to create sigShare");
             }
 
             UniValue obj(UniValue::VOBJ);
             obj.pushKV("llmqType", static_cast<uint8_t>(llmqType));
-            obj.pushKV("quorumHash", sigShare.quorumHash.ToString());
-            obj.pushKV("quorumMember", sigShare.quorumMember);
+            obj.pushKV("quorumHash", sigShare->getQuorumHash().ToString());
+            obj.pushKV("quorumMember", sigShare->getQuorumMember());
             obj.pushKV("id", id.ToString());
             obj.pushKV("msgHash", msgHash.ToString());
-            obj.pushKV("signHash", sigShare.GetSignHash().ToString());
-            obj.pushKV("signature", sigShare.sigShare.Get().ToString());
+            obj.pushKV("signHash", sigShare->GetSignHash().ToString());
+            obj.pushKV("signature", sigShare->sigShare.Get().ToString());
 
             return obj;
         }
@@ -511,7 +511,7 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
         if (!llmq::quorumSigningManager->GetRecoveredSigForId(llmqType, id, recSig)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "recovered signature not found");
         }
-        if (recSig.msgHash != msgHash) {
+        if (recSig.getMsgHash() != msgHash) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "recovered signature not found");
         }
         return recSig.ToJson();

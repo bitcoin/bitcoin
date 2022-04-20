@@ -70,13 +70,6 @@ public:
     static uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
     static uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
 
-    // works for sig shares and recovered sigs
-    template<typename T>
-    static uint256 BuildSignHash(const T& s)
-    {
-        return BuildSignHash((Consensus::LLMQType)s.llmqType, s.quorumHash, s.id, s.msgHash);
-    }
-
     static bool IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType);
     static bool IsQuorumPoseEnabled(Consensus::LLMQType llmqType);
     static uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
