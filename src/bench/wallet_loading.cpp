@@ -49,6 +49,7 @@ static void BenchUnloadWallet(std::shared_ptr<CWallet>&& wallet)
 static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 {
     const auto test_setup = MakeNoLogFileContext<TestingSetup>();
+    test_setup->m_args.ForceSetArg("-unsafesqlitesync", "1");
 
     WalletContext context;
     context.args = &test_setup->m_args;
