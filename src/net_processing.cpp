@@ -687,6 +687,9 @@ private:
     uint256 most_recent_block_hash GUARDED_BY(cs_most_recent_block);
     bool fWitnessesPresentInMostRecentCompactBlock GUARDED_BY(cs_most_recent_block){false};
 
+    /** Height of the highest block announced using BIP 152 high-bandwidth mode. */
+    int nHighestFastAnnounce{0};
+
     /** Have we requested this block from a peer */
     bool IsBlockRequested(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1632,7 +1635,6 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     LOCK(cs_main);
 
-    static int nHighestFastAnnounce = 0;
     if (pindex->nHeight <= nHighestFastAnnounce)
         return;
     nHighestFastAnnounce = pindex->nHeight;
