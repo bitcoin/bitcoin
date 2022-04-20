@@ -25,6 +25,7 @@
 #include <util/getuniquepath.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/syserror.h>
 #include <util/translation.h>
 
 
@@ -1374,7 +1375,7 @@ void ScheduleBatchPriority()
     const static sched_param param{};
     const int rc = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param);
     if (rc != 0) {
-        LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(rc));
+        LogPrintf("Failed to pthread_setschedparam: %s\n", SysErrorString(rc));
     }
 #endif
 }
