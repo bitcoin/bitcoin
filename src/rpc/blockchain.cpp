@@ -17,7 +17,7 @@
 #include <index/txindex.h>
 #include <key_io.h>
 #include <node/coinstats.h>
-#include <policy/feerate.h>
+#include <node/context.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
@@ -61,6 +61,15 @@ static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+
+CTxMemPool& EnsureMemPool()
+{
+    CHECK_NONFATAL(g_rpc_node);
+    if (!g_rpc_node->mempool) {
+        throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Mempool disabled or instance not found");
+    }
+    return *g_rpc_node->mempool;
+}
 
 /* Calculate the difficulty for a given block index.
  */
@@ -2769,3 +2778,5 @@ void RegisterBlockchainRPCCommands(CRPCTable &t)
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
+
+NodeContext* g_rpc_node = nullptr;

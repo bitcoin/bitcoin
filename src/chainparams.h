@@ -70,6 +70,8 @@ public:
     bool RequireStandard() const { return fRequireStandard; }
     /** Require addresses specified with "-externalip" parameter to be routable */
     bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
+    /** If this chain allows time to be mocked */
+    bool IsMockableChain() const { return m_is_mockable_chain; }
     /** If this chain is exclusively used for testing */
     bool IsTestChain() const { return m_is_test_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -133,6 +135,7 @@ protected:
     bool m_is_test_chain;
     bool fAllowMultipleAddressesFromGroup;
     bool fAllowMultiplePorts;
+    bool m_is_mockable_chain;
     int nLLMQConnectionRetryTimeout;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;

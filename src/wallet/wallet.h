@@ -270,7 +270,9 @@ class CWalletTx
 private:
     const CWallet* pwallet;
 
-  /** Constant used in hashBlock to indicate tx has been abandoned */
+    /** Constant used in hashBlock to indicate tx has been abandoned, only used at
+     * serialization/deserialization to avoid ambiguity with conflicted.
+     */
     static const uint256 ABANDON_HASH;
 
     mutable bool fIsChainlocked{false};
@@ -334,9 +336,7 @@ public:
     mutable CAmount nChangeCached;
 
     CWalletTx(const CWallet* pwalletIn, CTransactionRef arg)
-        : tx(std::move(arg)),
-          hashBlock(uint256()),
-          nIndex(-1)
+        : tx(std::move(arg))
     {
         Init(pwalletIn);
     }
@@ -354,16 +354,40 @@ public:
         fInMempool = false;
         nChangeCached = 0;
         nOrderPos = -1;
+        m_confirm = Confirmation{};
     }
 
     CTransactionRef tx;
-    uint256 hashBlock;
-    /* An nIndex == -1 means that hashBlock (in nonzero) refers to the earliest
-     * block in the chain we know this or any in-wallet dependency conflicts
-     * with. Older clients interpret nIndex == -1 as unconfirmed for backward
-     * compatibility.
+
+    /* New transactions start as UNCONFIRMED. At BlockConnected,
+     * they will transition to CONFIRMED. In case of reorg, at BlockDisconnected,
+     * they roll back to UNCONFIRMED. If we detect a conflicting transaction at
+     * block connection, we update conflicted tx and its dependencies as CONFLICTED.
+     * If tx isn't confirmed and outside of mempool, the user may switch it to ABANDONED
+     * by using the abandontransaction call. This last status may be override by a CONFLICTED
+     * or CONFIRMED transition.
      */
-    int nIndex;
+    enum Status {
+        UNCONFIRMED,
+        CONFIRMED,
+        CONFLICTED,
+        ABANDONED
+    };
+
+    /* Confirmation includes tx status and a triplet of {block height/block hash/tx index in block}
+     * at which tx has been confirmed. All three are set to 0 if tx is unconfirmed or abandoned.
+     * Meaning of these fields changes with CONFLICTED state where they instead point to block hash
+     * and block height of the deepest conflicting tx.
+     */
+    struct Confirmation {
+        Status status;
+        int block_height;
+        uint256 hashBlock;
+        int nIndex;
+        Confirmation(Status s = UNCONFIRMED, int b = 0, uint256 h = uint256(), int i = 0) : status(s), block_height(b), hashBlock(h), nIndex(i) {}
+    };
+
+    Confirmation m_confirm;
 
     template<typename Stream>
     void Serialize(Stream& s) const
@@ -379,7 +403,9 @@ public:
         std::vector<char> dummy_vector1; //!< Used to be vMerkleBranch
         std::vector<char> dummy_vector2; //!< Used to be vtxPrev
         bool dummy_bool = false; //!< Used to be fSpent
-        s << tx << hashBlock << dummy_vector1 << nIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool;
+        uint256 serializedHash = isAbandoned() ? ABANDON_HASH : m_confirm.hashBlock;
+        int serializedIndex = isAbandoned() || isConflicted() ? -1 : m_confirm.nIndex;
+        s << tx << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool;
     }
 
     template<typename Stream>
@@ -390,7 +416,24 @@ public:
         std::vector<uint256> dummy_vector1; //!< Used to be vMerkleBranch
         std::vector<CMerkleTx> dummy_vector2; //!< Used to be vtxPrev
         bool dummy_bool; //! Used to be fSpent
-        s >> tx >> hashBlock >> dummy_vector1 >> nIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool;
+        int serializedIndex;
+        s >> tx >> m_confirm.hashBlock >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool;
+
+        /* At serialization/deserialization, an nIndex == -1 means that hashBlock refers to
+         * the earliest block in the chain we know this or any in-wallet ancestor conflicts
+         * with. If nIndex == -1 and hashBlock is ABANDON_HASH, it means transaction is abandoned.
+         * In same context, an nIndex >= 0 refers to a confirmed transaction (if hashBlock set) or
+         * unconfirmed one. Older clients interpret nIndex == -1 as unconfirmed for backward
+         * compatibility (pre-commit 9ac63d6).
+         */
+        if (serializedIndex == -1 && m_confirm.hashBlock == ABANDON_HASH) {
+            setAbandoned();
+        } else if (serializedIndex == -1) {
+            setConflicted();
+        } else if (!m_confirm.hashBlock.IsNull()) {
+            m_confirm.nIndex = serializedIndex;
+            setConfirmed();
+        }
 
         ReadOrderPos(nOrderPos, mapValue);
         nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
@@ -432,17 +475,17 @@ public:
 
     //! filter decides which addresses will count towards the debit
     CAmount GetDebit(const isminefilter& filter) const;
-    CAmount GetCredit(interfaces::Chain::Lock& locked_chain, const isminefilter& filter) const;
-    CAmount GetImmatureCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true) const;
+    CAmount GetCredit(const isminefilter& filter) const;
+    CAmount GetImmatureCredit(bool fUseCache = true) const;
     // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
     // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
     // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
     // having to resolve the issue of member access into incomplete type CWallet.
-    CAmount GetAvailableCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filter=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
-    CAmount GetImmatureWatchOnlyCredit(interfaces::Chain::Lock& locked_chain, const bool fUseCache=true) const;
+    CAmount GetAvailableCredit(bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
+    CAmount GetImmatureWatchOnlyCredit(const bool fUseCache = true) const;
     CAmount GetChange() const;
 
-    CAmount GetAnonymizedCredit(interfaces::Chain::Lock& locked_chain, const CCoinControl* coinControl = nullptr) const;
+    CAmount GetAnonymizedCredit(const CCoinControl* coinControl = nullptr) const;
     CAmount GetDenominatedCredit(interfaces::Chain::Lock& locked_chain, bool unconfirmed, bool fUseCache=true) const;
 
     // Get the marginal bytes if spending the specified output from this transaction
@@ -468,7 +511,7 @@ public:
     int64_t GetTxTime() const;
 
     // Pass this transaction to node for mempool insertion and relay to peers if flag set to true
-    bool SubmitMemoryPoolAndRelay(std::string& err_string, bool relay, interfaces::Chain::Lock& locked_chain);
+    bool SubmitMemoryPoolAndRelay(std::string& err_string, bool relay);
 
     // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
     // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
@@ -478,16 +521,20 @@ public:
     // in place.
     std::set<uint256> GetConflicts() const NO_THREAD_SAFETY_ANALYSIS;
 
-    void SetMerkleBranch(const uint256& block_hash, int posInBlock);
-
     /**
      * Return depth of transaction in blockchain:
      * <0  : conflicts with a transaction this deep in the blockchain
      *  0  : in memory pool, waiting to be included in a block
      * >=1 : this many blocks deep in the main chain
      */
-    int GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const;
-    bool IsInMainChain(interfaces::Chain::Lock& locked_chain) const { return GetDepthInMainChain(locked_chain) > 0; }
+    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
+    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
+    // "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
+    // resolve the issue of member access into incomplete type CWallet. Note
+    // that we still have the runtime check "AssertLockHeld(pwallet->cs_wallet)"
+    // in place.
+    int GetDepthInMainChain() const NO_THREAD_SAFETY_ANALYSIS;
+    bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
     bool IsLockedByInstantSend() const;
     bool IsChainLocked() const;
 
@@ -496,14 +543,24 @@ public:
      *  0 : is not a coinbase transaction, or is a mature coinbase transaction
      * >0 : is a coinbase transaction which matures in this many blocks
      */
-    int GetBlocksToMaturity(interfaces::Chain::Lock& locked_chain) const;
-    bool hashUnset() const { return (hashBlock.IsNull() || hashBlock == ABANDON_HASH); }
-    bool isAbandoned() const { return (hashBlock == ABANDON_HASH); }
-    void setAbandoned() { hashBlock = ABANDON_HASH; }
-
+    int GetBlocksToMaturity() const;
+    bool isAbandoned() const { return m_confirm.status == CWalletTx::ABANDONED; }
+    void setAbandoned()
+    {
+        m_confirm.status = CWalletTx::ABANDONED;
+        m_confirm.hashBlock = uint256();
+        m_confirm.block_height = 0;
+        m_confirm.nIndex = 0;
+    }
+    bool isConflicted() const { return m_confirm.status == CWalletTx::CONFLICTED; }
+    void setConflicted() { m_confirm.status = CWalletTx::CONFLICTED; }
+    bool isUnconfirmed() const { return m_confirm.status == CWalletTx::UNCONFIRMED; }
+    void setUnconfirmed() { m_confirm.status = CWalletTx::UNCONFIRMED; }
+    bool isConfirmed() const { return m_confirm.status == CWalletTx::CONFIRMED; }
+    void setConfirmed() { m_confirm.status = CWalletTx::CONFIRMED; }
     const uint256& GetHash() const { return tx->GetHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
-    bool IsImmatureCoinBase(interfaces::Chain::Lock& locked_chain) const;
+    bool IsImmatureCoinBase() const;
 };
 
 struct WalletTxHasher
@@ -640,10 +697,10 @@ private:
      * Abandoned state should probably be more carefully tracked via different
      * posInBlock signals or by checking mempool presence when necessary.
      */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const uint256& block_hash, int posInBlock, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
-    void MarkConflicted(const uint256& hashBlock, const uint256& hashTx);
+    void MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx);
 
     /* Mark a transaction's inputs dirty, thus forcing the outputs to be recomputed */
     void MarkInputsDirty(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -652,7 +709,7 @@ private:
 
     /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected/ScanForWalletTransactions.
      * Should be called with non-zero block_hash and posInBlock if this is for a transaction that is included in a block. */
-    void SyncTransaction(const CTransactionRef& tx, const uint256& block_hash, int posInBlock = 0, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SyncTransaction(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -677,7 +734,7 @@ private:
     bool AddWatchOnly(const CScript& dest) override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Interface for accessing chain state. */
-    interfaces::Chain& m_chain;
+    interfaces::Chain* m_chain;
 
     /** Wallet location which includes wallet name (see WalletLocation). */
     WalletLocation m_location;
@@ -692,11 +749,10 @@ private:
      * The following is used to keep track of how far behind the wallet is
      * from the chain sync, and to allow clients to block on us being caught up.
      *
-     * Note that this is *not* how far we've processed, we may need some rescan
-     * to have seen all transactions in the chain, but is only used to track
-     * live BlockConnected callbacks.
+     * Processed hash is a pointer on node's tip and doesn't imply that the wallet
+     * has scanned sequentially all blocks up to this one.
      */
-    uint256 m_last_block_processed;
+    uint256 m_last_block_processed GUARDED_BY(cs_wallet);
 
     /** Pulled from wallet DB ("ps_salt") and used when mixing a random number of rounds.
      *  This salt is needed to prevent an attacker from learning how many extra times
@@ -708,6 +764,13 @@ private:
      * Fetches CoinJoin salt from database or generates and saves a new one if no salt was found in the db
      */
     void InitCoinJoinSalt();
+
+    /* Height of last block processed is used by wallet to know depth of transactions
+     * without relying on Chain interface beyond asynchronous updates. For safety, we
+     * initialize it to -1. Height is a pointer on node's tip and doesn't imply
+     * that the wallet has scanned sequentially all blocks up to this one.
+     */
+    int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
 
 public:
     /*
@@ -756,7 +819,7 @@ public:
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain& chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database)
+    CWallet(interfaces::Chain* chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
           m_location(location),
           database(std::move(database))
@@ -770,6 +833,9 @@ public:
         delete encrypted_batch;
         encrypted_batch = nullptr;
     }
+
+    /** Interface to assert chain access and if successful lock it */
+    std::unique_ptr<interfaces::Chain::Lock> LockChain() { return m_chain ? m_chain->lock() : nullptr; }
 
     std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
 
@@ -794,7 +860,7 @@ public:
     void handleNotifications();
 
     /** Interface for accessing chain state. */
-    interfaces::Chain& chain() const { return m_chain; }
+    interfaces::Chain& chain() const { assert(m_chain); return *m_chain; }
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -841,7 +907,7 @@ public:
     bool IsDenominated(const COutPoint& outpoint) const;
     bool IsFullyMixed(const COutPoint& outpoint) const;
 
-    bool IsSpent(interfaces::Chain::Lock& locked_chain, const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -944,10 +1010,10 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
-    void LoadToWallet(const CWalletTx& wtxIn) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LoadToWallet(CWalletTx& wtxIn) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) override;
-    void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted) override;
-    void BlockDisconnected(const CBlock& block) override;
+    void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted, int height) override;
+    void BlockDisconnected(const CBlock& block, int height) override;
     void UpdatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 
@@ -968,7 +1034,7 @@ public:
     };
     ScanResult ScanForWalletTransactions(const uint256& first_block, const uint256& last_block, const WalletRescanReserver& reserver, bool fUpdate);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) override;
-    void ReacceptWalletTransactions(interfaces::Chain::Lock& locked_chain) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void ReacceptWalletTransactions() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ResendWalletTransactions();
     struct Balance {
         CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
@@ -1182,7 +1248,7 @@ public:
     bool TransactionCanBeAbandoned(const uint256& hashTx) const;
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
-    bool AbandonTransaction(interfaces::Chain::Lock& locked_chain, const uint256& hashTx);
+    bool AbandonTransaction(const uint256& hashTx);
 
     //! Verify wallet naming and perform salvage on the wallet if required
     static bool Verify(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
@@ -1280,6 +1346,21 @@ public:
 
     /** Add a KeyOriginInfo to the wallet */
     bool AddKeyOrigin(const CPubKey& pubkey, const KeyOriginInfo& info);
+
+    /** Get last block processed height */
+    int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        AssertLockHeld(cs_wallet);
+        assert(m_last_block_processed_height >= 0);
+        return m_last_block_processed_height;
+    };
+    /** Set last block processed height, currently only use in unit test */
+    void SetLastBlockProcessed(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        AssertLockHeld(cs_wallet);
+        m_last_block_processed_height = block_height;
+        m_last_block_processed = block_hash;
+    };
 };
 
 /**

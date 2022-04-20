@@ -10,9 +10,11 @@
 #include <httpserver.h>
 #include <key_io.h>
 #include <net.h>
+#include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <scheduler.h>
 #include <script/descriptor.h>
 #include <txmempool.h>
 #include <util/check.h>
@@ -101,7 +103,7 @@ static UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
@@ -166,14 +168,14 @@ static UniValue spork(const JSONRPCRequest& request)
         if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
-        if (!g_connman)
+        if (!g_rpc_node->connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_rpc_node->connman)){
             return "success";
         } else {
             throw std::runtime_error(
@@ -580,7 +582,7 @@ static UniValue mnauth(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }
 
-    bool fSuccess = g_connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
+    bool fSuccess = g_rpc_node->connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
         pNode->SetVerifiedProRegTxHash(proTxHash);
         pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
         return true;
@@ -1090,6 +1092,38 @@ static UniValue getspentinfo(const JSONRPCRequest& request)
     return obj;
 }
 
+static UniValue mockscheduler(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+        RPCHelpMan{"mockscheduler",
+        "\nBump the scheduler into the future (-regtest only)\n",
+        {
+            {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
+        },
+        RPCResults{},
+        RPCExamples{""},
+        }.ToString());
+
+    if (!Params().IsMockableChain()) {
+        throw std::runtime_error("mockscheduler is for regression testing (-regtest mode) only");
+    }
+
+    // check params are valid values
+    RPCTypeCheck(request.params, {UniValue::VNUM});
+    int64_t delta_seconds = request.params[0].get_int64();
+    if ((delta_seconds <= 0) || (delta_seconds > 3600)) {
+        throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
+    }
+
+    // protect against null pointer dereference
+    CHECK_NONFATAL(g_rpc_node);
+    CHECK_NONFATAL(g_rpc_node->scheduler);
+    g_rpc_node->scheduler->MockForward(std::chrono::seconds(delta_seconds));
+
+    return NullUniValue;
+}
+
 static UniValue RPCLockedMemoryInfo()
 {
     LockedPool::Stats stats = LockedPoolManager::Instance().stats();
@@ -1316,6 +1350,7 @@ static const CRPCCommand commands[] =
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
+    { "hidden",             "mockscheduler",          &mockscheduler,          {"delta_time"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "mnauth",                 &mnauth,                 {"nodeId", "proTxHash", "publicKey"}},

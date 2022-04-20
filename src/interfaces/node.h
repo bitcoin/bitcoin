@@ -32,6 +32,7 @@ class proxyType;
 struct bilingual_str;
 struct CNodeStateStats;
 enum class WalletCreationStatus;
+struct NodeContext;
 
 namespace interfaces {
 class Handler;
@@ -352,6 +353,9 @@ public:
     using NotifyAdditionalDataSyncProgressChangedFn =
         std::function<void(double nSyncProgress)>;
     virtual std::unique_ptr<Handler> handleNotifyAdditionalDataSyncProgressChanged(NotifyAdditionalDataSyncProgressChangedFn fn) = 0;
+
+    //! Return pointer to internal chain interface, useful for testing.
+    virtual NodeContext* context() { return nullptr; }
 };
 
 //! Return implementation of Node interface.

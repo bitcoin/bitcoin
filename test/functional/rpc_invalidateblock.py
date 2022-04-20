@@ -5,7 +5,7 @@
 """Test the invalidateblock RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.util import (
     assert_equal,
     connect_nodes,
@@ -88,7 +88,7 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(tip, self.nodes[1].getbestblockhash())
 
         self.log.info("Verify that we reconsider all ancestors as well")
-        blocks = self.nodes[1].generatetoaddress(10, ADDRESS_BCRT1_UNSPENDABLE)
+        blocks = self.nodes[1].generatetodescriptor(10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
         # Invalidate the two blocks at the tip
         self.nodes[1].invalidateblock(blocks[-1])
@@ -100,7 +100,7 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
         self.log.info("Verify that we reconsider all descendants")
-        blocks = self.nodes[1].generatetoaddress(10, ADDRESS_BCRT1_UNSPENDABLE)
+        blocks = self.nodes[1].generatetodescriptor(10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
         # Invalidate the two blocks at the tip
         self.nodes[1].invalidateblock(blocks[-2])

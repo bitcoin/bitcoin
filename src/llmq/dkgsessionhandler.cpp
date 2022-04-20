@@ -15,6 +15,7 @@
 #include <masternode/node.h>
 #include <chainparams.h>
 #include <net_processing.h>
+#include <validation.h>
 
 namespace llmq
 {
@@ -140,7 +141,7 @@ void CDKGSessionHandler::StopThread()
 
 bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 {
-    curSession = std::make_unique<CDKGSession>(params, blsWorker, dkgManager);
+    curSession = std::make_unique<CDKGSession>(params, blsWorker, dkgManager, connman);
 
     if (!deterministicMNManager->IsDIP3Enforced(pQuorumBaseBlockIndex->nHeight)) {
         return false;
@@ -490,9 +491,9 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params, pQuorumBaseBlockIndex, curSession->myProTxHash);
+    CLLMQUtils::EnsureQuorumConnections(params, pQuorumBaseBlockIndex, connman, curSession->myProTxHash);
     if (curSession->AreWeMember()) {
-        CLLMQUtils::AddQuorumProbeConnections(params, pQuorumBaseBlockIndex, curSession->myProTxHash);
+        CLLMQUtils::AddQuorumProbeConnections(params, pQuorumBaseBlockIndex, connman, curSession->myProTxHash);
     }
 
     WaitForNextPhase(QuorumPhase::Initialized, QuorumPhase::Contribute, curQuorumHash);

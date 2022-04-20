@@ -11,6 +11,7 @@
 #include <interfaces/wallet.h>
 #include <net.h>
 #include <node/coin.h>
+#include <node/context.h>
 #include <node/transaction.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -55,12 +56,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
             return block->nHeight;
         }
         return nullopt;
-    }
-    int getBlockDepth(const uint256& hash) override
-    {
-        const Optional<int> tip_height = getHeight();
-        const Optional<int> height = getBlockHeight(hash);
-        return tip_height && height ? *tip_height - *height + 1 : 0;
     }
     uint256 getBlockHash(int height) override
     {
@@ -130,13 +125,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         }
         return nullopt;
     }
-    bool isPotentialTip(const uint256& hash) override
-    {
-        LockAnnotation lock(::cs_main);
-        if (::ChainActive().Tip()->GetBlockHash() == hash) return true;
-        CBlockIndex* block = LookupBlockIndex(hash);
-        return block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip();
-    }
     CBlockLocator getTipLocator() override
     {
         LockAnnotation lock(::cs_main);
@@ -187,11 +175,11 @@ public:
         const CBlockIndex* index,
         const std::vector<CTransactionRef>& tx_conflicted) override
     {
-        m_notifications->BlockConnected(*block, tx_conflicted);
+        m_notifications->BlockConnected(*block, tx_conflicted, index->nHeight);
     }
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexDisconnected) override
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->BlockDisconnected(*block);
+        m_notifications->BlockDisconnected(*block, index->nHeight);
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
@@ -252,6 +240,7 @@ public:
 class ChainImpl : public Chain
 {
 public:
+    explicit ChainImpl(NodeContext& node) : m_node(node) {}
     std::unique_ptr<Chain::Lock> lock(bool try_lock) override
     {
         auto lock = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
@@ -294,7 +283,7 @@ public:
     }
     bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
     {
-        const TransactionError err = BroadcastTransaction(tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
+        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
         // that Chain clients do not need to know about.
@@ -338,7 +327,7 @@ public:
         LOCK(cs_main);
         return ::fHavePruned;
     }
-    bool p2pEnabled() override { return g_connman != nullptr; }
+    bool p2pEnabled() override { return m_node.connman != nullptr; }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !::ChainstateActive().IsInitialBlockDownload(); }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
@@ -355,10 +344,22 @@ public:
     {
         return MakeUnique<NotificationsHandlerImpl>(*this, notifications);
     }
-    void waitForNotifications() override { SyncWithValidationInterfaceQueue(); }
+    void waitForNotificationsIfTipChanged(const uint256& old_tip) override
+    {
+        if (!old_tip.IsNull()) {
+            LOCK(::cs_main);
+            if (old_tip == ::ChainActive().Tip()->GetBlockHash()) return;
+        }
+        SyncWithValidationInterfaceQueue();
+    }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
         return MakeUnique<RpcHandlerImpl>(command);
+    }
+    bool rpcEnableDeprecated(const std::string& method) override { return IsDeprecatedRPCEnabled(method); }
+    void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) override
+    {
+        RPCRunLater(name, std::move(fn), seconds);
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {
@@ -367,9 +368,10 @@ public:
             notifications.TransactionAddedToMempool(entry.GetSharedTx(), 0);
         }
     }
+    NodeContext& m_node;
 };
 } // namespace
 
-std::unique_ptr<Chain> MakeChain() { return MakeUnique<ChainImpl>(); }
+std::unique_ptr<Chain> MakeChain(NodeContext& node) { return MakeUnique<ChainImpl>(node); }
 
 } // namespace interfaces

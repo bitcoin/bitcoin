@@ -187,14 +187,14 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStr
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->GetId());
 }
 
-void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
+void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)
 {
     // we're only interested in updated/removed MNs. Added MNs are of no interest for us
     if (diff.updatedMNs.empty() && diff.removedMns.empty()) {
         return;
     }
 
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         const auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
             return;

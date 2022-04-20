@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 using NodeId = int64_t;
+class CConnman;
 class CInv;
 class CNode;
 
@@ -136,6 +137,7 @@ class CSigningManager
 private:
     mutable CCriticalSection cs;
 
+    CConnman& connman;
     CRecoveredSigsDb db;
 
     // Incoming and not verified yet
@@ -149,7 +151,7 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs);
 
 public:
-    CSigningManager(bool fMemory, bool fWipe);
+    CSigningManager(CConnman& _connman, bool fMemory, bool fWipe);
 
     bool AlreadyHave(const CInv& inv) const;
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;

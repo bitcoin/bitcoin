@@ -451,7 +451,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
     CDKGLogger logger(*this, __func__);
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
-    g_connman->ForEachNode([&](const CNode* pnode) {
+    connman.ForEachNode([&](const CNode* pnode) {
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
             return;
@@ -1311,14 +1311,14 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
     logger.Batch("RelayInvToParticipants inv[%s] relayMembers[%d] GetNodeCount[%d] GetNetworkActive[%d] HasMasternodeQuorumNodes[%d] for quorumHash[%s] forMember[%s] relayMembers[%s]",
                  inv.ToString(),
                  relayMembers.size(),
-                 g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL),
-                 g_connman->GetNetworkActive(),
-                 g_connman->HasMasternodeQuorumNodes(params.type, m_quorum_base_block_index->GetBlockHash()),
+                 connman.GetNodeCount(CConnman::CONNECTIONS_ALL),
+                 connman.GetNetworkActive(),
+                 connman.HasMasternodeQuorumNodes(params.type, m_quorum_base_block_index->GetBlockHash()),
                  m_quorum_base_block_index->GetBlockHash().ToString(),
                  myProTxHash.ToString().substr(0, 4), ss.str());
 
     std::stringstream ss2;
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         if (pnode->qwatch ||
                 (!pnode->GetVerifiedProRegTxHash().IsNull() && relayMembers.count(pnode->GetVerifiedProRegTxHash()))) {
             pnode->PushInventory(inv);

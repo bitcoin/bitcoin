@@ -17,8 +17,6 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-InitInterfaces* g_rpc_interfaces = nullptr;
-
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValueType>& typesExpected,
                   bool fAllowNull)

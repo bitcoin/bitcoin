@@ -1112,11 +1112,11 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     const auto is_det = islock->IsDeterministic();
     CInv inv(is_det ? MSG_ISDLOCK : MSG_ISLOCK, hash);
     if (tx != nullptr) {
-        g_connman->RelayInvFiltered(inv, *tx, is_det ? ISDLOCK_PROTO_VERSION : MIN_PEER_PROTO_VERSION);
+        connman.RelayInvFiltered(inv, *tx, is_det ? ISDLOCK_PROTO_VERSION : MIN_PEER_PROTO_VERSION);
     } else {
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
-        g_connman->RelayInvFiltered(inv, islock->txid, is_det ? ISDLOCK_PROTO_VERSION : MIN_PEER_PROTO_VERSION);
+        connman.RelayInvFiltered(inv, islock->txid, is_det ? ISDLOCK_PROTO_VERSION : MIN_PEER_PROTO_VERSION);
     }
 
     ResolveBlockConflicts(hash, *islock);
@@ -1129,7 +1129,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         // bump mempool counter to make sure newly locked txes are picked up by getblocktemplate
         mempool.AddTransactionsUpdated(1);
     } else {
-        AskNodesForLockedTx(islock->txid);
+        AskNodesForLockedTx(islock->txid, connman);
     }
 }
 
@@ -1416,7 +1416,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
                 RemoveConflictedTx(*p.second);
             }
         }
-        AskNodesForLockedTx(islock.txid);
+        AskNodesForLockedTx(islock.txid, connman);
     }
 }
 
@@ -1526,7 +1526,7 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
     }
 }
 
-void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
+void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnman& connman)
 {
     std::vector<CNode*> nodesToAskFor;
     nodesToAskFor.reserve(4);
@@ -1542,11 +1542,11 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
         }
     };
 
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         // Check masternodes first
         if (pnode->m_masternode_connection) maybe_add_to_nodesToAskFor(pnode);
     });
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         // Check non-masternodes next
         if (!pnode->m_masternode_connection) maybe_add_to_nodesToAskFor(pnode);
     });

@@ -12,6 +12,7 @@
 #include <chainparams.h>
 #include <net_processing.h>
 #include <spork.h>
+#include <validation.h>
 
 namespace llmq
 {
@@ -22,9 +23,9 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, bool unitTests, bool fWipe) :
+CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, bool unitTests, bool fWipe) :
         db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
-        blsWorker(_blsWorker)
+        blsWorker(_blsWorker), connman(_connman)
 {
     MigrateDKG();
 
@@ -34,7 +35,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, bool unitTests, b
         for (int i = 0; i < session_count; ++i) {
             dkgSessionHandlers.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(params.type, i),
-                                       std::forward_as_tuple(params, blsWorker, *this, i));
+                                       std::forward_as_tuple(params, blsWorker, *this, connman, i));
         }
     }
 }

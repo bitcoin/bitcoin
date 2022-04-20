@@ -10,13 +10,14 @@
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <node/context.h>
 #include <node/transaction.h>
 
 #include <future>
 
-TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback, bool bypass_limits)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback, bool bypass_limits)
 {
-    assert(g_connman);
+    assert(node.connman);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
     bool callback_set = false;
@@ -77,7 +78,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
     }
 
     if (relay) {
-        RelayTransaction(hashTx, *g_connman);
+        RelayTransaction(hashTx, *node.connman);
     }
 
     return TransactionError::OK;

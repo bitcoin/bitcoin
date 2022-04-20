@@ -15,6 +15,7 @@
 #include <vector>
 
 class CBlock;
+class CConnman;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
@@ -26,6 +27,7 @@ class uint256;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+struct NodeContext;
 enum class MemPoolRemovalReason;
 
 namespace llmq {
@@ -57,6 +59,10 @@ class Handler;
 //!   notifications to the GUI should go away when GUI and wallet can directly
 //!   communicate with each other without going through the node
 //!   (https://github.com/bitcoin/bitcoin/pull/15288#discussion_r253321096).
+//!
+//! * The handleRpc, registerRpcs, rpcEnableDeprecated methods and other RPC
+//!   methods can go away if wallets listen for HTTP requests on their own
+//!   ports instead of registering to handle requests on the node HTTP port.
 class Chain
 {
 public:
@@ -81,10 +87,6 @@ public:
         //! 1 for following block, and so on. Returns nullopt for a block not
         //! included in the current chain.
         virtual Optional<int> getBlockHeight(const uint256& hash) = 0;
-
-        //! Get block depth. Returns 1 for chain tip, 2 for preceding block, and
-        //! so on. Returns 0 for a block not included in the current chain.
-        virtual int getBlockDepth(const uint256& hash) = 0;
 
         //! Get block hash. Height must be valid or this function will abort.
         virtual uint256 getBlockHash(int height) = 0;
@@ -118,11 +120,6 @@ public:
         //! parameter (to avoid the cost of a second hash lookup in case this
         //! information is desired).
         virtual Optional<int> findFork(const uint256& hash, Optional<int>* height) = 0;
-
-        //! Return true if block hash points to the current chain tip, or to a
-        //! possible descendant of the current chain tip that isn't currently
-        //! connected.
-        virtual bool isPotentialTip(const uint256& hash) = 0;
 
         //! Get locator for the current chain tip.
         virtual CBlockLocator getTipLocator() = 0;
@@ -232,8 +229,8 @@ public:
         virtual ~Notifications() {}
         virtual void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) {}
         virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason) {}
-        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
-        virtual void BlockDisconnected(const CBlock& block) {}
+        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted, int height) {}
+        virtual void BlockDisconnected(const CBlock& block, int height) {}
         virtual void UpdatedBlockTip() {}
         virtual void ChainStateFlushed(const CBlockLocator& locator) {}
         virtual void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {}
@@ -243,12 +240,19 @@ public:
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
 
-    //! Wait for pending notifications to be handled.
-    virtual void waitForNotifications() = 0;
+    //! Wait for pending notifications to be processed unless block hash points to the current
+    //! chain tip.
+    virtual void waitForNotificationsIfTipChanged(const uint256& old_tip) = 0;
 
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
     virtual std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) = 0;
+
+    //! Check if deprecated RPC is enabled.
+    virtual bool rpcEnableDeprecated(const std::string& method) = 0;
+
+    //! Run function after given number of seconds. Cancel any previous calls with same name.
+    virtual void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) = 0;
 
     //! Synchronously send TransactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
@@ -288,7 +292,7 @@ public:
 };
 
 //! Return implementation of Chain interface.
-std::unique_ptr<Chain> MakeChain();
+std::unique_ptr<Chain> MakeChain(NodeContext& node);
 
 //! Return implementation of ChainClient interface for a wallet client. This
 //! function will be undefined in builds where ENABLE_WALLET is false.

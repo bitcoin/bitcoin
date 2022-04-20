@@ -4,7 +4,9 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
+#include <node/context.h>
 #include <test/util.h>
+#include <test/util/setup_common.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 
@@ -12,10 +14,12 @@
 
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_watchonly, const bool add_mine, const uint32_t epoch_iters)
 {
+    RegTestingSetup test_setup;
     const auto& ADDRESS_WATCHONLY = ADDRESS_B58T_UNSPENDABLE;
 
-    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain();
-    CWallet wallet{*chain.get(), WalletLocation(), CreateMockWalletDatabase()};
+    NodeContext node;
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
+    CWallet wallet{chain.get(), WalletLocation(), CreateMockWalletDatabase()};
     {
         bool first_run;
         if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
@@ -27,8 +31,8 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
 
     for (int i = 0; i < 100; ++i) {
-        generatetoaddress(address_mine.value_or(ADDRESS_WATCHONLY));
-        generatetoaddress(ADDRESS_WATCHONLY);
+        generatetoaddress(test_setup.m_node, address_mine.value_or(ADDRESS_WATCHONLY));
+        generatetoaddress(test_setup.m_node, ADDRESS_WATCHONLY);
     }
     SyncWithValidationInterfaceQueue();
 

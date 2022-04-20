@@ -635,7 +635,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
     return result;
 }
 
-bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash)
+bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, CConnman& connman, const uint256& myProTxHash)
 {
     auto members = GetAllQuorumMembers(llmqParams.type, pQuorumBaseBlockIndex);
     bool isMember = std::find_if(members.begin(), members.end(), [&](const auto& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
@@ -657,7 +657,7 @@ bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams
         relayMembers = connections;
     }
     if (!connections.empty()) {
-        if (!g_connman->HasMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
+        if (!connman.HasMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
             std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pQuorumBaseBlockIndex->GetBlockHash().ToString());
             for (auto& c : connections) {
@@ -670,15 +670,15 @@ bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams
             }
             LogPrint(BCLog::NET_NETCONN, debugMsg.c_str()); /* Continued */
         }
-        g_connman->SetMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), connections);
+        connman.SetMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), connections);
     }
     if (!relayMembers.empty()) {
-        g_connman->SetMasternodeQuorumRelayMembers(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), relayMembers);
+        connman.SetMasternodeQuorumRelayMembers(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), relayMembers);
     }
     return true;
 }
 
-void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pQuorumBaseBlockIndex, const uint256 &myProTxHash)
+void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pQuorumBaseBlockIndex, CConnman& connman, const uint256 &myProTxHash)
 {
     if (!CLLMQUtils::IsQuorumPoseEnabled(llmqParams.type)) {
         return;
@@ -714,7 +714,7 @@ void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqPara
             }
             LogPrint(BCLog::NET_NETCONN, debugMsg.c_str()); /* Continued */
         }
-        g_connman->AddPendingProbeConnections(probeConnections);
+        connman.AddPendingProbeConnections(probeConnections);
     }
 }
 

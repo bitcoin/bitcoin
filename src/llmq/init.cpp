@@ -23,18 +23,18 @@ namespace llmq
 
 CBLSWorker* blsWorker;
 
-void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe)
+void InitLLMQSystem(CEvoDB& evoDb, CConnman& connman, bool unitTests, bool fWipe)
 {
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
-    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDKGSessionManager = new CDKGSessionManager(*blsWorker, unitTests, fWipe);
-    quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
-    quorumSigSharesManager = new CSigSharesManager();
-    quorumSigningManager = new CSigningManager(unitTests, fWipe);
-    chainLocksHandler = new CChainLocksHandler();
-    quorumInstantSendManager = new CInstantSendManager(unitTests, fWipe);
+    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
+    quorumDKGSessionManager = new CDKGSessionManager(connman, *blsWorker, unitTests, fWipe);
+    quorumManager = new CQuorumManager(evoDb, connman, *blsWorker, *quorumDKGSessionManager);
+    quorumSigSharesManager = new CSigSharesManager(connman);
+    quorumSigningManager = new CSigningManager(connman, unitTests, fWipe);
+    chainLocksHandler = new CChainLocksHandler(connman);
+    quorumInstantSendManager = new CInstantSendManager(connman, unitTests, fWipe);
 
     // NOTE: we use this only to wipe the old db, do NOT use it for anything else
     // TODO: remove it in some future version

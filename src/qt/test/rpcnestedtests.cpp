@@ -34,7 +34,6 @@ void RPCNestedTests::rpcNestedTests()
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
-    //mempool.setSanityCheck(1.0);
 
     TestingSetup test;
 
@@ -43,7 +42,7 @@ void RPCNestedTests::rpcNestedTests()
     std::string result;
     std::string result2;
     std::string filtered;
-    auto node = interfaces::MakeNode();
+    interfaces::Node* node = &m_node;
     RPCConsole::RPCExecuteCommandLine(*node, result, "getblockchaininfo()[chain]", &filtered); //simple result filtering with path
     QVERIFY(result=="main");
     QVERIFY(filtered == "getblockchaininfo()[chain]");

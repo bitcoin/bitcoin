@@ -14,8 +14,10 @@
 #include <init.h>
 #include <miner.h>
 #include <net.h>
+#include <net_processing.h>
 #include <noui.h>
 #include <pow.h>
+#include <rpc/blockchain.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
 #include <script/sigcache.h>
@@ -71,7 +73,7 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 }
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
-    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / std::to_string(g_insecure_rand_ctx_temp_path.rand32())}
+    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()}
 {
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
@@ -91,7 +93,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     InitScriptExecutionCache();
     fCheckBlockIndex = true;
     evoDb.reset(new CEvoDB(1 << 20, true, true));
-    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+    connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *connman));
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
     static bool noui_connected = false;
     if (!noui_connected) {
@@ -102,6 +105,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 
 BasicTestingSetup::~BasicTestingSetup()
 {
+    connman.reset();
     llmq::quorumSnapshotManager.reset();
     deterministicMNManager.reset();
     evoDb.reset();
@@ -116,15 +120,20 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
+    g_rpc_node = &m_node;
     RegisterAllCoreRPCCommands(tableRPC);
+
+    m_node.scheduler = MakeUnique<CScheduler>();
 
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
-    threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
-    GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-    mempool.setSanityCheck(1.0);
-    g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    threadGroup.create_thread([&]{ m_node.scheduler->serviceQueue(); });
+    GetMainSignals().RegisterBackgroundSignalScheduler(*g_rpc_node->scheduler);
+    m_node.mempool = &::mempool;
+    m_node.mempool->setSanityCheck(1.0);
+    m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.mempool, false);
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
     g_chainstate = MakeUnique<CChainState>();
     ::ChainstateActive().InitCoinsDB(
@@ -132,7 +141,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     assert(!::ChainstateActive().CanFlushToDisk());
     g_txindex = MakeUnique<TxIndex>(1 << 20, true);
     g_txindex->Start();
-    llmq::InitLLMQSystem(*evoDb, true);
+    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
+    llmq::InitLLMQSystem(*evoDb, *m_node.connman, true);
     ::ChainstateActive().InitCoinsCache();
     assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
@@ -152,7 +162,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
-    scheduler.stop();
+    m_node.scheduler->stop();
+    deterministicMNManager.reset();
     llmq::InterruptLLMQSystem();
     llmq::StopLLMQSystem();
     g_txindex->Interrupt();
@@ -163,8 +174,11 @@ TestingSetup::~TestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    g_connman.reset();
-    g_banman.reset();
+    g_rpc_node = nullptr;
+    m_node.connman.reset();
+    m_node.banman.reset();
+    m_node.mempool = nullptr;
+    m_node.scheduler.reset();
     UnloadBlockIndex();
     g_chainstate.reset();
     llmq::DestroyLLMQSystem();
@@ -221,7 +235,7 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
 CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
 
     std::vector<CTransactionRef> llmqCommitments;

@@ -54,11 +54,10 @@ void EditAddressAndSubmit(
  * In each case, verify the resulting state of the address book and optionally
  * the warning message presented to the user.
  */
-void TestAddAddressesToSendBook()
+void TestAddAddressesToSendBook(interfaces::Node& node)
 {
     TestChain100Setup test;
-    auto chain = interfaces::MakeChain();
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), CreateMockWalletDatabase());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), CreateMockWalletDatabase());
     bool firstRun;
     wallet->LoadWallet(firstRun);
 
@@ -102,10 +101,9 @@ void TestAddAddressesToSendBook()
     check_addbook_size(2);
 
     // Initialize relevant QT models.
-    auto node = interfaces::MakeNode();
-    OptionsModel optionsModel(*node);
+    OptionsModel optionsModel(node);
     AddWallet(wallet);
-    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &optionsModel);
+    WalletModel walletModel(interfaces::MakeWallet(wallet), node, &optionsModel);
     RemoveWallet(wallet);
     EditAddressDialog editAddressDialog(EditAddressDialog::NewSendingAddress);
     editAddressDialog.setModel(walletModel.getAddressTableModel());
@@ -151,5 +149,5 @@ void AddressBookTests::addressBookTests()
         return;
     }
 #endif
-    TestAddAddressesToSendBook();
+    TestAddAddressesToSendBook(m_node);
 }

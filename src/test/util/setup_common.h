@@ -9,6 +9,7 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
+#include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
 #include <scheduler.h>
@@ -76,6 +77,7 @@ struct BasicTestingSetup {
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
 private:
+    std::unique_ptr<CConnman> connman;
     const fs::path m_path_root;
 };
 
@@ -83,8 +85,8 @@ private:
  * Included are coins database, script check threads setup.
  */
 struct TestingSetup : public BasicTestingSetup {
+    NodeContext m_node;
     boost::thread_group threadGroup;
-    CScheduler scheduler;
 
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();

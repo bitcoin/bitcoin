@@ -47,8 +47,12 @@ public:
 private:
     masternode_state_t state{MASTERNODE_WAITING_FOR_PROTX};
     std::string strError;
+    CConnman& connman;
 
 public:
+    explicit CActiveMasternodeManager(CConnman& _connman) : connman(_connman) {};
+    ~CActiveMasternodeManager() = default;
+
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
     void Init(const CBlockIndex* pindex);

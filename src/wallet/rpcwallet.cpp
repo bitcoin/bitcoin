@@ -8,10 +8,11 @@
 #include <chainparams.h>
 #include <core_io.h>
 #include <httpserver.h>
-#include <init.h>
 #include <interfaces/chain.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
+#include <rpc/blockchain.h>
 #include <rpc/mining.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
@@ -96,11 +97,11 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
 static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx, UniValue& entry)
 {
     AssertLockHeld(cs_main); // for mapBlockIndex
-    int confirms = wtx.GetDepthInMainChain(locked_chain);
+    int confirms = wtx.GetDepthInMainChain();
     bool fLocked = llmq::quorumInstantSendManager->IsLocked(wtx.GetHash());
     bool chainlock = false;
     if (confirms > 0) {
-        chainlock = llmq::chainLocksHandler->HasChainLock(::BlockIndex()[wtx.hashBlock]->nHeight, wtx.hashBlock);
+        chainlock = llmq::chainLocksHandler->HasChainLock(::BlockIndex()[wtx.m_confirm.hashBlock]->nHeight, wtx.m_confirm.hashBlock);
     }
     entry.pushKV("confirmations", confirms);
     entry.pushKV("instantlock", fLocked || chainlock);
@@ -110,10 +111,10 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
         entry.pushKV("generated", true);
     if (confirms > 0)
     {
-        entry.pushKV("blockhash", wtx.hashBlock.GetHex());
-        entry.pushKV("blockindex", wtx.nIndex);
+        entry.pushKV("blockhash", wtx.m_confirm.hashBlock.GetHex());
+        entry.pushKV("blockindex", wtx.m_confirm.nIndex);
         int64_t block_time;
-        bool found_block = chain.findBlock(wtx.hashBlock, nullptr /* block */, &block_time);
+        bool found_block = chain.findBlock(wtx.m_confirm.hashBlock, nullptr /* block */, &block_time);
         CHECK_NONFATAL(found_block);
         entry.pushKV("blocktime", block_time);
     } else {
@@ -648,7 +649,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
         for (const CTxOut& txout : wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
-                if ((wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
+                if ((wtx.GetDepthInMainChain() >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
                     nAmount += txout.nValue;
     }
 
@@ -714,7 +715,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
         {
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwallet, address) && setAddress.count(address)) {
-                if ((wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
+                if ((wtx.GetDepthInMainChain() >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
                     nAmount += txout.nValue;
             }
         }
@@ -1080,7 +1081,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
         if (wtx.IsCoinBase() || !locked_chain.checkFinalTx(*wtx.tx))
             continue;
 
-        int nDepth = wtx.GetDepthInMainChain(locked_chain);
+        int nDepth = wtx.GetDepthInMainChain();
         if ((nDepth < nMinDepth) && !(fAddLocked && wtx.IsLockedByInstantSend()))
             continue;
 
@@ -1344,7 +1345,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
     }
 
     // Received
-    if (listReceived.size() > 0 && ((wtx.GetDepthInMainChain(locked_chain) >= nMinDepth) || wtx.IsLockedByInstantSend()))
+    if (listReceived.size() > 0 && ((wtx.GetDepthInMainChain() >= nMinDepth) || wtx.IsLockedByInstantSend()))
     {
         for (const COutputEntry& r : listReceived)
         {
@@ -1362,9 +1363,9 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             MaybePushAddress(entry, r.destination);
             if (wtx.IsCoinBase())
             {
-                if (wtx.GetDepthInMainChain(locked_chain) < 1)
+                if (wtx.GetDepthInMainChain() < 1)
                     entry.pushKV("category", "orphan");
-                else if (wtx.IsImmatureCoinBase(locked_chain))
+                else if (wtx.IsImmatureCoinBase())
                     entry.pushKV("category", "immature");
                 else
                     entry.pushKV("category", "generate");
@@ -1612,7 +1613,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
     for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         CWalletTx tx = pairWtx.second;
 
-        if (depth == -1 || tx.GetDepthInMainChain(*locked_chain) < depth) {
+        if (depth == -1 || tx.GetDepthInMainChain() < depth) {
             ListTransactions(*locked_chain, pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
         }
     }
@@ -1723,7 +1724,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     }
     const CWalletTx& wtx = it->second;
 
-    CAmount nCredit = wtx.GetCredit(*locked_chain, filter);
+    CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
@@ -1782,7 +1783,7 @@ static UniValue abandontransaction(const JSONRPCRequest& request)
     if (!pwallet->mapWallet.count(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
-    if (!pwallet->AbandonTransaction(*locked_chain, hash)) {
+    if (!pwallet->AbandonTransaction(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not eligible for abandonment");
     }
 
@@ -1959,7 +1960,7 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
     // wallet before the following callback is called. If a valid shared pointer
     // is acquired in the callback then the wallet is still loaded.
     std::weak_ptr<CWallet> weak_wallet = wallet;
-    RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet] {
+    pwallet->chain().rpcRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet] {
         if (auto shared_wallet = weak_wallet.lock()) {
             LOCK(shared_wallet->cs_wallet);
             shared_wallet->Lock();
@@ -2228,7 +2229,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
         }
 
-        if (pwallet->IsSpent(*locked_chain, outpt.hash, outpt.n)) {
+        if (pwallet->IsSpent(outpt.hash, outpt.n)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
         }
 
@@ -2728,7 +2729,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_interfaces->chain, location, error, warnings);
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_chain, location, error, warnings);
     if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error.original);
 
     UniValue obj(UniValue::VOBJ);
@@ -2787,7 +2788,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
 
     bilingual_str error;
     std::shared_ptr<CWallet> wallet;
-    WalletCreationStatus status = CreateWallet(*g_rpc_interfaces->chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
+    WalletCreationStatus status = CreateWallet(*g_rpc_chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
     switch (status) {
         case WalletCreationStatus::CREATION_FAILED:
             throw JSONRPCError(RPC_WALLET_ERROR, error.original);
@@ -3369,7 +3370,9 @@ UniValue generate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
 
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    const CTxMemPool& mempool = EnsureMemPool();
+
+    return generateBlocks(mempool, coinbase_script, num_generate, max_tries, true);
 }
 #else
 UniValue generate(const JSONRPCRequest& request)
@@ -4053,3 +4056,5 @@ void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         handlers.emplace_back(chain.handleRpc(commands[vcidx]));
 }
+
+interfaces::Chain* g_rpc_chain = nullptr;
