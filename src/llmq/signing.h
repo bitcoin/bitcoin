@@ -154,7 +154,7 @@ public:
     bool AlreadyHave(const CInv& inv) const;
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
-    void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStream& vRecv);
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks

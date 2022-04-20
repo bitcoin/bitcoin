@@ -158,7 +158,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     }
 }
 
-void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     static Mutex cs_indexedQuorumsCache;
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>> indexedQuorumsCache GUARDED_BY(cs_indexedQuorumsCache);
@@ -166,15 +166,15 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     if (!IsQuorumDKGEnabled())
         return;
 
-    if (strCommand != NetMsgType::QCONTRIB
-        && strCommand != NetMsgType::QCOMPLAINT
-        && strCommand != NetMsgType::QJUSTIFICATION
-        && strCommand != NetMsgType::QPCOMMITMENT
-        && strCommand != NetMsgType::QWATCH) {
+    if (msg_type != NetMsgType::QCONTRIB
+        && msg_type != NetMsgType::QCOMPLAINT
+        && msg_type != NetMsgType::QJUSTIFICATION
+        && msg_type != NetMsgType::QPCOMMITMENT
+        && msg_type != NetMsgType::QWATCH) {
         return;
     }
 
-    if (strCommand == NetMsgType::QWATCH) {
+    if (msg_type == NetMsgType::QWATCH) {
         pfrom->qwatch = true;
         return;
     }
@@ -250,7 +250,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
     assert(quorumIndex != -1);
     WITH_LOCK(cs_indexedQuorumsCache, indexedQuorumsCache[llmqType].insert(quorumHash, quorumIndex));
-    dkgSessionHandlers.at(std::make_pair(llmqType, quorumIndex)).ProcessMessage(pfrom, strCommand, vRecv);
+    dkgSessionHandlers.at(std::make_pair(llmqType, quorumIndex)).ProcessMessage(pfrom, msg_type, vRecv);
 }
 
 bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
@@ -443,6 +443,52 @@ void CDKGSessionManager::CleanupCache() const
             it = contributionsCache.erase(it);
         } else {
             ++it;
+        }
+    }
+}
+
+void CDKGSessionManager::CleanupOldContributions() const
+{
+    if (db->IsEmpty()) {
+        return;
+    }
+
+    const auto prefixes = {DB_VVEC, DB_SKCONTRIB, DB_ENC_CONTRIB};
+
+    for (const auto& params : Params().GetConsensus().llmqs) {
+        // For how many blocks recent DKG info should be kept
+        const size_t MAX_STORE_DEPTH = 2 * params.signingActiveQuorumCount * params.dkgInterval;
+
+        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, uint8_t(params.type));
+
+        CDBBatch batch(*db);
+        size_t cnt_old{0}, cnt_all{0};
+        for (const auto& prefix : prefixes) {
+            std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
+            auto start = std::make_tuple(prefix, params.type, uint256(), uint256());
+            decltype(start) k;
+
+            pcursor->Seek(start);
+            LOCK(cs_main);
+            while (pcursor->Valid()) {
+                if (!pcursor->GetKey(k) || std::get<0>(k) != prefix || std::get<1>(k) != params.type) {
+                    break;
+                }
+                cnt_all++;
+                const CBlockIndex* pindexQuorum = LookupBlockIndex(std::get<2>(k));
+                if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > MAX_STORE_DEPTH) {
+                    // not found or too old
+                    batch.Erase(k);
+                    cnt_old++;
+                }
+                pcursor->Next();
+            }
+            pcursor.reset();
+        }
+        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- found %lld entries for llmq type %d\n", __func__, cnt_all, uint8_t(params.type));
+        if (cnt_old > 0) {
+            db->WriteBatch(batch);
+            LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removed %lld old entries for llmq type %d\n", __func__, cnt_old, uint8_t(params.type));
         }
     }
 }

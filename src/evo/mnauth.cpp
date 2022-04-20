@@ -53,9 +53,9 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     connman.PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CMNAuth::ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStream& vRecv, CConnman& connman)
 {
-    if (strCommand != NetMsgType::MNAUTH || !masternodeSync.IsBlockchainSynced()) {
+    if (msg_type != NetMsgType::MNAUTH || !masternodeSync.IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
         return;
     }

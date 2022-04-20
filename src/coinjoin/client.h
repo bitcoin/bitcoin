@@ -123,7 +123,7 @@ public:
     {
     }
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
     void UnlockCoins();
 
@@ -151,7 +151,7 @@ public:
 class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 {
 public:
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
     void DoMaintenance();
 };
@@ -195,7 +195,7 @@ public:
     explicit CCoinJoinClientManager(CWallet& wallet) :
         mixingWallet(wallet) {}
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
     bool StartMixing();
     void StopMixing();

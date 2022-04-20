@@ -955,6 +955,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.nodes[0].generate(1)
         # sync nodes
         self.sync_all()
+        for i in range(0, num_simple_nodes):
+            force_finish_mnsync(self.nodes[i + 1])
+
         # Enable InstantSend (including block filtering) and ChainLocks by default
         self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
@@ -1109,7 +1112,9 @@ class DashTestFramework(BitcoinTestFramework):
                         mn_ok = False
                         break
                     break
-                all_ok = mn_ok
+                if not mn_ok:
+                    all_ok = False
+                    break
             if not all_ok and wait_proc is not None:
                 wait_proc()
             return all_ok
@@ -1176,7 +1181,9 @@ class DashTestFramework(BitcoinTestFramework):
                             mn_ok = False
                             break
                     break
-                all_ok = mn_ok
+                if not mn_ok:
+                    all_ok = False
+                    break
             if all_ok and member_count != expected_member_count:
                 return False
             return all_ok
@@ -1200,7 +1207,9 @@ class DashTestFramework(BitcoinTestFramework):
                         continue
                     c_ok = True
                     break
-                all_ok = c_ok
+                if not c_ok:
+                    all_ok = False
+                    break
             return all_ok
         wait_until(check_dkg_comitments, timeout=timeout, sleep=1)
 

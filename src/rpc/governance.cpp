@@ -1174,13 +1174,15 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
     }
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
-    int nBlockHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
+    const auto* pindex = WITH_LOCK(cs_main, return ::ChainActive().Tip());
+    int nBlockHeight = pindex->nHeight;
 
     CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum);
-    obj.pushKV("proposalfee", ValueFromAmount(GOVERNANCE_PROPOSAL_FEE_TX));
+    bool fork_active = VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE;
+    obj.pushKV("proposalfee", ValueFromAmount(fork_active ? GOVERNANCE_PROPOSAL_FEE_TX : GOVERNANCE_PROPOSAL_FEE_TX_OLD));
     obj.pushKV("superblockcycle", Params().GetConsensus().nSuperblockCycle);
     obj.pushKV("lastsuperblock", nLastSuperblock);
     obj.pushKV("nextsuperblock", nNextSuperblock);

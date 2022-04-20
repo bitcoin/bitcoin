@@ -39,9 +39,9 @@ CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb) :
     CLLMQUtils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }
 
-void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
-    if (strCommand == NetMsgType::QFCOMMITMENT) {
+    if (msg_type == NetMsgType::QFCOMMITMENT) {
         CFinalCommitment qc;
         vRecv >> qc;
 

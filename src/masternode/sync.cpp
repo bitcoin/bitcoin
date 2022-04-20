@@ -95,9 +95,9 @@ std::string CMasternodeSync::GetSyncStatus() const
     }
 }
 
-void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const
+void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv) const
 {
-    if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
+    if (msg_type == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
 
         //do not care about stats if sync process finished
         if (IsSynced()) return;

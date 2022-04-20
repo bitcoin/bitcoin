@@ -77,13 +77,13 @@ CChainLockSig CChainLocksHandler::GetBestChainLock() const
     return bestChainLock;
 }
 
-void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     if (!AreChainLocksEnabled()) {
         return;
     }
 
-    if (strCommand == NetMsgType::CLSIG) {
+    if (msg_type == NetMsgType::CLSIG) {
         CChainLockSig clsig;
         vRecv >> clsig;
 

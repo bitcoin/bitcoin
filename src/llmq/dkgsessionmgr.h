@@ -55,7 +55,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv);
     bool AlreadyHave(const CInv& inv) const;
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
     bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const;
@@ -70,6 +70,8 @@ public:
     void WriteEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions);
     /// Read encrypted (unverified) DKG contributions for the member with the given proTxHash from the llmqDb
     bool GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& proTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const;
+
+    void CleanupOldContributions() const;
 
 private:
     void MigrateDKG();

@@ -262,7 +262,7 @@ public:
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv);
 
     void TransactionAddedToMempool(const CTransactionRef& tx);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);

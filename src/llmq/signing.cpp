@@ -568,9 +568,9 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     return true;
 }
 
-void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
-    if (strCommand == NetMsgType::QSIGREC) {
+    if (msg_type == NetMsgType::QSIGREC) {
         auto recoveredSig = std::make_shared<CRecoveredSig>();
         vRecv >> *recoveredSig;
         ProcessMessageRecoveredSig(pfrom, recoveredSig);
