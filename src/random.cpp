@@ -16,6 +16,7 @@
 #include <logging.h>
 #include <randomenv.h>
 #include <support/allocators/secure.h>
+#include <span.h>
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
 
@@ -578,8 +579,8 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level) noexcept
     }
 }
 
-void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
-void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
+void GetRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST); }
+void GetStrongRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::SLOW); }
 void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
 void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
 
@@ -598,7 +599,7 @@ int GetRandInt(int nMax) noexcept
 uint256 GetRandHash() noexcept
 {
     uint256 hash;
-    GetRandBytes((unsigned char*)&hash, sizeof(hash));
+    GetRandBytes(hash);
     return hash;
 }
 
