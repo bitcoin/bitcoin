@@ -125,6 +125,7 @@ Refer to the `getmempoolinfo` RPC help for details.
 
 Returns the transactions in the mempool.
 Only supports JSON as output format.
+Refer to the `getrawmempool` RPC help for details.
 
 Risks
 -------------
