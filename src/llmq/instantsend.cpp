@@ -694,7 +694,9 @@ void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: got all recovered sigs, creating CInstantSendLock\n", __func__,
             tx.GetHash().ToString());
 
-    CInstantSendLock islock(CInstantSendLock::isdlock_version);
+    CInstantSendLock islock(llmqType == Params().GetConsensus().llmqTypeDIP0024InstantSend ?
+                CInstantSendLock::isdlock_version:
+                CInstantSendLock::islock_version);
     islock.txid = tx.GetHash();
     for (auto& in : tx.vin) {
         islock.inputs.emplace_back(in.prevout);
