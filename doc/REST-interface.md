@@ -123,6 +123,7 @@ Only supports JSON as output format.
 
 Returns transactions in the TX mempool.
 Only supports JSON as output format.
+Refer to the `getrawmempool` RPC help for details.
 
 Risks
 -------------
