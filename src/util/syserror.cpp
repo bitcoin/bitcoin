@@ -13,7 +13,7 @@
 
 std::string SysErrorString(int err)
 {
-    char buf[256];
+    char buf[1024];
     /* Too bad there are three incompatible implementations of the
      * thread-safe strerror. */
     const char *s = nullptr;
