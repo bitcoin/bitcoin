@@ -133,18 +133,7 @@ for p in "${PATHS[@]}"; do
 done
 
 # Disable Guix ld auto-rpath behavior
-case "$HOST" in
-    *darwin*)
-        # The auto-rpath behavior is necessary for darwin builds as some native
-        # tools built by depends refer to and depend on Guix-built native
-        # libraries
-        #
-        # After the native packages in depends are built, the ld wrapper should
-        # no longer affect our build, as clang would instead reach for
-        # x86_64-apple-darwin-ld from cctools
-        ;;
-    *) export GUIX_LD_WRAPPER_DISABLE_RPATH=yes ;;
-esac
+export GUIX_LD_WRAPPER_DISABLE_RPATH=yes
 
 # Make /usr/bin if it doesn't exist
 [ -e /usr/bin ] || mkdir -p /usr/bin
