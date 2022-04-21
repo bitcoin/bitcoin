@@ -1,0 +1,96 @@
+#!/usr/bin/env bpftrace
+
+BEGIN
+
+{
+  printf("Logging Mempool Activity\n");
+  printf("  TIME  ,EVENT, REASON  ,                           TXID                                 ,     VALUE      ,      FEE       ,  SIZE   , WEIGHT\r\n");
+}
+
+usdt:./src/bitcoind:mempool:evicted
+{
+    //64bit chunks of the 256bit TXID
+    $p1 = (uint64)0;
+    $p2 = (uint64)0;
+    $p3 = (uint64)0;
+    $p4 = (uint64)0;
+    //Reason
+    $reason = (int32)arg5;
+    $reasonStr = "UNDEFINED";
+    //TX Size
+    $size = (uint32) arg2;
+    //Args
+    $amt = (uint64) arg1;
+    $txid = arg0;
+    //Event reason decoding.
+    if($reason == 5){
+        $reasonStr = "REPLACED"
+    }
+    if($reason == 4){
+        $reasonStr = "CONFLICT"
+    }
+    if($reason == 3){
+        $reasonStr = "BLOCK"
+    }
+    if($reason == 2){
+        $reasonStr = "REORG"
+    }
+    if($reason == 1){
+        $reasonStr = "SIZELIMIT"
+    }
+    if($reason == 0){
+        $reasonStr = "EXPIRY"
+    }
+    //Store the segments
+    $p = $txid + 24;
+    unroll(4){
+        if($p == $txid + 24){
+            $p1 = *(uint64*)$p;
+        }
+        if($p == $txid + 16){
+            $p2 = *(uint64*)$p;
+        }
+        if($p == $txid + 8){
+            $p3 = *(uint64*)$p;
+        }
+        if($p == $txid + 0){
+            $p4 = *(uint64*)$p;
+        }
+        $p-=8;
+    }
+    //Print - %016u accounts for the max possible TX size 21mm
+    printf("%s,EVICT,%09s,%08X%08X%08X%08X%08X%08X%08X%08X,%16u,%16d,%9d,%7d\r\n", strftime("%H:%M:%S", nsecs),$reasonStr,$p1>>32,$p1,$p2>>32,$p2,$p3>>32,$p3,$p4>>32,$p4,$amt,arg4,$size,arg3);
+}
+
+usdt:./src/bitcoind:mempool:added
+{
+    //64bit chunks of the 256bit TXID
+    $p1 = (uint64)0;
+    $p2 = (uint64)0;
+    $p3 = (uint64)0;
+    $p4 = (uint64)0;
+    //TX Size
+    $size = (uint32) arg2;
+    //Args
+    $amt = (uint64) arg1;
+    $txid = arg0;
+    //Pointer Ref
+    $p = $txid + 24;
+    unroll(4){
+        if($p == $txid + 24){
+            $p1 = *(uint64*)$p;
+        }
+        if($p == $txid + 16){
+            $p2 = *(uint64*)$p;
+        }
+        if($p == $txid + 8){
+            $p3 = *(uint64*)$p;
+        }
+        if($p == $txid + 0){
+            $p4 = *(uint64*)$p;
+        }
+        $p-=8;
+    }
+    //Print - %016u accounts for the max possible TX size 21mm
+    printf("%s,ADDED,%09s,%08X%08X%08X%08X%08X%08X%08X%08X,%16u,%16d,%9d,%7d\r\n", strftime("%H:%M:%S", nsecs),"BROADCAST",$p1>>32,$p1,$p2>>32,$p2,$p3>>32,$p3,$p4>>32,$p4,$amt,arg4,$size,arg3);
+}

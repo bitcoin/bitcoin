@@ -17,6 +17,7 @@
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/time.h>
+#include <util/trace.h>
 #include <validationinterface.h>
 
 #include <cmath>
@@ -480,6 +481,13 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // all the appropriate checks.
     indexed_transaction_set::iterator newit = mapTx.insert(entry).first;
 
+    TRACE5(mempool,added,
+            entry.GetTx().GetHash().data(),
+            entry.GetTx().GetValueOut(),
+            entry.GetTxSize(),
+            entry.GetTxWeight(),
+            entry.GetFee());
+
     // Update transaction for any feeDelta created by PrioritiseTransaction
     CAmount delta{0};
     ApplyDelta(entry.GetTx().GetHash(), delta);
@@ -525,6 +533,14 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
+    TRACE6(mempool,evicted,
+        it->GetTx().GetHash().data(),
+        it->GetTx().GetValueOut(),
+        it->GetTxSize(),
+        it->GetTxWeight(),
+        it->GetFee(),
+        reason);
+
     // We increment mempool sequence value no matter removal reason
     // even if not directly reported below.
     uint64_t mempool_sequence = GetAndIncrementSequence();

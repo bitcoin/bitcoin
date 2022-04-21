@@ -286,3 +286,29 @@ Spent   a05880b8c77971ed0b9f73062c7c4cdb0ff3856ab14cbf8bc481ed571cd34b83:1      
 Added   eb689865f7d957938978d6207918748f74e6aa074f47874724327089445b0960:0            5589696005 2094513 No
 Added   eb689865f7d957938978d6207918748f74e6aa074f47874724327089445b0960:1               1565556 2094513 No
 ```
+
+### log_mempool_activity.bt
+A `bpftrace` script to log mempool events. Currently mempool additions and evictions are supported in a .csv format for use in external scrips and validation.
+this script is written to be used with bpftrace default env vars. Outputs a .csv formatted details about mempool events. Based on `mempool:event` tracepoint.
+
+ - TIME: System Time HMS event was logged
+ - EVENT: Added or Evict(removed)
+ - REASON: The reason for an addition or eviction from the mempool
+ - TXID: TXID Hash
+ - VALUE: Total TX value in satoshis excluding fee.
+ - FEE SATS: The TX fee in satoshis
+ - SIZE: TX size in bytes
+ - WEIGHT: TX size in vBytes
+
+OUTPUT
+```bash
+Logging Mempool Activity
+  TIME  ,EVENT, REASON  ,                           TXID                                 ,     VALUE      ,      FEE       ,  SIZE   , WEIGHT
+05:13:52,ADDED,BROADCAST,4EA76D17FD4852BDE684C578A2EC532521FE028485B8D4E05F4EB334965F1BFA,        33701179,            1420,      142,    565
+05:13:52,ADDED,BROADCAST,4484531143A5AAC2E6C3351EB0A41E775D557CB3E2D6782B6FEC0A04CD4F222B,        27998418,            1582,      225,    898
+05:13:52,ADDED,BROADCAST,DEA856E42DA2318E183AB98EA3E61F1595EA95B8302C5E4863AA3FD8EE78379E,         7649637,             994,      142,    565
+05:13:52,EVICT, REPLACED,831849164C4937A34008E2AC3DE478AB708A463BBE222BA2B6C17F0491193A87,          195922,             703,      223,    892
+05:13:53,ADDED,BROADCAST,372E8B632B429BC395CDDBB67D79C265285211A1019D819C3383037E56351DD5,         5701787,           16013,      588,   2351
+05:13:55,ADDED,BROADCAST,A9EE702224DEF6BDD47511FB5E93969DCC95CC74013B2884630E3931CC131F9C,       687874542,            1660,      165,    660
+05:13:58,ADDED,BROADCAST,79767939C89F66FF43D2F73809C556EA9780874C5222980EA4178A8CB31471C6,          671602,             705,      141,    562
+```

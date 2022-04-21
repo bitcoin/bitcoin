@@ -168,6 +168,33 @@ Arguments passed:
 4. Value of the coin as `int64`
 5. If the coin is a coinbase as `bool`
 
+### Context `mempool`
+
+#### Tracepoint `mempool:added`
+Is called when a transaction is added to the mempool `unchecked`. Additions to the mempool
+occur as transactions are broadcast between nodes.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. TX output value in satoshis `uint64`
+3. TX fee in satoshis `uint32`
+4. TX size in bytes `uint32`
+5. TX weight in vBytes
+
+#### Tracepoint `mempool:evicted`
+Is called when a transaction is evicted from the mempool `(unchecked)`.
+Mempool evictions can occur for 6 reasons (EXPIRY, SIZELIMIT, REORG, BLOCK, CONFLICT, REPLACED).
+BLOCK evictions can be troublesome because when a block is mined there will be many simultaneous calls to this tracepoint.
+
+Arguments passed:
+1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+2. TX output value in satoshis `uint64`
+3. TX fee in satoshis `uint32`
+4. TX size in bytes `uint32`
+5. TX weight in vBytes
+6. TX eviction reasion `uint32`
+
+
 ## Adding tracepoints to Bitcoin Core
 
 To add a new tracepoint, `#include <util/trace.h>` in the compilation unit where
