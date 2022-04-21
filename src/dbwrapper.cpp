@@ -224,7 +224,7 @@ const unsigned int CDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
 std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
 {
     std::vector<uint8_t> ret(OBFUSCATE_KEY_NUM_BYTES);
-    GetRandBytes(ret.data(), OBFUSCATE_KEY_NUM_BYTES);
+    GetRandBytes(ret);
     return ret;
 }
 

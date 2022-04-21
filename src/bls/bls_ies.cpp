@@ -97,7 +97,7 @@ void CBLSIESMultiRecipientBlobs::InitEncrypt(size_t count)
 {
     ephemeralSecretKey.MakeNewKey();
     ephemeralPubKey = ephemeralSecretKey.GetPublicKey();
-    GetStrongRandBytes(ivSeed.begin(), ivSeed.size());
+    GetStrongRandBytes({ivSeed.begin(), ivSeed.size()});
 
     uint256 iv = ivSeed;
     ivVector.resize(count);
