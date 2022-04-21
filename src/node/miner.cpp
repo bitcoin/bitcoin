@@ -310,10 +310,6 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
     // Keep track of entries that failed inclusion, to avoid duplicate work
     CTxMemPool::setEntries failedTx;
 
-    // Start by adding all descendants of previously added txs to mapModifiedTx
-    // and modifying them for their already included ancestors
-    UpdatePackagesForAdded(inBlock, mapModifiedTx);
-
     CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = m_mempool.mapTx.get<ancestor_score>().begin();
     CTxMemPool::txiter iter;
 
