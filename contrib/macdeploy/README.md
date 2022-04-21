@@ -15,13 +15,16 @@ When complete, it will have produced `Bitcoin-Core.dmg`.
 A free Apple Developer Account is required to proceed.
 
 Our current macOS SDK
-(`Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz`) can be
-extracted from
+(`Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz`)
+can be extracted from
 [Xcode_12.2.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip).
+
 Alternatively, after logging in to your account go to 'Downloads', then 'More'
 and search for [`Xcode_12.2`](https://developer.apple.com/download/all/?q=Xcode%2012.2).
+
 An Apple ID and cookies enabled for the hostname are needed to download this.
-The `sha256sum` of the archive should be `28d352f8c14a43d9b8a082ac6338dc173cb153f964c6e8fb6ba389e5be528bd0`.
+
+The `sha256sum` of the downloaded XIP archive should be `28d352f8c14a43d9b8a082ac6338dc173cb153f964c6e8fb6ba389e5be528bd0`.
 
 After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip`
 archive. This makes the SDK less-trivial to extract on non-macOS machines. One
@@ -55,7 +58,10 @@ previous stage) as the first argument.
 ./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
 ```
 
+The `sha256sum` of the generated TAR.GZ archive should be `e7ca56bc8804d16624fad68be2e71647747d6629cacaaa3de5fbfa7f444e9eae`.
+
 ## Deterministic macOS DMG Notes
+
 Working macOS DMGs are created in Linux by combining a recent `clang`, the Apple
 `binutils` (`ld`, `ar`, etc) and DMG authoring tools.
 
