@@ -243,6 +243,7 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@no_natpmp@|$(NO_NATPMP)|' \
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             -e 's|@debug@|$(DEBUG)|' \
+            -e 's|@qt_base_path@|$(SOURCES_PATH)/$(qt_file_name)|' \
             $< > $@
 	touch $@
 

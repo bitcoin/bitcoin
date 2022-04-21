@@ -815,6 +815,7 @@ case $host in
           ;;
         *) AC_MSG_ERROR([Could not determine Android arch, or it is unsupported]) ;;
       esac
+      AC_SUBST(QT_BASE_PATH, "$QT_BASE_PATH")
      ;;
    *linux*)
      TARGET_OS=linux
