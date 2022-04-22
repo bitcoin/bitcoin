@@ -24,6 +24,7 @@
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QMutexLocker>
 #include <QThread>
 #include <QTimer>
@@ -135,7 +136,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     // handled on the GUI event loop.
     wallet_model->moveToThread(thread());
     // setParent(parent) must be called in the thread which created the parent object. More details in #18948.
-    GUIUtil::ObjectInvoke(this, [wallet_model, this] {
+    QMetaObject::invokeMethod(this, [wallet_model, this] {
         wallet_model->setParent(this);
     }, GUIUtil::blockingGUIThreadConnection());
 
