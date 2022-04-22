@@ -1380,7 +1380,6 @@ RPCHelpMan sendall()
 
             CMutableTransaction rawTx{ConstructTransaction(options["inputs"], recipient_key_value_pairs, options["locktime"], rbf)};
             LOCK(pwallet->cs_wallet);
-            std::vector<COutput> all_the_utxos;
 
             CAmount total_input_value(0);
             bool send_max{options.exists("send_max") ? options["send_max"].get_bool() : false};
@@ -1398,8 +1397,7 @@ RPCHelpMan sendall()
                     total_input_value += tx->tx->vout[input.prevout.n].nValue;
                 }
             } else {
-                AvailableCoins(*pwallet, all_the_utxos, &coin_control, fee_rate, /*nMinimumAmount=*/0);
-                for (const COutput& output : all_the_utxos) {
+                for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, /*nMinimumAmount=*/0).coins) {
                     CHECK_NONFATAL(output.input_bytes > 0);
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
