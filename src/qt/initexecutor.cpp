@@ -5,7 +5,6 @@
 #include <qt/initexecutor.h>
 
 #include <interfaces/node.h>
-#include <qt/guiutil.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 
@@ -13,6 +12,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QMetaObject>
 #include <QObject>
 #include <QProcess>
 #include <QString>
@@ -41,7 +41,7 @@ void InitExecutor::handleRunawayException(const std::exception_ptr e)
 
 void InitExecutor::initialize()
 {
-    GUIUtil::ObjectInvoke(&m_context, [this] {
+    QMetaObject::invokeMethod(&m_context, [this] {
         try {
             util::ThreadRename("qt-init");
             qDebug() << "Running initialization in thread";
@@ -56,7 +56,7 @@ void InitExecutor::initialize()
 
 void InitExecutor::restart(QStringList args)
 {
-    GUIUtil::ObjectInvoke(&m_context, [this, args] {
+    QMetaObject::invokeMethod(&m_context, [this, args] {
         static bool executing_restart{false};
 
         if (!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
@@ -79,7 +79,7 @@ void InitExecutor::restart(QStringList args)
 
 void InitExecutor::shutdown()
 {
-    GUIUtil::ObjectInvoke(&m_context, [this] {
+    QMetaObject::invokeMethod(&m_context, [this] {
         try {
             qDebug() << "Running Shutdown in thread";
             m_node.appShutdown();
