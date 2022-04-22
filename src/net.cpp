@@ -2209,7 +2209,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
                 break;
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.GetAsmap()))) {
+            if (!fFeeler && setConnected.count(m_netgroupman.GetGroup(addr))) {
                 break;
             }
             // if anchor was set, and it's a dmn then override to full relay from blocks only
