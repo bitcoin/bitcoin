@@ -8,6 +8,7 @@
 
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
+#include <span.h>
 #include <uint256.h>
 
 #include <chrono>
@@ -66,7 +67,7 @@
  *
  * Thread-safe.
  */
-void GetRandBytes(unsigned char* buf, int num) noexcept;
+void GetRandBytes(Span<unsigned char> bytes) noexcept;
 /** Generate a uniform random integer in the range [0..range). Precondition: range > 0 */
 uint64_t GetRand(uint64_t nMax) noexcept;
 /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
@@ -105,7 +106,7 @@ uint256 GetRandHash() noexcept;
  *
  * Thread-safe.
  */
-void GetStrongRandBytes(unsigned char* buf, int num) noexcept;
+void GetStrongRandBytes(Span<unsigned char> bytes) noexcept;
 
 /**
  * Gather entropy from various expensive sources, and feed them to the PRNG state.

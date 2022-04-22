@@ -10,7 +10,6 @@
 #include <hash.h>
 #include <prevector.h>
 #include <tinyformat.h>
-#include <util/asmap.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -720,107 +719,6 @@ Network CNetAddr::GetNetClass() const
         return NET_IPV4;
     }
     return m_net;
-}
-
-uint32_t CNetAddr::GetMappedAS(const std::vector<bool> &asmap) const {
-    uint32_t net_class = GetNetClass();
-    if (asmap.size() == 0 || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
-        return 0; // Indicates not found, safe because AS0 is reserved per RFC7607.
-    }
-    std::vector<bool> ip_bits(128);
-    if (HasLinkedIPv4()) {
-        // For lookup, treat as if it was just an IPv4 address (IPV4_IN_IPV6_PREFIX + IPv4 bits)
-        for (int8_t byte_i = 0; byte_i < 12; ++byte_i) {
-            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
-                ip_bits[byte_i * 8 + bit_i] = (IPV4_IN_IPV6_PREFIX[byte_i] >> (7 - bit_i)) & 1;
-            }
-        }
-        uint32_t ipv4 = GetLinkedIPv4();
-        for (int i = 0; i < 32; ++i) {
-            ip_bits[96 + i] = (ipv4 >> (31 - i)) & 1;
-        }
-    } else {
-        // Use all 128 bits of the IPv6 address otherwise
-        assert(IsIPv6());
-        for (int8_t byte_i = 0; byte_i < 16; ++byte_i) {
-            uint8_t cur_byte = m_addr[byte_i];
-            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
-                ip_bits[byte_i * 8 + bit_i] = (cur_byte >> (7 - bit_i)) & 1;
-            }
-        }
-    }
-    uint32_t mapped_as = Interpret(asmap, ip_bits);
-    return mapped_as;
-}
-
-/**
- * Get the canonical identifier of our network group
- *
- * The groups are assigned in a way where it should be costly for an attacker to
- * obtain addresses with many different group identifiers, even if it is cheap
- * to obtain addresses with the same identifier.
- *
- * @note No two connections will be attempted to addresses with the same network
- *       group.
- */
-std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) const
-{
-    std::vector<unsigned char> vchRet;
-    uint32_t net_class = GetNetClass();
-    // If non-empty asmap is supplied and the address is IPv4/IPv6,
-    // return ASN to be used for bucketing.
-    uint32_t asn = GetMappedAS(asmap);
-    if (asn != 0) { // Either asmap was empty, or address has non-asmappable net class (e.g. TOR).
-        vchRet.push_back(NET_IPV6); // IPv4 and IPv6 with same ASN should be in the same bucket
-        for (int i = 0; i < 4; i++) {
-            vchRet.push_back((asn >> (8 * i)) & 0xFF);
-        }
-        return vchRet;
-    }
-
-    vchRet.push_back(net_class);
-    int nBits{0};
-
-    if (IsLocal()) {
-        // all local addresses belong to the same group
-    } else if (IsInternal()) {
-        // all internal-usage addresses get their own group
-        nBits = ADDR_INTERNAL_SIZE * 8;
-    } else if (!IsRoutable()) {
-        // all other unroutable addresses belong to the same group
-    } else if (HasLinkedIPv4()) {
-        // IPv4 addresses (and mapped IPv4 addresses) use /16 groups
-        uint32_t ipv4 = GetLinkedIPv4();
-        vchRet.push_back((ipv4 >> 24) & 0xFF);
-        vchRet.push_back((ipv4 >> 16) & 0xFF);
-        return vchRet;
-    } else if (IsTor() || IsI2P()) {
-        nBits = 4;
-    } else if (IsCJDNS()) {
-        // Treat in the same way as Tor and I2P because the address in all of
-        // them is "random" bytes (derived from a public key). However in CJDNS
-        // the first byte is a constant 0xfc, so the random bytes come after it.
-        // Thus skip the constant 8 bits at the start.
-        nBits = 12;
-    } else if (IsHeNet()) {
-        // for he.net, use /36 groups
-        nBits = 36;
-    } else {
-        // for the rest of the IPv6 network, use /32 groups
-        nBits = 32;
-    }
-
-    // Push our address onto vchRet.
-    const size_t num_bytes = nBits / 8;
-    vchRet.insert(vchRet.end(), m_addr.begin(), m_addr.begin() + num_bytes);
-    nBits %= 8;
-    // ...for the last byte, push nBits and for the rest of the byte push 1's
-    if (nBits > 0) {
-        assert(num_bytes < m_addr.size());
-        vchRet.push_back(m_addr[num_bytes] | ((1 << (8 - nBits)) - 1));
-    }
-
-    return vchRet;
 }
 
 std::vector<unsigned char> CNetAddr::GetAddrBytes() const
