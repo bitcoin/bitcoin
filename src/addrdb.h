@@ -17,6 +17,7 @@ class ArgsManager;
 class AddrMan;
 class CAddress;
 class CDataStream;
+class NetGroupManager;
 struct bilingual_str;
 
 bool DumpPeerAddresses(const ArgsManager& args, const AddrMan& addr);
@@ -48,7 +49,7 @@ public:
 };
 
 /** Returns an error string on failure */
-std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<AddrMan>& addrman);
+std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, const ArgsManager& args, std::unique_ptr<AddrMan>& addrman);
 
 /**
  * Dump the anchor IP address database (anchors.dat)

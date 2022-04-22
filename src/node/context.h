@@ -18,6 +18,7 @@ class CConnman;
 class CScheduler;
 class CTxMemPool;
 class ChainstateManager;
+class NetGroupManager;
 class PeerManager;
 namespace interfaces {
 class Chain;
@@ -43,6 +44,7 @@ struct NodeContext {
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
+    std::unique_ptr<const NetGroupManager> netgroupman;
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator;
     std::unique_ptr<PeerManager> peerman;
     std::unique_ptr<ChainstateManager> chainman;

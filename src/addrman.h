@@ -7,6 +7,7 @@
 #define SYSCOIN_ADDRMAN_H
 
 #include <netaddress.h>
+#include <netgroup.h>
 #include <protocol.h>
 #include <streams.h>
 #include <timedata.h>
@@ -88,8 +89,7 @@ protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
-    // SYSCOIN
-    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
+    explicit AddrMan(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrMan();
 
@@ -172,8 +172,6 @@ public:
 
     //! Update an entry's service bits.
     void SetServices(const CService& addr, ServiceFlags nServices);
-
-    const std::vector<bool>& GetAsmap() const;
 
     /** Test-only function
      * Find the address record in AddrMan and return information about its

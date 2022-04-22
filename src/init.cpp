@@ -33,6 +33,7 @@
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netbase.h>
+#include <netgroup.h>
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <node/chainstate.h>
@@ -269,6 +270,7 @@ void Shutdown(node::NodeContext& node)
     node.connman.reset();
     node.banman.reset();
     node.addrman.reset();
+    node.netgroupman.reset();
     // SYSCOIN
     std::string status;
     if (!RPCIsInWarmup(&status)) {
@@ -288,6 +290,7 @@ void Shutdown(node::NodeContext& node)
             flatdb3.Dump(*governance, govMan);
         }
     }
+
     if (node.mempool && node.mempool->IsLoaded() && node.args->GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(*node.mempool);
     }
@@ -1446,8 +1449,6 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && !fMasternodeMode};
 
     {
-        // Initialize addrman
-        assert(!node.addrman);
 
         // Read asmap file if configured
         std::vector<bool> asmap;
@@ -1471,8 +1472,14 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
             LogPrintf("Using /16 prefix for IP bucketing\n");
         }
 
+        // Initialize netgroup manager
+        assert(!node.netgroupman);
+        node.netgroupman = std::make_unique<NetGroupManager>(std::move(asmap));
+
+        // Initialize addrman
+        assert(!node.addrman);
         uiInterface.InitMessage(_("Loading P2P addresses…").translated);
-        if (const auto error{LoadAddrman(asmap, args, node.addrman)}) {
+        if (const auto error{LoadAddrman(*node.netgroupman, args, node.addrman)}) {
             return InitError(*error);
         }
     }
@@ -1480,7 +1487,9 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetIntArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
-    node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()), *node.addrman, args.GetBoolArg("-networkactive", true));
+    node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()),
+                                              GetRand(std::numeric_limits<uint64_t>::max()),
+                                              *node.addrman, *node.netgroupman, args.GetBoolArg("-networkactive", true));
 
     assert(!node.fee_estimator);
     // Don't initialize fee estimation with old data if we don't relay transactions,

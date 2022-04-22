@@ -240,6 +240,7 @@ SYSCOIN_CORE_H = \
   net_types.h \
   netaddress.h \
   netbase.h \
+  netgroup.h \
   netmessagemaker.h \
   node/blockstorage.h \
   node/caches.h \
@@ -518,6 +519,7 @@ libsyscoin_node_a_SOURCES = \
   mapport.cpp \
   net.cpp \
   netfulfilledman.cpp \
+  netgroup.cpp \
   net_processing.cpp \
   node/blockstorage.cpp \
   node/caches.cpp \
