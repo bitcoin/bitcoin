@@ -76,6 +76,7 @@ void AddLoggingArgs(ArgsManager& argsman)
     argsman.AddArg("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set -nodebuglogfile)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-shrinkdebugfilesize=<n>", strprintf("Specify the file size in <n> megabytes when shrinking debug.log (default: %u)", DEFAULT_SHRINKDEBUGLOGFILESIZE), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 }
 
 void SetLoggingOptions(const ArgsManager& args)
@@ -123,7 +124,7 @@ bool StartLogging(const ArgsManager& args)
         if (args.GetBoolArg("-shrinkdebugfile", LogInstance().DefaultShrinkDebugFile())) {
             // Do this first since it both loads a bunch of debug.log into memory,
             // and because this needs to happen before any other debug.log printing
-            LogInstance().ShrinkDebugFile();
+            LogInstance().ShrinkDebugFile(args);
         }
     }
     if (!LogInstance().StartLogging()) {

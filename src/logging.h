@@ -19,12 +19,15 @@
 #include <string>
 #include <vector>
 
+class ArgsManager;
+
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
 static const bool DEFAULT_LOGSOURCELOCATIONS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
+static const size_t DEFAULT_SHRINKDEBUGLOGFILESIZE = 10;
 
 extern bool fLogIPs;
 
@@ -134,7 +137,7 @@ namespace BCLog {
         /** Only for testing */
         void DisconnectTestLogger();
 
-        void ShrinkDebugFile();
+        void ShrinkDebugFile(const ArgsManager& args);
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
 
