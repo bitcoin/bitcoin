@@ -41,6 +41,7 @@ static void ErrorLogCallback(void* arg, int code, const char* msg)
 #if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
 #endif
@@ -481,8 +482,8 @@ bool SQLiteBatch::HasKey(CDataStream&& key)
 }
 
 #if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
-#pragma GCC diagnostic pop
 #pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 bool SQLiteBatch::StartCursor()

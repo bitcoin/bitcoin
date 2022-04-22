@@ -131,6 +131,7 @@
 #if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
 #endif
@@ -1175,8 +1176,8 @@ std::string format(const std::string &fmt, const Args&... args)
 #define strprintf tfm::format
 
 #if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
-#pragma GCC diagnostic pop
 #pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 #endif // TINYFORMAT_H_INCLUDED

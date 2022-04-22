@@ -2096,6 +2096,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
 #if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
 #endif
@@ -2106,8 +2107,8 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     void (*old_handler)(int) = signal(SIGCHLD, SIG_DFL);
 
 #if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
-#pragma GCC diagnostic pop
 #pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
     // Fork another process for testing before creating the lock, so that we
