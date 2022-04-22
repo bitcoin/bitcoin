@@ -58,7 +58,7 @@ previous stage) as the first argument.
 ./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
 ```
 
-The `sha256sum` of the generated TAR.GZ archive should be `e7ca56bc8804d16624fad68be2e71647747d6629cacaaa3de5fbfa7f444e9eae`.
+The `sha256sum` of the generated TAR.GZ archive should be `df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619`.
 
 ## Deterministic macOS DMG Notes
 
