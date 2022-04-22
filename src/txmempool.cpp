@@ -384,8 +384,9 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
         // and CTxMemPoolEntry::Children (which we need to preserve until we're
         // finished with all operations that need to traverse the mempool).
         for (txiter removeIt : entriesToRemove) {
+            setEntries iterSet{removeIt};
             setEntries setDescendants;
-            CalculateDescendants(removeIt, setDescendants);
+            CalculateDescendants(iterSet, setDescendants);
             setDescendants.erase(removeIt); // don't update state for self
             int64_t modifySize = -((int64_t)removeIt->GetTxSize());
             CAmount modifyFee = -removeIt->GetModifiedFee();
@@ -561,31 +562,34 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
 }
 
-// Calculates descendants of entry that are not already in setDescendants, and adds to
-// setDescendants. Assumes entryit is already a tx in the mempool and CTxMemPoolEntry::m_children
-// is correct for tx and all descendants.
+// Calculates descendants of iterSet and adds them to setDescendants. Assumes each txiter in the
+// set is already a tx in the mempool and CTxMemPoolEntry::m_children is correct for tx and all
+// descendants.
 // Also assumes that if an entry is in setDescendants already, then all
 // in-mempool descendants of it are already in setDescendants as well, so that we
 // can save time by not iterating over those entries.
-void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
+void CTxMemPool::CalculateDescendants(const setEntries& iterSet, setEntries& setDescendants) const
 {
-    setEntries stage;
-    if (setDescendants.count(entryit) == 0) {
-        stage.insert(entryit);
-    }
-    // Traverse down the children of entry, only adding children that are not
-    // accounted for in setDescendants already (because those children have either
-    // already been walked, or will be walked in this iteration).
-    while (!stage.empty()) {
-        txiter it = *stage.begin();
-        setDescendants.insert(it);
-        stage.erase(it);
+    WITH_FRESH_EPOCH(m_epoch);
 
-        const CTxMemPoolEntry::Children& children = it->GetMemPoolChildrenConst();
-        for (const CTxMemPoolEntry& child : children) {
-            txiter childiter = mapTx.iterator_to(child);
-            if (!setDescendants.count(childiter)) {
-                stage.insert(childiter);
+    for (txiter entryit : iterSet) {
+        setEntries stage;
+        if (!visited(entryit)) {
+            stage.insert(entryit);
+        }
+        // Traverse down the children of entryit, only adding children that have not
+        // been visited already.
+        while (!stage.empty()) {
+            txiter it = *stage.begin();
+            setDescendants.insert(it);
+            stage.erase(it);
+
+            const CTxMemPoolEntry::Children& children = it->GetMemPoolChildrenConst();
+            for (const CTxMemPoolEntry& child : children) {
+                txiter childiter = mapTx.iterator_to(child);
+                if (!visited(childiter)) {
+                    stage.insert(childiter);
+                }
             }
         }
     }
@@ -614,9 +618,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             }
         }
         setEntries setAllRemoves;
-        for (txiter it : txToRemove) {
-            CalculateDescendants(it, setAllRemoves);
-        }
+        CalculateDescendants(txToRemove, setAllRemoves);
 
         RemoveStaged(setAllRemoves, false, reason);
 }
@@ -632,9 +634,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
         if (check_final_and_mature(it)) txToRemove.insert(it);
     }
     setEntries setAllRemoves;
-    for (txiter it : txToRemove) {
-        CalculateDescendants(it, setAllRemoves);
-    }
+    CalculateDescendants(txToRemove, setAllRemoves);
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
@@ -930,8 +930,9 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
                 mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
             }
             // Now update all descendants' modified fees with ancestors
+            setEntries iterSet{it};
             setEntries setDescendants;
-            CalculateDescendants(it, setDescendants);
+            CalculateDescendants(iterSet, setDescendants);
             setDescendants.erase(it);
             for (txiter descendantIt : setDescendants) {
                 mapTx.modify(descendantIt, update_ancestor_state(0, nFeeDelta, 0, 0));
@@ -1054,9 +1055,7 @@ int CTxMemPool::Expire(std::chrono::seconds time)
         it++;
     }
     setEntries stage;
-    for (txiter removeit : toremove) {
-        CalculateDescendants(removeit, stage);
-    }
+    CalculateDescendants(toremove, stage);
     RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
     return stage.size();
 }
@@ -1141,8 +1140,9 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         trackPackageRemoved(removed);
         maxFeeRateRemoved = std::max(maxFeeRateRemoved, removed);
 
+        setEntries iterSet{mapTx.project<0>(it)};
         setEntries stage;
-        CalculateDescendants(mapTx.project<0>(it), stage);
+        CalculateDescendants(iterSet, stage);
         nTxnRemoved += stage.size();
 
         std::vector<CTransaction> txn;

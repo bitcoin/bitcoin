@@ -69,9 +69,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
         }
     }
     // Calculate the set of all transactions that would have to be evicted.
-    for (CTxMemPool::txiter it : iters_conflicting) {
-        pool.CalculateDescendants(it, all_conflicts);
-    }
+    pool.CalculateDescendants(iters_conflicting, all_conflicts);
     return std::nullopt;
 }
 
