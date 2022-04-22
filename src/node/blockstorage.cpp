@@ -19,6 +19,7 @@
 #include <streams.h>
 #include <undo.h>
 #include <util/syscall_sandbox.h>
+#include <util/system.h>
 #include <validation.h>
 
 namespace node {

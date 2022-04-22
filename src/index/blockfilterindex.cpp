@@ -8,6 +8,7 @@
 #include <index/blockfilterindex.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <util/system.h>
 
 using node::UndoReadFromDisk;
 

@@ -15,6 +15,7 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/moneystr.h>
+#include <util/system.h>
 #include <validation.h>
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;

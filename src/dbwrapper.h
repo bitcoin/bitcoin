@@ -7,11 +7,11 @@
 
 #include <clientversion.h>
 #include <fs.h>
+#include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>

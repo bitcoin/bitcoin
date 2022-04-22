@@ -18,6 +18,7 @@
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
+#include <util/system.h>
 
 #include <chrono>
 
