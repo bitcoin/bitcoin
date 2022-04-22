@@ -1092,7 +1092,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 
     // SYSCOIN push version and mn auth
     uint256 mnauthChallenge;
-    GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
+    GetRandBytes(mnauthChallenge);
     {
         LOCK(pnode.cs_mnauth);
         pnode.sentMNAuthChallenge = mnauthChallenge;
