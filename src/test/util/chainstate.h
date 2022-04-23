@@ -35,7 +35,7 @@ CreateAndActivateUTXOSnapshot(node::NodeContext& node, const fs::path root, F ma
     CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
 
     UniValue result = CreateUTXOSnapshot(
-        node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
+        UTXOSnapshotFormat::COMPACT, node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
     BOOST_TEST_MESSAGE(
         "Wrote UTXO snapshot to " << fs::PathToString(snapshot_path.make_preferred()) << ": " << result.write());
 

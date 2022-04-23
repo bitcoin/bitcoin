@@ -1339,6 +1339,11 @@ if test "$enable_fuzz_binary" = "yes"; then
   CHECK_RUNTIME_LIB
 fi
 
+dnl Check for sqlite3. We need to check if it's available regardless of whether wallet is enabled or not.
+if test "$use_sqlite" != "no"; then
+  PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.17], [have_sqlite=yes], [have_sqlite=no])
+fi
+
 if test "$enable_wallet" != "no"; then
     dnl Check for libdb_cxx only if wallet enabled
     if test "$use_bdb" != "no"; then
@@ -1348,10 +1353,7 @@ if test "$enable_wallet" != "no"; then
       fi
     fi
 
-    dnl Check for sqlite3
-    if test "$use_sqlite" != "no"; then
-      PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.17], [have_sqlite=yes], [have_sqlite=no])
-    fi
+    dnl Check if wallet should be built with sqlite support
     AC_MSG_CHECKING([whether to build wallet with support for sqlite])
     if test "$use_sqlite" = "no"; then
       use_sqlite=no
@@ -1375,6 +1377,19 @@ if test "$enable_wallet" != "no"; then
         fi
         enable_wallet=no
     fi
+elif test "$use_sqlite" == "yes"; then
+  dnl Check if we should build with sqlite for functionality independent of wallet
+  AC_MSG_CHECKING([whether to build with sqlite support without wallet])
+  if test "$have_sqlite" = "no"; then
+    AC_MSG_ERROR([sqlite support requested but cannot be built. Use --without-sqlite])
+    use_sqlite=no
+  else
+    AC_DEFINE([USE_SQLITE],[1],[Define if sqlite support should be compiled in])
+    use_sqlite=yes
+  fi
+else
+  dnl Wallet is disabled and we don't implicitly want to build with sqlite in this case, so disable it
+  use_sqlite=no
 fi
 
 if test "$use_usdt" != "no"; then
@@ -1999,9 +2014,9 @@ echo "  with experimental syscall sandbox support = $use_syscall_sandbox"
 echo "  with libs       = $build_bitcoin_libs"
 echo "  with wallet     = $enable_wallet"
 if test "$enable_wallet" != "no"; then
-    echo "    with sqlite   = $use_sqlite"
     echo "    with bdb      = $use_bdb"
 fi
+echo "  with sqlite     = $use_sqlite"
 echo "  with gui / qt   = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then
     echo "    with qr       = $use_qr"

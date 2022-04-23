@@ -48,11 +48,18 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_weight);
 
+/** File format type for CreateUTXOSnapshot() */
+enum class UTXOSnapshotFormat {
+    COMPACT,
+    SQLITE,
+};
+
 /**
  * Helper to create UTXO snapshots given a chainstate and a file handle.
  * @return a UniValue map containing metadata about the snapshot.
  */
 UniValue CreateUTXOSnapshot(
+    const UTXOSnapshotFormat format,
     node::NodeContext& node,
     CChainState& chainstate,
     CAutoFile& afile,

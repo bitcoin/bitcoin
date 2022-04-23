@@ -410,6 +410,9 @@ libbitcoin_node_a_SOURCES += wallet/init.cpp
 endif
 if !ENABLE_WALLET
 libbitcoin_node_a_SOURCES += dummywallet.cpp
+if USE_SQLITE
+libbitcoin_node_a_LIBADD = $(SQLITE_LIBS)
+endif
 endif
 
 if ENABLE_ZMQ

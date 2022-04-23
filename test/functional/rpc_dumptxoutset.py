@@ -5,6 +5,8 @@
 """Test the generation of UTXO snapshots using `dumptxoutset`.
 """
 
+import os
+
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -18,8 +20,8 @@ class DumptxoutsetTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def run_test(self):
-        """Test a trivial usage of the dumptxoutset RPC command."""
+    def test_compact_format(self):
+        self.log.info("Test compact format")
         node = self.nodes[0]
         mocktime = node.getblockheader(node.getblockhash(0))['time'] + 1
         node.setmocktime(mocktime)
@@ -56,6 +58,47 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_raises_rpc_error(
             -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path)
 
+
+    def test_sqlite_format(self):
+        self.log.info("Test sqlite format")
+        node = self.nodes[0]
+
+        FILENAME = 'txoutset.db'
+        out = node.dumptxoutset(FILENAME, 'sqlite')
+        expected_path = Path(node.datadir) / self.chain / FILENAME
+
+        assert expected_path.is_file()
+
+        assert_equal(out['coins_written'], 100)
+        assert_equal(out['base_height'], 100)
+        assert_equal(out['path'], str(expected_path))
+        # Blockhash should be deterministic based on mocked time.
+        assert_equal(
+            out['base_hash'],
+            '09abf0e7b510f61ca6cf33bab104e9ee99b3528b371d27a2d4b39abb800fba7e')
+
+        assert_equal(
+            out['txoutset_hash'], '1f7e3befd45dc13ae198dfbb22869a9c5c4196f8e9ef9735831af1288033f890')
+        assert_equal(out['nchaintx'], 101)
+
+        # Checking that no temporary file remains for a sqlite dump.
+        assert not os.path.exists(Path(node.datadir) / self.chain / (FILENAME + '.incomplete'))
+
+        # Specifying a path to an existing file will fail.
+        assert_raises_rpc_error(
+            -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME)
+
+    def test_sqlite_format_bad_path(self):
+        self.log.info("Test sqlite format with bad path")
+        node = self.nodes[0]
+        FILENAME = 'txoutset.db'
+        assert_raises_rpc_error(-32603, 'Unable to open database file', lambda: node.dumptxoutset('bad_path/' + FILENAME, 'sqlite'))
+
+    def run_test(self):
+        self.test_compact_format()
+        if self.is_sqlite_compiled():
+            self.test_sqlite_format()
+            self.test_sqlite_format_bad_path()
 
 if __name__ == '__main__':
     DumptxoutsetTest().main()

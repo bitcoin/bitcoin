@@ -31,6 +31,9 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#ifdef USE_SQLITE
+#include <sqlite3.h>
+#endif
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
@@ -2228,6 +2231,9 @@ static RPCHelpMan dumptxoutset()
         "Write the serialized UTXO set to disk.",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
+            {"format", RPCArg::Type::STR, RPCArg::Default{"compact"}, "The output file format to use\n"
+                                                                      "\"compact\" to output a compact binary serialized format\n"
+                                                                      "\"sqlite\" to output a SQLite database with table \"utxos\" and \"metadata\" (requires compiling with the wallet or configuring with SQLite support)"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -2241,7 +2247,8 @@ static RPCHelpMan dumptxoutset()
                 }
         },
         RPCExamples{
-            HelpExampleCli("dumptxoutset", "utxo.dat")
+            HelpExampleCli("dumptxoutset", "utxo.dat") +
+            HelpExampleCli("dumptxoutset", "\"utxo.db\" \"sqlite\"")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -2250,6 +2257,20 @@ static RPCHelpMan dumptxoutset()
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
     const fs::path temppath = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
+
+    UTXOSnapshotFormat format;
+    if (request.params[1].isNull() || request.params[1].get_str() == "compact") {
+        format = UTXOSnapshotFormat::COMPACT;
+    } else if (request.params[1].get_str() == "sqlite") {
+#ifndef USE_SQLITE
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Compiled without sqlite support (required for dumptxoutset 'sqlite' format)");
+#endif
+        format = UTXOSnapshotFormat::SQLITE;
+    } else {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            request.params[1].get_str() + " is not a valid format.");
+    }
 
     if (fs::exists(path)) {
         throw JSONRPCError(
@@ -2268,8 +2289,17 @@ static RPCHelpMan dumptxoutset()
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     UniValue result = CreateUTXOSnapshot(
-        node, node.chainman->ActiveChainstate(), afile, path, temppath);
-    fs::rename(temppath, path);
+        format, node, node.chainman->ActiveChainstate(), afile, path, temppath);
+
+    switch (format) {
+    case UTXOSnapshotFormat::COMPACT:
+        fs::rename(temppath, path);
+        break;
+    case UTXOSnapshotFormat::SQLITE:
+        afile.fclose();
+        fs::remove(temppath);
+        break;
+    }
 
     result.pushKV("path", path.u8string());
     return result;
@@ -2278,6 +2308,7 @@ static RPCHelpMan dumptxoutset()
 }
 
 UniValue CreateUTXOSnapshot(
+    const UTXOSnapshotFormat format,
     NodeContext& node,
     CChainState& chainstate,
     CAutoFile& afile,
@@ -2313,30 +2344,130 @@ UniValue CreateUTXOSnapshot(
         tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(stats.hashBlock));
     }
 
-    LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
-        tip->nHeight, tip->GetBlockHash().ToString(),
-        fs::PathToString(path), fs::PathToString(temppath)));
+    switch (format) {
+    case UTXOSnapshotFormat::COMPACT: {
+        LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
+                                   tip->nHeight, tip->GetBlockHash().ToString(),
+                                   fs::PathToString(path), fs::PathToString(temppath)));
+        SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
 
-    SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
+        afile << metadata;
 
-    afile << metadata;
+        COutPoint key;
+        Coin coin;
+        unsigned int iter{0};
 
-    COutPoint key;
-    Coin coin;
-    unsigned int iter{0};
+        while (pcursor->Valid()) {
+            if (iter % 5000 == 0) node.rpc_interruption_point();
+            ++iter;
+            if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
+                afile << key;
+                afile << coin;
+            }
 
-    while (pcursor->Valid()) {
-        if (iter % 5000 == 0) node.rpc_interruption_point();
-        ++iter;
-        if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            afile << key;
-            afile << coin;
+            pcursor->Next();
         }
 
-        pcursor->Next();
+        afile.fclose();
+        break;
     }
+    case UTXOSnapshotFormat::SQLITE: {
+#ifdef USE_SQLITE
+        LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to sqlite DB file %s",
+                                   tip->nHeight, tip->GetBlockHash().ToString(), fs::PathToString(path)));
 
-    afile.fclose();
+        sqlite3* db;
+        int ret;
+        std::string path_string = fs::PathToString(path);
+
+        if (!ContainsNoNUL(path_string)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid path");
+        }
+
+        ret = sqlite3_open(path_string.c_str(), &db);
+        if (ret != SQLITE_OK) {
+            sqlite3_close(db);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to open database file %s", path.u8string()));
+        }
+
+        // We have no need for rollbacks here, so we can set the `journal_mode` to 'off'. See: https://www.sqlite.org/pragma.html#pragma_journal_mode
+        ret = sqlite3_exec(db, "PRAGMA journal_mode=off;", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set 'journal_mode=off': %s\n", sqlite3_errstr(ret)));
+        }
+
+        // Create and populate 'metadata' table
+        ret = sqlite3_exec(db, "CREATE TABLE metadata(blockhash TEXT, blockheight INT);", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            sqlite3_close(db);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("SQLiteDatabase: Failed to create 'metadata' table: %s\n", sqlite3_errstr(ret)));
+        }
+        ret = sqlite3_exec(db, strprintf("INSERT INTO metadata VALUES ('%s', %d)", tip->GetBlockHash().ToString(), tip->nHeight).c_str(), nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            sqlite3_close(db);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("SQLiteDatabase: Failed to insert into 'metadata' table: %s\n", sqlite3_errstr(ret)));
+        }
+
+        const char* sql = "CREATE TABLE utxos(txid TEXT, vout INT, value INT, coinbase INT, height INT, scriptpubkey TEXT);";
+        ret = sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            sqlite3_close(db);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("SQLiteDatabase: Failed to create 'utxos' table: %s\n", sqlite3_errstr(ret)));
+        }
+
+        COutPoint key;
+        Coin coin;
+        unsigned int iter{0};
+
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, "INSERT INTO utxos VALUES (?, ?, ?, ?, ?, ?);", -1, &stmt, nullptr);
+
+        // Begin a transaction to wrap all INSERTs
+        ret = sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            sqlite3_close(db);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("SQLiteDatabase: Failed to begin transaction: %s\n", sqlite3_errstr(ret)));
+        }
+
+        while (pcursor->Valid()) {
+            if (iter % 5000 == 0) node.rpc_interruption_point();
+            ++iter;
+            if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
+                std::string prevouthash_hex{key.hash.GetHex()};
+                std::string scriptpubkey_hex{HexStr(coin.out.scriptPubKey)};
+
+                sqlite3_bind_text(stmt, 1, prevouthash_hex.c_str(), prevouthash_hex.size(), SQLITE_TRANSIENT);
+                sqlite3_bind_int(stmt, 2, key.n);
+                sqlite3_bind_int64(stmt, 3, coin.out.nValue);
+                sqlite3_bind_int(stmt, 4, coin.fCoinBase);
+                sqlite3_bind_int(stmt, 5, coin.nHeight);
+                sqlite3_bind_text(stmt, 6, scriptpubkey_hex.c_str(), scriptpubkey_hex.size(), SQLITE_TRANSIENT);
+
+                int retVal = sqlite3_step(stmt);
+                if (retVal != SQLITE_DONE) {
+                    throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("SQLiteDatabase: Failed to commit step: %s\n", sqlite3_errstr(ret)));
+                }
+
+                sqlite3_clear_bindings(stmt);
+                sqlite3_reset(stmt);
+            }
+
+            pcursor->Next();
+        }
+
+        // Commit transaction
+        ret = sqlite3_exec(db, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            sqlite3_close(db);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("SQLiteDatabase: Failed to commit transaction: %s\n", sqlite3_errstr(ret)));
+        }
+
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+#endif
+        break;
+    }
+    }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("coins_written", stats.coins_count);
