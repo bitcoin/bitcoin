@@ -20,6 +20,9 @@ namespace interfaces {
 class Chain;
 class Handler;
 }
+namespace util {
+class Ref;
+} // namespace util
 
 //! Pointer to chain interface that needs to be declared as a global to be
 //! accessible loadwallet and createwallet methods. Due to limitations of the

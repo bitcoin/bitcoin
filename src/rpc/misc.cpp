@@ -20,6 +20,7 @@
 #include <script/descriptor.h>
 #include <txmempool.h>
 #include <util/check.h>
+#include <util/ref.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
@@ -101,7 +102,8 @@ static UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
+        NodeContext& node = EnsureNodeContext(request.context);
+        masternodeSync.SwitchToNextAsset(*node.connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
@@ -165,14 +167,15 @@ static UniValue spork(const JSONRPCRequest& request)
         if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
-        if (!g_rpc_node->connman)
+        NodeContext& node = EnsureNodeContext(request.context);
+        if (!node.connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_rpc_node->connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)){
             return "success";
         } else {
                 RPCHelpMan{"spork",
@@ -528,8 +531,8 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VNUM});
     int64_t time = request.params[0].get_int64();
     SetMockTime(time);
-    if (g_rpc_node) {
-        for (const auto& chain_client : g_rpc_node->chain_clients) {
+    if (request.context.Has<NodeContext>()) {
+        for (const auto& chain_client : request.context.Get<NodeContext>().chain_clients) {
             chain_client->setMockTime(time);
         }
     }
@@ -566,7 +569,8 @@ static UniValue mnauth(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }
 
-    bool fSuccess = g_rpc_node->connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
+    NodeContext& node = EnsureNodeContext(request.context);
+    bool fSuccess = node.connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
         pNode->SetVerifiedProRegTxHash(proTxHash);
         pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
         return true;
@@ -1089,9 +1093,10 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
     }
 
     // protect against null pointer dereference
-    CHECK_NONFATAL(g_rpc_node);
-    CHECK_NONFATAL(g_rpc_node->scheduler);
-    g_rpc_node->scheduler->MockForward(std::chrono::seconds(delta_seconds));
+    CHECK_NONFATAL(request.context.Has<NodeContext>());
+    NodeContext& node = request.context.Get<NodeContext>();
+    CHECK_NONFATAL(node.scheduler);
+    node.scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
     return NullUniValue;
 }
