@@ -4474,6 +4474,9 @@ void Chainstate::LoadExternalBlockFile(
                 // next block, but it's still possible to rewind to the start of the current block (without a disk read).
                 nRewind = nBlockPos + nSize;
                 blkdat.SkipTo(nRewind);
+
+                std::shared_ptr<CBlock> pblock{}; // needs to remain available after the cs_main lock is released to avoid duplicate reads from disk
+
                 {
                     LOCK(cs_main);
                     // detect out of order blocks, and store them for later
@@ -4491,7 +4494,7 @@ void Chainstate::LoadExternalBlockFile(
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
                         // This block can be processed immediately; rewind to its start, read and deserialize it.
                         blkdat.SetPos(nBlockPos);
-                        std::shared_ptr<CBlock> pblock{std::make_shared<CBlock>()};
+                        pblock = std::make_shared<CBlock>();
                         blkdat >> *pblock;
                         nRewind = blkdat.GetPos();
 
@@ -4511,6 +4514,21 @@ void Chainstate::LoadExternalBlockFile(
                 if (hash == params.GetConsensus().hashGenesisBlock) {
                     BlockValidationState state;
                     if (!ActivateBestChain(state, nullptr)) {
+                        break;
+                    }
+                }
+
+                if (m_blockman.IsPruneMode() && !fReindex && pblock) {
+                    // must update the tip for pruning to work while importing with -loadblock.
+                    // this is a tradeoff to conserve disk space at the expense of time
+                    // spent updating the tip to be able to prune.
+                    // otherwise, ActivateBestChain won't be called by the import process
+                    // until after all of the block files are loaded. ActivateBestChain can be
+                    // called by concurrent network message processing. but, that is not
+                    // reliable for the purpose of pruning while importing.
+                    BlockValidationState state;
+                    if (!ActivateBestChain(state, pblock)) {
+                        LogPrint(BCLog::REINDEX, "failed to activate chain (%s)\n", state.ToString());
                         break;
                     }
                 }
