@@ -51,7 +51,7 @@ static std::vector<CTransactionRef> CreateOrderedCoins(FastRandomContext& det_ra
         size_t n_ancestors = det_rand.randrange(10)+1;
         for (size_t ancestor = 0; ancestor < n_ancestors && !available_coins.empty(); ++ancestor){
             size_t idx = det_rand.randrange(available_coins.size());
-            Available coin = available_coins[idx];
+            Available& coin = available_coins[idx];
             uint256 hash = coin.ref->GetHash();
             // biased towards taking min_ancestors parents, but maybe more
             size_t n_to_take = det_rand.randrange(2) == 0 ?
@@ -63,7 +63,7 @@ static std::vector<CTransactionRef> CreateOrderedCoins(FastRandomContext& det_ra
                 tx.vin.back().scriptSig = CScript() << coin.tx_count;
                 tx.vin.back().scriptWitness.stack.push_back(CScriptNum(coin.tx_count).getvch());
             }
-            if (coin.vin_left == coin.ref->vin.size()) {
+            if (coin.vin_left == coin.ref->vout.size()) {
                 coin = available_coins.back();
                 available_coins.pop_back();
             }
