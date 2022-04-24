@@ -750,11 +750,11 @@ case $host in
              if test "$use_upnp" != "no" && $BREW list --versions miniupnpc >/dev/null; then
                miniupnpc_prefix=$($BREW --prefix miniupnpc 2>/dev/null)
                if test "$suppress_external_warnings" != "no"; then
-                 CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $miniupnpc_prefix/include"
+                 MINIUPNPC_CPPFLAGS="-isystem $miniupnpc_prefix/include"
                else
-                 CORE_CPPFLAGS="$CORE_CPPFLAGS -I$miniupnpc_prefix/include"
+                 MINIUPNPC_CPPFLAGS="-I$miniupnpc_prefix/include"
                fi
-               CORE_LDFLAGS="$CORE_LDFLAGS -L$miniupnpc_prefix/lib"
+               MINIUPNPC_LIBS="-L$miniupnpc_prefix/lib"
              fi
              if test "$use_natpmp" != "no" && $BREW list --versions libnatpmp >/dev/null; then
                libnatpmp_prefix=$($BREW --prefix libnatpmp 2>/dev/null)
@@ -1392,9 +1392,11 @@ fi
 
 dnl Check for libminiupnpc (optional)
 if test "$use_upnp" != "no"; then
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $MINIUPNPC_CPPFLAGS"
   AC_CHECK_HEADERS(
     [miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
-    [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
+    [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS="$MINIUPNPC_LIBS -lminiupnpc"], [have_miniupnpc=no], [$MINIUPNPC_LIBS])],
     [have_miniupnpc=no]
   )
   dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
@@ -1417,6 +1419,7 @@ if test "$use_upnp" != "no"; then
       have_miniupnpc=no
     ])
   fi
+  CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 dnl Check for libnatpmp (optional).
@@ -1721,7 +1724,7 @@ else
     AC_MSG_RESULT([$use_upnp_default])
     AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test "$TARGET_OS" = "windows"; then
-      MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"
+      MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"
     fi
   else
     AC_MSG_RESULT([no])
