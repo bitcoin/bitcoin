@@ -394,7 +394,7 @@ static RPCHelpMan maxmempool()
     CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
 
-    int64_t nMempoolSizeMin = mempool.m_opts.limits.descendant_size_vbytes * 40;
+    int64_t nMempoolSizeMin = maxmempoolMinimumBytes(mempool.m_opts.limits.descendant_size_vbytes);
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("MaxMempool size %d is too small", nSize));
     mempool.m_opts.max_size_bytes = nSize;
