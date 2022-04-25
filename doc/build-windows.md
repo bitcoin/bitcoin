@@ -91,9 +91,12 @@ For further documentation on the depends system see [README.md](../depends/READM
 
 Please download the installer here: http://msys2.github.io/
 
-Execute:
+#### Execute:
+```bash
   C:\msys64\msys2.exe
+```
 
+```bash
 pacman -Sy
 pacman -Su
 pacman -S base-devel gcc vim cmake
@@ -105,12 +108,15 @@ pacman -S mingw-w64-{i686,x86_64}-crt-git
 pacman -S mingw-w64-{i686,x86_64}-libevent
 pacman -S mingw-w64-{i686,x86_64}-db mingw-w64-{i686,x86_64}-leveldb
 pacman -S mingw-w64-{i686,x86_64}-miniupnpc
+```
 
-Execute:
+#### Execute:
+```bash
   C:\msys64\mingw64.exe
+```
 
-Build using:
-
+### Build using:
+```bash
 ./autogen.sh
 
 ./configure \
@@ -123,6 +129,11 @@ Build using:
 make -J 
 
 make check
+```
+
+### Credits
+
+- blockchain-foundry [bitcoin-dependencies](https://github.com/blockchain-foundry/bitcoin-dependencies)
 
 Installation
 -------------
