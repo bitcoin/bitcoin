@@ -102,7 +102,7 @@ Please download the installer here: http://msys2.github.io/
   pacman -Su
   pacman -S base-devel gcc vim cmake git mingw-w64-{x86_64,i686}-nsis
   pacman -S --needed filesystem msys2-runtime bash libreadline libiconv libarchive libgpgme libcurl pacman ncurses libintl
-  pacman -S make autoconf autotools automake libtool pkg-config autotools-dev pkg-config 
+  pacman -S make autoconf autotools automake libtool pkg-config autotools-dev pkg-config
   pacman -S mingw-w64-{i686,x86_64}-toolchain mingw-w64-{i686,x86_64}-pkgconf
   pacman -S mingw-w64-{i686,x86_64}-{boost,protobuf}
   pacman -S mingw-w64-{i686,x86_64}-crt-git
@@ -127,7 +127,7 @@ Please download the installer here: http://msys2.github.io/
       --without-gui \
       --with-qrencode
 
-  make -J 
+  make -J
 
   make check
 ```
