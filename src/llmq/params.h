@@ -262,7 +262,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 40,
+        .dkgBadVotesThreshold = 48,
 
         .signingActiveQuorumCount = 32,
         .keepOldConnections = 33,
