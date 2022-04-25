@@ -15,12 +15,19 @@ import unittest
 class TestRPCAuth(unittest.TestCase):
     def setUp(self):
         config = configparser.ConfigParser()
-        config_path = os.path.abspath(
-            os.path.join(os.sep, os.path.abspath(os.path.dirname(__file__)),
-            "../config.ini"))
+        directory = os.path.abspath(os.path.dirname(__file__))
+        config_path = os.path.abspath(os.path.join(os.sep, directory, "../config.ini"))
         with open(config_path, encoding="utf8") as config_file:
             config.read_file(config_file)
-        sys.path.insert(0, os.path.dirname(config['environment']['RPCAUTH']))
+
+        sys.path.insert(0, directory)
+        path_helper = importlib.import_module('path_helper')
+
+        rpcauth_dir = path_helper.posix2windows(config['environment']['RPCAUTH'])
+        rpcauth_dir = os.path.dirname(rpcauth_dir)
+        rpcauth_dir = os.path.abspath(rpcauth_dir)
+
+        sys.path.insert(0, rpcauth_dir)
         self.rpcauth = importlib.import_module('rpcauth')
 
     def test_generate_salt(self):

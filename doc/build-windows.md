@@ -87,6 +87,43 @@ Build using:
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
+## Building for 64-bit Windows with msys2
+
+Please download the installer here: http://msys2.github.io/
+
+Execute:
+  C:\msys64\msys2.exe
+
+pacman -Sy
+pacman -Su
+pacman -S base-devel gcc vim cmake
+pacman -S --needed filesystem msys2-runtime bash libreadline libiconv libarchive libgpgme libcurl pacman ncurses libintl
+pacman -S make autoconf autotools automake libtool pkg-config autotools-dev pkg-config 
+pacman -S mingw-w64-{i686,x86_64}-toolchain mingw-w64-{i686,x86_64}-pkgconf
+pacman -S mingw-w64-{i686,x86_64}-{boost,protobuf}
+pacman -S mingw-w64-{i686,x86_64}-crt-git
+pacman -S mingw-w64-{i686,x86_64}-libevent
+pacman -S mingw-w64-{i686,x86_64}-db mingw-w64-{i686,x86_64}-leveldb
+pacman -S mingw-w64-{i686,x86_64}-miniupnpc
+
+Execute:
+  C:\msys64\mingw64.exe
+
+Build using:
+
+./autogen.sh
+
+./configure \
+    --with-gui=no \
+    --without-miniupnpc \
+    --without-bdb \
+    --without-gui \
+    --with-qrencode
+
+make -J 
+
+make check
+
 Installation
 -------------
 
