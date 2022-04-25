@@ -65,9 +65,9 @@ std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLM
         }
         /*
          * Quorums created with rotation are now created in a different way. All signingActiveQuorumCount are created during the period of dkgInterval.
-         * But they are not created exactly in the same block, they are spreaded overtime: one quorum in each block until all signingActiveQuorumCount are created.
+         * But they are not created exactly in the same block, they are spread overtime: one quorum in each block until all signingActiveQuorumCount are created.
          * The new concept of quorumIndex is introduced in order to identify them.
-         * In every dkgInterval blocks (also called CycleQuorumBaseBlock), the spreaded quorum creation starts like this:
+         * In every dkgInterval blocks (also called CycleQuorumBaseBlock), the spread quorum creation starts like this:
          * For quorumIndex = 0 : signingActiveQuorumCount
          * Quorum Q with quorumIndex is created at height CycleQuorumBaseBlock + quorumIndex
          */

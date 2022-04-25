@@ -210,7 +210,7 @@ public:
 
     /**
      * Execute a callback on all masternodes in the mnList. This will pass a reference
-     * of each masternode to the callback function. This should be prefered over ForEachMNShared.
+     * of each masternode to the callback function. This should be preferred over ForEachMNShared.
      * @param onlyValid Run on all masternodes, or only "valid" (not banned) masternodes
      * @param cb callback to execute
      */
