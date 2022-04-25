@@ -9,7 +9,6 @@ feature_llmq_rotation.py
 Checks LLMQs Quorum Rotation
 
 '''
-import time
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
@@ -127,21 +126,6 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.nodes[0].reconsiderblock(fallback_blockhash)
         wait_until(lambda: self.nodes[0].getbestblockhash() == new_quorum_blockhash, sleep=1)
         assert_equal(self.nodes[0].quorum("list", llmq_type), new_quorum_list)
-
-    def move_to_next_cycle(self):
-        cycle_length = 24
-        mninfos_online = self.mninfo.copy()
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-        cur_block = self.nodes[0].getblockcount()
-
-        # move forward to next DKG
-        skip_count = cycle_length - (cur_block % cycle_length)
-        if skip_count != 0:
-            self.bump_mocktime(1, nodes=nodes)
-            self.nodes[0].generate(skip_count)
-        sync_blocks(nodes)
-        time.sleep(1)
-        self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
 
 if __name__ == '__main__':
