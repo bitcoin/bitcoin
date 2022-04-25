@@ -246,13 +246,6 @@ AC_ARG_WITH([system-univalue],
   [system_univalue=$withval],
   [system_univalue=no]
 )
-
-AC_ARG_WITH([openssl],
-  [AS_HELP_STRING([--with-openssl],
-  [enable openssl (default is yes if OpenSSL is found)])],
-  [use_openssl=$withval],
-  [use_openssl=yes])
-
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
   [disable ZMQ notifications])],
@@ -689,14 +682,12 @@ case $host in
          dnl It's safe to add these paths even if the functionality is disabled by
          dnl the user (--without-wallet or --without-gui for example).
 
+         openssl_prefix=`$BREW --prefix openssl 2>/dev/null`
          bdb_prefix=`$BREW --prefix berkeley-db4 2>/dev/null`
          qt5_prefix=`$BREW --prefix qt5 2>/dev/null`
-         if test x$use_openssl != xno; then
-           openssl_prefix=`$BREW --prefix openssl 2>/dev/null`
-           if test x$openssl_prefix != x; then
-             PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-             export PKG_CONFIG_PATH
-           fi
+         if test x$openssl_prefix != x; then
+           PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+           export PKG_CONFIG_PATH
          fi
          if test x$bdb_prefix != x; then
            CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
@@ -1227,7 +1218,6 @@ if test "x$enable_fuzz" = "xyes"; then
   bitcoin_enable_qt_dbus=no
   enable_wallet=no
   use_bench=no
-  use_openssl=no
   use_upnp=no
   use_natpmp=no
   use_zmq=no
@@ -1439,9 +1429,7 @@ if test x$use_pkgconfig = xyes; then
   m4_ifdef(
     [PKG_CHECK_MODULES],
     [
-      if test x$use_openssl != xno; then
-        PKG_CHECK_MODULES([CRYPTO], [libcrypto],, [use_openssl=no])
-      fi
+      PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
       if test x$use_qr != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
@@ -1464,10 +1452,8 @@ if test x$use_pkgconfig = xyes; then
     ]
   )
 else
-  if test x$use_openssl != xno; then
-    AC_CHECK_HEADER([openssl/crypto.h],,[use_openssl=no])
-    AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS=-lcrypto, [use_openssl=no])
-  fi
+  AC_CHECK_HEADER([openssl/crypto.h],,AC_MSG_ERROR(libcrypto headers missing))
+  AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS=-lcrypto, AC_MSG_ERROR(libcrypto missing))
 
   if test x$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
@@ -1711,10 +1697,6 @@ if test x$bitcoin_enable_qt != xno; then
   fi
 fi
 
-if test x$use_openssl = xyes; then
-  AC_DEFINE([USE_OPENSSL],[1],[Define to 1 to use OpenSSL])
-fi
-
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
 AC_MSG_CHECKING([whether to build test_dash])
@@ -1896,7 +1878,6 @@ echo "  with gui / qt       = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then
     echo "    with qr           = $use_qr"
 fi
-echo "  with openssl        = $use_openssl"
 echo "  with zmq            = $use_zmq"
 echo "  with test           = $use_tests"
 echo "  with bench          = $use_bench"

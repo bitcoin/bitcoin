@@ -1,6 +1,4 @@
-packages:=boost libevent gmp bls-dash backtrace cmake immer
-
-openssl_packages = openssl
+packages:=boost openssl libevent gmp bls-dash backtrace cmake immer
 
 qt_packages = qrencode zlib
 

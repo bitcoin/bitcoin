@@ -44,10 +44,8 @@
 #include <cpuid.h>
 #endif
 
-#if USE_OPENSSL
 #include <openssl/rand.h>
 #include <openssl/conf.h>
-#endif
 
 [[noreturn]] static void RandFailure()
 {
@@ -402,9 +400,7 @@ void GetOSRand(unsigned char *ent32)
 #endif
 }
 
-#if USE_OPENSSL
 void LockingCallbackOpenSSL(int mode, int i, const char* file, int line);
-#endif
 
 namespace {
 
@@ -428,7 +424,6 @@ public:
     {
         InitHardwareRand();
 
-#if USE_OPENSSL
         // Init OpenSSL library multithreading support
         m_mutex_openssl.reset(new Mutex[CRYPTO_num_locks()]);
         CRYPTO_set_locking_callback(LockingCallbackOpenSSL);
@@ -439,17 +434,14 @@ public:
         // or corrupt. Explicitly tell OpenSSL not to try to load the file. The result for our libs will be
         // that the config appears to have been loaded and there are no modules/engines available.
         OPENSSL_no_config();
-#endif
     }
 
     ~RNGState()
     {
-#if USE_OPENSSL
         // Securely erase the memory used by the OpenSSL PRNG
         RAND_cleanup();
         // Shutdown OpenSSL library multithreading support
         CRYPTO_set_locking_callback(nullptr);
-#endif
     }
 
     /** Extract up to 32 bytes of entropy from the RNG state, mixing in new entropy from hasher.
@@ -486,9 +478,7 @@ public:
         return ret;
     }
 
-#if USE_OPENSSL
     Mutex& GetOpenSSLMutex(int i) { return m_mutex_openssl[i]; }
-#endif
 };
 
 RNGState& GetRNGState() noexcept
@@ -500,7 +490,6 @@ RNGState& GetRNGState() noexcept
 }
 }
 
-#if USE_OPENSSL
 void LockingCallbackOpenSSL(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
 {
     RNGState& rng = GetRNGState();
@@ -511,7 +500,6 @@ void LockingCallbackOpenSSL(int mode, int i, const char* file, int line) NO_THRE
         rng.GetOpenSSLMutex(i).unlock();
     }
 }
-#endif
 
 /* A note on the use of noexcept in the seeding functions below:
  *
@@ -550,11 +538,9 @@ static void SeedSlow(CSHA512& hasher) noexcept
     GetOSRand(buffer);
     hasher.Write(buffer, sizeof(buffer));
 
-#if USE_OPENSSL
     // OpenSSL RNG (for now)
     RAND_bytes(buffer, sizeof(buffer));
     hasher.Write(buffer, sizeof(buffer));
-#endif
 
     // High-precision timestamp.
     //
@@ -649,7 +635,6 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level)
         rng.MixExtract(out, num, std::move(startup_hasher), true);
     }
 
-#if USE_OPENSSL
     // For anything but the 'fast' level, feed the resulting RNG output (after an additional hashing step) back into OpenSSL.
     if (level != RNGLevel::FAST) {
         unsigned char buf[64];
@@ -657,7 +642,6 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level)
         RAND_add(buf, sizeof(buf), num);
         memory_cleanse(buf, 64);
     }
-#endif
 }
 
 std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept
