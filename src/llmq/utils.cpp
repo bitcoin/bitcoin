@@ -351,69 +351,77 @@ void CLLMQUtils::BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, co
 
 std::vector<std::vector<CDeterministicMNCPtr>> CLLMQUtils::GetQuorumQuarterMembersBySnapshot(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const llmq::CQuorumSnapshot& snapshot, int nHeight)
 {
-    auto numQuorums = static_cast<size_t>(llmqParams.signingActiveQuorumCount);
-    auto quorumSize = static_cast<size_t>(llmqParams.size);
+    std::vector<CDeterministicMNCPtr> sortedCombinedMns;
+    {
+        const CBlockIndex* pWorkBlockIndex = pQuorumBaseBlockIndex->GetAncestor(pQuorumBaseBlockIndex->nHeight - 8);
+        const auto modifier = ::SerializeHash(std::make_pair(llmqParams.type, pWorkBlockIndex->GetBlockHash()));
+        const auto [MnsUsedAtH, MnsNotUsedAtH] = CLLMQUtils::GetMNUsageBySnapshot(llmqParams.type, pQuorumBaseBlockIndex, snapshot, nHeight);
+        // the list begins with all the unused MNs
+        auto sortedMnsNotUsedAtH = MnsNotUsedAtH.CalculateQuorum(MnsNotUsedAtH.GetAllMNsCount(), modifier);
+        sortedCombinedMns = std::move(sortedMnsNotUsedAtH);
+        // Now add the already used MNs to the end of the list
+        auto sortedMnsUsedAtH = MnsUsedAtH.CalculateQuorum(MnsUsedAtH.GetAllMNsCount(), modifier);
+        std::move(sortedMnsUsedAtH.begin(), sortedMnsUsedAtH.end(), std::back_inserter(sortedCombinedMns));
+    }
+
+    if (sortedCombinedMns.empty()) return {};
+
+    auto numQuorums = size_t(llmqParams.signingActiveQuorumCount);
+    auto quorumSize = size_t(llmqParams.size);
     auto quarterSize = quorumSize / 4;
 
     std::vector<std::vector<CDeterministicMNCPtr>> quarterQuorumMembers(numQuorums);
 
-    const CBlockIndex* pWorkBlockIndex = pQuorumBaseBlockIndex->GetAncestor(pQuorumBaseBlockIndex->nHeight - 8);
-    auto modifier = ::SerializeHash(std::make_pair(llmqParams.type, pWorkBlockIndex->GetBlockHash()));
-
-    auto [MnsUsedAtH, MnsNotUsedAtH] = CLLMQUtils::GetMNUsageBySnapshot(llmqParams.type, pQuorumBaseBlockIndex, snapshot, nHeight);
-
-    auto sortedMnsUsedAtH = MnsUsedAtH.CalculateQuorum(MnsUsedAtH.GetAllMNsCount(), modifier);
-    auto sortedMnsNotUsedAtH = MnsNotUsedAtH.CalculateQuorum(MnsNotUsedAtH.GetAllMNsCount(), modifier);
-    auto sortedCombinedMns = std::move(sortedMnsNotUsedAtH);
-    for (auto& m : sortedMnsUsedAtH) {
-        sortedCombinedMns.push_back(std::move(m));
-    }
-
-    //Mode 0: No skipping
-    if (snapshot.mnSkipListMode == SnapshotSkipMode::MODE_NO_SKIPPING) {
-        auto itm = sortedCombinedMns.begin();
-        for (auto i = 0; i < llmqParams.signingActiveQuorumCount; ++i) {
-            while (quarterQuorumMembers[i].size() < quarterSize) {
-                quarterQuorumMembers[i].push_back(*itm);
-                itm++;
-                if (itm == sortedCombinedMns.end())
-                    itm = sortedCombinedMns.begin();
+    switch (snapshot.mnSkipListMode) {
+        case SnapshotSkipMode::MODE_NO_SKIPPING:
+        {
+            auto itm = sortedCombinedMns.begin();
+            for (auto i = 0; i < llmqParams.signingActiveQuorumCount; ++i) {
+                while (quarterQuorumMembers[i].size() < quarterSize) {
+                    quarterQuorumMembers[i].push_back(*itm);
+                    itm++;
+                    if (itm == sortedCombinedMns.end()) {
+                        itm = sortedCombinedMns.begin();
+                    }
+                }
             }
+            return quarterQuorumMembers;
         }
-    }
-    //Mode 1: List holds entries to be skipped
-    else if (snapshot.mnSkipListMode == SnapshotSkipMode::MODE_SKIPPING_ENTRIES) {
-        size_t first_entry_index = {};
-        std::vector<int> processesdSkipList;
-        for (const auto& s : snapshot.mnSkipList) {
-            if (first_entry_index == 0) {
-                first_entry_index = s;
-                processesdSkipList.push_back(s);
-            } else
-                processesdSkipList.push_back(first_entry_index + s);
-        }
-
-        auto idx = 0;
-        auto itsk = processesdSkipList.begin();
-        for (auto i = 0; i < llmqParams.signingActiveQuorumCount; ++i) {
-            while (quarterQuorumMembers[i].size() < quarterSize) {
-                if (itsk != processesdSkipList.end() && idx == *itsk)
-                    itsk++;
-                else
-                    quarterQuorumMembers[i].push_back(sortedCombinedMns[idx]);
-                idx++;
-                if (idx == sortedCombinedMns.size())
-                    idx = 0;
+        case SnapshotSkipMode::MODE_SKIPPING_ENTRIES: // List holds entries to be skipped
+        {
+            size_t first_entry_index{0};
+            std::vector<int> processesdSkipList;
+            for (const auto& s : snapshot.mnSkipList) {
+                if (first_entry_index == 0) {
+                    first_entry_index = s;
+                    processesdSkipList.push_back(s);
+                } else {
+                    processesdSkipList.push_back(first_entry_index + s);
+                }
             }
-        }
-    }
-    //Mode 2: List holds entries to be kept
-    else if (snapshot.mnSkipListMode == SnapshotSkipMode::MODE_NO_SKIPPING_ENTRIES) {
-        //TODO Mode 2 will be written. Not used now
-    }
-    //Mode 3: Every node was skipped. Returning empty quarterQuorumMembers
 
-    return quarterQuorumMembers;
+            auto idx = 0;
+            auto itsk = processesdSkipList.begin();
+            for (auto i = 0; i < llmqParams.signingActiveQuorumCount; ++i) {
+                while (quarterQuorumMembers[i].size() < quarterSize) {
+                    if (itsk != processesdSkipList.end() && idx == *itsk) {
+                        itsk++;
+                    } else {
+                        quarterQuorumMembers[i].push_back(sortedCombinedMns[idx]);
+                    }
+                    idx++;
+                    if (idx == sortedCombinedMns.size()) {
+                        idx = 0;
+                    }
+                }
+            }
+            return quarterQuorumMembers;
+        }
+        case SnapshotSkipMode::MODE_NO_SKIPPING_ENTRIES: // List holds entries to be kept
+        case SnapshotSkipMode::MODE_ALL_SKIPPED: // Every node was skipped. Returning empty quarterQuorumMembers
+        default:
+            return {};
+    }
 }
 
 std::pair<CDeterministicMNList, CDeterministicMNList> CLLMQUtils::GetMNUsageBySnapshot(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const llmq::CQuorumSnapshot& snapshot, int nHeight)
