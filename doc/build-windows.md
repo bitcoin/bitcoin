@@ -87,7 +87,8 @@ Build using:
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
-## Building for 64-bit Windows with msys2
+Compilation for 64-bit Windows with msys2
+------------------------------------------------------------
 
 Please download the installer here: http://msys2.github.io/
 
@@ -96,7 +97,7 @@ Please download the installer here: http://msys2.github.io/
   C:\msys64\msys2.exe
 ```
 
-### Install
+#### Install
 ```bash
   pacman -Sy
   pacman -Su
@@ -116,7 +117,7 @@ Please download the installer here: http://msys2.github.io/
   C:\msys64\mingw64.exe
 ```
 
-### Build using:
+#### Build using:
 ```bash
   ./autogen.sh
 
@@ -132,7 +133,7 @@ Please download the installer here: http://msys2.github.io/
   make check
 ```
 
-### Credits
+#### Credits
 
 - blockchain-foundry [bitcoin-dependencies](https://github.com/blockchain-foundry/bitcoin-dependencies)
 
