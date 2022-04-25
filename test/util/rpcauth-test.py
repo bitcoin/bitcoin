@@ -11,6 +11,7 @@ import importlib
 import os
 import sys
 import unittest
+from path_helper import posix2windows
 
 class TestRPCAuth(unittest.TestCase):
     def setUp(self):
@@ -20,10 +21,7 @@ class TestRPCAuth(unittest.TestCase):
         with open(config_path, encoding="utf8") as config_file:
             config.read_file(config_file)
 
-        sys.path.insert(0, directory)
-        path_helper = importlib.import_module('path_helper')
-
-        rpcauth_dir = path_helper.posix2windows(config['environment']['RPCAUTH'])
+        rpcauth_dir = posix2windows(config['environment']['RPCAUTH'])
         rpcauth_dir = os.path.dirname(rpcauth_dir)
         rpcauth_dir = os.path.abspath(rpcauth_dir)
 
