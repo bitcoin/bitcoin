@@ -23,9 +23,14 @@ import importlib
 directory = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, directory)
 
-importlib.invalidate_caches()
-path_helper = importlib.import_module('path_helper')
-posix2windows = path_helper.posix2windows
+posix2windows = lambda filename: filename
+
+try:
+    importlib.invalidate_caches()
+    path_helper = importlib.import_module('path_helper')
+    posix2windows = path_helper.posix2windows
+except Exception as e:
+    print(sys.path)
 
 def main():
     config = configparser.ConfigParser()

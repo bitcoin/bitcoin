@@ -12,6 +12,8 @@ import os
 import sys
 import unittest
 
+posix2windows = lambda filename: filename
+
 class TestRPCAuth(unittest.TestCase):
     def setUp(self):
         config = configparser.ConfigParser()
@@ -22,10 +24,17 @@ class TestRPCAuth(unittest.TestCase):
 
         sys.path.insert(0, directory)
 
+        try:
+            importlib.invalidate_caches()
+            path_helper = importlib.import_module('path_helper')
+            posix2windows = path_helper.posix2windows
+        except Exception as e:
+            print(sys.path)
+
         importlib.invalidate_caches()
         path_helper = importlib.import_module('path_helper')
 
-        rpcauth_dir = path_helper.posix2windows(config['environment']['RPCAUTH'])
+        rpcauth_dir = posix2windows(config['environment']['RPCAUTH'])
         rpcauth_dir = os.path.dirname(rpcauth_dir)
         rpcauth_dir = os.path.abspath(rpcauth_dir)
 
