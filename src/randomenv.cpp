@@ -38,11 +38,6 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-#endif
 #if HAVE_DECL_GETIFADDRS
 #include <ifaddrs.h>
 #endif
@@ -58,7 +53,7 @@
 #include <sys/vmmeter.h>
 #endif
 #endif
-#ifdef __linux__
+#if defined(HAVE_STRONG_GETAUXVAL) || defined(HAVE_WEAK_GETAUXVAL)
 #include <sys/auxv.h>
 #endif
 
@@ -72,7 +67,8 @@ void RandAddSeedPerfmon(CSHA512& hasher)
 #ifdef WIN32
     // Seed with the entire set of perfmon data
 
-    // This can take up to 2 seconds, so only do it every 10 minutes
+    // This can take up to 2 seconds, so only do it every 10 minutes.
+    // Initialize last_perfmon to 0 seconds, we don't skip the first call.
     static std::atomic<std::chrono::seconds> last_perfmon{std::chrono::seconds{0}};
     auto last_time = last_perfmon.load();
     auto current_time = GetTime<std::chrono::seconds>();
@@ -88,7 +84,7 @@ void RandAddSeedPerfmon(CSHA512& hasher)
         ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, vData.data(), &nSize);
         if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
             break;
-        vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
+        vData.resize(std::min((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
     }
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS) {
@@ -197,19 +193,30 @@ void AddAllCPUID(CSHA512& hasher)
     // Iterate over all standard leaves
     AddCPUID(hasher, 0, 0, ax, bx, cx, dx); // Returns max leaf in ax
     uint32_t max = ax;
-    for (uint32_t leaf = 1; leaf <= max; ++leaf) {
-        for (uint32_t subleaf = 0;; ++subleaf) {
+    for (uint32_t leaf = 1; leaf <= max && leaf <= 0xFF; ++leaf) {
+        uint32_t maxsub = 0;
+        for (uint32_t subleaf = 0; subleaf <= 0xFF; ++subleaf) {
             AddCPUID(hasher, leaf, subleaf, ax, bx, cx, dx);
-            // Iterate over subleaves for leaf 4, 11, 13
-            if (leaf != 4 && leaf != 11 && leaf != 13) break;
-            if ((leaf == 4 || leaf == 13) && ax == 0) break;
-            if (leaf == 11 && (cx & 0xFF00) == 0) break;
+            // Iterate subleafs for leaf values 4, 7, 11, 13
+            if (leaf == 4) {
+                if ((ax & 0x1f) == 0) break;
+            } else if (leaf == 7) {
+                if (subleaf == 0) maxsub = ax;
+                if (subleaf == maxsub) break;
+            } else if (leaf == 11) {
+                if ((cx & 0xff00) == 0) break;
+            } else if (leaf == 13) {
+                if (ax == 0 && bx == 0 && cx == 0 && dx == 0) break;
+            } else {
+                // For any other leaf, stop after subleaf 0.
+                break;
+            }
         }
     }
     // Iterate over all extended leaves
     AddCPUID(hasher, 0x80000000, 0, ax, bx, cx, dx); // Returns max extended leaf in ax
     uint32_t ext_max = ax;
-    for (uint32_t leaf = 0x80000001; leaf <= ext_max; ++leaf) {
+    for (uint32_t leaf = 0x80000001; leaf <= ext_max && leaf <= 0x800000FF; ++leaf) {
         AddCPUID(hasher, leaf, 0, ax, bx, cx, dx);
     }
 }
@@ -226,8 +233,6 @@ void RandAddDynamicEnv(CSHA512& hasher)
     GetSystemTimeAsFileTime(&ftime);
     hasher << ftime;
 #else
-#  ifndef __MACH__
-    // On non-MacOS systems, use various clock_gettime() calls.
     struct timespec ts = {};
 #    ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -241,18 +246,6 @@ void RandAddDynamicEnv(CSHA512& hasher)
     clock_gettime(CLOCK_BOOTTIME, &ts);
     hasher << ts;
 #    endif
-#  else
-    // On MacOS use mach_absolute_time (number of CPU ticks since boot) as a replacement for CLOCK_MONOTONIC,
-    // and clock_get_time for CALENDAR_CLOCK as a replacement for CLOCK_REALTIME.
-    hasher << mach_absolute_time();
-    // From https://gist.github.com/jbenet/1087739
-    clock_serv_t cclock;
-    mach_timespec_t mts = {};
-    if (host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock) == KERN_SUCCESS && clock_get_time(cclock, &mts) == KERN_SUCCESS) {
-        hasher << mts;
-        mach_port_deallocate(mach_task_self(), cclock);
-    }
-#  endif
     // gettimeofday is available on all UNIX systems, but only has microsecond precision.
     struct timeval tv = {};
     gettimeofday(&tv, nullptr);
@@ -333,7 +326,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     // Bitcoin client version
     hasher << CLIENT_VERSION;
 
-#ifdef __linux__
+#if defined(HAVE_STRONG_GETAUXVAL) || defined(HAVE_WEAK_GETAUXVAL)
     // Information available through getauxval()
 #  ifdef AT_HWCAP
     hasher << getauxval(AT_HWCAP);
@@ -353,7 +346,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     const char* exec_str = (const char*)getauxval(AT_EXECFN);
     if (exec_str) hasher.Write((const unsigned char*)exec_str, strlen(exec_str) + 1);
 #  endif
-#endif // __linux__
+#endif // HAVE_STRONG_GETAUXVAL || HAVE_WEAK_GETAUXVAL
 
 #ifdef HAVE_GETCPUID
     AddAllCPUID(hasher);
