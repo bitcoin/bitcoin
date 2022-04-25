@@ -54,13 +54,12 @@ elif [ "$BUILD_TARGET" = "win64" ]; then
   export DIRECT_WINE_EXEC_TESTS=true
 elif [ "$BUILD_TARGET" = "linux32" ]; then
   export HOST=i686-pc-linux-gnu
-  export DEP_OPTS="NO_PROTOBUF=1"
-  export BITCOIN_CONFIG="--enable-zmq --disable-bip70 --enable-reduce-exports --enable-crash-hooks"
+  export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks"
   export USE_SHELL="/bin/dash"
   export PYZMQ=true
 elif [ "$BUILD_TARGET" = "linux32_ubsan" ]; then
   export HOST=i686-pc-linux-gnu
-  export BITCOIN_CONFIG="--enable-zmq --disable-bip70 --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
+  export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
   export USE_SHELL="/bin/dash"
   export PYZMQ=true
 elif [ "$BUILD_TARGET" = "linux64" ]; then

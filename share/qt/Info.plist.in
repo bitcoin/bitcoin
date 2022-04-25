@@ -50,43 +50,6 @@
     </dict>
   </array>
 
-  <key>UTExportedTypeDeclarations</key>
-  <array>
-    <dict>
-      <key>UTTypeIdentifier</key>
-      <string>org.dash.paymentrequest</string>
-      <key>UTTypeDescription</key>
-      <string>Dash payment request</string>
-      <key>UTTypeConformsTo</key>
-      <array>
-        <string>public.data</string>
-      </array>
-      <key>UTTypeTagSpecification</key>
-      <dict>
-        <key>public.mime-type</key>
-        <string>application/x-dash-payment-request</string>
-        <key>public.filename-extension</key>
-        <array>
-          <string>dashpaymentrequest</string>
-        </array>
-      </dict>
-    </dict>
-  </array>
-
-  <key>CFBundleDocumentTypes</key>
-  <array>
-    <dict>
-      <key>CFBundleTypeRole</key>
-      <string>Editor</string>
-      <key>LSItemContentTypes</key>
-      <array>
-        <string>org.dash.paymentrequest</string>
-      </array>
-      <key>LSHandlerRank</key>
-      <string>Owner</string>
-    </dict>
-  </array>
-
   <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 

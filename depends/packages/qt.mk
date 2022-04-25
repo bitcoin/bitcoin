@@ -5,9 +5,6 @@ $(package)_suffix=opensource-src-$($(package)_version).tar.xz
 $(package)_file_name=qtbase-$($(package)_suffix)
 $(package)_sha256_hash=9b9dec1f67df1f94bce2955c5604de992d529dde72050239154c56352da0907d
 $(package)_dependencies=zlib
-ifeq ($(NO_OPENSSL),)
-$(package)_dependencies+= openssl
-endif
 $(package)_linux_dependencies=freetype fontconfig libxcb
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch fix_riscv64_arch.patch
@@ -49,9 +46,11 @@ $(package)_config_opts += -no-kms
 $(package)_config_opts += -no-linuxfb
 $(package)_config_opts += -no-libudev
 $(package)_config_opts += -no-mtdev
+$(package)_config_opts += -no-openssl
 $(package)_config_opts += -no-openvg
 $(package)_config_opts += -no-reduce-relocations
 $(package)_config_opts += -no-qml-debug
+$(package)_config_opts += -no-securetransport
 $(package)_config_opts += -no-sql-db2
 $(package)_config_opts += -no-sql-ibase
 $(package)_config_opts += -no-sql-oci
@@ -66,9 +65,6 @@ $(package)_config_opts += -no-xinput2
 $(package)_config_opts += -nomake examples
 $(package)_config_opts += -nomake tests
 $(package)_config_opts += -opensource
-ifeq ($(NO_OPENSSL),)
-$(package)_config_opts += -openssl-linked
-endif
 $(package)_config_opts += -optimized-tools
 $(package)_config_opts += -pch
 $(package)_config_opts += -pkg-config

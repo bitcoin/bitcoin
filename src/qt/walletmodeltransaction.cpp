@@ -47,29 +47,6 @@ void WalletModelTransaction::reassignAmounts()
     for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
         SendCoinsRecipient& rcp = (*it);
-
-#ifdef ENABLE_BIP70
-        if (rcp.paymentRequest.IsInitialized())
-        {
-            CAmount subtotal = 0;
-            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
-            for (int j = 0; j < details.outputs_size(); j++)
-            {
-                const payments::Output& out = details.outputs(j);
-                if (out.amount() <= 0) continue;
-                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
-                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : wtx.get()->vout) {
-                    if (txout.scriptPubKey == scriptPubKey) {
-                        subtotal += txout.nValue;
-                        break;
-                    }
-                }
-            }
-            rcp.amount = subtotal;
-        }
-        else // normal recipient (no payment request)
-#endif
         {
             for (const auto& txout : wtx.get()->vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
