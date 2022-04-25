@@ -12,8 +12,6 @@ import os
 import sys
 import unittest
 
-posix2windows = lambda filename: filename
-
 class TestRPCAuth(unittest.TestCase):
     def setUp(self):
         config = configparser.ConfigParser()
@@ -24,6 +22,7 @@ class TestRPCAuth(unittest.TestCase):
 
         sys.path.insert(0, directory)
 
+        posix2windows = lambda filename: filename
         try:
             importlib.invalidate_caches()
             path_helper = importlib.import_module('path_helper')
