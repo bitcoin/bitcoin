@@ -18,13 +18,18 @@ import os
 import pprint
 import subprocess
 import sys
-from path_helper import posix2windows
+import importlib
 
+directory = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, directory)
+
+importlib.invalidate_caches()
+path_helper = importlib.import_module('path_helper')
+posix2windows = path_helper.posix2windows
 
 def main():
     config = configparser.ConfigParser()
     config.optionxform = str
-    directory = os.path.abspath(os.path.dirname(__file__))
     config.read_file(open(os.path.join(directory, "../config.ini"), encoding="utf8"))
     env_conf = dict(config.items('environment'))
 
