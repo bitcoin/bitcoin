@@ -95,7 +95,7 @@ def run():
             tarinfo.uid, tarinfo.uname =  0, ''
             tarinfo.gid, tarinfo.gname = 0, ''
             # don't use isdir() as there are also executable files present
-            tarinfo.mode = 0o0755 if tarinfo.mode & 0o0100 else 0x0644
+            tarinfo.mode = 0o0755 if tarinfo.mode & 0o0100 else 0o0644
             return tarinfo
         with cd(dir_to_add):
             # recursion already adds entries in sorted order
