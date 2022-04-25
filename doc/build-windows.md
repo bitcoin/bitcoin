@@ -96,18 +96,19 @@ Please download the installer here: http://msys2.github.io/
   C:\msys64\msys2.exe
 ```
 
+### Install
 ```bash
-pacman -Sy
-pacman -Su
-pacman -S base-devel gcc vim cmake
-pacman -S --needed filesystem msys2-runtime bash libreadline libiconv libarchive libgpgme libcurl pacman ncurses libintl
-pacman -S make autoconf autotools automake libtool pkg-config autotools-dev pkg-config 
-pacman -S mingw-w64-{i686,x86_64}-toolchain mingw-w64-{i686,x86_64}-pkgconf
-pacman -S mingw-w64-{i686,x86_64}-{boost,protobuf}
-pacman -S mingw-w64-{i686,x86_64}-crt-git
-pacman -S mingw-w64-{i686,x86_64}-libevent
-pacman -S mingw-w64-{i686,x86_64}-db mingw-w64-{i686,x86_64}-leveldb
-pacman -S mingw-w64-{i686,x86_64}-miniupnpc
+  pacman -Sy
+  pacman -Su
+  pacman -S base-devel gcc vim cmake git mingw-w64-{x86_64,i686}-nsis
+  pacman -S --needed filesystem msys2-runtime bash libreadline libiconv libarchive libgpgme libcurl pacman ncurses libintl
+  pacman -S make autoconf autotools automake libtool pkg-config autotools-dev pkg-config 
+  pacman -S mingw-w64-{i686,x86_64}-toolchain mingw-w64-{i686,x86_64}-pkgconf
+  pacman -S mingw-w64-{i686,x86_64}-{boost,protobuf}
+  pacman -S mingw-w64-{i686,x86_64}-crt-git
+  pacman -S mingw-w64-{i686,x86_64}-libevent
+  pacman -S mingw-w64-{i686,x86_64}-db mingw-w64-{i686,x86_64}-leveldb
+  pacman -S mingw-w64-{i686,x86_64}-miniupnpc
 ```
 
 #### Execute:
@@ -117,18 +118,18 @@ pacman -S mingw-w64-{i686,x86_64}-miniupnpc
 
 ### Build using:
 ```bash
-./autogen.sh
+  ./autogen.sh
 
-./configure \
-    --with-gui=no \
-    --without-miniupnpc \
-    --without-bdb \
-    --without-gui \
-    --with-qrencode
+  ./configure \
+      --with-gui=no \
+      --without-miniupnpc \
+      --without-bdb \
+      --without-gui \
+      --with-qrencode
 
-make -J 
+  make -J 
 
-make check
+  make check
 ```
 
 ### Credits
