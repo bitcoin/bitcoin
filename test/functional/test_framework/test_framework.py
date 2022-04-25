@@ -1038,13 +1038,14 @@ class DashTestFramework(BitcoinTestFramework):
         request_id = hash256(request_id_buf)[::-1].hex()
         message_hash = tx.hash
 
+        llmq_type = 103 if deterministic else 104
         quorum_member = None
         for mn in self.mninfo:
-            res = mn.node.quorum('sign', 104, request_id, message_hash)
+            res = mn.node.quorum('sign', llmq_type, request_id, message_hash)
             if (res and quorum_member is None):
                 quorum_member = mn
 
-        rec_sig = self.get_recovered_sig(request_id, message_hash, node=quorum_member.node, llmq_type=104)
+        rec_sig = self.get_recovered_sig(request_id, message_hash, node=quorum_member.node, llmq_type=llmq_type)
 
         if deterministic:
             block_count = quorum_member.node.getblockcount()
@@ -1330,7 +1331,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         return new_quorum
 
-    def mine_cycle_quorum(self, llmq_type_name="llmq_test", llmq_type=100,  expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
+    def mine_cycle_quorum(self, llmq_type_name="llmq_test_dip0024", llmq_type=103,  expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
         spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
@@ -1466,6 +1467,21 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("h("+str(block_height)+"):"+str(quorum_rotation_info))
 
         return (quorum_info_0, quorum_info_1)
+
+    def move_to_next_cycle(self):
+        cycle_length = 24
+        mninfos_online = self.mninfo.copy()
+        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        cur_block = self.nodes[0].getblockcount()
+
+        # move forward to next DKG
+        skip_count = cycle_length - (cur_block % cycle_length)
+        if skip_count != 0:
+            self.bump_mocktime(1, nodes=nodes)
+            self.nodes[0].generate(skip_count)
+        sync_blocks(nodes)
+        time.sleep(1)
+        self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
     def get_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100, node=None):
         # Note: recsigs aren't relayed to regular nodes by default,
