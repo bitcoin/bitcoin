@@ -25,10 +25,6 @@
 #include <QObject>
 #include <QTest>
 
-#if USE_OPENSSL
-#include <openssl/ssl.h>
-#endif
-
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_MINIMAL)

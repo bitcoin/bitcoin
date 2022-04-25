@@ -1,7 +1,5 @@
 packages:=boost libevent gmp bls-dash backtrace cmake immer
 
-openssl_packages = openssl
-
 qt_packages = qrencode zlib
 
 qt_linux_packages:=qt expat dbus libxcb xcb_proto libXau xproto freetype fontconfig
