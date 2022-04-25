@@ -22,7 +22,7 @@
 /// Proposal wrapper
 ///
 
-Proposal::Proposal(const CGovernanceObject _govObj, QObject* parent) :
+Proposal::Proposal(const CGovernanceObject& _govObj, QObject* parent) :
     QObject(parent),
     govObj(_govObj)
 {

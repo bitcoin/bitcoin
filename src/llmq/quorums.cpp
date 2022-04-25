@@ -102,7 +102,7 @@ CBLSPublicKey CQuorum::GetPubKeyShare(size_t memberIdx) const
     if (!HasVerificationVector() || memberIdx >= members.size() || !qc->validMembers[memberIdx]) {
         return CBLSPublicKey();
     }
-    auto& m = members[memberIdx];
+    const auto& m = members[memberIdx];
     return blsCache.BuildPubKeyShare(m->proTxHash, quorumVvec, CBLSId(m->proTxHash));
 }
 
@@ -433,7 +433,6 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
         return {};
     }
 
-    bool fCacheExists{false};
     const CBlockIndex* pIndexScanCommitments{pindexStart};
     size_t nScanCommitments{nCountRequested};
     std::vector<CQuorumCPtr> vecResultQuorums;
@@ -463,7 +462,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     }
 
     size_t nCountResult{vecResultQuorums.size()};
-    if (nCountResult > 0 && !fCacheExists) {
+    if (nCountResult > 0) {
         LOCK(quorumsCacheCs);
         // Don't cache more than cache.max_size() elements
         auto& cache = scanQuorumsCache[llmqType];
