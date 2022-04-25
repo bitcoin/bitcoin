@@ -10,6 +10,7 @@
 
 #include <evo/deterministicmns.h>
 #include <llmq/utils.h>
+#include <util/irange.h>
 
 namespace llmq
 {
@@ -79,7 +80,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int quorumIndex, int detailLevel) const
         }
     };
 
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
         add(badMembers, i, m.bad);
         add(weComplain, i, m.weComplain);

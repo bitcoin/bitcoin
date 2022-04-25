@@ -302,6 +302,7 @@ BITCOIN_CORE_H = \
   util/check.h \
   util/error.h \
   util/fees.h \
+  util/irange.h \
   util/spanparsing.h \
   util/system.h \
   util/asmap.h \

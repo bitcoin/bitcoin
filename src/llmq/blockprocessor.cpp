@@ -16,9 +16,10 @@
 #include <net_processing.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <validation.h>
 #include <saltedhasher.h>
 #include <sync.h>
+#include <util/irange.h>
+#include <validation.h>
 
 #include <map>
 
@@ -446,7 +447,7 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(const Consensus::LLMQParams& ll
     assert(nHeight <= ::ChainActive().Height() + 1);
     const auto *const pindex = ::ChainActive().Height() < nHeight ? ::ChainActive().Tip() : ::ChainActive().Tip()->GetAncestor(nHeight);
 
-    for (int quorumIndex = 0; quorumIndex < llmqParams.signingActiveQuorumCount; ++quorumIndex) {
+    for (const auto quorumIndex : irange::range(llmqParams.signingActiveQuorumCount)) {
         uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight, quorumIndex);
         if (quorumHash.IsNull()) return false;
         if (HasMinedCommitment(llmqParams.type, quorumHash)) return false;
@@ -600,7 +601,7 @@ std::vector<std::pair<int, const CBlockIndex*>> CQuorumBlockProcessor::GetLastMi
     const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);
     std::vector<std::pair<int, const CBlockIndex*>> ret;
 
-    for (int quorumIndex = 0; quorumIndex < llmqParams.signingActiveQuorumCount; ++quorumIndex) {
+    for (const auto quorumIndex : irange::range(llmqParams.signingActiveQuorumCount)) {
         std::optional<const CBlockIndex*> q = GetLastMinedCommitmentsByQuorumIndexUntilBlock(llmqType, pindex, quorumIndex, cycle);
         if (q.has_value()) {
             ret.emplace_back(quorumIndex, q.value());
@@ -728,7 +729,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
     const auto *const pindex = ::ChainActive().Height() < nHeight ? ::ChainActive().Tip() : ::ChainActive().Tip()->GetAncestor(nHeight);
 
     std::stringstream ss;
-    for (int quorumIndex = 0; quorumIndex < llmqParams.signingActiveQuorumCount; ++quorumIndex) {
+    for (const auto quorumIndex : irange::range(llmqParams.signingActiveQuorumCount)) {
         CFinalCommitment cf;
 
         uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight, quorumIndex);

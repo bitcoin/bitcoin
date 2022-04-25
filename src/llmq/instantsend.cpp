@@ -13,13 +13,14 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <index/txindex.h>
-#include <txmempool.h>
-#include <util/ranges.h>
 #include <masternode/sync.h>
 #include <net_processing.h>
 #include <spork.h>
-#include <validation.h>
+#include <txmempool.h>
+#include <util/irange.h>
+#include <util/ranges.h>
 #include <util/validation.h>
+#include <validation.h>
 
 #include <cxxtimer.hpp>
 
@@ -558,7 +559,7 @@ bool CInstantSendManager::TrySignInputLocks(const CTransaction& tx, bool fRetroa
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on %d inputs\n", __func__,
              tx.GetHash().ToString(), tx.vin.size());
 
-    for (size_t i = 0; i < tx.vin.size(); i++) {
+    for (const auto i : irange::range(tx.vin.size())) {
         auto& in = tx.vin[i];
         auto& id = ids[i];
         WITH_LOCK(cs_inputReqests, inputRequestIds.emplace(id));

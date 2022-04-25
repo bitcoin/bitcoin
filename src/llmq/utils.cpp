@@ -18,6 +18,7 @@
 #include <random.h>
 #include <spork.h>
 #include <timedata.h>
+#include <util/irange.h>
 #include <util/ranges.h>
 #include <validation.h>
 #include <versionbits.h>
@@ -607,7 +608,7 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(const Consensus::LLMQParams&
         return r;
     };
 
-    for (size_t i = 0; i < mns.size(); i++) {
+    for (const auto i : irange::range(mns.size())) {
         const auto& dmn = mns[i];
         if (dmn->proTxHash == forMember) {
             auto r = calcOutbound(i, dmn->proTxHash);
@@ -636,7 +637,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
 
     std::set<size_t> result;
     uint256 rnd = qwatchConnectionSeed;
-    for (size_t i = 0; i < connectionCount; i++) {
+    for ([[maybe_unused]] const auto _ : irange::range(connectionCount)) {
         rnd = ::SerializeHash(std::make_pair(rnd, std::make_pair(llmqType, pQuorumBaseBlockIndex->GetBlockHash())));
         result.emplace(rnd.GetUint64(0) % memberCount);
     }

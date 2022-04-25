@@ -12,6 +12,7 @@
 #include <chainparams.h>
 #include <net_processing.h>
 #include <spork.h>
+#include <util/irange.h>
 #include <validation.h>
 
 namespace llmq
@@ -32,7 +33,7 @@ CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorke
     const Consensus::Params& consensus_params = Params().GetConsensus();
     for (const auto& params : consensus_params.llmqs) {
         auto session_count = (params.type == consensus_params.llmqTypeDIP0024InstantSend) ? params.signingActiveQuorumCount : 1;
-        for (int i = 0; i < session_count; ++i) {
+        for (const auto i : irange::range(session_count)) {
             dkgSessionHandlers.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(params.type, i),
                                        std::forward_as_tuple(params, blsWorker, *this, connman, i));
@@ -381,7 +382,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
     memberIndexesRet.reserve(members.size());
     vvecsRet.reserve(members.size());
     skContributionsRet.reserve(members.size());
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         if (validMembers[i]) {
             const uint256& proTxHash = members[i]->proTxHash;
             ContributionsCacheKey cacheKey = {llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash};
@@ -413,7 +414,8 @@ bool CDKGSessionManager::GetEncryptedContributions(Consensus::LLMQType llmqType,
     vecRet.reserve(members.size());
 
     size_t nRequestedMemberIdx{std::numeric_limits<size_t>::max()};
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
+        // cppcheck-suppress useStlAlgorithm
         if (members[i]->proTxHash == nProTxHash) {
             nRequestedMemberIdx = i;
             break;
@@ -423,7 +425,7 @@ bool CDKGSessionManager::GetEncryptedContributions(Consensus::LLMQType llmqType,
         return false;
     }
 
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         if (validMembers[i]) {
             CBLSIESMultiRecipientObjects<CBLSSecretKey> encryptedContributions;
             if (!db->Read(std::make_tuple(DB_ENC_CONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), members[i]->proTxHash), encryptedContributions)) {

@@ -12,6 +12,7 @@
 #include <serialize.h>
 #include <univalue.h>
 #include <unordered_lru_cache.h>
+#include <util/irange.h>
 
 #include <optional>
 
@@ -70,7 +71,7 @@ public:
         size_t cnt = ReadCompactSize(s);
         ReadFixedBitSet(s, activeQuorumMembers, cnt);
         cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             int obj;
             s >> obj;
             mnSkipList.push_back(obj);
@@ -175,21 +176,21 @@ public:
         }
 
         size_t cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             uint256 hash;
             ::Unserialize(s, hash);
             lastQuorumHashPerIndex.push_back(std::move(hash));
         }
 
         cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             CQuorumSnapshot snap;
             ::Unserialize(s, snap);
             quorumSnapshotList.push_back(std::move(snap));
         }
 
         cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             CSimplifiedMNListDiff mnlist;
             ::Unserialize(s, mnlist);
             mnListDiffList.push_back(std::move(mnlist));

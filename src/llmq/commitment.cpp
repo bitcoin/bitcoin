@@ -10,6 +10,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <logging.h>
+#include <util/irange.h>
 #include <validation.h>
 
 namespace llmq
@@ -80,16 +81,16 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
     }
     auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
     std::stringstream ss;
-    for (size_t i = 0; i < llmq_params.size; i++) {
+    for (const auto i : irange::range(llmq_params.size)) {
         ss << "v[" << i << "]=" << validMembers[i];
     }
     std::stringstream ss2;
-    for (size_t i = 0; i < llmq_params.size; i++) {
+    for (const auto i : irange::range(llmq_params.size)) {
         ss2 << "s[" << i << "]=" << signers[i];
     }
 
     LogPrintfFinalCommitment("CFinalCommitment::%s mns[%d] validMembers[%s] signers[%s]\n", __func__, members.size(), ss.str(), ss2.str());
-    for (size_t i = members.size(); i < size_t(llmq_params.size); i++) {
+    for (const auto i : irange::range(members.size(), size_t(llmq_params.size))) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("q[%s] invalid validMembers bitset. bit %d should not be set\n", quorumHash.ToString(), i);
             return false;
@@ -109,7 +110,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         }
         LogPrintfFinalCommitment("CFinalCommitment::%s members[%s] quorumPublicKey[%s] commitmentHash[%s]\n", __func__, ss3.str(), quorumPublicKey.ToString(), commitmentHash.ToString());
         std::vector<CBLSPublicKey> memberPubKeys;
-        for (size_t i = 0; i < members.size(); i++) {
+        for (const auto i : irange::range(members.size())) {
             if (!signers[i]) {
                 continue;
             }
@@ -168,7 +169,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
     }
     const auto& llmq_params = GetLLMQParams(qcTx.commitment.llmqType);
     std::stringstream ss;
-    for (size_t i = 0; i < llmq_params.size; i++) {
+    for (const auto i : irange::range(llmq_params.size)) {
         ss << "v[" << i << "]=" << qcTx.commitment.validMembers[i];
     }
     LogPrintfFinalCommitment("%s llmqType[%d] validMembers[%s] signers[]\n", __func__, int(qcTx.commitment.llmqType), ss.str());

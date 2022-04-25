@@ -9,13 +9,14 @@
 #include <llmq/utils.h>
 #include <llmq/signing_shares.h>
 
-#include <masternode/node.h>
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
 #include <cxxtimer.hpp>
+#include <masternode/node.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <scheduler.h>
+#include <util/irange.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -1030,7 +1031,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
 
         std::vector<std::pair<uint256, size_t>> scores;
         scores.reserve(quorums.size());
-        for (size_t i = 0; i < quorums.size(); i++) {
+        for (const auto i : irange::range(quorums.size())) {
             CHashWriter h(SER_NETWORK, 0);
             h << llmqType;
             h << quorums[i]->qc->quorumHash;

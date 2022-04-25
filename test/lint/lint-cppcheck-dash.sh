@@ -34,8 +34,8 @@ IGNORED_WARNINGS=(
     "src/test/dip0020opcodes_tests.cpp:.* warning: There is an unknown macro here somewhere. Configuration is required. If BOOST_FIXTURE_TEST_SUITE is a macro then please configure it."
     "src/ctpl_stl.h:.*22: warning: Dereferencing '_f' after it is deallocated / released"
 
-    "src/llmq/snapshot.cpp:.*:17: warning: Consider using std::copy algorithm instead of a raw loop."
-    "src/llmq/snapshot.cpp:.*:18: warning: Consider using std::copy algorithm instead of a raw loop."
+#    "src/llmq/snapshot.cpp:.*:17: warning: Consider using std::copy algorithm instead of a raw loop."
+#    "src/llmq/snapshot.cpp:.*:18: warning: Consider using std::copy algorithm instead of a raw loop."
 
 # General catchall, for some reason any value named 'hash' is viewed as never used.
     "Variable 'hash' is assigned a value that is never used."
@@ -109,7 +109,7 @@ ENABLED_CHECKS_REGEXP=$(join_array "|" "${ENABLED_CHECKS[@]}")
 IGNORED_WARNINGS_REGEXP=$(join_array "|" "${IGNORED_WARNINGS[@]}")
 FILES_REGEXP=$(join_array "|" "${FILES[@]}")
 WARNINGS=$(echo "${FILES}" | \
-    xargs cppcheck --enable=all -j "$(getconf _NPROCESSORS_ONLN)" --language=c++ --std=c++17 --template=gcc -D__cplusplus -DENABLE_WALLET -DCLIENT_VERSION_BUILD -DCLIENT_VERSION_IS_RELEASE -DCLIENT_VERSION_MAJOR -DCLIENT_VERSION_MINOR -DCLIENT_VERSION_REVISION -DCOPYRIGHT_YEAR -DDEBUG -DHAVE_WORKING_BOOST_SLEEP_FOR -DCHAR_BIT=8 -I src/ -q 2>&1 | sort -u | \
+    xargs cppcheck --enable=all --inline-suppr -j "$(getconf _NPROCESSORS_ONLN)" --language=c++ --std=c++17 --template=gcc -D__cplusplus -DENABLE_WALLET -DCLIENT_VERSION_BUILD -DCLIENT_VERSION_IS_RELEASE -DCLIENT_VERSION_MAJOR -DCLIENT_VERSION_MINOR -DCLIENT_VERSION_REVISION -DCOPYRIGHT_YEAR -DDEBUG -DHAVE_WORKING_BOOST_SLEEP_FOR -DCHAR_BIT=8 -I src/ -q 2>&1 | sort -u | \
     grep -E "${ENABLED_CHECKS_REGEXP}" | \
     grep -vE "${IGNORED_WARNINGS_REGEXP}" | \
     grep -E "${FILES_REGEXP}")

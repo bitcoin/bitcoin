@@ -6,6 +6,7 @@
 #define BITCOIN_LLMQ_UTILS_H
 
 #include <consensus/params.h>
+#include <util/irange.h>
 
 #include <dbwrapper.h>
 #include <random.h>
@@ -133,7 +134,7 @@ public:
     static std::string ToHexStr(const std::vector<bool>& vBits)
     {
         std::vector<uint8_t> vBytes((vBits.size() + 7) / 8);
-        for (size_t i = 0; i < vBits.size(); i++) {
+        for (const auto i : irange::range(vBits.size())) {
             vBytes[i / 8] |= vBits[i] << (i % 8);
         }
         return HexStr(vBytes);

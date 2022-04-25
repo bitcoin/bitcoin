@@ -12,13 +12,14 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 
-#include <masternode/node.h>
 #include <chainparams.h>
+#include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <univalue.h>
+#include <util/irange.h>
 #include <validation.h>
 
 #include <cxxtimer.hpp>
@@ -88,7 +89,8 @@ bool CQuorum::IsMember(const uint256& proTxHash) const
 
 bool CQuorum::IsValidMember(const uint256& proTxHash) const
 {
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
+        // cppcheck-suppress useStlAlgorithm
         if (members[i]->proTxHash == proTxHash) {
             return qc->validMembers[i];
         }
@@ -119,9 +121,10 @@ CBLSSecretKey CQuorum::GetSkShare() const
 
 int CQuorum::GetMemberIndex(const uint256& proTxHash) const
 {
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
+        // cppcheck-suppress useStlAlgorithm
         if (members[i]->proTxHash == proTxHash) {
-            return (int)i;
+            return int(i);
         }
     }
     return -1;
@@ -274,7 +277,7 @@ void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqPa
         int cycleIndexTipHeight = pindexNew->nHeight % llmqParams.dkgInterval;
         int cycleQuorumBaseHeight = pindexNew->nHeight - cycleIndexTipHeight;
         std::stringstream ss;
-        for (int quorumIndex = 0; quorumIndex < llmqParams.signingActiveQuorumCount; ++quorumIndex) {
+        for (const auto quorumIndex : irange::range(llmqParams.signingActiveQuorumCount)) {
             if (quorumIndex <= cycleIndexTipHeight) {
                 int curDkgHeight = cycleQuorumBaseHeight + quorumIndex;
                 auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
@@ -518,7 +521,8 @@ size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, c
     size_t nIndex{0};
     {
         LOCK(activeMasternodeInfoCs);
-        for (size_t i = 0; i < vecProTxHashes.size(); ++i) {
+        for (const auto i : irange::range(vecProTxHashes.size())) {
+            // cppcheck-suppress useStlAlgorithm
             if (activeMasternodeInfo.proTxHash == vecProTxHashes[i]) {
                 nIndex = i;
                 break;
@@ -695,7 +699,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
             BLSSecretKeyVector vecSecretKeys;
             vecSecretKeys.resize(vecEncrypted.size());
             auto secret = WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator);
-            for (size_t i = 0; i < vecEncrypted.size(); ++i) {
+            for (const auto i : irange::range(vecEncrypted.size())) {
                 if (!vecEncrypted[i].Decrypt(memberIdx, secret, vecSecretKeys[i], PROTOCOL_VERSION)) {
                     errorHandler("Failed to decrypt");
                     return;
@@ -724,7 +728,10 @@ void CQuorumManager::StartCachePopulatorThread(const CQuorumCPtr pQuorum) const
 
     // when then later some other thread tries to get keys, it will be much faster
     workerPool.push([pQuorum, t, this](int threadId) {
-        for (size_t i = 0; i < pQuorum->members.size() && !quorumThreadInterrupt; i++) {
+        for (const auto i : irange::range(pQuorum->members.size())) {
+            if (!quorumThreadInterrupt) {
+                break;
+            }
             if (pQuorum->qc->validMembers[i]) {
                 pQuorum->GetPubKeyShare(i);
             }

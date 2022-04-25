@@ -20,6 +20,7 @@
 
 #include <cxxtimer.hpp>
 #include <memory>
+#include <util/irange.h>
 
 namespace llmq
 {
@@ -79,14 +80,14 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
     receivedSkContributions.resize(members.size());
     vecEncryptedContributions.resize(members.size());
 
-    for (size_t i = 0; i < mns.size(); i++) {
+    for (const auto i : irange::range(mns.size())) {
         members[i] = std::make_unique<CDKGMember>(mns[i], i);
         membersMap.emplace(members[i]->dmn->proTxHash, i);
         memberIds[i] = members[i]->id;
     }
 
     if (!_myProTxHash.IsNull()) {
-        for (size_t i = 0; i < members.size(); i++) {
+        for (const auto i : irange::range(members.size())) {
             const auto& m = members[i];
             if (m->dmn->proTxHash == _myProTxHash) {
                 myIdx = i;
@@ -176,7 +177,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
     qc.contributions = std::make_shared<CBLSIESMultiRecipientObjects<CBLSSecretKey>>();
     qc.contributions->InitEncrypt(members.size());
 
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
         CBLSSecretKey skContrib = skContributions[i];
 
@@ -383,7 +384,7 @@ void CDKGSession::VerifyPendingContributions()
         return;
     }
 
-    for (size_t i = 0; i < memberIndexes.size(); i++) {
+    for (const auto i : irange::range(memberIndexes.size())) {
         if (!result[i]) {
             const auto& m = members[memberIndexes[i]];
             logger.Batch("invalid contribution from %s. will complain later", m->dmn->proTxHash.ToString());
@@ -493,7 +494,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 
     int badCount = 0;
     int complaintCount = 0;
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
         if (m->bad || m->badConnection) {
             qc.badMembers[i] = true;
@@ -601,7 +602,7 @@ void CDKGSession::ReceiveMessage(const CDKGComplaint& qc, bool& retBan)
     }
 
     int receivedCount = 0;
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
         if (qc.badMembers[i]) {
             logger.Batch("%s voted for %s to be bad", member->dmn->proTxHash.ToString(), m->dmn->proTxHash.ToString());
@@ -682,7 +683,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
     qj.proTxHash = myProTxHash;
     qj.contributions.reserve(forMembers.size());
 
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
         if (!forMembers.count(m->dmn->proTxHash)) {
             continue;
@@ -929,7 +930,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
     qc.quorumHash = m_quorum_base_block_index->GetBlockHash();
     qc.proTxHash = myProTxHash;
 
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
         if (!m->bad) {
             qc.validMembers[i] = true;
@@ -1069,7 +1070,8 @@ bool CDKGSession::PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retB
         return false;
     }
 
-    for (size_t i = members.size(); i < size_t(params.size); i++) {
+    for (const auto i : irange::range(members.size(), size_t(params.size))) {
+        // cppcheck-suppress useStlAlgorithm
         if (qc.validMembers[i]) {
             retBan = true;
             logger.Batch("invalid validMembers bitset. bit %d should not be set", i);

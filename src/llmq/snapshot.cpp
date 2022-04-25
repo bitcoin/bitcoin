@@ -29,12 +29,14 @@ void CQuorumSnapshot::ToJson(UniValue& obj) const
     obj.setObject();
     UniValue activeQ(UniValue::VARR);
     for (const auto& h : activeQuorumMembers) {
+        // cppcheck-suppress useStlAlgorithm
         activeQ.push_back(h);
     }
     obj.pushKV("activeQuorumMembers", activeQ);
     obj.pushKV("mnSkipListMode", mnSkipListMode);
     UniValue skipList(UniValue::VARR);
     for (const auto& h : mnSkipList) {
+        // cppcheck-suppress useStlAlgorithm
         skipList.push_back(h);
     }
     obj.pushKV("mnSkipList", skipList);
