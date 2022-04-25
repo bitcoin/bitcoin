@@ -31,8 +31,6 @@ void CScheduler::serviceQueue()
         try {
             if (!shouldStop() && taskQueue.empty()) {
                 REVERSE_LOCK(lock);
-                // Use this chance to get more entropy
-                RandAddSeedSleep();
             }
             while (!shouldStop() && taskQueue.empty()) {
                 // Wait until there is something to do.
