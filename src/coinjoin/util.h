@@ -29,13 +29,13 @@ public:
 class CKeyHolderStorage
 {
 private:
-    mutable CCriticalSection cs_storage;
+    mutable Mutex cs_storage;
     std::vector<std::unique_ptr<CKeyHolder> > storage GUARDED_BY(cs_storage);
 
 public:
-    CScript AddKey(CWallet* pwalletIn);
-    void KeepAll();
-    void ReturnAll();
+    CScript AddKey(CWallet* pwalletIn) LOCKS_EXCLUDED(cs_storage);
+    void KeepAll() LOCKS_EXCLUDED(cs_storage);
+    void ReturnAll() LOCKS_EXCLUDED(cs_storage);
 };
 
 /**
@@ -93,7 +93,7 @@ class CTransactionBuilder
     /// Call KeepKey for all keys in destructor if fKeepKeys is true, call ReturnKey for all key if its false.
     bool fKeepKeys{false};
     /// Protect vecOutputs
-    mutable CCriticalSection cs_outputs;
+    mutable Mutex cs_outputs;
     /// Contains all outputs already added to the transaction
     std::vector<std::unique_ptr<CTransactionBuilderOutput>> vecOutputs GUARDED_BY(cs_outputs);
     /// Needed by CTransactionBuilderOutput::UpdateAmount to lock cs_outputs
@@ -107,7 +107,7 @@ public:
     /// Check if its possible to add multiple outputs as vector of amounts. Returns true if its possible to add all of them and false if not.
     bool CouldAddOutputs(const std::vector<CAmount>& vecOutputAmounts) const;
     /// Add an output with the amount nAmount. Returns a pointer to the output if it could be added and nullptr if not due to insufficient amount left.
-    CTransactionBuilderOutput* AddOutput(CAmount nAmountOutput = 0);
+    CTransactionBuilderOutput* AddOutput(CAmount nAmountOutput = 0) LOCKS_EXCLUDED(cs_outputs);
     /// Get amount we had available when we started
     CAmount GetAmountInitial() const { return tallyItem.nAmount; }
     /// Get the amount currently left to add more outputs. Does respect fees.
@@ -117,25 +117,25 @@ public:
     /// Get the total number of added outputs
     int CountOutputs() const { LOCK(cs_outputs); return vecOutputs.size(); }
     /// Create and Commit the transaction to the wallet
-    bool Commit(bilingual_str& strResult);
+    bool Commit(bilingual_str& strResult) LOCKS_EXCLUDED(cs_outputs);
     /// Convert to a string
     std::string ToString() const;
 
 private:
     /// Clear the output vector and keep/return the included keys depending on the value of fKeepKeys
-    void Clear();
+    void Clear() LOCKS_EXCLUDED(cs_outputs);
     /// Get the total number of bytes used already by this transaction
-    unsigned int GetBytesTotal() const;
+    unsigned int GetBytesTotal() const LOCKS_EXCLUDED(cs_outputs);
     /// Helper to calculate static amount left by simply subtracting an used amount and a fee from a provided initial amount.
     static CAmount GetAmountLeft(CAmount nAmountInitial, CAmount nAmountUsed, CAmount nFee);
     /// Get the amount currently used by added outputs. Does not include fees.
-    CAmount GetAmountUsed() const;
+    CAmount GetAmountUsed() const LOCKS_EXCLUDED(cs_outputs);
     /// Get fees based on the number of bytes and the feerate set in CoinControl.
     /// NOTE: To get the total transaction fee this should only be called once with the total number of bytes for the transaction to avoid
     /// calling CFeeRate::GetFee multiple times with subtotals as this may add rounding errors with each further call.
     CAmount GetFee(unsigned int nBytes) const;
     /// Helper to get GetSizeOfCompactSizeDiff(vecOutputs.size(), vecOutputs.size() + nAdd)
-    int GetSizeOfCompactSizeDiff(size_t nAdd) const;
+    int GetSizeOfCompactSizeDiff(size_t nAdd) const LOCKS_EXCLUDED(cs_outputs);
 };
 
 #endif // BITCOIN_COINJOIN_UTIL_H

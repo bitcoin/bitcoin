@@ -99,9 +99,11 @@ void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string
             ranges::any_of(coinJoinClientManagers,
                            [&dsq](const auto& pair){ return pair.second->MarkAlreadyJoinedQueueAsTried(dsq); });
 
-            TRY_LOCK(cs_vecqueue, lockRecv);
-            if (!lockRecv) return;
-            vecCoinJoinQueue.push_back(dsq);
+            {
+                TRY_LOCK(cs_vecqueue, lockRecv);
+                if (!lockRecv) return;
+                vecCoinJoinQueue.push_back(dsq);
+            }
             dsq.Relay(connman);
         }
 
@@ -124,6 +126,7 @@ void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& msg
     if (msg_type == NetMsgType::DSSTATUSUPDATE ||
                msg_type == NetMsgType::DSFINALTX ||
                msg_type == NetMsgType::DSCOMPLETE) {
+        AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
             session.ProcessMessage(pfrom, msg_type, vRecv, connman, enable_bip61);
@@ -214,13 +217,14 @@ void CCoinJoinClientSession::ResetPool()
     txMyCollateral = CMutableTransaction();
     UnlockCoins();
     keyHolderStorage.ReturnAll();
-    SetNull();
+    WITH_LOCK(cs_coinjoin, SetNull());
 }
 
 void CCoinJoinClientManager::ResetPool()
 {
     nCachedLastSuccessBlock = 0;
     vecMasternodesUsed.clear();
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
         session.ResetPool();
@@ -230,6 +234,7 @@ void CCoinJoinClientManager::ResetPool()
 
 void CCoinJoinClientSession::SetNull()
 {
+    AssertLockHeld(cs_coinjoin);
     // Client side
     mixingMasternode = nullptr;
     pendingDsaRequest = CPendingDsaRequest();
@@ -303,6 +308,7 @@ bilingual_str CCoinJoinClientManager::GetStatuses()
     bilingual_str strStatus;
     bool fWaitForBlock = WaitForAnotherBlock();
 
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
         strStatus = strStatus + session.GetStatus(fWaitForBlock) + Untranslated("; ");
@@ -314,6 +320,7 @@ std::string CCoinJoinClientManager::GetSessionDenoms()
 {
     std::string strSessionDenoms;
 
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
         strSessionDenoms += CCoinJoin::DenominationToString(session.nSessionDenom);
@@ -330,6 +337,7 @@ bool CCoinJoinClientSession::GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) 
 
 bool CCoinJoinClientManager::GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const
 {
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
         CDeterministicMNCPtr dmn;
@@ -353,7 +361,7 @@ bool CCoinJoinClientSession::CheckTimeout()
         if (GetTime() - nTimeLastSuccessfulStep >= 10) {
             // reset after being in POOL_STATE_ERROR for 10 or more seconds
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- resetting session %d\n", __func__, nSessionID);
-            SetNull();
+            WITH_LOCK(cs_coinjoin, SetNull());
         }
         return false;
     }
@@ -381,6 +389,7 @@ bool CCoinJoinClientSession::CheckTimeout()
 //
 void CCoinJoinClientManager::CheckTimeout()
 {
+    AssertLockNotHeld(cs_deqsessions);
     if (fMasternodeMode) return;
 
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return;
@@ -414,14 +423,14 @@ bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn,
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::SendDenominate -- No Masternode has been selected yet.\n");
         UnlockCoins();
         keyHolderStorage.ReturnAll();
-        SetNull();
+        WITH_LOCK(cs_coinjoin, SetNull());
         return false;
     }
 
     if (!CheckDiskSpace(GetDataDir())) {
         UnlockCoins();
         keyHolderStorage.ReturnAll();
-        SetNull();
+        WITH_LOCK(cs_coinjoin, SetNull());
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::SendDenominate -- Not enough disk space.\n");
         return false;
     }
@@ -634,7 +643,7 @@ void CCoinJoinClientSession::CompletedTransaction(PoolMessage nMessageID)
         keyHolderStorage.ReturnAll();
     }
     UnlockCoins();
-    SetNull();
+    WITH_LOCK(cs_coinjoin, SetNull());
     strLastMessage = CCoinJoin::GetMessageByID(nMessageID);
 }
 
@@ -931,6 +940,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, bool fDr
     }
 
     bool fResult = true;
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     if ((int)deqSessions.size() < CCoinJoinClientOptions::GetSessions()) {
         deqSessions.emplace_back(mixingWallet);
@@ -1152,7 +1162,7 @@ bool CCoinJoinClientSession::ProcessPendingDsaRequest(CConnman& connman)
         pendingDsaRequest = CPendingDsaRequest();
     } else if (pendingDsaRequest.IsExpired()) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- failed to connect to %s\n", __func__, pendingDsaRequest.GetAddr().ToString());
-        SetNull();
+        WITH_LOCK(cs_coinjoin, SetNull());
     }
 
     return fDone;
@@ -1160,6 +1170,7 @@ bool CCoinJoinClientSession::ProcessPendingDsaRequest(CConnman& connman)
 
 void CCoinJoinClientManager::ProcessPendingDsaRequest(CConnman& connman)
 {
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
         if (session.ProcessPendingDsaRequest(connman)) {
@@ -1170,6 +1181,7 @@ void CCoinJoinClientManager::ProcessPendingDsaRequest(CConnman& connman)
 
 bool CCoinJoinClientManager::TrySubmitDenominate(const CService& mnAddr, CConnman& connman)
 {
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
         CDeterministicMNCPtr mnMixing;
@@ -1183,6 +1195,7 @@ bool CCoinJoinClientManager::TrySubmitDenominate(const CService& mnAddr, CConnma
 
 bool CCoinJoinClientManager::MarkAlreadyJoinedQueueAsTried(CCoinJoinQueue& dsq) const
 {
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
         CDeterministicMNCPtr mnMixing;
@@ -1818,6 +1831,7 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
     obj.pushKV("running",       IsMixing());
 
     UniValue arrSessions(UniValue::VARR);
+    AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
         if (session.GetState() != POOL_STATE_IDLE) {

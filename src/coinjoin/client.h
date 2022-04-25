@@ -101,7 +101,7 @@ private:
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, const std::vector<CTxDSIn>& vecTxDSIn, std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet, bool fDryRun = false);
     /// step 2: send denominated inputs and outputs prepared in step 1
-    bool SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman);
+    bool SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman) LOCKS_EXCLUDED(cs_coinjoin);
 
     /// Process Masternode updates about the progress of mixing
     void ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup);
@@ -111,11 +111,11 @@ private:
     void CompletedTransaction(PoolMessage nMessageID);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
+    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman) LOCKS_EXCLUDED(cs_coinjoin);
 
     void RelayIn(const CCoinJoinEntry& entry, CConnman& connman) const;
 
-    void SetNull();
+    void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
     explicit CCoinJoinClientSession(CWallet& pwallet) :
@@ -127,14 +127,14 @@ public:
 
     void UnlockCoins();
 
-    void ResetPool();
+    void ResetPool() LOCKS_EXCLUDED(cs_coinjoin);
 
     bilingual_str GetStatus(bool fWaitForBlock) const;
 
     bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
+    bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false) LOCKS_EXCLUDED(cs_coinjoin);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
     bool SubmitDenominate(CConnman& connman);
@@ -151,7 +151,7 @@ public:
 class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 {
 public:
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
 
     void DoMaintenance();
 };
@@ -164,7 +164,7 @@ private:
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
 
-    mutable CCriticalSection cs_deqsessions;
+    mutable Mutex cs_deqsessions;
     // TODO: or map<denom, CCoinJoinClientSession> ??
     std::deque<CCoinJoinClientSession> deqSessions GUARDED_BY(cs_deqsessions);
 
@@ -195,27 +195,27 @@ public:
     explicit CCoinJoinClientManager(CWallet& wallet) :
         mixingWallet(wallet) {}
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61) LOCKS_EXCLUDED(cs_deqsessions);
 
     bool StartMixing();
     void StopMixing();
     bool IsMixing() const;
-    void ResetPool();
+    void ResetPool() LOCKS_EXCLUDED(cs_deqsessions);
 
-    bilingual_str GetStatuses();
-    std::string GetSessionDenoms();
+    bilingual_str GetStatuses() LOCKS_EXCLUDED(cs_deqsessions);
+    std::string GetSessionDenoms() LOCKS_EXCLUDED(cs_deqsessions);
 
-    bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;
+    bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const LOCKS_EXCLUDED(cs_deqsessions);
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
+    bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false) LOCKS_EXCLUDED(cs_deqsessions);
 
-    bool TrySubmitDenominate(const CService& mnAddr, CConnman& connman);
-    bool MarkAlreadyJoinedQueueAsTried(CCoinJoinQueue& dsq) const;
+    bool TrySubmitDenominate(const CService& mnAddr, CConnman& connman) LOCKS_EXCLUDED(cs_deqsessions);
+    bool MarkAlreadyJoinedQueueAsTried(CCoinJoinQueue& dsq) const LOCKS_EXCLUDED(cs_deqsessions);
 
-    void CheckTimeout();
+    void CheckTimeout() LOCKS_EXCLUDED(cs_deqsessions);
 
-    void ProcessPendingDsaRequest(CConnman& connman);
+    void ProcessPendingDsaRequest(CConnman& connman) LOCKS_EXCLUDED(cs_deqsessions);
 
     void AddUsedMasternode(const COutPoint& outpointMn);
     CDeterministicMNCPtr GetRandomNotUsedMasternode();
@@ -226,7 +226,7 @@ public:
 
     void DoMaintenance(CConnman& connman);
 
-    void GetJsonInfo(UniValue& obj) const;
+    void GetJsonInfo(UniValue& obj) const LOCKS_EXCLUDED(cs_deqsessions);
 };
 
 

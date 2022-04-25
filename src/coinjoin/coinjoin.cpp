@@ -145,7 +145,7 @@ bool CCoinJoinBroadcastTx::IsValidStructure() const
 void CCoinJoinBaseSession::SetNull()
 {
     // Both sides
-    LOCK(cs_coinjoin);
+    AssertLockHeld(cs_coinjoin);
     nState = POOL_STATE_IDLE;
     nSessionID = 0;
     nSessionDenom = 0;
@@ -301,7 +301,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
 }
 
 // Definitions for static data members
-CCriticalSection CCoinJoin::cs_mapdstx;
+Mutex CCoinJoin::cs_mapdstx;
 std::map<uint256, CCoinJoinBroadcastTx> CCoinJoin::mapDSTX GUARDED_BY(CCoinJoin::cs_mapdstx);
 
 // check to make sure the collateral provided by the client is valid
@@ -429,12 +429,14 @@ bilingual_str CCoinJoin::GetMessageByID(PoolMessage nMessageID)
 
 void CCoinJoin::AddDSTX(const CCoinJoinBroadcastTx& dstx)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     mapDSTX.insert(std::make_pair(dstx.tx->GetHash(), dstx));
 }
 
 CCoinJoinBroadcastTx CCoinJoin::GetDSTX(const uint256& hash)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     auto it = mapDSTX.find(hash);
     return (it == mapDSTX.end()) ? CCoinJoinBroadcastTx() : it->second;
@@ -442,6 +444,7 @@ CCoinJoinBroadcastTx CCoinJoin::GetDSTX(const uint256& hash)
 
 void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     auto it = mapDSTX.begin();
     while (it != mapDSTX.end()) {
@@ -483,12 +486,14 @@ void CCoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHeight
 
 void CCoinJoin::TransactionAddedToMempool(const CTransactionRef& tx)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     UpdateDSTXConfirmedHeight(tx, -1);
 }
 
 void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     for (const auto& tx : vtxConflicted) {
         UpdateDSTXConfirmedHeight(tx, -1);
@@ -501,6 +506,7 @@ void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, cons
 
 void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     for (const auto& tx : pblock->vtx) {
         UpdateDSTXConfirmedHeight(tx, -1);

@@ -186,6 +186,7 @@ void CCoinJoinServer::ProcessDSVIN(CNode* pfrom, const std::string& msg_type, CD
     if (AddEntry(connman, entry, nMessageID)) {
         PushStatus(pfrom, STATUS_ACCEPTED, nMessageID, connman);
         CheckPool(connman);
+        LOCK(cs_coinjoin);
         RelayStatus(STATUS_ACCEPTED, connman);
     } else {
         PushStatus(pfrom, STATUS_REJECTED, nMessageID, connman);
@@ -206,6 +207,7 @@ void CCoinJoinServer::ProcessDSSIGNFINALTX(CNode* pfrom, const std::string& msg_
         nTxInIndex++;
         if (!AddScriptSig(txin)) {
             LogPrint(BCLog::COINJOIN, "DSSIGNFINALTX -- AddScriptSig() failed at %d/%d, session: %d\n", nTxInIndex, nTxInsCount, nSessionID);
+            LOCK(cs_coinjoin);
             RelayStatus(STATUS_REJECTED, connman);
             return;
         }
@@ -217,6 +219,7 @@ void CCoinJoinServer::ProcessDSSIGNFINALTX(CNode* pfrom, const std::string& msg_
 
 void CCoinJoinServer::SetNull()
 {
+    AssertLockHeld(cs_coinjoin);
     // MN side
     vecSessionCollaterals.clear();
 
@@ -261,6 +264,7 @@ void CCoinJoinServer::CheckPool(CConnman& connman)
 
 void CCoinJoinServer::CreateFinalTransaction(CConnman& connman)
 {
+    AssertLockNotHeld(cs_coinjoin);
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CreateFinalTransaction -- FINALIZE TRANSACTIONS\n");
 
     LOCK(cs_coinjoin);
@@ -268,7 +272,7 @@ void CCoinJoinServer::CreateFinalTransaction(CConnman& connman)
     CMutableTransaction txNew;
 
     // make our new transaction
-    for (int i = 0; i < GetEntriesCount(); i++) {
+    for (int i = 0; i < GetEntriesCountLocked(); i++) {
         for (const auto& txout : vecEntries[i].vecTxOut) {
             txNew.vout.push_back(txout);
         }
@@ -290,6 +294,7 @@ void CCoinJoinServer::CreateFinalTransaction(CConnman& connman)
 
 void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 {
+    AssertLockNotHeld(cs_coinjoin);
     if (!fMasternodeMode) return; // check and relay final tx only on masternode
 
     CTransactionRef finalTransaction = WITH_LOCK(cs_coinjoin, return MakeTransactionRef(finalMutableTransaction));
@@ -304,7 +309,7 @@ void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
         mempool.PrioritiseTransaction(hashTx, 0.1 * COIN);
         if (!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, nullptr /* pfMissingInputs */, false /* bypass_limits */, DEFAULT_MAX_RAW_TX_FEE /* nAbsurdFee */)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
-            SetNull();
+            WITH_LOCK(cs_coinjoin, SetNull());
             // not much we can do in this case, just notify clients
             RelayCompletedTransaction(ERR_INVALID_TX, connman);
             return;
@@ -333,7 +338,7 @@ void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 
     // Reset
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- COMPLETED -- RESETTING\n");
-    SetNull();
+    WITH_LOCK(cs_coinjoin, SetNull());
 }
 
 //
@@ -350,6 +355,7 @@ void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 //
 void CCoinJoinServer::ChargeFees(CConnman& connman) const
 {
+    AssertLockNotHeld(cs_coinjoin);
     if (!fMasternodeMode) return;
 
     //we don't need to charge collateral for every offence.
@@ -465,7 +471,7 @@ void CCoinJoinServer::CheckTimeout(CConnman& connman)
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CheckTimeout -- %s timed out -- resetting\n",
         (nState == POOL_STATE_SIGNING) ? "Signing" : "Session");
     ChargeFees(connman);
-    SetNull();
+    WITH_LOCK(cs_coinjoin, SetNull());
 }
 
 /*
@@ -491,6 +497,7 @@ void CCoinJoinServer::CheckForCompleteQueue(CConnman& connman)
 // Check to make sure a given input matches an input in the pool and its scriptSig is valid
 bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin) const
 {
+    AssertLockHeld(cs_coinjoin);
     CMutableTransaction txNew;
     txNew.vin.clear();
     txNew.vout.clear();
@@ -499,7 +506,6 @@ bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin) const
     CScript sigPubKey = CScript();
 
     {
-        LOCK(cs_coinjoin);
         int i = 0;
         for (const auto &entry: vecEntries) {
             for (const auto &txout: entry.vecTxOut) {
@@ -538,6 +544,7 @@ bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin) const
 //
 bool CCoinJoinServer::AddEntry(CConnman& connman, const CCoinJoinEntry& entry, PoolMessage& nMessageIDRet)
 {
+    AssertLockNotHeld(cs_coinjoin);
     if (!fMasternodeMode) return false;
 
     if (size_t(GetEntriesCount()) >= vecSessionCollaterals.size()) {
@@ -600,6 +607,7 @@ bool CCoinJoinServer::AddEntry(CConnman& connman, const CCoinJoinEntry& entry, P
 
 bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
 {
+    AssertLockNotHeld(cs_coinjoin);
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
 
     LOCK(cs_coinjoin);
@@ -624,7 +632,7 @@ bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- adding to finalMutableTransaction, scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
         }
     }
-    for (int i = 0; i < GetEntriesCount(); i++) {
+    for (int i = 0; i < GetEntriesCountLocked(); i++) {
         if (vecEntries[i].AddScriptSig(txinNew)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- adding to entries, scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
             return true;
@@ -638,6 +646,7 @@ bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
 // Check to make sure everything is signed
 bool CCoinJoinServer::IsSignaturesComplete() const
 {
+    AssertLockNotHeld(cs_coinjoin);
     LOCK(cs_coinjoin);
 
     return ranges::all_of(vecEntries, [](const auto& entry){
@@ -757,11 +766,11 @@ bool CCoinJoinServer::IsSessionReady() const
 
 void CCoinJoinServer::RelayFinalTransaction(const CTransaction& txFinal, CConnman& connman)
 {
+    AssertLockHeld(cs_coinjoin);
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- nSessionID: %d  nSessionDenom: %d (%s)\n",
         __func__, nSessionID, nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
-    LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&txFinal, &connman, this](CNode* pnode) {
             CNetMsgMaker msgMaker(pnode->GetSendVersion());
@@ -785,9 +794,9 @@ void CCoinJoinServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, P
 
 void CCoinJoinServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& connman, PoolMessage nMessageID)
 {
+    AssertLockHeld(cs_coinjoin);
     unsigned int nDisconnected{};
     // status updates should be relayed to mixing participants only
-    LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         // make sure everyone is still connected
         bool fOk = connman.ForNode(entry.addr, [&nStatusUpdate, &nMessageID, &connman, this](CNode* pnode) {
@@ -822,6 +831,7 @@ void CCoinJoinServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& conn
 
 void CCoinJoinServer::RelayCompletedTransaction(PoolMessage nMessageID, CConnman& connman)
 {
+    AssertLockNotHeld(cs_coinjoin);
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- nSessionID: %d  nSessionDenom: %d (%s)\n",
         __func__, nSessionID, nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
 
