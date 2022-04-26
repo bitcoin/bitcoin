@@ -3446,7 +3446,7 @@ bool CConnman::OutboundTargetReached(bool historicalBlockServingLimit) const
         // keep a large enough buffer to at least relay each block once
         const std::chrono::seconds timeLeftInCycle = GetMaxOutboundTimeLeftInCycle_();
         // SYSCOIN
-        const uint64_t buffer = timeLeftInCycle / (std::chrono::seconds{150}/60) * MAX_BLOCK_SERIALIZED_SIZE;
+        const uint64_t buffer = timeLeftInCycle / ((std::chrono::seconds{150}/60) * MAX_BLOCK_SERIALIZED_SIZE);
         if (buffer >= nMaxOutboundLimit || nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit - buffer)
             return true;
     }
