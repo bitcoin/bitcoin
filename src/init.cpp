@@ -1211,7 +1211,7 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {
             return InitError(_("-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes."));
         }
-        if (g_enabled_filter_types.count(BlockFilterType::BASIC)) {
+        if (g_enabled_filter_types.count(BlockFilterType::BASIC_FILTER)) {
             return InitError(_("-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes."));
         }
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
