@@ -4222,8 +4222,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         {
         LOCK(cs_main);
 
-        const CBlockIndex* prev_block = m_chainman.m_blockman.LookupBlockIndex(cmpctblock.header.hashPrevBlock);
+        // Does the header in the compact block connect to something in our
+        // blockindex and should this peer be allowed to know abut the
+        // connecting header (i.e. cmpctblock.header.hashPrevBlock)?
+        const CBlockIndex* prev_block{LookupBlockIndexForPeer(pfrom, cmpctblock.header.hashPrevBlock)};
         if (!prev_block) {
+            const CBlockIndex* prev_block_index{m_chainman.m_blockman.LookupBlockIndex(cmpctblock.header.hashPrevBlock)};
+            if (prev_block_index) {
+                // The headers connects to something in our blockindex but this
+                // peer is not allowed to know about the existence of the
+                // connecting header. The peer might be probing for stale
+                // blocks in our index but this could also just happen
+                // randomly.
+                LogPrint(BCLog::NET, "treating received compact block header from peer=%d as unconnecting header to prevent fingerprinting\n", pfrom.GetId());
+            }
+
             // Doesn't connect (or is genesis), instead of DoSing in AcceptBlockHeader, request deeper headers
             if (!m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                 MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), *peer);
