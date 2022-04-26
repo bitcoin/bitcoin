@@ -1182,7 +1182,7 @@ Somente é possível assinar com endereços do tipo 'legado'.</translation>
     </message>
     <message>
         <source>S&amp;how</source>
-        <translation type="unfinished">S&amp;como</translation>
+        <translation type="unfinished">Mo&amp;strar</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
