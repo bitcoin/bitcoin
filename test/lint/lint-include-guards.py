@@ -26,8 +26,7 @@ EXCLUDE_FILES_WITH_PREFIX = ['src/crypto/ctaes',
                              'src/tinyformat.h',
                              'src/bench/nanobench.h',
                              'src/test/fuzz/FuzzedDataProvider.h',
-                             'src/bls-dash/'
-                             'src/ctpl_stl.h']
+                             'src/bls-dash']
 
 
 def _get_header_file_lst() -> List[str]:

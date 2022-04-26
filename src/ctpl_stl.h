@@ -17,8 +17,8 @@
 *********************************************************/
 
 
-#ifndef __ctpl_stl_thread_pool_H__
-#define __ctpl_stl_thread_pool_H__
+#ifndef SYSCOIN_CTPL_STL_H
+#define SYSCOIN_CTPL_STL_H
 
 #include <functional>
 #include <thread>
@@ -250,4 +250,4 @@ namespace ctpl {
 
 }
 
-#endif // __ctpl_stl_thread_pool_H__
+#endif // SYSCOIN_CTPL_STL_H
