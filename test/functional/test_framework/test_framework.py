@@ -1463,7 +1463,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         best_block_hash = self.nodes[0].getbestblockhash()
         block_height = self.nodes[0].getblockcount()
-        quorum_rotation_info = self.nodes[0].quorum("rotationinfo", best_block_hash, 0, False)
+        quorum_rotation_info = self.nodes[0].quorum("rotationinfo", best_block_hash)
         self.log.info("h("+str(block_height)+"):"+str(quorum_rotation_info))
 
         return (quorum_info_0, quorum_info_1)
