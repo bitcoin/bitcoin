@@ -871,7 +871,7 @@ void RPCConsole::clear(bool keep_prompt)
     }
 
     // Set default style sheet
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont(/*use_embedded_font=*/true));
 #else
     QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont());
