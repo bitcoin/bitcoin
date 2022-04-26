@@ -102,15 +102,14 @@ Please download the installer here: http://msys2.github.io/
   pacman -Sy
   pacman -Su
   pacman -S --needed filesystem msys2-runtime bash
-  pacman -S base-devel gcc cmake git mingw-w64-{x86_64,i686}-nsis
-  pacman -S make autoconf autotools automake libtool autotools-dev
-  pacman -S mingw-w64-{i686,x86_64}-toolchain mingw-w64-{i686,x86_64}-pkgconf
-  pacman -S mingw-w64-{i686,x86_64}-boost
-  pacman -S mingw-w64-{i686,x86_64}-crt-git
-  pacman -S mingw-w64-{i686,x86_64}-libevent
-  pacman -S mingw-w64-{i686,x86_64}-db
-  pacman -S mingw-w64-{i686,x86_64}-miniupnpc
-  pacman -S mingw-w64-{i686,x86_64}-ccache
+  pacman -S base-devel gcc make cmake git
+  pacman -S autoconf autotools automake libtool
+  pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkgconf
+  pacman -S mingw-w64-x86_64-boost mingw-w64-x86_64-nsis
+  pacman -S mingw-w64-x86_64-libevent
+  pacman -S mingw-w64-x86_64-db
+  pacman -S mingw-w64-x86_64-miniupnpc
+  pacman -S mingw-w64-x86_64-ccache
 ```
 
 #### Execute:
