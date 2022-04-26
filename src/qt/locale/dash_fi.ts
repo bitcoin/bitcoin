@@ -1,4 +1,4 @@
-<TS language="fi" version="2.1">
+<TS version="2.1" language="fi">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -78,8 +78,8 @@
         <translation>Nämä ovat Dash osoitteesi maksujen lähetykseen. Tarkista aina lähetettävä määrä ja vastaanottajan osoite ennen kuin lähetät kolikoita.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Nämä ovat Dash osoitteesi suoritusten vastaanottamiseen. Suositellaan että käytät uutta osoitetta kullekin siirtotapahtumalle.</translation>
+        <source>These are your Dash addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Nämä ovat Dash osoitteesi maksujen vastaanottoon. Käytä 'Luo uusi osoite' painiketta vastaanota välilehdellä luodaksesi uusia osoitteita.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -191,12 +191,8 @@
         <translation>Uusi salasana uudelleen</translation>
     </message>
     <message>
-        <source>Show password</source>
+        <source>Show passphrase</source>
         <translation>Näytä salasana</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Anna lompakolle uusi salasana.&lt;br/&gt;Käytä salasanaa jossa on ainakin  &lt;b&gt;10 satunnaista mekkiä&lt;/b&gt; tai &lt;b&gt;kahdeksan sanaa&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -227,10 +223,6 @@
         <translation>Vaihda salasana</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Anna lompakon vanha ja uusi salasana.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Vahvista lompakon salaus</translation>
     </message>
@@ -247,8 +239,28 @@
         <translation>Lompakko salattu</translation>
     </message>
     <message>
-        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>Lompakkosi on nyt salattu. Muista että salaus ei voi täysin suojata varojasi jo tietokoneesi saastuu haittaohjelmalla.</translation>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Anna lompakolle uusi salasana.&lt;br/&gt;Käytä salasanaa jossa on ainakin  &lt;b&gt;10 satunnaista mekkiä&lt;/b&gt; tai, &lt;b&gt;kahdeksan sanaa&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Anna lompakon vanha ja uusi salasana.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>Muista että salaus ei voi täysin suojata varojasi jos tietokoneesi saastuu haittaohjelmalla.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Salattava lompakko</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Lompakkosi salataan pian.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Lompakkosi on nyt salattu.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -316,18 +328,6 @@
         <translation>Vakava virhe tapahtunut. Dash Core ei voi enää toimia turvallisesti ja sulkeutuu.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Lompakko</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Solmu</translation>
-    </message>
-    <message>
         <source>&amp;Overview</source>
         <translation>&amp;Yleisnäkymä</translation>
     </message>
@@ -352,6 +352,50 @@
         <translation>Pyydä maksuja (Luo QR koodit ja Dash: URIt)</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Lähettävät Osoitteet</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Vastaanottavat Osoitteet</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Avaa Lompakko</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Avaa lompakko</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Sulje Lompakko...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Sulje lompakko</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Ei käytettävissä olevia lompakoita</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Ikkuna</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Pienennä</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Suurenna</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Pääikkuna</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
         <translation>&amp;Tapahtumat</translation>
     </message>
@@ -374,10 +418,6 @@
     <message>
         <source>Quit application</source>
         <translation>Sulje ohjelma</translation>
-    </message>
-    <message>
-        <source>Show information about Dash Core</source>
-        <translation>Näytä tietoja Dash Core:sta</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -520,16 +560,8 @@
         <translation>Näytä automaattisesti tehdyt lompakon varmistukset</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Lähettävät Osoitteet...</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Näytä lähettämiseen käytettyjen osoitteiden ja nimien lista</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Va&amp;staanottavat Osoitteet...</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -574,6 +606,18 @@
         <translation>&amp;Tiedosto</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Näytä tietoja %1</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Luo Lompakko...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Luo uusi lompakko</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 T&amp;ietoja</translation>
     </message>
@@ -586,16 +630,20 @@
         <translation>&amp;Asetukset</translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Työkalut</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Apua</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
         <translation>Välilehtipalkki</translation>
+    </message>
+    <message>
+        <source>&amp;Governance</source>
+        <translation>&amp;Hallinto</translation>
+    </message>
+    <message>
+        <source>View Governance Proposals</source>
+        <translation>Näytä hallinnon ehdotukset</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
@@ -662,8 +710,16 @@
         <translation>Virhe</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>Virhe: %1</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Varoitus</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Varoitus: %1</translation>
     </message>
     <message>
         <source>Information</source>
@@ -746,6 +802,14 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittu&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy on &lt;b&gt;käytössä&lt;/b&gt;: %1</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>Alkuperäinen viesti:</translation>
     </message>
 </context>
 <context>
@@ -944,6 +1008,60 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Luodaan Lompakko &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Lompakon luonti epäonnistui</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Luo lompakko varoitus</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Luo Lompakko</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Lompakon Nimi</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Salaa lompakko. Lompakko salataan haluamallasi salasanallasi.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Salaa Lompakko</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Poista tämän lompakon yksityisavaimet käytöstä. Lompakoissa joissa yksityisavaimet on poistettu käytöstä, ei ole yksityisiä avaimia, eikä niissä voi olla HD-siementä tai tuotuja yksityisavaimia Tämä sopii hyvin katso-vain lompakoille.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Poista Käytöstä Yksityisavaimet </translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Tee tyhjä lompakko. Tyhjissä lompakoissa ei aluksi ole yksityisavaimia tai komentosarjoja. Yksityisavaimet ja osoitteet voidaan tuoda tai HD siemen voidaan asettaa myöhemmin.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Luo Tyhjä Lompakko</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Luo</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -982,8 +1100,12 @@
         <translation>Annettu osoite "%1" ei ole pätevä Dash osoite.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Osoite "%1" on jo osoitekirjassa.</translation>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>Osoite "%1" on jo olemassa nimellä "%2" ja ei voida lisätä lähettäväksi osoitteeksi.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>Osoite "%1" on jo osoitekirjassa nimellä "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1018,14 +1140,37 @@
     </message>
 </context>
 <context>
+    <name>GovernanceList</name>
+    <message>
+        <source>Form</source>
+        <translation>Lomake</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>SuodatusLista:</translation>
+    </message>
+    <message>
+        <source>Filter propsal list</source>
+        <translation>Suodata ehdotuslista</translation>
+    </message>
+    <message>
+        <source>Proposal Count:</source>
+        <translation>Ehdotuksien Määrä:</translation>
+    </message>
+    <message>
+        <source>Filter by Title</source>
+        <translation>Suodata Otsikolla</translation>
+    </message>
+    <message>
+        <source>Proposal Info: %1</source>
+        <translation>Ehdotus Info: %1</translation>
+    </message>
+</context>
+<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
         <translation>versio</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bittinen)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -1120,10 +1265,6 @@
     <message>
         <source>Status</source>
         <translation>Tila</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1285,8 +1426,8 @@
         <translation>Piilota</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Tuntematon. Synkronoidaan otsikoita (%1)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Tuntematon. Synkronoidaan otsikoita (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -1313,6 +1454,25 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Lompakon avaus epäonnistui</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Lompakon avaus varoitus</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>oletus lompakko</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Avataan Lompakko &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -1325,10 +1485,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>&amp;Tietokannan välimuistin koko</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1347,10 +1503,6 @@
         <translation>&amp;Ulkoasu</translation>
     </message>
     <message>
-        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
-        <translation>Poistaa käytöstä joitakin laajempia ominaisuuksia mutta silti kaikki lohkot vahvistetaan. Tämän asetuksen takaisin käyttöönottaminen edellyttää koko lohkoketjun uudelleen latausta. Levytilan tarve voi olla korkeampi.</translation>
-    </message>
-    <message>
         <source>Prune &amp;block storage to</source>
         <translation>Karsi &amp;lohko levytila</translation>
     </message>
@@ -1363,12 +1515,24 @@
         <translation>Tämän asetuksen takaisin käyttöönottaminen edellyttää koko lohkoketjun uudelleen latausta.</translation>
     </message>
     <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
+    </message>
+    <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>Näytä lisävälilehti jonka ensimmäisellä alivälilehdellä näkyvät sinun masternodet&lt;br/&gt;ja toisella alivälilehdellä näkyvät verkon kaikki masternodet.</translation>
     </message>
     <message>
         <source>Show Masternodes Tab</source>
         <translation>Näytä Masternodet Välilehti</translation>
+    </message>
+    <message>
+        <source>Show additional tab listing governance proposals.</source>
+        <translation>Näytä lisä välilehti listaus hallintoehdotuksista.</translation>
+    </message>
+    <message>
+        <source>Show Governance Tab</source>
+        <translation>Näytä Hallinto Välilehti</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
@@ -1427,6 +1591,14 @@
         <translation>Avaa automaattisesti Dash Core asiakasohjelmalle portti reitittimeen. Tämä toimii vain jos reitittimesi tukee UPnP:tä ja se on käytössä.</translation>
     </message>
     <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation>Avaa automaattisesti Bitcoin asiakasohjelmalle portti reitittimeen. Tämä toimii vain jos reitittimesi tukee NAT-PMP:tä ja se on käytössä. Ulkoinen portti voi olla satunnainen.</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation>Kartoita portti käyttäen NA&amp;T-PMP</translation>
+    </message>
+    <message>
         <source>Accept connections from outside.</source>
         <translation>Hyväksy yhteydet ulkopuolelta.</translation>
     </message>
@@ -1449,6 +1621,10 @@
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
         <translation>Käytä erillistä SOCKS&amp;5 proxy:a tavoittaaksesi peers:it Tor piilopalvelun kautta:</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Asetukset tässä dialogissa ylikirjoitetaan joko komentorivin tai asetustiedostosta:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1497,6 +1673,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Verkko</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Karsinnan käyttöönotto vähentää huomattavasti levytilan tarvetta. Kaikki lohkot ovat silti täysin vahvistettu. Tämän asetuksen ottaminen pois päältä vaatii koko lohkoketjun uudelleen lataamisen.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1579,10 +1759,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Desimaalit</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktiiviset komentorivivalinnat jotka ohittavat ylläolevat valinnat:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1875,6 +2051,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Maksupyynnön haku URL on virheellinen: %1</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>Ei voida prosessoida maksupyyntöä koska BIP70 tukea ei ole.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>Virheellinen maksuosoite %1</translation>
     </message>
@@ -1975,6 +2155,56 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>Proposal</name>
+    <message>
+        <source>Passing +%1</source>
+        <translation>Läpi menossa +%1</translation>
+    </message>
+    <message>
+        <source>Needs additional %1 votes</source>
+        <translation>Tarvitsee lisä-ääniä %1</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalModel</name>
+    <message>
+        <source>Yes</source>
+        <translation>Kyllä</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Ei</translation>
+    </message>
+    <message>
+        <source>Hash</source>
+        <translation>Tarkiste</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Otsikko</translation>
+    </message>
+    <message>
+        <source>Start</source>
+        <translation>Käynnistä</translation>
+    </message>
+    <message>
+        <source>End</source>
+        <translation>Lopeta</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Määrä</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>Aktiivinen</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Tila</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
@@ -2015,6 +2245,46 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Näytä aloitusruutu käynnistettäessä (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Virhe: Annettua datahakemistoa "%1" ei ole olemassa.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Virhe: Ei voida jäsentää asetustiedostoa: %1.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Virhe: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>Virhe: Fonttien lataus ei onnistunut.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>Virhe: Määritetty fonttiperhe virheellinen. Sallittu arvoalue: %1.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>Virhe: Määritetty fontin normaali painoarvo virheellinen. Sallittu arvoalue %1 - %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>Virhe: Määritetty fontin paksu painoarvo virheellinen. Sallittu arvoalue %1 - %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>Virhe: Määritetty fontin skaala virheellinen. Sallittu arvoalue %1 - %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>Virhe: Virheellinen -custom-css-dir polku.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>Virhe: %1 CSS tiedosto(t) puuttuu custom-css-dir polusta.</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -2118,49 +2388,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Virhe: Annettua datahakemistoa "%1" ei ole olemassa.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Virhe: asetustiedostoa %1 ei voida jäsentää. Käytä vain avain=arvo merkintätapaa.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Virhe: %1</translation>
-    </message>
-    <message>
-        <source>Error: Failed to load application fonts.</source>
-        <translation>Virhe: Fonttien lataus ei onnistunut.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Virhe: Määritetty fonttiperhe virheellinen. Sallittu arvoalue: %1.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>Virhe: Määritetty fontin normaali painoarvo virheellinen. Sallittu arvoalue %1 - %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>Virhe: Määritetty fontin paksu painoarvo virheellinen. Sallittu arvoalue %1 - %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>Virhe: Määritetty fontin arvoalue virheellinen. Sallittu arvoalue %1 - %2.</translation>
-    </message>
-    <message>
-        <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>Virhe: Virheellinen -custom-css-dir polku.</translation>
-    </message>
-    <message>
-        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>Virhe: %1 CSS tiedosto(t)  puuttuu custom-css-dir polusta.</translation>
-    </message>
-</context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -2207,6 +2434,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Kopioi kuva</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Tuloksen URI liian pitkä, yritä lyhentää otsikon tekstiä / viestiä.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Virhe käännettäessä URI:a QR koodiksi.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>QR koodin tuki ei käytettävissä.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2264,16 +2503,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Debug lokitiedosto</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Nykyinen lohkojen määrä</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>Asiakasohjelman versio</translation>
-    </message>
-    <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Käytössä oleva BerkeleyDB versio</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -2364,6 +2595,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Skannaa lohkoketju tiedostot 2 uudelleen</translation>
     </message>
     <message>
+        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
+        <translation>Painikkeet uudelleen käynnistävät lompakon korjauksen komentorivin valintoja käyttäen, nämä korjaavat korruptoituneen lohkoketjun tai puuttuvat/vanhentuneet tapahtumat.</translation>
+    </message>
+    <message>
         <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
         <translation>-rescan=1: Skannaa uudelleen puuttuvat tapahtumat lohkoketjusta aloittaen lompakon luontiajasta.</translation>
     </message>
@@ -2384,8 +2619,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Datahakemisto</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Määrittääksesi ei oletus datahakemiston sijainnin käytä '%1' asetusta.</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Lohkohakemisto</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Määrittääksesi ei oletus hakemiston sijainnin lohkoille käytä '%1' asetusta.</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Nykyinen lohkomäärä</translation>
+    </message>
+    <message>
         <source>Last block hash</source>
         <translation>Viimeisin lohkon tarkiste</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block hash</source>
+        <translation>Viimeisin Ketjulukitun lohkon tarkiste</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block height</source>
+        <translation>Viimeisin Ketjulukittu lohko</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2464,10 +2723,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Lompakon Korjaus</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>Pelasta lompakko</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>Palauta tapahtumat 1</translation>
     </message>
@@ -2478,15 +2733,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Upgrade wallet format</source>
         <translation>Päivitä lompakon formaatti</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Painikkeet käynnistävät lompakon korjauksen komentorivin valintoja käyttäen.
-Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/vanhentuneet tapahtumat.</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Yrittää pelastaa yksityiset avaimet viallisesta lompakkotiedostosta.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2542,10 +2788,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Poista estolistalta</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>oletuslompakko</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2671,8 +2913,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>&amp;Määrä</translation>
     </message>
     <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Maksupyyntö</translation>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Luo uusi vastaanottava osoite</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2713,6 +2955,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Copy URI</source>
         <translation>Kopioi URI</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Kopioi osoite</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -2776,14 +3022,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Wallet</source>
         <translation>Lompakko</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Tuloksen URI liian pitkä, yritä lyhentää otsikon tekstiä / viestiä.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Virhe käännettäessä URI:a QR koodiksi.</translation>
     </message>
 </context>
 <context>
@@ -2884,10 +3122,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Valitse...</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>pienennä siirtomaksu asetukset</translation>
-    </message>
-    <message>
         <source>Confirmation time target:</source>
         <translation>Vahvistusajan tavoite:</translation>
     </message>
@@ -2910,6 +3144,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
         <translation>Huomio: Ei tarpeeksi tietoja siirtomaksun määrän arviointiin, käytetään oletus siirtomaksua.</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Piilota tapahtuman siirtomaksun asetukset</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -3008,14 +3246,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Haluatko varmasti lähettää?</translation>
     </message>
     <message>
-        <source>are added as transaction fee</source>
-        <translation>lisätty siirtomaksuna</translation>
-    </message>
-    <message>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Määrä yhteensä = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
-    </message>
-    <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(Näytetään %1 / %2 merkintää)&lt;/b&gt;</translation>
     </message>
@@ -3036,6 +3266,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>kaikkia käytössä olevia varoja</translation>
     </message>
     <message>
+        <source>Transaction fee</source>
+        <translation>Siirtomaksu</translation>
+    </message>
+    <message>
         <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
         <translation>(%1 siirtotapahtumissa on korkeampi siirtomaksu yleensä koska vaihtolähtöjä ei sallita)</translation>
     </message>
@@ -3054,6 +3288,18 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
         <translation>Varoitus: Käyttämällä %1 ja %2 tai useampia syötteitä voi heikentää yksityisyyttäsi ja ei ole suositeltavaa</translation>
+    </message>
+    <message>
+        <source>Click to learn more</source>
+        <translation>Klikkaa saadaksesi lisätietoja</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Kokonaismäärä</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>tai</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3082,10 +3328,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Transaction creation failed!</source>
         <translation>Siirtotapahtuman luonti epäonnistui!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Siirto hylättiin seuraavasta syystä: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -3127,10 +3369,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>Tämä on normaali maksu.</translation>
-    </message>
-    <message>
         <source>Pay &amp;To:</source>
         <translation>Maksun &amp;saaja:</translation>
     </message>
@@ -3169,6 +3407,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>A&amp;mount:</source>
         <translation>&amp;Määrä:</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Valitun yksikön lähetettävä määrä</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -3214,8 +3456,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
 <context>
     <name>SendConfirmationDialog</name>
     <message>
-        <source>Yes</source>
-        <translation>Kyllä</translation>
+        <source>Send</source>
+        <translation>Lähetä</translation>
     </message>
 </context>
 <context>
@@ -3302,6 +3544,14 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>The Dash address the message was signed with</source>
         <translation>Dash osoite jolla viesti on allekirjoitettu</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>Vahvistettava allekirjoitettu viesti</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>Annettu allekirjoitus milloin viesti on vahvistettu</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
@@ -3543,6 +3793,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Transaction total size</source>
         <translation>Siirtotapahtuman koko yhteensä</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation> (Sertifikaatti ei ollut vahvistettu)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3838,8 +4092,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Kopioi siirtotapahtuman yksityiskohdat</translation>
     </message>
     <message>
-        <source>Edit label</source>
-        <translation>Muokkaa nimeä</translation>
+        <source>Edit address label</source>
+        <translation>Muokkaa osoitteen nimeä</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -3922,6 +4176,21 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Sulje lompakko</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Haluatko varmasti sulkea lompakon &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Lompakon sulkeminen liian pitkäksi ajaksi voi johtaa siihen, että koko ketju on synkronoitava uudelleen, jos karsiminen on käytössä. </translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3933,6 +4202,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Send Coins</source>
         <translation>Lähetä</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>oletuslompakko</translation>
     </message>
 </context>
 <context>
@@ -3983,6 +4256,14 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Virhe: Sisääntulevien yhteyksien kuuntelu epäonnistui (kuuntelu palautti virheen %s)</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>Siirtomaksun arvio epäonnistui. Varasiirtomaksu ei ole käytössä. Odota muutama lohko tai ota käyttöön -fallbackfee</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Tämä virhe saattaa ilmetä, jos tätä lompakkoa ei sammutettu kunnolla ja se ladattiin viimeksi Berkeley DB:n uudemmalla versiolla. Jos näin on, käytä ohjelmistoa joka latasi tämän lompakon viimeksi</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -4045,14 +4326,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Virhe luettaessa tietokantaa, ohjelma suljetaan.</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Virhe</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Virhe: Levytila on alhainen!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ei onnistuttu kuuntelemaan mitään porttia. Käytä -listen=0 jos haluat tätä.</translation>
     </message>
@@ -4089,18 +4362,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Merkintä ylittää maksimin.</translation>
     </message>
     <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Täytettyjen pyyntöjen välimuistin lataaminen epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>Hallinnon välimuistin lataaminen epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Masternode välimuistin lataaminen epäonnistui</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan ( odotetaan %s )</translation>
     </message>
@@ -4123,10 +4384,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Väärä tai ei alkuperäinen lohko löydetty. Väärä datahakemisto verkolle?</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Tietoja</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
@@ -4209,18 +4466,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Tuntematon vastaus.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Ei tuettu argumentti -benchmark jätetty huomiotta, käytä -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Ei tuettu argumentti -debugnet jätetty huomiotta, käytä -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Ei tuettu argumentti -tor löytyi, käytä -onion.</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Käyttäjä toimijan kommentti (%s) sisältää ei suositeltuja merkkejä.</translation>
     </message>
@@ -4245,10 +4490,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>%s odottaa.</translation>
     </message>
     <message>
-        <source>%s request incomplete: %s</source>
-        <translation>%s pyyntö kesken: %s</translation>
-    </message>
-    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Ei voida sekoittaa synkronoinnin aikana.</translation>
     </message>
@@ -4263,10 +4504,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s tiedosto sisältää kaikki yksityisavaimet tähän lompakkoon. Älä luovuta sitä kenellekkän!</translation>
-    </message>
-    <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>-masternode asetus ei ole enää käytössä, käyttämällä -masternodeblsprivkey riittää käynnistämään masternoden. </translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4302,24 +4539,12 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
 Vähennä uakommenttien määrää tai kokoa.</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Ei tuettu argumentti -socks löydetty. SOCKS version asettaminen ei ole enää mahdollista, vain SOCKS5 proxyt ovat tuettuja.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Ei tuettu argumentti -whitelistalwaysrelay sivuutettu, käytä -whitelistrelay ja/tai -whitelistforcerelay.</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>VAROITUS! Osoitevarannon täydentäminen epäonnistui, avaa lompakon lukitus.</translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
         <translation>Lompakko on lukittu, osoitevarannon täydentäminen ei onnistu! Automaattinen varmistus ja sekoitus ei ole käytössä, avaa lompakon lukitus täydentääksesi osoitevarannon.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Varoitus: Tuntemattomia lohkoversioita louhitaan! On mahdollista että tuntemattomia sääntöjä on käytössä</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -timestampindex</source>
@@ -4334,10 +4559,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>%s epäonnistui</translation>
     </message>
     <message>
-        <source>-litemode is deprecated.</source>
-        <translation>-litemode on poistettu käytöstä.</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool on oltava vähintään %d MB</translation>
     </message>
@@ -4346,8 +4567,28 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Automaattinen varmistus ei ole käytössä</translation>
     </message>
     <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Ei voida asettaa -peerblockfilters ilman -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>%s:n konfigurointiasetus käytössä vain %s verkossa [%s] osiossa. </translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>Ei löytynyt asmap tiedostoa %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>Ei voitu jäsentää asmap tiedostoa %s</translation>
+    </message>
+    <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>VIRHE! Automaattinen varmistus epäonnistui</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Virhe ladatessa %s: Yksityisavaimet voivat olla ainoastaan pois käytöstä luomisen aikana</translation>
     </message>
     <message>
         <source>Error upgrading evo database</source>
@@ -4358,24 +4599,16 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Virhe: Vakava sisäinen virhe, katso debug.log lisätietoja</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Virhe: Levytila on alhainen %s</translation>
+    </message>
+    <message>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
         <translation>Virhe: socket lisäys epollfd:ään epäonnistui (epoll_ctl palautti virheen %s)</translation>
     </message>
     <message>
         <source>Exceeded max tries.</source>
         <translation>Maksimi yritykset ylitetty.</translation>
-    </message>
-    <message>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>Täytettyjen pyyntöjen välimuistin tyhjennys epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to clear governance cache at</source>
-        <translation>Hallinnon välimuistin tyhjennys epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>Masternode välimuistin tyhjennys epäonnistui</translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4394,12 +4627,12 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Varmistuksen poisto epäonnistui, virhe: %s</translation>
     </message>
     <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>Spork välimuistin lataaminen epäonnistui</translation>
-    </message>
-    <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Lompakon uudelleen skannaaminen epäonnistui alustuksen aikana</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Virheellinen P2P oikeus: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -4408,14 +4641,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>Virheellinen masternodeblsprivkey. Katso lisätietoja dokumentaatiosta.</translation>
-    </message>
-    <message>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>Se on korvattu -disablegovernance.</translation>
-    </message>
-    <message>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>Korvaava -disablegovernance on pakotettu sen sijaan.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4470,6 +4695,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Karsinta ei voi olla asetettu negatiiviseksi arvoksi.</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Karsintatila on epäyhteensopiva -blockfilterindex kanssa.</translation>
+    </message>
+    <message>
         <source>Prune mode is incompatible with -disablegovernance=false.</source>
         <translation>Karsintatila on epäyhteensopiva -disablegovernance=false kanssa.</translation>
     </message>
@@ -4480,6 +4709,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Pruning blockstore...</source>
         <translation>Karsitaan lohkoja...</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>Osio [%s] ei ole tunnistettavissa.</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
@@ -4496,6 +4729,12 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Synchronizing blockchain...</source>
         <translation>Synkronoidaan lohkoketju...</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>Asetustiedostoa %s ei ole olemassa
+</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4538,16 +4777,20 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Kytkeytyminen kohteeseen %s ei onnistu tällä tietokoneella. %s on luultavasti jo käynnissä.</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Ei voitu luoda PID tiedostoa '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Aloitusavaimia ei voitu luoda</translation>
     </message>
     <message>
-        <source>Upgrading UTXO database</source>
-        <translation>Päivitetään UTXO tietokantaa</translation>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Tuntematon -blockfilterindex arvo %s.</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Lompakko %s sijaitsee lompakkohakemiston ulkopuolella %s</translation>
+        <source>Upgrading UTXO database</source>
+        <translation>Päivitetään UTXO tietokantaa</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4574,20 +4817,12 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Sinun tulee uudelleen rakentaa tietokanta käyttäen -reindex vaihtaen -spentindex</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Sinun tulee uudelleen rakentaa tietokanta käyttäen -reindex vaihtaen -txindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>sekoitus ei käytettävissä.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>katso debug.log lisätietoja.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4642,24 +4877,28 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Ei voitu toistaa lohkoja. Sinun tulee uudelleen rakentaa tietokanta käyttäen -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varoitus: Lompakkotiedosto on vioittunut, tiedot pelastettu. Alkuperäinen %s on tallennettu nimellä %s tänne %s, jos saldosi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Varoitus: Lompakossa {%s} havaittiin yksityisavaimet , jotka on poistettu käytöstä </translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d viimeisintä lohkoa 100:sta sisältää odottamattoman version</translation>
     </message>
     <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s korruptoitunut, korjaaminen epäonnistui</translation>
-    </message>
-    <message>
         <source>%s is not a valid backup folder!</source>
         <translation>%s ei ole pätevä varmistus hakemisto!</translation>
     </message>
     <message>
+        <source>%s is only allowed with a single wallet file</source>
+        <translation>%s on sallittu vain yhden lompakkotiedoston kanssa</translation>
+    </message>
+    <message>
         <source>%s is set very high!</source>
         <translation>%s on asetettu todella korkeaksi!</translation>
+    </message>
+    <message>
+        <source>%s request incomplete:</source>
+        <translation>%s pyyntö kesken:</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -4672,6 +4911,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>-rpcport must be specified when -devnet and -server are specified</source>
         <translation>-rpcport täytyy määritellä kun -devnet ja -server on määritelty</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Vakava sisäinen virhe, katso debug.log lisätietoja</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4688,6 +4931,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>Tekijänoikeus (C)</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>Levytila on alhainen!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -4718,8 +4965,36 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Virhe: socket lisäys kqueuefd:ään epäonnistui (kevent palautti virheen %s)</translation>
     </message>
     <message>
+        <source>Failed to clear fulfilled requests cache at %s</source>
+        <translation>Täytettyjen pyyntöjen välimuistin tyhjennys epäonnistui %s</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at %s</source>
+        <translation>Hallinnon välimuistin tyhjennys epäonnistui %s</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at %s</source>
+        <translation>Masternode välimuistin tyhjennys epäonnistui %s</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>Ei löytynyt sekoitusjonoa johon liittyä</translation>
+    </message>
+    <message>
+        <source>Failed to load fulfilled requests cache from %s</source>
+        <translation>Täytettyjen pyyntöjen välimuistin lataaminen epäonnistui %s</translation>
+    </message>
+    <message>
+        <source>Failed to load governance cache from %s</source>
+        <translation>Hallinnon välimuistin lataaminen epäonnistui %s</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode cache from %s</source>
+        <translation>Masternode välimuistin lataaminen epäonnistui %s</translation>
+    </message>
+    <message>
+        <source>Failed to load sporks cache from %s</source>
+        <translation>Spork välimuistin lataaminen epäonnistui %s</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
@@ -4790,6 +5065,14 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Viimeisin jono on luotu liian äskettäin.</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
+        <translation> %s vioittunut. Yritä käyttää lompakkotyökalua dash-wallet pelastaaksesi tai palauttaaksesi varmuuskopion.</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Vaihtoraha-osoitetta ei voi luoda. Ei avaimia sisäisessä avainvarannossa, eikä avaimia voi luoda.</translation>
+    </message>
+    <message>
         <source>Last successful action was too recent.</source>
         <translation>Viimeinen onnistunut tapahtuma oli liian äskettäin.</translation>
     </message>
@@ -4830,10 +5113,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Siirtotapahtuma ei ole voimassa.</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Siirtotapahtuma on liian iso suhteessa siirtomaksujen käytäntöön.</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Ei voida yhdistää %s tässä tietokoneessa (yhdistäminen palautti virheen %s)</translation>
     </message>
@@ -4862,6 +5141,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Ei tuettu lokikategoria %s=%s.</translation>
     </message>
     <message>
+        <source>Upgrading txindex database</source>
+        <translation>Päivitetään txindex tietokantaa</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>Tarkistetaan lohkoja...</translation>
     </message>
@@ -4872,14 +5155,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Wallet is locked.</source>
         <translation>Lompakko on lukittu.</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Varoitus</translation>
-    </message>
-    <message>
-        <source>Warning: %s is deprecated, please use %s instead</source>
-        <translation>Varoitus: %s on vanhentunut, käytä %s sen sijaan</translation>
     </message>
     <message>
         <source>Warning: can't use %s and %s together, will prefer %s</source>

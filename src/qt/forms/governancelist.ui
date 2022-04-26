@@ -61,7 +61,7 @@
          <item>
           <widget class="QLineEdit" name="filterLineEdit">
            <property name="toolTip">
-            <string>Filter propsal list</string>
+            <string>Filter proposal list</string>
            </property>
           </widget>
          </item>
