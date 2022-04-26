@@ -1,4 +1,4 @@
-<TS language="es" version="2.1">
+<TS version="2.1" language="es">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -78,8 +78,8 @@
         <translation>Estas son sus direcciones Dash para enviar pagos. Compruebe siempre la cantidad y la dirección receptora antes de enviar monedas.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Estas son sus direcciones de Dash para recibir pagos. Se recomienda utilizar una nueva dirección de recepción para cada transacción.</translation>
+        <source>These are your Dash addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Estas son tus direcciones de Dash para recibir pagos. Use el botón 'Crear nueva dirección de recepción' en la pestaña de recepción para crear nuevas direcciones.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -191,12 +191,8 @@
         <translation>Repita la nueva contraseña</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Mostrar contraseña</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Introduzca la nueva contraseña de la billetera.&lt;br/&gt;Por favor, use una contraseña con &lt;b&gt;diez o más caracteres aleatorios&lt;/b&gt;, u &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
+        <source>Show passphrase</source>
+        <translation>Mostrar frase de contraseña</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -227,10 +223,6 @@
         <translation>Cambiar contraseña</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Ingresa la antigua frase de acceso y la nueva contraseña de la billetera.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirmar cifrado de la billetera</translation>
     </message>
@@ -245,6 +237,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Billetera cifrado</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Ingresa la nueva frase de contraseña para la billetera.&lt;br/&gt;Utiliza una frase de contraseña de &lt;b&gt;diez o más caracteres aleatorios&lt;/b&gt;, o &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Ingresa la frase de contraseña anterior y la nueva para la billetera.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>Recuerda que encriptar tu billetera no puede proteger completamente tus fondos de que sean robados por un malware que infecte tu computadora.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Billetera a encriptar</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Tu billetera está a punto de ser encriptada.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Tu billetera ahora está encriptada.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -312,18 +328,6 @@
         <translation>Se produjo un error fatal. Dash Core no puede continuar de forma segura y se cerrará.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Billetera</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
-    </message>
-    <message>
         <source>&amp;Overview</source>
         <translation>&amp;Vista general</translation>
     </message>
@@ -348,6 +352,50 @@
         <translation>Solicitar pagos (genera códigos QR y URIs de Dash)</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Direcciones de envío</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Direcciones de recepción</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Abrir billetera</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Abrir una billetera</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Cerrar billetera...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Cerrar billetera</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>No hay billeteras disponibles</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Ventana</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimizar</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Ventana principal</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
         <translation>&amp;Transacciones</translation>
     </message>
@@ -370,10 +418,6 @@
     <message>
         <source>Quit application</source>
         <translation>Salir de la aplicación</translation>
-    </message>
-    <message>
-        <source>Show information about Dash Core</source>
-        <translation>Mostrar información acerca de Dash Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -516,16 +560,8 @@
         <translation>Mostrar las copias de seguridad de la billetera creadas automáticamente</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Direcciones de envío...</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Mostrar la lista de direcciones de envío y etiquetas</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Direcciones de recepción...</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -548,6 +584,10 @@
         <translation>Mostrar el %1 mensaje de ayuda para obtener una lista de las posibles opciones de linea de comandos de Dash</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>billetera predeterminada</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 cliente</translation>
     </message>
@@ -566,6 +606,18 @@
         <translation>&amp;Archivo</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Mostrar información sobre %1</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Crear billetera...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Crear una nueva billetera</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 &amp;Información</translation>
     </message>
@@ -578,16 +630,20 @@
         <translation>&amp;Configuración</translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Herramientas</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Ayuda</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
         <translation>Barra de pestañas</translation>
+    </message>
+    <message>
+        <source>&amp;Governance</source>
+        <translation>&amp;Governanza</translation>
+    </message>
+    <message>
+        <source>View Governance Proposals</source>
+        <translation>Ver propuestas de gobernanza</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
@@ -654,8 +710,16 @@
         <translation>Error</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>Error: %1</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Advertencia</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Advertencia: %1</translation>
     </message>
     <message>
         <source>Information</source>
@@ -738,6 +802,14 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>La billetera está &lt;b&gt;cifrada&lt;/b&gt; y actualmente &lt;b&gt;bloqueada&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy esta &lt;b&gt;activado&lt;/b&gt;: %1</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>Mensaje original:</translation>
     </message>
 </context>
 <context>
@@ -936,6 +1008,60 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Creando billetera &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>No se pudo crear la billetera</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Crear advertencia de billetera</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Crear billetera</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Nombre de la billetera</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Encriptar la billetera. La billetera se encriptará con una frase de contraseña de tu elección.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Encriptar billetera</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Deshabilita las llaves privadas para esta billetera. Las billeteras con llaves privadas deshabilitadas no tendrán llaves privadas y no pueden tener una semilla HD o llaves privadas importadas. Esto es ideal para carteras de vigilancia</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Deshabilitar llaves privadas</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Haz una billetera en blanco. Las billeteras en blanco inicialmente no tienen llaves privadas o scripts. Las llaves privadas y las direcciones se pueden importar, o se puede configurar una semilla HD, en un momento posterior.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Hacer una billetera en blanco</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Crear</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -974,8 +1100,12 @@
         <translation>La dirección introducida "%1" no es una dirección Dash válida.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>La dirección introducida "%1" ya está en la libreta de direcciones.</translation>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>La dirección "%1" ya existe como dirección de recepción con la etiqueta "%2" y por lo tanto, no se puede agregar como dirección de envío.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>La dirección ingresada "%1" ya está en la libreta de direcciones con la etiqueta "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1010,14 +1140,37 @@
     </message>
 </context>
 <context>
+    <name>GovernanceList</name>
+    <message>
+        <source>Form</source>
+        <translation>Forma</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>Lista de filtros:</translation>
+    </message>
+    <message>
+        <source>Filter propsal list</source>
+        <translation>Filtrar lista de propuestas</translation>
+    </message>
+    <message>
+        <source>Proposal Count:</source>
+        <translation>Número de propuestas:</translation>
+    </message>
+    <message>
+        <source>Filter by Title</source>
+        <translation>Filtrar por título</translation>
+    </message>
+    <message>
+        <source>Proposal Info: %1</source>
+        <translation>Información de la propuesta: %1</translation>
+    </message>
+</context>
+<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
         <translation>versión</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -1112,10 +1265,6 @@
     <message>
         <source>Status</source>
         <translation>Estado</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1277,8 +1426,8 @@
         <translation>Ocultar</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Desconocido. Sincronizando Encabezados (%1)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Desconocido. Sincronización de encabezados (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -1305,6 +1454,25 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>No se pudo abrir la billetera</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Advertencia de billetera abierta</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera predeterminada</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Abriendo billetera &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -1317,10 +1485,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Tamaño de la &amp;memoria caché en la base de datos</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1339,12 +1503,36 @@
         <translation>&amp;Apariencia</translation>
     </message>
     <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Despeja y bloquea el almacenamiento para</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Revertir esta configuración requiere volver a descargar toda la cadena de bloques.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
+    </message>
+    <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>Mostrar una pestaña adicional listando todos sus masternodes en la primera sub-pestaña&lt;br/&gt; y todos los masternodos en la red en la segunda sub-pestaña.</translation>
     </message>
     <message>
         <source>Show Masternodes Tab</source>
         <translation>Mostrar pestaña Masternodes</translation>
+    </message>
+    <message>
+        <source>Show additional tab listing governance proposals.</source>
+        <translation>Mostrar pestaña adicional que enumera las propuestas de gobernanza.</translation>
+    </message>
+    <message>
+        <source>Show Governance Tab</source>
+        <translation>Mostrar pestaña de gobernanza</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
@@ -1403,6 +1591,14 @@
         <translation>Abrir automáticamente el puerto del cliente Dash Core en el enrutador. Esto solo funciona cuando su enrutador admite UPnP y está habilitado.</translation>
     </message>
     <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation>Abre automáticamente el puerto del cliente Bitcoin en el router. Esto solo funciona cuando tu router es compatible con NAT-PMP y está habilitado. El puerto externo podría ser aleatorio.</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation>Mapa de puerto usando NA&amp;T-PMP</translation>
+    </message>
+    <message>
         <source>Accept connections from outside.</source>
         <translation>Aceptar conexiones del exterior.</translation>
     </message>
@@ -1425,6 +1621,10 @@
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
         <translation>Usar por separado SOCKS&amp;5 proxy para llegar a pares a través de los servicios ocultos de Tor:</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Las opciones configuradas en este cuadro de diálogo se reemplazan por la línea de comando o en el archivo de configuración:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1473,6 +1673,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Red</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Habilitar el despeje reduce significativamente el espacio en disco necesario para almacenar transacciones. Todos los bloques todavía están completamente validados. Revertir esta configuración requiere volver a descargar toda la cadena de bloques.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1555,10 +1759,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Dígitos decimales</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Opciones activas de la consola de comandos que tienen preferencia sobre las opciones anteriores:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1851,6 +2051,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La URL de obtención de la solicitud de pago es inválida: %1</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>No se puede procesar la solicitud de pago porque no se compiló el soporte BIP70.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>Dirección de pago no válida %1</translation>
     </message>
@@ -1951,6 +2155,56 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>Proposal</name>
+    <message>
+        <source>Passing +%1</source>
+        <translation>Pasando +%1</translation>
+    </message>
+    <message>
+        <source>Needs additional %1 votes</source>
+        <translation>Necesita %1 votos adicionales</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalModel</name>
+    <message>
+        <source>Yes</source>
+        <translation>Si</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>Hash</source>
+        <translation>Hash</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Título</translation>
+    </message>
+    <message>
+        <source>Start</source>
+        <translation>Inicio</translation>
+    </message>
+    <message>
+        <source>End</source>
+        <translation>Final</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Monto</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>Activo</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Estado</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
@@ -1991,6 +2245,46 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Mostrar pantalla de bienvenida al iniciar (predeterminado: %u)</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Error: Directorio de datos especificado "%1" no existe.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Error: No se puede analizar el archivo de configuración: %1.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Error: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>Error: Error al cargar las fuentes de la aplicación.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>Error: La familia de fuentes especificada no es válida. Valores válidos: %1.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>Error: Fuente-peso-normal especificado no válido. Rango válido %1 a %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>Error: La fuente-peso-negrita especificada no es válida. Rango válido %1 a %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>Error: La escala de fuente especificada no es válida. Rango válido %1 a %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>Error: Camino -custom-css-dir inválido.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>Error: %1 CSS file(s) faltando en -custom-css-dir camino.</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -2094,49 +2388,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Error: El directorio de datos «%1» especificado no existe.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Error: No se puede analizar el archivo de configuración: %1. Utilice únicamente la sintaxis key=value.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Error: %1</translation>
-    </message>
-    <message>
-        <source>Error: Failed to load application fonts.</source>
-        <translation>Error: no se pudieron cargar las fuentes de la aplicación.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Error: la familia de fuentes especificada no es válida. Valores válidos: %1.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>Error: la fuente especificada-peso-normal no es válida. Rango válido %1 to %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>Error: el peso de la fuente especificado no es válido. Rango válido %1 to %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>Error: La escala de fuente especificada no es válida. Rango válido %1 to %2.</translation>
-    </message>
-    <message>
-        <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>Error: Invalido -custom-css-dir path.</translation>
-    </message>
-    <message>
-        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>Error: %1 CSS archivo(s) falta en -custom-css-dir path.</translation>
-    </message>
-</context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -2183,6 +2434,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Copiar imagen</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URI resultante demasiado largo, intenta reducir el texto de la etiqueta / mensaje.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Error al codificar el URI en el código QR.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>Soporte de código QR no disponible.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2240,16 +2503,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Archivo de registro de depuración</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Número actual de bloques</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>Versión del cliente</translation>
-    </message>
-    <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Utilizando versión de BerkeleyDB</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -2340,6 +2595,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Reexplorar la cadena de bloques 2</translation>
     </message>
     <message>
+        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
+        <translation>Los botones a continuación reiniciarán la billetera con opciones de línea de comandos para reparar la billetera, solucionar problemas con archivos corruptos de  la cadena de bloques o transacciones faltantes / obsoletas.</translation>
+    </message>
+    <message>
         <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
         <translation>-rescan=1: Vuelve a escanear la cadena de bloques en busca de transacciones de billetera faltantes a partir del momento de creación de la billetera.</translation>
     </message>
@@ -2360,8 +2619,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Datadir</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Para especificar una ubicación no predeterminada del directorio de datos, usa la opción '%1'.</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Blocksdir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Para especificar una ubicación no predeterminada del directorio de bloques, usa la opción '%1'.</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Altura de bloque actual</translation>
+    </message>
+    <message>
         <source>Last block hash</source>
         <translation>Hash del último bloque</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block hash</source>
+        <translation>Último hash de bloque de la cadena bloqueada</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block height</source>
+        <translation>Última altura de bloque de la cadena bloqueada</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2440,10 +2723,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Reparar Billetera</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>Rescatar billetera</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>Recuperar transacciones 1</translation>
     </message>
@@ -2454,14 +2733,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Upgrade wallet format</source>
         <translation>Actualizar formato de la billetera</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Los botones de abajo reiniciarán la billetera con las opciones de la línea de comandos para reparar la billetera, arreglar problemas con archivos corruptos de la cadena de bloques o transacciones perdidas/obsoletas.</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Intentar recuperar las llaves privadas de un wallet.dat corrupto.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2639,8 +2910,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Cantidad:</translation>
     </message>
     <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Solicitar pago</translation>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Crear nueva dirección de recepción</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2681,6 +2952,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copy URI</source>
         <translation>Copiar URI</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Copiar dirección</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -2744,14 +3019,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wallet</source>
         <translation>Billetera</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>URI resultante demasiado larga. Intente reducir el texto de la etiqueta / mensaje.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Error al codificar la URI en el código QR.</translation>
     </message>
 </context>
 <context>
@@ -2852,10 +3119,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Elegir...</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>plegar ajustes de comisión</translation>
-    </message>
-    <message>
         <source>Confirmation time target:</source>
         <translation>Objetivo de tiempo de confirmación</translation>
     </message>
@@ -2878,6 +3141,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
         <translation>Nota: No hay suficientes datos para la estimación de tarifas, en su lugar se utiliza la tarifa de reserva.</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Ocultar la configuración de la comisión de transacción</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -2976,14 +3243,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>¿Está seguro que desea enviar?</translation>
     </message>
     <message>
-        <source>are added as transaction fee</source>
-        <translation>se añaden como comisión de transacción</translation>
-    </message>
-    <message>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Cantidad Total = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
-    </message>
-    <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 de %2 registros mostrados)&lt;/b&gt;</translation>
     </message>
@@ -3004,6 +3263,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>cualquier fondo disponible</translation>
     </message>
     <message>
+        <source>Transaction fee</source>
+        <translation>Comisión de transacción</translation>
+    </message>
+    <message>
         <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
         <translation>(Las transacciones de %1 tienen comisiones más altas, generalmente debido a que no se permiten cambios de salida)</translation>
     </message>
@@ -3022,6 +3285,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
         <translation>Advertencia: el uso de %1 con %2 o más entradas puede dañar tu privacidad y no se recomienda</translation>
+    </message>
+    <message>
+        <source>Click to learn more</source>
+        <translation>Haz click para aprender mas</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Monto total</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>o</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3050,10 +3325,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction creation failed!</source>
         <translation>¡Ha fallado la creación de la transacción!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Se ha rechazado la transacción por la siguiente razón: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -3095,10 +3366,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>Esto es un pago ordinario.</translation>
-    </message>
-    <message>
         <source>Pay &amp;To:</source>
         <translation>Pagar &amp;a:</translation>
     </message>
@@ -3137,6 +3404,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>A&amp;mount:</source>
         <translation>C&amp;antidad:</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>El monto a enviar en la unidad seleccionada</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -3182,8 +3453,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
-        <source>Yes</source>
-        <translation>Sí</translation>
+        <source>Send</source>
+        <translation>Enviar</translation>
     </message>
 </context>
 <context>
@@ -3270,6 +3541,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The Dash address the message was signed with</source>
         <translation>La dirección Dash con la cual se firmó el mensaje</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>El mensaje firmado para verificar</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>La firma dada cuando se firmó el mensaje.</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
@@ -3511,6 +3790,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction total size</source>
         <translation>Tamaño total de transacción</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(El certificado no fue verificado)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3806,8 +4089,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copiar todos los detalles de la transacción</translation>
     </message>
     <message>
-        <source>Edit label</source>
-        <translation>Editar etiqueta</translation>
+        <source>Edit address label</source>
+        <translation>Editar etiqueta de dirección</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -3890,6 +4173,21 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Cerrar billetera</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>¿Estás seguro de que deseas cerrar la billetera&lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Cerrar la billetera por mucho tiempo puede resultar en tener que volver a sincronizar toda la cadena si el despeje está habilitado.</translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3901,6 +4199,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Send Coins</source>
         <translation>Enviar Dash</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera predeterminada</translation>
     </message>
 </context>
 <context>
@@ -3951,6 +4253,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Error: Ha fallado la "escucha" de conexiones entrantes ("Escucha" ha devuelto el error %s)</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>No se ha podido calcular la comisión. La comisión alternativa está deshabilitada. Espera unos bloques o habilitea -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Este error podría ocurrir si esta billetera no se cerró correctamente y se cargó por última vez usando una compilación con una versión más nueva de Berkeley DB. Si es así, utiliza el software que cargaste por última vez en esta billetera</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -4013,14 +4323,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Error leyendo la base de datos, cerrando.</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Error: ¡Espacio en disco bajo!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Error al escuchar cualquier puerto. Use -listen=0 si desea esto.</translation>
     </message>
@@ -4057,18 +4359,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Entrada exceden el tamaño máximo.</translation>
     </message>
     <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Error al cargar la memoria caché de solicitudes completadas</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>Error al cargar la memoria cache de gobernanza</translation>
-    </message>
-    <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Error al cargar la memoria caché del masternode</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Se encontraron suficientes usuarios, firmando (esperando %s)</translation>
     </message>
@@ -4091,10 +4381,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Bloque génesis incorrecto o no encontrado. ¿Es el directorio datadir incorrecto para la red?</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Información</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
@@ -4177,18 +4463,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Respuesta desconocida.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>El argumento -benchmark no es soportado y ha sido ignorado, utiliza -debug=bench</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Parámetros no compatibles -debugnet ignorados , use -debug = red.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Parámetros no compatibles -tor encontrados, use -onion .</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>El comentario del Agente de Usuario (%s) contiene caracteres inseguros.</translation>
     </message>
@@ -4213,10 +4487,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s está parado.</translation>
     </message>
     <message>
-        <source>%s request incomplete: %s</source>
-        <translation>Petición de %s incompleta: %s</translation>
-    </message>
-    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>No se puede mezclar mientras la sincronización esté en curso.</translation>
     </message>
@@ -4231,10 +4501,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s archivo contiene todas las llaves privadas de esta billetera. ¡No lo compartas con nadie!</translation>
-    </message>
-    <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>-la opción masternode está en desuso e ignorada, especificando -masternodeblsprivkey es suficiente para iniciar este nodo como masternode.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4269,24 +4535,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La longitud total de la cadena de versión de red ( %i ) supera la longitud máxima ( %i ) . Reducir el número o tamaño de uacomments .</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Error:  argumento -socks encontrado. El ajuste de la versión SOCKS ya no es posible, sólo proxies SOCKS5 son compatibles.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>El argumento no soportado -whitelistalwaysrelay ha sido ignorado, utiliza -whitelistrelay  y/o -whitelistforcerelay.</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>¡ADVERTENCIA! Error al reponer la keypool, por favor desbloquee su billetera para hacerlo.</translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
         <translation>¡La billetera esta bloqueado, no se puede reponer keypool! Copias de seguridad automáticas y mezclado están deshabilitados, por favor desbloquee su billetera para reponer keypool.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Advertencia: Se están minando versiones de bloques desconocidas! Es posible que normas desconocidas estén activas</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -timestampindex</source>
@@ -4297,8 +4551,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Necesitas reconstruir la base de datos utilizando -reindex para volver al modo sin poda. Esto volverá a descargar toda la cadena de bloques</translation>
     </message>
     <message>
-        <source>-litemode is deprecated.</source>
-        <translation>-modo seguro está en desuso.</translation>
+        <source>%s failed</source>
+        <translation>%s ha fallado</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4309,8 +4563,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copias de seguridad automáticas deshabilitadas</translation>
     </message>
     <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>No se puede establecer -peerblockfilters sin -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>El ajuste de configuración para %s solo se aplica en la red %s cuando está en la sección [%s].</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>No se pudo encontrar un archivo asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>No se pudo analizar un archivo asmap %s</translation>
+    </message>
+    <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>¡ERROR! Error al crear copia de seguridad automática</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Error al cargar %s: las claves privadas solo se pueden deshabilitar durante la creación</translation>
     </message>
     <message>
         <source>Error upgrading evo database</source>
@@ -4321,24 +4595,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Error: Un error interno fatal ocurrió, ver debug.log para detalles</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Error: el espacio en disco es bajo para %s</translation>
+    </message>
+    <message>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
         <translation>Error: no se pudo agregar el socket a epollfd (epoll_ctl returned error %s)</translation>
     </message>
     <message>
         <source>Exceeded max tries.</source>
         <translation>Se superó el máximo de intentos.</translation>
-    </message>
-    <message>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>No se pudo borrar la caché de solicitudes cumplidas en</translation>
-    </message>
-    <message>
-        <source>Failed to clear governance cache at</source>
-        <translation>No se pudo borrar el caché de gobernanza en</translation>
-    </message>
-    <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>No se pudo borrar el caché de masternode en</translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4357,12 +4623,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Error al borrar copia de seguridad, error: %s</translation>
     </message>
     <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>Error al cargar el caché de sporks desde</translation>
-    </message>
-    <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>No se pudo volver a escanear la billetera durante la inicialización</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Permiso P2P no válido: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -4371,14 +4637,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>Llave privada de Masternode inválida. Por favor ver la documentación.</translation>
-    </message>
-    <message>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>Ha sido reemplazado por -disablegovernance.</translation>
-    </message>
-    <message>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>Su reemplazo -disablegovernance ha sido forzado en su lugar.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4433,6 +4691,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La poda no se puede configurar con un valor negativo.</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>El modo de despeje es incompatible con -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Prune mode is incompatible with -disablegovernance=false.</source>
         <translation>El modo de poda es incompatible con -disablegovernance=false.</translation>
     </message>
@@ -4443,6 +4705,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Pruning blockstore...</source>
         <translation>Podando almacén de bloques</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>La sección [%s] no se reconoce</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
@@ -4459,6 +4725,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing blockchain...</source>
         <translation>Sincronizando cadena de bloques...</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>El archivo de configuración especificado %s no existe
+</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4501,16 +4773,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>No se ha podido conectar con %s en este equipo. %s es posible que este todavia en ejecución.</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>No se puede crear el archivo PID '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>No se pueden generar llaves iniciales</translation>
     </message>
     <message>
-        <source>Upgrading UTXO database</source>
-        <translation>Actualizando la base de datos UTXO</translation>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Valor -blockfilterindex desconocido %s.</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Billetera %s reside fuera del directorio de billetera %s</translation>
+        <source>Upgrading UTXO database</source>
+        <translation>Actualizando la base de datos UTXO</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4537,20 +4813,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Necesita reconstruir la base de datos usando -reindex para cambiar -spentindex</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Usted necesita reconstruir la base de datos utilizando -reindex para cambiar -txindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>No hay mezclado disponible.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>ver debug.log para detalles.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4605,24 +4873,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>No se pueden reproducir bloques. Deberás reconstruir la base de datos utilizando -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Advertencia: archivo Billetera esta corrupto, datos recuperados! Original %s guardado como %s en %s; si su balance o transacciones es incorrecto, debe restaurar desde una copia de seguridad.</translation>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Advertencia: claves privadas detectadas en la billetera {%s} con claves privadas deshabilitadas</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d de los últimos 100 bloques tienen una versión inesperada</translation>
     </message>
     <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrupto, recuperacion fallida</translation>
-    </message>
-    <message>
         <source>%s is not a valid backup folder!</source>
         <translation>¡%s no es una carpeta de copia de seguridad valida!</translation>
     </message>
     <message>
+        <source>%s is only allowed with a single wallet file</source>
+        <translation>%s solo está permitido con un solo archivo de billetera</translation>
+    </message>
+    <message>
         <source>%s is set very high!</source>
         <translation>¡%s esta establecido muy alto!</translation>
+    </message>
+    <message>
+        <source>%s request incomplete:</source>
+        <translation>%s solicitud incompleta:</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -4635,6 +4907,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-rpcport must be specified when -devnet and -server are specified</source>
         <translation>-rpcport solo se debe especificar cuando -devnet y -server son especificados</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Ocurrió un error interno fatal, ver debug.log para más detalles</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4651,6 +4927,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>Copyright (C)</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>¡El espacio en disco es demasiado bajo!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -4681,8 +4961,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Error: no se pudo agregar el socket a kqueuefd (kevent returned error %s)</translation>
     </message>
     <message>
+        <source>Failed to clear fulfilled requests cache at %s</source>
+        <translation>No se pudo borrar la memoria caché de solicitudes cumplidas en %s</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at %s</source>
+        <translation>No se pudo borrar la memoria caché de gobernanza en %s</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at %s</source>
+        <translation>No se pudo borrar la memoria caché de masternode en %s</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>Error al encontrar cola de mezclado para unirse</translation>
+    </message>
+    <message>
+        <source>Failed to load fulfilled requests cache from %s</source>
+        <translation>No se pudo cargar la memoria caché de solicitudes cumplidas desde %s</translation>
+    </message>
+    <message>
+        <source>Failed to load governance cache from %s</source>
+        <translation>No se pudo cargar la memoria caché de governanza desde %s</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode cache from %s</source>
+        <translation>No se puedo cargar la memoria caché de masternode desde %s</translation>
+    </message>
+    <message>
+        <source>Failed to load sporks cache from %s</source>
+        <translation>No se pudo cargar la memoria caché de sporks desde %s</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
@@ -4753,6 +5061,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La última cola se creó muy recientemente.</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
+        <translation>%s corrupto. Intenta usar la herramienta de billetera dash-wallet para recuperar o restaurar una copia de seguridad.</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>No se puede generar una llave de cambio de dirección. No hay llaves en el conjunto de llaves internas y no puede generar ninguna llave.</translation>
+    </message>
+    <message>
         <source>Last successful action was too recent.</source>
         <translation>La última acción exitosa era demasiado reciente.</translation>
     </message>
@@ -4793,10 +5109,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La transacción no es válida.</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transacción demasiado grande para la política de comisiones</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>No es posible enlazar con %s en este computador (enlazado ha dado el error %s)</translation>
     </message>
@@ -4825,6 +5137,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Categoría de registro no compatible %s=%s.</translation>
     </message>
     <message>
+        <source>Upgrading txindex database</source>
+        <translation>Actualización de la base de datos txindex</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>Verificando bloques...</translation>
     </message>
@@ -4835,14 +5151,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wallet is locked.</source>
         <translation>La billetera está bloqueada.</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Advertencia</translation>
-    </message>
-    <message>
-        <source>Warning: %s is deprecated, please use %s instead</source>
-        <translation>Advertencia: %s está obsoleto, utiliza %s en su lugar</translation>
     </message>
     <message>
         <source>Warning: can't use %s and %s together, will prefer %s</source>

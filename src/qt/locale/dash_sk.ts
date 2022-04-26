@@ -1,4 +1,4 @@
-<TS language="sk" version="2.1">
+<TS version="2.1" language="sk">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -78,8 +78,8 @@
         <translation>Toto sú vaše Dash adresy pre posielanie platieb. Pred poslaním mincí vždy overte sumu a doručovaciu adresu.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Toto sú vaše Dash adresy pre posielanie platieb. Pre každú transakciu sa doporučuje použiť novú doručovaciu adresu.</translation>
+        <source>These are your Dash addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Toto sú vaše Dash adresy na prijímanie platieb. Na vytvorenie nových adries použite tlačidlo „Vytvoriť novú prijímaciu adresu“ na karte prijímania.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -191,12 +191,8 @@
         <translation>Zopakujte nové heslo</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Ukázať heslo</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Zadajte nové heslo k peňaženke.&lt;br/&gt;Prosím použite heslo s dĺžkou aspon &lt;b&gt;10 alebo viac náhodných znakov&lt;/b&gt;, alebo &lt;b&gt;8 alebo viac slov&lt;/b&gt;.</translation>
+        <source>Show passphrase</source>
+        <translation>Zobraziť prístupovú frázu</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -227,10 +223,6 @@
         <translation>Zmena hesla</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Zadajte staré heslo a nové heslo k peňaženke.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Potvrďte zašifrovanie peňaženky</translation>
     </message>
@@ -245,6 +237,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Peňaženka zašifrovaná</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Zadajte novú prístupovú frázu pre peňaženku.&lt;br/&gt;Použite prístupovú frázu pozostávajúcu &lt;b&gt;z desiatich alebo viacerých náhodných znakov&lt;/b&gt; alebo &lt;b&gt;ôsmich alebo viacerých slov&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Zadajte starú a novú prístupovú frázu pre peňaženku.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>Pamätajte, že šifrovanie vašej peňaženky nemôže plne ochrániť vaše prostriedky pred krádežou škodlivým softvérom, ktorý infikuje váš počítač.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Peňaženka ktorá má byť zašifrovaná</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Vaša peňaženka bude čoskoro zašifrovaná.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Vaša peňaženka je teraz zašifrovaná.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -312,18 +328,6 @@
         <translation>Došlo k závažnej chybe. Dash Core už nemôže bezpečne pokračovať a bude ukončený.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Peňaženka</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Uzol</translation>
-    </message>
-    <message>
         <source>&amp;Overview</source>
         <translation>&amp;Prehľad</translation>
     </message>
@@ -348,6 +352,50 @@
         <translation>Vyžiadať platby (vygeneruje QR kódy a Dash: URI)</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Odosielacie adresy</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Prijímacie adresy</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Otvoriť Peňaženku</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Otvoriť peňaženku</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Zatvoriť Peňaženku...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Zatvoriť peňaženku...</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Nie je k dispozícii žiadna peňaženka</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Okno</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimalizovať</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Priblížiť</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Hlavné okno</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
         <translation>&amp;Transakcie</translation>
     </message>
@@ -370,10 +418,6 @@
     <message>
         <source>Quit application</source>
         <translation>Ukončiť program</translation>
-    </message>
-    <message>
-        <source>Show information about Dash Core</source>
-        <translation>Zobraziť informácie o Dash Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -516,16 +560,8 @@
         <translation>Zobraziť automaticky vytvorené zálohy peňaženky</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Posielajúce adresy...</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Zobraziť zoznam použitých adries odosielateľa a ich popisy</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>P&amp;rijímajúce adresy...</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -548,6 +584,10 @@
         <translation>Ukázať %1 zoznam možných nastavení Dash pomocou príkazového riadku</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>predvolená peňaženka</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 klient</translation>
     </message>
@@ -566,6 +606,18 @@
         <translation>&amp;Súbor</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Zobraziť informácie o %1</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Vytvoriť peňaženku...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Vytvoriť novú peňaženku</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 &amp;Informácie</translation>
     </message>
@@ -578,16 +630,20 @@
         <translation>&amp;Nastavenia</translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Nástroje</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Pomoc</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
         <translation>Lišta záložiek</translation>
+    </message>
+    <message>
+        <source>&amp;Governance</source>
+        <translation>&amp;Dozor</translation>
+    </message>
+    <message>
+        <source>View Governance Proposals</source>
+        <translation>Zobraziť návrhy dozoru</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
@@ -654,8 +710,16 @@
         <translation>Chyba</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>Chyba: %1</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Upozornenie</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Upozornenie: %1</translation>
     </message>
     <message>
         <source>Information</source>
@@ -738,6 +802,14 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálne &lt;b&gt;zamknutá&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Server proxy je &lt;b&gt;povolený:&lt;/b&gt; %1</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>Pôvodná správa:</translation>
     </message>
 </context>
 <context>
@@ -936,6 +1008,60 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Vytvára sa peňaženka &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Vytvorenie peňaženky zlyhalo</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Vytvorenie peňaženky s upozornením</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Vytvoriť peňaženku</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Názov peňaženky</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Zašifruje peňaženku. Peňaženka bude zašifrovaná pomocou prístupovej frázy podľa vášho výberu.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Zašifrovať peňaženku</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Zakázať súkromné kľúče pre túto peňaženku. Peňaženky so zakázanými súkromnými kľúčmi nebudú mať žiadne súkromné kľúče a nemôžu mať HD pôvod ani importované súkromné kľúče. Toto je ideálne pre peňaženky, ktoré len sledujete.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Zakázať súkromné kľúče</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Vytvorí prázdnu peňaženku. Prázdne peňaženky pôvodne nemajú súkromné kľúče ani skripty. Súkromné kľúče a adresy je možné importovať, HD zdroj je možný nastaviť neskôr.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Vytvoriť prázdnu peňaženku</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Vytvoriť</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -974,8 +1100,12 @@
         <translation>Zadaná adresa "%1" nie je platná Dash adresa.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Vložená adresa "%1" sa už nachádza v adresári.</translation>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>Adresa "%1" už existuje ako prijímacia adresa s menovkou "%2", a preto nemôže byť pridaná ako odosielacia adresa.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>Zadaná adresa "%1" je už v adresári s menovkou "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1010,14 +1140,37 @@
     </message>
 </context>
 <context>
+    <name>GovernanceList</name>
+    <message>
+        <source>Form</source>
+        <translation>Od</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>Filtrovať zoznam:</translation>
+    </message>
+    <message>
+        <source>Filter propsal list</source>
+        <translation>Filtrovať zoznam návrhov</translation>
+    </message>
+    <message>
+        <source>Proposal Count:</source>
+        <translation>Počet návrhov:</translation>
+    </message>
+    <message>
+        <source>Filter by Title</source>
+        <translation>Filtrovať podľa názvu</translation>
+    </message>
+    <message>
+        <source>Proposal Info: %1</source>
+        <translation>Informácie o návrhu: %1</translation>
+    </message>
+</context>
+<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
         <translation>verzia</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -1112,10 +1265,6 @@
     <message>
         <source>Status</source>
         <translation>Stav</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1277,8 +1426,8 @@
         <translation>Skryť</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Neznámy. Synchronizujú sa hlavičky (%1)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Neznáme. Synchronizujú sa hlavičky (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -1305,6 +1454,25 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Otvorenie peňaženky zlyhalo</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Upozornenie pri otvorení peňaženky</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>predvolená peňaženka</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Otvára sa peňaženka &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -1317,10 +1485,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>&amp;Veľkosť vyrovnávacej pamäti databázy</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1339,12 +1503,36 @@
         <translation>&amp;Vzhľad</translation>
     </message>
     <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Orezať blok úložiska na</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Vrátenie tohto nastavenia si vyžaduje opätovné stiahnutie celého blockchainu.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
+    </message>
+    <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>Zobraziť dodatočnú záložku, ktorá vypíše všetky vaše masternódy v prvej pod-zložke&lt;br/&gt;- a všetky masternódy v druhej pod-zložke. </translation>
     </message>
     <message>
         <source>Show Masternodes Tab</source>
         <translation>Ukázať záložku masternódov</translation>
+    </message>
+    <message>
+        <source>Show additional tab listing governance proposals.</source>
+        <translation>Zobraziť ďalšiu kartu so zoznamom návrhov.</translation>
+    </message>
+    <message>
+        <source>Show Governance Tab</source>
+        <translation>Zobraziť kartu dozoru</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
@@ -1403,6 +1591,14 @@
         <translation>Automaticky otvoriť na smerovači port pre Dash Core klient. Toto funguje iba ak váš smerovač  podporuje UPnP a je povolené</translation>
     </message>
     <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation>Automaticky otvorte bitcoinový klientsky port na smerovači. Funguje to len vtedy, keď váš smerovač podporuje NAT-PMP a je povolený. Externý port môže byť náhodný.</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation>Mapovať port pomocou NA&amp;T-PMP</translation>
+    </message>
+    <message>
         <source>Accept connections from outside.</source>
         <translation>Prijímať spojenia zvonka.</translation>
     </message>
@@ -1425,6 +1621,10 @@
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
         <translation>Použiť samostatný SOCKS&amp;5 proxy server na dosiahnutie počítačov cez skryté služby Tor:</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Možnosti nastavené v tomto dialógovom okne sú prepísané príkazovým riadkom alebo v konfiguračnom súbore:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1473,6 +1673,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Sieť</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Povolenie orezávania výrazne znižuje miesto na disku potrebné na ukladanie transakcií. Všetky bloky sú stále plne overené. Vrátenie tohto nastavenia si vyžaduje opätovné stiahnutie celého blockchainu.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1555,10 +1759,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Decimálne čísla</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktívne možnosti príkazového riadku, ktoré prepíšu možnosti vyššie:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1851,6 +2051,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>URL pre stiahnutie výzvy na zaplatenie je neplatné: %1</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>Nie je možné spracovať žiadosť o platbu, pretože podpora BIP70 nebola skompilovaná.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>Neplatná adresa platby %1</translation>
     </message>
@@ -1951,6 +2155,56 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>Proposal</name>
+    <message>
+        <source>Passing +%1</source>
+        <translation>Prechádza +%1</translation>
+    </message>
+    <message>
+        <source>Needs additional %1 votes</source>
+        <translation>Vyžaduje dodatočných %1 hlasov</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalModel</name>
+    <message>
+        <source>Yes</source>
+        <translation>Áno</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nie</translation>
+    </message>
+    <message>
+        <source>Hash</source>
+        <translation>Hash</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Názov</translation>
+    </message>
+    <message>
+        <source>Start</source>
+        <translation>Štart</translation>
+    </message>
+    <message>
+        <source>End</source>
+        <translation>Koniec</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Suma</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>Aktívne</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Stav</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
@@ -1991,6 +2245,46 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Zobraziť uvítaciu obrazovku pri spustení (predvolené: %u)</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Chyba: Zadaný dátový adresár "%1" neexistuje.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Chyba: Nie je možné načítať konfiguračný súbor: %1.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Chyba: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>Chyba: Nepodarilo sa načítať písma aplikácie.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>Chyba: Zadaná rodina fontov je neplatná. Platné hodnoty: %1.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>Chyba: Zadaná hodnota normálnej váhy fontu je neplatná. Platný rozsah %1 až %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>Chyba: Zadaná hodnota tučnej váhy fontu je neplatná. Platný rozsah %1 až %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>Chyba: Zadaná hodnota škálovania fontu je neplatná. Platný rozsah %1 až %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>Chyba: Neplatná cesta -custom-css-dir.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>Chyba: %1 CSS súbor(ov) chýba v ceste -custom-css-dir.</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -2094,49 +2388,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Chyba: Zadaný adresár pre dáta „%1“ neexistuje.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Chyba: Nedá sa spracovať konfiguračný súbor: %1. Používajte iba syntax kľúč=hodnota.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Chyba: %1</translation>
-    </message>
-    <message>
-        <source>Error: Failed to load application fonts.</source>
-        <translation>Chyba: Nepodarilo sa načítať písma aplikácie.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Chyba: Zadaná rodina fontov je neplatná. Platné hodnoty: %1.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>Chyba: Zadaná hodnota normálnej váhy fontu je neplatná. Platný rozsah %1 až %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>Chyba: Zadaná hodnota tučnej váhy fontu je neplatná. Platný rozsah %1 až %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>Chyba: Zadaná hodnota škálovania fontu je neplatná. Platný rozsah %1 až %2.</translation>
-    </message>
-    <message>
-        <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>Chyba: Neplatná cesta -custom-css-dir.</translation>
-    </message>
-    <message>
-        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>Chyba: %1 CSS súbor(ov) chýba v ceste -custom-css-dir.</translation>
-    </message>
-</context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -2183,6 +2434,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Kopírovať obrázok</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Výsledné URI je príliš dlhé, skrátite text pre popis / správu.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Chyba v zakódovaní URI do QR kódu</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>Podpora QR kódov nie je k dispozícii.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2240,16 +2503,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Súbor záznamu ladenia</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Aktuálny počet blokov</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>Verzia klienta</translation>
-    </message>
-    <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Používa BerkeleyDB verziu</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -2340,6 +2595,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Znova prehľadať blockchain 2</translation>
     </message>
     <message>
+        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
+        <translation>Nižšie uvedené tlačidlá reštartujú peňaženku s možnosťami príkazového riadka na opravu peňaženky, riešenie problémov s poškodenými súbormi blockchainu alebo chýbajúcimi/zastaranými transakciami.</translation>
+    </message>
+    <message>
         <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
         <translation>-rescan=1: Znova prehľadať reťazec blokov pre nájdenie chýbajúcich transakcií peňaženky od času jej vytvorenia.</translation>
     </message>
@@ -2360,8 +2619,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Priečinok s dátami</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Ak chcete zadať iné ako predvolené umiestnenie adresára údajov, použite voľbu '%1'.</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Blocksdir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Ak chcete zadať iné ako predvolené umiestnenie adresára blokov, použite voľbu '%1'.</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Aktuálna výška bloku</translation>
+    </message>
+    <message>
         <source>Last block hash</source>
         <translation>Hash posledný bloku</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block hash</source>
+        <translation>Najnovší blokový hash ChainLocked</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block height</source>
+        <translation>Najnovšia výška bloku ChainLocked</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2440,10 +2723,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Oprava peňaženky</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>Záchranná peňaženka</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>Znova prehľadať transakcie 1</translation>
     </message>
@@ -2454,14 +2733,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Upgrade wallet format</source>
         <translation>Inovovať formát peňaženky</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Tlačidlá nižšie reštartujú peňaženku s príkazmi na opravu peňaženky, opravia chyby s poškodenými súbormi reťazca blokov, alebo chýbajúce či zastarané transakcie.</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Pokus obnoviť súkromné kľúče z poškodeného wallet.dat.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2639,8 +2910,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Suma:</translation>
     </message>
     <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Vyžiadať platbu</translation>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Vytvoriť novú prijímaciu adresu</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2681,6 +2952,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copy URI</source>
         <translation>Kopírovať URI</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Kopírovať adresu</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -2744,14 +3019,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wallet</source>
         <translation>Peňaženka</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Výsledné URI je príliš dlhé, skrátite text pre popis / správu.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Chyba v zakódovaní URI do QR kódu</translation>
     </message>
 </context>
 <context>
@@ -2852,10 +3119,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vybrať...</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>skryť nastavenia poplatkov</translation>
-    </message>
-    <message>
         <source>Confirmation time target:</source>
         <translation>Cieľový čas potvrdenia:</translation>
     </message>
@@ -2878,6 +3141,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
         <translation>Poznámka: Nedostatok údajov na odhad poplatku, použije sa preddefinovaná hodnota.</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Skryť nastavenia transakčných poplatkov</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -2976,14 +3243,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Určite chcete odoslať transakciu?</translation>
     </message>
     <message>
-        <source>are added as transaction fee</source>
-        <translation>pridané ako transakčný poplatok</translation>
-    </message>
-    <message>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Celková suma = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
-    </message>
-    <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 z %2 zobrazených položiek)&lt;/b&gt;</translation>
     </message>
@@ -3004,6 +3263,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>akékoľvek dostupné zdroje</translation>
     </message>
     <message>
+        <source>Transaction fee</source>
+        <translation>Poplatok za transakciu</translation>
+    </message>
+    <message>
         <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
         <translation>(Transakcie typu %1 majú zvyčajne vyššie poplatky, pretože nie sú povolené žiadne zmeny výstupu)</translation>
     </message>
@@ -3022,6 +3285,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
         <translation>Varovanie: Použitie %1 s %2 alebo viac vstupmi môže poškodiť vaše súkromie a neodporúča sa</translation>
+    </message>
+    <message>
+        <source>Click to learn more</source>
+        <translation>Kliknutím sa dozviete viac</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Celková suma</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>alebo</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3050,10 +3325,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction creation failed!</source>
         <translation>Vytvorenie transakcie zlyhalo!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Transakcia bola odmietnutá z nasledujúceho dôvodu: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -3095,10 +3366,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>Toto je normálna platba.</translation>
-    </message>
-    <message>
         <source>Pay &amp;To:</source>
         <translation>Zapla&amp;tiť:</translation>
     </message>
@@ -3137,6 +3404,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>A&amp;mount:</source>
         <translation>Su&amp;ma:</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Suma na odoslanie vo vybranej jednotke</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -3182,8 +3453,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
-        <source>Yes</source>
-        <translation>Áno</translation>
+        <source>Send</source>
+        <translation>Poslať</translation>
     </message>
 </context>
 <context>
@@ -3270,6 +3541,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The Dash address the message was signed with</source>
         <translation>Adresa Dash s ktorou bola podpísaná správa</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>Podpísaná správa na overenie</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>Podpis daný pri podpise správy</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
@@ -3511,6 +3790,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction total size</source>
         <translation>Celková veľkosť transakcie</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Certifikát nebol overený)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3806,8 +4089,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kopírovať všetky podrobnosti o transakcii</translation>
     </message>
     <message>
-        <source>Edit label</source>
-        <translation>Editovať popis</translation>
+        <source>Edit address label</source>
+        <translation>Upraviť štítok s adresou</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -3890,6 +4173,21 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Zatvoriť peňaženku...</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Naozaj chcete zatvoriť peňaženku &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Príliš dlhé zatvorenie peňaženky môže viesť k nutnosti opätovnej synchronizácie celého reťazca, ak je povolené orezávanie.</translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3901,6 +4199,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Send Coins</source>
         <translation>Poslať Mince</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>predvolená peňaženka</translation>
     </message>
 </context>
 <context>
@@ -3951,6 +4253,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Chyba: Počúvanie prichádzajúcich spojení zlyhalo (vrátená chyba je %s)</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>Odhad poplatku zlyhal. Fallbackfee je zakázaný. Počkajte niekoľko blokov alebo povoľte -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Táto chyba sa môže vyskytnúť, ak táto peňaženka nebola vypnutá čisto a bola naposledy načítaná pomocou zostavy s novšou verziou Berkeley DB. Ak áno, použite softvér, ktorý naposledy načítal túto peňaženku</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -4013,14 +4323,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chyba pri načítaní z databázy, ukončuje sa.</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Chyba</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Chyba: Nedostatok miesta na disku!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Nepodarilo sa počúvať na žiadnom porte. Použite -listen=0 ak to takto chcete.</translation>
     </message>
@@ -4057,18 +4359,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vstup prekračuje maximálnu veľkosť.</translation>
     </message>
     <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Chyba pri načítaní vyrovnávajúcej pamäti splnených zadaní z</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>Chyba pri načítaní vyrovnávajúcej pamäti správy z</translation>
-    </message>
-    <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Chyba pri načítaní vyrovnávajúcej pamäti masternode z</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Nájdený dostatok používateľov, pospisuje sa ( čakanie %s )</translation>
     </message>
@@ -4091,10 +4381,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Nesprávny alebo žiadny genesis blok nájdený. Nesprávny dátový priečinok alebo sieť?</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informácie</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
@@ -4177,18 +4463,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Neznáma odpoveď.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Nepodporovaný argument -benchmark bol ignorovaný, použite -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Nepodporovaný argument -debugnet bol ignorovaný, použite -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Nepodporovaný argument -tor, použite -onion.</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Komentár u typu klienta (%s) obsahuje riskantné znaky.</translation>
     </message>
@@ -4213,10 +4487,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s je nečinný.</translation>
     </message>
     <message>
-        <source>%s request incomplete: %s</source>
-        <translation>%s požiadavok nedokončený: %s</translation>
-    </message>
-    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Miešanie nefunguje počas synchronizácie.</translation>
     </message>
@@ -4231,10 +4501,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>Súbor %s obsahuje všetky súkromné kľúče z tejto peňaženky. Nezdieľajte s nikým!</translation>
-    </message>
-    <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>Podpora -masternode príkazu bola ukončená a je ignorovaná, na spustenie tohto uzla ako masternódu stačí zadanie -masternodeblsprivkey.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4269,24 +4535,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Celková dĺžka verzie sieťového reťazca (%i) prekračuje maximálnu dĺžku (%i). Znížte počet a veľkosť parametra  uacomments.</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Nájdený nepodporovaný argument -socks. Nastavenie SOCKS verzie nie je už možné, podporované sú už iba proxy SOCKS5.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Nepodporovaný argument -whitelistalwaysrelay ignorovaný, použite -whitelistrelay a/alebo -whitelistforcerelay.</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>UPOZORNENIE! Chyba pri doplňovaní zásobníku kľúčov. Pre doplnenie musíte odomknúť vašu peňaženku.</translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
         <translation>Peňaženka je zamknutá takže sa nedá doplniť zásobník kľúčov. Automatické zálohy a miešanie sú vypnuté. Pre doplnenie musíte odomknúť vašu peňaženku.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Upozornenie: Ťaží sa neznáma verzia blokov! Je možné, že sú v platnosti neznáme pravidlá</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -timestampindex</source>
@@ -4297,8 +4551,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>K návratu k neorezanému režimu je treba prestavať databázu použitím -reindex. Tiež sa znova stiahne celý blockchain</translation>
     </message>
     <message>
-        <source>-litemode is deprecated.</source>
-        <translation>-litemode je už nepodporovaný.</translation>
+        <source>%s failed</source>
+        <translation>%s zlyhalo</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4309,8 +4563,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Automatické zálohy sú deaktivované</translation>
     </message>
     <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Nie je možné nastaviť -peerblockfilters bez -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>Nastavenie konfigurácie pre %s sa použije iba v sieti %s v sekcii [%s].</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>Nepodarilo sa nájsť súbor asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>Nepodarilo sa načítať súbor asmap %s</translation>
+    </message>
+    <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>CHYBA! Nepodarilo sa vytvoriť automatickú zálohu</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Chyba pri načítavaní %s: Súkromné kľúče je možné deaktivovať iba počas vytvárania</translation>
     </message>
     <message>
         <source>Error upgrading evo database</source>
@@ -4321,24 +4595,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chyba: Vyskytla sa interná chyba, pre viac informácií zobrazte debug.log</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Chyba: Miesta na disku pre %s je málo</translation>
+    </message>
+    <message>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
         <translation>Chyba: Nepodaril sa pridať soket do epollfd (epoll_ctl vrátil chybu %s)</translation>
     </message>
     <message>
         <source>Exceeded max tries.</source>
         <translation>Prekročený maximálny počet pokusov.</translation>
-    </message>
-    <message>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>Vymazanie vyrovnávacej pamäte splnených požiadaviek sa nepodarilo o</translation>
-    </message>
-    <message>
-        <source>Failed to clear governance cache at</source>
-        <translation>Vymazanie medzipamäte riadenia sa nepodarilo o</translation>
-    </message>
-    <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>Vymazanie vyrovnávacej pamäte masternode sa nepodarilo o</translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4357,12 +4623,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nepodarilo sa vymazať zálohu, chyba: %s</translation>
     </message>
     <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>Chyba pri načítaní vyrovnávajúcej pamäti sporks z</translation>
-    </message>
-    <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Počas inicializácie sa nepodarilo znova naskenovať peňaženku</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Neplatné povolenie P2P: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -4371,14 +4637,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>Neplatný masternodeblsprivkey. Pozrite si dokumentáciu.</translation>
-    </message>
-    <message>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>Bol nahradený -disablegovernance.</translation>
-    </message>
-    <message>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>Namiesto toho bola vynútená jeho náhrada -disablegovernance.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4433,6 +4691,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Orezanie nemôže byť nastavené na zápornú hodnotu.</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Režim orezávania nie je kompatibilný s -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Prune mode is incompatible with -disablegovernance=false.</source>
         <translation>Orezávanie nie je kompatibilné s -disablegovernance=false.</translation>
     </message>
@@ -4443,6 +4705,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Pruning blockstore...</source>
         <translation>Redukovanie blockstore...</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>Sekcia [%s] nie je rozpoznaná.</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
@@ -4459,6 +4725,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing blockchain...</source>
         <translation>Synchronizuje sa blockchain...</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>Zadaný konfiguračný súbor %s neexistuje
+</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4501,16 +4773,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nedá sa pripojiť k %s na tomto počítači. %s už pravdepodobne beží.</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Nie je možné vytvoriť súbor PID '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Nie je možné vygenerovať počiatočné kľúče</translation>
     </message>
     <message>
-        <source>Upgrading UTXO database</source>
-        <translation>Vylepšuje sa databáza neminutých výstupov (UTXO)</translation>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Neznáma -blockfilterindex hodnota %s.</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Peňaženka %s sa nachádza mimo adresára peňaženky %s</translation>
+        <source>Upgrading UTXO database</source>
+        <translation>Vylepšuje sa databáza neminutých výstupov (UTXO)</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4537,20 +4813,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -spentindex</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -txindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>miešanie nedostupné.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>podrobnosti nájdete v debug.log.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4605,24 +4873,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bloky nie je možné prehrať. Potrebujete prebudovať databázu použitím -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varovanie: Peňaženka poškodená, dáta boli zachránené! Originálna %s ako %s v %s; ak váš zostatok alebo transakcie sú nesprávne, mali by ste obnoviť zálohu.</translation>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Upozornenie: Boli zistené súkromné kľúče v peňaženke {%s} so zakázanými súkromnými kľúčmi</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d z posledných 100 blokov má neočakávanú verziu</translation>
     </message>
     <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s je poškodený, záchrana zlyhala</translation>
-    </message>
-    <message>
         <source>%s is not a valid backup folder!</source>
         <translation>%s nie je platný priečinok pre zálohu!</translation>
     </message>
     <message>
+        <source>%s is only allowed with a single wallet file</source>
+        <translation>%s je povolené iba s jedným súborom peňaženky</translation>
+    </message>
+    <message>
         <source>%s is set very high!</source>
         <translation>Hodnota %s je nastavená veľmi vysoko!</translation>
+    </message>
+    <message>
+        <source>%s request incomplete:</source>
+        <translation>%s žiadosť nie je dokončená:</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -4635,6 +4907,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-rpcport must be specified when -devnet and -server are specified</source>
         <translation>-rpcport musí byť zadaný, keď sú špecifikované -devnet a -server</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Vyskytla sa závažná interná chyba, podrobnosti nájdete v debug.log</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4651,6 +4927,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>Autorské práva (C)</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>Príliš málo miesta na disku!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -4681,8 +4961,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chyba: Nepodaril sa pridať soket do kqueuefd (kevent vrátil chybu %s)</translation>
     </message>
     <message>
+        <source>Failed to clear fulfilled requests cache at %s</source>
+        <translation>Nepodarilo sa vymazať vyrovnávaciu pamäť splnených požiadaviek o %s</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at %s</source>
+        <translation>Nepodarilo sa vymazať vyrovnávaciu pamäť dozoru o %s</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at %s</source>
+        <translation>Vymazanie vyrovnávacej pamäte masternode sa nepodarilo o %s</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>Nepodarilo sa nájsť frontu miešania</translation>
+    </message>
+    <message>
+        <source>Failed to load fulfilled requests cache from %s</source>
+        <translation>Chyba pri načítaní vyrovnávajúcej pamäti splnených zadaní z %s</translation>
+    </message>
+    <message>
+        <source>Failed to load governance cache from %s</source>
+        <translation>Chyba pri načítaní vyrovnávajúcej pamäti dozoru z %s</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode cache from %s</source>
+        <translation>Chyba pri načítaní vyrovnávajúcej pamäti masternode z %s</translation>
+    </message>
+    <message>
+        <source>Failed to load sporks cache from %s</source>
+        <translation>Chyba pri načítaní vyrovnávajúcej pamäti sporks z %s</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
@@ -4753,6 +5061,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Posledný dotaz bol vytvorený príliš nedávno.</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
+        <translation>%s poškodený. Skúste použiť nástroj peňaženky dash-wallet na záchranu alebo obnovenie zálohy.</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Nedá sa vygenerovať kľúč na zmenu adresy. V internej oblasti kľúčov nie sú žiadne kľúče a nemožno generovať žiadne kľúče.</translation>
+    </message>
+    <message>
         <source>Last successful action was too recent.</source>
         <translation>Posledná akcia bola pred chvíľou.</translation>
     </message>
@@ -4793,10 +5109,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Neplatná transakcia.</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transakcia je príliš veľká pre aktuálne podmienky poplatkov</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Na tomto počítači sa nedá vytvoriť väzba %s (vytvorenie väzby vrátilo chybu %s)</translation>
     </message>
@@ -4825,6 +5137,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nepodporovaná záznamová kategória %s =%s.</translation>
     </message>
     <message>
+        <source>Upgrading txindex database</source>
+        <translation>Aktualizácia databázy txindex</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>Overovanie blokov...</translation>
     </message>
@@ -4835,14 +5151,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wallet is locked.</source>
         <translation>Peňaženka je zamknutá.</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Upozornenie</translation>
-    </message>
-    <message>
-        <source>Warning: %s is deprecated, please use %s instead</source>
-        <translation>Upozornenie: Podpora %s je ukončená, použite radšej %s</translation>
     </message>
     <message>
         <source>Warning: can't use %s and %s together, will prefer %s</source>
