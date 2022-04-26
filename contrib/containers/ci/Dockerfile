@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     autotools-dev \
     automake \
     autoconf \
+    bison \
     build-essential \
     bsdmainutils \
     curl \
