@@ -224,6 +224,7 @@ FUZZ_TARGET(string)
         int64_t amount_out;
         (void)ParseFixedPoint(random_string_1, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1024), &amount_out);
     }
+    (void)SplitString(random_string_1, fuzzed_data_provider.ConsumeIntegral<char>());
     {
         (void)Untranslated(random_string_1);
         const bilingual_str bs1{random_string_1, random_string_2};

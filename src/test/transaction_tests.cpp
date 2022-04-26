@@ -31,8 +31,6 @@
 #include <map>
 #include <string>
 
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
@@ -70,8 +68,7 @@ unsigned int ParseScriptFlags(std::string strFlags)
 {
     if (strFlags.empty() || strFlags == "NONE") return 0;
     unsigned int flags = 0;
-    std::vector<std::string> words;
-    boost::algorithm::split(words, strFlags, boost::algorithm::is_any_of(","));
+    std::vector<std::string> words = SplitString(strFlags, ',');
 
     for (const std::string& word : words)
     {

@@ -112,8 +112,6 @@
 #include <services/asset.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
-#include <boost/algorithm/string/classification.hpp> // is_any_of
-#include <boost/algorithm/string/split.hpp> // split
 #include <flatdatabase.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
@@ -1166,8 +1164,7 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
     if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST) {
         if (args.IsArgSet("-llmqtestparams")) {
             std::string s = args.GetArg("-llmqtestparams", "");
-            std::vector<std::string> v;
-            boost::split(v, s, boost::is_any_of(":"));
+            std::vector<std::string> v = SplitString(s, ':');
             int size, threshold;
             if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
                 return InitError(Untranslated("Invalid -llmqtestparams specified"));
