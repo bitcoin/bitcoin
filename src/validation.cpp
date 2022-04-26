@@ -1937,6 +1937,8 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     // violating blocks.
     uint32_t flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
     const auto it{consensusparams.script_flag_exceptions.find(*Assert(block_index.phashBlock))};
+    // can be removed after backports no longer needed
+    auto pindex = &block_index;
     if (it != consensusparams.script_flag_exceptions.end()) {
         flags = it->second;
     }
