@@ -48,13 +48,8 @@ static RPCHelpMan masternode_outputs()
 
 Span<const CRPCCommand> wallet::GetMasternodeWalletRPCCommands()
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)        
-//  --------------------- ------------------------  ----------------------- 
-    { "masternode",           &masternode_outputs,      },
-
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"masternode", &masternode_outputs},
+    };
     return commands;
 }

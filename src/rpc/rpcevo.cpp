@@ -226,17 +226,13 @@ static RPCHelpMan bls_fromsecret()
 
 void RegisterEvoRPCCommands(CRPCTable &t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)
-  //  --------------------- ------------------------  -----------------------
-    { "evo",                &bls_generate,                },
-    { "evo",                &bls_fromsecret,              },
-    { "evo",                &protx_list,                  },
-    { "evo",                &protx_info,                  },
-    { "evo",                &protx_diff,                  },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"evo", &bls_generate},
+        {"evo", &bls_fromsecret},
+        {"evo", &protx_list},
+        {"evo", &protx_info},
+        {"evo", &protx_diff},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

@@ -1092,20 +1092,16 @@ static RPCHelpMan protx_info_wallet()
 
 Span<const CRPCCommand> wallet::GetEvoWalletRPCCommands()
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)
-  //  --------------------- ------------------------  -----------------------
-    { "evowallet",              &protx_list_wallet,                 },
-    { "evowallet",              &protx_info_wallet,                 },
-    { "evowallet",              &protx_register,                    },
-    { "evowallet",              &protx_register_fund,               },
-    { "evowallet",              &protx_register_prepare,            },
-    { "evowallet",              &protx_register_submit,             },
-    { "evowallet",              &protx_update_service,              },
-    { "evowallet",              &protx_update_registrar,            },
-    { "evowallet",              &protx_revoke,                      },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"evowallet", &protx_list_wallet},
+        {"evowallet", &protx_info_wallet},
+        {"evowallet", &protx_register},
+        {"evowallet", &protx_register_fund},
+        {"evowallet", &protx_register_prepare},
+        {"evowallet", &protx_register_submit},
+        {"evowallet", &protx_update_service},
+        {"evowallet", &protx_update_registrar},
+        {"evowallet", &protx_revoke},
+    };
     return commands;
 }

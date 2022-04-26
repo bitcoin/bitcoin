@@ -594,20 +594,16 @@ RPCHelpMan masternodelist()
 
 void RegisterMasternodeRPCCommands(CRPCTable &t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)  
-//  --------------------- ------------------------  -----------------------
-    { "masternode",            &masternode_connect,      },
-    { "masternode",            &masternode_list,         },
-    { "masternode",            &masternode_winners,      },
-    { "masternode",            &masternode_payments,     },
-    { "masternode",            &masternode_count,        },
-    { "masternode",            &masternode_winner,       },
-    { "masternode",            &masternode_status,       },
-    { "masternode",            &masternode_current,      },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"masternode", &masternode_connect},
+        {"masternode", &masternode_list},
+        {"masternode", &masternode_winners},
+        {"masternode", &masternode_payments},
+        {"masternode", &masternode_count},
+        {"masternode", &masternode_winner},
+        {"masternode", &masternode_status},
+        {"masternode", &masternode_current},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

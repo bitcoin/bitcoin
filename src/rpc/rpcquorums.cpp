@@ -586,23 +586,20 @@ static RPCHelpMan quorum_dkgsimerror()
 
 void RegisterQuorumsRPCCommands(CRPCTable &t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)
-  //  --------------------- ------------------------  -----------------------
-    { "evo",                &quorum_list,                        },
-    { "evo",                &quorum_info,                        },
-    { "evo",                &quorum_dkgstatus,                   },
-    { "evo",                &quorum_memberof,                    },
-    { "evo",                &quorum_selectquorum,                },
-    { "evo",                &quorum_dkgsimerror,                 },
-    { "evo",                &quorum_hasrecsig,                   },
-    { "evo",                &quorum_verify,                      },
-    { "evo",                &quorum_getrecsig,                   },
-    { "evo",                &quorum_isconflicting,               },
-    { "evo",                &quorum_sign,                        },
-};
-// clang-format on
+    static const CRPCCommand commands[] =
+    {
+        {"evo", &quorum_list},
+        {"evo", &quorum_info},
+        {"evo", &quorum_dkgstatus},
+        {"evo", &quorum_memberof},
+        {"evo", &quorum_selectquorum},
+        {"evo", &quorum_dkgsimerror},
+        {"evo", &quorum_hasrecsig},
+        {"evo", &quorum_verify},
+        {"evo", &quorum_getrecsig},
+        {"evo", &quorum_isconflicting},
+        {"evo", &quorum_sign},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

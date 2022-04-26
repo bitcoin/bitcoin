@@ -1407,32 +1407,28 @@ static RPCHelpMan submitauxblock()
 
  /* ************************************************************************** */
 
-void RegisterMiningRPCCommands(CRPCTable &t)
+void RegisterMiningRPCCommands(CRPCTable& t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category               actor (function)
-  //  ---------------------  -----------------------
-    { "mining",              &getnetworkhashps,        },
-    { "mining",              &getmininginfo,           },
-    { "mining",              &prioritisetransaction,   },
-    { "mining",              &getblocktemplate,        },
-    { "mining",              &submitblock,             },
-    { "mining",              &submitheader,            },
-    // SYSCOIN
-    { "mining",              &createauxblock,          },
-    { "mining",              &submitauxblock,          },
+    static const CRPCCommand commands[]{
+        {"mining", &getnetworkhashps},
+        {"mining", &getmininginfo},
+        {"mining", &prioritisetransaction},
+        {"mining", &getblocktemplate},
+        {"mining", &submitblock},
+        {"mining", &submitheader},
+        // SYSCOIN
+        {"mining", &createauxblock},
+        {"mining", &submitauxblock},
 
-    { "hidden",              &generatetoaddress,       },
-    { "hidden",              &generatetodescriptor,    },
-    { "hidden",              &generateblock,           },
+        {"hidden", &generatetoaddress},
+        {"hidden", &generatetodescriptor},
+        {"hidden", &generateblock},
 
-    { "util",                &estimatesmartfee,        },
+        {"util", &estimatesmartfee},
 
-    { "hidden",              &estimaterawfee,          },
-    { "hidden",              &generate,                },
-};
-// clang-format on
+        {"hidden", &estimaterawfee},
+        {"hidden", &generate},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

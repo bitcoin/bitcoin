@@ -961,26 +961,22 @@ static RPCHelpMan syscoinsetethheaders()
 // clang-format on
 void RegisterAssetRPCCommands(CRPCTable &t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                                actor (function)        
-    //  --------------------- ------------------------          -----------------------
-    { "syscoin",            &syscoingettxroots,             },
-    { "syscoin",            &syscoingetspvproof,            },
-    { "syscoin",            &convertaddress,                },
-    { "syscoin",            &syscoindecoderawtransaction,   },
-    { "syscoin",            &assetinfo,                     },
-    { "syscoin",            &listassets,                    },
-    { "syscoin",            &assetallocationverifyzdag,     },
-    { "syscoin",            &syscoinsetethheaders,          },
-    { "syscoin",            &syscoinstopgeth,               },
-    { "syscoin",            &syscoinstartgeth,              },
-    { "syscoin",            &syscoincheckmint,              },
-    { "syscoin",            &assettransactionnotarize,      },
-    { "syscoin",            &getnotarysighash,              },
-    { "syscoin",            &getnevmblockchaininfo,         },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"syscoin", &syscoingettxroots},
+        {"syscoin", &syscoingetspvproof},
+        {"syscoin", &convertaddress},
+        {"syscoin", &syscoindecoderawtransaction},
+        {"syscoin", &assetinfo},
+        {"syscoin", &listassets},
+        {"syscoin", &assetallocationverifyzdag},
+        {"syscoin", &syscoinsetethheaders},
+        {"syscoin", &syscoinstopgeth},
+        {"syscoin", &syscoinstartgeth},
+        {"syscoin", &syscoincheckmint},
+        {"syscoin", &assettransactionnotarize},
+        {"syscoin", &getnotarysighash},
+        {"syscoin", &getnevmblockchaininfo},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

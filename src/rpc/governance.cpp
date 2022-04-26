@@ -760,25 +760,21 @@ static RPCHelpMan getsuperblockbudget()
 
 void RegisterGovernanceRPCCommands(CRPCTable &t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)    
-//  --------------------- ------------------------  -----------------------
-    { "governance",               &getgovernanceinfo,      },
-    { "governance",               &getsuperblockbudget,    },
-    { "governance",               &gobject_count,          },
-    { "governance",               &gobject_deserialize,    },
-    { "governance",               &gobject_check,          },
-    { "governance",               &gobject_getcurrentvotes,},
-    { "governance",               &gobject_get,            },
-    { "governance",               &gobject_submit,         },
-    { "governance",               &gobject_vote_conf,      },
-    { "governance",               &gobject_list,           },
-    { "governance",               &gobject_diff,           },
-    { "governance",               &voteraw,                },
+    static const CRPCCommand commands[]{  
+        {"governance", &getgovernanceinfo },
+        {"governance", &getsuperblockbudget},
+        {"governance", &gobject_count},
+        {"governance", &gobject_deserialize},
+        {"governance", &gobject_check},
+        {"governance", &gobject_getcurrentvotes},
+        {"governance", &gobject_get},
+        {"governance", &gobject_submit},
+        {"governance", &gobject_vote_conf},
+        {"governance", &gobject_list},
+        {"governance", &gobject_diff},
+        {"governance", &voteraw},
 
-};
-// clang-format on
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

@@ -367,15 +367,11 @@ static RPCHelpMan gobject_vote_alias()
 
 Span<const CRPCCommand> wallet::GetGovernanceWalletRPCCommands()
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)       
-//  --------------------- ------------------------  ----------------------- 
-    { "governancewallet",            &gobject_vote_alias,      },
-    { "governancewallet",            &gobject_vote_many,       },
-    { "governancewallet",            &gobject_prepare,         },
-    { "governancewallet",            &gobject_list_prepared,   },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"governancewallet", &gobject_vote_alias},
+        {"governancewallet", &gobject_vote_many},
+        {"governancewallet", &gobject_prepare},
+        {"governancewallet", &gobject_list_prepared},
+    };
     return commands;
 }

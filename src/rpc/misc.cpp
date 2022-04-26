@@ -959,37 +959,31 @@ static RPCHelpMan getindexinfo()
     };
 }
 
-void RegisterMiscRPCCommands(CRPCTable &t)
+void RegisterMiscRPCCommands(CRPCTable& t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- ------------------------
-    { "control",            &getmemoryinfo,           },
-    { "control",            &logging,                 },
-    { "util",               &validateaddress,         },
-    { "util",               &createmultisig,          },
-    { "util",               &deriveaddresses,         },
-    { "util",               &getdescriptorinfo,       },
-    { "util",               &verifymessage,           },
-    { "util",               &signmessagewithprivkey,  },
-    { "util",               &getindexinfo,            },
-
-    /* Not shown in help */
-    { "hidden",             &setmocktime,             },
-    { "hidden",             &mockscheduler,           },
-    { "hidden",             &echo,                    },
-    { "hidden",             &echojson,                },
-    // SYSCOIN
-    { "syscoin",            &mnauth,                  },
-    { "syscoin",            &mnsync,                  },
-    { "syscoin",            &spork,                   },
-    { "hidden",             &echoipc,                 },
+    static const CRPCCommand commands[]{
+        {"control", &getmemoryinfo},
+        {"control", &logging},
+        {"util", &validateaddress},
+        {"util", &createmultisig},
+        {"util", &deriveaddresses},
+        {"util", &getdescriptorinfo},
+        {"util", &verifymessage},
+        {"util", &signmessagewithprivkey},
+        {"util", &getindexinfo},
+        {"hidden", &setmocktime},
+        {"hidden", &mockscheduler},
+        {"hidden", &echo},
+        {"hidden", &echojson},
+        {"hidden", &echoipc},
+        // SYSCOIN
+        {"syscoin", &mnauth},
+        {"syscoin", &mnsync},
+        {"syscoin", &spork},
 #if defined(USE_SYSCALL_SANDBOX)
-    { "hidden",             &invokedisallowedsyscall, },
+        {"hidden", &invokedisallowedsyscall},
 #endif // USE_SYSCALL_SANDBOX
-};
-// clang-format on
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

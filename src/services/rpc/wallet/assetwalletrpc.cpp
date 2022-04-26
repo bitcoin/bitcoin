@@ -2839,35 +2839,28 @@ static RPCHelpMan getauxblock()
 
 Span<const CRPCCommand> wallet::GetAssetWalletRPCCommands()
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ 
-    //  category              name                                actor (function)      
-    //  --------------------- ------------------------          -----------------------
-
-   /* assets using the blockchain, coins/points/service backed tokens*/
-    { "syscoinwallet",            &syscoinburntoassetallocation,  }, 
-    { "syscoinwallet",            &convertaddresswallet,          },
-    { "syscoinwallet",            &assetallocationburn,           }, 
-    { "syscoinwallet",            &assetallocationmint,           },     
-    { "syscoinwallet",            &assetnew,                      },
-    { "syscoinwallet",            &assetnewtest,                  },
-    { "syscoinwallet",            &assetupdate,                   },
-    { "syscoinwallet",            &assettransfer,                 },
-    { "syscoinwallet",            &assetsend,                     },
-    { "syscoinwallet",            &assetsendmany,                 },
-    { "syscoinwallet",            &assetallocationsend,           },
-    { "syscoinwallet",            &assetallocationsendmany,       },
-    { "syscoinwallet",            &listunspentasset,              },
-    { "syscoinwallet",            &signhash,                      },
-    { "syscoinwallet",            &signmessagebech32,             },
-    { "syscoinwallet",            &addressbalance,                },
-    { "syscoinwallet",            &assetallocationbalance,        },
-    { "syscoinwallet",            &sendfrom,                      },
-
-    /** Auxpow wallet functions */
-    { "syscoinwallet",            &getauxblock,                   },
-};
+    static const CRPCCommand commands[]{ 
+        {"syscoinwallet", &syscoinburntoassetallocation}, 
+        {"syscoinwallet", &convertaddresswallet},
+        {"syscoinwallet", &assetallocationburn}, 
+        {"syscoinwallet", &assetallocationmint},     
+        {"syscoinwallet", &assetnew},
+        {"syscoinwallet", &assetnewtest},
+        {"syscoinwallet", &assetupdate},
+        {"syscoinwallet", &assettransfer},
+        {"syscoinwallet", &assetsend},
+        {"syscoinwallet", &assetsendmany},
+        {"syscoinwallet", &assetallocationsend},
+        {"syscoinwallet", &assetallocationsendmany},
+        {"syscoinwallet", &listunspentasset},
+        {"syscoinwallet", &signhash},
+        {"syscoinwallet", &signmessagebech32},
+        {"syscoinwallet", &addressbalance},
+        {"syscoinwallet", &assetallocationbalance},
+        {"syscoinwallet", &sendfrom},
+        /** Auxpow wallet functions */
+        {"syscoinwallet", &getauxblock},
+    };
 // clang-format on
     return commands;
 }
