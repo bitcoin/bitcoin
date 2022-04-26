@@ -1845,52 +1845,43 @@ static RPCHelpMan bls_help()
 #ifdef ENABLE_WALLET
 Span<const CRPCCommand> GetWalletEvoRPCCommands()
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- -----------------------
-    { "evo",                &protx_list,                       },
-    { "evo",                &protx_info,                       },
-    { "evo",                &protx_register,                   },
-    { "evo",                &protx_register_evo,               },
-    { "evo",                &protx_register_fund,              },
-    { "evo",                &protx_register_fund_evo,          },
-    { "evo",                &protx_register_prepare,           },
-    { "evo",                &protx_register_prepare_evo,       },
-    { "evo",                &protx_update_service,             },
-    { "evo",                &protx_update_service_evo,         },
-    { "evo",                &protx_register_submit,            },
-    { "evo",                &protx_update_registrar,           },
-    { "evo",                &protx_revoke,                     },
-    { "hidden",             &protx_register_legacy,            },
-    { "hidden",             &protx_register_fund_legacy,       },
-    { "hidden",             &protx_register_prepare_legacy,    },
-    { "hidden",             &protx_update_registrar_legacy,    },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"evo", &protx_list},
+        {"evo", &protx_info},
+        {"evo", &protx_register},
+        {"evo", &protx_register_evo},
+        {"evo", &protx_register_fund},
+        {"evo", &protx_register_fund_evo},
+        {"evo", &protx_register_prepare},
+        {"evo", &protx_register_prepare_evo},
+        {"evo", &protx_update_service},
+        {"evo", &protx_update_service_evo},
+        {"evo", &protx_register_submit},
+        {"evo", &protx_update_registrar},
+        {"evo", &protx_revoke},
+        {"hidden", &protx_register_legacy},
+        {"hidden", &protx_register_fund_legacy},
+        {"hidden", &protx_register_prepare_legacy},
+        {"hidden", &protx_update_registrar_legacy},
+    };
     return commands;
 }
 #endif // ENABLE_WALLET
 
 void RegisterEvoRPCCommands(CRPCTable& tableRPC)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- -----------------------
-    { "evo",                &bls_help,                         },
-    { "evo",                &bls_generate,                     },
-    { "evo",                &bls_fromsecret,                   },
-    { "evo",                &protx_help,                       },
-    { "evo",                &protx_diff,                       },
-    { "evo",                &protx_listdiff,                   },
-};
-static const CRPCCommand commands_wallet[] =
-{
-    { "evo",                &protx_list,                       },
-    { "evo",                &protx_info,                       },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"evo", &bls_help},
+        {"evo", &bls_generate},
+        {"evo", &bls_fromsecret},
+        {"evo", &protx_help},
+        {"evo", &protx_diff},
+        {"evo", &protx_listdiff},
+    };
+    static const CRPCCommand commands_wallet[]{
+        {"evo", &protx_list},
+        {"evo", &protx_info},
+    };
     for (const auto& command : commands) {
         tableRPC.appendCommand(command.name, &command);
     }
