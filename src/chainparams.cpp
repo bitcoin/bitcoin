@@ -783,8 +783,7 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
     }
     if (args.IsArgSet("-dip3params")) {
         std::string strDIP3Params = args.GetArg("-dip3params", "");
-        std::vector<std::string> vDIP3Params;
-        boost::split(vDIP3Params, strDIP3Params, boost::is_any_of(":"));
+        std::vector<std::string> vDIP3Params = SplitString(strDIP3Params, ':');
         if (vDIP3Params.size() != 2) {
             throw std::runtime_error("DIP3 parameters malformed, expecting DIP3ActivationHeight:DIP3EnforcementHeight");
         }
