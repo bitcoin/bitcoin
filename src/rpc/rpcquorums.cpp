@@ -649,26 +649,27 @@ static UniValue quorum_getdata(const JSONRPCRequest& request)
     });
 }
 
-static void quorum_getrotationinfo_help()
+static void quorum_rotationinfo_help()
 {
     throw std::runtime_error(
         RPCHelpMan{
             "quorum rotationinfo",
             "Get quorum rotation information\n",
-            {{"blockRequestHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The blockHash of the request."},
-             {"baseBlockHashesNb", RPCArg::Type::NUM, RPCArg::Optional::NO,
-              "Number of baseBlockHashes"},
-             {"extraShare", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Extra share"}},
+            {
+                {"blockRequestHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The blockHash of the request"},
+                {"extraShare", RPCArg::Type::BOOL, /* default */ "false", "Extra share"},
+                {"baseBlockHash...", RPCArg::Type::STR_HEX, /* default*/ "", "baseBlockHashes"},
+            },
             RPCResults{},
             RPCExamples{""},
         }
-            .ToString());
+        .ToString());
 }
 
-static UniValue quorum_getrotationdata(const JSONRPCRequest& request)
+static UniValue quorum_rotationinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() < 2)) {
-        quorum_getrotationinfo_help();
+        quorum_rotationinfo_help();
     }
 
     llmq::CGetQuorumRotationInfo cmd;
@@ -676,15 +677,12 @@ static UniValue quorum_getrotationdata(const JSONRPCRequest& request)
     std::string strError;
 
     cmd.blockRequestHash = ParseHashV(request.params[1], "blockRequestHash");
-    size_t baseBlockHashesNb = static_cast<uint32_t>(ParseInt32V(request.params[2], "baseBlockHashesNb"));
-    cmd.extraShare = ParseBoolV(request.params[3], "extraShare");
+    cmd.extraShare = request.params[2].isNull() ? false : ParseBoolV(request.params[2], "extraShare");
 
-    /*if (request.params.size() - 2 != cmd.baseBlockHashesNb) {
-        quorum_getrotationinfo_help();
-    }*/
-
-    for (auto i = 0; i < baseBlockHashesNb; i++) {
-        cmd.baseBlockHashes.push_back(ParseHashV(request.params[3 + i], "quorumHash"));
+    size_t idx = 3;
+    while (!request.params[idx].isNull()) {
+        cmd.baseBlockHashes.emplace_back(ParseHashV(request.params[idx], "baseBlockHash"));
+        ++idx;
     }
     LOCK(cs_main);
     if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, strError)) {
@@ -755,7 +753,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "getdata") {
         return quorum_getdata(request);
     } else if (command == "rotationinfo") {
-        return quorum_getrotationdata(request);
+        return quorum_rotationinfo(request);
     } else {
         quorum_help();
     }
