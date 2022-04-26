@@ -20,6 +20,8 @@ protected:
 private:
     const std::unique_ptr<DB> m_db;
 
+    bool AllowPrune() const override { return false; }
+
 protected:
     bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
 

@@ -75,6 +75,9 @@ private:
     /// to a chain reorganization), the index must halt until Commit succeeds or else it could end up
     /// getting corrupted.
     bool Commit();
+
+    virtual bool AllowPrune() const = 0;
+
 protected:
     CChainState* m_chainstate{nullptr};
 
@@ -102,6 +105,9 @@ protected:
 
     /// Get the name of the index for display in logs.
     virtual const char* GetName() const = 0;
+
+    /// Update the internal best block index as well as the prune lock.
+    void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
     /// Destructor interrupts sync thread if running and blocks until it exits.

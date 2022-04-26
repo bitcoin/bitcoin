@@ -928,10 +928,9 @@ static RPCHelpMan pruneblockchain()
 
     PruneBlockFilesManual(active_chainstate, height);
     const CBlockIndex* block = CHECK_NONFATAL(active_chain.Tip());
-    while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-        block = block->pprev;
-    }
-    return uint64_t(block->nHeight);
+    const CBlockIndex* last_block = node::GetFirstStoredBlock(block);
+
+    return static_cast<uint64_t>(last_block->nHeight);
 },
     };
 }
@@ -1359,11 +1358,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("pruned", node::fPruneMode);
     if (node::fPruneMode) {
         const CBlockIndex* block = CHECK_NONFATAL(tip);
-        while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-            block = block->pprev;
-        }
-
-        obj.pushKV("pruneheight",        block->nHeight);
+        obj.pushKV("pruneheight", node::GetFirstStoredBlock(block)->nHeight);
 
         // if 0, execution bypasses the whole if block.
         bool automatic_pruning{args.GetIntArg("-prune", 0) != 1};
