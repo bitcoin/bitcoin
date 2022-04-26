@@ -138,6 +138,7 @@ BITCOIN_CORE_H = \
   compat/sanity.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/merkle.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
   core_io.h \
@@ -532,8 +533,6 @@ libbitcoin_consensus_a_SOURCES = \
   arith_uint256.cpp \
   arith_uint256.h \
   consensus/amount.h \
-  consensus/merkle.cpp \
-  consensus/merkle.h \
   consensus/params.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
@@ -572,6 +571,7 @@ libbitcoin_common_a_SOURCES = \
   coins.cpp \
   common/bloom.cpp \
   compressor.cpp \
+  consensus/merkle.cpp \
   core_read.cpp \
   core_write.cpp \
   deploymentinfo.cpp \
