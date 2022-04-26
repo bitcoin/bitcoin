@@ -430,7 +430,7 @@ static bool createJuratTx(const UniValue& uniVal, UniValue& out,
     uint32_t nLockBlockHeight = uniVal[keyLockHeight].get_int();
     CAmount satoshiFee = FEE;
     if( !uniVal[keyFeeAmt].isNull()  &&  uniVal[keyLockHeight].isNum()) {
-        satoshiFee = uniVal[keyLockHeight].get_int();
+        satoshiFee = uniVal[keyFeeAmt].get_int();
     }
     
     
