@@ -64,7 +64,7 @@ static const size_t TOTAL_TRIES = 100000;
 
 std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
 {
-    SelectionResult result(selection_target);
+    SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
     std::vector<size_t> curr_selection; // selected utxo indexes
 
@@ -167,7 +167,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 
 std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
 {
-    SelectionResult result(target_value);
+    SelectionResult result(target_value, SelectionAlgorithm::SRD);
 
     std::vector<size_t> indexes;
     indexes.resize(utxo_pool.size());
@@ -249,7 +249,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
 std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
                                               CAmount change_target, FastRandomContext& rng)
 {
-    SelectionResult result(nTargetValue);
+    SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
 
     // List of values less than target
     std::optional<OutputGroup> lowest_larger;
@@ -459,5 +459,18 @@ bool SelectionResult::operator<(SelectionResult other) const
 std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
+}
+
+std::string GetAlgorithmName(const SelectionAlgorithm algo)
+{
+    switch (algo)
+    {
+    case SelectionAlgorithm::BNB: return "bnb";
+    case SelectionAlgorithm::KNAPSACK: return "knapsack";
+    case SelectionAlgorithm::SRD: return "srd";
+    case SelectionAlgorithm::MANUAL: return "manual";
+    // No default case to allow for compiler to warn
+    }
+    assert(false);
 }
 } // namespace wallet
