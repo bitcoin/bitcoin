@@ -27,7 +27,7 @@ class TestRPCAuth(unittest.TestCase):
             importlib.invalidate_caches()
             path_helper = importlib.import_module('path_helper')
             posix_to_windows_path = path_helper.posix_to_windows_path
-        except Exception as e:
+        except Exception:
             pass
 
         rpcauth_dir = posix_to_windows_path(config['environment']['RPCAUTH'])
