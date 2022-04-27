@@ -134,12 +134,20 @@ Please download the installer here: http://msys2.github.io/
 #### Build using:
 ```bash
   ./autogen.sh
+```
 
+```bash
   ./configure --enable-ccache --without-gui
+```
 
+```bash
   make -J $(nproc)
+```
 
+```bash
   make check
+```
   
+```bash
   make install DESTDIR=/mnt/c/workspace/bitcoin
 ```
