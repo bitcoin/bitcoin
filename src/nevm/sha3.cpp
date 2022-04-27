@@ -163,7 +163,7 @@ mkapply_sd(setout, dst[i] = src[i])  // setout
 static inline int hash(uint8_t* out, size_t outlen,
 					   const uint8_t* in, size_t inlen,
 					   size_t rate, uint8_t delim) {
-  if ((out == NULL) || ((in == NULL) && inlen != 0) || (rate >= Plen)) {
+  if ((out == nullptr) || ((in == nullptr) && inlen != 0) || (rate >= Plen)) {
 	return -1;
   }
   uint8_t a[Plen] = {0};
