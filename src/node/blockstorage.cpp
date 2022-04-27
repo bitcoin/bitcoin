@@ -232,7 +232,8 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
            nLastBlockWeCanPrune, count);
 }
 
-void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
+void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info)
+{
     AssertLockHeld(::cs_main);
     m_prune_locks[name] = lock_info;
 }

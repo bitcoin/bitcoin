@@ -378,7 +378,8 @@ IndexSummary BaseIndex::GetSummary() const
     return summary;
 }
 
-void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
+void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
+{
     assert(!node::fPruneMode || AllowPrune());
 
     m_best_block_index = block;

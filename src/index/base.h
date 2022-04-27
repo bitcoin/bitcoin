@@ -83,6 +83,9 @@ private:
     /// Write update index entries for a newly connected block.
     virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
 
+    /// Update the internal best block index as well as the prune lock.
+    void SetBestBlockIndex(const CBlockIndex* block);
+
     /// Get the name of the index for display in logs.
     virtual const char* GetIndexName() const = 0;
 
@@ -105,9 +108,6 @@ protected:
     /// Rewind index to an earlier chain tip during a chain reorg. The tip must
     /// be an ancestor of the current best block.
     virtual bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
-
-    /// Update the internal best block index as well as the prune lock.
-    void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
     /// Destructor interrupts sync thread if running and blocks until it exits.
