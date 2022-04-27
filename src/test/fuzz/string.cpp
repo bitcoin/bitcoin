@@ -42,7 +42,7 @@ bool LegacyParsePrechecks(const std::string& str)
         return false;
     if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size() - 1]))) // No padding allowed
         return false;
-    if (!ValidAsCString(str)) // No embedded NUL characters allowed
+    if (!ContainsNoNUL(str)) // No embedded NUL characters allowed
         return false;
     return true;
 }
@@ -188,7 +188,7 @@ FUZZ_TARGET(string)
     (void)TrimString(random_string_1);
     (void)TrimString(random_string_1, random_string_2);
     (void)urlDecode(random_string_1);
-    (void)ValidAsCString(random_string_1);
+    (void)ContainsNoNUL(random_string_1);
     (void)_(random_string_1.c_str());
     try {
         throw scriptnum_error{random_string_1};
