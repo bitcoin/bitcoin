@@ -28,15 +28,15 @@ installing the toolchain will be different.
 First, install the general dependencies:
 
 ```sh
-    sudo apt update
+  sudo apt update
 ```
 
 ```sh
-    sudo apt upgrade
+  sudo apt upgrade
 ```
 
 ```sh
-    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
+  sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
 ```
 
 A host toolchain (`build-essential`) is necessary because some dependency
@@ -47,17 +47,17 @@ See [dependencies.md](dependencies.md) for a complete overview.
 If you want to build the windows installer with `make deploy` you need [NSIS](https://nsis.sourceforge.io/Main_Page):
 
 ```sh
-    sudo apt install nsis
+  sudo apt install nsis
 ```
 
 Acquire the source in the usual way:
 
 ```sh
-    git clone https://github.com/bitcoin/bitcoin.git
+  git clone https://github.com/bitcoin/bitcoin.git
 ```
 
 ```sh
-    cd bitcoin
+  cd bitcoin
 ```
 
 ## Building for 64-bit Windows
@@ -66,13 +66,13 @@ The first step is to install the mingw-w64 cross-compilation tool chain:
   - on modern systems (Ubuntu 21.04 Hirsute Hippo or newer, Debian 11 Bullseye or newer):
 
 ```sh
-sudo apt install g++-mingw-w64-x86-64-posix
+  sudo apt install g++-mingw-w64-x86-64-posix
 ```
 
   - on older systems:
 
 ```sh
-sudo apt install g++-mingw-w64-x86-64
+  sudo apt install g++-mingw-w64-x86-64
 ```
 
 Once the toolchain is installed the build steps are common:
@@ -89,39 +89,39 @@ is to temporarily disable WSL support for Win32 applications.
 Build using:
 
 ```sh
-    PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
+  PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
 ```
 
 ```sh
-    sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
+  sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
 ```
 
 ```sh
-    cd depends
+  cd depends
 ```
 
 ```sh
-    make HOST=x86_64-w64-mingw32
+  make HOST=x86_64-w64-mingw32
 ```
 
 ```sh
-    cd ..
+  cd ..
 ```
 
 ```sh
-    ./autogen.sh
+  ./autogen.sh
 ```
 
 ```sh
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+  CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
 ```
 
 ```sh
-    make # use "-j N" for N parallel jobs
+  make # use "-j N" for N parallel jobs
 ```
 
 ```sh
-    sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
+  sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
 ```
 
 ## Depends system
@@ -137,13 +137,13 @@ as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
 
 ```sh
-    make install DESTDIR=/mnt/c/workspace/bitcoin
+  make install DESTDIR=/mnt/c/workspace/bitcoin
 ```
 
 You can also create an installer using:
 
 ```sh
-    make deploy
+  make deploy
 ```
 
 Compilation for 64-bit Windows with msys2
