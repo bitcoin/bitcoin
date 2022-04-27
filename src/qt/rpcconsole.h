@@ -5,6 +5,10 @@
 #ifndef SYSCOIN_QT_RPCCONSOLE_H
 #define SYSCOIN_QT_RPCCONSOLE_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
 
@@ -17,6 +21,7 @@
 
 class ClientModel;
 class PlatformStyle;
+class RPCExecutor;
 class RPCTimerInterface;
 class WalletModel;
 
@@ -49,8 +54,11 @@ public:
     }
 
     void setClientModel(ClientModel *model = nullptr, int bestblock_height = 0, int64_t bestblock_date = 0, double verification_progress = 0.0);
-    void addWallet(WalletModel * const walletModel);
+
+#ifdef ENABLE_WALLET
+    void addWallet(WalletModel* const walletModel);
     void removeWallet(WalletModel* const walletModel);
+#endif // ENABLE_WALLET
 
     enum MessageClass {
         MC_ERROR,
@@ -137,8 +145,6 @@ public Q_SLOTS:
     void setTabFocus(enum TabTypes tabType);
 
 Q_SIGNALS: 
-    // For RPC command executor
-    void cmdRequest(const QString &command, const WalletModel* wallet_model);
     /** SYSCOIN Get restart command-line parameters and handle restart */
     void handleRestart(const QStringList &args);
 private:
@@ -176,6 +182,7 @@ private:
     int consoleFontSize = 0;
     QCompleter *autoCompleter = nullptr;
     QThread thread;
+    RPCExecutor* m_executor{nullptr};
     WalletModel* m_last_wallet_model{nullptr};
     bool m_is_executing{false};
     QByteArray m_peer_widget_header_state;
