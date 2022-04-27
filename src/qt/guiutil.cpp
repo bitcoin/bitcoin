@@ -738,8 +738,14 @@ bool GetStartOnSystemStartup()
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
-    if (!fAutoStart)
-        fs::remove(GetAutostartFilePath());
+    if (!fAutoStart) {
+        try {
+            fs::remove(GetAutostartFilePath());
+        } catch(const fs::filesystem_error& e) {
+            LogPrintf("Failed to remove autostart file: %s\n", e.what());
+            return false;
+        }
+    }
     else
     {
         char pszExePath[MAX_PATH+1];
@@ -747,7 +753,12 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         if (readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1) == -1)
             return false;
 
-        fs::create_directories(GetAutostartDir());
+        try {
+            fs::create_directories(GetAutostartDir());
+        } catch(const fs::filesystem_error& e) {
+            LogPrintf("Failed to create autostart directory: %s\n", e.what());
+            return false;
+        }
 
         fs::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
         if (!optionFile.good())
