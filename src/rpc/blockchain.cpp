@@ -787,10 +787,9 @@ static RPCHelpMan pruneblockchain()
 
     PruneBlockFilesManual(active_chainstate, height);
     const CBlockIndex* block = CHECK_NONFATAL(active_chain.Tip());
-    while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-        block = block->pprev;
-    }
-    return uint64_t(block->nHeight);
+    const CBlockIndex* last_block = node::GetFirstStoredBlock(block);
+
+    return static_cast<uint64_t>(last_block->nHeight);
 },
     };
 }
@@ -1217,11 +1216,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("pruned", node::fPruneMode);
     if (node::fPruneMode) {
         const CBlockIndex* block = CHECK_NONFATAL(tip);
-        while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-            block = block->pprev;
-        }
-
-        obj.pushKV("pruneheight",        block->nHeight);
+        obj.pushKV("pruneheight", node::GetFirstStoredBlock(block)->nHeight);
 
         // if 0, execution bypasses the whole if block.
         bool automatic_pruning{args.GetIntArg("-prune", 0) != 1};
@@ -2371,44 +2366,36 @@ UniValue CreateUTXOSnapshot(
     return result;
 }
 
-
-void RegisterBlockchainRPCCommands(CRPCTable &t)
+void RegisterBlockchainRPCCommands(CRPCTable& t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- ------------------------
-    { "blockchain",         &getblockchaininfo,                  },
-    { "blockchain",         &getchaintxstats,                    },
-    { "blockchain",         &getblockstats,                      },
-    { "blockchain",         &getbestblockhash,                   },
-    { "blockchain",         &getblockcount,                      },
-    { "blockchain",         &getblock,                           },
-    { "blockchain",         &getblockfrompeer,                   },
-    { "blockchain",         &getblockhash,                       },
-    { "blockchain",         &getblockheader,                     },
-    { "blockchain",         &getchaintips,                       },
-    { "blockchain",         &getdifficulty,                      },
-    { "blockchain",         &getdeploymentinfo,                  },
-    { "blockchain",         &gettxout,                           },
-    { "blockchain",         &gettxoutsetinfo,                    },
-    { "blockchain",         &pruneblockchain,                    },
-    { "blockchain",         &verifychain,                        },
-
-    { "blockchain",         &preciousblock,                      },
-    { "blockchain",         &scantxoutset,                       },
-    { "blockchain",         &getblockfilter,                     },
-
-    /* Not shown in help */
-    { "hidden",              &invalidateblock,                   },
-    { "hidden",              &reconsiderblock,                   },
-    { "hidden",              &waitfornewblock,                   },
-    { "hidden",              &waitforblock,                      },
-    { "hidden",              &waitforblockheight,                },
-    { "hidden",              &syncwithvalidationinterfacequeue,  },
-    { "hidden",              &dumptxoutset,                      },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"blockchain", &getblockchaininfo},
+        {"blockchain", &getchaintxstats},
+        {"blockchain", &getblockstats},
+        {"blockchain", &getbestblockhash},
+        {"blockchain", &getblockcount},
+        {"blockchain", &getblock},
+        {"blockchain", &getblockfrompeer},
+        {"blockchain", &getblockhash},
+        {"blockchain", &getblockheader},
+        {"blockchain", &getchaintips},
+        {"blockchain", &getdifficulty},
+        {"blockchain", &getdeploymentinfo},
+        {"blockchain", &gettxout},
+        {"blockchain", &gettxoutsetinfo},
+        {"blockchain", &pruneblockchain},
+        {"blockchain", &verifychain},
+        {"blockchain", &preciousblock},
+        {"blockchain", &scantxoutset},
+        {"blockchain", &getblockfilter},
+        {"hidden", &invalidateblock},
+        {"hidden", &reconsiderblock},
+        {"hidden", &waitfornewblock},
+        {"hidden", &waitforblock},
+        {"hidden", &waitforblockheight},
+        {"hidden", &syncwithvalidationinterfacequeue},
+        {"hidden", &dumptxoutset},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

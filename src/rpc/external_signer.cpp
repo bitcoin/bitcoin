@@ -62,15 +62,11 @@ static RPCHelpMan enumeratesigners()
     };
 }
 
-void RegisterSignerRPCCommands(CRPCTable &t)
+void RegisterSignerRPCCommands(CRPCTable& t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ // category              actor (function)
-  // --------------------- ------------------------
-  { "signer",              &enumeratesigners,      },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"signer", &enumeratesigners},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

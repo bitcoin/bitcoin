@@ -21,6 +21,8 @@
 #include <util/system.h>
 #include <validation.h>
 
+#include <unordered_map>
+
 namespace node {
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
@@ -230,6 +232,11 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
            nLastBlockWeCanPrune, count);
 }
 
+void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
+    AssertLockHeld(::cs_main);
+    m_prune_locks[name] = lock_info;
+}
+
 CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
 {
     AssertLockHeld(cs_main);
@@ -395,6 +402,16 @@ bool BlockManager::IsBlockPruned(const CBlockIndex* pblockindex)
 {
     AssertLockHeld(::cs_main);
     return (m_have_pruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
+}
+
+const CBlockIndex* GetFirstStoredBlock(const CBlockIndex* start_block) {
+    AssertLockHeld(::cs_main);
+    assert(start_block);
+    const CBlockIndex* last_block = start_block;
+    while (last_block->pprev && (last_block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+        last_block = last_block->pprev;
+    }
+    return last_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the

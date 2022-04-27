@@ -135,6 +135,8 @@ static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
 static constexpr auto AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL{24h};
 /** Average delay between peer address broadcasts */
 static constexpr auto AVG_ADDRESS_BROADCAST_INTERVAL{30s};
+/** Delay between rotating the peers we relay a particular address to */
+static constexpr auto ROTATE_ADDR_RELAY_DEST_INTERVAL{24h};
 /** Average delay between trickled inventory transmissions for inbound peers.
  *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
 static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL{5s};
@@ -1818,9 +1820,12 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the m_addr_knowns of the chosen nodes prevent repeats
     const uint64_t hash_addr{CServiceHash(0, 0)(addr)};
+    const auto current_time{GetTime<std::chrono::seconds>()};
+    // Adding address hash makes exact rotation time different per address, while preserving periodicity.
+    const uint64_t time_addr{(static_cast<uint64_t>(count_seconds(current_time)) + hash_addr) / count_seconds(ROTATE_ADDR_RELAY_DEST_INTERVAL)};
     const CSipHasher hasher{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY)
                                 .Write(hash_addr)
-                                .Write((GetTime() + hash_addr) / (24 * 60 * 60))};
+                                .Write(time_addr)};
     FastRandomContext insecure_rand;
 
     // Relay reachable addresses to 2 peers. Unreachable addresses are relayed randomly to 1 or 2 peers.

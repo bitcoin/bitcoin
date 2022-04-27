@@ -226,17 +226,17 @@ BOOST_AUTO_TEST_CASE(util_Join)
 BOOST_AUTO_TEST_CASE(util_TrimString)
 {
     BOOST_CHECK_EQUAL(TrimString(" foo bar "), "foo bar");
-    BOOST_CHECK_EQUAL(TrimString("\t \n  \n \f\n\r\t\v\tfoo \n \f\n\r\t\v\tbar\t  \n \f\n\r\t\v\t\n "), "foo \n \f\n\r\t\v\tbar");
+    BOOST_CHECK_EQUAL(TrimStringView("\t \n  \n \f\n\r\t\v\tfoo \n \f\n\r\t\v\tbar\t  \n \f\n\r\t\v\t\n "), "foo \n \f\n\r\t\v\tbar");
     BOOST_CHECK_EQUAL(TrimString("\t \n foo \n\tbar\t \n "), "foo \n\tbar");
-    BOOST_CHECK_EQUAL(TrimString("\t \n foo \n\tbar\t \n ", "fobar"), "\t \n foo \n\tbar\t \n ");
+    BOOST_CHECK_EQUAL(TrimStringView("\t \n foo \n\tbar\t \n ", "fobar"), "\t \n foo \n\tbar\t \n ");
     BOOST_CHECK_EQUAL(TrimString("foo bar"), "foo bar");
-    BOOST_CHECK_EQUAL(TrimString("foo bar", "fobar"), " ");
+    BOOST_CHECK_EQUAL(TrimStringView("foo bar", "fobar"), " ");
     BOOST_CHECK_EQUAL(TrimString(std::string("\0 foo \0 ", 8)), std::string("\0 foo \0", 7));
-    BOOST_CHECK_EQUAL(TrimString(std::string(" foo ", 5)), std::string("foo", 3));
+    BOOST_CHECK_EQUAL(TrimStringView(std::string(" foo ", 5)), std::string("foo", 3));
     BOOST_CHECK_EQUAL(TrimString(std::string("\t\t\0\0\n\n", 6)), std::string("\0\0", 2));
-    BOOST_CHECK_EQUAL(TrimString(std::string("\x05\x04\x03\x02\x01\x00", 6)), std::string("\x05\x04\x03\x02\x01\x00", 6));
+    BOOST_CHECK_EQUAL(TrimStringView(std::string("\x05\x04\x03\x02\x01\x00", 6)), std::string("\x05\x04\x03\x02\x01\x00", 6));
     BOOST_CHECK_EQUAL(TrimString(std::string("\x05\x04\x03\x02\x01\x00", 6), std::string("\x05\x04\x03\x02\x01", 5)), std::string("\0", 1));
-    BOOST_CHECK_EQUAL(TrimString(std::string("\x05\x04\x03\x02\x01\x00", 6), std::string("\x05\x04\x03\x02\x01\x00", 6)), "");
+    BOOST_CHECK_EQUAL(TrimStringView(std::string("\x05\x04\x03\x02\x01\x00", 6), std::string("\x05\x04\x03\x02\x01\x00", 6)), "");
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatParseISO8601DateTime)
@@ -2349,6 +2349,55 @@ BOOST_AUTO_TEST_CASE(test_spanparsing)
     BOOST_CHECK_EQUAL(SpanToStr(results[3]), "");
 }
 
+BOOST_AUTO_TEST_CASE(test_SplitString)
+{
+    // Empty string.
+    {
+        std::vector<std::string> result = SplitString("", '-');
+        BOOST_CHECK_EQUAL(result.size(), 1);
+        BOOST_CHECK_EQUAL(result[0], "");
+    }
+
+    // Empty items.
+    {
+        std::vector<std::string> result = SplitString("-", '-');
+        BOOST_CHECK_EQUAL(result.size(), 2);
+        BOOST_CHECK_EQUAL(result[0], "");
+        BOOST_CHECK_EQUAL(result[1], "");
+    }
+
+    // More empty items.
+    {
+        std::vector<std::string> result = SplitString("--", '-');
+        BOOST_CHECK_EQUAL(result.size(), 3);
+        BOOST_CHECK_EQUAL(result[0], "");
+        BOOST_CHECK_EQUAL(result[1], "");
+        BOOST_CHECK_EQUAL(result[2], "");
+    }
+
+    // Separator is not present.
+    {
+        std::vector<std::string> result = SplitString("abc", '-');
+        BOOST_CHECK_EQUAL(result.size(), 1);
+        BOOST_CHECK_EQUAL(result[0], "abc");
+    }
+
+    // Basic behavior.
+    {
+        std::vector<std::string> result = SplitString("a-b", '-');
+        BOOST_CHECK_EQUAL(result.size(), 2);
+        BOOST_CHECK_EQUAL(result[0], "a");
+        BOOST_CHECK_EQUAL(result[1], "b");
+    }
+
+    // Case-sensitivity of the separator.
+    {
+        std::vector<std::string> result = SplitString("AAA", 'a');
+        BOOST_CHECK_EQUAL(result.size(), 1);
+        BOOST_CHECK_EQUAL(result[0], "AAA");
+    }
+}
+
 BOOST_AUTO_TEST_CASE(test_LogEscapeMessage)
 {
     // ASCII and UTF-8 must pass through unaltered.
@@ -2569,13 +2618,13 @@ BOOST_AUTO_TEST_CASE(message_hash)
 BOOST_AUTO_TEST_CASE(remove_prefix)
 {
     BOOST_CHECK_EQUAL(RemovePrefix("./util/system.h", "./"), "util/system.h");
-    BOOST_CHECK_EQUAL(RemovePrefix("foo", "foo"), "");
+    BOOST_CHECK_EQUAL(RemovePrefixView("foo", "foo"), "");
     BOOST_CHECK_EQUAL(RemovePrefix("foo", "fo"), "o");
-    BOOST_CHECK_EQUAL(RemovePrefix("foo", "f"), "oo");
+    BOOST_CHECK_EQUAL(RemovePrefixView("foo", "f"), "oo");
     BOOST_CHECK_EQUAL(RemovePrefix("foo", ""), "foo");
-    BOOST_CHECK_EQUAL(RemovePrefix("fo", "foo"), "fo");
+    BOOST_CHECK_EQUAL(RemovePrefixView("fo", "foo"), "fo");
     BOOST_CHECK_EQUAL(RemovePrefix("f", "foo"), "f");
-    BOOST_CHECK_EQUAL(RemovePrefix("", "foo"), "");
+    BOOST_CHECK_EQUAL(RemovePrefixView("", "foo"), "");
     BOOST_CHECK_EQUAL(RemovePrefix("", ""), "");
 }
 
