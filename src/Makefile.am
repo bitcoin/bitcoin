@@ -939,12 +939,50 @@ endif # BUILD_BITCOIN_KERNEL_LIB
 if BUILD_BITCOIN_LIBS
 lib_LTLIBRARIES += $(LIBBITCOINCONSENSUS)
 
+noinst_LTLIBRARIES += libscriptvalidation.la
+libscriptvalidation_la_SOURCES =
+libscriptvalidation_la_SOURCES += crypto/hmac_sha512.cpp
+libscriptvalidation_la_SOURCES += crypto/hmac_sha512.h
+libscriptvalidation_la_SOURCES += crypto/ripemd160.cpp
+libscriptvalidation_la_SOURCES += crypto/ripemd160.h
+libscriptvalidation_la_SOURCES += crypto/sha1.cpp
+libscriptvalidation_la_SOURCES += crypto/sha1.h
+libscriptvalidation_la_SOURCES += crypto/sha256.cpp
+libscriptvalidation_la_SOURCES += crypto/sha256.h
+libscriptvalidation_la_SOURCES += crypto/sha256_arm_shani.cpp
+libscriptvalidation_la_SOURCES += crypto/sha256_avx2.cpp
+libscriptvalidation_la_SOURCES += crypto/sha256_sse4.cpp
+libscriptvalidation_la_SOURCES += crypto/sha256_sse41.cpp
+libscriptvalidation_la_SOURCES += crypto/sha256_x86_shani.cpp
+libscriptvalidation_la_SOURCES += crypto/sha512.cpp
+libscriptvalidation_la_SOURCES += crypto/sha512.h
+libscriptvalidation_la_SOURCES += hash.cpp
+libscriptvalidation_la_SOURCES += hash.h
+libscriptvalidation_la_SOURCES += primitives/transaction.cpp
+libscriptvalidation_la_SOURCES += primitives/transaction.h
+libscriptvalidation_la_SOURCES += pubkey.cpp
+libscriptvalidation_la_SOURCES += pubkey.h
+libscriptvalidation_la_SOURCES += script/interpreter.cpp
+libscriptvalidation_la_SOURCES += script/interpreter.h
+libscriptvalidation_la_SOURCES += script/script.cpp
+libscriptvalidation_la_SOURCES += script/script.h
+libscriptvalidation_la_SOURCES += script/transaction_unserialize.cpp
+libscriptvalidation_la_SOURCES += script/transaction_unserialize.h
+libscriptvalidation_la_SOURCES += uint256.cpp
+libscriptvalidation_la_SOURCES += uint256.h
+libscriptvalidation_la_SOURCES += util/strencodings.cpp
+libscriptvalidation_la_SOURCES += util/strencodings.h
+libscriptvalidation_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libscriptvalidation_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libscriptvalidation_la_LIBADD = $(LIBSECP256K1)
+libscriptvalidation_la_LDFLAGS = $(AM_LDFLAGS) -static
+
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES = script/bitcoinconsensus.cpp
 
 libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libbitcoinconsensus_la_LIBADD = libscriptvalidation.la
+libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -DBUILD_BITCOIN_INTERNAL
 libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif

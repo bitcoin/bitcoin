@@ -11,10 +11,7 @@
     <ClCompile Include="..\..\src\arith_uint256.cpp" />
     <ClCompile Include="..\..\src\consensus\merkle.cpp" />
     <ClCompile Include="..\..\src\consensus\tx_check.cpp" />
-    <ClCompile Include="..\..\src\crypto\aes.cpp" />
-    <ClCompile Include="..\..\src\crypto\chacha20.cpp" />
     <ClCompile Include="..\..\src\crypto\hmac_sha256.cpp" />
-    <ClCompile Include="..\..\src\crypto\hmac_sha512.cpp" />
     <ClCompile Include="..\..\src\crypto\ripemd160.cpp" />
     <ClCompile Include="..\..\src\crypto\sha1.cpp" />
     <ClCompile Include="..\..\src\crypto\sha256.cpp" />
@@ -28,6 +25,7 @@
     <ClCompile Include="..\..\src\script\interpreter.cpp" />
     <ClCompile Include="..\..\src\script\script.cpp" />
     <ClCompile Include="..\..\src\script\script_error.cpp" />
+    <ClCompile Include="..\..\src\script\transaction_unserialize.cpp" />
     <ClCompile Include="..\..\src\uint256.cpp" />
     <ClCompile Include="..\..\src\util\strencodings.cpp" />
   </ItemGroup>
