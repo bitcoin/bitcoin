@@ -38,8 +38,8 @@ MasternodeList::MasternodeList(QWidget* parent) :
     nTimeUpdatedDIP3(0),
     fFilterUpdatedDIP3(true),
     ui(new Ui::MasternodeList),
-    clientModel(0),
-    walletModel(0),
+    clientModel(nullptr),
+    walletModel(nullptr),
     mnListChanged(true)
 {
     ui->setupUi(this);

@@ -1997,7 +1997,7 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, bilingual
 {
   CURLcode res;
   struct MemoryStruct chunk;
-  struct curl_slist *headers = NULL;                      /* http headers to send with request */
+  struct curl_slist *headers = nullptr;                      /* http headers to send with request */
   chunk.size = 0;    /* no data at this point */ 
   chunk.memory = nullptr;
   if(curl) {

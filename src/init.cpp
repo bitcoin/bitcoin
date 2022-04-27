@@ -118,7 +118,7 @@
 #include <evo/deterministicmns.h>
 #include <curl/curl.h>
 #include <node/context.h>
-static CDSNotificationInterface* pdsNotificationInterface = NULL;
+static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 
 using node::CacheSizes;
 using node::CalculateCacheSizes;
