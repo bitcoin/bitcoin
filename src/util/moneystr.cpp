@@ -40,7 +40,7 @@ std::string FormatMoney(const CAmount n)
 
 std::optional<CAmount> ParseMoney(const std::string& money_string)
 {
-    if (!ValidAsCString(money_string)) {
+    if (!ContainsNoNUL(money_string)) {
         return std::nullopt;
     }
     const std::string str = TrimString(money_string);

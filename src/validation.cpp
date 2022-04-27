@@ -6079,8 +6079,8 @@ bool DownloadFile(const std::string &url, const fs::path &dest, const std::strin
                 LogPrintf("DownloadFile -- Failed to parse spork address\n");
                 return false;
             }
-            const std::vector<unsigned char> &vchSig = DecodeBase64(signature.c_str());
-            sigVerified = CMessageSigner::VerifyMessage(keyID, vchSig, checksum);
+            auto vchSig = DecodeBase64(signature.c_str());
+            sigVerified = CMessageSigner::VerifyMessage(keyID, *vchSig, checksum);
             if(sigVerified) {
                 break;
             }

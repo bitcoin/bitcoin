@@ -66,7 +66,8 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
     CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
         if(asset.nUpdateMask & ASSET_INIT)  {
-            entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
+            auto decoded = DecodeBase64(asset.strSymbol);
+            entry.__pushKV("symbol", std::string{(*decoded).begin(), (*decoded).end()});
             entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nBaseAsset));
             entry.__pushKV("precision", asset.nPrecision);
         }

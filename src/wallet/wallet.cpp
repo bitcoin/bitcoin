@@ -2056,12 +2056,11 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
         const uint64_t nBaseAsset = GetBaseAssetID(vecOut.key);
         if(mapSigs.find(nBaseAsset) == mapSigs.end() && GetAsset(nBaseAsset, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
-                bool fInvalid = false;
-                const std::string strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
-                if (fInvalid) {
+                auto strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint);
+                if (!strEndPoint) {
                     strError = _("Malformed base64 encoding for notary endpoint");
                 }
-                char* response = curl_fetch_url(curl, strEndPoint.c_str(), reqJSON.c_str(), strError);
+                char* response = curl_fetch_url(curl, std::string{(*strEndPoint).begin(), (*strEndPoint).end()}.c_str(), reqJSON.c_str(), strError);
                 if(response != nullptr) {
                     UniValue resObj;
                     if(resObj.read(response)) {
@@ -2087,15 +2086,15 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                                 }
                                 const std::string &strSig = sigObj.get_str();
                                 // get signature from end-point
-                                const std::vector<unsigned char> &vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
-                                if (fInvalid) {
+                                auto vchSig = DecodeBase64(strSig);
+                                if (!vchSig) {
                                     strError = _("Malformed base64 encoding for notary signature");
                                 }
                                 // ensure compact sig is 65 bytes exactly for ECDSA
-                                if(vchSig.size() == 65)
-                                    mapSigs.try_emplace(nBaseAsset, vchSig);
+                                if((*vchSig).size() == 65)
+                                    mapSigs.try_emplace(nBaseAsset, *vchSig);
                                 else {
-                                    strError = _(("Invalid signature size. Required 65, found %s") + vchSig.size());
+                                    strError = _(("Invalid signature size. Required 65, found %s") + (*vchSig).size());
                                 }
                             }
                         } else {

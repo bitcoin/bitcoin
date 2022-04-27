@@ -747,8 +747,8 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 if (nBaseAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                     return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
                 }
-                const std::string& decodedSymbol = DecodeBase64(storedAssetRef.strSymbol);
-                if (ToUpper(decodedSymbol) == "SYSX") {
+                auto decodedSymbol = DecodeBase64(storedAssetRef.strSymbol);
+                if (ToUpper(std::string{(*decodedSymbol).begin(), (*decodedSymbol).end()}) == "SYSX") {
                     return FormatSyscoinErrorMessage(state, "asset-reserved-symbol-sysx", bSanityCheck);
                 }
             }

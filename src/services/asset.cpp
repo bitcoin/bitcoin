@@ -179,7 +179,8 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
 UniValue AssetPublicDataToJson(const std::string &strPubData) {
     UniValue pubDataObj(UniValue::VOBJ);
     if(pubDataObj.read(strPubData)) {
-        pubDataObj.pushKV("desc", DecodeBase64(pubDataObj["desc"].get_str()));
+        auto decoded = DecodeBase64(pubDataObj["desc"].get_str());
+        pubDataObj.pushKV("desc", std::string{(*decoded).begin(), (*decoded).end()});
     }
     return pubDataObj;
 }
@@ -221,7 +222,8 @@ CNotaryDetails::CNotaryDetails(const UniValue& value){
 }
 
 void CNotaryDetails::ToJson(UniValue& value) const {
-    value.pushKV("endpoint", DecodeBase64(strEndPoint));
+    auto decoded = DecodeBase64(strEndPoint);
+    value.pushKV("endpoint", std::string{(*decoded).begin(), (*decoded).end()});
     value.pushKV("instant_transfers", bEnableInstantTransfers);
     value.pushKV("hd_required", bRequireHD);
 }

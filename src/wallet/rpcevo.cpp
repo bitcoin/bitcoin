@@ -641,7 +641,7 @@ static RPCHelpMan protx_register_submit()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "payload signature not empty");
     }
 
-    ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str());
+    ptx.vchSig = *DecodeBase64(request.params[1].get_str().c_str());
 
     SetTxPayload(tx, ptx);
     return SignAndSendSpecialTx(request, *pwallet, tx);

@@ -30,7 +30,8 @@ using node::ReadBlockFromDisk;
 using node::GetTransaction;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
     oAsset.__pushKV("asset_guid", UniValue(nBaseAsset).write());
-    oAsset.__pushKV("symbol", DecodeBase64(asset.strSymbol));
+    auto decoded = DecodeBase64(asset.strSymbol);
+    oAsset.__pushKV("symbol", std::string{(*decoded).begin(), (*decoded).end()});
 	oAsset.__pushKV("public_value", AssetPublicDataToJson(asset.strPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
     oAsset.__pushKV("notary_address", asset.vchNotaryKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
@@ -159,7 +160,7 @@ static RPCHelpMan assettransactionnotarize()
     uint64_t nAsset;
     if(!ParseUInt64(request.params[1].get_str(), &nAsset))
          throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
-    std::vector<unsigned char> vchSig = DecodeBase64(request.params[2].get_str().c_str());
+    auto vchSig = DecodeBase64(request.params[2].get_str().c_str());
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
@@ -167,7 +168,7 @@ static RPCHelpMan assettransactionnotarize()
         }
     }
     const uint64_t nBaseAsset = GetBaseAssetID(nAsset);
-    UpdateNotarySignature(mtx, nBaseAsset, vchSig);
+    UpdateNotarySignature(mtx, nBaseAsset, *vchSig);
     UniValue ret(UniValue::VOBJ);	
     ret.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
     return ret;

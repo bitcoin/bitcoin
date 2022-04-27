@@ -658,10 +658,9 @@ static RPCHelpMan voteraw()
 
     int64_t nTime = request.params[5].get_int64();
     std::string strSig = request.params[6].get_str();
-    bool fInvalid = false;
-    std::vector<unsigned char> vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
+    auto vchSig = DecodeBase64(strSig);
 
-    if (fInvalid) {
+    if (!vchSig) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
     auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -673,7 +672,7 @@ static RPCHelpMan voteraw()
 
     CGovernanceVote vote(outpoint, hashGovObj, eVoteSignal, eVoteOutcome);
     vote.SetTime(nTime);
-    vote.SetSignature(vchSig);
+    vote.SetSignature(*vchSig);
 
     bool onlyVotingKeyAllowed = govObjType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
