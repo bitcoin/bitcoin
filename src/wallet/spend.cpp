@@ -182,7 +182,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (wallet.IsLockedCoin(outpoint))
                 continue;
 
-            if (wallet.IsSpent(wtxid, i))
+            if (wallet.IsSpent(outpoint))
                 continue;
 
             isminetype mine = wallet.IsMine(output);
