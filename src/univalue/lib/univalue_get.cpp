@@ -50,7 +50,7 @@ bool ParseUInt32(const std::string& str, uint32_t *out)
         return false;
     if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtoul will not set errno if valid
     unsigned long int n = strtoul(str.c_str(), &endp, 10);
     if(out) *out = (uint32_t)n;
@@ -66,7 +66,7 @@ bool ParseUInt64(const std::string& str, uint64_t *out)
         return false;
     if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoull accepts these by default if they fit in the range
         return false;
-    char *endp = NULL;
+    char *endp = nullptr;
     errno = 0; // strtoull will not set errno if valid
     unsigned long long int n = strtoull(str.c_str(), &endp, 10);
     if(out) *out = (uint64_t)n;

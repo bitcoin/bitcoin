@@ -2188,7 +2188,7 @@ void StopScriptCheckWorkerThreads()
 bool GetBlockHash(ChainstateManager& chainman, uint256& hashRet, int nBlockHeight)
 {
     LOCK(cs_main);
-    if(chainman.ActiveTip() == NULL) return false;
+    if(chainman.ActiveTip() == nullptr) return false;
     if(nBlockHeight < -1 || nBlockHeight > chainman.ActiveHeight()) return false;
     if(nBlockHeight == -1) nBlockHeight = chainman.ActiveHeight();
     hashRet = chainman.ActiveChain()[nBlockHeight]->GetBlockHash();
@@ -5968,8 +5968,8 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
         wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
         const wchar_t* app_const = app_w.c_str();
         LogPrintf("CreateProcessW app %s %s\n",app,arg);
-        int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
-              CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+        int result = CreateProcessW(app_const, arg_concat, nullptr, nullptr, FALSE, 
+              CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
         if(!result)
         {
             LogPrintf("CreateProcess failed (%d)\n", GetLastError());
@@ -6255,7 +6255,7 @@ bool StartGethNode(const std::string &gethDescriptorURL)
     sa.sa_handler = SIG_DFL;
     sa.sa_flags = SA_NOCLDWAIT;
         
-    sigaction( SIGCHLD, &sa, NULL ) ;
+    sigaction( SIGCHLD, &sa, nullptr ) ;
         
     // Duplicate ("fork") the process. Will return zero in the child
     // process, and the child's PID in the parent (or negative on error).
@@ -6273,7 +6273,7 @@ bool StartGethNode(const std::string &gethDescriptorURL)
         }  
     
         // push NULL to the end of the vector (execvp expects NULL as last element)
-        commandVector.push_back(NULL);
+        commandVector.push_back(nullptr);
         char **command = commandVector.data();    
         LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
         int err = open(fs::PathToString(log).c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
