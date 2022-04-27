@@ -8,52 +8,9 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
-#include <version.h>
+#include <script/transaction_unserialize.h>
 
 namespace {
-
-/** A class that deserializes a single CTransaction one time. */
-class TxInputStream
-{
-public:
-    TxInputStream(int nVersionIn, const unsigned char *txTo, size_t txToLen) :
-    m_version(nVersionIn),
-    m_data(txTo),
-    m_remaining(txToLen)
-    {}
-
-    void read(Span<std::byte> dst)
-    {
-        if (dst.size() > m_remaining) {
-            throw std::ios_base::failure(std::string(__func__) + ": end of data");
-        }
-
-        if (dst.data() == nullptr) {
-            throw std::ios_base::failure(std::string(__func__) + ": bad destination buffer");
-        }
-
-        if (m_data == nullptr) {
-            throw std::ios_base::failure(std::string(__func__) + ": bad source buffer");
-        }
-
-        memcpy(dst.data(), m_data, dst.size());
-        m_remaining -= dst.size();
-        m_data += dst.size();
-    }
-
-    template<typename T>
-    TxInputStream& operator>>(T&& obj)
-    {
-        ::Unserialize(*this, obj);
-        return *this;
-    }
-
-    int GetVersion() const { return m_version; }
-private:
-    const int m_version;
-    const unsigned char* m_data;
-    size_t m_remaining;
-};
 
 inline int set_error(bitcoinconsensus_error* ret, bitcoinconsensus_error serror)
 {
@@ -84,12 +41,13 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         return set_error(err, bitcoinconsensus_ERR_INVALID_FLAGS);
     }
     try {
-        TxInputStream stream(PROTOCOL_VERSION, txTo, txToLen);
-        CTransaction tx(deserialize, stream);
-        if (nIn >= tx.vin.size())
+        CTransaction tx = bitcoinconsensus::UnserializeTx(txTo, txToLen);
+        if (nIn >= tx.vin.size()) {
             return set_error(err, bitcoinconsensus_ERR_TX_INDEX);
-        if (GetSerializeSize(tx, PROTOCOL_VERSION) != txToLen)
+        }
+        if (bitcoinconsensus::TxSize(tx) != txToLen) {
             return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+        }
 
         // Regardless of the verification result, the tx did not error.
         set_error(err, bitcoinconsensus_ERR_OK);
