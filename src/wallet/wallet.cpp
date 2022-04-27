@@ -910,31 +910,36 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
 {
     AssertLockHeld(cs_wallet);
     const CWalletTx* srctx = GetWalletTx(hash);
-    if (srctx) {
-        assert(srctx->tx->vout.size() > n);
-        CTxDestination dest;
-        if (!ExtractDestination(srctx->tx->vout[n].scriptPubKey, dest)) {
-            return false;
-        }
-        if (IsAddressUsed(dest)) {
-            return true;
-        }
-        if (IsLegacy()) {
-            LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
-            assert(spk_man != nullptr);
-            for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
-                WitnessV0KeyHash wpkh_dest(keyid);
-                if (IsAddressUsed(wpkh_dest)) {
-                    return true;
-                }
-                ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-                if (IsAddressUsed(sh_wpkh_dest)) {
-                    return true;
-                }
-                PKHash pkh_dest(keyid);
-                if (IsAddressUsed(pkh_dest)) {
-                    return true;
-                }
+    if (!srctx) return false;
+    assert(srctx->tx->vout.size() > n);
+    return IsSpentKey(srctx->tx->vout[n].scriptPubKey);
+}
+
+bool CWallet::IsSpentKey(const CScript& scriptPubKey) const
+{
+    AssertLockHeld(cs_wallet);
+    CTxDestination dest;
+    if (!ExtractDestination(scriptPubKey, dest)) {
+        return false;
+    }
+    if (IsAddressUsed(dest)) {
+        return true;
+    }
+    if (IsLegacy()) {
+        LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+        assert(spk_man != nullptr);
+        for (const auto& keyid : GetAffectedKeys(scriptPubKey, *spk_man)) {
+            WitnessV0KeyHash wpkh_dest(keyid);
+            if (IsAddressUsed(wpkh_dest)) {
+                return true;
+            }
+            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
+            if (IsAddressUsed(sh_wpkh_dest)) {
+                return true;
+            }
+            PKHash pkh_dest(keyid);
+            if (IsAddressUsed(pkh_dest)) {
+                return true;
             }
         }
     }
