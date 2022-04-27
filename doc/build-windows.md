@@ -27,9 +27,17 @@ installing the toolchain will be different.
 
 First, install the general dependencies:
 
+```sh
     sudo apt update
+```
+
+```sh
     sudo apt upgrade
+```
+
+```sh
     sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
+```
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
@@ -38,12 +46,19 @@ See [dependencies.md](dependencies.md) for a complete overview.
 
 If you want to build the windows installer with `make deploy` you need [NSIS](https://nsis.sourceforge.io/Main_Page):
 
+```sh
     sudo apt install nsis
+```
 
 Acquire the source in the usual way:
 
+```sh
     git clone https://github.com/bitcoin/bitcoin.git
+```
+
+```sh
     cd bitcoin
+```
 
 ## Building for 64-bit Windows
 
@@ -73,15 +88,41 @@ is to temporarily disable WSL support for Win32 applications.
 
 Build using:
 
+```sh
     PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
+```
+
+```sh
     sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
+```
+
+```sh
     cd depends
+```
+
+```sh
     make HOST=x86_64-w64-mingw32
+```
+
+```sh
     cd ..
+```
+
+```sh
     ./autogen.sh
+```
+
+```sh
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+```
+
+```sh
     make # use "-j N" for N parallel jobs
+```
+
+```sh
     sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
+```
 
 ## Depends system
 
@@ -95,11 +136,15 @@ executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
 
+```sh
     make install DESTDIR=/mnt/c/workspace/bitcoin
+```
 
 You can also create an installer using:
 
+```sh
     make deploy
+```
 
 Compilation for 64-bit Windows with msys2
 ------------------------------------------------------------
@@ -107,47 +152,77 @@ Compilation for 64-bit Windows with msys2
 Please download the installer here: http://msys2.github.io/
 
 #### Execute:
-```bash
+```sh
   C:\msys64\msys2.exe
 ```
 
 #### Install
-```bash
+```sh
   pacman -Sy
+```
+
+```sh
   pacman -Su
+```
+
+```sh
   pacman -S --needed filesystem msys2-runtime bash
+```
+
+```sh
   pacman -S base-devel gcc make cmake git
+```
+
+```sh
   pacman -S autoconf autotools automake libtool
+```
+
+```sh
   pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkgconf
+```
+
+```sh
   pacman -S mingw-w64-x86_64-boost mingw-w64-x86_64-nsis
+```
+
+```sh
   pacman -S mingw-w64-x86_64-libevent
+```
+
+```sh
   pacman -S mingw-w64-x86_64-db
+```
+
+```sh
   pacman -S mingw-w64-x86_64-miniupnpc
+```
+
+```sh
   pacman -S mingw-w64-x86_64-ccache
 ```
 
 #### Execute:
-```bash
+```sh
   C:\msys64\mingw64.exe
 ```
 
 #### Build using:
-```bash
+```sh
   ./autogen.sh
 ```
 
-```bash
+```sh
   ./configure --enable-ccache --without-gui
 ```
 
-```bash
+```sh
   make -J $(nproc)
 ```
 
-```bash
+```sh
   make check
 ```
-  
-```bash
+
+```sh
   make install DESTDIR=/mnt/c/workspace/bitcoin
 ```
