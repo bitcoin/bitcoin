@@ -179,7 +179,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(outpoint))
                 continue;
 
-            if (wallet.IsLockedCoin(wtxid, i))
+            if (wallet.IsLockedCoin(outpoint))
                 continue;
 
             if (wallet.IsSpent(wtxid, i))
