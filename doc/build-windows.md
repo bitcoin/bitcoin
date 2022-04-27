@@ -128,10 +128,6 @@ Please download the installer here: http://msys2.github.io/
   make check
 ```
 
-#### References
-
-- blockchain-foundry [bitcoin-dependencies](https://github.com/blockchain-foundry/bitcoin-dependencies)
-
 Installation
 -------------
 
