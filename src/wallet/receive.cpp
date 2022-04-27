@@ -205,8 +205,8 @@ CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, 
     CAmount nCredit = 0;
     uint256 hashTx = wtx.GetHash();
     for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
-        if (!wallet.IsSpent(COutPoint(hashTx, i)) && (allow_used_addresses || !wallet.IsSpentKey(hashTx, i))) {
-            const CTxOut &txout = wtx.tx->vout[i];
+        const CTxOut& txout = wtx.tx->vout[i];
+        if (!wallet.IsSpent(COutPoint(hashTx, i)) && (allow_used_addresses || !wallet.IsSpentKey(txout.scriptPubKey))) {
             nCredit += OutputGetCredit(wallet, txout, filter);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error(std::string(__func__) + " : value out of range");

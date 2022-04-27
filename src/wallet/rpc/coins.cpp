@@ -649,7 +649,7 @@ RPCHelpMan listunspent()
         CTxDestination address;
         const CScript& scriptPubKey = out.txout.scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsSpentKey(out.outpoint.hash, out.outpoint.n);
+        bool reused = avoid_reuse && pwallet->IsSpentKey(scriptPubKey);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;

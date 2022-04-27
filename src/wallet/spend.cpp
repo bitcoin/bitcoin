@@ -191,7 +191,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 continue;
             }
 
-            if (!allow_used_addresses && wallet.IsSpentKey(wtxid, i)) {
+            if (!allow_used_addresses && wallet.IsSpentKey(output.scriptPubKey)) {
                 continue;
             }
 
