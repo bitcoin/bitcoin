@@ -87,6 +87,20 @@ Build using:
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
+Installation
+-------------
+
+After building using the Windows subsystem it can be useful to copy the compiled
+executables to a directory on the Windows drive in the same directory structure
+as they appear in the release `.zip` archive. This can be done in the following
+way. This will install to `c:\workspace\bitcoin`, for example:
+
+    make install DESTDIR=/mnt/c/workspace/bitcoin
+
+You can also create an installer using:
+
+    make deploy
+
 Compilation for 64-bit Windows with msys2
 ------------------------------------------------------------
 
@@ -126,18 +140,6 @@ Please download the installer here: http://msys2.github.io/
   make -J $(nproc)
 
   make check
+  
+  make install DESTDIR=/mnt/c/workspace/bitcoin
 ```
-
-Installation
--------------
-
-After building using the Windows subsystem it can be useful to copy the compiled
-executables to a directory on the Windows drive in the same directory structure
-as they appear in the release `.zip` archive. This can be done in the following
-way. This will install to `c:\workspace\bitcoin`, for example:
-
-    make install DESTDIR=/mnt/c/workspace/bitcoin
-
-You can also create an installer using:
-
-    make deploy
