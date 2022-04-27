@@ -390,7 +390,8 @@ bool BlockManager::IsBlockPruned(const CBlockIndex* pblockindex)
     return (m_have_pruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
 
-const CBlockIndex* GetFirstStoredBlock(const CBlockIndex* start_block) {
+const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex* start_block)
+{
     AssertLockHeld(::cs_main);
     assert(start_block);
     const CBlockIndex* last_block = start_block;
