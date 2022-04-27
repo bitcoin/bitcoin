@@ -88,7 +88,15 @@ elif PYTHONWARNINGS="ignore" flake8 --version | grep -q "Python 2"; then
     exit 0
 fi
 
-PYTHONWARNINGS="ignore" flake8 --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}")$(
+FLAKECMD=flake8
+
+if command -v flake8-cached > /dev/null; then
+    FLAKECMD=flake8-cached
+else
+    echo "Consider install flake8-cached for cached flake8 results."
+fi
+
+PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}")$(
     if [[ $# == 0 ]]; then
         git ls-files "*.py"
     else

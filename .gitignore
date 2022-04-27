@@ -160,3 +160,9 @@ dist/
 *.background.tiff
 
 /guix-build-*
+
+# cppcheck cache-directory
+.cppcheck/*
+
+# flake8 cache location
+.cache/*
