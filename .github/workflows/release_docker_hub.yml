@@ -43,7 +43,7 @@ jobs:
       id: docker_build
       uses: docker/build-push-action@v2
       with:
-        context: ${{ github.workspace }}
+        context: ./contrib/containers/deploy
         file: ./contrib/containers/deploy/Dockerfile.GitHubActions.Release
         push: true
         tags: ${{ steps.docker_meta.outputs.tags }}
