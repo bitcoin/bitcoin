@@ -8,16 +8,12 @@ https://bitcoincore.org/en/download/.
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
 
-What is Bitcoin?
-----------------
+What is Bitcoin Core?
+---------------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
-
-For more information read the original Bitcoin whitepaper.
+Bitcoin Core is a full node implementation for the Bitcoin P2P network. It also
+includes a wallet and Qt-based graphical user interface, that can be
+optionally built.
 
 License
 -------
