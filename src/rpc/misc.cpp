@@ -14,12 +14,12 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <outputtype.h>
-#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/descriptor.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/message.h> // For MessageSign(), MessageVerify()
 #include <util/strencodings.h>
@@ -32,8 +32,6 @@
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif
-
-#include <univalue.h>
 
 using node::NodeContext;
 
@@ -335,8 +333,6 @@ static RPCHelpMan verifymessage()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    LOCK(cs_main);
-
     std::string strAddress  = request.params[0].get_str();
     std::string strSign     = request.params[1].get_str();
     std::string strMessage  = request.params[2].get_str();
