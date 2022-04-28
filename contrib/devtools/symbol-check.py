@@ -198,7 +198,7 @@ def check_exported_symbols(binary) -> bool:
         name = symbol.name
         if binary.header.machine_type == lief.ELF.ARCH.RISCV or name in IGNORE_EXPORTS:
             continue
-        print(f'{binary.name}: export of symbol {name} not allowed!')
+        print(f'{filename}: export of symbol {name} not allowed!')
         ok = False
     return ok
 
@@ -215,7 +215,7 @@ def check_MACHO_libraries(binary) -> bool:
     for dylib in binary.libraries:
         library = dylib.name.split('/')[-1]
         if library not in MACHO_ALLOWED_LIBRARIES:
-            print(f'{library} is not in ALLOWED_LIBRARIES!')
+            print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')
             ok = False
     return ok
 
@@ -233,7 +233,7 @@ def check_PE_libraries(binary) -> bool:
     ok: bool = True
     for dylib in binary.libraries:
         if dylib not in PE_ALLOWED_LIBRARIES:
-            print(f'{dylib} is not in ALLOWED_LIBRARIES!')
+            print(f'{filename}: {dylib} is not in ALLOWED_LIBRARIES!')
             ok = False
     return ok
 
