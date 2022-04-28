@@ -1665,14 +1665,17 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
 
     assert(!node.mempool);
     assert(!node.chainman);
+    assert(!node.peerman);
     const int mempool_check_ratio = std::clamp<int>(args.GetIntArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0, 1000000);
-
     for (fLoaded = false; !fLoaded && !ShutdownRequested();) {
         node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), mempool_check_ratio);
 
         node.chainman = std::make_unique<ChainstateManager>();
         ChainstateManager& chainman = *node.chainman;
-
+        // SYSCOIN
+        node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
+                                     chainman, *node.mempool, ignores_incoming_txs);
+        RegisterValidationInterface(node.peerman.get());
         const bool fReset = fReindex;
         bilingual_str strLoadError;
 
@@ -1853,11 +1856,8 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
             }
         }
     }
-    
-    assert(!node.peerman);
-    node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                     chainman, *node.mempool, ignores_incoming_txs);
-    RegisterValidationInterface(node.peerman.get());
+
+    // RegisterValidationInterface(node.peerman.get());
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
