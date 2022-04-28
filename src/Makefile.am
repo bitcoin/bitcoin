@@ -995,9 +995,19 @@ clean-local:
 	## FIXME: How to get the appropriate modulename_CPPFLAGS in here?
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
-check-symbols: $(bin_PROGRAMS)
+if TARGET_LINUX
+  LIBEXT = .so.0
+endif
+if TARGET_DARWIN
+  LIBEXT = .0.dylib
+endif
+if TARGET_WINDOWS
+  LIBEXT = -0.dll
+endif
+
+check-symbols: $(bin_PROGRAMS) $(LIBBITCOINCONSENSUS)
 	@echo "Running symbol and dynamic library checks..."
-	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS) $(builddir)/.libs/$$(echo $(LIBBITCOINCONSENSUS) | sed "s/.la//")$(LIBEXT)
 
 check-security: $(bin_PROGRAMS)
 if HARDEN

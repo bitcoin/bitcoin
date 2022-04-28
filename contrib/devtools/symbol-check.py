@@ -81,11 +81,12 @@ ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
 
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
-# bitcoind and bitcoin-qt
+# libbitcoinconsensus.so.0, bitcoind and bitcoin-qt
 'libgcc_s.so.1', # GCC base support
 'libc.so.6', # C library
-'libpthread.so.0', # threading
 'libm.so.6', # math library
+# bitcoind and bitcoin-qt
+'libpthread.so.0', # threading
 'librt.so.1', # real-time (clock)
 'libatomic.so.1',
 'ld-linux-x86-64.so.2', # 64-bit dynamic linker
@@ -117,7 +118,7 @@ ELF_ALLOWED_LIBRARIES = {
 }
 
 MACHO_ALLOWED_LIBRARIES = {
-# bitcoind and bitcoin-qt
+# libbitcoinconsensus.0.dylib, bitcoind and bitcoin-qt
 'libc++.1.dylib', # C++ Standard Library
 'libSystem.B.dylib', # libc, libm, libpthread, libinfo
 # bitcoin-qt only
@@ -141,14 +142,17 @@ MACHO_ALLOWED_LIBRARIES = {
 }
 
 PE_ALLOWED_LIBRARIES = {
+# libbitcoinconsensus-0.dll, bitcoind.exe and bitcoin-qt.exe
 'ADVAPI32.dll', # security & registry
-'IPHLPAPI.DLL', # IP helper API
 'KERNEL32.dll', # win32 base APIs
 'msvcrt.dll', # C standard library for MSVC
+'libssp-0.dll', # mingw-w64 stack smashing protection
+# bitcoind.exe and bitcoin-qt.exe
+'IPHLPAPI.DLL', # IP helper API
 'SHELL32.dll', # shell API
 'USER32.dll', # user interface
 'WS2_32.dll', # sockets
-# bitcoin-qt only
+# bitcoin-qt.exe only
 'dwmapi.dll', # desktop window manager
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor
@@ -191,6 +195,8 @@ def check_imported_symbols(binary) -> bool:
 
 def check_exported_symbols(binary) -> bool:
     ok: bool = True
+    if binary.abstract.header.object_type == lief.OBJECT_TYPES.LIBRARY:
+        return ok
 
     for symbol in binary.concrete.dynamic_symbols:
         if not symbol.exported:
@@ -214,6 +220,8 @@ def check_MACHO_libraries(binary) -> bool:
     ok: bool = True
     for dylib in binary.concrete.libraries:
         library = dylib.name.split('/')[-1]
+        if binary.abstract.header.object_type == lief.OBJECT_TYPES.LIBRARY and library == 'libbitcoinconsensus.0.dylib':
+            continue
         if library not in MACHO_ALLOWED_LIBRARIES:
             print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')
             ok = False
@@ -245,8 +253,9 @@ def check_PE_subsystem_version(binary) -> bool:
     return False
 
 def check_ELF_interpreter(binary) -> bool:
+    if binary.abstract.header.object_type == lief.OBJECT_TYPES.LIBRARY:
+        return True
     expected_interpreter = ELF_INTERPRETER_NAMES[binary.concrete.header.machine_type][binary.abstract.header.endianness]
-
     return binary.concrete.interpreter == expected_interpreter
 
 CHECKS = {
@@ -275,6 +284,12 @@ if __name__ == '__main__':
             etype = binary.concrete.format
             if etype == lief.EXE_FORMATS.UNKNOWN:
                 print(f'{filename}: unknown executable format')
+                retval = 1
+                continue
+
+            obj_type = binary.abstract.header.object_type
+            if obj_type != lief.OBJECT_TYPES.EXECUTABLE and obj_type != lief.OBJECT_TYPES.LIBRARY:
+                print(f'{filename}: unsupported file type')
                 retval = 1
                 continue
 
