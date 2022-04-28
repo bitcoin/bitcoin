@@ -258,6 +258,8 @@ private:
     bool m_use_effective{false};
     /** The computed waste */
     std::optional<CAmount> m_waste;
+    /** Force no change even if more than enough inputs are selected */
+    bool m_force_no_change{false};
 
 public:
     /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
@@ -265,8 +267,8 @@ public:
     /** The algorithm used to produce this result */
     const SelectionAlgorithm m_algo;
 
-    explicit SelectionResult(const CAmount target, SelectionAlgorithm algo)
-        : m_target(target), m_algo(algo) {}
+    explicit SelectionResult(const CAmount target, SelectionAlgorithm algo, const bool force_no_change = false)
+        : m_target(target), m_algo(algo), m_force_no_change(force_no_change) {}
 
     SelectionResult() = delete;
 
