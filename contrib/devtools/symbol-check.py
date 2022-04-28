@@ -213,9 +213,9 @@ def check_ELF_libraries(binary) -> bool:
 def check_MACHO_libraries(binary) -> bool:
     ok: bool = True
     for dylib in binary.libraries:
-        split = dylib.name.split('/')
-        if split[-1] not in MACHO_ALLOWED_LIBRARIES:
-            print(f'{split[-1]} is not in ALLOWED_LIBRARIES!')
+        library = dylib.name.split('/')[-1]
+        if library not in MACHO_ALLOWED_LIBRARIES:
+            print(f'{library} is not in ALLOWED_LIBRARIES!')
             ok = False
     return ok
 
