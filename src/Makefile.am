@@ -723,9 +723,7 @@ libdash_util_a_SOURCES = \
 
 if GLIBC_BACK_COMPAT
 libdash_util_a_SOURCES += compat/glibc_compat.cpp
-AM_LDFLAGS += -Wl,--wrap=log2f -Wl,--wrap=__divmoddi4
-AM_LDFLAGS += -Wl,--wrap=exp -Wl,--wrap=exp2 -Wl,--wrap=fcntl
-AM_LDFLAGS += -Wl,--wrap=log -Wl,--wrap=log2 -Wl,--wrap=pow
+AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
 # cli: shared between dash-cli and dash-qt
