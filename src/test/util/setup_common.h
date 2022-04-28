@@ -110,6 +110,8 @@ struct TestingSetup : public ChainTestingSetup {
     bool m_coins_db_in_memory{true};
     bool m_block_tree_db_in_memory{true};
 
+    void LoadVerifyActivateChainstate();
+
     explicit TestingSetup(
         const std::string& chainName = CBaseChainParams::MAIN,
         const std::vector<const char*>& extra_args = {},
