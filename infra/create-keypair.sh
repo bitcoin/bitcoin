@@ -63,7 +63,7 @@ startEphemeralDaemon() {
     timeout 10 "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest -rpcwait -rpcclienttimeout=3 uptime >/dev/null
     errecho "create-keypair: warmed up"
 
-    "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest createwallet mywallet >/dev/null
+    "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest -named createwallet wallet_name=mywallet >/dev/null
 } # startEphemeralDaemon()
 
 # Generates a public/private pair of keys and prints them on two different lines
