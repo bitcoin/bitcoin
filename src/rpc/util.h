@@ -5,6 +5,7 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/coinstats.h>
 #include <node/transaction.h>
 #include <protocol.h>
 #include <pubkey.h>
