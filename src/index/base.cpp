@@ -75,7 +75,7 @@ bool BaseIndex::Init()
         if (!m_best_block_index) {
             // index is not built yet
             // make sure we have all block data back to the genesis
-            prune_violation = m_chainstate->m_blockman.GetFirstStoredBlock(active_chain.Tip()) != active_chain.Genesis();
+            prune_violation = m_chainstate->m_blockman.GetFirstStoredBlock(*active_chain.Tip()) != active_chain.Genesis();
         }
         // in case the index has a best block set and is not fully synced
         // check if we have the required blocks to continue building the index
