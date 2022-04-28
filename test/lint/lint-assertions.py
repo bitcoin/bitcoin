@@ -30,20 +30,20 @@ def main():
         r"[^_]assert\(.*(\+\+|\-\-|[^=!<>]=[^=!<>]).*\);",
         "--",
         "*.cpp",
-        "*.h"
+        "*.h",
     ], "Assertions should not have side effects:")
 
-    # Macro CHECK_NONFATAL(condition) should be used instead of assert for RPC code, where it
-    # is undesirable to crash the whole program. See: src/util/check.h
+    # Aborting the whole process is undesirable for RPC code. So nonfatal
+    # checks should be used over assert. See: src/util/check.h
     # src/rpc/server.cpp is excluded from this check since it's mostly meta-code.
     exit_code |= git_grep([
         "-nE",
-        r"\<(A|a)ssert *\(.*\);",
+        r"\<(A|a)ss(ume|ert) *\(.*\);",
         "--",
         "src/rpc/",
         "src/wallet/rpc*",
-        ":(exclude)src/rpc/server.cpp"
-    ], "CHECK_NONFATAL(condition) should be used instead of assert for RPC code.")
+        ":(exclude)src/rpc/server.cpp",
+    ], "CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of assert for RPC code.")
 
     sys.exit(exit_code)
 
