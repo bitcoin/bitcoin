@@ -484,9 +484,8 @@ static RPCHelpMan mockscheduler()
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }
 
-    auto node_context = util::AnyPtr<NodeContext>(request.context);
+    auto node_context = CHECK_NONFATAL(util::AnyPtr<NodeContext>(request.context));
     // protect against null pointer dereference
-    CHECK_NONFATAL(node_context);
     CHECK_NONFATAL(node_context->scheduler);
     node_context->scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
@@ -791,33 +790,27 @@ static RPCHelpMan getindexinfo()
     };
 }
 
-void RegisterMiscRPCCommands(CRPCTable &t)
+void RegisterMiscRPCCommands(CRPCTable& t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- ------------------------
-    { "control",            &getmemoryinfo,           },
-    { "control",            &logging,                 },
-    { "util",               &validateaddress,         },
-    { "util",               &createmultisig,          },
-    { "util",               &deriveaddresses,         },
-    { "util",               &getdescriptorinfo,       },
-    { "util",               &verifymessage,           },
-    { "util",               &signmessagewithprivkey,  },
-    { "util",               &getindexinfo,            },
-
-    /* Not shown in help */
-    { "hidden",             &setmocktime,             },
-    { "hidden",             &mockscheduler,           },
-    { "hidden",             &echo,                    },
-    { "hidden",             &echojson,                },
-    { "hidden",             &echoipc,                 },
+    static const CRPCCommand commands[]{
+        {"control", &getmemoryinfo},
+        {"control", &logging},
+        {"util", &validateaddress},
+        {"util", &createmultisig},
+        {"util", &deriveaddresses},
+        {"util", &getdescriptorinfo},
+        {"util", &verifymessage},
+        {"util", &signmessagewithprivkey},
+        {"util", &getindexinfo},
+        {"hidden", &setmocktime},
+        {"hidden", &mockscheduler},
+        {"hidden", &echo},
+        {"hidden", &echojson},
+        {"hidden", &echoipc},
 #if defined(USE_SYSCALL_SANDBOX)
-    { "hidden",             &invokedisallowedsyscall, },
+        {"hidden", &invokedisallowedsyscall},
 #endif // USE_SYSCALL_SANDBOX
-};
-// clang-format on
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

@@ -33,6 +33,7 @@
 #include <script/standard.h>
 #include <uint256.h>
 #include <util/bip32.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/vector.h>
@@ -466,7 +467,7 @@ static RPCHelpMan decodescript()
                 // Should not be wrapped
                 return false;
             } // no default case, so the compiler can warn about missing cases
-            CHECK_NONFATAL(false);
+            NONFATAL_UNREACHABLE();
         }()};
         if (can_wrap_P2WSH) {
             UniValue sr(UniValue::VOBJ);
@@ -1679,28 +1680,24 @@ static RPCHelpMan analyzepsbt()
     };
 }
 
-void RegisterRawTransactionRPCCommands(CRPCTable &t)
+void RegisterRawTransactionRPCCommands(CRPCTable& t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category               actor (function)
-  //  ---------------------  -----------------------
-    { "rawtransactions",     &getrawtransaction,          },
-    { "rawtransactions",     &createrawtransaction,       },
-    { "rawtransactions",     &decoderawtransaction,       },
-    { "rawtransactions",     &decodescript,               },
-    { "rawtransactions",     &combinerawtransaction,      },
-    { "rawtransactions",     &signrawtransactionwithkey,  },
-    { "rawtransactions",     &decodepsbt,                 },
-    { "rawtransactions",     &combinepsbt,                },
-    { "rawtransactions",     &finalizepsbt,               },
-    { "rawtransactions",     &createpsbt,                 },
-    { "rawtransactions",     &converttopsbt,              },
-    { "rawtransactions",     &utxoupdatepsbt,             },
-    { "rawtransactions",     &joinpsbts,                  },
-    { "rawtransactions",     &analyzepsbt,                },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"rawtransactions", &getrawtransaction},
+        {"rawtransactions", &createrawtransaction},
+        {"rawtransactions", &decoderawtransaction},
+        {"rawtransactions", &decodescript},
+        {"rawtransactions", &combinerawtransaction},
+        {"rawtransactions", &signrawtransactionwithkey},
+        {"rawtransactions", &decodepsbt},
+        {"rawtransactions", &combinepsbt},
+        {"rawtransactions", &finalizepsbt},
+        {"rawtransactions", &createpsbt},
+        {"rawtransactions", &converttopsbt},
+        {"rawtransactions", &utxoupdatepsbt},
+        {"rawtransactions", &joinpsbts},
+        {"rawtransactions", &analyzepsbt},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

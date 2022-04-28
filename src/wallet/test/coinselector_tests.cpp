@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     FastRandomContext rand{};
     // Setup
     std::vector<COutput> utxo_pool;
-    SelectionResult expected_result(CAmount(0));
+    SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
 
     /////////////////////////
     // Known Outcome tests //

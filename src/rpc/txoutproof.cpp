@@ -172,8 +172,6 @@ static RPCHelpMan verifytxoutproof()
 void RegisterTxoutProofRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
-        // category     actor (function)
-        // --------     ----------------
         {"blockchain", &gettxoutproof},
         {"blockchain", &verifytxoutproof},
     };

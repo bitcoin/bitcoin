@@ -5,6 +5,7 @@
 #include <list>
 #include <locale>
 #include <stdexcept>
+#include <string>
 
 namespace
 {

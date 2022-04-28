@@ -82,6 +82,7 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     'feature_dbcrash.py',
+    'feature_index_prune.py',
 ]
 
 BASE_SCRIPTS = [
@@ -111,7 +112,6 @@ BASE_SCRIPTS = [
     'p2p_tx_download.py',
     'mempool_updatefromblock.py',
     'wallet_dump.py --legacy-wallet',
-    'feature_taproot.py --previous_release',
     'feature_taproot.py',
     'rpc_signer.py',
     'wallet_signer.py --descriptors',
@@ -170,6 +170,7 @@ BASE_SCRIPTS = [
     'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
+    'interface_usdt_coinselection.py',
     'interface_usdt_net.py',
     'interface_usdt_utxocache.py',
     'interface_usdt_validation.py',
@@ -332,7 +333,6 @@ BASE_SCRIPTS = [
     'feature_help.py',
     'feature_shutdown.py',
     'p2p_ibd_txrelay.py',
-    'feature_blockfilterindex_prune.py'
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]

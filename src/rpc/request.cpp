@@ -82,7 +82,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
 {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
-    GetRandBytes(rand_pwd, COOKIE_SIZE);
+    GetRandBytes(rand_pwd);
     std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd);
 
     /** the umask determines what permissions are used to create this file -

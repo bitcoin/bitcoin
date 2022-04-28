@@ -10,6 +10,8 @@
 
 #include <cpuid.h>
 
+#include <cstdint>
+
 // We can't use cpuid.h's __get_cpuid as it does not support subleafs.
 void static inline GetCPUID(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d)
 {
