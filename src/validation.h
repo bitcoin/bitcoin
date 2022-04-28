@@ -24,6 +24,7 @@
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <script/script_error.h>
+#include <shutdown.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
@@ -663,6 +664,12 @@ public:
      * May not be called with cs_main held. May not be called in a
      * validationinterface callback.
      *
+     * Note that if this is called while a snapshot chainstate is active, and if
+     * it is called on a background chainstate whose tip has reached the base block
+     * of the snapshot, its execution will take *MINUTES* while it hashes the
+     * background UTXO set to verify the assumeutxo value the snapshot was activated
+     * with. `cs_main` will be held during this time.
+     *
      * @returns true unless a system error occurred
      */
     bool ActivateBestChain(
@@ -784,7 +791,35 @@ private:
     std::chrono::microseconds m_last_write{0};
     std::chrono::microseconds m_last_flush{0};
 
+    /**
+     * In case of an invalid snapshot, rename the coins leveldb directory so
+     * that it can be examined for issue diagnosis.
+     */
+    void InvalidateCoinsDBOnDisk() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     friend ChainstateManager;
+};
+
+
+enum class SnapshotCompletionResult {
+    SUCCESS,
+    SKIPPED,
+
+    // Expected assumeutxo configuration data is not found for the height of the
+    // base block.
+    MISSING_CHAINPARAMS,
+
+    // Failed to generate UTXO statistics (to check UTXO set hash) for the background
+    // chainstate.
+    STATS_FAILED,
+
+    // The UTXO set hash of the background validation chainstate does not match
+    // the one expected by assumeutxo chainparams.
+    HASH_MISMATCH,
+
+    // The blockhash of the current tip of the background validation chainstate does
+    // not match the one expected by the snapshot chainstate.
+    BASE_BLOCKHASH_MISMATCH,
 };
 
 /**
@@ -984,6 +1019,18 @@ public:
     [[nodiscard]] bool ActivateSnapshot(
         AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
+    //! Once the background validation chainstate has reached the height which
+    //! is the base of the UTXO snapshot in use, compare its coins to ensure
+    //! they match those expected by the snapshot.
+    //!
+    //! If the coins match (expected), then mark the validation chainstate for
+    //! deletion and continue using the snapshot chainstate as active.
+    //! Otherwise, revert to using the ibd chainstate and shutdown.
+    SnapshotCompletionResult MaybeCompleteSnapshotValidation(
+        std::function<void(bilingual_str)> shutdown_fnc =
+            [](bilingual_str msg) { AbortNode(msg.original, msg); })
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     //! The most-work chain.
     Chainstate& ActiveChainstate() const;
     CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
@@ -1090,6 +1137,17 @@ public:
     //! previously.
     Chainstate& ActivateExistingSnapshot(CTxMemPool* mempool, uint256 base_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! If we have validated a snapshot chain during this runtime, copy its
+    //! chainstate directory over to the main `chainstate` location, completing
+    //! validation of the snapshot.
+    //!
+    //! If the cleanup succeeds, the caller will need to ensure chainstates are
+    //! reinitialized, since ResetChainstates() will be called before leveldb
+    //! directories are moved or deleted.
+    //!
+    //! @sa node/chainstate:LoadChainstate()
+    bool ValidatedSnapshotCleanup() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     ~ChainstateManager();
 };
