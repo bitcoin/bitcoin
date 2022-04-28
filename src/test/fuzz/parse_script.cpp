@@ -10,7 +10,7 @@ FUZZ_TARGET(parse_script)
 {
     const std::string script_string(buffer.begin(), buffer.end());
     try {
-        (void)ParseScript(script_string);
+        (void)ParseScriptPreTapScript(script_string);
     } catch (const std::runtime_error&) {
     }
 }

@@ -963,9 +963,9 @@ BOOST_AUTO_TEST_CASE(script_json_test)
             continue;
         }
         std::string scriptSigString = test[pos++].get_str();
-        CScript scriptSig = ParseScript(scriptSigString);
+        CScript scriptSig = ParseScriptPreTapScript(scriptSigString);
         std::string scriptPubKeyString = test[pos++].get_str();
-        CScript scriptPubKey = ParseScript(scriptPubKeyString);
+        CScript scriptPubKey = ParseScriptPreTapScript(scriptPubKeyString);
         unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
@@ -1457,18 +1457,18 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     BOOST_CHECK(s == expect);
 }
 
-BOOST_AUTO_TEST_CASE(script_HasValidOps)
+BOOST_AUTO_TEST_CASE(script_HasValidOpsPreTapScript)
 {
-    // Exercise the HasValidOps functionality
+    // Exercise the HasValidOpsPreTapScript functionality
     CScript script;
     script = ScriptFromHex("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"); // Normal script
-    BOOST_CHECK(script.HasValidOps());
+    BOOST_CHECK(script.HasValidOpsPreTapScript());
     script = ScriptFromHex("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac");
-    BOOST_CHECK(script.HasValidOps());
+    BOOST_CHECK(script.HasValidOpsPreTapScript());
     script = ScriptFromHex("ff88ac"); // Script with OP_INVALIDOPCODE explicit
-    BOOST_CHECK(!script.HasValidOps());
+    BOOST_CHECK(!script.HasValidOpsPreTapScript());
     script = ScriptFromHex("88acc0"); // Script with undefined opcode
-    BOOST_CHECK(!script.HasValidOps());
+    BOOST_CHECK(!script.HasValidOpsPreTapScript());
 }
 
 static CMutableTransaction TxFromHex(const std::string& str)

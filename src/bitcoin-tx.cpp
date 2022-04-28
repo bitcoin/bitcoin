@@ -463,7 +463,7 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
 
     // extract and validate script
     std::string strScript = vStrInputParts[1];
-    CScript scriptPubKey = ParseScript(strScript);
+    CScript scriptPubKey = ParseScriptPreTapScript(strScript);
 
     // Extract FLAGS
     bool bSegWit = false;

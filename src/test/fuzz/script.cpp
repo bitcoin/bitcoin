@@ -96,7 +96,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     std::vector<std::vector<unsigned char>> solutions;
     (void)Solver(script, solutions);
 
-    (void)script.HasValidOps();
+    (void)script.HasValidOpsPreTapScript();
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPushOnly();

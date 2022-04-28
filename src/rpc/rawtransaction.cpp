@@ -425,7 +425,7 @@ static RPCHelpMan decodescript()
             // Should not be wrapped
             return false;
         } // no default case, so the compiler can warn about missing cases
-        if (!script.HasValidOps() || script.IsUnspendable()) {
+        if (!script.HasValidOpsPreTapScript() || script.IsUnspendable()) {
             return false;
         }
         for (CScript::const_iterator it{script.begin()}; it != script.end();) {

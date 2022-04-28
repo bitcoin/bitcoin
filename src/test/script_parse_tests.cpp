@@ -42,14 +42,14 @@ BOOST_AUTO_TEST_CASE(parse_script)
     std::string all_in;
     std::string all_out;
     for (const auto& [in, out] : IN_OUT) {
-        BOOST_CHECK_EQUAL(HexStr(ParseScript(in)), out);
+        BOOST_CHECK_EQUAL(HexStr(ParseScriptPreTapScript(in)), out);
         all_in += " " + in + " ";
         all_out += out;
     }
-    BOOST_CHECK_EQUAL(HexStr(ParseScript(all_in)), all_out);
+    BOOST_CHECK_EQUAL(HexStr(ParseScriptPreTapScript(all_in)), all_out);
 
-    BOOST_CHECK_EXCEPTION(ParseScript("11111111111111111111"), std::runtime_error, HasReason("script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF"));
-    BOOST_CHECK_EXCEPTION(ParseScript("11111111111"), std::runtime_error, HasReason("script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF"));
-    BOOST_CHECK_EXCEPTION(ParseScript("OP_CHECKSIGADD"), std::runtime_error, HasReason("script parse error: unknown opcode"));
+    BOOST_CHECK_EXCEPTION(ParseScriptPreTapScript("11111111111111111111"), std::runtime_error, HasReason("script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF"));
+    BOOST_CHECK_EXCEPTION(ParseScriptPreTapScript("11111111111"), std::runtime_error, HasReason("script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF"));
+    BOOST_CHECK_EXCEPTION(ParseScriptPreTapScript("OP_CHECKSIGADD"), std::runtime_error, HasReason("script parse error: unknown opcode"));
 }
 BOOST_AUTO_TEST_SUITE_END()

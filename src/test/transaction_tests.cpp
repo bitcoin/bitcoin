@@ -217,8 +217,13 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     fValid = false;
                     break;
                 }
+<<<<<<< HEAD
                 COutPoint outpoint{uint256S(vinput[0].get_str()), uint32_t(vinput[1].getInt<int>())};
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
+=======
+                COutPoint outpoint{uint256S(vinput[0].get_str()), uint32_t(vinput[1].get_int())};
+                mapprevOutScriptPubKeys[outpoint] = ParseScriptPreTapScript(vinput[2].get_str());
+>>>>>>> 2cee051b1... Rename script operations that only work on pretapscripts
                 if (vinput.size() >= 4)
                 {
                     mapprevOutValues[outpoint] = vinput[3].getInt<int64_t>();
@@ -306,7 +311,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     break;
                 }
                 COutPoint outpoint{uint256S(vinput[0].get_str()), uint32_t(vinput[1].getInt<int>())};
-                mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
+                mapprevOutScriptPubKeys[outpoint] = ParseScriptPreTapScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
                     mapprevOutValues[outpoint] = vinput[3].getInt<int64_t>();

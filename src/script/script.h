@@ -209,7 +209,7 @@ enum opcodetype
 };
 
 // Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_NOP10;
+static const unsigned int MAX_OPCODE_PRE_TAPSCRIPT = OP_NOP10;
 
 std::string GetOpName(opcodetype opcode);
 
@@ -539,7 +539,7 @@ public:
     bool IsPushOnly() const;
 
     /** Check if the script contains valid OP_CODES */
-    bool HasValidOps() const;
+    bool HasValidOpsPreTapScript() const;
 
     /**
      * Returns whether the script is guaranteed to fail at execution,
