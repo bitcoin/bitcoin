@@ -295,7 +295,7 @@ public:
     void ForceRemoveArg(const std::string& strArg);
 
     /**
-     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+     * Returns the appropriate chain name from the program arguments.
      * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
