@@ -9,18 +9,24 @@
 #include <clientversion.h>
 #include <compat/sanity.h>
 #include <crypto/sha256.h>
+#include <fs.h>
 #include <key.h>
 #include <logging.h>
 #include <node/ui_interface.h>
 #include <pubkey.h>
 #include <random.h>
+#include <tinyformat.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 
+#include <algorithm>
 #include <memory>
 // SYSCOIN
 #include <bls/bls.h>
+#include <string>
+#include <vector>
+
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
 namespace init {

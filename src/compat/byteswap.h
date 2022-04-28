@@ -9,7 +9,7 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <stdint.h>
+#include <cstdint>
 
 #if defined(HAVE_BYTESWAP_H)
 #include <byteswap.h>
