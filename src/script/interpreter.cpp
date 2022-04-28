@@ -1446,10 +1446,6 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
 
     m_spent_outputs = std::move(spent_outputs);
 
-    hashPrevouts = SHA256Uint256(GetPrevoutsSHA256(txTo));
-    hashSequence = SHA256Uint256(GetSequencesSHA256(txTo));
-    hashOutputs = SHA256Uint256(GetOutputsSHA256(txTo));
-
     m_ready = true;
 }
 
