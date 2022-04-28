@@ -51,6 +51,7 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-flushwallet",
         "-privdb",
         "-walletrejectlongchains",
+        "-walletcrosschain",
         "-unsafesqlitesync",
     });
 }
