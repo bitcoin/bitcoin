@@ -134,8 +134,6 @@ extern arith_uint256 nMinimumChainWork;
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
 
-/** Unload database information */
-void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 /** Run instances of script checking worker threads */
 void StartScriptCheckWorkerThreads(int threads_num);
 /** Stop all of the script checking worker threads */
@@ -831,9 +829,9 @@ private:
 
     //! If true, the assumed-valid chainstate has been fully validated
     //! by the background validation chainstate.
-    bool m_snapshot_validated{false};
+    bool m_snapshot_validated GUARDED_BY(::cs_main){false};
 
-    CBlockIndex* m_best_invalid;
+    CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
     //! Internal helper for ActivateSnapshot().
     [[nodiscard]] bool PopulateAndValidateSnapshot(
@@ -940,7 +938,7 @@ public:
     std::optional<uint256> SnapshotBlockhash() const;
 
     //! Is there a snapshot in use and has it been fully validated?
-    bool IsSnapshotValidated() const { return m_snapshot_validated; }
+    bool IsSnapshotValidated() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_snapshot_validated; }
 
     /**
      * Process an incoming block. This only returns after the best known valid
@@ -988,17 +986,11 @@ public:
     //! Load the block tree and coins database from disk, initializing state if we're running with -reindex
     bool LoadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    //! Unload block index and chain data before shutdown.
-    void Unload() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     //! Check to see if caches are out of balance and if so, call
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    ~ChainstateManager() {
-        LOCK(::cs_main);
-        UnloadBlockIndex(/*mempool=*/nullptr, *this);
-    }
+    ~ChainstateManager();
 };
 
 using FopenFn = std::function<FILE*(const fs::path&, const char*)>;

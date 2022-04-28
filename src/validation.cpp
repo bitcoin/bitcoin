@@ -1921,7 +1921,7 @@ public:
     }
 };
 
-static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS] GUARDED_BY(cs_main);
+static std::array<ThresholdConditionCache, VERSIONBITS_NUM_BITS> warningcache GUARDED_BY(cs_main);
 
 static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Consensus::Params& consensusparams)
 {
@@ -2550,7 +2550,7 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(bit);
-            ThresholdState state = checker.GetStateFor(pindex, m_params.GetConsensus(), warningcache[bit]);
+            ThresholdState state = checker.GetStateFor(pindex, m_params.GetConsensus(), warningcache.at(bit));
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
                 const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
                 if (state == ThresholdState::ACTIVE) {
@@ -4143,20 +4143,6 @@ void CChainState::UnloadBlockIndex()
     setBlockIndexCandidates.clear();
 }
 
-// May NOT be used after any connections are up as much
-// of the peer-processing logic assumes a consistent
-// block index state
-void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman)
-{
-    AssertLockHeld(::cs_main);
-    chainman.Unload();
-    if (mempool) mempool->clear();
-    g_versionbitscache.Clear();
-    for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
-        warningcache[b].clear();
-    }
-}
-
 bool ChainstateManager::LoadBlockIndex()
 {
     AssertLockHeld(cs_main);
@@ -5187,20 +5173,6 @@ bool ChainstateManager::IsSnapshotActive() const
     return m_snapshot_chainstate && m_active_chainstate == m_snapshot_chainstate.get();
 }
 
-void ChainstateManager::Unload()
-{
-    AssertLockHeld(::cs_main);
-    for (CChainState* chainstate : this->GetAll()) {
-        chainstate->m_chain.SetTip(nullptr);
-        chainstate->UnloadBlockIndex();
-    }
-
-    m_failed_blocks.clear();
-    m_blockman.Unload();
-    m_best_header = nullptr;
-    m_best_invalid = nullptr;
-}
-
 void ChainstateManager::MaybeRebalanceCaches()
 {
     AssertLockHeld(::cs_main);
@@ -5229,5 +5201,17 @@ void ChainstateManager::MaybeRebalanceCaches()
             m_ibd_chainstate->ResizeCoinsCaches(
                 m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
         }
+    }
+}
+
+ChainstateManager::~ChainstateManager()
+{
+    LOCK(::cs_main);
+
+    // TODO: The version bits cache and warning cache should probably become
+    // non-globals
+    g_versionbitscache.Clear();
+    for (auto& i : warningcache) {
+        i.clear();
     }
 }
