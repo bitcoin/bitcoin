@@ -415,9 +415,15 @@ CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng)
     }
 }
 
-void SelectionResult::ComputeAndSetWaste(CAmount change_cost)
+void SelectionResult::ComputeAndSetWaste(const CAmount change_cost)
 {
-    m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+    const CAmount change = GetChange(change_cost);
+
+    if (change > 0) {
+        m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+    } else {
+        m_waste = GetSelectionWaste(m_selected_inputs, 0, m_target, m_use_effective);
+    }
 }
 
 CAmount SelectionResult::GetWaste() const
@@ -430,6 +436,11 @@ CAmount SelectionResult::GetSelectedValue() const
     return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.txout.nValue; });
 }
 
+CAmount SelectionResult::GetSelectedEffectiveValue() const
+{
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.effective_value; });
+}
+
 void SelectionResult::Clear()
 {
     m_selected_inputs.clear();
@@ -439,7 +450,18 @@ void SelectionResult::Clear()
 void SelectionResult::AddInput(const OutputGroup& group)
 {
     util::insert(m_selected_inputs, group.m_outputs);
-    m_use_effective = !group.m_subtract_fee_outputs;
+    m_use_effective = m_use_effective || !group.m_subtract_fee_outputs;
+}
+
+void SelectionResult::Merge(const SelectionResult& other)
+{
+    m_target += other.m_target;
+    m_use_effective |= other.m_use_effective;
+    m_force_no_change |= other.m_force_no_change;
+    if (m_algo == SelectionAlgorithm::MANUAL) {
+        m_algo = other.m_algo;
+    }
+    util::insert(m_selected_inputs, other.m_selected_inputs);
 }
 
 const std::set<COutput>& SelectionResult::GetInputSet() const
@@ -462,6 +484,7 @@ bool SelectionResult::operator<(SelectionResult other) const
     return *m_waste < *other.m_waste || (*m_waste == *other.m_waste && m_selected_inputs.size() > other.m_selected_inputs.size());
 }
 
+
 std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
@@ -479,4 +502,21 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     }
     assert(false);
 }
+
+CAmount SelectionResult::GetChange(const CAmount min_change) const
+{
+    if (m_force_no_change) return 0;
+
+    CAmount change = m_use_effective
+                     ? GetSelectedEffectiveValue() - m_target
+                     : GetSelectedValue() - m_target;
+    assert(change >= 0);
+
+    if (change <= min_change) { // TODO: less or less_or_equal
+        change = 0;
+    }
+
+    return change;
+}
+
 } // namespace wallet

@@ -434,9 +434,17 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
              */
             preset_inputs.Insert(out, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
         }
+        if (preset_inputs.GetSelectionAmount() < nTargetValue) return std::nullopt;
+
+        if (preset_inputs.GetSelectionAmount() > nTargetValue + coin_selection_params.m_cost_of_change) {
+            SelectionResult result(nTargetValue + coin_selection_params.m_change_fee, SelectionAlgorithm::MANUAL);
+            result.AddInput(preset_inputs);
+            result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+            return result;
+        }
+
         SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         result.AddInput(preset_inputs);
-        if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
         result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         return result;
     }
@@ -488,6 +496,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
          */
         preset_inputs.Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
     }
+    // TODO: value_to_select -= preset_inputs.GetSelectionAmount();
 
     // remove preset inputs from vCoins so that Coin Selection doesn't pick them.
     for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coin_control.HasSelected();)
@@ -514,12 +523,16 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
         Shuffle(vCoins.begin(), vCoins.end(), coin_selection_params.rng_fast);
     }
 
+    SelectionResult preselected(preset_inputs.GetSelectionAmount(), SelectionAlgorithm::MANUAL);
+    preselected.AddInput(preset_inputs);
+
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
     // transaction at a target feerate. If an attempt fails, more attempts may be made using a more
     // permissive CoinEligibilityFilter.
     std::optional<SelectionResult> res = [&] {
         // Pre-selected inputs already cover the target amount.
-        if (value_to_select <= 0) return std::make_optional(SelectionResult(nTargetValue, SelectionAlgorithm::MANUAL));
+        if (value_to_select < -coin_selection_params.m_cost_of_change) return std::make_optional(SelectionResult(value_to_select + coin_selection_params.m_change_fee, SelectionAlgorithm::MANUAL));
+        if (value_to_select <= 0) return std::make_optional(SelectionResult(value_to_select, SelectionAlgorithm::MANUAL));
 
         // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
         // confirmations on outputs received from other wallets and only spend confirmed change.
@@ -572,8 +585,8 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     if (!res) return std::nullopt;
 
     // Add preset inputs to result
-    res->AddInput(preset_inputs);
-    if (res->m_algo == SelectionAlgorithm::MANUAL) {
+    res->Merge(preselected);
+    if (res->GetAlgo() == SelectionAlgorithm::MANUAL) {
         res->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
     }
 
@@ -756,6 +769,13 @@ static bool CreateTransactionInternal(
     coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
     coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
 
+    // We want to drop the change to fees if:
+    // 1. The change output would be dust
+    // 2. The change is within the (almost) exact match window, i.e. it is less than or equal to the cost of the change output (cost_of_change)
+    const auto dust = GetDustThreshold(change_prototype_txout, coin_selection_params.m_discard_feerate);
+    // TODO: disambiguate between min_change and m_cost_of_change
+    if (dust > coin_selection_params.m_cost_of_change) coin_selection_params.m_cost_of_change = dust;
+
     // vouts to the payees
     if (!coin_selection_params.m_subtract_fee_outputs) {
         coin_selection_params.tx_noinputs_size = 10; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
@@ -792,26 +812,27 @@ static bool CreateTransactionInternal(
         error = _("Insufficient funds");
         return false;
     }
-    TRACE5(coin_selection, selected_coins, wallet.GetName().c_str(), GetAlgorithmName(result->m_algo).c_str(), result->m_target, result->GetWaste(), result->GetSelectedValue());
+    TRACE5(coin_selection, selected_coins, wallet.GetName().c_str(), GetAlgorithmName(result->GetAlgo()).c_str(), result->GetTarget(), result->GetWaste(), result->GetSelectedValue());
 
-    // Always make a change output
-    // We will reduce the fee from this change output later, and remove the output if it is too small.
-    const CAmount change_and_fee = result->GetSelectedValue() - recipients_sum;
-    assert(change_and_fee >= 0);
-    CTxOut newTxOut(change_and_fee, scriptChange);
+    // TODO: replace with min_change
+    const CAmount change_amount = result->GetChange(coin_selection_params.m_cost_of_change);
+    if (change_amount > 0) {
+        CTxOut newTxOut(change_amount, scriptChange);
+        if (nChangePosInOut == -1)
+        {
+            // Insert change txn at random position:
+            nChangePosInOut = rng_fast.randrange(txNew.vout.size() + 1);
+        }
+        else if ((unsigned int)nChangePosInOut > txNew.vout.size())
+        {
+            error = _("Transaction change output index out of range");
+            return false;
+        }
 
-    if (nChangePosInOut == -1) {
-        // Insert change txn at random position:
-        nChangePosInOut = rng_fast.randrange(txNew.vout.size() + 1);
+        txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
+    } else {
+        nChangePosInOut = -1;
     }
-    else if ((unsigned int)nChangePosInOut > txNew.vout.size())
-    {
-        error = _("Transaction change output index out of range");
-        return false;
-    }
-
-    assert(nChangePosInOut != -1);
-    auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
 
     // Shuffle selected coins and fill in final vin
     std::vector<COutput> selected_coins = result->GetShuffledInputVector();
@@ -837,42 +858,25 @@ static bool CreateTransactionInternal(
         error = _("Missing solving data for estimating transaction size");
         return false;
     }
-    nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
-
-    // Subtract fee from the change output if not subtracting it from recipient outputs
-    CAmount fee_needed = nFeeRet;
-    if (!coin_selection_params.m_subtract_fee_outputs) {
-        change_position->nValue -= fee_needed;
-    }
-
-    // We want to drop the change to fees if:
-    // 1. The change output would be dust
-    // 2. The change is within the (almost) exact match window, i.e. it is less than or equal to the cost of the change output (cost_of_change)
-    CAmount change_amount = change_position->nValue;
-    if (IsDust(*change_position, coin_selection_params.m_discard_feerate) || change_amount <= coin_selection_params.m_cost_of_change)
-    {
-        nChangePosInOut = -1;
-        change_amount = 0;
-        txNew.vout.erase(change_position);
-
-        // Because we have dropped this change, the tx size and required fee will be different, so let's recalculate those
-        tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), &wallet, &coin_control);
-        nBytes = tx_sizes.vsize;
-        fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
-    }
+    CAmount fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+    nFeeRet = result->GetSelectedValue() - recipients_sum - change_amount;
 
     // The only time that fee_needed should be less than the amount available for fees (in change_and_fee - change_amount) is when
     // we are subtracting the fee from the outputs. If this occurs at any other time, it is a bug.
-    assert(coin_selection_params.m_subtract_fee_outputs || fee_needed <= change_and_fee - change_amount);
+    // TODO: verify that we never underestimate fees, otherwise this assert will fail
+    // and we would need to reduce change when there is no change output
+    assert(coin_selection_params.m_subtract_fee_outputs || fee_needed <= nFeeRet);
 
-    // Update nFeeRet in case fee_needed changed due to dropping the change output
-    if (fee_needed <= change_and_fee - change_amount) {
-        nFeeRet = change_and_fee - change_amount;
+    // If there is a change output and we overpay the fees than increase the change to match fee needed
+    if (nChangePosInOut != -1 && fee_needed < nFeeRet) {
+        auto& change = txNew.vout.at(nChangePosInOut);
+        change.nValue += nFeeRet - fee_needed;
+        nFeeRet = fee_needed;
     }
 
     // Reduce output values for subtractFeeFromAmount
     if (coin_selection_params.m_subtract_fee_outputs) {
-        CAmount to_reduce = fee_needed + change_amount - change_and_fee;
+        CAmount to_reduce = fee_needed - nFeeRet;
         int i = 0;
         bool fFirst = true;
         for (const auto& recipient : vecSend)
