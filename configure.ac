@@ -684,6 +684,12 @@ AC_ARG_WITH([libs],
   [build_syscoin_libs=$withval],
   [build_syscoin_libs=yes])
 
+AC_ARG_WITH([experimental-kernel-lib],
+  [AS_HELP_STRING([--with-experimental-kernel-lib],
+  [build experimental syscoinkernel library (default is to build if we're building libraries and the experimental build-chainstate executable)])],
+  [build_experimental_kernel_lib=$withval],
+  [build_experimental_kernel_lib=auto])
+
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
   [build syscoind daemon (default=yes)])],
@@ -1695,15 +1701,23 @@ AM_CONDITIONAL([BUILD_SYSCOIN_UTIL], [test $build_syscoin_util = "yes"])
 AC_MSG_RESULT($build_syscoin_util)
 
 AC_MSG_CHECKING([whether to build experimental syscoin-chainstate])
-AM_CONDITIONAL([BUILD_SYSCOIN_CHAINSTATE], [test $build_syscoin_chainstate = "yes"])
+if test "$build_experimental_kernel_lib" = "no"; then
+AC_MSG_ERROR([experimental syscoin-chainstate cannot be built without the experimental syscoinkernel library. Use --with-experimental-kernel-lib]);
+else
+  AM_CONDITIONAL([BUILD_SYSCOIN_CHAINSTATE], [test $build_syscoin_chainstate = "yes"])
+fi
 AC_MSG_RESULT($build_syscoin_chainstate)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_SYSCOIN_LIBS], [test $build_syscoin_libs = "yes"])
+
 if test "$build_syscoin_libs" = "yes"; then
   AC_DEFINE([HAVE_CONSENSUS_LIB], [1], [Define this symbol if the consensus lib has been built])
   AC_CONFIG_FILES([libsyscoinconsensus.pc:libsyscoinconsensus.pc.in])
 fi
+
+AM_CONDITIONAL([BUILD_SYSCOIN_KERNEL_LIB], [test "$build_experimental_kernel_lib" != "no" && ( test "$build_experimental_kernel_lib" = "yes" || test "$build_syscoin_chainstate" = "yes" )])
+
 AC_MSG_RESULT($build_syscoin_libs)
 
 AC_LANG_POP

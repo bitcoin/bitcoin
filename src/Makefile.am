@@ -15,6 +15,14 @@ AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
 
+lib_LTLIBRARIES =
+noinst_LTLIBRARIES =
+
+bin_PROGRAMS =
+noinst_PROGRAMS =
+TESTS =
+BENCHMARKS =
+
 SYSCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 SYSCOIN_INCLUDES += $(LIBCHIABLS_CFLAGS)
 SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
@@ -33,8 +41,9 @@ LIBSYSCOIN_NODE=libsyscoin_node.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
 LIBSYSCOIN_CLI=libsyscoin_cli.a
+LIBSYSCOIN_KERNEL=libsyscoin_kernel.a
 LIBSYSCOIN_UTIL=libsyscoin_util.a
-LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.a
+LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.la
 LIBSYSCOINQT=qt/libsyscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBNEVM=nevm/libnevm.a
@@ -45,6 +54,9 @@ endif
 if BUILD_SYSCOIN_LIBS
 LIBSYSCOINCONSENSUS=libsyscoinconsensus.la
 endif
+if BUILD_SYSCOIN_KERNEL_LIB
+LIBSYSCOINKERNEL=libsyscoinkernel.la
+endif
 if ENABLE_WALLET
 LIBSYSCOIN_WALLET=libsyscoin_wallet.a
 LIBSYSCOIN_WALLET_TOOL=libsyscoin_wallet_tool.a
@@ -52,21 +64,22 @@ endif
 
 LIBSYSCOIN_CRYPTO= $(LIBSYSCOIN_CRYPTO_BASE)
 if ENABLE_SSE41
-LIBSYSCOIN_CRYPTO_SSE41 = crypto/libsyscoin_crypto_sse41.a
+LIBSYSCOIN_CRYPTO_SSE41 = crypto/libsyscoin_crypto_sse41.la
 LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_SSE41)
 endif
 if ENABLE_AVX2
-LIBSYSCOIN_CRYPTO_AVX2 = crypto/libsyscoin_crypto_avx2.a
+LIBSYSCOIN_CRYPTO_AVX2 = crypto/libsyscoin_crypto_avx2.la
 LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_AVX2)
 endif
 if ENABLE_X86_SHANI
-LIBSYSCOIN_CRYPTO_X86_SHANI = crypto/libsyscoin_crypto_x86_shani.a
+LIBSYSCOIN_CRYPTO_X86_SHANI = crypto/libsyscoin_crypto_x86_shani.la
 LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_X86_SHANI)
 endif
 if ENABLE_ARM_SHANI
-LIBSYSCOIN_CRYPTO_ARM_SHANI = crypto/libsyscoin_crypto_arm_shani.a
+LIBSYSCOIN_CRYPTO_ARM_SHANI = crypto/libsyscoin_crypto_arm_shani.la
 LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_ARM_SHANI)
 endif
+noinst_LTLIBRARIES += $(LIBSYSCOIN_CRYPTO)
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
@@ -74,7 +87,6 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
-  $(LIBSYSCOIN_CRYPTO) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_CONSENSUS) \
@@ -87,13 +99,6 @@ EXTRA_LIBRARIES += \
   $(LIBNEVM) \
   $(LIBSYSCOIN_BLS)
 
-lib_LTLIBRARIES = $(LIBSYSCOINCONSENSUS)
-noinst_LTLIBRARIES =
-
-bin_PROGRAMS =
-noinst_PROGRAMS =
-TESTS =
-BENCHMARKS =
 
 if BUILD_SYSCOIND
   bin_PROGRAMS += syscoind
@@ -645,9 +650,16 @@ libsyscoin_wallet_tool_a_SOURCES = \
   $(SYSCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libsyscoin_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libsyscoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libsyscoin_crypto_base_a_SOURCES = \
+crypto_libsyscoin_crypto_base_la_CPPFLAGS = $(AM_CPPFLAGS)
+
+# Specify -static in both CXXFLAGS and LDFLAGS so libtool will only build a
+# static version of this library. We don't need a dynamic version, and a dynamic
+# version can't be used on windows anyway because the library doesn't currently
+# export DLL symbols.
+crypto_libsyscoin_crypto_base_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libsyscoin_crypto_base_la_LDFLAGS = $(AM_LDFLAGS) -static
+
+crypto_libsyscoin_crypto_base_la_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/chacha_poly_aead.h \
@@ -679,32 +691,44 @@ crypto_libsyscoin_crypto_base_a_SOURCES = \
   crypto/siphash.h
 
 if USE_ASM
-crypto_libsyscoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
+crypto_libsyscoin_crypto_base_la_SOURCES += crypto/sha256_sse4.cpp
 endif
 
-crypto_libsyscoin_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libsyscoin_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libsyscoin_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
-crypto_libsyscoin_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
-crypto_libsyscoin_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
+# See explanation for -static in crypto_libsyscoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libsyscoin_crypto_sse41_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libsyscoin_crypto_sse41_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libsyscoin_crypto_sse41_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libsyscoin_crypto_sse41_la_CXXFLAGS += $(SSE41_CXXFLAGS)
+crypto_libsyscoin_crypto_sse41_la_CPPFLAGS += -DENABLE_SSE41
+crypto_libsyscoin_crypto_sse41_la_SOURCES = crypto/sha256_sse41.cpp
 
-crypto_libsyscoin_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libsyscoin_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libsyscoin_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
-crypto_libsyscoin_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
-crypto_libsyscoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
+# See explanation for -static in crypto_libsyscoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libsyscoin_crypto_avx2_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libsyscoin_crypto_avx2_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libsyscoin_crypto_avx2_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libsyscoin_crypto_avx2_la_CXXFLAGS += $(AVX2_CXXFLAGS)
+crypto_libsyscoin_crypto_avx2_la_CPPFLAGS += -DENABLE_AVX2
+crypto_libsyscoin_crypto_avx2_la_SOURCES = crypto/sha256_avx2.cpp
 
-crypto_libsyscoin_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libsyscoin_crypto_x86_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libsyscoin_crypto_x86_shani_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
-crypto_libsyscoin_crypto_x86_shani_a_CPPFLAGS += -DENABLE_X86_SHANI
-crypto_libsyscoin_crypto_x86_shani_a_SOURCES = crypto/sha256_x86_shani.cpp
+# See explanation for -static in crypto_libsyscoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libsyscoin_crypto_x86_shani_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libsyscoin_crypto_x86_shani_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libsyscoin_crypto_x86_shani_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libsyscoin_crypto_x86_shani_la_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+crypto_libsyscoin_crypto_x86_shani_la_CPPFLAGS += -DENABLE_X86_SHANI
+crypto_libsyscoin_crypto_x86_shani_la_SOURCES = crypto/sha256_x86_shani.cpp
 
-crypto_libsyscoin_crypto_arm_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libsyscoin_crypto_arm_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libsyscoin_crypto_arm_shani_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
-crypto_libsyscoin_crypto_arm_shani_a_CPPFLAGS += -DENABLE_ARM_SHANI
-crypto_libsyscoin_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
+# See explanation for -static in crypto_libsyscoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libsyscoin_crypto_arm_shani_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libsyscoin_crypto_arm_shani_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libsyscoin_crypto_arm_shani_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libsyscoin_crypto_arm_shani_la_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+crypto_libsyscoin_crypto_arm_shani_la_CPPFLAGS += -DENABLE_ARM_SHANI
+crypto_libsyscoin_crypto_arm_shani_la_SOURCES = crypto/sha256_arm_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libsyscoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
@@ -874,7 +898,6 @@ syscoin_bin_ldadd = \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBNEVM)
@@ -932,7 +955,6 @@ syscoin_tx_LDADD = \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBNEVM)
@@ -970,9 +992,44 @@ syscoin_util_LDADD = \
   $(LIBSECP256K1)
 #
 
-# syscoin-chainstate binary #
-syscoin_chainstate_SOURCES = \
-  syscoin-chainstate.cpp \
+# $(LIBTOOL_APP_LDFLAGS) deliberately omitted here so that we can test linking
+# syscoin-chainstate against libsyscoinkernel as a shared or static library by
+# setting --{en,dis}able-shared.
+#syscoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS)
+#syscoin_chainstate_LDADD = $(LIBSYSCOINKERNEL)
+#
+
+# syscoinkernel library #
+if BUILD_SYSCOIN_KERNEL_LIB
+lib_LTLIBRARIES += $(LIBSYSCOINKERNEL)
+
+libsyscoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
+libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1)
+libsyscoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+
+# libsyscoinkernel requires default symbol visibility, explicitly specify that
+# here so that things still work even when user configures with
+#   --enable-reduce-exports
+#
+# Note this is a quick hack that will be removed as we incrementally define what
+# to export from the library.
+libsyscoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
+
+# TODO: For now, Specify -static in both CXXFLAGS and LDFLAGS when building for
+#       windows targets so libtool will only build a static version of this
+#       library. There are unresolved problems when building dll's for mingw-w64
+#       and attempting to statically embed libstdc++, libpthread, etc.
+if TARGET_WINDOWS
+libsyscoinkernel_la_LDFLAGS += -static
+libsyscoinkernel_la_CXXFLAGS += -static
+endif
+
+# TODO: libsyscoinkernel is a work in progress consensus engine library, as more
+#       and more modules are decoupled from the consensus engine, this list will
+#       shrink to only those which are absolutely necessary. For example, things
+#       like index/*.cpp will be removed.
+libsyscoinkernel_la_SOURCES = \
+  kernel/syscoinkernel.cpp \
   arith_uint256.cpp \
   blockfilter.cpp \
   chain.cpp \
@@ -1059,13 +1116,16 @@ syscoin_chainstate_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
-syscoin_chainstate-clientversion.$(OBJEXT): obj/build.h
+libsyscoinkernel_la-clientversion.l$(OBJEXT): obj/build.h
+endif # BUILD_SYSCOIN_KERNEL_LIB
 #
 
 # syscoinconsensus library #
 if BUILD_SYSCOIN_LIBS
+lib_LTLIBRARIES += $(LIBSYSCOINCONSENSUS)
+
 include_HEADERS = script/syscoinconsensus.h
-libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_base_a_SOURCES) $(libsyscoin_consensus_a_SOURCES)
+libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_base_la_SOURCES) $(libsyscoin_consensus_a_SOURCES)
 
 
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)

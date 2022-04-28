@@ -9,7 +9,7 @@
 // DEVELOPER NOTE: Since this is a "demo-only", experimental, etc. executable,
 //                 it may diverge from Bitcoin Core's coding style.
 //
-// It is part of the libbitcoinkernel project.
+// It is part of the libsyscoinkernel project.
 
 #include <chainparams.h>
 #include <consensus/validation.h>
@@ -31,7 +31,6 @@
 #include <net.h>
 #include <net_processing.h>
 #include <banman.h>
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 int main(int argc, char* argv[])
 {

@@ -3711,19 +3711,16 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
     return true;
 }
 bool CChainState::ResetLastBlock() {
+    AssertLockHeld(cs_main);
     if(m_chainman.m_best_invalid && m_chainman.m_best_invalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
         LogPrintf("%s: Found invalid best block, resetting %s\n", __func__, m_chainman.m_best_invalid->GetBlockHash().ToString());
         uint256 hash(m_chainman.m_best_invalid->GetBlockHash());
-        {
-            LOCK(cs_main);
-            CBlockIndex* pblockindex = m_blockman.LookupBlockIndex(hash);
-            if (!pblockindex) {
-                LogPrintf("%s: Block not found\n", __func__);
-                return false;
-            }
-
-            ResetBlockFailureFlags(pblockindex);
+        CBlockIndex* pblockindex = m_blockman.LookupBlockIndex(hash);
+        if (!pblockindex) {
+            LogPrintf("%s: Block not found\n", __func__);
+            return false;
         }
+        ResetBlockFailureFlags(pblockindex);
     }
     return true;
 }
@@ -6209,9 +6206,12 @@ bool CChainState::RestartGethNode() {
         LogPrintf("RestartGethNode: Could not start Geth\n");
         return false;
     }
-    if(!ResetLastBlock()) {
-        LogPrintf("RestartGethNode: Could not reset last invalid block\n");
-        return false;
+    {
+        LOCK(cs_main);
+        if(!ResetLastBlock()) {
+            LogPrintf("RestartGethNode: Could not reset last invalid block\n");
+            return false;
+        }
     }
     bool bResponse = false;
     GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);

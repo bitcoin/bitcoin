@@ -1807,6 +1807,16 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
             }
         }
     }
+    // As LoadBlockIndex can take several minutes, it's possible the user
+    // requested to kill the GUI during the last operation. If so, exit.
+    // As the program has not fully started yet, Shutdown() is possibly overkill.
+    if (ShutdownRequested()) {
+        LogPrintf("Shutdown requested. Exiting.\n");
+        return false;
+    }
+
+    ChainstateManager& chainman = *Assert(node.chainman);
+
     if(fNEVMConnection) {
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
@@ -1843,16 +1853,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
             }
         }
     }
-    // As LoadBlockIndex can take several minutes, it's possible the user
-    // requested to kill the GUI during the last operation. If so, exit.
-    // As the program has not fully started yet, Shutdown() is possibly overkill.
-    if (ShutdownRequested()) {
-        LogPrintf("Shutdown requested. Exiting.\n");
-        return false;
-    }
-
-    ChainstateManager& chainman = *Assert(node.chainman);
-
+    
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
                                      chainman, *node.mempool, ignores_incoming_txs);
