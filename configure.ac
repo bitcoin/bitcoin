@@ -756,20 +756,20 @@ case $host in
              if test "$use_upnp" != "no" && $BREW list --versions miniupnpc >/dev/null; then
                miniupnpc_prefix=$($BREW --prefix miniupnpc 2>/dev/null)
                if test "$suppress_external_warnings" != "no"; then
-                 CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $miniupnpc_prefix/include"
+                 MINIUPNPC_CPPFLAGS="-isystem $miniupnpc_prefix/include"
                else
-                 CORE_CPPFLAGS="$CORE_CPPFLAGS -I$miniupnpc_prefix/include"
+                 MINIUPNPC_CPPFLAGS="-I$miniupnpc_prefix/include"
                fi
-               CORE_LDFLAGS="$CORE_LDFLAGS -L$miniupnpc_prefix/lib"
+               MINIUPNPC_LIBS="-L$miniupnpc_prefix/lib"
              fi
              if test "$use_natpmp" != "no" && $BREW list --versions libnatpmp >/dev/null; then
                libnatpmp_prefix=$($BREW --prefix libnatpmp 2>/dev/null)
                if test "$suppress_external_warnings" != "no"; then
-                 CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $libnatpmp_prefix/include"
+                 NATPMP_CPPFLAGS="-isystem $libnatpmp_prefix/include"
                else
-                 CORE_CPPFLAGS="$CORE_CPPFLAGS -I$libnatpmp_prefix/include"
+                 NATPMP_CPPFLAGS="-I$libnatpmp_prefix/include"
                fi
-               CORE_LDFLAGS="$CORE_LDFLAGS -L$libnatpmp_prefix/lib"
+               NATPMP_LIBS="-L$libnatpmp_prefix/lib"
              fi
              ;;
          esac
@@ -1398,38 +1398,44 @@ fi
 
 dnl Check for libminiupnpc (optional)
 if test "$use_upnp" != "no"; then
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $MINIUPNPC_CPPFLAGS"
   AC_CHECK_HEADERS(
     [miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
-    [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
+    [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS="$MINIUPNPC_LIBS -lminiupnpc"], [have_miniupnpc=no], [$MINIUPNPC_LIBS])],
     [have_miniupnpc=no]
   )
-dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
-dnl with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
-if test "$have_miniupnpc" != "no"; then
-  AC_MSG_CHECKING([whether miniUPnPc API version is supported])
-  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-      @%:@include <miniupnpc/miniupnpc.h>
-    ]], [[
-      #if MINIUPNPC_API_VERSION >= 10
-      // Everything is okay
-      #else
-      #  error miniUPnPc API version is too old
-      #endif
-    ]])],[
-      AC_MSG_RESULT([yes])
-    ],[
-    AC_MSG_RESULT([no])
-    AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
-    have_miniupnpc=no
-  ])
-fi
+  dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
+  dnl with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
+  if test "$have_miniupnpc" != "no"; then
+    AC_MSG_CHECKING([whether miniUPnPc API version is supported])
+    AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+        @%:@include <miniupnpc/miniupnpc.h>
+      ]], [[
+        #if MINIUPNPC_API_VERSION >= 10
+        // Everything is okay
+        #else
+        #  error miniUPnPc API version is too old
+        #endif
+      ]])],[
+        AC_MSG_RESULT([yes])
+      ],[
+      AC_MSG_RESULT([no])
+      AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
+      have_miniupnpc=no
+    ])
+  fi
+  CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 dnl Check for libnatpmp (optional).
 if test "$use_natpmp" != "no"; then
+  TEMP_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $NATPMP_CPPFLAGS"
   AC_CHECK_HEADERS([natpmp.h],
-                   [AC_CHECK_LIB([natpmp], [initnatpmp], [NATPMP_LIBS=-lnatpmp], [have_natpmp=no])],
+                   [AC_CHECK_LIB([natpmp], [initnatpmp], [NATPMP_LIBS="$NATPMP_LIBS -lnatpmp"], [have_natpmp=no], [$NATPMP_LIBS])],
                    [have_natpmp=no])
+  CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" = "nonononononono"; then
@@ -1735,7 +1741,7 @@ else
     AC_MSG_RESULT([$use_upnp_default])
     AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test "$TARGET_OS" = "windows"; then
-      MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"
+      MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"
     fi
   else
     AC_MSG_RESULT([no])
@@ -1763,7 +1769,7 @@ else
     AC_MSG_RESULT($use_natpmp_default)
     AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test "$TARGET_OS" = "windows"; then
-      NATPMP_CPPFLAGS="-DSTATICLIB -DNATPMP_STATICLIB"
+      NATPMP_CPPFLAGS="$NATPMP_CPPFLAGS -DSTATICLIB -DNATPMP_STATICLIB"
     fi
   else
     AC_MSG_RESULT([no])
