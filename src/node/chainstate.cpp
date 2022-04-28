@@ -44,8 +44,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     chainman.m_total_coinstip_cache = nCoinCacheUsage;
     chainman.m_total_coinsdb_cache = nCoinDBCache;
 
-    UnloadBlockIndex(mempool, chainman);
-
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
     // SYSCOIN
     if(fAssetIndex) {
