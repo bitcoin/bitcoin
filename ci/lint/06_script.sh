@@ -14,7 +14,7 @@ fi
 export COMMIT_RANGE
 
 test/lint/check-doc.py
-test/lint/lint-all.sh
+test/lint/lint-all.py
 
 if [ "$CIRRUS_REPO_FULL_NAME" = "syscoin/syscoin" ] && [ "$CIRRUS_PR" = "" ] ; then
     # Sanity check only the last few commits to get notified of missing sigs,
