@@ -86,7 +86,7 @@ $ <cmd> enumerate
 ]
 ```
 
-The command MUST return an (empty) array with at least a `fingerprint` field.
+The command MUST return an (empty) array with at least a `fingerprint` field. `Fingerprint` MUST be represented as lowercase hex string.
 
 A future extension could add an optional return field with device capabilities. Perhaps a descriptor with wildcards. For example: `["pkh("44'/0'/$'/{0,1}/*"), sh(wpkh("49'/0'/$'/{0,1}/*")), wpkh("84'/0'/$'/{0,1}/*")]`. This would indicate the device supports legacy, wrapped SegWit and native SegWit. In addition it restricts the derivation paths that can used for those, to maintain compatibility with other wallet software. It also indicates the device, or the driver, doesn't support multisig.
 
