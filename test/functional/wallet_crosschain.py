@@ -5,10 +5,10 @@
 
 import os
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
-class WalletCrossChain(BitcoinTestFramework):
+class WalletCrossChain(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -22,9 +22,9 @@ class WalletCrossChain(BitcoinTestFramework):
         # Switch node 1 to testnet before starting it.
         self.nodes[1].chain = 'testnet3'
         self.nodes[1].extra_args = ['-maxconnections=0'] # disable testnet sync
-        with open(self.nodes[1].bitcoinconf, 'r', encoding='utf8') as conf:
+        with open(self.nodes[1].syscoinconf, 'r', encoding='utf8') as conf:
             conf_data = conf.read()
-        with open (self.nodes[1].bitcoinconf, 'w', encoding='utf8') as conf:
+        with open (self.nodes[1].syscoinconf, 'w', encoding='utf8') as conf:
             conf.write(conf_data.replace('regtest=', 'testnet=').replace('[regtest]', '[test]'))
 
         self.start_nodes()
