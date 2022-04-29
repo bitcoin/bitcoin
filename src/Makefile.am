@@ -379,6 +379,7 @@ libbitcoin_node_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/fees.cpp \
   rpc/mempool.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
