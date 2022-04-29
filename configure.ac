@@ -30,6 +30,37 @@ dnl Multi Process
 BITCOIN_MP_NODE_NAME=bitcoin-node
 BITCOIN_MP_GUI_NAME=bitcoin-gui
 
+m4_define([UPDATE_TARGET_LIST], [
+  all_targets="\
+    build_bitcoind \
+    build_bitcoin_cli \
+    build_bitcoin_tx \
+    build_bitcoin_util \
+    build_bitcoin_chainstate \
+    build_bitcoin_wallet \
+    bitcoin_enable_qt \
+    use_tests \
+    enable_fuzz_binary \
+    use_bench \
+    build_multiprocess \
+    build_bitcoin_libs \
+    build_experimental_kernel_lib \
+  "
+
+  sep=", "
+  result=""
+  for target in $all_targets; do
+    AS_VAR_COPY([value], [$target])
+    if test "$value" != "no"; then
+      if test "$result" != ""; then
+        result="${result}${sep}"
+      fi
+      result="${result}${target}"
+    fi
+  done
+  target_list="$result"
+])
+
 dnl Unless the user specified ARFLAGS, force it to be cr
 dnl This is also the default as-of libtool 2.4.7
 AC_ARG_VAR([ARFLAGS], [Flags for the archiver, defaults to <cr> if not set])
