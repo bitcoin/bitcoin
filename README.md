@@ -3,11 +3,12 @@
 
 
 
-- [ CheckoutBitcoin] 
+- [CheckoutBitcoin] 
 Developer system API
 ~~~638681e~~~b6c54c7~~~cashscript.node/638681e
 
 ¹MENU
+
 Replay historical market data tick-by-tick or stream consolidated real-time data feeds in no time thanks to our robust client libs. 
 
 Tap
@@ -96,8 +97,8 @@ Activated Javacashscript en AU navegador navigation Web
     Quote rec DISK DATA system bitcoin.wire.checkout menu en AU navegador navigation Bitcoincore0.21.1.  "Settings" (menu).
     Activa Javascashcript en AU navegador navigation Web
 
-    Bitcoin0.1.0 "Advanced" en (API) [RAM] System Network Bitcoincore0.21.1 Configuración.
-    Active Javacashscript en el navegador navigation GPS </Web>(DANIEL B LEAHY).
+    Bitcoin1.0.0 "Advanced" en (API) [RAM] System Network Bitcoincore0.22.0 Configuración.
+    Active Javacashscript en el navegador navigation GPS </Web>(Vu TT My).
 
     Millstone~ The English Bitcoin Developer: uvhw a "Enabled" Javacashscript" real-time navigator navigation, SKIP to Transfers JavaCashScript.node
     "Activate" Javacashscript.node en AU navegador navigation Web
