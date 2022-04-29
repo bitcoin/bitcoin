@@ -22,6 +22,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    wait_until_helper,
 )
 
 # Rescans start at the earliest block up to 2 hours before a key timestamp, so
@@ -346,6 +347,17 @@ class PruneTest(BitcoinTestFramework):
         prune(1000)
         assert not has_block(2), "blk00002.dat is still there, should be pruned by now"
         assert not has_block(3), "blk00003.dat is still there, should be pruned by now"
+
+        assert_raises_rpc_error(-1, "Block not available (pruned data)", node.getblock, node.getblockhash(680))
+
+        # make sure blocks can be re-downloaded from peers
+        self.connect_nodes(0, node_number)
+        # prune with lower height so blocks can be re-downloaded
+        node.pruneblockchain(height(680))
+
+        # wait for the node to re-download the blocks
+        wait_until_helper(lambda: 680 == node.getblockchaininfo()['pruneheight'], timeout=300)
+        node.getblock(node.getblockhash(680))
 
         # stop node, start back up with auto-prune at 550 MiB, make sure still runs
         self.restart_node(node_number, extra_args=["-prune=550"])

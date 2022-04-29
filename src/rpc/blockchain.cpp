@@ -742,6 +742,7 @@ static RPCHelpMan pruneblockchain()
                 {
                     {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or to a " + UNIX_EPOCH_TIME + "\n"
             "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
+                    {"peer_id", RPCArg::Type::NUM, RPCArg::Default{0}, "The peer to fetch missing blocks from (see getpeerinfo for peer IDs)"},
                 },
                 RPCResult{
                     RPCResult::Type::NUM, "", "Height of the last block pruned"},
@@ -775,20 +776,49 @@ static RPCHelpMan pruneblockchain()
         heightParam = pindex->nHeight;
     }
 
-    unsigned int height = (unsigned int) heightParam;
-    unsigned int chainHeight = (unsigned int) active_chain.Height();
+    unsigned int height = (unsigned int)heightParam;
+    unsigned int chainHeight = (unsigned int)active_chain.Height();
     if (chainHeight < Params().PruneAfterHeight())
         throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning.");
     else if (height > chainHeight)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height.");
     else if (height > chainHeight - MIN_BLOCKS_TO_KEEP) {
-        LogPrint(BCLog::RPC, "Attempt to prune blocks close to the tip.  Retaining the minimum number of blocks.\n");
+        LogPrint(BCLog::RPC, "Attempt to prune blocks close to the tip. Retaining the minimum number of blocks.\n");
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
+    const CBlockIndex& tip{*CHECK_NONFATAL(active_chain.Tip())};
+    const CBlockIndex* last_block{active_chainstate.m_blockman.GetFirstStoredBlock(tip)};
+    if (!last_block)
+        throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
+
+    unsigned int last_height = (unsigned int)last_block->nHeight;
+
+    // If blocks need to be re-downloaded
+    if (last_height >= height && last_height > 0) {
+        const NodeContext& node{EnsureAnyNodeContext(request.context)};
+        PeerManager& peerman{EnsurePeerman(node)};
+        const NodeId peer_id{request.params[1].isNull() ? 0 : request.params[1].get_int64()};
+
+        last_block = CHECK_NONFATAL(tip.GetAncestor(--last_height));
+
+        while (last_height >= height) {
+            const bool block_has_data = WITH_LOCK(::cs_main, return last_block->nStatus & BLOCK_HAVE_DATA);
+            if (!block_has_data) {
+                if (const auto err{peerman.FetchBlock(peer_id, *last_block)}) {
+                    throw JSONRPCError(RPC_MISC_ERROR, err.value());
+                }
+            }
+
+            if (last_height == 0)
+                break;
+
+            last_block = CHECK_NONFATAL(tip.GetAncestor(--last_height));
+        }
+    }
+
     PruneBlockFilesManual(active_chainstate, height);
-    const CBlockIndex& block{*CHECK_NONFATAL(active_chain.Tip())};
-    const CBlockIndex* last_block{active_chainstate.m_blockman.GetFirstStoredBlock(block)};
+    last_block = active_chainstate.m_blockman.GetFirstStoredBlock(tip);
 
     return static_cast<uint64_t>(last_block->nHeight);
 },
