@@ -1064,8 +1064,11 @@ endif
 
 include Makefile.minisketch.include
 
+if !BUILD_LIBBITCOINCONSENSUS_ONLY
 include Makefile.crc32c.include
 include Makefile.leveldb.include
+include Makefile.univalue.include
+endif
 
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
@@ -1083,5 +1086,3 @@ endif
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
 endif
-
-include Makefile.univalue.include

@@ -1892,6 +1892,8 @@ if test "$target_list" = ""; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-fuzz(-binary) --enable-bench or --enable-tests])
 fi
 
+AM_CONDITIONAL([BUILD_LIBBITCOINCONSENSUS_ONLY], [test "$target_list" = "build_bitcoin_libs"])
+
 AM_CONDITIONAL([TARGET_DARWIN], [test "$TARGET_OS" = "darwin"])
 AM_CONDITIONAL([BUILD_DARWIN], [test "$BUILD_OS" = "darwin"])
 AM_CONDITIONAL([TARGET_LINUX], [test "$TARGET_OS" = "linux"])
