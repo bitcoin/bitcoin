@@ -1730,7 +1730,10 @@ if test "$build_bitcoin_libs" = "yes"; then
   AC_CONFIG_FILES([libbitcoinconsensus.pc:libbitcoinconsensus.pc.in])
 fi
 
-AM_CONDITIONAL([BUILD_BITCOIN_KERNEL_LIB], [test "$build_experimental_kernel_lib" != "no" && ( test "$build_experimental_kernel_lib" = "yes" || test "$build_bitcoin_chainstate" = "yes" )])
+if test "$build_experimental_kernel_lib" = "auto" && test "$build_bitcoin_chainstate" != "yes"; then
+  build_experimental_kernel_lib="no"
+fi
+AM_CONDITIONAL([BUILD_BITCOIN_KERNEL_LIB], [test "$build_experimental_kernel_lib" = "yes"])
 
 AC_MSG_RESULT($build_bitcoin_libs)
 
@@ -1883,7 +1886,8 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$enable_fuzz_binary$use_bench$use_tests" = "nonononononononono"; then
+UPDATE_TARGET_LIST
+if test "$target_list" = ""; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-fuzz(-binary) --enable-bench or --enable-tests])
 fi
 
