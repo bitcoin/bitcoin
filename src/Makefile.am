@@ -559,6 +559,7 @@ libsyscoin_node_a_SOURCES = \
   rpc/rpcevo.cpp \
   rpc/rpcquorums.cpp \
   rpc/server_util.cpp \
+  rpc/signmessage.cpp \
   rpc/txoutproof.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
