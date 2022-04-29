@@ -529,6 +529,7 @@ libbitcoin_server_a_SOURCES = \
   rpc/blockchain.cpp \
   rpc/coinjoin.cpp \
   rpc/evo.cpp \
+  rpc/fees.cpp \
   rpc/index_util.cpp \
   rpc/masternode.cpp \
   rpc/mempool.cpp \
