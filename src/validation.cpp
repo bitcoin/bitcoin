@@ -4203,6 +4203,8 @@ bool ChainstateManager::LoadBlockIndex()
                 assert(any_chain([](auto chainstate) { return !chainstate->reliesOnAssumedValid(); }));
 
                 first_assumed_valid_height = block->nHeight;
+                LogPrintf("Saw first assumedvalid block at height %d (%s)\n",
+                        first_assumed_valid_height, block->ToString());
                 break;
             }
         }
