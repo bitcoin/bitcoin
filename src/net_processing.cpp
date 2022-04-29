@@ -2029,6 +2029,10 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
     // 3. This is currently the best block we're aware of. We haven't updated
     //    the tip yet so we have no way to check this directly here. Instead we
     //    just check that there are currently no other blocks in flight.
+    //
+    // No need to consider the background validation chainstate's IBD status
+    // (if applicable) because any active chainstate not in IBD will allow
+    // us to judge block validity.
     else if (state.IsValid() &&
              !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
@@ -2778,7 +2782,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
 
     // If we're in IBD, we want outbound peers that will serve us a useful
     // chain. Disconnect peers that are on chains with insufficient work.
-    if (m_chainman.ActiveChainstate().IsInitialBlockDownload() && !may_have_more_headers) {
+    if (m_chainman.IsAnyChainInIBD() && !may_have_more_headers) {
         // If the peer has no more headers to give us, then we know we have
         // their tip.
         if (nodestate->pindexBestKnownBlock && nodestate->pindexBestKnownBlock->nChainWork < m_chainman.MinimumChainWork()) {
@@ -3765,6 +3769,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 AddKnownTx(*peer, inv.hash);
+                // Can ignore background validation chainstate IBD status here because
+                // as long as the active chainstate is out of IBD, we can consider
+                // TX validity.
                 if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
@@ -4037,6 +4044,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Stop processing the transaction early if we are still in IBD since we don't
         // have enough information to validate it yet. Sending unsolicited transactions
         // is not considered a protocol violation, so don't punish the peer.
+        //
+        // Can ignore background validation chainstate's IBD status here.
         if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) return;
 
         CTransactionRef ptx;
@@ -4249,7 +4258,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const CBlockIndex* prev_block = m_chainman.m_blockman.LookupBlockIndex(cmpctblock.header.hashPrevBlock);
         if (!prev_block) {
-            // Doesn't connect (or is genesis), instead of DoSing in AcceptBlockHeader, request deeper headers
+            // Doesn't connect (or is genesis), instead of DoSing in AcceptBlockHeader, request deeper headers.
+            //
+            // Can ignore background chainstate (if applicable) for IsIBD because
+            // we will have a full headers chain by the time two chainstates are in use.
             if (!m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                 MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), *peer);
             }
@@ -5321,6 +5333,9 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     CAmount currentFilter = m_mempool.GetMinFee().GetFeePerK();
     static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
 
+    // No need to consider background validation chainstate's IBD status
+    // (if applicable), since we will process tx-inv messages when the
+    // active chainstate is out of IBD (see comment below).
     if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
         // Received tx-inv messages are discarded when the active
         // chainstate is in IBD, so tell the peer to not send them.
