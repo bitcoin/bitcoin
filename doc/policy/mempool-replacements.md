@@ -11,7 +11,8 @@ their in-mempool descendants (together, "original transactions") if, in addition
 other consensus and policy rules, each of the following conditions are met:
 
 1. The directly conflicting transactions all signal replaceability explicitly. A transaction is
-   signaling replaceability if any of its inputs have an nSequence number less than (0xffffffff - 1).
+   signaling replaceability if any of its inputs have an nSequence number less than (0xffffffff - 1)
+   or if its nVersion field is set to 3. See [version 3 policies](./version3_transactions.md).
 
    *Rationale*: See [BIP125
    explanation](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki#motivation).
