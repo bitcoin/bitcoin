@@ -1475,7 +1475,8 @@ if test "$use_natpmp" != "no"; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" = "nonononononono"; then
+UPDATE_TARGET_LIST
+if test "$target_list" = "build_bitcoin_libs"; then
   use_boost=no
 else
   use_boost=yes
