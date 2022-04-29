@@ -1674,7 +1674,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
 
     if (start) {
         // TODO: this should take into account failure by ScanResult::USER_ABORT
-        ScanResult result = ScanForWalletTransactions(start_block, start_height, {} /* max_height */, reserver, update);
+        ScanResult result = ScanForWalletTransactions(start_block, start_height, /*max_height=*/{}, reserver, /*fUpdate=*/update, /*save_progress=*/false);
         if (result.status == ScanResult::FAILURE) {
             int64_t time_max;
             CHECK_NONFATAL(chain().findBlock(result.last_failed_block, FoundBlock().maxTime(time_max)));
@@ -1705,10 +1705,10 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  * the main chain after to the addition of any new keys you want to detect
  * transactions for.
  */
-CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate)
+CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, const bool save_progress)
 {
     using Clock = std::chrono::steady_clock;
-    constexpr auto LOG_INTERVAL{60s};
+    constexpr auto INTERVAL_TIME{60s};
     auto current_time{Clock::now()};
     auto start_time{Clock::now()};
 
@@ -1737,7 +1737,9 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
             ShowProgress(strprintf("%s " + _("Rescanning…").translated, GetDisplayName()), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
         }
-        if (Clock::now() >= current_time + LOG_INTERVAL) {
+
+        bool next_interval = Clock::now() >= current_time + INTERVAL_TIME;
+        if (next_interval) {
             current_time = Clock::now();
             WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
         }
@@ -1768,6 +1770,16 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             // scan succeeded, record block as most recent successfully scanned
             result.last_scanned_block = block_hash;
             result.last_scanned_height = block_height;
+
+            if (save_progress && next_interval) {
+                CBlockLocator loc = m_chain->getActiveChainLocator(block_hash);
+
+                if (!loc.IsNull()) {
+                    WalletLogPrintf("Saving scan progress %d.\n", block_height);
+                    WalletBatch batch(GetDatabase());
+                    batch.WriteBestBlock(loc);
+                }
+            }
         } else {
             // could not scan block, keep scanning but record this block as the most recent failure
             result.last_failed_block = block_hash;
@@ -3026,7 +3038,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
 
         {
             WalletRescanReserver reserver(*walletInstance);
-            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, {} /* max height */, reserver, true /* update */).status)) {
+            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, /*max_height=*/{}, reserver, /*fUpdate=*/true, /*save_progress=*/true).status)) {
                 error = _("Failed to rescan the wallet during initialization");
                 return false;
             }
