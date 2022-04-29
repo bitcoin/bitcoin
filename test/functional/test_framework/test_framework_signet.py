@@ -122,7 +122,6 @@ class BaseSignetTest(BitcoinTestFramework):
 
         # parent class attributes
         self.chain = SIGNET
-        self.num_nodes = self.signet_num_signers
         self.setup_clean_chain = True
 
         # supposed to be private
@@ -135,7 +134,7 @@ class BaseSignetTest(BitcoinTestFramework):
         self._key_pairs = self.deterministic_key_pairs(self.signet_num_signers)
         
         # Extract the public keys
-        node_keys = [ECKey() for i in range(self.num_nodes)]
+        node_keys = [ECKey() for i in range(self.signet_num_signers)]
         for i, key in enumerate(node_keys):
             key_b = base58_to_byte(self._key_pairs[i].key)[0][:-1]
             key.set(key_b, True)

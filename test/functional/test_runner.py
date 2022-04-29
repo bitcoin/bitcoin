@@ -232,6 +232,7 @@ BASE_SCRIPTS = [
     'mining_basic.py',
     'feature_signet_solution_independent_blockchain_1_of_2.py',
     'feature_signet_solution_independent_blockchain_3_of_4.py',
+    'feature_signet_num_nodes_differs_from_num_signers.py',
     'feature_signet_old_test.py',
     'wallet_bumpfee.py',
     'wallet_bumpfee.py --descriptors',

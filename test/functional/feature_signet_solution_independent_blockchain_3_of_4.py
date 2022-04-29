@@ -23,6 +23,7 @@ from test_framework.util import assert_equal
 class SignetSignatureIndependentMerkleRootTest(BaseSignetTest):
 
     def set_test_params(self):
+        self.num_nodes = 4
         self.signet_num_signers = 4
         self.signet_num_signatures = 3
         super().set_test_params()
