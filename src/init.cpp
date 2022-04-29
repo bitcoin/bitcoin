@@ -1630,8 +1630,6 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     if(fNEVMConnection) {
         DoGethMaintenance();
     }
-    pdsNotificationInterface = new CDSNotificationInterface(*node.connman, *node.peerman);
-    RegisterValidationInterface(pdsNotificationInterface);
     // ********************************************************* Step 7: load block chain
     if(fRegTest) {
         nMNCollateralRequired = args.GetIntArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
@@ -1675,7 +1673,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
         // SYSCOIN
         node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
                                      chainman, *node.mempool, ignores_incoming_txs);
-        RegisterValidationInterface(node.peerman.get());
+        
         const bool fReset = fReindex;
         bilingual_str strLoadError;
 
@@ -1817,7 +1815,9 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
-
+    pdsNotificationInterface = new CDSNotificationInterface(*node.connman, *node.peerman);
+    RegisterValidationInterface(pdsNotificationInterface);
+    RegisterValidationInterface(node.peerman.get());
     ChainstateManager& chainman = *Assert(node.chainman);
 
     if(fNEVMConnection) {
