@@ -72,9 +72,9 @@ class FeatureIndexPruneTest(SyscoinTestFramework):
         for node in self.nodes[:2]:
             with node.assert_debug_log(['limited pruning to height 689']):
                 pruneheight_new = node.pruneblockchain(400)
-                # the prune heights used here and below are magic numbers that are determined by the
+                # SYSCOIN the prune heights used here and below are magic numbers that are determined by the
                 # thresholds at which block files wrap, so they depend on disk serialization and default block file size.
-                assert_equal(pruneheight_new, 249)
+                assert_equal(pruneheight_new, 248)
 
         self.log.info("check if we can access the tips blockfilter and coinstats when we have pruned some blocks")
         tip = self.nodes[0].getbestblockhash()
