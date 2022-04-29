@@ -4767,6 +4767,46 @@ const AssumeutxoData* ExpectedAssumeutxo(
     return nullptr;
 }
 
+static bool DeleteCoinsDBFromDisk(const fs::path db_path, bool is_snapshot)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    AssertLockHeld(::cs_main);
+
+    if (is_snapshot) {
+        fs::path base_blockhash_path = db_path / node::SNAPSHOT_BLOCKHASH_FILENAME;
+
+        if (fs::exists(base_blockhash_path)) {
+            bool removed = fs::remove(base_blockhash_path);
+            if (!removed) {
+                LogPrintf("[snapshot] failed to remove file %s\n",
+                          fs::PathToString(base_blockhash_path));
+            }
+        } else {
+            LogPrintf("[snapshot] snapshot chainstate dir being removed lacks %s file\n",
+                    fs::PathToString(node::SNAPSHOT_BLOCKHASH_FILENAME));
+        }
+    }
+
+    std::string path_str = fs::PathToString(db_path);
+    LogPrintf("Removing leveldb dir at %s\n", path_str);
+
+    // We have to destruct before this call leveldb::DB in order to release the db
+    // lock, otherwise `DestroyDB` will fail. See `leveldb::~DBImpl()`.
+    const bool destroyed = dbwrapper::DestroyDB(path_str, {}).ok();
+
+    if (!destroyed) {
+        LogPrintf("error: leveldb DestroyDB call failed on %s\n", path_str);
+    }
+
+    // Datadir should be removed from filesystem; otherwise initialization may detect
+    // it on subsequent statups and get confused.
+    //
+    // If the base_blockhash_path removal above fails in the case of snapshot
+    // chainstates, this will return false since leveldb won't remove a non-empty
+    // directory.
+    return destroyed && !fs::exists(db_path);
+}
+
 bool ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
         const SnapshotMetadata& metadata,
