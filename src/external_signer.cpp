@@ -77,8 +77,11 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
 
     // Check if signer fingerprint matches any input master key fingerprint
     auto matches_signer_fingerprint = [&](const PSBTInput& input) {
+        std::string entry_fingerprint;
         for (const auto& entry : input.hd_keypaths) {
-            if (m_fingerprint == strprintf("%08x", ReadBE32(entry.second.fingerprint))) return true;
+            entry_fingerprint = strprintf("%08x", ReadBE32(entry.second.fingerprint));
+            // check for both upper/lower hex representation match
+            if (m_fingerprint == entry_fingerprint || m_fingerprint == ToUpper(entry_fingerprint)) return true;
         }
         return false;
     };
