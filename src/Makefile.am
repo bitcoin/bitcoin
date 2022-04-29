@@ -992,12 +992,16 @@ syscoin_util_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBSECP256K1)
 #
+# syscoin-chainstate binary #
+syscoin_chainstate_SOURCES = syscoin-chainstate.cpp
+syscoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 # $(LIBTOOL_APP_LDFLAGS) deliberately omitted here so that we can test linking
 # syscoin-chainstate against libsyscoinkernel as a shared or static library by
 # setting --{en,dis}able-shared.
-#syscoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS)
-#syscoin_chainstate_LDADD = $(LIBSYSCOINKERNEL)
+syscoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS)
+syscoin_chainstate_LDADD = $(LIBSYSCOINKERNEL)
 #
 
 # syscoinkernel library #
@@ -1005,7 +1009,7 @@ if BUILD_SYSCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBSYSCOINKERNEL)
 
 libsyscoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1)
+libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
 libsyscoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
 
 # libsyscoinkernel requires default symbol visibility, explicitly specify that
@@ -1110,10 +1114,6 @@ libsyscoinkernel_la_SOURCES = \
   versionbits.cpp \
   warnings.cpp
 
-syscoin_chainstate_CPPFLAGS = $(syscoin_bin_cppflags)
-syscoin_chainstate_CXXFLAGS = $(syscoin_bin_cxxflags)
-syscoin_chainstate_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_chainstate_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
