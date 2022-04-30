@@ -365,12 +365,17 @@ void CWallet::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metadata, CKey
 
     // derive child key at next index, skip keys already known to the wallet
     CExtKey childKey;
+    CKeyMetadata metadataTmp;
     uint32_t nChildIndex = fInternal ? acc.nInternalChainCounter : acc.nExternalChainCounter;
     do {
-        hdChainTmp.DeriveChildExtKey(nAccountIndex, fInternal, nChildIndex, childKey, metadata);
+        // NOTE: DeriveChildExtKey updates metadata, use temporary structure to make sure
+        // we start with the original (non-updated) data each time.
+        metadataTmp = metadata;
+        hdChainTmp.DeriveChildExtKey(nAccountIndex, fInternal, nChildIndex, childKey, metadataTmp);
         // increment childkey index
         nChildIndex++;
     } while (HaveKey(childKey.key.GetPubKey().GetID()));
+    metadata = metadataTmp;
     secretRet = childKey.key;
 
     CPubKey pubkey = secretRet.GetPubKey();

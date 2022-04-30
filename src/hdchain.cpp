@@ -187,6 +187,9 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
     changeKey.Derive(extKeyRet, nChildIndex);
 
 #ifdef ENABLE_WALLET
+    // We should never ever update an already existing key_origin here
+    assert(!metadata.has_key_origin);
+    assert(metadata.key_origin.path.empty());
     metadata.key_origin.path.push_back(44 | 0x80000000);
     metadata.key_origin.path.push_back(Params().ExtCoinType() | 0x80000000);
     metadata.key_origin.path.push_back(nAccountIndex | 0x80000000);
