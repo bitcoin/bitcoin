@@ -233,6 +233,7 @@ public:
     virtual void PushTxInventoryOther(Peer& peer, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
     virtual PeerRef GetPeerRef(NodeId id) const = 0;
     virtual void AddKnownTx(Peer& peer, const uint256& hash) = 0;
+    virtual bool IsBanned(NodeId nodeid, BanMan& banman) = 0;
     /**
      * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
      * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
@@ -249,6 +250,9 @@ public:
     /** Process a single message from a peer. Public for fuzz testing */
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
+
+    /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
+    virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
 };
 
 // SYSCOIN

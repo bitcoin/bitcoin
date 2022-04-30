@@ -1407,7 +1407,7 @@ void CSigSharesManager::RemoveBannedNodeStates()
 
     LOCK2(cs_main, cs);
     for (auto it = nodeStates.begin(); it != nodeStates.end();) {
-        if (IsBanned(it->first, banman)) {
+        if (peerman.IsBanned(it->first, banman)) {
             // re-request sigshares from other nodes
             it->second.requestedSigShares.ForEach([this](const SigShareKey& k, int64_t) {
                 LOCK(cs);
