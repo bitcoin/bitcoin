@@ -15,6 +15,7 @@ from test_framework.util import (
 class FeatureIndexPruneTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
+        self.rpc_timeout = 240
         self.extra_args = [
             ["-fastprune", "-prune=1", "-blockfilterindex=1","-dip3params=9000:9000"],
             ["-fastprune", "-prune=1", "-coinstatsindex=1","-dip3params=9000:9000"],
