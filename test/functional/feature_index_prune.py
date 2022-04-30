@@ -16,10 +16,10 @@ class FeatureIndexPruneTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.extra_args = [
-            ["-fastprune", "-prune=1", "-blockfilterindex=1"],
-            ["-fastprune", "-prune=1", "-coinstatsindex=1"],
-            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
-            []
+            ["-fastprune", "-prune=1", "-blockfilterindex=1","-dip3params=9000:9000"],
+            ["-fastprune", "-prune=1", "-coinstatsindex=1","-dip3params=9000:9000"],
+            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1","-dip3params=9000:9000"],
+            ["-dip3params=9000:9000"]
         ]
 
     def sync_index(self, height):
@@ -50,7 +50,7 @@ class FeatureIndexPruneTest(SyscoinTestFramework):
 
     def restart_without_indices(self):
         for i in range(3):
-            self.restart_node(i, extra_args=["-fastprune", "-prune=1"])
+            self.restart_node(i, extra_args=["-fastprune", "-prune=1","-dip3params=9000:9000"])
         self.reconnect_nodes()
 
     def run_test(self):
@@ -91,8 +91,8 @@ class FeatureIndexPruneTest(SyscoinTestFramework):
             assert(node.gettxoutsetinfo(hash_type="muhash", hash_or_height=height_hash)['muhash'])
 
         # mine and sync index up to a height that will later be the pruneheight
-        self.generate(self.nodes[0], 51)
-        self.sync_index(height=751)
+        self.generate(self.nodes[0], 298)
+        self.sync_index(height=998)
 
         self.restart_without_indices()
 
@@ -104,12 +104,13 @@ class FeatureIndexPruneTest(SyscoinTestFramework):
             msg = "Querying specific block heights requires coinstatsindex"
             assert_raises_rpc_error(-8, msg, node.gettxoutsetinfo, "muhash", height_hash)
 
-        self.mine_batches(749)
+        self.mine_batches(502)
 
         self.log.info("prune exactly up to the indices best blocks while the indices are disabled")
         for i in range(3):
             pruneheight_2 = self.nodes[i].pruneblockchain(1000)
-            assert_equal(pruneheight_2, 751)
+            # SYSCOIN
+            assert_equal(pruneheight_2, 998)
             # Restart the nodes again with the indices activated
             self.restart_node(i, extra_args=self.extra_args[i])
 
