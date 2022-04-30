@@ -309,7 +309,7 @@ Use the `-v` option for verbose output.
 | [`lint-python.py`](lint/lint-python.py) | [mypy](https://github.com/python/mypy)
 | [`lint-python.py`](lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
 | [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
-| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck)
+| [`lint-shell.py`](lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
 | [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
 
 In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
