@@ -489,7 +489,7 @@ RPCHelpMan importwallet()
 {
     return RPCHelpMan{"importwallet",
                 "\nImports keys from a wallet dump file (see dumpwallet). Requires a new wallet backup to include imported keys.\n"
-                "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
+                "Note: Blockchain and Mempool will be rescanned after a successful import. Use \"getwalletinfo\" to query the scanning progress.\n",
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet file"},
                 },
@@ -1600,7 +1600,7 @@ RPCHelpMan importdescriptors()
         "                                                              Use the string \"now\" to substitute the current synced blockchain time.\n"
         "                                                              \"now\" can be specified to bypass scanning, for outputs which are known to never have been used, and\n"
         "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp\n"
-        "                                                              of all descriptors being imported will be scanned.",
+                                        "of all descriptors being imported will be scanned as well as the mempool.",
                                         /*oneline_description=*/"", {"timestamp | \"now\"", "integer / string"}
                                     },
                                     {"internal", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether matching outputs should be treated as not incoming payments (e.g. change)"},
