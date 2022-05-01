@@ -19,22 +19,104 @@
 #include <base58.h>
 #include <key_io.h>
 #include <script/standard.h>
-
+#include <iostream>
+#include <fstream>
+#include <univalue.h>
 
 
 
 namespace jurat {
 
 ///jurat keys
-const int N_JURAT_MIN_SIGS = 2;
-const int N_JURAT_KEYS = 2;
-const std::string judicialVerifierPubKeys[] = {"024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c",
-    "02b5efb6fa70adbe1aa9a70347699ed6948a660bf8eca9826cb4824b644a1484bb"};
+int N_JURAT_MIN_SIGS = 2;
 
-//const std::string bitcoinSignPubKey = "03432e525e798fb76f96b0596fc5e6bd4b78fb628b2debece5be146b9e467d7f1f";
-const std::string bitcoinSignPubKey = "02675b5ef4ef8b704c3a0ab9a3964c0e60a77b89a09575d6f8886abbe92b584043";
+std::string JURAT_WITNESS_KEYFILE_PATH = "./witness_keys.json";
+std::string JURAT_WITNESS_KEYFILE_PATH_TEST = "./witness_keys_test.json";
+std::string JURAT_WITNESS_KEYFILE_PATH_ENV = "JURAT_WITNESS_PUBKEYS";
+std::string JSON_TOKEN_VERIFIER_PUBKEYS = "witness_public_keys";
+std::string JSON_TOKEN_MIN_VERIFIERS = "min_verifiers";
+bool isWitnessKeysInitialized = false;
 
+std::vector<std::string> judicialVerifierPubKeys;
+//const std::string judicialVerifierPubKeys[] = {"024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c",
+//    "02b5efb6fa70adbe1aa9a70347699ed6948a660bf8eca9826cb4824b644a1484bb"};
+
+
+///the bitcoin transaction hash for jurat transactions are signed by this and attached as part of segwit
+const std::string bitcoinSignPubKey = "03b8c53308a5ed31dea6733ee267c546872be4d2903100d5eabf4f154bed0b944d";
+///all jurat transaction builders should sign the bitcoin-tx hash with the below private key [ for the above pub key ]
+///given here in mainnet and testnet compatible format
+///const std::string mainnetFormatPrivKey = "KypcjQrjKKfGN6gf6HYLa2Qn9T7mKR4N3zdqHUoPQmRTNiTCUBaz";
+///const std::string testnetFormatPrivKey = "cQBcCKrakPMXXY9vUhMTwLuqmgRAysA482nJPuFtut5TdTU4TXjT";
+
+
+static void printJson(UniValue& out);
+
+static void initWitnessKeys() {
     
+    if(isWitnessKeysInitialized)
+        return;
+    
+    std::string keyFilePath;
+    if(Params().IsTestChain()){
+        keyFilePath = JURAT_WITNESS_KEYFILE_PATH_TEST;
+    }else{
+        keyFilePath = JURAT_WITNESS_KEYFILE_PATH;
+    }
+    
+    //check override in env property
+    char* witness_keyfile_path = std::getenv(JURAT_WITNESS_KEYFILE_PATH_ENV.c_str());
+    if(witness_keyfile_path){
+        keyFilePath = witness_keyfile_path;
+    }
+    
+    tfm::format(std::cout, "opening witness public keys file... %s\n", witness_keyfile_path);
+    std::ifstream keyFile;
+    UniValue val;
+    keyFile.open(keyFilePath);
+    if(keyFile.is_open()){
+        std::string strJson;
+        std::string line;
+        while(getline(keyFile, line)){
+            strJson.append(line);
+        }
+        keyFile.close();
+        if (!val.read(strJson)) {
+            throw std::runtime_error("error parsing jurat witness pubkeys json");
+        }
+        printJson(val);
+    }
+    
+    UniValue keys = find_value(val, JSON_TOKEN_VERIFIER_PUBKEYS);
+    const std::vector<UniValue>& pubKeys = keys.getValues();
+    judicialVerifierPubKeys.clear();
+    
+    for(const UniValue& k : pubKeys){
+        std::string strPubKey = k.get_str();
+        judicialVerifierPubKeys.push_back(strPubKey);
+    }
+    
+    UniValue uniMinVerifiers = find_value(val, JSON_TOKEN_MIN_VERIFIERS);
+    N_JURAT_MIN_SIGS = uniMinVerifiers.get_int();
+    
+    tfm::format(std::cout,"jurat witness %d keys loaded from...%s\n",
+                judicialVerifierPubKeys.size(),keyFilePath);
+    int keyCount=0;
+    for(std::string& key : judicialVerifierPubKeys){
+        tfm::format(std::cout, "pub key[%d]=%s\n", keyCount,key);
+        keyCount++;
+    }
+    tfm::format(std::cout, "min no of verifiers %d of %d\n",N_JURAT_MIN_SIGS, keyCount);
+    isWitnessKeysInitialized = true;
+    
+}
+
+static void printJson(UniValue& out) {
+    std::string json = out.write(4);
+    std::cout << "begin:\n" << json << "\nend\n";
+    std::cout.flush();
+}
+
 ///declarations
 
 ///jurat verifier
@@ -56,9 +138,9 @@ private:
 public:
     JuratVerifier() = delete;
     
-    //JuratVerifier(const CTransaction& tx):m_tx(tx){}
-    
-    JuratVerifier(const CTransaction& tx, const CScript& scriptPubKey):m_tx(tx),prevScriptPubKey(scriptPubKey){}
+    JuratVerifier(const CTransaction& tx, const CScript& scriptPubKey):m_tx(tx),prevScriptPubKey(scriptPubKey){
+        initWitnessKeys();
+    }
     
     bool isJuratTx();
     
@@ -310,7 +392,7 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
     }
     
     CScriptWitness witness =  tx.vin[vin].scriptWitness;
-    int len = (int) witness.stack.size();
+    int len = (int)witness.stack.size();
     std::cout << "[verifier] witness stack size = " << len << std::endl;
     //witness stack size = one empty chunk + num of jurat witness sigs + one bitcoin sig + one unlock script
     if (len < N_JURAT_MIN_SIGS+3)
@@ -369,7 +451,7 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
         }
         
         int verifierIdx = sigData[sigData.size()-1];
-        if(verifierIdx < 0 || verifierIdx >= N_JURAT_KEYS)
+        if(verifierIdx < 0 || verifierIdx >= (int)judicialVerifierPubKeys.size())
         {
             verified = false;
             break;
@@ -388,10 +470,9 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
         std::cout << "[verifier] verified with pub-key: " << strVerifierPubKey << std::endl;
         verifiedKeys.insert(verifiedKeys.begin(),verifierIdx);
         keySet.insert(verifierIdx);
-        
     }
     
-    if(keySet.size() < N_JURAT_MIN_SIGS){
+    if((int)keySet.size() < N_JURAT_MIN_SIGS){
         verified = false;
     }
     
@@ -403,6 +484,7 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
 
 CScript getMultiSigRedeemScript()
 {
+    ///designed for multisig but currenty using a signle signature as a special case 1 of 1 Multisig
     CScript script;
     script << 1;
     std::vector<unsigned char> vchPubKey = ParseHex(bitcoinSignPubKey);
