@@ -156,21 +156,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // initiated from another node, so skip it too.
         if (!pnode->CanRelay() || (fMasternodeMode && pnode->fInbound)) continue;
 
-        // QUICK MODE (REGTEST ONLY!)
-        if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
-        {
-            if (nCurrentAsset == MASTERNODE_SYNC_BLOCKCHAIN) {
-                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
-                SwitchToNextAsset(connman);
-            } else if (nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
-                SendGovernanceSyncRequest(pnode, connman);
-                SwitchToNextAsset(connman);
-            }
-            connman.ReleaseNodeVector(vNodesCopy);
-            return;
-        }
-
-        // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
             if ((pnode->HasPermission(PF_NOBAN) || pnode->m_manual_connection) && !netfulfilledman.HasFulfilledRequest(pnode->addr, strAllow)) {
                 netfulfilledman.RemoveAllFulfilledRequests(pnode->addr);
