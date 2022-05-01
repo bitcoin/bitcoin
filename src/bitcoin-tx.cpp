@@ -33,6 +33,8 @@
 
 #include "jurat.hpp"
 #include <core_io.h>
+#include <iostream>
+#include <fstream>
 
 #include <boost/algorithm/string.hpp>
 
@@ -44,6 +46,7 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 std::string JURAT_CREATE_TX = "juratCreateTx";
 std::string JURAT_SIGN_TX = "juratSignTx";
+std::string JURAT_GENERIC_CMD = "juratGenricCmd";
 
 const std::string keyJudicialAction = "judicialAction";
 const std::string keyNonce = "nonce";
@@ -60,6 +63,8 @@ const std::string keyJuratWitnessSig = "jwsig";
 const std::string keySigs = "sigs";
 const std::string keyTxHex = "txHex";
 const std::string keyPrivKeys = "privkeys";
+
+const std::string keyJuratDataHash = "juratDataHash";
 
 using namespace jurat;
 CAmount FEE = 300;
@@ -87,8 +92,18 @@ const std::string judicialVerifierPvtKeys[] =
         "cVWYLhVS2ppfQDVmvPgppw84Wo69gkBqP7Z3g8HFcRHFNZF1rAg9"
     };
 
-//const std::string bitcoinSignPrivKey = "cS55U7eMUB7rXfPa5xPyGEacUtenbU346keSv8Js3rJLLQEVBH2M";
-const std::string bitcoinSignPrivKey = "KxF4mbL7EoHgqhCan5DrC9bHdwfnGNK7vK9m9zRLZvj2y8RxuWns";
+
+static const std::string getJuratSigPrivateKey() {
+    ///same private key in mainnet compatible format and testnet compatible format
+    const std::string mainnetFormatPrivKey = "KypcjQrjKKfGN6gf6HYLa2Qn9T7mKR4N3zdqHUoPQmRTNiTCUBaz";
+    const std::string testnetFormatPrivKey = "cQBcCKrakPMXXY9vUhMTwLuqmgRAysA482nJPuFtut5TdTU4TXjT";
+    if(Params().IsTestChain()){
+        return testnetFormatPrivKey;
+    }else{
+        return mainnetFormatPrivKey;
+    }
+    
+}
 
 
 CTransaction juratSign(CTransaction& tx, std::string& srcAddr,
@@ -144,7 +159,7 @@ CTransaction juratSign(CTransaction& tx, std::string& srcAddr,
     uint256 sigData = SignatureHash(redeemScript, mutableTx, nIn, SIGHASH_ALL,satoshisTxIn, SigVersion::WITNESS_V0);
     std::cout <<"[signer] sigDataHash=" << HexStr(sigData);
     
-    for(char i=0;i<N_JURAT_KEYS;i++){
+    for(int i=0;i<(int)judicialVerifierPubKeys.size();i++){
         std::vector<unsigned char> vchJuratSig;
         CKey privateKey = DecodeSecret(judicialVerifierPvtKeys[(int)i]);
         
@@ -266,13 +281,31 @@ bool freezeTx(enumJurat action,
     ss << nLockBlockHeight;
     ss << nonce;
     uint256 juratSigDataHash = ss.GetHash();
-    out.pushKV("juratDataHash", HexStr(juratSigDataHash));
+    out.pushKV(keyJuratDataHash, HexStr(juratSigDataHash));
     
     jurat::JuratVerifier verifier(tx, srcScriptPubKey);
     if(!verifier.isJuratTx())
         return false;
     
     return true;
+}
+
+static int findSignatureIndex(std::vector<unsigned char> vchSignature,
+                              std::vector<unsigned char> vchJuratDataHash){
+    
+    uint256 signedHash(vchJuratDataHash);
+    for(int i=0; i< (int)judicialVerifierPubKeys.size();i++){
+        std::vector<unsigned char> vchPubKey = ParseHex(judicialVerifierPubKeys[i]);
+        CPubKey pubKey(vchPubKey.begin(), vchPubKey.end());
+        
+        bool isVerified = pubKey.Verify(signedHash, vchSignature);
+        if(isVerified){
+            return i;
+        }
+        
+    }
+    return -1;
+    
 }
 
 static bool attachWitness(CMutableTransaction& mutableTx,
@@ -292,6 +325,7 @@ static bool attachWitness(CMutableTransaction& mutableTx,
         return false;
     }
     
+    std::vector<unsigned char> vchJuratDataHash = ParseHex(out[keyJuratDataHash].get_str());
     CScriptWitness witness;
     std::vector<unsigned char> emptyChunk;
     witness.stack.push_back(emptyChunk);
@@ -299,19 +333,37 @@ static bool attachWitness(CMutableTransaction& mutableTx,
     for(int i=0;i<(int)jsigs.size();i++){
         
         if(IsHex(jsigs[i])) {
-            tfm::format(std::cout, "witness push hex signature => %s\n",jsigs[i]);
-            witness.stack.push_back(ParseHex(jsigs[i]));
+            std::vector<unsigned char> vchSignature = ParseHex(jsigs[i]);
+            int verifierIndx = findSignatureIndex(vchSignature, vchJuratDataHash);
+            if(verifierIndx >=0){
+                vchSignature.push_back((unsigned char)verifierIndx);
+                tfm::format(std::cout, "witness push hex signature => %s\n",jsigs[i]);
+                witness.stack.push_back(vchSignature);
+            }else{
+                std::string str = tfm::format("could not verify witness signature with any of the witness pub keys ..%s",jsigs[i]);
+                err = err + "; " + str;
+            }
+            
         } else {
             //try base64 decoding
             bool isInvalid = false;
-            std::vector<unsigned char> byteSign = DecodeBase64(jsigs[i].c_str(),&isInvalid);
+            std::vector<unsigned char> vchSignature = DecodeBase64(jsigs[i].c_str(),&isInvalid);
             if(isInvalid){
                 signatureCheck = false;
                 std::string str = tfm::format("witness signature is not a valid base64 encoded string ..%s",jsigs[i]);
                 err = err + "; " + str;
+                continue;
             }else{
-                witness.stack.push_back(byteSign);
-                tfm::format(std::cout, "witness push base64 decoded signature  %s => %s\n",jsigs[i],HexStr(byteSign));
+                int verifierIndx = findSignatureIndex(vchSignature, vchJuratDataHash);
+                if(verifierIndx >=0){
+                    vchSignature.push_back((unsigned char)verifierIndx);
+                    witness.stack.push_back(vchSignature);
+                    tfm::format(std::cout, "witness push base64 decoded signature  %s => %s\n",jsigs[i],HexStr(vchSignature));
+                }else{
+                    std::string str = tfm::format("could not verify witness signature with any of the witness pub keys ..%s",jsigs[i]);
+                    err = err + "; " + str;
+                }
+                
             }
         }
     }
@@ -325,7 +377,7 @@ static bool attachWitness(CMutableTransaction& mutableTx,
     uint256 sigData = SignatureHash(redeemScript, mutableTx, nInToSign, SIGHASH_ALL,satoshisTxIn, SigVersion::WITNESS_V0);
     std::cout <<"[signer] sigDataHash=" << HexStr(sigData);
     std::vector<unsigned char> vchSig;
-    CKey privateKey = DecodeSecret(bitcoinSignPrivKey);
+    CKey privateKey = DecodeSecret(getJuratSigPrivateKey());
     if(privateKey.Sign(sigData, vchSig))
     {
         vchSig.push_back(SIGHASH_ALL);
@@ -457,6 +509,130 @@ static void printOutput(UniValue& out) {
     std::cout.flush();
 }
 
+static void privateKeyFormats(std::string& base58CheckPrivateKey, bool isCompressed){
+    
+    tfm::format(std::cout,"[private key]: loading = %s\n",base58CheckPrivateKey);
+    CKey privateKey = DecodeSecret(base58CheckPrivateKey);
+    if(!privateKey.IsValid()){
+        tfm::format(std::cout,"[private key]: failed to load = %s\n",base58CheckPrivateKey);
+        return;
+    }
+    
+    std::vector<unsigned char> vchKeyData(privateKey.begin(), privateKey.end());
+    tfm::format(std::cout,"[private key]: loaded key hexStr = %s\n",HexStr(vchKeyData));
+    CPubKey pubKey = privateKey.GetPubKey();
+    std::vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+    tfm::format(std::cout,"[public key]: = %s\n",HexStr(vchPubKey));
+    
+    std::string net[] = {"mainnet", "testnet"};
+    unsigned char mainnetPrefix = (unsigned char)0x80;
+    unsigned char testnetPrefix = (unsigned char)0xef;
+    unsigned char suffixChar = (unsigned char)0x01;
+    unsigned char prefixChar[] = {mainnetPrefix,testnetPrefix};
+    for(int i=0;i<2;i++){
+        std::vector<unsigned char> vchBytes(privateKey.begin(), privateKey.end());
+        
+        ///step# 1
+        vchBytes.insert(vchBytes.begin(), prefixChar[i]);
+        
+        ///step# 2
+        if(isCompressed){
+            vchBytes.push_back(suffixChar);
+        }
+        
+        tfm::format(std::cout,"[%s]: private key with prefix+suffix = %s\n",net[i],HexStr(vchBytes));
+        
+        ///step# 3 get hash-256
+        uint256 hash = Hash(vchBytes);
+        tfm::format(std::cout,"[%s]: hash-256 = %s\n",net[i],HexStr(hash));
+        
+        ///step# 4 append 4 byte check sum [ taking first 4 bytes from step# 3
+        vchBytes.insert(vchBytes.end(), hash.begin(), hash.begin()+4);
+        tfm::format(std::cout,"[%s]: added 4 byte checksum %s\n",net[i],HexStr(vchBytes));
+        
+        /// step#5 base58 encode to get WIF [ wallet import format ] key
+        std::string encodedKey = EncodeBase58(vchBytes);
+        
+        ///EncodeBase58Check can be called instead of steps #3 #4 and #5
+        tfm::format(std::cout, "[%s]: private key wif compatible base58check = %s\n", net[i],encodedKey);
+    }
+    
+}
+
+static void genericJuratCmd(const UniValue& in, UniValue& out){
+    
+    {
+        initWitnessKeys();
+        const std::vector<unsigned char>& privkey_prefix = Params().Base58Prefix(CChainParams::SECRET_KEY);
+        tfm::format(std::cout, "privkey_prefix [%s]\n", HexStr(privkey_prefix));
+        
+        std::string pvtKey = "";
+    
+        std::string strKey = "024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c";
+        std::vector<unsigned char> vchPubKey =  ParseHex(strKey);
+        CPubKey pk(vchPubKey.begin(), vchPubKey.end());
+        uint256 hash(ParseHex("bd4cc33f0f756104824f6bb00130f91dcca549e69720358f13917ba3dddb5faf"));
+        std::vector<unsigned char> vchSig = ParseHex("3044022046281f4663b816e472c785f29abc0e31954c1720fa265c1806c8e463b0cd75aa022072b0c2e55dce53e0472e1be64654494d0cab8ccd29c3e3a803e8831399880107");
+        bool isverified = pk.Verify(hash, vchSig);
+        tfm::format(std::cout, "is verified [%s]\n", isverified);
+        
+    }
+    
+    
+    //hex string
+    std::string juratDataHash = in[keyJuratDataHash].get_str();
+    
+    //hex str => char array
+    std::vector<unsigned char> hash = ParseHex(juratDataHash);
+    uint256 hash256 = uint256(hash);
+    
+    std::string testPrivKeyStr = "cQBcCKrakPMXXY9vUhMTwLuqmgRAysA482nJPuFtut5TdTU4TXjT";
+    std::string mainPrivKeyStr = "KypcjQrjKKfGN6gf6HYLa2Qn9T7mKR4N3zdqHUoPQmRTNiTCUBaz";
+    
+    std::string testPubKeyStr = "03b8c53308a5ed31dea6733ee267c546872be4d2903100d5eabf4f154bed0b944d";
+    std::string mainPubKeyStr = "03b8c53308a5ed31dea6733ee267c546872be4d2903100d5eabf4f154bed0b944d";
+    
+    std::vector<std::string> signingKeys;
+    std::vector<std::string> verifierKeys;
+    signingKeys.push_back(testPrivKeyStr);
+    signingKeys.push_back(mainPrivKeyStr);
+    verifierKeys.push_back(testPubKeyStr);
+    verifierKeys.push_back(mainPubKeyStr);
+    
+    for(int i=0;i<(int)signingKeys.size();i++){
+        std::vector<unsigned char> vchJuratSig;
+        tfm::format(std::cout,"loading private key =%s\n",signingKeys[i]);
+        
+        CKey privateKey = DecodeSecret(signingKeys[i]);
+        privateKeyFormats(signingKeys[i], privateKey.IsCompressed());
+        if(!privateKey.IsValid()){
+            tfm::format(std::cout,"failed to load key=%s\n",signingKeys[i]);
+            continue;
+        }
+        bool isSigned = privateKey.Sign(hash256, vchJuratSig);
+        if(isSigned) {
+            tfm::format(std::cout, "sign success priv-key=%s hashHex=%s\n signatureHex=%s\n",
+                        signingKeys[i], juratDataHash, HexStr(vchJuratSig));
+            
+        }else {
+            tfm::format(std::cout,"failed to sign with key=%s\n",signingKeys[i]);
+        }
+        
+        if (isSigned) {
+            //verify
+            std::string strVerifierPubKey = verifierKeys[i];
+            std::vector<unsigned char> vchPubKey =  ParseHex(strVerifierPubKey);
+            CPubKey verifierPubKey(vchPubKey.begin(), vchPubKey.end());
+            std::vector<unsigned char> vchSignature(vchJuratSig.begin(), vchJuratSig.end());
+            bool isVerified = verifierPubKey.Verify(hash256, vchSignature);
+            tfm::format(std::cout, "signature verification pub-key=%s verified=%s\n",
+                        verifierKeys[i], isVerified);
+            
+        }
+    }
+    std::cout.flush();
+}
+
 static bool runJuratCmd()
 {
 
@@ -477,6 +653,14 @@ static bool runJuratCmd()
     if(!ECC_InitSanityCheck()){
         tfm::format(std::cout,"ecc support not available at runtime");
         return false;
+    }
+    
+    if(registers.find(JURAT_GENERIC_CMD) != registers.end()) {
+        const UniValue uniVal = registers[JURAT_GENERIC_CMD];
+        UniValue out(UniValue::VOBJ);
+        out.pushKV("request", uniVal);
+        genericJuratCmd(uniVal, out);
+        return true;
     }
     
     
