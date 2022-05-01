@@ -1010,7 +1010,7 @@ lib_LTLIBRARIES += $(LIBSYSCOINKERNEL)
 
 libsyscoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
 libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
-libsyscoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+libsyscoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(SYSCOIN_INCLUDES)
 
 # libsyscoinkernel requires default symbol visibility, explicitly specify that
 # here so that things still work even when user configures with
