@@ -22,6 +22,7 @@
 #include <netbase.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
+#include <node/txpackagetracker.h>
 #include <node/txreconciliation.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -711,6 +712,7 @@ private:
     CTxMemPool& m_mempool;
     TxRequestTracker m_txrequest GUARDED_BY(::cs_main);
     std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
+    std::unique_ptr<node::TxPackageTracker> m_txpackagetracker;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1830,6 +1832,7 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
     if (gArgs.GetBoolArg("-txreconciliation", DEFAULT_TXRECONCILIATION_ENABLE)) {
         m_txreconciliation = std::make_unique<TxReconciliationTracker>(TXRECONCILIATION_VERSION);
     }
+    m_txpackagetracker = std::make_unique<node::TxPackageTracker>();
 }
 
 void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
