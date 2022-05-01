@@ -1018,7 +1018,7 @@ libsyscoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp
 #
 # Note this is a quick hack that will be removed as we incrementally define what
 # to export from the library.
-libsyscoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
+libsyscoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default -fPIC
 
 # TODO: For now, Specify -static in both CXXFLAGS and LDFLAGS when building for
 #       windows targets so libtool will only build a static version of this
