@@ -687,7 +687,7 @@ private:
 
 
     // All of the following cache a recent block, and are protected by m_most_recent_block_mutex
-    RecursiveMutex m_most_recent_block_mutex;
+    Mutex m_most_recent_block_mutex;
     std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
     uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
