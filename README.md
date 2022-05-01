@@ -1,7 +1,7 @@
 
-🪙MILLSTONE🪙
+MILLSTONE
 
-
+#### 1GwvLW9qJ8uaYjew3cFvPiqxViWhuU1pKT
 
 - [CheckoutBitcoin] 
 Developer system API
@@ -39,7 +39,7 @@ Navigation Navigator
 SKIP
 About:JavaCashScript.com
 
-[RAM]link to webmoney javacashscript.
+[RAM]link to bitcoin javacashscript.
 ========================================
                Sign up
 bitcoin-dot-org / developer.bitcoin.org Public
@@ -51,7 +51,7 @@ Projects
 Wiki
 Security
 Insights
-Bitcoin/uvhw
+uvhw/bitcoin
 @1GwvLW9qJ8uaYjew3cFvPiqxViWhuU1pKT-btc
 ~b702042~638681e~b6c54c7~
 NYSE:DOW
@@ -106,7 +106,7 @@ Activated Javacashscript en AU navegador navigation Web
 
 
 
-© About:JavaCashScript.node - All about JavaCashScript and learn how to activated JavaCashScript in your web browser - (Go to top up purse) wmkeeper.com/topupcredit/WMID:619062469911/transfer.index.
+© About:uvhw.node - All about JavaCashScript and learn how to activated JavaCashScript in your web browser - (Go to top up purse) uvhw/bitcoin.index.
 
 
 
