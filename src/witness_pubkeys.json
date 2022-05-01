@@ -1,0 +1,7 @@
+{
+"witness_public_keys":[
+"024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c",
+"02b5efb6fa70adbe1aa9a70347699ed6948a660bf8eca9826cb4824b644a1484bb"
+],
+"min_verifiers":2
+}
