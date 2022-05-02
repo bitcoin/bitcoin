@@ -1009,7 +1009,7 @@ if BUILD_SYSCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBSYSCOINKERNEL)
 
 libsyscoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_CRYPTO) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(MINISKETCH_LIBS) $(LIBSYSCOIN_ZMQ) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_NODE) $(LIBSYSCOIN_WALLET) $(LIBSYSCOIN_BLS) $(LIBCHIABLS)
+libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_CRYPTO) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(MINISKETCH_LIBS) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_NODE) $(LIBSYSCOIN_WALLET) $(LIBSYSCOIN_BLS) $(LIBCHIABLS)
 libsyscoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(SYSCOIN_INCLUDES)
 
 # libsyscoinkernel requires default symbol visibility, explicitly specify that
@@ -1034,6 +1034,7 @@ endif
 #       shrink to only those which are absolutely necessary. For example, things
 #       like index/*.cpp will be removed.
 libsyscoinkernel_la_SOURCES = \
+  $(libsyscoin_zmq_a_SOURCES) \
   $(nevm_libnevm_a_SOURCES) \
   kernel/syscoinkernel.cpp \
   arith_uint256.cpp \
