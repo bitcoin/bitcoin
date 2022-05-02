@@ -36,7 +36,7 @@ RUN_LINT_FILE = 'test/lint/run-lint-format-strings.py'
 
 def check_doctest():
     command = [
-        'python3',
+        sys.executable,
         '-m',
         'doctest',
         RUN_LINT_FILE,
