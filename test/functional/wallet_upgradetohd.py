@@ -28,6 +28,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
     def setup_network(self):
         self.add_nodes(self.num_nodes)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def recover_non_hd(self):
         self.log.info("Recover non-HD wallet to check different upgrade paths")

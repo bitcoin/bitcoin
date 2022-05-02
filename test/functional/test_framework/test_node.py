@@ -264,6 +264,10 @@ class TestNode():
             time.sleep(1.0 / poll_per_s)
         self._raise_assertion_error("Unable to connect to dashd")
 
+    def generate(self, nblocks, maxtries=1000000):
+        self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
+        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
+
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
             return self.cli("-rpcwallet={}".format(wallet_name))

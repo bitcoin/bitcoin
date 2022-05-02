@@ -35,6 +35,7 @@ class DIP3Test(BitcoinTestFramework):
         self.disable_mocktime()
         self.add_nodes(1)
         self.start_controller_node()
+        self.import_deterministic_coinbase_privkeys()
 
     def start_controller_node(self):
         self.log.info("starting controller node")

@@ -35,8 +35,8 @@ class TxIndexTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
-
         self.sync_all()
+        self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
         self.log.info("Mining blocks...")
