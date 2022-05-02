@@ -187,33 +187,15 @@ static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
 }
 static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
 
-std::optional<CCoinsStats> LookupUTXOStatsWithIndex(CoinStatsIndex& coin_stats_index, const CBlockIndex* pindex)
-{
-    CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
-
-    stats.index_used = true;
-    if (!coin_stats_index.LookUpStats(pindex, stats)) {
-        return std::nullopt;
-    }
-
-    return stats;
-}
-
-std::optional<CCoinsStats> LookupUTXOStatsWithIndex(CoinStatsIndex& coin_stats_index, CCoinsView* view, BlockManager& blockman)
-{
-    CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
-
-    return LookupUTXOStatsWithIndex(coin_stats_index, pindex);
-}
-
 std::optional<CCoinsStats> GetUTXOStats(CCoinsView* view, BlockManager& blockman, CoinStatsHashType hash_type, const std::function<void()>& interruption_point, const CBlockIndex* pindex, bool index_requested)
 {
     // Use CoinStatsIndex if it is requested and available and a hash_type of Muhash or None was requested
     if ((hash_type == CoinStatsHashType::MUHASH || hash_type == CoinStatsHashType::NONE) && g_coin_stats_index && index_requested) {
         if (pindex) {
-            return LookupUTXOStatsWithIndex(*g_coin_stats_index, pindex);
+            return g_coin_stats_index->LookUpStats(pindex);
         } else {
-            return LookupUTXOStatsWithIndex(*g_coin_stats_index, view, blockman);
+            CBlockIndex* block_index = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
+            return g_coin_stats_index->LookUpStats(block_index);
         }
     }
 
