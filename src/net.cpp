@@ -54,6 +54,7 @@
 #include <unordered_map>
 
 TRACEPOINT_SEMAPHORE(net, inbound_connection);
+TRACEPOINT_SEMAPHORE(net, outbound_connection);
 TRACEPOINT_SEMAPHORE(net, outbound_message);
 
 /** Maximum number of block-relay-only anchor connections */
@@ -3002,6 +3003,13 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         // update connection count by network
         if (pnode->IsManualOrFullOutboundConn()) ++m_network_conn_counts[pnode->addr.GetNetwork()];
     }
+
+    TRACEPOINT(net, outbound_connection,
+        pnode->GetId(),
+        pnode->m_addr_name.c_str(),
+        pnode->ConnectionTypeAsString().c_str(),
+        pnode->ConnectedThroughNetwork(),
+        GetNodeCount(ConnectionDirection::Out));
 }
 
 Mutex NetEventsInterface::g_msgproc_mutex;
