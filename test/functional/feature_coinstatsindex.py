@@ -231,11 +231,13 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         self.log.info("Test that -reindex-chainstate is disallowed with coinstatsindex")
 
+        self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(
             expected_msg='Error: -reindex-chainstate option is not compatible with -coinstatsindex. '
             'Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.',
             extra_args=['-coinstatsindex', '-reindex-chainstate'],
         )
+        self.restart_node(1, extra_args=["-coinstatsindex"])
 
     def _test_use_index_option(self):
         self.log.info("Test use_index option for nodes running the index")
