@@ -321,13 +321,13 @@ void addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LO
     altintegration::ValidationState state;
     auto& popmp = VeriBlock::GetPop().getMemPool();
     for (const auto& i : popData.context) {
-        popmp.submit(i, state);
+        popmp.submit(i, false, state);
     }
     for (const auto& i : popData.vtbs) {
-        popmp.submit(i, state);
+        popmp.submit(i, false, state);
     }
     for (const auto& i : popData.atvs) {
-        popmp.submit(i, state);
+        popmp.submit(i, false, state);
     }
 }
 

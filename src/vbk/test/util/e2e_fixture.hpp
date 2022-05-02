@@ -144,12 +144,12 @@ struct E2eFixture : public TestChain100Setup {
         auto& pop_mempool = VeriBlock::GetPop().getMemPool();
         altintegration::ValidationState state;
         for (const auto& atv : atvs) {
-            pop_mempool.submit(atv, state);
+            pop_mempool.submit(atv, true, state);
             // do not check the submit result - expect statefully invalid data for testing purposes
         }
 
         for (const auto& vtb : vtbs) {
-            pop_mempool.submit(vtb, state);
+            pop_mempool.submit(vtb, true, state);
             // do not check the submit result - expect statefully invalid data for testing purposes
         }
 

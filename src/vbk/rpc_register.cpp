@@ -234,7 +234,7 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     LOCK(cs_main);
     auto& mp = VeriBlock::GetPop().getMemPool();
     auto idhex = data.getId().toHex();
-    auto result = mp.submit<Pop>(data, state);
+    auto result = mp.submit<Pop>(data, false, state);
     logSubmitResult<Pop>(idhex, result, state);
 
     bool accepted = result.isAccepted();
@@ -571,7 +571,7 @@ bool GetPayload(
     auto id = pid.asVector();
     auto containing = pop.getAltBlockTree().getPayloadsIndex().find(id);
     auto* fh = pop.getAltBlockTree().getFinalizedPayloadsIndex().find(id);
-    if(fh != nullptr) {
+    if (fh != nullptr) {
         containing.clear();
         containing.insert(*fh);
     }

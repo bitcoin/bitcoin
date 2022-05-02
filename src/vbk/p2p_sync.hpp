@@ -87,7 +87,7 @@ bool ProcessPopPayload(CNode* pfrom, CConnman* connman, CDataStream& vRecv, F on
     AssertLockHeld(cs_main);
     auto& mp = VeriBlock::GetPop().getMemPool();
     altintegration::ValidationState state;
-    auto result = mp.submit(data, state);
+    auto result = mp.submit(data, true, state);
     if (result.isAccepted()) {
         // relay this POP payload to other peers
         RelayPopPayload(connman, data);
