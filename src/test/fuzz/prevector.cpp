@@ -161,7 +161,7 @@ public:
         pre_vector.shrink_to_fit();
     }
 
-    void swap()
+    void swap() noexcept
     {
         real_vector.swap(real_vector_alt);
         pre_vector.swap(pre_vector_alt);
