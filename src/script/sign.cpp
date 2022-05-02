@@ -230,16 +230,16 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
     // Try key path spending.
     {
         KeyOriginInfo info;
-        if (provider.GetKeyOriginByXOnly(spenddata.internal_key, info)) {
-            auto it = sigdata.taproot_misc_pubkeys.find(spenddata.internal_key);
+        if (provider.GetKeyOriginByXOnly(sigdata.tr_spenddata.internal_key, info)) {
+            auto it = sigdata.taproot_misc_pubkeys.find(sigdata.tr_spenddata.internal_key);
             if (it == sigdata.taproot_misc_pubkeys.end()) {
-                sigdata.taproot_misc_pubkeys.emplace(spenddata.internal_key, std::make_pair(std::set<uint256>(), info));
+                sigdata.taproot_misc_pubkeys.emplace(sigdata.tr_spenddata.internal_key, std::make_pair(std::set<uint256>(), info));
             }
         }
 
         std::vector<unsigned char> sig;
         if (sigdata.taproot_key_path_sig.size() == 0) {
-            if (creator.CreateSchnorrSig(provider, sig, spenddata.internal_key, nullptr, &spenddata.merkle_root, SigVersion::TAPROOT)) {
+            if (creator.CreateSchnorrSig(provider, sig, sigdata.tr_spenddata.internal_key, nullptr, &sigdata.tr_spenddata.merkle_root, SigVersion::TAPROOT)) {
                 sigdata.taproot_key_path_sig = sig;
             }
         }
