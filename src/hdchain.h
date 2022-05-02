@@ -70,7 +70,7 @@ public:
                 );
     }
 
-    void swap(CHDChain& first, CHDChain& second) // nothrow
+    void swap(CHDChain& first, CHDChain& second) noexcept
     {
         // enable ADL (not necessary in our case, but good practice)
         using std::swap;

@@ -35,7 +35,10 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         {
             return true;
         }
-        void swap(PrevectorJob& x){p.swap(x.p);};
+        void swap(PrevectorJob& x) noexcept
+        {
+            p.swap(x.p);
+        };
     };
     CCheckQueue<PrevectorJob> queue {QUEUE_BATCH_SIZE};
 
