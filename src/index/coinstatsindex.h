@@ -9,7 +9,7 @@
 #include <crypto/muhash.h>
 #include <flatfile.h>
 #include <index/base.h>
-#include <node/coinstats.h>
+#include <kernel/coinstats.h>
 
 /**
  * CoinStatsIndex maintains statistics on the UTXO set.

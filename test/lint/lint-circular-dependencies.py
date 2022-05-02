@@ -14,7 +14,6 @@ import sys
 EXPECTED_CIRCULAR_DEPENDENCIES = (
     "chainparamsbase -> util/system -> chainparamsbase",
     "node/blockstorage -> validation -> node/blockstorage",
-    "index/coinstatsindex -> node/coinstats -> index/coinstatsindex",
     "policy/fees -> txmempool -> policy/fees",
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel",
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel",
