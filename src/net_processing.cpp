@@ -446,7 +446,7 @@ struct CNodeState {
       * Both are only in effect for outbound, non-manual, non-protected connections.
       * Any peer protected (m_protect = true) is not chosen for eviction. A peer is
       * marked as protected if all of these are true:
-      *   - its connection type is IsBlockOnlyConn() == false
+      *   - its connection type is IsAutomaticBlockRelayConn() == false
       *   - it gave us a valid connecting header
       *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
       *   - its chain tip has at least as much work as ours
@@ -1531,7 +1531,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     }
     } // cs_main
     if (node.fSuccessfullyConnected && misbehavior == 0 &&
-        !node.IsBlockOnlyConn() && !node.IsInboundConn()) {
+        !node.IsAutomaticBlockRelayConn() && !node.IsInboundConn()) {
         // Only change visible addrman state for full outbound peers.  We don't
         // call Connected() for feeler connections since they don't have
         // fSuccessfullyConnected set.
@@ -3282,7 +3282,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // - fRelay=true (the peer wishes to receive transaction announcements)
         //   or we're offering NODE_BLOOM to this peer. NODE_BLOOM means that
         //   the peer may turn on transaction relay later.
-        if (!pfrom.IsBlockOnlyConn() &&
+        if (!pfrom.IsAutomaticBlockRelayConn() &&
             !pfrom.IsFeelerConn() &&
             (fRelay || (peer->m_our_services & NODE_BLOOM))) {
             auto* const tx_relay = peer->SetTxRelay();
@@ -5007,7 +5007,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
         std::pair<NodeId, std::chrono::seconds> youngest_peer{-1, 0}, next_youngest_peer{-1, 0};
 
         m_connman.ForEachNode([&](CNode* pnode) {
-            if (!pnode->IsBlockOnlyConn() || pnode->fDisconnect) return;
+            if (!pnode->IsAutomaticBlockRelayConn() || pnode->fDisconnect) return;
             if (pnode->GetId() > youngest_peer.first) {
                 next_youngest_peer = youngest_peer;
                 youngest_peer.first = pnode->GetId();
@@ -5266,7 +5266,7 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     if (pto.HasPermission(NetPermissionFlags::ForceRelay)) return;
     // Don't send feefilter messages to outbound block-relay-only peers since they should never announce
     // transactions to us, regardless of feefilter state.
-    if (pto.IsBlockOnlyConn()) return;
+    if (pto.IsAutomaticBlockRelayConn()) return;
 
     CAmount currentFilter = m_mempool.GetMinFee().GetFeePerK();
     static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
@@ -5325,7 +5325,7 @@ public:
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 {
     // block-relay-only peers may never send txs to us
-    if (peer.IsBlockOnlyConn()) return true;
+    if (peer.IsAutomaticBlockRelayConn()) return true;
     if (peer.IsFeelerConn()) return true;
     // In -blocksonly mode, peers need the 'relay' permission to send txs to us
     if (m_ignore_incoming_txs && !peer.HasPermission(NetPermissionFlags::Relay)) return true;
@@ -5337,7 +5337,7 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
     // We don't participate in addr relay with outbound block-relay-only
     // connections to prevent providing adversaries with the additional
     // information of addr traffic to infer the link.
-    if (node.IsBlockOnlyConn()) return false;
+    if (node.IsAutomaticBlockRelayConn()) return false;
 
     if (!peer.m_addr_relay_enabled.exchange(true)) {
         // During version message processing (non-block-relay-only outbound peers)

@@ -463,7 +463,7 @@ public:
         return m_conn_type == ConnectionType::MANUAL;
     }
 
-    bool IsBlockOnlyConn() const {
+    bool IsAutomaticBlockRelayConn() const {
         return m_conn_type == ConnectionType::BLOCK_RELAY;
     }
 
@@ -1006,7 +1006,7 @@ private:
     /**
      * Return vector of current BLOCK_RELAY peers.
      */
-    std::vector<CAddress> GetCurrentBlockRelayOnlyConns() const;
+    std::vector<CAddress> GetCurrentAutomaticBlockRelayConns() const;
 
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);

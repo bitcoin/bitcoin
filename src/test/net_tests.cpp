@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
                                                             /*inbound_onion=*/false);
     BOOST_CHECK(pnode1->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode1->IsManualConn() == false);
-    BOOST_CHECK(pnode1->IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode1->IsAutomaticBlockRelayConn() == false);
     BOOST_CHECK(pnode1->IsFeelerConn() == false);
     BOOST_CHECK(pnode1->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode1->IsInboundConn() == false);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
                                                             /*inbound_onion=*/false);
     BOOST_CHECK(pnode2->IsFullOutboundConn() == false);
     BOOST_CHECK(pnode2->IsManualConn() == false);
-    BOOST_CHECK(pnode2->IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode2->IsAutomaticBlockRelayConn() == false);
     BOOST_CHECK(pnode2->IsFeelerConn() == false);
     BOOST_CHECK(pnode2->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode2->IsInboundConn() == true);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
                                                             /*inbound_onion=*/false);
     BOOST_CHECK(pnode3->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode3->IsManualConn() == false);
-    BOOST_CHECK(pnode3->IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode3->IsAutomaticBlockRelayConn() == false);
     BOOST_CHECK(pnode3->IsFeelerConn() == false);
     BOOST_CHECK(pnode3->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode3->IsInboundConn() == false);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
                                                             /*inbound_onion=*/true);
     BOOST_CHECK(pnode4->IsFullOutboundConn() == false);
     BOOST_CHECK(pnode4->IsManualConn() == false);
-    BOOST_CHECK(pnode4->IsBlockOnlyConn() == false);
+    BOOST_CHECK(pnode4->IsAutomaticBlockRelayConn() == false);
     BOOST_CHECK(pnode4->IsFeelerConn() == false);
     BOOST_CHECK(pnode4->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode4->IsInboundConn() == true);

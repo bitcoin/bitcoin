@@ -1587,7 +1587,7 @@ int CConnman::GetExtraBlockRelayCount() const
     {
         LOCK(m_nodes_mutex);
         for (const CNode* pnode : m_nodes) {
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsBlockOnlyConn()) {
+            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsAutomaticBlockRelayConn()) {
                 ++block_relay_peers;
             }
         }
@@ -1713,7 +1713,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             LOCK(m_nodes_mutex);
             for (const CNode* pnode : m_nodes) {
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
-                if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
+                if (pnode->IsAutomaticBlockRelayConn()) nOutboundBlockRelay++;
 
                 // Make sure our persistent outbound slots to ipv4/ipv6 peers belong to different netgroups.
                 switch (pnode->m_conn_type) {
@@ -1908,12 +1908,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     }
 }
 
-std::vector<CAddress> CConnman::GetCurrentBlockRelayOnlyConns() const
+std::vector<CAddress> CConnman::GetCurrentAutomaticBlockRelayConns() const
 {
     std::vector<CAddress> ret;
     LOCK(m_nodes_mutex);
     for (const CNode* pnode : m_nodes) {
-        if (pnode->IsBlockOnlyConn()) {
+        if (pnode->IsAutomaticBlockRelayConn()) {
             ret.push_back(pnode->addr);
         }
     }
@@ -2482,7 +2482,7 @@ void CConnman::StopNodes()
 
         if (m_use_addrman_outgoing) {
             // Anchor connections are only dumped during clean shutdown.
-            std::vector<CAddress> anchors_to_dump = GetCurrentBlockRelayOnlyConns();
+            std::vector<CAddress> anchors_to_dump = GetCurrentAutomaticBlockRelayConns();
             if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
                 anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
             }
