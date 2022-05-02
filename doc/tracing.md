@@ -93,6 +93,18 @@ to user-space in full. Messages longer than a 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
 
+#### Tracepoint `net:inbound_connection`
+
+Is called when a new inbound connection is opened to us. Passes information about
+the peer and the number of inbound connections including the newly opened connection.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Number of existing inbound connections as `uint64` including the newly opened inbound connection.
+
 ### Context `validation`
 
 #### Tracepoint `validation:block_connected`
