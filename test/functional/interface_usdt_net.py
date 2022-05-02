@@ -14,7 +14,7 @@ try:
     from bcc import BPF, USDT  # type: ignore[import]
 except ImportError:
     pass
-from test_framework.messages import msg_version
+from test_framework.messages import CBlockHeader, MAX_HEADERS_RESULTS, msg_headers, msg_version
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -23,6 +23,7 @@ from test_framework.util import assert_equal
 MAX_PEER_ADDR_LENGTH = 68
 MAX_PEER_CONN_TYPE_LENGTH = 20
 MAX_MSG_TYPE_LENGTH = 20
+MAX_MISBEHAVING_MESSAGE_LENGTH = 128
 # We won't process messages larger than 150 byte in this test. For reading
 # larger messanges see contrib/tracing/log_raw_p2p_msgs.py
 MAX_MSG_DATA_LENGTH = 150
@@ -40,11 +41,13 @@ net_tracepoints_program = """
 #define MAX_PEER_CONN_TYPE_LENGTH {}
 #define MAX_MSG_TYPE_LENGTH {}
 #define MAX_MSG_DATA_LENGTH {}
+#define MAX_MISBEHAVING_MESSAGE_LENGTH {}
 """.format(
     MAX_PEER_ADDR_LENGTH,
     MAX_PEER_CONN_TYPE_LENGTH,
     MAX_MSG_TYPE_LENGTH,
-    MAX_MSG_DATA_LENGTH
+    MAX_MSG_DATA_LENGTH,
+    MAX_MISBEHAVING_MESSAGE_LENGTH,
 ) + """
 // A min() macro. Prefixed with _TRACEPOINT_TEST to avoid collision with other MIN macros.
 #define _TRACEPOINT_TEST_MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
@@ -77,6 +80,12 @@ struct ClosedConnection
 {
     struct Connection   conn;
     u64                 time_established;
+};
+
+struct MisbehavingConnection
+{
+    u64     id;
+    char    message[MAX_MISBEHAVING_MESSAGE_LENGTH];
 };
 
 BPF_PERF_OUTPUT(inbound_messages);
@@ -150,6 +159,16 @@ int trace_evicted_inbound_connection(struct pt_regs *ctx) {
     return 0;
 };
 
+BPF_PERF_OUTPUT(misbehaving_connections);
+int trace_misbehaving_connection(struct pt_regs *ctx) {
+    struct MisbehavingConnection misbehaving = {};
+    void *message_pointer = NULL;
+    bpf_usdt_readarg(1, ctx, &misbehaving.id);
+    bpf_usdt_readarg(2, ctx, &message_pointer);
+    bpf_probe_read_user_str(&misbehaving.message, sizeof(misbehaving.message), message_pointer);
+    misbehaving_connections.perf_submit(ctx, &misbehaving, sizeof(misbehaving));
+    return 0;
+};
 """
 
 
@@ -183,6 +202,17 @@ class ClosedConnection(ctypes.Structure):
     def __repr__(self):
         return f"ClosedConnection(conn={self.conn}, time_established={self.time_established})"
 
+
+class MisbehavingConnection(ctypes.Structure):
+    _fields_ = [
+        ("id", ctypes.c_uint64),
+        ("message", ctypes.c_char * MAX_MISBEHAVING_MESSAGE_LENGTH),
+    ]
+
+    def __repr__(self):
+        return f"MisbehavingConnection(id={self.id}, message={self.message})"
+
+
 class NetTracepointTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -199,6 +229,7 @@ class NetTracepointTest(BitcoinTestFramework):
         self.inbound_conn_tracepoint_test()
         self.outbound_conn_tracepoint_test()
         self.evicted_inbound_conn_tracepoint_test()
+        self.misbehaving_conn_tracepoint_test()
 
     def p2p_message_tracepoint_test(self):
         # Tests the net:inbound_message and net:outbound_message tracepoints
@@ -391,6 +422,40 @@ class NetTracepointTest(BitcoinTestFramework):
         bpf.cleanup()
         for node in testnodes:
             node.peer_disconnect()
+
+    def misbehaving_conn_tracepoint_test(self):
+        self.log.info("hook into the net:misbehaving_connection tracepoint")
+        ctx = USDT(pid=self.nodes[0].process.pid)
+        ctx.enable_probe(probe="net:misbehaving_connection",
+                         fn_name="trace_misbehaving_connection")
+        bpf = BPF(text=net_tracepoints_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+
+        EXPECTED_MISBEHAVING_CONNECTIONS = 2
+        misbehaving_connections = []
+
+        def handle_misbehaving_connection(_, data, __):
+            event = ctypes.cast(data, ctypes.POINTER(MisbehavingConnection)).contents
+            self.log.info(f"handle_misbehaving_connection(): {event}")
+            misbehaving_connections.append(event)
+
+        bpf["misbehaving_connections"].open_perf_buffer(handle_misbehaving_connection)
+
+        self.log.info("connect a misbehaving P2P test nodes to our bitcoind node")
+        msg = msg_headers([CBlockHeader()] * (MAX_HEADERS_RESULTS + 1))
+        for _ in range(EXPECTED_MISBEHAVING_CONNECTIONS):
+            testnode = P2PInterface()
+            self.nodes[0].add_p2p_connection(testnode)
+            testnode.send_message(msg)
+            bpf.perf_buffer_poll(timeout=500)
+            testnode.peer_disconnect()
+
+        assert_equal(EXPECTED_MISBEHAVING_CONNECTIONS, len(misbehaving_connections))
+        for misbehaving_connection in misbehaving_connections:
+            assert misbehaving_connection.id > 0
+            assert len(misbehaving_connection.message) > 0
+            assert misbehaving_connection.message == b"headers message size = 2001"
+
+        bpf.cleanup()
 
 if __name__ == '__main__':
     NetTracepointTest(__file__).main()
