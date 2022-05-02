@@ -458,7 +458,8 @@ public:
         return *item_ptr(size() - 1);
     }
 
-    void swap(prevector<N, T, Size, Diff>& other) {
+    void swap(prevector<N, T, Size, Diff>& other) noexcept
+    {
         std::swap(_union, other._union);
         std::swap(_size, other._size);
     }
