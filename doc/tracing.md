@@ -117,6 +117,17 @@ Arguments passed:
 4. Network of the peer as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
 5. Number of existing outbound connections as `uint64` including the newly opened outbound connection.
 
+#### Tracepoint `net:evicted_inbound_connection`
+
+Is called when a inbound connection is evicted by us. Passes information about the evicted peer and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp in seconds as `uint64`.
+
 ### Context `validation`
 
 #### Tracepoint `validation:block_connected`
