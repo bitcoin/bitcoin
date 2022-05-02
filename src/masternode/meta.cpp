@@ -6,6 +6,8 @@
 
 #include <timedata.h>
 
+#include <sstream>
+
 CMasternodeMetaMan mmetaman;
 
 const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-2";
