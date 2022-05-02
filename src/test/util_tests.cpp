@@ -2396,6 +2396,19 @@ BOOST_AUTO_TEST_CASE(test_SplitString)
         BOOST_CHECK_EQUAL(result.size(), 1);
         BOOST_CHECK_EQUAL(result[0], "AAA");
     }
+
+    // multiple split characters
+    {
+        using V = std::vector<std::string>;
+        BOOST_TEST(SplitString("a,b.c:d;e", ",;") == V({"a", "b.c:d", "e"}));
+        BOOST_TEST(SplitString("a,b.c:d;e", ",;:.") == V({"a", "b", "c", "d", "e"}));
+        BOOST_TEST(SplitString("a,b.c:d;e", "") == V({"a,b.c:d;e"}));
+        BOOST_TEST(SplitString("aaa", "bcdefg") == V({"aaa"}));
+        BOOST_TEST(SplitString("x\0a,b"s, "\0"s) == V({"x", "a,b"}));
+        BOOST_TEST(SplitString("x\0a,b"s, '\0') == V({"x", "a,b"}));
+        BOOST_TEST(SplitString("x\0a,b"s, "\0,"s) == V({"x", "a", "b"}));
+        BOOST_TEST(SplitString("abcdefg", "bcd") == V({"a", "", "", "efg"}));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_LogEscapeMessage)
