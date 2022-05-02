@@ -22,9 +22,7 @@ EXCLUDED_DIRS = ["src/leveldb/",
                  "src/univalue/"]
 
 EXPECTED_BOOST_INCLUDES = ["boost/algorithm/string.hpp",
-                           "boost/algorithm/string/classification.hpp",
                            "boost/algorithm/string/replace.hpp",
-                           "boost/algorithm/string/split.hpp",
                            "boost/date_time/posix_time/posix_time.hpp",
                            "boost/multi_index/hashed_index.hpp",
                            "boost/multi_index/ordered_index.hpp",
