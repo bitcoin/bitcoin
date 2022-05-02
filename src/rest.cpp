@@ -1036,13 +1036,13 @@ static bool rest_getfee(const std::any& context, HTTPRequest* req, const std::st
 
         // type conversions for estimateSmartFee
         bool conservative = mode == FeeEstimateMode::CONSERVATIVE;
-        const auto parsed_conf_target{ToIntegral<int64_t>(path[1])};
+        const auto parsed_conf_target{ToIntegral<unsigned int>(path[1])};
         if (!parsed_conf_target.has_value()) {
             return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Unable to parse confirmation target to int"));
         }
-        int64_t conf_target{*parsed_conf_target};
+        auto conf_target{*parsed_conf_target};
         unsigned int max_target = fee_estimator->HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
-        if (conf_target < 1 || (unsigned int)conf_target > max_target) {
+        if (conf_target < 1 || conf_target > max_target) {
             return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Invalid confirmation target, must be in between %u - %u", 1, max_target));
         }
 
