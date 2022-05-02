@@ -278,14 +278,14 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
-task:
-  name: '[no wallet, libsyscoinkernel] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:bionic
-  env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libsyscoinkernel.sh"
+# task:
+#   name: '[no wallet, libsyscoinkernel] [bionic]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:bionic
+#   env:
+#     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+#     FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libsyscoinkernel.sh"
 
 task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
