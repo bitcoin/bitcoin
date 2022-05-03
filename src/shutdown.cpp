@@ -5,12 +5,14 @@
 
 #include <shutdown.h>
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <logging.h>
 #include <node/ui_interface.h>
 #include <util/tokenpipe.h>
 #include <warnings.h>
-
-#include <config/bitcoin-config.h>
 
 #include <assert.h>
 #include <atomic>
