@@ -419,7 +419,7 @@ static RPCHelpMan getindexinfo()
     };
 }
 
-void RegisterMiscRPCCommands(CRPCTable& t)
+void RegisterNodeRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
         {"control", &getmemoryinfo},
