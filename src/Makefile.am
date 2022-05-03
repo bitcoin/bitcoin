@@ -853,7 +853,6 @@ endif
 libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
-  blockfilter.cpp \
   chain.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
@@ -872,7 +871,6 @@ libbitcoinkernel_la_SOURCES = \
   fs.cpp \
   hash.cpp \
   index/base.cpp \
-  index/blockfilterindex.cpp \
   index/coinstatsindex.cpp \
   init/common.cpp \
   key.cpp \
