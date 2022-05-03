@@ -127,6 +127,7 @@ class MiniWallet:
             if not fixed_length:
                 break
         tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
+        tx.rehash()
 
     def generate(self, num_blocks, **kwargs):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
@@ -233,7 +234,8 @@ class MiniWallet:
         return tx
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
-        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed.
+           Checking mempool validity via the testmempoolaccept RPC can be skipped by setting mempool_valid to False."""
         from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._priv_key is None:
@@ -260,12 +262,13 @@ class MiniWallet:
             tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
         tx_hex = tx.serialize().hex()
 
-        tx_info = from_node.testmempoolaccept([tx_hex])[0]
-        assert_equal(mempool_valid, tx_info['allowed'])
         if mempool_valid:
+            tx_info = from_node.testmempoolaccept([tx_hex])[0]
+            assert_equal(tx_info['allowed'], True)
             assert_equal(tx_info['vsize'], vsize)
             assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
-        return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
+
+        return {'txid': tx.rehash(), 'wtxid': tx.getwtxid(), 'hex': tx_hex, 'tx': tx}
 
     def sendrawtransaction(self, *, from_node, tx_hex, **kwargs):
         txid = from_node.sendrawtransaction(hexstring=tx_hex, **kwargs)
