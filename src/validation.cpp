@@ -1491,7 +1491,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 }
 
 CoinsViews::CoinsViews(
-    std::string ldb_name,
+    fs::path ldb_name,
     size_t cache_size_bytes,
     bool in_memory,
     bool should_wipe) : m_dbview(
@@ -1519,7 +1519,7 @@ void CChainState::InitCoinsDB(
     size_t cache_size_bytes,
     bool in_memory,
     bool should_wipe,
-    std::string leveldb_name)
+    fs::path leveldb_name)
 {
     if (m_from_snapshot_blockhash) {
         leveldb_name += "_" + m_from_snapshot_blockhash->ToString();

@@ -30,7 +30,7 @@ CreateAndActivateUTXOSnapshot(node::NodeContext& node, const fs::path root, F ma
     //
     int height;
     WITH_LOCK(::cs_main, height = node.chainman->ActiveHeight());
-    fs::path snapshot_path = root / tfm::format("test_snapshot.%d.dat", height);
+    fs::path snapshot_path = root / fs::u8path(tfm::format("test_snapshot.%d.dat", height));
     FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
     CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
 

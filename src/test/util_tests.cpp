@@ -2049,7 +2049,7 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("31.999999999999999999999", 3, &amount));
 }
 
-static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
+static void TestOtherThread(fs::path dirname, fs::path lockname, bool *result)
 {
     *result = LockDirectory(dirname, lockname);
 }
@@ -2059,7 +2059,7 @@ static constexpr char LockCommand = 'L';
 static constexpr char UnlockCommand = 'U';
 static constexpr char ExitCommand = 'X';
 
-[[noreturn]] static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
+[[noreturn]] static void TestOtherProcess(fs::path dirname, fs::path lockname, int fd)
 {
     char ch;
     while (true) {
@@ -2090,7 +2090,7 @@ static constexpr char ExitCommand = 'X';
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
 {
     fs::path dirname = m_args.GetDataDirBase() / "lock_dir";
-    const std::string lockname = ".lock";
+    const fs::path lockname = ".lock";
 #ifndef WIN32
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
     // it: there is BOOST_TEST_IGNORE_SIGCHLD but that only works when defined
