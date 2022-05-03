@@ -5,9 +5,10 @@
 #ifndef BITCOIN_NODE_BLOCKSTORAGE_H
 #define BITCOIN_NODE_BLOCKSTORAGE_H
 
+#include <attributes.h>
 #include <chain.h>
 #include <fs.h>
-#include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <protocol.h>
 #include <sync.h>
 #include <txdb.h>
 
@@ -179,7 +180,7 @@ public:
     const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Find the first block that is not pruned
-    const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** True if any block files have ever been pruned. */
     bool m_have_pruned = false;
