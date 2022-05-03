@@ -509,7 +509,7 @@ fs::path static StartupShortcutPath()
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Syscoin.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Syscoin (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Syscoin (%s).lnk", chain);
+    return GetSpecialFolderPath(CSIDL_STARTUP) / fs::u8path(strprintf("Syscoin (%s).lnk", chain));
 }
 
 bool GetStartOnSystemStartup()
@@ -590,7 +590,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "syscoin.desktop";
-    return GetAutostartDir() / strprintf("syscoin-%s.desktop", chain);
+    return GetAutostartDir() / fs::u8path(strprintf("syscoin-%s.desktop", chain));
 }
 
 bool GetStartOnSystemStartup()

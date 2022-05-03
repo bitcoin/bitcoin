@@ -1674,7 +1674,7 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensus
 
 }
 CoinsViews::CoinsViews(
-    std::string ldb_name,
+    fs::path ldb_name,
     size_t cache_size_bytes,
     bool in_memory,
     bool should_wipe) : m_dbview(
@@ -1701,7 +1701,7 @@ void CChainState::InitCoinsDB(
     size_t cache_size_bytes,
     bool in_memory,
     bool should_wipe,
-    std::string leveldb_name)
+    fs::path leveldb_name)
 {
     if (m_from_snapshot_blockhash) {
         leveldb_name += "_" + m_from_snapshot_blockhash->ToString();
@@ -5929,7 +5929,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
   if (fs::is_directory(src)) {
     TryCreateDirectories(dst);
     for (auto item : fs::directory_iterator(src)) {
-      recursive_copy(item.path(), dst/item.path().filename());
+      recursive_copy(item.path(), dst/fs::u8path(item.path().filename()));
     }
   } 
   else if (fs::is_regular_file(src)) {
@@ -6230,7 +6230,7 @@ bool StartGethNode(const std::string &gethDescriptorURL)
 
     LogPrintf("%s: Downloading Geth descriptor from %s\n", __func__, gethDescriptorURL);
     fs::path descriptorPath = gArgs.GetDataDirBase() / "gethdescriptor.json";
-    fs::path binaryURL = gArgs.GetDataDirBase() / GetGethFilename();
+    fs::path binaryURL = gArgs.GetDataDirBase() / fs::u8path(GetGethFilename());
     // if either bin or descriptor not existing remove both files to download from scratch
     if (!fs::exists(binaryURL) || !fs::exists(descriptorPath)) {
         if(fs::exists(binaryURL))
