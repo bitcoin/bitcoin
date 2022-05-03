@@ -548,6 +548,7 @@ libsyscoin_node_a_SOURCES = \
   rest.cpp \
   rpc/auxpow_miner.cpp \
   rpc/blockchain.cpp \
+  rpc/fees.cpp \
   rpc/mempool.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \

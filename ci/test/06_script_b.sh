@@ -41,6 +41,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
           " src/compat"\
           " src/init"\
+          " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
           " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/syscoin-$HOST/contrib/devtools/iwyu/syscoin.core.imp"
 fi

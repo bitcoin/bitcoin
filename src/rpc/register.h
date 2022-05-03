@@ -10,8 +10,8 @@
 class CRPCTable;
 
 void RegisterBlockchainRPCCommands(CRPCTable &tableRPC);
+void RegisterFeeRPCCommands(CRPCTable&);
 void RegisterMempoolRPCCommands(CRPCTable&);
-void RegisterTxoutProofRPCCommands(CRPCTable&);
 void RegisterNetRPCCommands(CRPCTable &tableRPC);
 void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
@@ -30,12 +30,13 @@ void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterSignMessageRPCCommands(CRPCTable&);
 void RegisterSignerRPCCommands(CRPCTable &tableRPC);
+void RegisterTxoutProofRPCCommands(CRPCTable&);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
     RegisterBlockchainRPCCommands(t);
+    RegisterFeeRPCCommands(t);
     RegisterMempoolRPCCommands(t);
-    RegisterTxoutProofRPCCommands(t);
     RegisterNetRPCCommands(t);
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
@@ -50,6 +51,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 #ifdef ENABLE_EXTERNAL_SIGNER
     RegisterSignerRPCCommands(t);
 #endif // ENABLE_EXTERNAL_SIGNER
+    RegisterTxoutProofRPCCommands(t);
 }
 
 #endif // SYSCOIN_RPC_REGISTER_H
