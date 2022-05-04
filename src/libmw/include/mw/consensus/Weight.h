@@ -8,22 +8,6 @@
 class Weight
 {
 public:
-    static constexpr size_t BYTES_PER_WEIGHT = 42;
-
-    static constexpr size_t BASE_KERNEL_WEIGHT = 2;
-    static constexpr size_t STEALTH_EXCESS_WEIGHT = 1;
-    static constexpr size_t KERNEL_WITH_STEALTH_WEIGHT = BASE_KERNEL_WEIGHT + STEALTH_EXCESS_WEIGHT;
-
-    static constexpr size_t BASE_OUTPUT_WEIGHT = 17;
-    static constexpr size_t STANDARD_OUTPUT_FIELDS_WEIGHT = 1;
-    static constexpr size_t STANDARD_OUTPUT_WEIGHT = BASE_OUTPUT_WEIGHT + STANDARD_OUTPUT_FIELDS_WEIGHT;
-
-    static constexpr size_t MAX_NUM_INPUTS = 50'000;
-    static constexpr size_t INPUT_BYTES = 196;
-    static constexpr size_t MAX_MWEB_BYTES = 180 + (3 * 5) + // 180 bytes per header and 5 bytes each for input, output, and kernel vec size
-        (MAX_NUM_INPUTS * INPUT_BYTES) + // 50k inputs at 196 bytes each (ignoring extradata)
-        (mw::MAX_BLOCK_WEIGHT * 60); // Ignoring inputs, no tx component is ever more than 60 bytes per unit of weight 
-
     static size_t Calculate(const TxBody& tx_body)
     {
         size_t input_weight = std::accumulate(
@@ -57,7 +41,7 @@ public:
 
     static bool ExceedsMaximum(const TxBody& tx_body)
     {
-        return tx_body.GetInputs().size() > MAX_NUM_INPUTS || Calculate(tx_body) > mw::MAX_BLOCK_WEIGHT;
+        return tx_body.GetInputs().size() > mw::MAX_NUM_INPUTS || Calculate(tx_body) > mw::MAX_BLOCK_WEIGHT;
     }
 
     static size_t CalcInputWeight(const std::vector<uint8_t>& extra_data)
@@ -71,7 +55,7 @@ public:
         const std::vector<uint8_t>& extra_data = {})
     {
         // Kernels with a stealth excess cost extra.
-        size_t base_weight = has_stealth_excess ? KERNEL_WITH_STEALTH_WEIGHT : BASE_KERNEL_WEIGHT;
+        size_t base_weight = has_stealth_excess ? mw::KERNEL_WITH_STEALTH_WEIGHT : mw::BASE_KERNEL_WEIGHT;
 
         return base_weight + ExtraBytesToWeight(pegout_script.size()) + ExtraBytesToWeight(extra_data.size());
     }
@@ -82,7 +66,7 @@ public:
         const std::vector<uint8_t>& extra_data = {})
     {
         // Kernels with a stealth excess cost extra.
-        size_t base_weight = has_stealth_excess ? KERNEL_WITH_STEALTH_WEIGHT : BASE_KERNEL_WEIGHT;
+        size_t base_weight = has_stealth_excess ? mw::KERNEL_WITH_STEALTH_WEIGHT : mw::BASE_KERNEL_WEIGHT;
 
         size_t pegout_weight = std::accumulate(
             pegouts.begin(), pegouts.end(), (size_t)0,
@@ -97,13 +81,13 @@ public:
     // Outputs have a weight of 'BASE_OUTPUT_WEIGHT' plus 2 weight for standard fields, and 1 weight for every 'BYTES_PER_WEIGHT' extra_data bytes
     static size_t CalcOutputWeight(const bool standard_fields, const std::vector<uint8_t>& extra_data = {})
     {
-        size_t base_weight = standard_fields ? STANDARD_OUTPUT_WEIGHT : BASE_OUTPUT_WEIGHT;
+        size_t base_weight = standard_fields ? mw::STANDARD_OUTPUT_WEIGHT : mw::BASE_OUTPUT_WEIGHT;
         return base_weight + ExtraBytesToWeight(extra_data.size());
     }
 
 private:
     static size_t ExtraBytesToWeight(const size_t extra_bytes)
     {
-        return (extra_bytes + (BYTES_PER_WEIGHT - 1)) / BYTES_PER_WEIGHT;
+        return (extra_bytes + (mw::BYTES_PER_WEIGHT - 1)) / mw::BYTES_PER_WEIGHT;
     }
 };

@@ -35,6 +35,10 @@ AssembledTx TxAssembler::CreateTransaction(
 {
     VerifyRecipients(recipients);
 
+    if (boost::get<StealthAddress>(&coin_control.destChange)) {
+        throw CreateTxError(_("Custom MWEB change addresses not yet supported"));
+    }
+
     InProcessTx new_tx;
     new_tx.recipients = recipients;
     new_tx.recipient_amount = std::accumulate(
@@ -398,8 +402,8 @@ bool TxAssembler::AttemptCoinSelection(InProcessTx& new_tx, const CAmount& nTarg
         // First try to construct an MWEB-to-MWEB transaction
         CoinSelectionParams mweb_to_mweb = new_tx.coin_selection_params;
         mweb_to_mweb.input_preference = InputPreference::MWEB_ONLY;
-        mweb_to_mweb.mweb_change_output_weight = Weight::STANDARD_OUTPUT_WEIGHT;
-        mweb_to_mweb.mweb_nochange_weight = Weight::KERNEL_WITH_STEALTH_WEIGHT + (new_tx.recipients.size() * Weight::STANDARD_OUTPUT_WEIGHT);
+        mweb_to_mweb.mweb_change_output_weight = mw::STANDARD_OUTPUT_WEIGHT;
+        mweb_to_mweb.mweb_nochange_weight = mw::KERNEL_WITH_STEALTH_WEIGHT + (new_tx.recipients.size() * mw::STANDARD_OUTPUT_WEIGHT);
         mweb_to_mweb.change_output_size = 0;
         mweb_to_mweb.change_spend_size = 0;
         mweb_to_mweb.tx_noinputs_size = 0;
@@ -412,8 +416,8 @@ bool TxAssembler::AttemptCoinSelection(InProcessTx& new_tx, const CAmount& nTarg
         const bool change_on_mweb = MWEB::IsChangeOnMWEB(m_wallet, MWEB::TxType::PEGIN, new_tx.recipients, new_tx.coin_control.destChange);
         CoinSelectionParams params_pegin = new_tx.coin_selection_params;
         params_pegin.input_preference = InputPreference::ANY;
-        params_pegin.mweb_change_output_weight = change_on_mweb ? Weight::STANDARD_OUTPUT_WEIGHT : 0;
-        params_pegin.mweb_nochange_weight = Weight::KERNEL_WITH_STEALTH_WEIGHT + (new_tx.recipients.size() * Weight::STANDARD_OUTPUT_WEIGHT);
+        params_pegin.mweb_change_output_weight = change_on_mweb ? mw::STANDARD_OUTPUT_WEIGHT : 0;
+        params_pegin.mweb_nochange_weight = mw::KERNEL_WITH_STEALTH_WEIGHT + (new_tx.recipients.size() * mw::STANDARD_OUTPUT_WEIGHT);
         params_pegin.change_output_size = change_on_mweb ? 0 : new_tx.coin_selection_params.change_output_size;
         params_pegin.change_spend_size = change_on_mweb ? 0 : new_tx.coin_selection_params.change_spend_size;
 
@@ -439,7 +443,7 @@ bool TxAssembler::AttemptCoinSelection(InProcessTx& new_tx, const CAmount& nTarg
         // If LTC-to-LTC fails, create a peg-out transaction
         CoinSelectionParams params_pegout = new_tx.coin_selection_params;
         params_pegout.input_preference = InputPreference::ANY;
-        params_pegout.mweb_change_output_weight = Weight::STANDARD_OUTPUT_WEIGHT;
+        params_pegout.mweb_change_output_weight = mw::STANDARD_OUTPUT_WEIGHT;
         params_pegout.mweb_nochange_weight = Weight::CalcKernelWeight(true, new_tx.recipients.front().GetScript());
         params_pegout.change_output_size = 0;
         params_pegout.change_spend_size = 0;

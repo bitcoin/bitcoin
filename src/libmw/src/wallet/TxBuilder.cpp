@@ -52,7 +52,7 @@ mw::Transaction::CPtr TxBuilder::BuildTx(
         .Sub(kernel_offset)
         .Total();
 
-    // MW: TODO - This is only needed for peg-ins or when no change
+    // MW: FUTURE - This is only needed for peg-ins or when no change
     SecretKey stealth_blind = SecretKey::Random();
 
     // Create the kernel

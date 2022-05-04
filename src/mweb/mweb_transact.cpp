@@ -68,11 +68,11 @@ uint64_t MWEB::CalcMWEBWeight(const MWEB::TxType& mweb_type, const bool change_o
     uint64_t mweb_weight = 0;
 
     if (mweb_type == MWEB::TxType::PEGIN || mweb_type == MWEB::TxType::MWEB_TO_MWEB) {
-        mweb_weight += Weight::STANDARD_OUTPUT_WEIGHT; // MW: FUTURE - Look at actual recipients list, but for now we only support 1 MWEB recipient.
+        mweb_weight += mw::STANDARD_OUTPUT_WEIGHT; // MW: FUTURE - Look at actual recipients list, but for now we only support 1 MWEB recipient.
     }
 
     if (change_on_mweb) {
-        mweb_weight += Weight::STANDARD_OUTPUT_WEIGHT;
+        mweb_weight += mw::STANDARD_OUTPUT_WEIGHT;
     }
 
     if (mweb_type != MWEB::TxType::LTC_TO_LTC) {
@@ -134,8 +134,8 @@ void Transact::AddMWEBTx(InProcessTx& new_tx)
         [](CAmount amt, const CInputCoin& input) { return amt + (input.IsMWEB() ? 0 : input.GetAmount()); }
     );
     if (ltc_input_amount > 0) {
-        assert(new_tx.total_fee < ltc_input_amount);
         const CAmount ltc_fee = new_tx.total_fee - new_tx.mweb_fee;
+        assert(ltc_fee <= ltc_input_amount);
         pegin_amount = (ltc_input_amount - (ltc_fee + ltc_change));
     }
 

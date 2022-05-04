@@ -82,7 +82,7 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fMWEBFeatures"))
         settings.setValue("fMWEBFeatures", false);
-    fMWEBFeatures = settings.value("fMWEBFeatures", false).toBool();
+    fMWEBFeatures = settings.value("fMWEBFeatures", false).toBool() && gArgs.IsArgSet("-debug");
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.

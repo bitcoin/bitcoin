@@ -60,50 +60,50 @@ static std::vector<Kernel> CreateKernels(const size_t plain_kernels, const size_
 
 BOOST_AUTO_TEST_CASE(ExceedsMaximum)
 {
-    BOOST_CHECK(Weight::MAX_NUM_INPUTS == 50'000);
-    BOOST_CHECK(Weight::BASE_KERNEL_WEIGHT == 2);
-    BOOST_CHECK(Weight::KERNEL_WITH_STEALTH_WEIGHT == 3);
-    BOOST_CHECK(Weight::BASE_OUTPUT_WEIGHT == 17);
-    BOOST_CHECK(Weight::STANDARD_OUTPUT_WEIGHT == 18);
-    BOOST_CHECK(Weight::BYTES_PER_WEIGHT == 42);
-    BOOST_CHECK(mw::MAX_BLOCK_WEIGHT == 21'000);
+    BOOST_CHECK(mw::MAX_NUM_INPUTS == 50'000);
+    BOOST_CHECK(mw::BASE_KERNEL_WEIGHT == 2);
+    BOOST_CHECK(mw::KERNEL_WITH_STEALTH_WEIGHT == 3);
+    BOOST_CHECK(mw::BASE_OUTPUT_WEIGHT == 17);
+    BOOST_CHECK(mw::STANDARD_OUTPUT_WEIGHT == 18);
+    BOOST_CHECK(mw::BYTES_PER_WEIGHT == 42);
+    BOOST_CHECK(mw::MAX_BLOCK_WEIGHT == 200'000);
 
 
-    // 1,000 outputs + 1,000 stealth kernels = 21,000 Weight
+    // 10,000 outputs + 10,000 plain kernels = 200,000 Weight
     {
-        std::vector<Input> inputs(Weight::MAX_NUM_INPUTS);
-        std::vector<Output> outputs = CreateStandardOutputs(1000);
-        std::vector<Kernel> kernels = CreateKernels(0, 1000);
+        std::vector<Input> inputs(mw::MAX_NUM_INPUTS);
+        std::vector<Output> outputs = CreateStandardOutputs(10'000);
+        std::vector<Kernel> kernels = CreateKernels(10'000, 0);
 
         TxBody tx(inputs, outputs, kernels);
 
-        BOOST_CHECK(Weight::Calculate(tx) == 21'000);
+        BOOST_CHECK(Weight::Calculate(tx) == 200'000);
         BOOST_CHECK(!Weight::ExceedsMaximum(tx));
     }
 
     // 50,000 inputs max, so 50,001 should exceed maximum
     {
-        std::vector<Input> inputs(Weight::MAX_NUM_INPUTS + 1);
-        std::vector<Output> outputs = CreateStandardOutputs(1000);
-        std::vector<Kernel> kernels = CreateKernels(0, 1000);
+        std::vector<Input> inputs(mw::MAX_NUM_INPUTS + 1);
+        std::vector<Output> outputs = CreateStandardOutputs(10'000);
+        std::vector<Kernel> kernels = CreateKernels(10'000, 0);
         BOOST_CHECK(inputs.size() == 50'001);
 
         TxBody tx(inputs, outputs, kernels);
 
-        BOOST_CHECK(Weight::Calculate(tx) == 21'000);
+        BOOST_CHECK(Weight::Calculate(tx) == 200'000);
         BOOST_CHECK(Weight::ExceedsMaximum(tx));
     }
 
-    // 1,000 outputs + 1,000 stealth kernels and 1 plain kernel = 21,002 Weight
+    // 10,000 outputs + 10,000 plain kernels and 1 stealth kernel = 200,003 Weight
     {
-        std::vector<Input> inputs(Weight::MAX_NUM_INPUTS);
-        std::vector<Output> outputs = CreateStandardOutputs(1000);
-        std::vector<Kernel> kernels = CreateKernels(1, 1000);
+        std::vector<Input> inputs(mw::MAX_NUM_INPUTS);
+        std::vector<Output> outputs = CreateStandardOutputs(10'000);
+        std::vector<Kernel> kernels = CreateKernels(10'000, 1);
         BOOST_CHECK(inputs.size() == 50'000);
 
         TxBody tx(inputs, outputs, kernels);
 
-        BOOST_CHECK(Weight::Calculate(tx) == 21'002);
+        BOOST_CHECK(Weight::Calculate(tx) == 200'003);
         BOOST_CHECK(Weight::ExceedsMaximum(tx));
     }
 

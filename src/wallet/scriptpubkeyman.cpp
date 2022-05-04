@@ -1728,6 +1728,8 @@ void LegacyScriptPubKeyMan::LoadMWEBKeychain()
         return;
     }
 
+    m_storage.SetMinVersion(FEATURE_MWEB);
+
     // try to get the seed
     CKey seed;
     if (!GetKey(m_hd_chain.seed_id, seed)) {

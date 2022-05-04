@@ -81,7 +81,7 @@ class MWEBWalletBasicTest(BitcoinTestFramework):
         assert n1_tx2['fee'] < 0 and n1_tx2['fee'] > -0.1
 
         self.log.info("Verify node2's wallet receives the first pegout transaction")
-        n2_tx2 = node2.gettransaction(txid=tx2_id)
+        n2_tx2 = node2.listwallettransactions(txid=tx2_id)[0]
         assert_equal(n2_tx2['amount'], 15)
         assert_equal(n2_tx2['confirmations'], 0)
         assert tx2_id in node1.getrawmempool()

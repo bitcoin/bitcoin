@@ -267,7 +267,6 @@ QString TransactionDesc::toHTML_Amounts(interfaces::Wallet& wallet, const interf
                         strHTML += "<br>";
                     }
                 }
-                // MW: TODO - Pegouts?
 
                 strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -txout.nValue) + "<br>";
                 if (toSelf)
@@ -304,6 +303,8 @@ QString TransactionDesc::toHTML_Amounts(interfaces::Wallet& wallet, const interf
             if (fAllToMe) {
                 // Payment to self
                 CAmount nValue = wtx.credit - wtx.change;
+                strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wtx.credit) + "<br>";
+                strHTML += "<b>" + tr("Change") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wtx.change) + "<br>";
                 strHTML += "<b>" + tr("Total debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nValue) + "<br>";
                 strHTML += "<b>" + tr("Total credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nValue) + "<br>";
             }

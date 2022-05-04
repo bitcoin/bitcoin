@@ -7,7 +7,7 @@
 
 #include <tinyformat.h>
 
-static const CAmount BASE_MWEB_FEE = 1'000;
+static const CAmount BASE_MWEB_FEE = 100;
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_, uint64_t mweb_weight)
     : m_nFeePaid(nFeePaid), m_nBytes(nBytes_), m_weight(mweb_weight)

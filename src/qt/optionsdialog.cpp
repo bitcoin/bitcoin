@@ -136,6 +136,10 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         ui->minimizeToTray->setEnabled(false);
     }
 
+    if (!gArgs.IsArgSet("-debug")) {
+        ui->mwebFeatures->setVisible(false);
+    }
+
     GUIUtil::handleCloseWindowShortcut(this);
 }
 

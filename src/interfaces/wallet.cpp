@@ -195,7 +195,7 @@ public:
 
         auto output_type = OutputType::BECH32;
         auto reserve_dest = std::make_shared<ReserveDestination>(m_wallet.get(), output_type);
-        if (reserve_dest->GetReservedDestination(dest, true)) {
+        if (reserve_dest->GetReservedDestination(dest, false)) {
             return reserve_dest;
         }
 

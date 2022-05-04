@@ -2236,7 +2236,7 @@ void CWallet::ReacceptWalletTransactions()
 
         int nDepth = wtx.GetDepthInMainChain();
 
-        if (!wtx.IsCoinBase() && (nDepth == 0 && !wtx.isAbandoned())) {
+        if (!wtx.IsCoinBase() && !wtx.IsHogEx() && (nDepth == 0 && !wtx.isAbandoned())) {
             mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
         }
     }
@@ -4631,7 +4631,7 @@ const CWalletTx* CWallet::FindWalletTxByKernelId(const mw::Hash& kernel_id) cons
 {
     LOCK(cs_wallet);
     auto kernel_iter = mapKernelsMWEB.find(kernel_id);
-    if (kernel_iter != mapOutputsMWEB.end()) {
+    if (kernel_iter != mapKernelsMWEB.end()) {
         auto tx_iter = mapWallet.find(kernel_iter->second);
         if (tx_iter != mapWallet.end()) {
             return &tx_iter->second;

@@ -16,6 +16,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.extra_args = [[
             "-acceptnonstdtxn=1",
             "-maxmempool=5",
+            "-mintxfee=0.00001",
             "-spendzeroconfchange=0",
         ]]
         self.supports_cli = False

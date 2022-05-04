@@ -36,7 +36,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[
-            "-maxuploadtarget=3200",
+            "-maxuploadtarget=6400",
             "-acceptnonstdtxn=1",
             "-peertimeout=9999",  # bump because mocktime might cause a disconnect otherwise
         ]]
@@ -90,8 +90,8 @@ class MaxUploadTest(BitcoinTestFramework):
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(MSG_BLOCK, big_old_block))
 
-        max_bytes_per_day = 3200*1024*1024
-        daily_buffer = 144 * 4000000 * 4 # MWEB uses a buffer 4x the max serialized segwit block
+        max_bytes_per_day = 6400*1024*1024
+        daily_buffer = 144 * 25800195 # MWEB uses a buffer 4x the max serialized segwit block
         max_bytes_available = max_bytes_per_day - daily_buffer
         success_count = max_bytes_available // old_block_size
 
