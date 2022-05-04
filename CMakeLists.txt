@@ -36,10 +36,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(CheckCXXSourceCompiles)
+include(CheckCXXSymbolExists)
 include(TestBigEndian)
 
 # Global checks.
 test_big_endian(WORDS_BIGENDIAN)
+check_cxx_symbol_exists(fdatasync "unistd.h" HAVE_FDATASYNC)
+if(NOT HAVE_FDATASYNC)
+  set(HAVE_FDATASYNC 0)
+endif()
 
 option(USE_CCACHE "Use ccache for building" ON)
 if(USE_CCACHE)
@@ -50,3 +55,4 @@ if(USE_CCACHE)
 endif()
 
 include(cmake/subtree-crc32c.cmake)
+include(cmake/subtree-leveldb.cmake)
