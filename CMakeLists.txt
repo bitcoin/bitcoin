@@ -56,3 +56,4 @@ endif()
 
 include(cmake/subtree-crc32c.cmake)
 include(cmake/subtree-leveldb.cmake)
+include(cmake/subtree-minisketch.cmake)
