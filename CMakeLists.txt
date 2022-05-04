@@ -39,3 +39,11 @@ include(TestBigEndian)
 
 # Global checks.
 test_big_endian(WORDS_BIGENDIAN)
+
+option(USE_CCACHE "Use ccache for building" ON)
+if(USE_CCACHE)
+  find_program(CCACHE ccache)
+  if(CCACHE)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  endif()
+endif()
