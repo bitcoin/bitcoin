@@ -9,6 +9,7 @@
 #include <tinyformat.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -452,17 +453,37 @@ std::string Capitalize(std::string str)
     return str;
 }
 
+namespace {
+
+using ByteAsHex = std::array<char, 2>;
+
+constexpr std::array<ByteAsHex, 256> CreateByteToHexMap()
+{
+    constexpr char hexmap[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+    std::array<ByteAsHex, 256> byte_to_hex{};
+    for (size_t i = 0; i < byte_to_hex.size(); ++i) {
+        byte_to_hex[i][0] = hexmap[i >> 4];
+        byte_to_hex[i][1] = hexmap[i & 15];
+    }
+    return byte_to_hex;
+}
+
+} // namespace
+
 std::string HexStr(const Span<const uint8_t> s)
 {
     std::string rv(s.size() * 2, '\0');
-    static constexpr char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
-                                         '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-    auto it = rv.begin();
+    static constexpr auto byte_to_hex = CreateByteToHexMap();
+    static_assert(sizeof(byte_to_hex) == 512);
+
+    char* it = rv.data();
     for (uint8_t v : s) {
-        *it++ = hexmap[v >> 4];
-        *it++ = hexmap[v & 15];
+        std::memcpy(it, byte_to_hex[v].data(), 2);
+        it += 2;
     }
-    assert(it == rv.end());
+
+    assert(it == rv.data() + rv.size());
     return rv;
 }
 
