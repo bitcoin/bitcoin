@@ -12,9 +12,10 @@ class CRPCTable;
 void RegisterBlockchainRPCCommands(CRPCTable &tableRPC);
 void RegisterFeeRPCCommands(CRPCTable&);
 void RegisterMempoolRPCCommands(CRPCTable&);
-void RegisterNetRPCCommands(CRPCTable &tableRPC);
-void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
+void RegisterNodeRPCCommands(CRPCTable&);
+void RegisterNetRPCCommands(CRPCTable&);
+void RegisterOutputScriptRPCCommands(CRPCTable&);
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 // SYSCOIN
 /** Register Syscoin Asset RPC commands */
@@ -37,9 +38,10 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterBlockchainRPCCommands(t);
     RegisterFeeRPCCommands(t);
     RegisterMempoolRPCCommands(t);
-    RegisterNetRPCCommands(t);
-    RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
+    RegisterNodeRPCCommands(t);
+    RegisterNetRPCCommands(t);
+    RegisterOutputScriptRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
     // SYSCOIN
     RegisterAssetRPCCommands(t);
