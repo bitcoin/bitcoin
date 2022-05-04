@@ -71,6 +71,15 @@ SHA256_SUMS = {
     "91b1e012975c5a363b5b5fcc81b5b7495e86ff703ec8262d4b9afcfec633c30d": "bitcoin-22.0-powerpc64le-linux-gnu.tar.gz",
     "9cc3a62c469fe57e11485fdd32c916f10ce7a2899299855a2e479256ff49ff3c": "bitcoin-22.0-riscv64-linux-gnu.tar.gz",
     "59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16": "bitcoin-22.0-x86_64-linux-gnu.tar.gz",
+
+    "06f4c78271a77752ba5990d60d81b1751507f77efda1e5981b4e92fd4d9969fb":  "bitcoin-23.0-aarch64-linux-gnu.tar.gz",
+    "952c574366aff76f6d6ad1c9ee45a361d64fa04155e973e926dfe7e26f9703a3":  "bitcoin-23.0-arm-linux-gnueabihf.tar.gz",
+    "7c8bc63731aa872b7b334a8a7d96e33536ad77d49029bad179b09dca32cd77ac":  "bitcoin-23.0-arm64-apple-darwin.tar.gz",
+    "2caa5898399e415f61d9af80a366a3008e5856efa15aaff74b88acf429674c99":  "bitcoin-23.0-powerpc64-linux-gnu.tar.gz",
+    "217dd0469d0f4962d22818c368358575f6a0abcba8804807bb75325eb2f28b19":  "bitcoin-23.0-powerpc64le-linux-gnu.tar.gz",
+    "078f96b1e92895009c798ab827fb3fde5f6719eee886bd0c0e93acab18ea4865":  "bitcoin-23.0-riscv64-linux-gnu.tar.gz",
+    "c816780583009a9dad426dc0c183c89be9da98906e1e2c7ebae91041c1aaaaf3":  "bitcoin-23.0-x86_64-apple-darwin.tar.gz",
+    "2cca490c1f2842884a3c5b0606f179f9f937177da4eadd628e3f7fd7e25d26d0":  "bitcoin-23.0-x86_64-linux-gnu.tar.gz",
 }
 
 
@@ -96,8 +105,11 @@ def download_binary(tag, args) -> int:
     if match:
         bin_path = 'bin/bitcoin-core-{}/test.{}'.format(
             match.group(1), match.group(2))
+    platform = args.platform
+    if tag < "v23" and platform in ["x86_64-apple-darwin", "aarch64-apple-darwin"]:
+        platform = "osx64"
     tarball = 'bitcoin-{tag}-{platform}.tar.gz'.format(
-        tag=tag[1:], platform=args.platform)
+        tag=tag[1:], platform=platform)
     tarballUrl = 'https://bitcoincore.org/{bin_path}/{tarball}'.format(
         bin_path=bin_path, tarball=tarball)
 
@@ -201,8 +213,8 @@ def check_host(args) -> int:
         platforms = {
             'aarch64-*-linux*': 'aarch64-linux-gnu',
             'x86_64-*-linux*': 'x86_64-linux-gnu',
-            'x86_64-apple-darwin*': 'osx64',
-            'aarch64-apple-darwin*': 'osx64',
+            'x86_64-apple-darwin*': 'x86_64-apple-darwin',
+            'aarch64-apple-darwin*': 'aarch64-apple-darwin',
         }
         args.platform = ''
         for pattern, target in platforms.items():
