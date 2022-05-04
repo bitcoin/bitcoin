@@ -320,15 +320,13 @@ def get_most_recent_git_change_year(filename):
 ################################################################################
 
 def read_file_lines(filename):
-    f = open(filename, 'r', encoding="utf8")
-    file_lines = f.readlines()
-    f.close()
+    with open(filename, 'r', encoding="utf8") as f:
+        file_lines = f.readlines()
     return file_lines
 
 def write_file_lines(filename, file_lines):
-    f = open(filename, 'w', encoding="utf8")
-    f.write(''.join(file_lines))
-    f.close()
+    with open(filename, 'w', encoding="utf8") as f:
+        f.write(''.join(file_lines))
 
 ################################################################################
 # update header years execution
