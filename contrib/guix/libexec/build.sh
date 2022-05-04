@@ -383,6 +383,10 @@ mkdir -p "$DISTSRC"
                 ;;
         esac
 
+        # copy over the example syscoin.conf file. if contrib/devtools/gen-syscoin-conf.sh
+        # has not been run before buildling, this file will be a stub
+        cp "${DISTSRC}/share/examples/syscoin.conf" "${DISTNAME}/"
+
         # Finally, deterministically produce {non-,}debug binary tarballs ready
         # for release
         case "$HOST" in
