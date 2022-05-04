@@ -52,6 +52,8 @@ KNOWN_VIOLATIONS = [
     "src/test/util_tests.cpp:.*strtoll",
     "src/rpc/blockchain.cpp:.*fprintf",
     "src/util/strencodings.cpp:.*strtoul"
+    "src/wallet/bdb.cpp:.*DbEnv::strerror",  # False positive
+    "src/util/syserror.cpp:.*strerror",      # Outside this function use `SysErrorString`
 ]
 
 REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
@@ -147,7 +149,7 @@ LOCALE_DEPENDENT_FUNCTIONS = [
     "strcasecmp",
     "strcasestr",
     "strcoll",      # LC_COLLATE
-    #"strerror",
+    "strerror",
     "strfmon",
     "strftime",     # LC_TIME
     "strncasecmp",
@@ -221,7 +223,7 @@ LOCALE_DEPENDENT_FUNCTIONS = [
 def find_locale_dependent_function_uses():
     regexp_locale_dependent_functions = "|".join(LOCALE_DEPENDENT_FUNCTIONS)
     exclude_args = [":(exclude)" + excl for excl in REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS]
-    git_grep_command = ["git", "grep", "-E", "[^a-zA-Z0-9_\\`'\"<>](" +  regexp_locale_dependent_functions + "(_r|_s)?)[^a-zA-Z0-9_\\`'\"<>]", "--", "*.cpp", "*.h"] + exclude_args
+    git_grep_command = ["git", "grep", "-E", "[^a-zA-Z0-9_\\`'\"<>](" +  regexp_locale_dependent_functions + ")(_r|_s)?[^a-zA-Z0-9_\\`'\"<>]", "--", "*.cpp", "*.h"] + exclude_args
     git_grep_output = list()
 
     try:
