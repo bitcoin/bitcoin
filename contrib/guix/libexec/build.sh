@@ -368,6 +368,10 @@ mkdir -p "$DISTSRC"
                 ;;
         esac
 
+        # copy over the example bitcoin.conf file. if contrib/devtools/gen-bitcoin-conf.sh
+        # has not been run before buildling, this file will be a stub
+        cp "${DISTSRC}/share/examples/bitcoin.conf" "${DISTNAME}/"
+
         # Finally, deterministically produce {non-,}debug binary tarballs ready
         # for release
         case "$HOST" in
