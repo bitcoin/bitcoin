@@ -141,7 +141,7 @@ void SingleThreadedSchedulerClient::MaybeScheduleProcessQueue()
         if (m_are_callbacks_running) return;
         if (m_callbacks_pending.empty()) return;
     }
-    m_pscheduler->schedule(std::bind(&SingleThreadedSchedulerClient::ProcessQueue, this), std::chrono::system_clock::now());
+    m_scheduler.schedule([this] { this->ProcessQueue(); }, std::chrono::system_clock::now());
 }
 
 void SingleThreadedSchedulerClient::ProcessQueue()
@@ -177,8 +177,6 @@ void SingleThreadedSchedulerClient::ProcessQueue()
 
 void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void()> func)
 {
-    assert(m_pscheduler);
-
     {
         LOCK(m_callbacks_mutex);
         m_callbacks_pending.emplace_back(std::move(func));
@@ -188,7 +186,7 @@ void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void()> func
 
 void SingleThreadedSchedulerClient::EmptyQueue()
 {
-    assert(!m_pscheduler->AreThreadsServicingQueue());
+    assert(!m_scheduler.AreThreadsServicingQueue());
     bool should_continue = true;
     while (should_continue) {
         ProcessQueue();
