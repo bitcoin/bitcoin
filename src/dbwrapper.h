@@ -19,6 +19,12 @@
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
 
+struct LevelDbOptions : public leveldb::Options {
+    LevelDbOptions(size_t nCacheSize);
+
+    ~LevelDbOptions();
+};
+
 class dbwrapper_error : public std::runtime_error
 {
 public:
@@ -181,7 +187,7 @@ private:
     leveldb::Env* penv;
 
     //! database options used
-    leveldb::Options options;
+    LevelDbOptions options;
 
     //! options used when reading from the database
     leveldb::ReadOptions readoptions;

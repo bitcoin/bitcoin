@@ -72,7 +72,20 @@ public:
     }
 };
 
-static void SetMaxOpenFiles(leveldb::Options *options) {
+LevelDbOptions::LevelDbOptions(size_t nCacheSize)
+{
+    filter_policy = leveldb::NewBloomFilterPolicy(10);
+    compression = leveldb::kNoCompression;
+    info_log = new CBitcoinLevelDBLogger();
+    if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
+        // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
+        // on corruption in later versions.
+        paranoid_checks = true;
+    }
+    block_cache = leveldb::NewLRUCache(nCacheSize / 2);
+    write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
+    create_if_missing = true;
+
     // On most platforms the default setting of max_open_files (which is 1000)
     // is optimal. On Windows using a large file count is OK because the handles
     // do not interfere with select() loops. On 64-bit Unix hosts this value is
@@ -87,43 +100,34 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
     //
     // See PR #12495 for further discussion.
 
-    int default_open_files = options->max_open_files;
+    int default_open_files = max_open_files;
 #ifndef WIN32
     if (sizeof(void*) < 8) {
-        options->max_open_files = 64;
+        max_open_files = 64;
     }
 #endif
     LogPrint(BCLog::LEVELDB, "LevelDB using max_open_files=%d (default=%d)\n",
-             options->max_open_files, default_open_files);
+             max_open_files, default_open_files);
 }
 
-static leveldb::Options GetOptions(size_t nCacheSize)
+LevelDbOptions::~LevelDbOptions()
 {
-    leveldb::Options options;
-    options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
-    options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
-    options.filter_policy = leveldb::NewBloomFilterPolicy(10);
-    options.compression = leveldb::kNoCompression;
-    options.info_log = new CBitcoinLevelDBLogger();
-    if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
-        // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
-        // on corruption in later versions.
-        options.paranoid_checks = true;
-    }
-    SetMaxOpenFiles(&options);
-    return options;
+    delete filter_policy;
+    filter_policy = nullptr;
+    delete info_log;
+    info_log = nullptr;
+    delete block_cache;
+    block_cache = nullptr;
 }
 
 CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : m_name{fs::PathToString(path.stem())}
+    : options(nCacheSize), m_name{fs::PathToString(path.stem())}
 {
     penv = nullptr;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
     iteroptions.fill_cache = false;
     syncoptions.sync = true;
-    options = GetOptions(nCacheSize);
-    options.create_if_missing = true;
     if (fMemory) {
         penv = leveldb::NewMemEnv(leveldb::Env::Default());
         options.env = penv;
@@ -174,12 +178,6 @@ CDBWrapper::~CDBWrapper()
 {
     delete pdb;
     pdb = nullptr;
-    delete options.filter_policy;
-    options.filter_policy = nullptr;
-    delete options.info_log;
-    options.info_log = nullptr;
-    delete options.block_cache;
-    options.block_cache = nullptr;
     delete penv;
     options.env = nullptr;
 }
