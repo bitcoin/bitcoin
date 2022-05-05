@@ -293,9 +293,9 @@ void PrepareShutdown(NodeContext& node)
     }
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
-    {
+    if (node.chainman) {
         LOCK(cs_main);
-        for (CChainState* chainstate : g_chainman.GetAll()) {
+        for (CChainState* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
                 chainstate->ForceFlushStateToDisk();
             }
@@ -320,9 +320,9 @@ void PrepareShutdown(NodeContext& node)
     // up with our current chain to avoid any strange pruning edge cases and make
     // next startup faster by avoiding rescan.
 
-    {
+    if (node.chainman) {
         LOCK(cs_main);
-        for (CChainState* chainstate : g_chainman.GetAll()) {
+        for (CChainState* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
                 chainstate->ForceFlushStateToDisk();
                 chainstate->ResetCoinsViews();
@@ -395,7 +395,8 @@ void Shutdown(NodeContext& node)
     // Shutdown part 2: delete wallet instance
     globalVerifyHandle.reset();
     ECC_Stop();
-    if (node.mempool) node.mempool = nullptr;
+    node.mempool = nullptr;
+    node.chainman = nullptr;
     node.scheduler.reset();
     LogPrintf("%s: done\n", __func__);
 }
@@ -866,7 +867,7 @@ static void CleanupBlockRevFiles()
     }
 }
 
-static void ThreadImport(std::vector<fs::path> vImportFiles)
+static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     util::ThreadRename("loadblk");
@@ -934,9 +935,9 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
 
     // We can't hold cs_main during ActivateBestChain even though we're accessing
-    // the g_chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
+    // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
     // the relevant pointers before the ABC call.
-    for (CChainState* chainstate : WITH_LOCK(::cs_main, return g_chainman.GetAll())) {
+    for (CChainState* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
         CValidationState state;
         if (!chainstate->ActivateBestChain(state, chainparams, nullptr)) {
             LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
@@ -1775,8 +1776,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // which are all started after this, may use it from the node context.
     assert(!node.mempool);
     node.mempool = &::mempool;
+    assert(!node.chainman);
+    node.chainman = &g_chainman;
+    ChainstateManager& chainman = EnsureChainman(node);
 
-    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.mempool, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
+    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.chainman, *node.mempool, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
     RegisterValidationInterface(node.peer_logic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -1977,7 +1981,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
             try {
                 LOCK(cs_main);
-                g_chainman.InitializeChainstate();
+                chainman.InitializeChainstate();
                 UnloadBlockIndex();
 
                 // new CBlockTreeDB tries to delete the existing file, which
@@ -2008,7 +2012,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 // block file from disk.
                 // Note that it also sets fReindex based on the disk flag!
                 // From here on out fReindex and fReset mean something different!
-                if (!LoadBlockIndex(chainparams)) {
+                if (!chainman.LoadBlockIndex(chainparams)) {
                     if (ShutdownRequested()) break;
                     strLoadError = _("Error loading block database");
                     break;
@@ -2067,7 +2071,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 // block tree into BlockIndex()!
 
                 bool failed_chainstate_init = false;
-                for (CChainState* chainstate : g_chainman.GetAll()) {
+                for (CChainState* chainstate : chainman.GetAll()) {
                     LogPrintf("Initializing chainstate %s\n", chainstate->ToString());
                     chainstate->InitCoinsDB(
                         /* cache_size_bytes */ nCoinDBCache,
@@ -2129,7 +2133,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                     break;
                 }
 
-                for (CChainState* chainstate : g_chainman.GetAll()) {
+                for (CChainState* chainstate : chainman.GetAll()) {
                     if (!is_coinsview_empty(chainstate)) {
                         uiInterface.InitMessage(_("Verifying blocks...").translated);
                         if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
@@ -2257,7 +2261,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         nLocalServices = ServiceFlags(nLocalServices & ~NODE_NETWORK);
         if (!fReindex) {
             LOCK(cs_main);
-            for (CChainState* chainstate : g_chainman.GetAll()) {
+            for (CChainState* chainstate : chainman.GetAll()) {
                 uiInterface.InitMessage(_("Pruning blockstore...").translated);
                 chainstate->PruneAndFlush();
             }
@@ -2418,7 +2422,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         vImportFiles.push_back(strFile);
     }
 
-    threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
+    threadGroup.create_thread([=, &chainman] { ThreadImport(chainman, vImportFiles); });
 
     // Wait for genesis block to be processed
     {

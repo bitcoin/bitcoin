@@ -132,10 +132,11 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     m_node.mempool->setSanityCheck(1.0);
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-    m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.mempool, false);
+    m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
-    g_chainman.InitializeChainstate();
+    m_node.chainman = &::g_chainman;
+    m_node.chainman->InitializeChainstate();
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -181,6 +182,7 @@ TestingSetup::~TestingSetup()
     UnloadBlockIndex();
     llmq::DestroyLLMQSystem();
     m_node.chainman->Reset();
+    m_node.chainman = nullptr;
     pblocktree.reset();
 }
 
@@ -219,7 +221,7 @@ TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& tx
     auto block = CreateBlock(txns, scriptPubKey);
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    EnsureChainman(m_node).ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
     CBlock result = block;
     return result;

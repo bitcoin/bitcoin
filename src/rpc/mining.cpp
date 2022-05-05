@@ -106,7 +106,7 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
 }
 
 #if ENABLE_MINER
-static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extra_nonce, uint256& block_hash)
+static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& max_tries, unsigned int& extra_nonce, uint256& block_hash)
 {
     block_hash.SetNull();
 
@@ -129,14 +129,15 @@ static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extr
     }
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    if (!ProcessNewBlock(chainparams, shared_pblock, true, nullptr))
+    if (!chainman.ProcessNewBlock(chainparams, shared_pblock, true, nullptr)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+    }
 
     block_hash = block.GetHash();
     return true;
 }
 
-UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -156,7 +157,7 @@ UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScrip
         CBlock *pblock = &pblocktemplate->block;
 
         uint256 block_hash;
-        if (!GenerateBlock(*pblock, nMaxTries, nExtraNonce, block_hash)) {
+        if (!GenerateBlock(chainman, *pblock, nMaxTries, nExtraNonce, block_hash)) {
             break;
         }
 
@@ -239,11 +240,12 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
     }
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
+    ChainstateManager& chainman = EnsureChainman(request.context);
 
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
     coinbaseScript->reserveScript = coinbase_script;
 
-    return generateBlocks(mempool, coinbaseScript, num_blocks, max_tries, false);
+    return generateBlocks(chainman, mempool, coinbaseScript, num_blocks, max_tries, false);
 }
 
 static UniValue generatetoaddress(const JSONRPCRequest& request)
@@ -279,11 +281,12 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     }
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
+    ChainstateManager& chainman = EnsureChainman(request.context);
 
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
     coinbaseScript->reserveScript = GetScriptForDestination(destination);
 
-    return generateBlocks(mempool, coinbaseScript, nGenerate, nMaxTries, false);
+    return generateBlocks(chainman, mempool, coinbaseScript, nGenerate, nMaxTries, false);
 }
 
 static UniValue generateblock(const JSONRPCRequest& request)
@@ -383,7 +386,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
     uint64_t max_tries{1000000};
     unsigned int extra_nonce{0};
 
-    if (!GenerateBlock(block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
+    if (!GenerateBlock(EnsureChainman(request.context), block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
         throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
     }
 
@@ -996,7 +999,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
     bool new_block;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool accepted = ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    bool accepted = EnsureChainman(request.context).ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
     UnregisterValidationInterface(&sc);
     if (!new_block && accepted) {
         return "duplicate";
@@ -1035,7 +1038,7 @@ static UniValue submitheader(const JSONRPCRequest& request)
     }
 
     CValidationState state;
-    ProcessNewBlockHeaders({h}, state, Params(), /* ppindex */ nullptr, /* first_invalid */ nullptr);
+    EnsureChainman(request.context).ProcessNewBlockHeaders({h}, state, Params(), /* ppindex */ nullptr, /* first_invalid */ nullptr);
     if (state.IsValid()) return NullUniValue;
     if (state.IsError()) {
         throw JSONRPCError(RPC_VERIFY_ERROR, FormatStateMessage(state));

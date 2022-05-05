@@ -12,6 +12,7 @@
 #include <validationinterface.h>
 
 class CTxMemPool;
+class ChainstateManager;
 
 extern CCriticalSection cs_main;
 
@@ -28,11 +29,12 @@ class PeerLogicValidation final : public CValidationInterface, public NetEventsI
 private:
     CConnman* const connman;
     BanMan* const m_banman;
+    ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
 
     bool SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 public:
-    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, CTxMemPool& pool, bool enable_bip61);
+    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool, bool enable_bip61);
 
     /**
      * Overridden from CValidationInterface.

@@ -12,6 +12,7 @@
 class CBlock;
 class CBlockIndex;
 class CTxMemPool;
+class ChainstateManager;
 class UniValue;
 struct NodeContext;
 namespace util {
@@ -48,5 +49,6 @@ void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], s
 
 NodeContext& EnsureNodeContext(const util::Ref& context);
 CTxMemPool& EnsureMemPool(const util::Ref& context);
+ChainstateManager& EnsureChainman(const util::Ref& context);
 
 #endif
