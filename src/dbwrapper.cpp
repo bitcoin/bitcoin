@@ -123,14 +123,13 @@ LevelDbOptions::~LevelDbOptions()
 CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
     : options(nCacheSize), m_name{fs::PathToString(path.stem())}
 {
-    penv = nullptr;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
     iteroptions.fill_cache = false;
     syncoptions.sync = true;
     if (fMemory) {
-        penv = leveldb::NewMemEnv(leveldb::Env::Default());
-        options.env = penv;
+        m_env = std::unique_ptr<leveldb::Env>{leveldb::NewMemEnv(leveldb::Env::Default())};
+        options.env = m_env.get();
     } else {
         if (fWipe) {
             LogPrintf("Wiping LevelDB in %s\n", fs::PathToString(path));
@@ -178,8 +177,6 @@ CDBWrapper::~CDBWrapper()
 {
     delete pdb;
     pdb = nullptr;
-    delete penv;
-    options.env = nullptr;
 }
 
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
