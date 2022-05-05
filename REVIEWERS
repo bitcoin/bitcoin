@@ -112,7 +112,7 @@
 /src/dbwrapper.*                            @jamesob
 
 # Linter
-/test/lint/lint-shell.sh                    @hebasto
+/test/lint/lint-shell.py                    @hebasto
 
 # Bech32
 /src/bech32.*                               @sipa
