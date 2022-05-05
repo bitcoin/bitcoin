@@ -88,7 +88,7 @@ def main():
         verified_sha512_root = f.read().splitlines()[0]
     with open(dirname + "/allow-revsig-commits", "r", encoding="utf8") as f:
         revsig_allowed = f.read().splitlines()
-    with open(dirname + "/allow-unclean-merge-commit", "r", encoding="utf8") as f:
+    with open(dirname + "/allow-unclean-merge-commits", "r", encoding="utf8") as f:
         unclean_merge_allowed = f.read().splitlines()
     with open(dirname + "/allow-incorrect-sha512-commits", "r", encoding="utf8") as f:
         incorrect_sha512_allowed = f.read().splitlines()
