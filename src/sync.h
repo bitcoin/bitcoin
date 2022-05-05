@@ -136,60 +136,18 @@ template <typename Mutex, typename Base = typename Mutex::UniqueLock>
 class SCOPED_LOCKABLE UniqueLock : public Base
 {
 private:
-    void Enter(const char* pszName, const char* pszFile, int nLine)
-    {
-        EnterCritical(pszName, pszFile, nLine, Base::mutex());
-#ifdef DEBUG_LOCKCONTENTION
-        if (Base::try_lock()) return;
-        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
-#endif
-        Base::lock();
-    }
-
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine)
-    {
-        EnterCritical(pszName, pszFile, nLine, Base::mutex(), true);
-        Base::try_lock();
-        if (!Base::owns_lock()) {
-            LeaveCritical();
-        }
-        return Base::owns_lock();
-    }
+    void Enter(const char* pszName, const char* pszFile, int nLine);
+    bool TryEnter(const char* pszName, const char* pszFile, int nLine);
 
 public:
-    UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
-    {
-        if (fTry)
-            TryEnter(pszName, pszFile, nLine);
-        else
-            Enter(pszName, pszFile, nLine);
-    }
-
-    UniqueLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
-    {
-        if (!pmutexIn) return;
-
-        *static_cast<Base*>(this) = Base(*pmutexIn, std::defer_lock);
-        if (fTry)
-            TryEnter(pszName, pszFile, nLine);
-        else
-            Enter(pszName, pszFile, nLine);
-    }
-
-    ~UniqueLock() UNLOCK_FUNCTION()
-    {
-        if (Base::owns_lock())
-            LeaveCritical();
-    }
-
-    operator bool()
-    {
-        return Base::owns_lock();
-    }
+    UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn);
+    UniqueLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn);
+    ~UniqueLock() UNLOCK_FUNCTION();
+    operator bool();
 
 protected:
     // needed for reverse_lock
-    UniqueLock() { }
+    UniqueLock();
 
 public:
     /**

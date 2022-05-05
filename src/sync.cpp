@@ -324,3 +324,67 @@ bool LockStackEmpty()
 bool g_debug_lockorder_abort = true;
 
 #endif /* DEBUG_LOCKORDER */
+
+
+template <typename Mutex, typename Base>
+void UniqueLock<Mutex, Base>::Enter(const char* pszName, const char* pszFile, int nLine)
+{
+    EnterCritical(pszName, pszFile, nLine, Base::mutex());
+#ifdef DEBUG_LOCKCONTENTION
+    if (Base::try_lock()) return;
+    LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
+#endif
+    Base::lock();
+}
+
+template <typename Mutex, typename Base>
+bool UniqueLock<Mutex, Base>::TryEnter(const char* pszName, const char* pszFile, int nLine)
+{
+    EnterCritical(pszName, pszFile, nLine, Base::mutex(), true);
+    Base::try_lock();
+    if (!Base::owns_lock()) {
+        LeaveCritical();
+    }
+    return Base::owns_lock();
+}
+
+template <typename Mutex, typename Base>
+UniqueLock<Mutex, Base>::UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
+{
+    if (fTry)
+        TryEnter(pszName, pszFile, nLine);
+    else
+        Enter(pszName, pszFile, nLine);
+}
+
+template <typename Mutex, typename Base>
+UniqueLock<Mutex, Base>::UniqueLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
+{
+    if (!pmutexIn) return;
+
+    *static_cast<Base*>(this) = Base(*pmutexIn, std::defer_lock);
+    if (fTry)
+        TryEnter(pszName, pszFile, nLine);
+    else
+        Enter(pszName, pszFile, nLine);
+}
+
+template <typename Mutex, typename Base>
+UniqueLock<Mutex, Base>::~UniqueLock() UNLOCK_FUNCTION()
+{
+    if (Base::owns_lock())
+        LeaveCritical();
+}
+
+template <typename Mutex, typename Base>
+UniqueLock<Mutex, Base>::operator bool()
+{
+    return Base::owns_lock();
+}
+
+template <typename Mutex, typename Base>
+UniqueLock<Mutex, Base>::UniqueLock() = default;
+
+// explicitly instantiate UniqueLock
+template class UniqueLock<AnnotatedMixin<std::mutex>, std::unique_lock<std::mutex>>;
+template class UniqueLock<AnnotatedMixin<std::recursive_mutex>, std::unique_lock<std::recursive_mutex>>;
