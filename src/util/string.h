@@ -5,17 +5,19 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
-#include <attributes.h>
 #include <util/spanparsing.h>
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <cstring>
 #include <locale>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
+
+void ReplaceAll(std::string& in_out, std::string_view search, std::string_view substitute);
 
 [[nodiscard]] inline std::vector<std::string> SplitString(std::string_view str, char sep)
 {

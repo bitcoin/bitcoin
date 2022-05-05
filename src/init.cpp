@@ -112,8 +112,6 @@
 #include <sys/stat.h>
 #endif
 
-#include <boost/algorithm/string/replace.hpp>
-
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
@@ -2431,7 +2429,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
             std::string strCmd = block_notify;
             if (!strCmd.empty()) {
-                boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
+                ReplaceAll(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
                 std::thread t(runCommand, strCmd);
                 t.detach(); // thread runs free
             }
