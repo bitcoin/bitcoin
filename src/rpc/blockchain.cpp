@@ -908,8 +908,10 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
     std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
 
-    if (::BlockIndex().count(hash) == 0)
+    const CBlockIndex* pblockindex = LookupBlockIndex(hash);
+    if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
 
     int nCount = MAX_HEADERS_RESULTS;
     if (!request.params[1].isNull())
@@ -921,8 +923,6 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
     bool fVerbose = true;
     if (!request.params[2].isNull())
         fVerbose = request.params[2].get_bool();
-
-    CBlockIndex* pblockindex = ::BlockIndex()[hash];
 
     UniValue arrHeaders(UniValue::VARR);
 
@@ -1015,7 +1015,8 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
     std::string strHash = request.params[1].get_str();
     uint256 hash(uint256S(strHash));
 
-    if (::BlockIndex().count(hash) == 0) {
+    const CBlockIndex* pblockindex = LookupBlockIndex(hash);
+    if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
@@ -1027,7 +1028,6 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
     }
 
-    CBlockIndex* pblockindex = ::BlockIndex()[hash];
     CBlock block = GetBlockChecked(pblockindex);
 
     UniValue arrMerkleBlocks(UniValue::VARR);
@@ -2073,13 +2073,11 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         pindex = ::ChainActive()[height];
     } else {
         const uint256 hash = ParseHashV(request.params[0], "parameter 1");
-        if (::BlockIndex().count(hash) == 0)
+
+        pindex = LookupBlockIndex(hash);
+        if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        pindex = ::BlockIndex()[hash];
-        // pindex = LookupBlockIndex(hash);
-        // if (!pindex) {
-        //     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        // }
+        }
         if (!::ChainActive().Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Block is not in chain %s", Params().NetworkIDString()));
         }
@@ -2296,11 +2294,11 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Verbosity must be in range 0..2");
         }
     }
-
-    if (::BlockIndex().count(hash) == 0)
+    const CBlockIndex* pblockindex = LookupBlockIndex(hash);
+    if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
 
-    CBlockIndex* pblockindex = ::BlockIndex()[hash];
     const CBlock block = GetBlockChecked(pblockindex);
 
     int nTxNum = 0;
