@@ -30,6 +30,8 @@ using node::CBlockTemplate;
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
+    void TestBasicMining(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
+    void TestPrioritisedMining(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
     bool TestSequenceLocks(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs)
     {
         CCoinsViewMemPool view_mempool(&m_node.chainman->ActiveChainstate().CoinsTip(), *m_node.mempool);
@@ -191,60 +193,17 @@ void MinerTestingSetup::TestPackageSelection(const CChainParams& chainparams, co
     BOOST_CHECK(pblocktemplate->block.vtx[8]->GetHash() == hashLowFeeTx2);
 }
 
-// NOTE: These tests rely on CreateNewBlock doing its own self-validation!
-BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
+void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
 {
-    // Note that by default, these tests run with size accounting enabled.
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    const CChainParams& chainparams = *chainParams;
-    CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    std::unique_ptr<CBlockTemplate> pblocktemplate;
-    CMutableTransaction tx;
-    CScript script;
     uint256 hash;
+    CMutableTransaction tx;
     TestMemPoolEntryHelper entry;
     entry.nFee = 11;
     entry.nHeight = 11;
 
-    fCheckpointsEnabled = false;
-
-    // Simple block creation, nothing special yet:
-    BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
-
-    // We can't make transactions until we have inputs
-    // Therefore, load 110 blocks :)
-    static_assert(std::size(BLOCKINFO) == 110, "Should have 110 blocks to import");
-    int baseheight = 0;
-    std::vector<CTransactionRef> txFirst;
-    for (const auto& bi : BLOCKINFO) {
-        CBlock *pblock = &pblocktemplate->block; // pointer for convenience
-        {
-            LOCK(cs_main);
-            pblock->nVersion = VERSIONBITS_TOP_BITS;
-            pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
-            CMutableTransaction txCoinbase(*pblock->vtx[0]);
-            txCoinbase.nVersion = 1;
-            txCoinbase.vin[0].scriptSig = CScript{} << (m_node.chainman->ActiveChain().Height() + 1) << bi.extranonce;
-            txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
-            txCoinbase.vout[0].scriptPubKey = CScript();
-            pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
-            if (txFirst.size() == 0)
-                baseheight = m_node.chainman->ActiveChain().Height();
-            if (txFirst.size() < 4)
-                txFirst.push_back(pblock->vtx[0]);
-            pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
-            pblock->nNonce = bi.nonce;
-        }
-        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
-        pblock->hashPrevBlock = pblock->GetHash();
-    }
-
-    LOCK(cs_main);
-    LOCK(m_node.mempool->cs);
-
     // Just to make sure we can still make simple blocks
-    BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
+    auto pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey);
+    BOOST_CHECK(pblocktemplate);
 
     const CAmount BLOCKSUBSIDY = 50*COIN;
     const CAmount LOWFEE = CENT;
@@ -386,7 +345,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[0].prevout.n = 0;
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout[0].nValue = BLOCKSUBSIDY-LOWFEE;
-    script = CScript() << OP_0;
+    CScript script = CScript() << OP_0;
     tx.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(script));
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
@@ -508,12 +467,142 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5U);
+}
+
+void MinerTestingSetup::TestPrioritisedMining(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+{
+    TestMemPoolEntryHelper entry;
+
+    // Test that a tx below min fee but prioritised is included
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    uint256 hashFreePrioritisedTx = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(0).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    m_node.mempool->PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
+
+    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vout[0].nValue = 5000000000LL - 1000;
+    // This tx has a low fee: 1000 satoshis
+    uint256 hashParentTx = tx.GetHash(); // save this txid for later use
+    m_node.mempool->addUnchecked(entry.Fee(1000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+
+    // This tx has a medium fee: 10000 satoshis
+    tx.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx.vout[0].nValue = 5000000000LL - 10000;
+    uint256 hashMediumFeeTx = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(10000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    m_node.mempool->PrioritiseTransaction(hashMediumFeeTx, -5 * COIN);
+
+    // This tx also has a low fee, but is prioritised
+    tx.vin[0].prevout.hash = hashParentTx;
+    tx.vout[0].nValue = 5000000000LL - 1000 - 1000; // 1000 satoshi fee
+    uint256 hashPrioritsedChild = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(1000).Time(GetTime()).SpendsCoinbase(false).FromTx(tx));
+    m_node.mempool->PrioritiseTransaction(hashPrioritsedChild, 2 * COIN);
+
+    // Test that transaction selection properly updates ancestor fee calculations as prioritised
+    // parents get included in a block. Create a transaction with two prioritised ancestors, each
+    // included by itself: FreeParent <- FreeChild <- FreeGrandchild.
+    // When FreeParent is added, a modified entry will be created for FreeChild + FreeGrandchild
+    // FreeParent's prioritisation should not be included in that entry.
+    // When FreeChild is included, FreeChild's prioritisation should also not be included.
+    tx.vin[0].prevout.hash = txFirst[3]->GetHash();
+    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    uint256 hashFreeParent = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
+    m_node.mempool->PrioritiseTransaction(hashFreeParent, 10 * COIN);
+
+    tx.vin[0].prevout.hash = hashFreeParent;
+    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    uint256 hashFreeChild = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
+    m_node.mempool->PrioritiseTransaction(hashFreeChild, 1 * COIN);
+
+    tx.vin[0].prevout.hash = hashFreeChild;
+    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    uint256 hashFreeGrandchild = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
+
+    auto pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey);
+    BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 6U);
+    BOOST_CHECK(pblocktemplate->block.vtx[1]->GetHash() == hashFreeParent);
+    BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashFreePrioritisedTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[3]->GetHash() == hashParentTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[4]->GetHash() == hashPrioritsedChild);
+    BOOST_CHECK(pblocktemplate->block.vtx[5]->GetHash() == hashFreeChild);
+    for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
+        // The FreeParent and FreeChild's prioritisations should not impact the child.
+        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeGrandchild);
+        // De-prioritised transaction should not be included.
+        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashMediumFeeTx);
+    }
+}
+
+// NOTE: These tests rely on CreateNewBlock doing its own self-validation!
+BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
+{
+    // Note that by default, these tests run with size accounting enabled.
+    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    const CChainParams& chainparams = *chainParams;
+    CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+    std::unique_ptr<CBlockTemplate> pblocktemplate;
+
+    fCheckpointsEnabled = false;
+
+    // Simple block creation, nothing special yet:
+    BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
+
+    // We can't make transactions until we have inputs
+    // Therefore, load 110 blocks :)
+    static_assert(std::size(BLOCKINFO) == 110, "Should have 110 blocks to import");
+    int baseheight = 0;
+    std::vector<CTransactionRef> txFirst;
+    for (const auto& bi : BLOCKINFO) {
+        CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+        {
+            LOCK(cs_main);
+            pblock->nVersion = VERSIONBITS_TOP_BITS;
+            pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
+            CMutableTransaction txCoinbase(*pblock->vtx[0]);
+            txCoinbase.nVersion = 1;
+            txCoinbase.vin[0].scriptSig = CScript{} << (m_node.chainman->ActiveChain().Height() + 1) << bi.extranonce;
+            txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
+            txCoinbase.vout[0].scriptPubKey = CScript();
+            pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+            if (txFirst.size() == 0)
+                baseheight = m_node.chainman->ActiveChain().Height();
+            if (txFirst.size() < 4)
+                txFirst.push_back(pblock->vtx[0]);
+            pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+            pblock->nNonce = bi.nonce;
+        }
+        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+        BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
+        pblock->hashPrevBlock = pblock->GetHash();
+    }
+
+    LOCK(cs_main);
+    LOCK(m_node.mempool->cs);
+
+    TestBasicMining(chainparams, scriptPubKey, txFirst, baseheight);
 
     m_node.chainman->ActiveChain().Tip()->nHeight--;
     SetMockTime(0);
     m_node.mempool->clear();
 
     TestPackageSelection(chainparams, scriptPubKey, txFirst);
+
+    m_node.chainman->ActiveChain().Tip()->nHeight--;
+    SetMockTime(0);
+    m_node.mempool->clear();
+
+    TestPrioritisedMining(chainparams, scriptPubKey, txFirst);
 
     fCheckpointsEnabled = true;
 }
