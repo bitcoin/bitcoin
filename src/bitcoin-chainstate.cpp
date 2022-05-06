@@ -115,12 +115,14 @@ int main(int argc, char* argv[])
     // Main program logic starts here
     std::cout
         << "Hello! I'm going to print out some information about your datadir." << std::endl
-        << "\t" << "Path: " << gArgs.GetDataDirNet() << std::endl
+        << "\t" << "Path: " << gArgs.GetDataDirNet() << std::endl;
+    {
+        LOCK(chainman.GetMutex());
+        std::cout
         << "\t" << "Reindexing: " << std::boolalpha << node::fReindex.load() << std::noboolalpha << std::endl
         << "\t" << "Snapshot Active: " << std::boolalpha << chainman.IsSnapshotActive() << std::noboolalpha << std::endl
         << "\t" << "Active Height: " << chainman.ActiveHeight() << std::endl
         << "\t" << "Active IBD: " << std::boolalpha << chainman.ActiveChainstate().IsInitialBlockDownload() << std::noboolalpha << std::endl;
-    {
         CBlockIndex* tip = chainman.ActiveTip();
         if (tip) {
             std::cout << "\t" << tip->ToString() << std::endl;

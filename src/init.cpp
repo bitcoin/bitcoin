@@ -1547,7 +1547,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;
-    if (chainman.ActiveChain().Tip() == nullptr) {
+    if (WITH_LOCK(chainman.GetMutex(), return chainman.ActiveChain().Tip() == nullptr)) {
         block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(std::bind(BlockNotifyGenesisWait, std::placeholders::_2));
     } else {
         fHaveGenesis = true;

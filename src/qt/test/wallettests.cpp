@@ -175,14 +175,14 @@ void TestGUI(interfaces::Node& node)
         if (!wallet->AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
         CTxDestination dest = GetDestinationForKey(test.coinbaseKey.GetPubKey(), wallet->m_default_address_type);
         wallet->SetAddressBook(dest, "", "receive");
-        wallet->SetLastBlockProcessed(105, node.context()->chainman->ActiveChain().Tip()->GetBlockHash());
+        wallet->SetLastBlockProcessed(105, WITH_LOCK(node.context()->chainman->GetMutex(), return node.context()->chainman->ActiveChain().Tip()->GetBlockHash()));
     }
     {
         WalletRescanReserver reserver(*wallet);
         reserver.reserve();
         CWallet::ScanResult result = wallet->ScanForWalletTransactions(Params().GetConsensus().hashGenesisBlock, /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/true, /*save_progress=*/false);
         QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
-        QCOMPARE(result.last_scanned_block, node.context()->chainman->ActiveChain().Tip()->GetBlockHash());
+        QCOMPARE(result.last_scanned_block, WITH_LOCK(node.context()->chainman->GetMutex(), return node.context()->chainman->ActiveChain().Tip()->GetBlockHash()));
         QVERIFY(result.last_failed_block.IsNull());
     }
     wallet->SetBroadcastTransactions(true);
