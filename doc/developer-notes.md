@@ -657,10 +657,6 @@ Wallet
 
 - Make sure that no crashes happen with run-time option `-disablewallet`.
 
-- Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set.
-
-  - *Rationale*: Otherwise compilation of the disable-wallet build will fail in environments without BerkeleyDB.
-
 General C++
 -------------
 
