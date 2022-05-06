@@ -56,11 +56,11 @@
 #include <warnings.h>
 
 #include <algorithm>
+#include <deque>
 #include <numeric>
 #include <optional>
 #include <string>
 
-#include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
 #include <key_io.h>
 #include <masternode/masternodepayments.h>
@@ -1762,7 +1762,7 @@ static void AlertNotify(const std::string& strMessage)
     std::string singleQuote("'");
     std::string safeStatus = SanitizeString(strMessage);
     safeStatus = singleQuote+safeStatus+singleQuote;
-    boost::replace_all(strCmd, "%s", safeStatus);
+    ReplaceAll(strCmd, "%s", safeStatus);
 
     std::thread t(runCommand, strCmd);
     t.detach(); // thread runs free
