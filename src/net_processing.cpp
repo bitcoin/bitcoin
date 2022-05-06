@@ -905,6 +905,19 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         PushNodeVersion(pnode, connman, GetTime());
 }
 
+void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
+{
+    std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+
+    for (const uint256& txid : unbroadcast_txids) {
+        RelayTransaction(txid, *connman);
+    }
+
+    // schedule next run for 10-15 minutes in the future
+    const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
+    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta.count());
+}
+
 void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
     fUpdateConnectionTime = false;
     LOCK(cs_main);
@@ -1170,6 +1183,10 @@ PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CS
     // timer.
     static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
     scheduler.scheduleEvery(std::bind(&PeerLogicValidation::CheckForStaleTipAndEvictPeers, this, consensusParams), EXTRA_PEER_CHECK_INTERVAL * 1000);
+
+    // schedule next run for 10-15 minutes in the future
+    const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
+    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta.count());
 }
 
 /**
@@ -1637,7 +1654,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
     }
 }
 
-void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, const CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
+void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
 {
     AssertLockNotHeld(cs_main);
 
@@ -1688,6 +1705,13 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                         push = true;
                     }
                 }
+            }
+
+            if (push) {
+                // We interpret fulfilling a GETDATA for a transaction as a
+                // successful initial broadcast and remove it from our
+                // unbroadcast set.
+                mempool.RemoveUnbroadcastTx(inv.hash);
             }
 
             if (!push && inv.type == MSG_SPORK) {
@@ -1744,6 +1768,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                     push = true;
                 }
             }
+
             if (!push && (inv.type == MSG_QUORUM_COMPLAINT)) {
                 llmq::CDKGComplaint o;
                 if (llmq::quorumDKGSessionManager->GetComplaint(inv.hash, o)) {
@@ -1751,6 +1776,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                     push = true;
                 }
             }
+
             if (!push && (inv.type == MSG_QUORUM_JUSTIFICATION)) {
                 llmq::CDKGJustification o;
                 if (llmq::quorumDKGSessionManager->GetJustification(inv.hash, o)) {
@@ -1758,6 +1784,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                     push = true;
                 }
             }
+
             if (!push && (inv.type == MSG_QUORUM_PREMATURE_COMMITMENT)) {
                 llmq::CDKGPrematureCommitment o;
                 if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
@@ -1765,6 +1792,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                     push = true;
                 }
             }
+
             if (!push && (inv.type == MSG_QUORUM_RECOVERED_SIG)) {
                 llmq::CRecoveredSig o;
                 if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
@@ -1790,8 +1818,9 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 }
             }
 
-            if (!push)
+            if (!push) {
                 vNotFound.push_back(inv);
+            }
         }
     } // release cs_main
 

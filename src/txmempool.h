@@ -581,6 +581,9 @@ private:
 
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    /** track locally submitted transactions to periodically retry initial broadcast */
+    std::set<uint256> m_unbroadcast_txids GUARDED_BY(cs);
+
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas;
@@ -749,6 +752,21 @@ public:
 
     boost::signals2::signal<void (CTransactionRef)> NotifyEntryAdded;
     boost::signals2::signal<void (CTransactionRef, MemPoolRemovalReason)> NotifyEntryRemoved;
+
+    /** Adds a transaction to the unbroadcast set */
+    void AddUnbroadcastTx(const uint256& txid) {
+        LOCK(cs);
+        m_unbroadcast_txids.insert(txid);
+    }
+
+    /** Removes a transaction from the unbroadcast set */
+    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
+
+    /** Returns transactions in unbroadcast set */
+    const std::set<uint256> GetUnbroadcastTxs() const {
+        LOCK(cs);
+        return m_unbroadcast_txids;
+    }
 
 private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
