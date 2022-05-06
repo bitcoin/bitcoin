@@ -96,7 +96,10 @@ code.
     Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
     which recommend using `snake_case`.  Please use what seems appropriate.
   - Class names, function names, and method names are UpperCamelCase
-    (PascalCase). Do not prefix class names with `C`.
+    (PascalCase). Do not prefix class names with `C`. See [Internal interface
+    naming style](#internal-interface-naming-style) for an exception to this
+    convention.
+
   - Test suite naming convention: The Boost test suite in file
     `src/test/foo_tests.cpp` should be named `foo_tests`. Test suite names
     must be unique.
@@ -1415,6 +1418,8 @@ communication:
   virtual bool disconnect(const CNetAddr& net_addr) = 0;
   virtual bool disconnect(NodeId id) = 0;
   ```
+
+### Internal interface naming style
 
 - For consistency and friendliness to code generation tools, interface method
   names should be `lowerCamelCase` and standalone function names should be
