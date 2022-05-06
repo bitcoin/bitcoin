@@ -15,7 +15,7 @@
 
 using namespace std::chrono_literals;
 
-BOOST_FIXTURE_TEST_SUITE(sock_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(sock_tests)
 
 static bool SocketIsClosed(const SOCKET& s)
 {
