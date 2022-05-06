@@ -32,11 +32,20 @@ namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
     void TestBasicMining(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
-    void TestPrioritisedMining(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
+    void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool TestSequenceLocks(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs)
     {
         CCoinsViewMemPool view_mempool(&m_node.chainman->ActiveChainstate().CoinsTip(), *m_node.mempool);
         return CheckSequenceLocksAtTip(m_node.chainman->ActiveChain().Tip(), view_mempool, tx);
+    }
+    CTxMemPool& MakeMempool()
+    {
+        // Delete the previous mempool to ensure with valgrind that the old
+        // pointer is not accessed, when the new one should be accessed
+        // instead.
+        m_node.mempool.reset();
+        m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node));
+        return *m_node.mempool;
     }
     BlockAssembler AssemblerForTest(CTxMemPool& tx_mempool);
 };
@@ -476,9 +485,10 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5U);
 }
 
-void MinerTestingSetup::TestPrioritisedMining(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
 {
-    CTxMemPool& tx_mempool{*m_node.mempool};
+    CTxMemPool& tx_mempool{MakeMempool()};
+    LOCK(tx_mempool.cs);
 
     TestMemPoolEntryHelper entry;
 
@@ -491,29 +501,29 @@ void MinerTestingSetup::TestPrioritisedMining(const CChainParams& chainparams, c
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     uint256 hashFreePrioritisedTx = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(0).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
-    m_node.mempool->PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
+    tx_mempool.addUnchecked(entry.Fee(0).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    tx_mempool.PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
 
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].prevout.n = 0;
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
     uint256 hashParentTx = tx.GetHash(); // save this txid for later use
-    m_node.mempool->addUnchecked(entry.Fee(1000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    tx_mempool.addUnchecked(entry.Fee(1000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
     uint256 hashMediumFeeTx = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(10000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
-    m_node.mempool->PrioritiseTransaction(hashMediumFeeTx, -5 * COIN);
+    tx_mempool.addUnchecked(entry.Fee(10000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    tx_mempool.PrioritiseTransaction(hashMediumFeeTx, -5 * COIN);
 
     // This tx also has a low fee, but is prioritised
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 1000; // 1000 satoshi fee
     uint256 hashPrioritsedChild = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(1000).Time(GetTime()).SpendsCoinbase(false).FromTx(tx));
-    m_node.mempool->PrioritiseTransaction(hashPrioritsedChild, 2 * COIN);
+    tx_mempool.addUnchecked(entry.Fee(1000).Time(GetTime()).SpendsCoinbase(false).FromTx(tx));
+    tx_mempool.PrioritiseTransaction(hashPrioritsedChild, 2 * COIN);
 
     // Test that transaction selection properly updates ancestor fee calculations as prioritised
     // parents get included in a block. Create a transaction with two prioritised ancestors, each
@@ -524,19 +534,19 @@ void MinerTestingSetup::TestPrioritisedMining(const CChainParams& chainparams, c
     tx.vin[0].prevout.hash = txFirst[3]->GetHash();
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     uint256 hashFreeParent = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
-    m_node.mempool->PrioritiseTransaction(hashFreeParent, 10 * COIN);
+    tx_mempool.addUnchecked(entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
+    tx_mempool.PrioritiseTransaction(hashFreeParent, 10 * COIN);
 
     tx.vin[0].prevout.hash = hashFreeParent;
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     uint256 hashFreeChild = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
-    m_node.mempool->PrioritiseTransaction(hashFreeChild, 1 * COIN);
+    tx_mempool.addUnchecked(entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
+    tx_mempool.PrioritiseTransaction(hashFreeChild, 1 * COIN);
 
     tx.vin[0].prevout.hash = hashFreeChild;
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     uint256 hashFreeGrandchild = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
+    tx_mempool.addUnchecked(entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
 
     auto pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
     BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 6U);
@@ -608,9 +618,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     m_node.chainman->ActiveChain().Tip()->nHeight--;
     SetMockTime(0);
-    m_node.mempool->clear();
 
-    TestPrioritisedMining(chainparams, scriptPubKey, txFirst);
+    TestPrioritisedMining(scriptPubKey, txFirst);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
