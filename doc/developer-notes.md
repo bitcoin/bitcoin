@@ -859,12 +859,12 @@ from using a different variable with the same name),
 please name variables so that their names do not shadow variables defined in the source code.
 
 When using nested cycles, do not name the inner cycle variable the same as in
-the upper cycle, etc.
+the outer cycle, etc.
 
 Threads and synchronization
 ----------------------------
 
-- Prefer `Mutex` type to `RecursiveMutex` one
+- Prefer `Mutex` type to `RecursiveMutex` one.
 
 - Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
   get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
@@ -942,6 +942,8 @@ TRY_LOCK(cs_vNodes, lockNodes);
 
 Scripts
 --------------------------
+
+Write scripts in Python rather than bash, when possible.
 
 ### Shebang
 
@@ -1386,7 +1388,7 @@ communication:
   ```
 
 - For consistency and friendliness to code generation tools, interface method
-  input and inout parameters should be ordered first and output parameters
+  input and in-out parameters should be ordered first and output parameters
   should come last.
 
   Example:
