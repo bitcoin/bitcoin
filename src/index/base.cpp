@@ -168,7 +168,7 @@ void BaseIndex::ThreadSync()
             }
 
             if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
-                SetBestBlockIndex(pindex);
+                SetBestBlockIndex(pindex->pprev);
                 last_locator_write_time = current_time;
                 // No need to handle errors in Commit. See rationale above.
                 Commit();
