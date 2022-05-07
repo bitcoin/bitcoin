@@ -25,7 +25,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
 {
     if (nIn >= txTo.vin.size())
     {
-        return UINT256_ONE();
+        return uint256::ONE;
     }
     CMutableTransaction txTmp(txTo);
 
@@ -55,7 +55,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         unsigned int nOut = nIn;
         if (nOut >= txTmp.vout.size())
         {
-            return UINT256_ONE();
+            return uint256::ONE;
         }
         txTmp.vout.resize(nOut+1);
         for (unsigned int i = 0; i < nOut; i++)

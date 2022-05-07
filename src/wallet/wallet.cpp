@@ -327,8 +327,6 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
     return WalletCreationStatus::SUCCESS;
 }
 
-const uint256 CWalletTx::ABANDON_HASH(UINT256_ONE());
-
 /** @defgroup mapWallet
  *
  * @{
