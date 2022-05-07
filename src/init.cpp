@@ -966,12 +966,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
 
     if (fMasternodeMode) {
         assert(activeMasternodeManager);
-        const CBlockIndex* pindexTip;
-        {
-            LOCK(cs_main);
-            pindexTip = ::ChainActive().Tip();
-        }
-        activeMasternodeManager->Init(pindexTip);
+        activeMasternodeManager->Init(::ChainActive().Tip());
     }
 
     g_wallet_init_interface.AutoLockMasternodeCollaterals();
@@ -999,12 +994,7 @@ void PeriodicStats()
     }
 
     // short version of GetNetworkHashPS(120, -1);
-    CBlockIndex *tip;
-    {
-        LOCK(cs_main);
-        tip = ::ChainActive().Tip();
-        assert(tip);
-    }
+    CBlockIndex *tip = ::ChainActive().Tip();
     CBlockIndex *pindex = tip;
     int64_t minTime = pindex->GetBlockTime();
     int64_t maxTime = minTime;
@@ -2284,14 +2274,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
 
-    bool fLoadCacheFiles = !(fReindex || fReindexChainState);
-    {
-        LOCK(cs_main);
-        // was blocks/chainstate deleted?
-        if (::ChainActive().Tip() == nullptr) {
-            fLoadCacheFiles = false;
-        }
-    }
+    bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (::ChainActive().Tip() != nullptr);
     fs::path pathDB = GetDataDir();
     std::string strDBName;
 

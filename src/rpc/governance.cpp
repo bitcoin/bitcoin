@@ -202,7 +202,6 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    auto locked_chain = wallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
     {
@@ -226,9 +225,9 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
 
     CTransactionRef tx;
 
-    bool fork_active = VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE;
+    bool fork_active = WITH_LOCK(cs_main, return VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
 
-    if (!pwallet->GetBudgetSystemCollateralTX(*locked_chain, tx, govobj.GetHash(), govobj.GetMinCollateralFee(fork_active), outpoint)) {
+    if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(fork_active), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (!request.params[5].isNull() && !request.params[6].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
@@ -241,7 +240,10 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     // -- send the tx to the network
-    pwallet->CommitTransaction(tx, {}, {});
+    {
+        LOCK(cs_main);
+        pwallet->CommitTransaction(tx, {}, {});
+    }
 
     LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());

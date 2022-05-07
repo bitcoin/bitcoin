@@ -115,19 +115,15 @@ void TestGUI(interfaces::Node& node)
     bool firstRun;
     wallet->LoadWallet(firstRun);
     {
-        auto locked_chain = wallet->chain().lock();
         LOCK(wallet->cs_wallet);
         wallet->SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
         wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
         wallet->SetLastBlockProcessed(105, ::ChainActive().Tip()->GetBlockHash());
     }
     {
-        auto locked_chain = wallet->chain().lock();
-        LockAssertion lock(::cs_main);
-
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        CWallet::ScanResult result = wallet->ScanForWalletTransactions(locked_chain->getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(wallet->chain().getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
         QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
         QCOMPARE(result.last_scanned_block, ::ChainActive().Tip()->GetBlockHash());
         QVERIFY(result.last_failed_block.IsNull());

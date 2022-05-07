@@ -271,8 +271,11 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     }
 
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
-        return false;
+    {
+        LOCK2(pwallet->cs_wallet, cs_main);
+        if (!pwallet->CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
+            return false;
+        }
     }
 
     CAmount nAmountLeft = GetAmountLeft();
@@ -306,7 +309,10 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
         return false;
     }
 
-    pwallet->CommitTransaction(tx, {}, {});
+    {
+        LOCK2(pwallet->cs_wallet, cs_main);
+        pwallet->CommitTransaction(tx, {}, {});
+    }
 
     fKeepKeys = true;
 

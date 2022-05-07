@@ -182,7 +182,6 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
@@ -214,7 +213,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     coinControl.fRequireAllInputs = false;
 
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(*locked_chain, vecOutputs);
+    pwallet->AvailableCoins(vecOutputs);
 
     for (const auto& out : vecOutputs) {
         CTxDestination txDest;
@@ -232,7 +231,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     bilingual_str strFailReason;
 
-    if (!pwallet->CreateTransaction(*locked_chain, vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason.original);
     }
 
@@ -1012,7 +1011,7 @@ static UniValue protx_list(const JSONRPCRequest& request)
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
         }
 #ifdef ENABLE_WALLET
-        LOCK2(cs_main, pwallet->cs_wallet);
+        LOCK2(pwallet->cs_wallet, cs_main);
 
         if (request.params.size() > 4) {
             protx_list_help(request);

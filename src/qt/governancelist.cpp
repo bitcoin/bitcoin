@@ -64,8 +64,8 @@ QString Proposal::url() const { return m_url; }
 
 bool Proposal::isActive() const
 {
-    std::string strError;
     LOCK(cs_main);
+    std::string strError;
     return govObj.IsValidLocally(strError, false);
 }
 
