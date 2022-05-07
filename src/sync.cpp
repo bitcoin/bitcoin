@@ -327,9 +327,9 @@ bool g_debug_lockorder_abort = true;
 
 
 template <typename Mutex, typename Base>
-void UniqueLock<Mutex, Base>::Enter(const char* pszName, const char* pszFile, int nLine)
+void UniqueLock<Mutex, Base>::Enter()
 {
-    EnterCritical(pszName, pszFile, nLine, Base::mutex());
+    EnterCritical(m_pszName, m_pszFile, m_nLine, Base::mutex());
 #ifdef DEBUG_LOCKCONTENTION
     if (Base::try_lock()) return;
     LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
@@ -338,9 +338,9 @@ void UniqueLock<Mutex, Base>::Enter(const char* pszName, const char* pszFile, in
 }
 
 template <typename Mutex, typename Base>
-bool UniqueLock<Mutex, Base>::TryEnter(const char* pszName, const char* pszFile, int nLine)
+bool UniqueLock<Mutex, Base>::TryEnter()
 {
-    EnterCritical(pszName, pszFile, nLine, Base::mutex(), true);
+    EnterCritical(m_pszName, m_pszFile, m_nLine, Base::mutex(), true);
     Base::try_lock();
     if (!Base::owns_lock()) {
         LeaveCritical();
@@ -349,12 +349,16 @@ bool UniqueLock<Mutex, Base>::TryEnter(const char* pszName, const char* pszFile,
 }
 
 template <typename Mutex, typename Base>
-UniqueLock<Mutex, Base>::UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
+UniqueLock<Mutex, Base>::UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry) EXCLUSIVE_LOCK_FUNCTION(mutexIn)
+    : Base(mutexIn, std::defer_lock),
+      m_pszName(pszName),
+      m_pszFile(pszFile),
+      m_nLine(nLine)
 {
     if (fTry)
-        TryEnter(pszName, pszFile, nLine);
+        TryEnter();
     else
-        Enter(pszName, pszFile, nLine);
+        Enter();
 }
 
 template <typename Mutex, typename Base>
@@ -363,10 +367,13 @@ UniqueLock<Mutex, Base>::UniqueLock(Mutex* pmutexIn, const char* pszName, const 
     if (!pmutexIn) return;
 
     *static_cast<Base*>(this) = Base(*pmutexIn, std::defer_lock);
+    m_pszName = pszName;
+    m_pszFile = pszFile;
+    m_nLine = nLine;
     if (fTry)
-        TryEnter(pszName, pszFile, nLine);
+        TryEnter();
     else
-        Enter(pszName, pszFile, nLine);
+        Enter();
 }
 
 template <typename Mutex, typename Base>

@@ -135,9 +135,13 @@ typedef AnnotatedMixin<std::mutex> Mutex;
 template <typename Mutex, typename Base = typename Mutex::UniqueLock>
 class SCOPED_LOCKABLE UniqueLock : public Base
 {
+    const char* m_pszName;
+    const char* m_pszFile;
+    int m_nLine;
+
 private:
-    void Enter(const char* pszName, const char* pszFile, int nLine);
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine);
+    void Enter();
+    bool TryEnter();
 
 public:
     UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn);
