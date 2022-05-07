@@ -5,7 +5,6 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional, Sequence, Callable, Any, Dict, Set
 
-import miner
 from test_framework.address import base58_to_byte
 
 from test_framework.conftest import (
@@ -23,6 +22,9 @@ from test_framework.test_framework import TMPDIR_PREFIX, BitcoinTestFramework
 from test_framework.test_node import TestNode
 from test_framework.util import PortSeed, initialize_datadir, assert_equal
 
+# import itcoin's miner
+from .itcoin_abs_import import import_miner
+miner = import_miner()
 
 class NodeWrapper:
     """Wrapper to a 'TestNode' instance."""
@@ -132,14 +134,14 @@ class BaseSignetTest(BitcoinTestFramework):
 
         # Get deterministic keypairs for signet
         self._key_pairs = self.deterministic_key_pairs(self.signet_num_signers)
-        
+
         # Extract the public keys
         node_keys = [ECKey() for i in range(self.signet_num_signers)]
         for i, key in enumerate(node_keys):
             key_b = base58_to_byte(self._key_pairs[i].key)[0][:-1]
             key.set(key_b, True)
         pubkeys = [key.get_pubkey().get_bytes().hex() for key in node_keys]
-        
+
         # we use str.lower to avoid case-sensitive ordering in case of misformatted input
         self._index_to_pubkey = sorted(pubkeys, key=str.lower)
         self._pubkey_to_index = dict(map(reversed, enumerate(self._index_to_pubkey)))

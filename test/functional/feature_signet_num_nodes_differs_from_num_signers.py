@@ -6,19 +6,13 @@
 import time
 import sys, os
 
-# Edit pythonpath to include contrib/signet, this is also needed in BaseSignetTest, which imports miner
-PATH_BASE_CURRENT_MODULE = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-PATH_BASE_DEPENDENCY_MODULE = os.path.abspath(os.path.join(PATH_BASE_CURRENT_MODULE, "..", "..", "contrib", "signet"))
-
-if (PATH_BASE_DEPENDENCY_MODULE not in sys.path):
-    sys.path.insert(0, PATH_BASE_DEPENDENCY_MODULE)
-
-# Now we can import the miner
-import miner
-
-# And the test primitives
+# Import the test primitives
 from test_framework.test_framework_signet import BaseSignetTest
 from test_framework.util import assert_equal
+
+# import itcoin's miner
+from test_framework.itcoin_abs_import import import_miner
+miner = import_miner()
 
 class SignetNumNodesDiffersFromNumSigners(BaseSignetTest):
 

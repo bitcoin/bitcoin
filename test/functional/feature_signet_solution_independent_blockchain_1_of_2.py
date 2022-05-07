@@ -6,19 +6,13 @@
 import time
 import sys, os
 
-# Edit pythonpath to include contrib/signet, this is also needed in BaseSignetTest, which imports miner
-PATH_BASE_CURRENT_MODULE = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-PATH_BASE_DEPENDENCY_MODULE = os.path.abspath(os.path.join(PATH_BASE_CURRENT_MODULE, "..", "..", "contrib", "signet"))
-
-if (PATH_BASE_DEPENDENCY_MODULE not in sys.path):
-    sys.path.insert(0, PATH_BASE_DEPENDENCY_MODULE)
-
-# Now we can import the miner
-import miner
-
-# And the test primitives
+# Import the test primitives
 from test_framework.test_framework_signet import BaseSignetTest
 from test_framework.util import assert_equal
+
+# import itcoin's miner
+from test_framework.itcoin_abs_import import import_miner
+miner = import_miner()
 
 class SignetSignatureIndependentMerkleRootTest(BaseSignetTest):
 
@@ -97,8 +91,8 @@ class SignetSignatureIndependentMerkleRootTest(BaseSignetTest):
         self.assert_blockchaininfo_property_forall_nodes("bestblockhash", expected_bestblockhash)
 
         # Check a reorg did not occurr after the partition is resolved
-        assert(expected_bestblockhash == bestblockhash_before_connect)        
-        
+        assert(expected_bestblockhash == bestblockhash_before_connect)
+
         #  but they kept the same different coinbase txs
         block3_coinbase_0 = self.nodes[0].getblock(self.nodes[0].getblockhash(3))["tx"][0]
         block3_coinbase_1 = self.nodes[1].getblock(self.nodes[1].getblockhash(3))["tx"][0]
