@@ -78,9 +78,17 @@ startEphemeralDaemon() {
 #       read -r PUBKEY
 #     } <<< "$(generateKeypair)"
 generateKeypair() {
-    local TMPADDR=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest getnewaddress)
-    local PRIVKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest dumpprivkey "${TMPADDR}")
-    local PUBKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli  -datadir="${TMPDIR}" -regtest getaddressinfo "${TMPADDR}" |  jq -r '.pubkey')
+    # In order to trap errors in shell substitutions assigned to local
+    # variables, we have to split the declaration and the assignment.
+    #
+    # https://unix.stackexchange.com/questions/23026/how-can-i-get-bash-to-exit-on-backtick-failure-in-a-similar-way-to-pipefail#146900
+    local TMPADDR
+    local PRIVKEY
+    local PUBKEY
+
+    TMPADDR=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest getnewaddress)
+    PRIVKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest dumpprivkey "${TMPADDR}")
+    PUBKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli  -datadir="${TMPDIR}" -regtest getaddressinfo "${TMPADDR}" |  jq -r '.pubkey')
 
     echo ${PRIVKEY}
     echo ${PUBKEY}
