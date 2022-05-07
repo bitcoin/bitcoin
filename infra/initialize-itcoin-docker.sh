@@ -111,7 +111,7 @@ docker run \
 
 # Only the first time: let's create a wallet and call it itcoin_signer
 errecho "Create wallet itcoin_signer"
-"${MYDIR}/run-docker-bitcoin-cli.sh" -named createwallet wallet_name=itcoin_signer >/dev/null
+"${MYDIR}/run-docker-bitcoin-cli.sh" -named createwallet wallet_name=itcoin_signer descriptors=false >/dev/null
 errecho "Wallet itcoin_signer created"
 
 # Now we need to import inside itcoin_signer the private key we generated

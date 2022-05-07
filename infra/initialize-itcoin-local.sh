@@ -89,7 +89,7 @@ errecho "ItCoin daemon: warmed up"
 
 # Only the first time: let's create a wallet and call it itcoin_signer
 errecho "Create wallet itcoin_signer"
-"${BITCOIN_CLI}" -datadir="${DATADIR}" -named createwallet wallet_name=itcoin_signer >/dev/null
+"${BITCOIN_CLI}" -datadir="${DATADIR}" -named createwallet wallet_name=itcoin_signer descriptors=false >/dev/null
 errecho "Wallet itcoin_signer created"
 
 # Now we need to import inside itcoin_signer the private key we generated
