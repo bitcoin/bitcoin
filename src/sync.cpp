@@ -327,12 +327,16 @@ bool g_debug_lockorder_abort = true;
 #endif /* DEBUG_LOCKORDER */
 
 template <typename PARENT>
-AnnotatedMixin<PARENT>::AnnotatedMixin() = default;
+AnnotatedMixin<PARENT>::AnnotatedMixin()
+{
+    TRACE1(sync, mutex_ctor, this);
+}
 
 template <typename PARENT>
 AnnotatedMixin<PARENT>::~AnnotatedMixin()
 {
     DeleteLock((void*)this);
+    TRACE1(sync, mutex_dtor, this);
 }
 
 template <typename PARENT>
