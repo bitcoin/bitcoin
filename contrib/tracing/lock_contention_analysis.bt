@@ -1,0 +1,117 @@
+#!/usr/bin/env bpftrace
+
+/*
+
+  USAGE:
+
+  bpftrace contrib/tracing/lock_contention_analysis.bt
+
+  This script requires a 'bitcoind' binary compiled with eBPF support and the
+  'sync' tracepoints. By default, it's assumed that 'bitcoind' is
+  located in './src/bitcoind'. This can be modified in the script below.
+
+  configure @min_blocked_duration_ns in the BEGIN section
+
+  NOTE: requires bpftrace v0.12.0 or above.
+*/
+
+BEGIN
+{
+    @min_blocked_duration_ns = (uint64)100000;
+
+    @start_ns = nsecs;
+    printf("minimum blocked duration: %lldµs\n\n", @min_blocked_duration_ns / (uint64)1000);
+    printf("timestamp       | Lock                                  | waiting duration  | waiting at                     | blocked by\n");
+    printf("---------------:|:--------------------------------------|------------------:|:-------------------------------|:------------------------------\n");
+}
+
+END
+{
+    printf("\n\nMonitored from %s to %s. top 50 lock contention locations (file, lineNo): µs\n",
+        strftime("%H:%M:%S.%f", @start_ns),
+        strftime("%H:%M:%S.%f", nsecs));
+    print(@locked_at_source_line, 50, 1000);
+
+    clear(@last_to_unlock);
+    clear(@locking_start);
+    clear(@start_ns);
+    clear(@min_blocked_duration_ns);
+    clear(@locked_at_source_line);
+}
+
+
+/* mutex creation
+   Register an entry in @last_to_unlock[$mutexAddr].
+*/
+usdt:./src/bitcoind:sync:mutex_ctor
+{
+    $mutexAddr = uptr(arg0);
+    @last_to_unlock[$mutexAddr] = (0, 0);
+}
+
+
+/* mutex destructor
+   Unregister the mutex (cleans up the map)
+*/
+usdt:./src/bitcoind:sync:mutex_dtor
+{
+    $mutexAddr = uptr(arg0);
+    delete(@last_to_unlock[$mutexAddr]);
+}
+
+
+/* Start of lock
+   remember timestamp when we try to acquire the lock
+*/
+usdt:./src/bitcoind:sync:enter
+{
+    $mutexAddr = uptr(arg0);
+    @locking_start[tid] = nsecs;
+}
+
+
+/* Lock acquired
+   Check how long it took between sync:enter until the lock was actually acquired
+   Log lock contention information when we waited long enough
+*/
+usdt:./src/bitcoind:sync:locked
+{
+    $duration_ns = nsecs - @locking_start[tid];
+    delete(@locking_start[tid]);
+
+    /* Only show when we've been waiting for quite some time */
+    if ($duration_ns > @min_blocked_duration_ns) {
+        $mutexAddr = uptr(arg0);
+        $pszName = str(arg1);
+        $pszFile = str(arg2);
+        $nLine = (int32)arg3;
+        $lastLocker = @last_to_unlock[$mutexAddr];
+
+        printf("%s | %-38s| %15lldµs | %-24s(%4d) | %-24s(%4d)\n",
+            strftime("%H:%M:%S.%f", nsecs),
+            $pszName,
+            $duration_ns / (uint64)1000,
+            $pszFile,
+            $nLine,
+            str($lastLocker.0),
+            $lastLocker.1);
+
+    }
+
+    /* clear mutex map, we don't want any old information */
+    @last_to_unlock[$mutexAddr] = (0, 0);
+    @locked_at_source_line[str(arg2), arg3] += $duration_ns
+}
+
+
+/* Unlocked:
+   Remember who unlocked the mutex, so the next who locks can print the lock contention time
+*/
+usdt:./src/bitcoind:sync:unlock
+{
+    $mutexAddr = uptr(arg0);
+    $pszFile = str(arg1);
+    $nLine = (int32)arg2;
+
+    @last_to_unlock[$mutexAddr] = (arg1, arg2);
+}
