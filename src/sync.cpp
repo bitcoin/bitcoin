@@ -326,6 +326,49 @@ bool g_debug_lockorder_abort = true;
 
 #endif /* DEBUG_LOCKORDER */
 
+template <typename PARENT>
+AnnotatedMixin<PARENT>::AnnotatedMixin() = default;
+
+template <typename PARENT>
+AnnotatedMixin<PARENT>::~AnnotatedMixin()
+{
+    DeleteLock((void*)this);
+}
+
+template <typename PARENT>
+void AnnotatedMixin<PARENT>::lock() EXCLUSIVE_LOCK_FUNCTION()
+{
+    PARENT::lock();
+}
+
+template <typename PARENT>
+void AnnotatedMixin<PARENT>::unlock() UNLOCK_FUNCTION()
+{
+    PARENT::unlock();
+}
+
+template <typename PARENT>
+bool AnnotatedMixin<PARENT>::try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
+{
+    return PARENT::try_lock();
+}
+
+#ifdef __clang__
+//! For negative capabilities in the Clang Thread Safety Analysis.
+//! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
+//! with the ! operator, to indicate that a mutex should not be held.
+template <typename PARENT>
+const AnnotatedMixin<PARENT>& AnnotatedMixin<PARENT>::operator!() const
+{
+    return *this;
+}
+#endif // __clang__
+
+// explicitly instantiate AnnotatedMixin
+template class AnnotatedMixin<std::mutex>;
+template class AnnotatedMixin<std::recursive_mutex>;
+
+
 
 template <typename Mutex, typename Base>
 void UniqueLock<Mutex, Base>::Enter()

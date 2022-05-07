@@ -94,31 +94,19 @@ template <typename PARENT>
 class LOCKABLE AnnotatedMixin : public PARENT
 {
 public:
-    ~AnnotatedMixin() {
-        DeleteLock((void*)this);
-    }
+    AnnotatedMixin();
+    ~AnnotatedMixin();
 
-    void lock() EXCLUSIVE_LOCK_FUNCTION()
-    {
-        PARENT::lock();
-    }
-
-    void unlock() UNLOCK_FUNCTION()
-    {
-        PARENT::unlock();
-    }
-
-    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
-    {
-        return PARENT::try_lock();
-    }
+    void lock() EXCLUSIVE_LOCK_FUNCTION();
+    void unlock() UNLOCK_FUNCTION();
+    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true);
 
     using UniqueLock = std::unique_lock<PARENT>;
 #ifdef __clang__
     //! For negative capabilities in the Clang Thread Safety Analysis.
     //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
     //! with the ! operator, to indicate that a mutex should not be held.
-    const AnnotatedMixin& operator!() const { return *this; }
+    const AnnotatedMixin& operator!() const;
 #endif // __clang__
 };
 
