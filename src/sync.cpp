@@ -12,6 +12,7 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
+#include <util/trace.h>
 
 #include <map>
 #include <mutex>
@@ -334,7 +335,9 @@ void UniqueLock<Mutex, Base>::Enter()
     if (Base::try_lock()) return;
     LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
 #endif
+    TRACE4(sync, enter, Base::mutex(), m_pszName, m_pszFile, m_nLine);
     Base::lock();
+    TRACE4(sync, locked, Base::mutex(), m_pszName, m_pszFile, m_nLine);
 }
 
 template <typename Mutex, typename Base>
@@ -344,6 +347,8 @@ bool UniqueLock<Mutex, Base>::TryEnter()
     Base::try_lock();
     if (!Base::owns_lock()) {
         LeaveCritical();
+    } else {
+        TRACE4(sync, try_locked, Base::mutex(), m_pszName, m_pszFile, m_nLine);
     }
     return Base::owns_lock();
 }
@@ -379,8 +384,10 @@ UniqueLock<Mutex, Base>::UniqueLock(Mutex* pmutexIn, const char* pszName, const 
 template <typename Mutex, typename Base>
 UniqueLock<Mutex, Base>::~UniqueLock() UNLOCK_FUNCTION()
 {
-    if (Base::owns_lock())
+    if (Base::owns_lock()) {
         LeaveCritical();
+        TRACE3(sync, unlock, Base::mutex(), m_pszFile, m_nLine);
+    }
 }
 
 template <typename Mutex, typename Base>
