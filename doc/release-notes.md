@@ -1,112 +1,88 @@
-Litecoin Core version 0.21.2 is now available from:
+0.21.2 Release Notes
+====================
 
- <https://download.litecoin.org/litecoin-0.21.2/>.
+Bitcoin Core version 0.21.2 is now available from:
 
-This is the largest update ever, providing full node, wallet, and mining support for MWEB.
+  <https://bitcoincore.org/bin/bitcoin-core-0.21.2/>
+
+This minor release includes various bug fixes and performance
+improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/litecoin-project/litecoin/issues>
+  <https://github.com/bitcoin/bitcoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://groups.google.com/forum/#!forum/litecoin-dev>
+  <https://bitcoincore.org/en/list/announcements/join/>
 
-
-How to upgrade: 
+How to Upgrade
 ==============
 
-Firstly, thank you for running Litecoin Core and helping secure the network!
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes in some cases), then run the
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+or `bitcoind`/`bitcoin-qt` (on Linux).
 
-As you’re running an older version of Litecoin Core, shut it down. Wait until it’s completely shut down  - which might take a few minutes for older versions - then follow these simple steps:
-For Windows: simply run the installer 
-For Mac: copy over to `/Applications/Litecoin-Qt` 
-For Linux: copy cover `litecoind`/`litecoin-qt`.
+Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+possible, but it might take some time if the data directory needs to be migrated. Old
+wallet versions of Bitcoin Core are generally supported.
 
-NB: upgrading directly from an ‘end of life’ version of Litecoin Core is possible, but it might take a while if the data directory needs to be migrated. Old wallet versions of Litecoin Core are generally supported.
- 
-
-Compatibility:
+Compatibility
 ==============
 
-Litecoin Core is supported and extensively tested on operating systems using the Linux kernel, macOS 10.10+,  Windows 7 and newer. It’s not recommended to use Litecoin Core on unsupported systems.
+Bitcoin Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  Bitcoin
+Core should also work on most other Unix-like systems but is not as
+frequently tested on them.  It is not recommended to use Bitcoin Core on
+unsupported systems.
 
-Litecoin Core should also work on most other Unix-like systems, but is not as frequently tested on them.
-
-MWEB fields added to BlockIndex, and block serialization format has changed. Downgrading to older versions is unsafe.
-
-If upgrading to 0.21.2 *after* MWEB has activated, you must resync to download MWEB blocks.
-
-Notable changes
-===============
-
-Consensus changes
------------------
-
-- This release implements the proposed MWEB consensus rules
-  ([LIP002](https://github.com/litecoin-project/lips/blob/master/lip-0002.mediawiki),
-  [LIP003](https://github.com/litecoin-project/lips/blob/master/lip-0003.mediawiki), and
-  [LIP004](https://github.com/litecoin-project/lips/blob/master/lip-0004.mediawiki))
-
-P2P and network changes
------------------------
-
-- A new service flag, NODE_MWEB (1 << 24), was added to signal to peers that the node supports MWEB.
-  When connected peers both advertise this capability, they are expected to provide all MWEB data when
-  sharing transactions, blocks, and compact blocks with each other.
-
-- Nodes now announce compact block version 3 support, informing peers that they can provide MWEB data
-  in compact blocks.
+From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
+longer supported. Additionally, Bitcoin Core does not yet change appearance
+when macOS "dark mode" is activated.
 
 
-Updated RPCs
-------------
+0.21.2 change log
+=================
 
-- `getblockheader` now returns an additional `mweb_header` field containing
-  all of the MWEB header data, and an `mweb_amount` field containing the total
-  number of coins pegged-in to the MWEB after applying the block.
+### P2P protocol and network code
 
-- `getblock` now returns an additional `mweb` field containing MWEB header info,
-  and all of the inputs, outputs, and kernels in the MWEB block.
+- #21644 use NetPermissions::HasFlag() in CConnman::Bind() (jonatack)
+- #22569 Rate limit the processing of rumoured addresses (sipa)
 
-- Added `mwebweight`, `descendantmwebweight`, `ancestormwebweight`, and `mweb`
-  fields to `getrawmempool`, `getmempoolancestors`, `getmempooldescendants`,
-  and `getmempoolentry`.
+### Wallet
 
-- Added new fields to describe MWEB transaction inputs, outputs, and kernels
-  for `getrawtransaction`.
+- #21907 Do not iterate a directory if having an error while accessing it (hebasto)
 
-Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section below.
+### RPC
 
-New settings
-------------
+- #19361 Reset scantxoutset progress before inferring descriptors (prusnak)
 
-- Added "fMWEBFeatures" option for enabling the new "Advanced MWEB Features"
-  control.
+### Build System
 
-Wallet Database
----------------
+- #21932 depends: update Qt 5.9 source url (kittywhiskers)
+- #22017 Update Windows code signing certificate (achow101)
+- #22191 Use custom MacOS code signing tool (achow101)
+- #22713 Fix build with Boost 1.77.0 (sizeofvoid)
 
-- Added "mweb_coin" type which stores MWEB coins and their derived keys.
+### Tests and QA
 
-- Added CHDChain version 4 which includes an MWEB key index counter and
-  the stealth address scan key.
+- #20182 Build with --enable-werror by default, and document exceptions (hebasto)
+- #20535 Fix intermittent feature_taproot issue (MarcoFalke)
+- #21663 Fix macOS brew install command (hebasto)
+- #22279 add missing ECCVerifyHandle to base_encode_decode (apoelstra)
+- #22730 Run fuzzer task for the master branch only (hebasto)
 
-- Added CKeyMetadata version 14 which includes the MWEB key index.
+### GUI
 
-- Added FEATURE_MWEB = 210000 minimum database version.
+- #277 Do not use QClipboard::Selection on Windows and macOS. (hebasto)
+- #280 Remove user input from URI error message (prayank23)
+- #365 Draw "eye" sign at the beginning of watch-only addresses (hebasto)
 
-Wallet RPC changes
-------------------
+### Miscellaneous
 
-- Added 'listwallettransactions' which matches the transaction list display values.
-
-GUI changes
------------
-
-- Added an "Advanced MWEB Features" control for testing. It’s only available
-  when the "-debug" argument is supplied, and the option is turned on in the
-  settings dialog.
+- #22002 Fix crash when parsing command line with -noincludeconf=0 (MarcoFalke)
+- #22137 util: Properly handle -noincludeconf on command line (take 2) (MarcoFalke)
 
 
 Credits
@@ -114,7 +90,20 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
-- [The Bitcoin Core Developers]
-- DavidBurkett
-- hectorchu
-- losh11
+- Andrew Chow
+- Andrew Poelstra
+- fanquake
+- Hennadii Stepanov
+- Jon Atack
+- Kittywhiskers Van Gogh
+- Luke Dashjr
+- MarcoFalke
+- Pavol Rusnak
+- Pieter Wuille
+- prayank23
+- Rafael Sadowski
+- W. J. van der Laan
+
+
+As well as to everyone that helped with translations on
+[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
