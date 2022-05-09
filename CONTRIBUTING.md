@@ -10,10 +10,9 @@ First, in terms of structure, there is no particular concept of "Dash Core
 developers" in the sense of privileged people. Open source often naturally
 revolves around a meritocracy where contributors earn trust from the developer
 community over time. Nevertheless, some hierarchy is necessary for practical
-purposes. As such, there are repository "maintainers" who are responsible for
-merging pull requests, as well as a "lead maintainer" who is responsible for the
-[release cycle](/doc/release-process.md) as well as overall merging, moderation
-and appointment of maintainers.
+purposes. As such, there are repository maintainers who are responsible for
+merging pull requests, the [release cycle](/doc/release-process.md), and
+moderation.
 
 Getting Started
 ---------------
@@ -272,7 +271,7 @@ projects such as libsecp256k1), and is not to be confused with overall Dash
 Network Protocol consensus changes.
 
 Whether a pull request is merged into Dash Core rests with the project merge
-maintainers and ultimately the project lead.
+maintainers.
 
 Maintainers will take into consideration if a patch is in line with the general
 principles of the project; meets the minimum standards for inclusion; and will
