@@ -41,10 +41,10 @@ public:
         iterator operator++() { value_ += step_; return *this; }
         reference operator*() { return value_; }
         const pointer operator->() { return &value_; }
-        bool operator==(const iterator& rhs) { return positive_step_ ? (value_ >= rhs.value_ && value_ > boundary_)
-                                                                     : (value_ <= rhs.value_ && value_ < boundary_); }
-        bool operator!=(const iterator& rhs) { return positive_step_ ? (value_ < rhs.value_ && value_ >= boundary_)
-                                                                     : (value_ > rhs.value_ && value_ <= boundary_); }
+        bool operator==(const iterator& rhs) const { return positive_step_ ? (value_ >= rhs.value_ && value_ > boundary_)
+                                                                           : (value_ <= rhs.value_ && value_ < boundary_); }
+        bool operator!=(const iterator& rhs) const { return positive_step_ ? (value_ < rhs.value_ && value_ >= boundary_)
+                                                                           : (value_ > rhs.value_ && value_ <= boundary_); }
 
     private:
         value_type value_;
