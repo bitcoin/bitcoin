@@ -6,7 +6,8 @@
 import argparse
 import base64
 import json
-import logging
+# ITCOIN_SPECIFIC logging is imported using "import as"
+import logging as logging_the_lib
 import math
 import os.path
 import re
@@ -30,15 +31,38 @@ from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_co
 from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, uint256_from_str # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
 
-logger = logging.getLogger("miner")
-logger.setLevel(logging.DEBUG)
+# ITCOIN_SPECIFIC - START
+#
+# bitcoin's contrib/signet/miner does not use a dedicated logger, and instead
+# directly calls logging.{debug,info,warning,error}. By default, the logging
+# module writes to stderr. This is ok as long as the miner is called via command
+# line.
+# However, in itcoin the miner is also loaded as a module by the functional test
+# framework. In that case we cannot afford to write to stderr, because the test
+# framework considers a failure any output to stderr.
+#
+# This section configures a proper logger for the miner module, but
+# monkey-patches the "logging" name, assigning it to the logger. In this way we
+# can keep the source code as close as possible to upstream, without breaking
+# the tests.
+#
+# If a proper logging was upstreamed in bitcoin, this patch could be reverted.
+logger = logging_the_lib.getLogger("miner")
+logger.setLevel(logging_the_lib.DEBUG)
 logger.propagate = False
-logger_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setLevel(logging.DEBUG)
+logger_formatter = logging_the_lib.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+stdout_handler = logging_the_lib.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging_the_lib.DEBUG)
 stdout_handler.setFormatter(logger_formatter)
 logger.addHandler(stdout_handler)
 
+# monkey patch: trick the rest of the source code to use a customized logger,
+# while thinking it is continuingto use the library's one.
+#
+# The "type: ignore" annotation here is necessary, because we are really
+# assigning something of type Logger to a name that was originally of Module
+logging = logger # type: ignore
+# ITCOIN_SPECIFIC - END
 
 SIGNET_HEADER = b"\xec\xc7\xda\xa2"
 PSBT_SIGNET_BLOCK = b"\xfc\x06signetb"    # proprietary PSBT global field holding the block being signed
@@ -367,9 +391,9 @@ def do_generate_next_block(args) -> Tuple[CBlock, dict, str]:
     # gbt
     tmpl = args.bcli("getblocktemplate", '{"rules":["signet","segwit"]}')
     if tmpl["previousblockhash"] != bci["bestblockhash"]:
-        logger.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
+        logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
         raise
-    logger.debug("GBT template: %s", tmpl)
+    logging.debug("GBT template: %s", tmpl)
 
     # address for reward
     reward_addr, reward_spk = get_reward_addr_spk(args, tmpl["height"])
@@ -387,7 +411,7 @@ def do_generate_next_block(args) -> Tuple[CBlock, dict, str]:
     block.nBits = int(tmpl["bits"], 16)
     block.nNonce = 0
     block.vtx = [cbtx] + [FromHex(CTransaction(), t["data"]) for t in tmpl["transactions"]]
-    logger.debug(f"Block merkle root (function which includes signatures) after block creation = { ser_uint256(block.calc_merkle_root()).hex() }")
+    logging.debug(f"Block merkle root (function which includes signatures) after block creation = { ser_uint256(block.calc_merkle_root()).hex() }")
 
     # Appending the witness commitment
     witnonce = 0
@@ -397,22 +421,22 @@ def do_generate_next_block(args) -> Tuple[CBlock, dict, str]:
     block.vtx[0].wit.vtxinwit = [cbwit]
     block.vtx[0].vout.append(CTxOut(0, get_witness_script(witroot, witnonce)))
     block.vtx[0].rehash()
-    logger.debug(f"Block merkle root (function which includes signatures) after appending witness commitment = { ser_uint256(block.calc_merkle_root()).hex() }")
+    logging.debug(f"Block merkle root (function which includes signatures) after appending witness commitment = { ser_uint256(block.calc_merkle_root()).hex() }")
 
     # Appending the SIGNET_HEADER
     # In itCoin this is made here, because the merkle root should include the signet header but not the signet solution
     # In the original signet, the signet header was appendend later, together with the signet solution. The merke root included both.
     block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER)
     block.vtx[0].rehash()
-    logger.debug(f"Block witness commitment after appending signet header = { block.vtx[0].vout[-1].scriptPubKey.hex() }")
-    logger.debug(f"Block merkle root (function which includes signatures) after appending signet header = { ser_uint256(block.calc_merkle_root()).hex() }")
+    logging.debug(f"Block witness commitment after appending signet header = { block.vtx[0].vout[-1].scriptPubKey.hex() }")
+    logging.debug(f"Block merkle root (function which includes signatures) after appending signet header = { ser_uint256(block.calc_merkle_root()).hex() }")
 
     # Transactions updated, recalculate block merkle root
     # Signet solution has not been added, so there is no need to use an itCoin signet specific merkle root calculator
     block.hashMerkleRoot = block.calc_merkle_root()
 
     # Mine block
-    logger.debug(f"Grinding block...")
+    logging.debug(f"Grinding block...")
     headhex = CBlockHeader.serialize(block).hex()
     cmd = grind_cmd.split(" ") + [headhex]
     subp_env = dict(os.environ, LD_LIBRARY_PATH=f'$LD_LIBRARY_PATH:{ITCOIN_PBFT_ROOT_DIR}/usrlocal/lib')
@@ -420,7 +444,7 @@ def do_generate_next_block(args) -> Tuple[CBlock, dict, str]:
     newhead = FromHex(CBlockHeader(), newheadhex.decode('utf8'))
     block.nNonce = newhead.nNonce
     block.rehash()
-    logger.debug(f"Block merkle root (function which includes signatures) after mining = { ser_uint256(block.calc_merkle_root()).hex() }")
+    logging.debug(f"Block merkle root (function which includes signatures) after mining = { ser_uint256(block.calc_merkle_root()).hex() }")
 
     return block, tmpl, reward_addr
 
@@ -429,13 +453,13 @@ def do_sign_block(args, block: CBlock, signet_spk) -> CBlock:
 
     # Creating the signet transactions
     signme, spendme = signet_txs(block, signet_spk_bin)
-    logger.debug(f"signme.vin[0] = {signme.vin[0]}")
+    logging.debug(f"signme.vin[0] = {signme.vin[0]}")
 
     # sign block
     psbt = do_createpsbt(block, signme, spendme)
     psbt_signed = args.bcli("walletprocesspsbt", psbt)
     if not psbt_signed.get("complete",False):
-        logger.debug("Generated PSBT: %s" % (psbt,))
+        logging.debug("Generated PSBT: %s" % (psbt,))
         sys.stderr.write("PSBT signing failed")
         raise RuntimeError("PSBT signing failed")
 
@@ -452,8 +476,8 @@ def do_sign_block(args, block: CBlock, signet_spk) -> CBlock:
     block_copy.vtx[0].vout[-1].scriptPubKey = block_copy.vtx[0].vout[-1].scriptPubKey[:-5] + CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
     block_copy.vtx[0].rehash()
 
-    logger.debug(f"Signet solution = { signet_solution.hex() }")
-    logger.debug(f"Block merkle root (function which includes signatures) after signature = { ser_uint256(block_copy.calc_merkle_root()).hex() }")
+    logging.debug(f"Signet solution = { signet_solution.hex() }")
+    logging.debug(f"Block merkle root (function which includes signatures) after signature = { ser_uint256(block_copy.calc_merkle_root()).hex() }")
 
     return block_copy
 
@@ -471,7 +495,7 @@ def do_sign_block_partial(args: DoGenerateArgs, block: CBlock, signet_spk: str) 
 
     # Creating the signet transactions
     signme, spendme = signet_txs(block, signet_spk_bin)
-    logger.debug(f"signme.vin[0] = {signme.vin[0]}")
+    logging.debug(f"signme.vin[0] = {signme.vin[0]}")
 
     psbt = do_createpsbt(block, signme, spendme)
 
@@ -527,14 +551,14 @@ def extract_block(args, psbt: str) -> CBlock:
     block_copy.vtx[0].vout[-1].scriptPubKey = block_copy.vtx[0].vout[-1].scriptPubKey[:-5] + CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
     block_copy.vtx[0].rehash()
 
-    logger.debug(f"Signet solution = { signet_solution.hex() }")
-    logger.debug(f"Block merkle root after signature = { ser_uint256(block_copy.calc_merkle_root()).hex() }")
+    logging.debug(f"Signet solution = { signet_solution.hex() }")
+    logging.debug(f"Block merkle root after signature = { ser_uint256(block_copy.calc_merkle_root()).hex() }")
 
     return block_copy
 
 def do_propagate_block(args, block: CBlock):
-    logger.debug(f"propagating block = {ToHex(block)}")
-    logger.debug(f"with block_header = {CBlockHeader(block).serialize().hex()}")
+    logging.debug(f"propagating block = {ToHex(block)}")
+    logging.debug(f"with block_header = {CBlockHeader(block).serialize().hex()}")
 
     # submit block
     r = args.bcli("submitblock", ToHex(block))
@@ -544,10 +568,10 @@ def do_propagate_block(args, block: CBlock):
 def do_generate(args):
     if args.max_blocks is not None:
         if args.ongoing:
-            logger.error("Cannot specify both --ongoing and --max-blocks")
+            logging.error("Cannot specify both --ongoing and --max-blocks")
             return 1
         if args.max_blocks < 1:
-            logger.error("N must be a positive integer")
+            logging.error("N must be a positive integer")
             return 1
         max_blocks = args.max_blocks
     elif args.ongoing:
@@ -556,40 +580,40 @@ def do_generate(args):
         max_blocks = 1
 
     if args.set_block_time is not None and max_blocks != 1:
-        logger.error("Cannot specify --ongoing or --max-blocks > 1 when using --set-block-time")
+        logging.error("Cannot specify --ongoing or --max-blocks > 1 when using --set-block-time")
         return 1
     if args.set_block_time is not None and args.set_block_time < 0:
         args.set_block_time = time.time()
-        logger.info("Treating negative block time as current time (%d)" % (args.set_block_time))
+        logging.info("Treating negative block time as current time (%d)" % (args.set_block_time))
 
     if args.min_nbits:
         if args.nbits is not None:
-            logger.error("Cannot specify --nbits and --min-nbits")
+            logging.error("Cannot specify --nbits and --min-nbits")
             return 1
         args.nbits = "1e0377ae"
-        logger.info("Using nbits=%s" % (args.nbits))
+        logging.info("Using nbits=%s" % (args.nbits))
 
     if args.set_block_time is None:
         if args.nbits is None or len(args.nbits) != 8:
-            logger.error("Must specify --nbits (use calibrate command to determine value)")
+            logging.error("Must specify --nbits (use calibrate command to determine value)")
             return 1
 
     if args.multiminer is None:
        my_blocks = (0,1,1)
     else:
         if not args.ongoing:
-            logger.error("Cannot specify --multiminer without --ongoing")
+            logging.error("Cannot specify --multiminer without --ongoing")
             return 1
         m = RE_MULTIMINER.match(args.multiminer)
         if m is None:
-            logger.error("--multiminer argument must be k/m or j-k/m")
+            logging.error("--multiminer argument must be k/m or j-k/m")
             return 1
         start,_,stop,total = m.groups()
         if stop is None:
             stop = start
         start, stop, total = map(int, (start, stop, total))
         if stop < start or start <= 0 or total < stop or total == 0:
-            logger.error("Inconsistent values for --multiminer")
+            logging.error("Inconsistent values for --multiminer")
             return 1
         my_blocks = (start-1, stop, total)
 
@@ -612,20 +636,20 @@ def do_generate(args):
             next_delta = next_block_delta(int(bestheader["bits"], 16), bestheader["hash"], ultimate_target, args.poisson)
             next_delta += bestheader["time"] - time.time()
             next_is_mine = next_block_is_mine(bestheader["hash"], my_blocks)
-            logger.info("Received new block at height %d; next in %s (%s)", bestheader["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
+            logging.info("Received new block at height %d; next in %s (%s)", bestheader["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
             lastheader = bestheader["hash"]
 
         # when is the next block due to be mined?
         now = time.time()
         if args.set_block_time is not None:
-            logger.debug("Setting start time to %d", args.set_block_time)
+            logging.debug("Setting start time to %d", args.set_block_time)
             mine_time = args.set_block_time
             action_time = now
             is_mine = True
         elif bestheader["height"] == 0:
             time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
             time_delta *= 100 # 100 blocks
-            logger.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
+            logging.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
             mine_time = now - time_delta
             action_time = now
             is_mine = True
@@ -662,7 +686,7 @@ def do_generate(args):
                 # mining the next block if it's ours
                 sleep_for = min(20, sleep_for)
             minestr = "mine" if is_mine else "backup"
-            logger.debug("Sleeping for %s, next block due in %s (%s)" % (seconds_to_hms(sleep_for), seconds_to_hms(mine_time - now), minestr))
+            logging.debug("Sleeping for %s, next block due in %s (%s)" % (seconds_to_hms(sleep_for), seconds_to_hms(mine_time - now), minestr))
             time.sleep(sleep_for)
             continue
 
@@ -671,30 +695,30 @@ def do_generate(args):
         block, tmpl, reward_addr = do_generate_next_block(args)
         # tmpl = args.bcli("getblocktemplate", '{"rules":["signet","segwit"]}')
         if tmpl["previousblockhash"] != bci["bestblockhash"]:
-            logger.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
+            logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
             time.sleep(1)
             continue
 
-        logger.debug("GBT template: %s", tmpl)
+        logging.debug("GBT template: %s", tmpl)
 
         if tmpl["mintime"] > mine_time:
-            logger.info("Updating block time from %d to %d", mine_time, tmpl["mintime"])
+            logging.info("Updating block time from %d to %d", mine_time, tmpl["mintime"])
             mine_time = tmpl["mintime"]
             if mine_time > now:
-                logger.error("GBT mintime is in the future: %d is %d seconds later than %d", mine_time, (mine_time-now), now)
+                logging.error("GBT mintime is in the future: %d is %d seconds later than %d", mine_time, (mine_time-now), now)
                 return 1
 
         # address for reward
         # reward_addr, reward_spk = get_reward_addr_spk(args, tmpl["height"])
 
         # mine block
-        logger.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(mine_time-bestheader["time"]), mine_time, is_mine)
+        logging.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(mine_time-bestheader["time"]), mine_time, is_mine)
         mined_blocks += 1
         signed_block = do_sign_block(args, block, tmpl["signet_challenge"])
         # psbt = generate_psbt(tmpl, reward_spk, blocktime=mine_time)
         # psbt_signed = args.bcli("walletprocesspsbt", psbt)
         # if not psbt_signed.get("complete",False):
-        #     logger.debug("Generated PSBT: %s" % (psbt,))
+        #     logging.debug("Generated PSBT: %s" % (psbt,))
         #     sys.stderr.write("PSBT signing failed")
         #     return 1
         # block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
@@ -712,10 +736,10 @@ def do_generate(args):
         next_delta += block.nTime - time.time()
         next_is_mine = next_block_is_mine(block.hash, my_blocks)
 
-        logger.debug("Block hash %s payout to %s", block.hash, reward_addr)
-        logger.info("Mined %s at height %d; next in %s (%s)", bstr, tmpl["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
+        logging.debug("Block hash %s payout to %s", block.hash, reward_addr)
+        logging.info("Mined %s at height %d; next in %s (%s)", bstr, tmpl["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
         if r != "":
-            logger.warning("submitblock returned %s for height %d hash %s", r, tmpl["height"], block.hash)
+            logging.warning("submitblock returned %s for height %d hash %s", r, tmpl["height"], block.hash)
         lastheader = block.hash
 
 def do_calibrate(args):
@@ -757,16 +781,16 @@ def do_calibrate(args):
 def bitcoin_cli(cli_function, command, *args, **kwargs):
     """A generic bitcoin_cli function
     """
-    logger.debug("Calling bitcoin-cli: %r %r", command, list(args))
+    logging.debug("Calling bitcoin-cli: %r %r", command, list(args))
     result = cli_function(command, *args,  **kwargs)
-    logger.debug("Result of bitcoin-cli: %r %r", command, result)
+    logging.debug("Result of bitcoin-cli: %r %r", command, result)
     return result
 
 def subprocess_bitcoin_cli(basecmd, args, **kwargs):
     """A bitcoin_cli function that calls subprocess
     """
     cmd = basecmd + ["-signet"] + args
-    logger.debug("Calling bitcoin-cli: %r", cmd)
+    logging.debug("Calling bitcoin-cli: %r", cmd)
     out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True,
         env={ "LD_LIBRARY_PATH": f'$LD_LIBRARY_PATH:{ITCOIN_PBFT_ROOT_DIR}/usrlocal/lib' }
     ).stdout
@@ -782,7 +806,7 @@ def subprocess_bitcoin_cli(basecmd, args, **kwargs):
     except ValueError as e:
         pass
 
-    logger.debug("Result of bitcoin-cli: %r %r", cmd, out)
+    logging.debug("Result of bitcoin-cli: %r %r", cmd, out)
     return out
 
 def main():
@@ -835,19 +859,22 @@ def main():
             return 1
         args.derived_addresses = {}
 
-    logger_level = logging.INFO
+    # ITCOIN_SPECIFIC - START
     if args.debug:
-        logger_level = logging.DEBUG
+        logger_level = logging_the_lib.DEBUG
     elif args.quiet:
-        logger_level = logging.WARNING
+        logger_level = logging_the_lib.WARNING
+    else:
+        logger_level = logging_the_lib.INFO
     logger.setLevel(logger_level)
     for handler in logger.handlers:
         handler.setLevel(logger_level)
+    # ITCOIN_SPECIFIC - end
 
     if hasattr(args, "fn"):
         return args.fn(args)
     else:
-        logger.error("Must specify command")
+        logging.error("Must specify command")
         return 1
 
 if __name__ == "__main__":
