@@ -360,7 +360,7 @@ def do_generate_next_block(args) -> tuple([CBlock, dict, str]):
     grind_cmd = args.grind_cmd
     if grind_cmd is None:
         raise
-    
+
     # bci
     bci = args.bcli("getblockchaininfo")
 
@@ -767,7 +767,7 @@ def subprocess_bitcoin_cli(basecmd, args, **kwargs):
     """
     cmd = basecmd + ["-signet"] + args
     logger.debug("Calling bitcoin-cli: %r", cmd)
-    out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True, 
+    out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True,
         env={ "LD_LIBRARY_PATH": f'$LD_LIBRARY_PATH:{ITCOIN_PBFT_ROOT_DIR}/usrlocal/lib' }
     ).stdout
 
