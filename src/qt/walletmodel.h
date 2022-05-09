@@ -157,6 +157,9 @@ public:
 
     uint256 getLastBlockProcessed() const;
 
+    // Retrieve the cached wallet balance
+    interfaces::WalletBalances getCachedBalance() const;
+
 private:
     std::unique_ptr<interfaces::Wallet> m_wallet;
     std::unique_ptr<interfaces::Handler> m_handler_unload;

@@ -120,10 +120,15 @@ void WalletModel::pollBalanceChanged()
 
 void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)
 {
-    if(new_balances.balanceChanged(m_cached_balances)) {
+    if (new_balances.balanceChanged(m_cached_balances)) {
         m_cached_balances = new_balances;
         Q_EMIT balanceChanged(new_balances);
     }
+}
+
+interfaces::WalletBalances WalletModel::getCachedBalance() const
+{
+    return m_cached_balances;
 }
 
 void WalletModel::updateTransaction()
