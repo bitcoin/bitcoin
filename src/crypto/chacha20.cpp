@@ -18,6 +18,8 @@ constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (
   a += b; d = rotl32(d ^ a, 8); \
   c += d; b = rotl32(b ^ c, 7);
 
+#define REPEAT10(a) do { {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; } while(0)
+
 static const unsigned char sigma[] = "expand 32-byte k";
 static const unsigned char tau[] = "expand 16-byte k";
 
@@ -119,16 +121,19 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
         x13 = j13;
         x14 = j14;
         x15 = j15;
-        for (i = 20;i > 0;i -= 2) {
-            QUARTERROUND( x0, x4, x8,x12)
-            QUARTERROUND( x1, x5, x9,x13)
-            QUARTERROUND( x2, x6,x10,x14)
-            QUARTERROUND( x3, x7,x11,x15)
-            QUARTERROUND( x0, x5,x10,x15)
-            QUARTERROUND( x1, x6,x11,x12)
-            QUARTERROUND( x2, x7, x8,x13)
-            QUARTERROUND( x3, x4, x9,x14)
-        }
+
+        // The 20 inner ChaCha20 rounds are unrolled here for performance.
+        REPEAT10(
+            QUARTERROUND( x0, x4, x8,x12);
+            QUARTERROUND( x1, x5, x9,x13);
+            QUARTERROUND( x2, x6,x10,x14);
+            QUARTERROUND( x3, x7,x11,x15);
+            QUARTERROUND( x0, x5,x10,x15);
+            QUARTERROUND( x1, x6,x11,x12);
+            QUARTERROUND( x2, x7, x8,x13);
+            QUARTERROUND( x3, x4, x9,x14);
+        );
+
         x0 += j0;
         x1 += j1;
         x2 += j2;
@@ -231,16 +236,19 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
         x13 = j13;
         x14 = j14;
         x15 = j15;
-        for (i = 20;i > 0;i -= 2) {
-            QUARTERROUND( x0, x4, x8,x12)
-            QUARTERROUND( x1, x5, x9,x13)
-            QUARTERROUND( x2, x6,x10,x14)
-            QUARTERROUND( x3, x7,x11,x15)
-            QUARTERROUND( x0, x5,x10,x15)
-            QUARTERROUND( x1, x6,x11,x12)
-            QUARTERROUND( x2, x7, x8,x13)
-            QUARTERROUND( x3, x4, x9,x14)
-        }
+
+        // The 20 inner ChaCha20 rounds are unrolled here for performance.
+        REPEAT10(
+            QUARTERROUND( x0, x4, x8,x12);
+            QUARTERROUND( x1, x5, x9,x13);
+            QUARTERROUND( x2, x6,x10,x14);
+            QUARTERROUND( x3, x7,x11,x15);
+            QUARTERROUND( x0, x5,x10,x15);
+            QUARTERROUND( x1, x6,x11,x12);
+            QUARTERROUND( x2, x7, x8,x13);
+            QUARTERROUND( x3, x4, x9,x14);
+        );
+
         x0 += j0;
         x1 += j1;
         x2 += j2;
