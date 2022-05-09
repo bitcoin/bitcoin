@@ -737,9 +737,6 @@ void MaybeCompactWalletDB()
     if (fOneThread.exchange(true)) {
         return;
     }
-    if (!gArgs.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
-        return;
-    }
 
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         WalletDatabase& dbh = pwallet->GetDBHandle();
