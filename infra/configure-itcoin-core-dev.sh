@@ -20,9 +20,6 @@ INSTALL_DIR=$(realpath "${MY_DIR}/../target")
 cd "${MY_DIR}/.."
 "${MY_DIR}"/../autogen.sh
 
-# Removed flags:
-    # --enable-werror \
-
 "${MY_DIR}"/../configure \
     --prefix="${INSTALL_DIR}" \
     --enable-debug \
