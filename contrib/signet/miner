@@ -355,7 +355,7 @@ class DoGenerateArgs:
     # Util class for passing arguments to signet miner do_generate
     pass
 
-def do_generate_next_block(args) -> tuple([CBlock, dict, str]):
+def do_generate_next_block(args) -> Tuple[CBlock, dict, str]:
     # Check input parameters
     grind_cmd = args.grind_cmd
     if grind_cmd is None:
