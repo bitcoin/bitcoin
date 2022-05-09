@@ -4764,7 +4764,7 @@ bool CChainState::ReplayBlocks()
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
         const CBlockIndex& pindex{*Assert(pindexNew->GetAncestor(nHeight))};
-        LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
+        LogPrintf("Rolling forward %s (%i)\n", pindex.GetBlockHash().ToString(), nHeight);
         // SYSCOIN
         uiInterface.ShowProgress(_("Replaying blocks…").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
         if (!RollforwardBlock(&pindex, cache, mapAssetsConnect, mapNEVMTxRoots, mapMintKeysConnect, vecTXIDPairs)) return false;
