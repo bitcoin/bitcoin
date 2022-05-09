@@ -141,6 +141,27 @@ public:
 } // namespace foo
 ```
 
+Coding Style (C++ functions and methods)
+--------------------
+
+- When ordering function parameters, place input parameters first, then any
+  in-out parameters, followed by any output parameters.
+
+- *Rationale*: API consistency.
+
+- Prefer returning values directly to using in-out or output parameters. Use
+  `std::optional` where helpful for returning values.
+
+- *Rationale*: Less error-prone (no need for assumptions about what the output
+  is initialized to on failure), easier to read, and often the same or better
+  performance.
+
+- Generally, use `std::optional` to represent optional by-value inputs (and
+  instead of a magic default value, if there is no real default). Non-optional
+  input parameters should usually be values or const references, while
+  non-optional in-out and output parameters should usually be references, as
+  they cannot be null.
+
 Coding Style (C++ named arguments)
 ------------------------------
 
@@ -1390,22 +1411,9 @@ communication:
   virtual boost::signals2::scoped_connection connectTipChanged(TipChangedFn fn) = 0;
   ```
 
-- For consistency and friendliness to code generation tools, interface method
-  input and in-out parameters should be ordered first and output parameters
-  should come last.
+- Interface methods should not be overloaded.
 
-  Example:
-
-  ```c++
-  // Good: error output param is last
-  virtual bool broadcastTransaction(const CTransactionRef& tx, CAmount max_fee, std::string& error) = 0;
-
-  // Bad: error output param is between input params
-  virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& error, CAmount max_fee) = 0;
-  ```
-
-- For friendliness to code generation tools, interface methods should not be
-  overloaded:
+  *Rationale*: consistency and friendliness to code generation tools.
 
   Example:
 
@@ -1421,9 +1429,10 @@ communication:
 
 ### Internal interface naming style
 
-- For consistency and friendliness to code generation tools, interface method
-  names should be `lowerCamelCase` and standalone function names should be
+- Interface method names should be `lowerCamelCase` and standalone function names should be
   `UpperCamelCase`.
+
+  *Rationale*: consistency and friendliness to code generation tools.
 
   Examples:
 
