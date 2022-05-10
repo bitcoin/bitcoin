@@ -26,6 +26,7 @@ cd "${MY_DIR}/.."
     --enable-wallet \
     --enable-werror \
     --enable-c++17 \
+    --enable-suppress-external-warnings \
     --disable-tests \
     --disable-gui-tests \
     --disable-bench \

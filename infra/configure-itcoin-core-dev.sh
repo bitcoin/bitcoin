@@ -26,6 +26,7 @@ cd "${MY_DIR}/.."
     --enable-determinism \
     --enable-wallet \
     --enable-c++17 \
+    --enable-suppress-external-warnings \
     --disable-gui-tests \
     --disable-bench \
     --disable-man \
