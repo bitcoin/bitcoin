@@ -33,7 +33,7 @@ static RPCHelpMan validateaddress()
         "\nReturn information about the given bitcoin address.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to validate"},
-            {"address_type", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "DEPRECATED AND IGNORED", RPCArgOptions{.hidden=true}},
+            {"address_type", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "DEPRECATED", RPCArgOptions{.hidden=true}},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -62,6 +62,14 @@ static RPCHelpMan validateaddress()
             std::string error_msg;
             std::vector<int> error_locations;
             CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations);
+
+            // Merely validate address_type is an actual address type, so we don't silently ignore potential future parameters
+            if (!request.params[1].isNull()) {
+                if (!ParseOutputType(request.params[1].get_str())) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
+                }
+            }
+
             const bool isValid = IsValidDestination(dest);
             CHECK_NONFATAL(isValid == error_msg.empty());
 

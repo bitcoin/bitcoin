@@ -67,6 +67,11 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
             assert_equal(res['error_locations'], [])
 
     def test_validateaddress(self):
+        # Invalid deprecated address_type field
+        assert_raises_rpc_error(-5, "Unknown address type 'nonsense'", self.nodes[0].validateaddress, address=BECH32_INVALID_SIZE, address_type='nonsense')
+        for inv_addrtype in (7, True, {}, [], ['bech32']):
+            assert_raises_rpc_error(-3, "is not of expected type string", self.nodes[0].validateaddress, address=BECH32_INVALID_SIZE, address_type=inv_addrtype)
+
         # Invalid Bech32
         self.check_invalid(BECH32_INVALID_SIZE, 'Invalid Bech32 address data size')
         self.check_invalid(BECH32_INVALID_PREFIX, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
