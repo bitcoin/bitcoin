@@ -25,7 +25,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
         passphrase = "WalletPassphrase"
         passphrase2 = "SecondWalletPassphrase"
 
-        # Make sure the wallet isn't encrypted first
+        self.log.info("Test user actions with an unencrypted wallet")
         msg = "test message"
         address = self.nodes[0].getnewaddress(address_type='legacy')
         sig = self.nodes[0].signmessage(address, msg)
@@ -33,45 +33,46 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called", self.nodes[0].walletpassphrase, 'ff', 1)
         assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.", self.nodes[0].walletpassphrasechange, 'ff', 'ff')
 
-        # Encrypt the wallet
+        self.log.info("Test encryptwallet with an empty passphrase and with a valid passphrase")
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].encryptwallet, '')
         self.nodes[0].encryptwallet(passphrase)
 
-        # Test that the wallet is encrypted
+        self.log.info("Test user actions with an encrypted wallet")
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
         assert_raises_rpc_error(-15, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
 
-        # Check that walletpassphrase works
-        self.nodes[0].walletpassphrase(passphrase, 2)
+        self.log.info("Test walletpassphrase happy path")
+        self.nodes[0].walletpassphrase(passphrase=passphrase, timeout=2)
         sig = self.nodes[0].signmessage(address, msg)
         assert self.nodes[0].verifymessage(address, sig, msg)
 
-        # Check that the timeout is right
+        self.log.info("Test walletpassphrase timeout")
         time.sleep(3)
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
 
-        # Test wrong passphrase
+        self.log.info('Test walletpassphrase with the wrong passphrase')
         assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase + "wrong", 10)
 
-        # Test walletlock
-        self.nodes[0].walletpassphrase(passphrase, 84600)
+        self.log.info("Test walletlock")
+        self.nodes[0].walletpassphrase(passphrase=passphrase, timeout=84600)
         sig = self.nodes[0].signmessage(address, msg)
         assert self.nodes[0].verifymessage(address, sig, msg)
         self.nodes[0].walletlock()
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
 
-        # Test passphrase changes
+        self.log.info("Test walletpassphrasechange")
         self.nodes[0].walletpassphrasechange(passphrase, passphrase2)
         assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase, 10)
-        self.nodes[0].walletpassphrase(passphrase2, 10)
+        self.nodes[0].walletpassphrase(passphrase=passphrase2, timeout=10)
         sig = self.nodes[0].signmessage(address, msg)
         assert self.nodes[0].verifymessage(address, sig, msg)
         self.nodes[0].walletlock()
 
-        # Test timeout bounds
+        self.log.info("Test walletpassphrase with an invalid negative timeout and a valid zero timeout")
         assert_raises_rpc_error(-8, "Timeout cannot be negative.", self.nodes[0].walletpassphrase, passphrase2, -10)
+        self.nodes[0].walletpassphrase(passphrase=passphrase2, timeout=0)
 
         # Maximum time to keep the decryption key, in seconds (~3 years); see MAX_SLEEP_TIME
         timeout_limit = 100_000_000
