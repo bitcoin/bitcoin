@@ -82,6 +82,23 @@ void ChaCha20::Seek(uint64_t pos)
     prev_block_start_pos = 0;
 }
 
+void ChaCha20::SeekRFC8439(uint32_t pos)
+{
+    input[12] = pos;
+    is_rfc8439 = true;
+    prev_block_start_pos = 0;
+}
+
+void ChaCha20::SetRFC8439Nonce(const std::array<std::byte, 12>& nonce)
+{
+    auto nonce_ptr = reinterpret_cast<const unsigned char*>(nonce.data());
+    input[13] = ReadLE32(nonce_ptr);
+    input[14] = ReadLE32(nonce_ptr + 4);
+    input[15] = ReadLE32(nonce_ptr + 8);
+    is_rfc8439 = true;
+    prev_block_start_pos = 0;
+}
+
 void ChaCha20::Keystream(unsigned char* c, size_t bytes)
 {
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
@@ -199,7 +216,7 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
         }
 
         ++j12;
-        if (!j12) ++j13;
+        if (!j12 && !is_rfc8439) ++j13;
 
         WriteLE32(c + 0, x0);
         WriteLE32(c + 4, x1);
@@ -223,7 +240,7 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
                 for (i = 0;i < bytes;++i) ctarget[i] = c[i];
             }
             input[12] = j12;
-            input[13] = j13;
+            if (!is_rfc8439) input[13] = j13;
             return;
         }
         bytes -= 64;
@@ -372,7 +389,7 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
         x15 ^= ReadLE32(m + 60);
 
         ++j12;
-        if (!j12) ++j13;
+        if (!j12 && !is_rfc8439) ++j13;
 
         WriteLE32(c + 0, x0);
         WriteLE32(c + 4, x1);
@@ -396,7 +413,7 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
                 for (i = 0;i < bytes;++i) ctarget[i] = c[i];
             }
             input[12] = j12;
-            input[13] = j13;
+            if (!is_rfc8439) input[13] = j13;
             return;
         }
         bytes -= 64;

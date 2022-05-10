@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CRYPTO_CHACHA20_H
 #define BITCOIN_CRYPTO_CHACHA20_H
 
+#include <array>
+#include <cstddef>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -16,6 +18,7 @@ private:
     uint32_t input[16];
     uint8_t prev_block_bytes[64];
     uint8_t prev_block_start_pos{0};
+    bool is_rfc8439{false};
 
 public:
     ChaCha20();
@@ -23,6 +26,9 @@ public:
     void SetKey(const unsigned char* key, size_t keylen); //!< set key with flexible keylength; 256bit recommended */
     void SetIV(uint64_t iv); // set the 64bit nonce
     void Seek(uint64_t pos); // set the 64bit block counter
+
+    void SetRFC8439Nonce(const std::array<std::byte, 12>& nonce);
+    void SeekRFC8439(uint32_t pos);
 
     /** outputs the keystream of size <bytes> into <c> */
     void Keystream(unsigned char* c, size_t bytes);
