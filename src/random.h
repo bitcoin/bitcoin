@@ -11,6 +11,7 @@
 #include <span.h>
 #include <uint256.h>
 
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <limits>
@@ -236,12 +237,18 @@ public:
     template <typename Tp>
     Tp rand_uniform_delay(const Tp& time, typename Tp::duration range)
     {
-        using Dur = typename Tp::duration;
-        Dur dur{range.count() > 0 ? /* interval [0..range) */ Dur{randrange(range.count())} :
-                range.count() < 0 ? /* interval (range..0] */ -Dur{randrange(-range.count())} :
-                                    /* interval [0..0] */ Dur{0}};
-        return time + dur;
+        return time + rand_uniform_duration<Tp>(range);
     }
+
+    /** Generate a uniform random duration in the range from 0 (inclusive) to range (exclusive). */
+    template <typename Chrono>
+    typename Chrono::duration rand_uniform_duration(typename Chrono::duration range) noexcept
+    {
+        using Dur = typename Chrono::duration;
+        return range.count() > 0 ? /* interval [0..range) */ Dur{randrange(range.count())} :
+               range.count() < 0 ? /* interval (range..0] */ -Dur{randrange(-range.count())} :
+                                   /* interval [0..0] */ Dur{0};
+    };
 
     // Compatibility with the C++11 UniformRandomBitGenerator concept
     typedef uint64_t result_type;
