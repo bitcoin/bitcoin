@@ -148,6 +148,8 @@ inline uint256 uint256S(const std::string& str)
     return rv;
 }
 
+uint256& UINT256_ONE();
+
 /** 512-bit unsigned big integer. */
 class uint512 : public base_blob<512> {
 public:
