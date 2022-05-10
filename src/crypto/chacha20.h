@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CRYPTO_CHACHA20_H
 #define BITCOIN_CRYPTO_CHACHA20_H
 
+#include <array>
+#include <cstddef>
 #include <cstdlib>
 #include <stdint.h>
 
@@ -16,6 +18,7 @@ class ChaCha20Aligned
 {
 private:
     uint32_t input[12];
+    bool is_rfc8439{false};
 
 public:
     ChaCha20Aligned();
@@ -31,6 +34,9 @@ public:
 
     /** set the 64bit block counter (pos seeks to byte position 64*pos). */
     void Seek64(uint64_t pos);
+
+    void SetRFC8439Nonce(const std::array<std::byte, 12>& nonce);
+    void SeekRFC8439(uint32_t pos);
 
     /** outputs the keystream of size <64*blocks> into <c> */
     void Keystream64(unsigned char* c, size_t blocks);
@@ -69,6 +75,16 @@ public:
     void Seek64(uint64_t pos)
     {
         m_aligned.Seek64(pos);
+        m_bufleft = 0;
+    }
+
+    void SetRFC8439Nonce(const std::array<std::byte, 12>& nonce) {
+        m_aligned.SetRFC8439Nonce(nonce);
+        m_bufleft = 0;
+    }
+
+    void SeekRFC8439(uint32_t pos) {
+        m_aligned.SeekRFC8439(pos);
         m_bufleft = 0;
     }
 

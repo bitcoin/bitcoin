@@ -59,6 +59,21 @@ void ChaCha20Aligned::Seek64(uint64_t pos)
     input[9] = pos >> 32;
 }
 
+void ChaCha20Aligned::SeekRFC8439(uint32_t pos)
+{
+    input[8] = pos;
+    is_rfc8439 = true;
+}
+
+void ChaCha20Aligned::SetRFC8439Nonce(const std::array<std::byte, 12>& nonce)
+{
+    auto nonce_ptr = reinterpret_cast<const unsigned char*>(nonce.data());
+    input[9] = ReadLE32(nonce_ptr);
+    input[10] = ReadLE32(nonce_ptr + 4);
+    input[11] = ReadLE32(nonce_ptr + 8);
+    is_rfc8439 = true;
+}
+
 inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
 {
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
@@ -127,7 +142,7 @@ inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
         x15 += j15;
 
         ++j12;
-        if (!j12) ++j13;
+        if (!j12 && !is_rfc8439) ++j13;
 
         WriteLE32(c + 0, x0);
         WriteLE32(c + 4, x1);
@@ -148,7 +163,7 @@ inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
 
         if (blocks == 1) {
             input[8] = j12;
-            input[9] = j13;
+            if (!is_rfc8439) input[9] = j13;
             return;
         }
         blocks -= 1;
@@ -241,7 +256,7 @@ inline void ChaCha20Aligned::Crypt64(const unsigned char* m, unsigned char* c, s
         x15 ^= ReadLE32(m + 60);
 
         ++j12;
-        if (!j12) ++j13;
+        if (!j12 && !is_rfc8439) ++j13;
 
         WriteLE32(c + 0, x0);
         WriteLE32(c + 4, x1);
@@ -262,7 +277,7 @@ inline void ChaCha20Aligned::Crypt64(const unsigned char* m, unsigned char* c, s
 
         if (blocks == 1) {
             input[8] = j12;
-            input[9] = j13;
+            if (!is_rfc8439) input[9] = j13;
             return;
         }
         blocks -= 1;
