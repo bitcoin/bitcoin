@@ -167,11 +167,10 @@ void QValidatedLineEdit::checkValidity()
                 validation_result = checkValidator->validate(address, pos);
                 error_locations.push_back(pos);
             }
-            if (validation_result == QValidator::Acceptable) {
-                setValid(/* valid= */ true, has_warning);
-            } else {
+            if (validation_result == QValidator::Acceptable)
+                setValid(true, has_warning);
+            else
                 setValid(/* valid= */ false, /* with_warning= */ false, error_locations);
-            }
         }
     }
     else
