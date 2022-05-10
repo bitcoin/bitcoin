@@ -26,6 +26,29 @@ struct IndexSummary {
  */
 class BaseIndex : public CValidationInterface
 {
+public:
+    /// Destructor interrupts sync thread if running and blocks until it exits.
+    virtual ~BaseIndex();
+
+    /// Blocks the current thread until the index is caught up to the current
+    /// state of the block chain. This only blocks if the index has gotten in
+    /// sync once and only needs to process blocks in the ValidationInterface
+    /// queue. If the index is catching up from far behind, this method does
+    /// not block and immediately returns false.
+    bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main);
+
+    void Interrupt();
+
+    /// Start initializes the sync state and registers the instance as a
+    /// ValidationInterface so that it stays in sync with blockchain updates.
+    [[nodiscard]] bool Start(CChainState& active_chainstate);
+
+    /// Stops the instance from staying in sync with blockchain updates.
+    void Stop();
+
+    /// Get a summary of the index and its state.
+    IndexSummary GetSummary() const;
+
 protected:
     /**
      * The database stores a block locator of the chain the database is synced to
@@ -46,6 +69,14 @@ protected:
         /// Write block locator of the chain that the index is in sync with.
         void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator);
     };
+
+    CChainState* m_chainstate{nullptr};
+
+    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
+
+    void ChainStateFlushed(const CBlockLocator& locator) override;
+
+    const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };
 
 private:
     /// Whether the index is in sync with the main chain. The flag is flipped
@@ -76,27 +107,12 @@ private:
     /// getting corrupted.
     bool Commit();
 
-    virtual bool AllowPrune() const = 0;
-
-    virtual DB& GetDB() const = 0;
-
-    /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
-
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
 
-    /// Get the name of the index for display in logs.
-    virtual const char* GetIndexName() const = 0;
-
 protected:
-    CChainState* m_chainstate{nullptr};
-
-    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
-
-    void ChainStateFlushed(const CBlockLocator& locator) override;
-
-    const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };
+    // The following virtual functions can be overridden but the inherited base
+    // implementation is used by some of the child classes.
 
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool Init();
@@ -109,28 +125,19 @@ protected:
     /// be an ancestor of the current best block.
     virtual bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
-public:
-    /// Destructor interrupts sync thread if running and blocks until it exits.
-    virtual ~BaseIndex();
+private:
+    // The following virtual functions are fully overridden, i.e. no inherited
+    // base implementation is used by the child classes.
 
-    /// Blocks the current thread until the index is caught up to the current
-    /// state of the block chain. This only blocks if the index has gotten in
-    /// sync once and only needs to process blocks in the ValidationInterface
-    /// queue. If the index is catching up from far behind, this method does
-    /// not block and immediately returns false.
-    bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main);
+    virtual bool AllowPrune() const = 0;
 
-    void Interrupt();
+    virtual DB& GetDB() const = 0;
 
-    /// Start initializes the sync state and registers the instance as a
-    /// ValidationInterface so that it stays in sync with blockchain updates.
-    [[nodiscard]] bool Start(CChainState& active_chainstate);
+    /// Write update index entries for a newly connected block.
+    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
 
-    /// Stops the instance from staying in sync with blockchain updates.
-    void Stop();
-
-    /// Get a summary of the index and its state.
-    IndexSummary GetSummary() const;
+    /// Get the name of the index for display in logs.
+    virtual const char* GetIndexName() const = 0;
 };
 
 #endif // BITCOIN_INDEX_BASE_H
