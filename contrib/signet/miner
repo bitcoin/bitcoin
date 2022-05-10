@@ -457,7 +457,7 @@ def do_sign_block(args, block: CBlock, signet_spk) -> CBlock:
 
     # sign block
     psbt = do_createpsbt(block, signme, spendme)
-    psbt_signed = args.bcli("walletprocesspsbt", psbt)
+    psbt_signed = args.bcli("walletprocesspsbt", psbt, "true", "ALL")
     if not psbt_signed.get("complete",False):
         logging.debug("Generated PSBT: %s" % (psbt,))
         sys.stderr.write("PSBT signing failed")
@@ -499,7 +499,7 @@ def do_sign_block_partial(args: DoGenerateArgs, block: CBlock, signet_spk: str) 
 
     psbt = do_createpsbt(block, signme, spendme)
 
-    partially_signed_psbt = args.bcli("walletprocesspsbt", psbt)
+    partially_signed_psbt = args.bcli("walletprocesspsbt", psbt, "true", "ALL")
     return partially_signed_psbt["psbt"], partially_signed_psbt["complete"]
 
 
