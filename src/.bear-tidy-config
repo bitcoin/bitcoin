@@ -4,7 +4,8 @@
       "include_only_existing_source": true,
       "paths_to_include": [],
       "paths_to_exclude": [
-        "src/leveldb"
+        "src/leveldb",
+        "src/univalue"
       ]
     },
     "format": {
