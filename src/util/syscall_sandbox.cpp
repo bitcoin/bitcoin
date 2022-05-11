@@ -487,7 +487,7 @@ void SyscallSandboxDebugSignalHandler(int, siginfo_t* signal_info, void* void_si
     const uint32_t syscall_number = static_cast<uint32_t>(signal_context->uc_mcontext.gregs[REG_RAX]);
     const std::string syscall_name = GetLinuxSyscallName(syscall_number);
     const std::string thread_name = !util::ThreadGetInternalName().empty() ? util::ThreadGetInternalName() : "*unnamed*";
-    const std::string error_message = strprintf("ERROR: The syscall \"%s\" (syscall number %d) is not allowed by the syscall sandbox in thread \"%s\". Please report.", syscall_name, syscall_number, thread_name);
+    const std::string error_message = strprintf(R"(ERROR: The syscall "%s" (syscall number %d) is not allowed by the syscall sandbox in thread "%s". Please report.)", syscall_name, syscall_number, thread_name);
     tfm::format(std::cerr, "%s\n", error_message);
     LogPrintf("%s\n", error_message);
     std::terminate();

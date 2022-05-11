@@ -944,9 +944,9 @@ void RPCConsole::message(int category, const QString &message, bool html)
     QTime time = QTime::currentTime();
     QString timeString = time.toString();
     QString out;
-    out += "<table><tr><td class=\"time\" width=\"65\">" + timeString + "</td>";
-    out += "<td class=\"icon\" width=\"32\"><img src=\"" + categoryClass(category) + "\"></td>";
-    out += "<td class=\"message " + categoryClass(category) + "\" valign=\"middle\">";
+    out += R"(<table><tr><td class="time" width="65">)" + timeString + "</td>";
+    out += R"(<td class="icon" width="32"><img src=")" + categoryClass(category) + "\"></td>";
+    out += "<td class=\"message " + categoryClass(category) + R"(" valign="middle">)";
     if(html)
         out += message;
     else

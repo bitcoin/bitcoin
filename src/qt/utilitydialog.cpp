@@ -46,7 +46,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         // Make URLs clickable
         QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
         uri.setMinimal(true); // use non-greedy matching
-        licenseInfoHTML.replace(uri, "<a href=\"\\1\">\\1</a>");
+        licenseInfoHTML.replace(uri, R"(<a href="\1">\1</a>)");
         // Replace newlines with HTML breaks
         licenseInfoHTML.replace("\n", "<br>");
 

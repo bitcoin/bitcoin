@@ -281,8 +281,8 @@ static RPCHelpMan addnode()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
-            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
+                    HelpExampleCli("addnode", R"("192.168.0.6:8333" "onetry")")
+            + HelpExampleRpc("addnode", R"("192.168.0.6:8333", "onetry")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -330,7 +330,7 @@ static RPCHelpMan addconnection()
         "\nOpen an outbound connection to a specified node. This RPC is for testing only.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address and port to attempt connecting to."},
-            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open (\"outbound-full-relay\", \"block-relay-only\", \"addr-fetch\" or \"feeler\")."},
+            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, R"(Type of connection to open ("outbound-full-relay", "block-relay-only", "addr-fetch" or "feeler").)"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -339,8 +339,8 @@ static RPCHelpMan addconnection()
                 { RPCResult::Type::STR, "connection_type", "Type of connection opened." },
             }},
         RPCExamples{
-            HelpExampleCli("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\"")
-            + HelpExampleRpc("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\"")
+            HelpExampleCli("addconnection", R"("192.168.0.6:8333" "outbound-full-relay")")
+            + HelpExampleRpc("addconnection", R"("192.168.0.6:8333" "outbound-full-relay")")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -677,9 +677,9 @@ static RPCHelpMan setban()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("setban", "\"192.168.0.6\" \"add\" 86400")
-                            + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
-                            + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\", 86400")
+                    HelpExampleCli("setban", R"("192.168.0.6" "add" 86400)")
+                            + HelpExampleCli("setban", R"("192.168.0.0/24" "add")")
+                            + HelpExampleRpc("setban", R"("192.168.0.6", "add", 86400)")
                 },
         [&](const RPCHelpMan& help, const JSONRPCRequest& request) -> UniValue
 {

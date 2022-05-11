@@ -102,7 +102,7 @@ static RPCHelpMan createmultisig()
                 {
                     {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                 }},
-            {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+            {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, R"(The address type to use. Options are "legacy", "p2sh-segwit", and "bech32".)"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -118,9 +118,9 @@ static RPCHelpMan createmultisig()
         },
         RPCExamples{
             "\nCreate a multisig address from 2 public keys\n"
-            + HelpExampleCli("createmultisig", "2 \"[\\\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\\\",\\\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\\\"]\"") +
+            + HelpExampleCli("createmultisig", R"(2 "[\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\",\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\"]")") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("createmultisig", "2, [\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\",\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\"]")
+            + HelpExampleRpc("createmultisig", R"(2, ["03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd","03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626"])")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
@@ -246,8 +246,8 @@ static RPCHelpMan deriveaddresses()
         },
         RPCExamples{
             "First three native segwit receive addresses\n" +
-            HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\" \"[0,2]\"") +
-            HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"")
+            HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + R"(" "[0,2]")") +
+            HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + R"(", "[0,2]")")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {

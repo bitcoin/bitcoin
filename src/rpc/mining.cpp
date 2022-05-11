@@ -516,7 +516,7 @@ static RPCHelpMan getblocktemplate()
         {
             {"template_request", RPCArg::Type::OBJ, RPCArg::Default{UniValue::VOBJ}, "Format of the template",
             {
-                {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED_NAMED_ARG, "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
+                {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED_NAMED_ARG, R"(This must be set to "template", "proposal" (see BIP 23), or omitted)"},
                 {"capabilities", RPCArg::Type::ARR, /* treat as named arg */ RPCArg::Optional::OMITTED_NAMED_ARG, "A list of strings",
                 {
                     {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported feature, 'longpoll', 'coinbasevalue', 'proposal', 'serverlist', 'workid'"},
@@ -589,8 +589,8 @@ static RPCHelpMan getblocktemplate()
             }},
         },
         RPCExamples{
-                    HelpExampleCli("getblocktemplate", "'{\"rules\": [\"segwit\"]}'")
-            + HelpExampleRpc("getblocktemplate", "{\"rules\": [\"segwit\"]}")
+                    HelpExampleCli("getblocktemplate", R"('{"rules": ["segwit"]}')")
+            + HelpExampleRpc("getblocktemplate", R"({"rules": ["segwit"]})")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -730,12 +730,12 @@ static RPCHelpMan getblocktemplate()
 
     // GBT must be called with 'signet' set in the rules for signet chains
     if (consensusParams.signet_blocks && setClientRules.count("signet") != 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the signet rule set (call with {\"rules\": [\"segwit\", \"signet\"]})");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, R"(getblocktemplate must be called with the signet rule set (call with {"rules": ["segwit", "signet"]}))");
     }
 
     // GBT must be called with 'segwit' set in the rules
     if (setClientRules.count("segwit") != 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, R"(getblocktemplate must be called with the segwit rule set (call with {"rules": ["segwit"]}))");
     }
 
     // Update block

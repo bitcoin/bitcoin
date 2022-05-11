@@ -22,7 +22,7 @@ RPCHelpMan getnewaddress()
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, R"(The address type to use. Options are "legacy", "p2sh-segwit", "bech32", and "bech32m".)"},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new bitcoin address"
@@ -75,7 +75,7 @@ RPCHelpMan getrawchangeaddress()
                 "\nReturns a new Bitcoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, R"(The address type to use. Options are "legacy", "p2sh-segwit", "bech32", and "bech32m".)"},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The address"
@@ -127,8 +127,8 @@ RPCHelpMan setlabel()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\" \"tabby\"")
-            + HelpExampleRpc("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\", \"tabby\"")
+                    HelpExampleCli("setlabel", "\"" + EXAMPLE_ADDRESS[0] + R"(" "tabby")")
+            + HelpExampleRpc("setlabel", "\"" + EXAMPLE_ADDRESS[0] + R"(", "tabby")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -231,7 +231,7 @@ RPCHelpMan addmultisigaddress()
                         },
                         },
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, R"(The address type to use. Options are "legacy", "p2sh-segwit", and "bech32".)"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -247,9 +247,9 @@ RPCHelpMan addmultisigaddress()
                 },
                 RPCExamples{
             "\nAdd a multisig address from 2 addresses\n"
-            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"") +
+            + HelpExampleCli("addmultisigaddress", R"(2 "[\")" + EXAMPLE_ADDRESS[0] + R"(\",\")" + EXAMPLE_ADDRESS[1] + R"(\"]")") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"")
+            + HelpExampleRpc("addmultisigaddress", R"(2, "[\")" + EXAMPLE_ADDRESS[0] + R"(\",\")" + EXAMPLE_ADDRESS[1] + R"(\"]")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -660,7 +660,7 @@ RPCHelpMan getaddressesbylabel()
                     {
                         {RPCResult::Type::OBJ, "address", "json object with information about address",
                         {
-                            {RPCResult::Type::STR, "purpose", "Purpose of address (\"send\" for sending address, \"receive\" for receiving address)"},
+                            {RPCResult::Type::STR, "purpose", R"(Purpose of address ("send" for sending address, "receive" for receiving address))"},
                         }},
                     }
                 },

@@ -141,7 +141,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     std::string version_value;
     std::getline(dump_file, version_value, '\n');
     if (magic_key != DUMP_MAGIC) {
-        error = strprintf(_("Error: Dumpfile identifier record is incorrect. Got \"%s\", expected \"%s\"."), magic_key, DUMP_MAGIC);
+        error = strprintf(_(R"(Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".)"), magic_key, DUMP_MAGIC);
         dump_file.close();
         return false;
     }
@@ -166,7 +166,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     std::string format_value;
     std::getline(dump_file, format_value, '\n');
     if (format_key != "format") {
-        error = strprintf(_("Error: Dumpfile format record is incorrect. Got \"%s\", expected \"format\"."), format_key);
+        error = strprintf(_(R"(Error: Dumpfile format record is incorrect. Got "%s", expected "format".)"), format_key);
         dump_file.close();
         return false;
     }
@@ -182,11 +182,11 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     } else if (file_format == "sqlite") {
         data_format = DatabaseFormat::SQLITE;
     } else {
-        error = strprintf(_("Unknown wallet file format \"%s\" provided. Please provide one of \"bdb\" or \"sqlite\"."), file_format);
+        error = strprintf(_(R"(Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".)"), file_format);
         return false;
     }
     if (file_format != format_value) {
-        warnings.push_back(strprintf(_("Warning: Dumpfile wallet format \"%s\" does not match command line specified format \"%s\"."), format_value, file_format));
+        warnings.push_back(strprintf(_(R"(Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".)"), format_value, file_format));
     }
     std::string format_hasher_line = strprintf("%s,%s\n", format_key, format_value);
     hasher.write(MakeByteSpan(format_hasher_line));

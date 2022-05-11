@@ -1220,19 +1220,19 @@ RPCHelpMan getblockchaininfo()
 
 namespace {
 const std::vector<RPCResult> RPCHelpForDeployment{
-    {RPCResult::Type::STR, "type", "one of \"buried\", \"bip9\""},
-    {RPCResult::Type::NUM, "height", /*optional=*/true, "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
+    {RPCResult::Type::STR, "type", R"(one of "buried", "bip9")"},
+    {RPCResult::Type::NUM, "height", /*optional=*/true, R"(height of the first block which the rules are or will be enforced (only for "buried" type, or "bip9" type with "active" status))"},
     {RPCResult::Type::BOOL, "active", "true if the rules are enforced for the mempool and the next block"},
     {RPCResult::Type::OBJ, "bip9", /*optional=*/true, "status of bip9 softforks (only for \"bip9\" type)",
     {
-        {RPCResult::Type::NUM, "bit", /*optional=*/true, "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" and \"locked_in\" status)"},
+        {RPCResult::Type::NUM, "bit", /*optional=*/true, R"(the bit (0-28) in the block version field used to signal this softfork (only for "started" and "locked_in" status))"},
         {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
         {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
-        {RPCResult::Type::STR, "status", "status of deployment at specified block (one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\")"},
+        {RPCResult::Type::STR, "status", R"(status of deployment at specified block (one of "defined", "started", "locked_in", "active", "failed"))"},
         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
         {RPCResult::Type::STR, "status_next", "status of deployment at the next block"},
-        {RPCResult::Type::OBJ, "statistics", /*optional=*/true, "numeric statistics about signalling for a softfork (only for \"started\" and \"locked_in\" status)",
+        {RPCResult::Type::OBJ, "statistics", /*optional=*/true, R"(numeric statistics about signalling for a softfork (only for "started" and "locked_in" status))",
         {
             {RPCResult::Type::NUM, "period", "the length in blocks of the signalling period"},
             {RPCResult::Type::NUM, "threshold", /*optional=*/true, "the number of blocks with the version bit set required to activate the feature (only for \"started\" status)"},
@@ -2036,7 +2036,7 @@ static RPCHelpMan scantxoutset()
             HelpExampleCli("scantxoutset", "start \'[\"" + EXAMPLE_DESCRIPTOR_RAW + "\"]\'") +
             HelpExampleCli("scantxoutset", "status") +
             HelpExampleCli("scantxoutset", "abort") +
-            HelpExampleRpc("scantxoutset", "\"start\", [\"" + EXAMPLE_DESCRIPTOR_RAW + "\"]") +
+            HelpExampleRpc("scantxoutset", R"("start", [")" + EXAMPLE_DESCRIPTOR_RAW + "\"]") +
             HelpExampleRpc("scantxoutset", "\"status\"") +
             HelpExampleRpc("scantxoutset", "\"abort\"")
         },
@@ -2065,7 +2065,7 @@ static RPCHelpMan scantxoutset()
     } else if (request.params[0].get_str() == "start") {
         CoinsViewScanReserver reserver;
         if (!reserver.reserve()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, R"(Scan already in progress, use action "abort" or "status")");
         }
 
         if (request.params.size() < 2) {
@@ -2152,8 +2152,8 @@ static RPCHelpMan getblockfilter()
                         {RPCResult::Type::STR_HEX, "header", "the hex-encoded filter header"},
                     }},
                 RPCExamples{
-                    HelpExampleCli("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" \"basic\"") +
-                    HelpExampleRpc("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\", \"basic\"")
+                    HelpExampleCli("getblockfilter", R"("00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09" "basic")") +
+                    HelpExampleRpc("getblockfilter", R"("00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09", "basic")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

@@ -592,7 +592,7 @@ void SetupServerArgs(ArgsManager& argsman)
 #endif
 
 #if defined(USE_SYSCALL_SANDBOX)
-    argsman.AddArg("-sandbox=<mode>", "Use the experimental syscall sandbox in the specified mode (-sandbox=log-and-abort or -sandbox=abort). Allow only expected syscalls to be used by bitcoind. Note that this is an experimental new feature that may cause bitcoind to exit or crash unexpectedly: use with caution. In the \"log-and-abort\" mode the invocation of an unexpected syscall results in a debug handler being invoked which will log the incident and terminate the program (without executing the unexpected syscall). In the \"abort\" mode the invocation of an unexpected syscall results in the entire process being killed immediately by the kernel without executing the unexpected syscall.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-sandbox=<mode>", R"(Use the experimental syscall sandbox in the specified mode (-sandbox=log-and-abort or -sandbox=abort). Allow only expected syscalls to be used by bitcoind. Note that this is an experimental new feature that may cause bitcoind to exit or crash unexpectedly: use with caution. In the "log-and-abort" mode the invocation of an unexpected syscall results in a debug handler being invoked which will log the incident and terminate the program (without executing the unexpected syscall). In the "abort" mode the invocation of an unexpected syscall results in the entire process being killed immediately by the kernel without executing the unexpected syscall.)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif // USE_SYSCALL_SANDBOX
 
     // Add the hidden options
@@ -1055,7 +1055,7 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         } else if (sandbox_arg == "abort") {
             // log_syscall_violation_before_terminating is false by default.
         } else {
-            return InitError(Untranslated("Unknown syscall sandbox mode (-sandbox=<mode>). Available modes are \"log-and-abort\" and \"abort\"."));
+            return InitError(Untranslated(R"(Unknown syscall sandbox mode (-sandbox=<mode>). Available modes are "log-and-abort" and "abort".)"));
         }
         // execve(...) is not allowed by the syscall sandbox.
         const std::vector<std::string> features_using_execve{

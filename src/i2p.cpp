@@ -234,7 +234,7 @@ std::string Session::Reply::Get(const std::string& key) const
     const auto& pos = keys.find(key);
     if (pos == keys.end() || !pos->second.has_value()) {
         throw std::runtime_error(
-            strprintf("Missing %s= in the reply to \"%s\": \"%s\"", key, request, full));
+            strprintf(R"(Missing %s= in the reply to "%s": "%s")", key, request, full));
     }
     return pos->second.value();
 }
@@ -275,7 +275,7 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
 
     if (check_result_ok && reply.Get("RESULT") != "OK") {
         throw std::runtime_error(
-            strprintf("Unexpected reply to \"%s\": \"%s\"", request, reply.full));
+            strprintf(R"(Unexpected reply to "%s": "%s")", request, reply.full));
     }
 
     return reply;

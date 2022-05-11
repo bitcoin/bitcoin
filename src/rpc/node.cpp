@@ -183,7 +183,7 @@ static RPCHelpMan getmemoryinfo()
                         }
                     },
                     RPCResult{"mode \"mallocinfo\"",
-                        RPCResult::Type::STR, "", "\"<malloc version=\"1\">...\""
+                        RPCResult::Type::STR, "", R"("<malloc version="1">...")"
                     },
                 },
                 RPCExamples{
@@ -258,8 +258,8 @@ static RPCHelpMan logging()
                     }
                 },
                 RPCExamples{
-                    HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
-            + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
+                    HelpExampleCli("logging", R"("[\"all\"]" "[\"http\"]")")
+            + HelpExampleRpc("logging", R"(["all"], ["libevent"])")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

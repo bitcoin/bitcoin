@@ -114,8 +114,8 @@ RPCHelpMan walletpassphrasechange()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
-            + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
+                    HelpExampleCli("walletpassphrasechange", R"("old one" "new one")")
+            + HelpExampleRpc("walletpassphrasechange", R"("old one", "new one")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -208,7 +208,7 @@ RPCHelpMan encryptwallet()
             "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can do something like sign\n"
-            + HelpExampleCli("signmessage", "\"address\" \"test message\"") +
+            + HelpExampleCli("signmessage", R"("address" "test message")") +
             "\nNow lock the wallet again by removing the passphrase\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"

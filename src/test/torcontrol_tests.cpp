@@ -125,51 +125,51 @@ BOOST_AUTO_TEST_CASE(util_ParseTorReplyMapping)
 
     // Escapes
     CheckParseTorReplyMapping(
-        "Foo=\"Bar\\ Baz\"", {
+        R"(Foo="Bar\ Baz")", {
             {"Foo", "Bar Baz"},
         });
     CheckParseTorReplyMapping(
-        "Foo=\"Bar\\Baz\"", {
+        R"(Foo="Bar\Baz")", {
             {"Foo", "BarBaz"},
         });
     CheckParseTorReplyMapping(
-        "Foo=\"Bar\\@Baz\"", {
+        R"(Foo="Bar\@Baz")", {
             {"Foo", "Bar@Baz"},
         });
     CheckParseTorReplyMapping(
-        "Foo=\"Bar\\\"Baz\" Spam=\"\\\"Eggs\\\"\"", {
+        R"(Foo="Bar\"Baz" Spam="\"Eggs\"")", {
             {"Foo", "Bar\"Baz"},
             {"Spam", "\"Eggs\""},
         });
     CheckParseTorReplyMapping(
-        "Foo=\"Bar\\\\Baz\"", {
+        R"(Foo="Bar\\Baz")", {
             {"Foo", "Bar\\Baz"},
         });
 
     // C escapes
     CheckParseTorReplyMapping(
-        "Foo=\"Bar\\nBaz\\t\" Spam=\"\\rEggs\" Octals=\"\\1a\\11\\17\\18\\81\\377\\378\\400\\2222\" Final=Check", {
+        R"(Foo="Bar\nBaz\t" Spam="\rEggs" Octals="\1a\11\17\18\81\377\378\400\2222" Final=Check)", {
             {"Foo", "Bar\nBaz\t"},
             {"Spam", "\rEggs"},
             {"Octals", "\1a\11\17\1" "881\377\37" "8\40" "0\222" "2"},
             {"Final", "Check"},
         });
     CheckParseTorReplyMapping(
-        "Valid=Mapping Escaped=\"Escape\\\\\"", {
+        R"(Valid=Mapping Escaped="Escape\\")", {
             {"Valid", "Mapping"},
             {"Escaped", "Escape\\"},
         });
     CheckParseTorReplyMapping(
-        "Valid=Mapping Bare=\"Escape\\\"", {});
+        R"(Valid=Mapping Bare="Escape\")", {});
     CheckParseTorReplyMapping(
-        "OneOctal=\"OneEnd\\1\" TwoOctal=\"TwoEnd\\11\"", {
+        R"(OneOctal="OneEnd\1" TwoOctal="TwoEnd\11")", {
             {"OneOctal", "OneEnd\1"},
             {"TwoOctal", "TwoEnd\11"},
         });
 
     // Special handling for null case
     // (needed because string comparison reads the null as end-of-string)
-    auto ret = ParseTorReplyMapping("Null=\"\\0\"");
+    auto ret = ParseTorReplyMapping(R"(Null="\0")");
     BOOST_CHECK_EQUAL(ret.size(), 1U);
     auto r_it = ret.begin();
     BOOST_CHECK_EQUAL(r_it->first, "Null");

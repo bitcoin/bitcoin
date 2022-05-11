@@ -27,11 +27,11 @@ RPCHelpMan signmessage()
             "\nUnlock the wallet for 30 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
             "\nCreate the signature\n"
-            + HelpExampleCli("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"my message\"") +
+            + HelpExampleCli("signmessage", R"("1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX" "my message")") +
             "\nVerify the signature\n"
-            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"signature\" \"my message\"") +
+            + HelpExampleCli("verifymessage", R"("1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX" "signature" "my message")") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"my message\"")
+            + HelpExampleRpc("signmessage", R"("1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX", "my message")")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {

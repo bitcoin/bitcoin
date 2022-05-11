@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(run_command)
 #ifdef WIN32
         const UniValue result = RunCommandParseJSON("cmd.exe /c echo {\"success\": true}");
 #else
-        const UniValue result = RunCommandParseJSON("echo \"{\"success\": true}\"");
+        const UniValue result = RunCommandParseJSON(R"(echo "{"success": true}")");
 #endif
         BOOST_CHECK(result.isObject());
         const UniValue& success = find_value(result, "success");

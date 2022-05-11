@@ -24,7 +24,7 @@ const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, bilingual_str& error)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        error = _("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types");
+        error = _(R"(Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types)");
         return false;
     }
     assert(type != OutputType::BECH32M);
@@ -299,7 +299,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
 bool LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        error = _("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types");
+        error = _(R"(Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types)");
         return false;
     }
     assert(type != OutputType::BECH32M);

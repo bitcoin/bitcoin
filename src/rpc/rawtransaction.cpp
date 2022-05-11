@@ -205,8 +205,8 @@ static RPCHelpMan getrawtransaction()
                     HelpExampleCli("getrawtransaction", "\"mytxid\"")
             + HelpExampleCli("getrawtransaction", "\"mytxid\" true")
             + HelpExampleRpc("getrawtransaction", "\"mytxid\", true")
-            + HelpExampleCli("getrawtransaction", "\"mytxid\" false \"myblockhash\"")
-            + HelpExampleCli("getrawtransaction", "\"mytxid\" true \"myblockhash\"")
+            + HelpExampleCli("getrawtransaction", R"("mytxid" false "myblockhash")")
+            + HelpExampleCli("getrawtransaction", R"("mytxid" true "myblockhash")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -289,10 +289,10 @@ static RPCHelpMan createrawtransaction()
                     RPCResult::Type::STR_HEX, "transaction", "hex string of the transaction"
                 },
                 RPCExamples{
-                    HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"address\\\":0.01}]\"")
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"address\\\":0.01}]\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                    HelpExampleCli("createrawtransaction", R"("[{\"txid\":\"myid\",\"vout\":0}]" "[{\"address\":0.01}]")")
+            + HelpExampleCli("createrawtransaction", R"("[{\"txid\":\"myid\",\"vout\":0}]" "[{\"data\":\"00010203\"}]")")
+            + HelpExampleRpc("createrawtransaction", R"("[{\"txid\":\"myid\",\"vout\":0}]", "[{\"address\":0.01}]")")
+            + HelpExampleRpc("createrawtransaction", R"("[{\"txid\":\"myid\",\"vout\":0}]", "[{\"data\":\"00010203\"}]")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -639,8 +639,8 @@ static RPCHelpMan signrawtransactionwithkey()
                     }
                 },
                 RPCExamples{
-                    HelpExampleCli("signrawtransactionwithkey", "\"myhex\" \"[\\\"key1\\\",\\\"key2\\\"]\"")
-            + HelpExampleRpc("signrawtransactionwithkey", "\"myhex\", \"[\\\"key1\\\",\\\"key2\\\"]\"")
+                    HelpExampleCli("signrawtransactionwithkey", R"("myhex" "[\"key1\",\"key2\"]")")
+            + HelpExampleRpc("signrawtransactionwithkey", R"("myhex", "[\"key1\",\"key2\"]")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1265,7 +1265,7 @@ static RPCHelpMan createpsbt()
                     RPCResult::Type::STR, "", "The resulting raw transaction (base64-encoded string)"
                 },
                 RPCExamples{
-                    HelpExampleCli("createpsbt", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                    HelpExampleCli("createpsbt", R"("[{\"txid\":\"myid\",\"vout\":0}]" "[{\"data\":\"00010203\"}]")")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1325,7 +1325,7 @@ static RPCHelpMan converttopsbt()
                 },
                 RPCExamples{
                             "\nCreate a transaction\n"
-                            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"") +
+                            + HelpExampleCli("createrawtransaction", R"("[{\"txid\":\"myid\",\"vout\":0}]" "[{\"data\":\"00010203\"}]")") +
                             "\nConvert the transaction to a PSBT\n"
                             + HelpExampleCli("converttopsbt", "\"rawtransaction\"")
                 },
