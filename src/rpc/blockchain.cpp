@@ -2444,8 +2444,13 @@ static RPCHelpMan dumptxoutset()
     // SYSCOIN
     FILE* filejson{fsbridge::fopen(temppathjson, "w")};
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
-    node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (afile.IsNull()) {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            "Couldn't open file " + temppath.u8string() + " for writing.");
+    }
     // SYSCOIN
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
     UniValue result = CreateUTXOSnapshot(
         node, node.chainman->ActiveChainstate(), afile, path, temppath, filejson);
     fclose(filejson);
