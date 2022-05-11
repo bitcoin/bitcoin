@@ -583,7 +583,7 @@ inspecting signatures in Mach-O binaries.")
         automake
         pkg-config
         bison
-        rust-1.51
+        rust
         ;; Scripting
         perl
         python-3
