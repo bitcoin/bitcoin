@@ -26,9 +26,10 @@ static void SetupBenchArgs(ArgsManager& argsman)
     argsman.AddArg("-asymptote=<n1,n2,n3,...>", "Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-list", "List benchmarks without executing them", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-min_time=<milliseconds>", strprintf("Minimum runtime per benchmark, in milliseconds (default: %d)", DEFAULT_MIN_TIME_MS), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-output_csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-output_json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-min-time=<milliseconds>", strprintf("Minimum runtime per benchmark, in milliseconds (default: %d)", DEFAULT_MIN_TIME_MS), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
+    argsman.AddArg("-output-csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-output-json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-sanity-check", "Run benchmarks for only one iteration", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 // parses a comma separated list like "10,20,30,50"
@@ -73,7 +74,7 @@ int main(int argc, char** argv)
                      "    sure each run has exactly the same preconditions.\n"
                      "\n"
                      "  * If results are still not reliable, increase runtime with e.g.\n"
-                     "    -min_time=5000 to let a benchmark run for at least 5 seconds.\n"
+                     "    -min-time=5000 to let a benchmark run for at least 5 seconds.\n"
                      "\n"
                      "  * bench_dash uses nanobench [3] for which there is extensive\n"
                      "    documentation available online.\n"
@@ -108,10 +109,11 @@ int main(int argc, char** argv)
     benchmark::Args args;
     args.asymptote = parseAsymptote(argsman.GetArg("-asymptote", ""));
     args.is_list_only = argsman.GetBoolArg("-list", false);
-    args.min_time = std::chrono::milliseconds(argsman.GetIntArg("-min_time", DEFAULT_MIN_TIME_MS));
-    args.output_csv = argsman.GetPathArg("-output_csv");
-    args.output_json = argsman.GetPathArg("-output_json");
+    args.min_time = std::chrono::milliseconds(argsman.GetIntArg("-min-time", DEFAULT_MIN_TIME_MS));
+    args.output_csv = argsman.GetPathArg("-output-csv");
+    args.output_json = argsman.GetPathArg("-output-json");
     args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
+    args.sanity_check = argsman.GetBoolArg("-sanity-check", false);
 
     benchmark::BenchRunner::RunAll(args);
 
