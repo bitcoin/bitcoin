@@ -124,6 +124,7 @@ class BaseSignetTest(BitcoinTestFramework):
 
         # parent class attributes
         self.chain = SIGNET
+        self.requires_wallet = True
         self.setup_clean_chain = True
 
         # supposed to be private
