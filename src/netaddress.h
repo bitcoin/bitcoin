@@ -202,12 +202,6 @@ public:
     //! Whether this address has a linked IPv4 address (see GetLinkedIPv4()).
     bool HasLinkedIPv4() const;
 
-    // The AS on the BGP path to the node we use to diversify
-    // peers in AddrMan bucketing based on the AS infrastructure.
-    // The ip->AS mapping depends on how asmap is constructed.
-    uint32_t GetMappedAS(const std::vector<bool>& asmap) const;
-
-    std::vector<unsigned char> GetGroup(const std::vector<bool>& asmap) const;
     std::vector<unsigned char> GetAddrBytes() const;
     int GetReachabilityFrom(const CNetAddr* paddrPartner = nullptr) const;
 

@@ -49,7 +49,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
-  MAYBE_BEAR="bear"
+  MAYBE_BEAR="bear --config src/.bear-tidy-config"
   MAYBE_TOKEN="--"
 fi
 

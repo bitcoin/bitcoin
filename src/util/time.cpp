@@ -23,16 +23,6 @@ void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread
 
 static std::atomic<int64_t> nMockTime(0); //!< For testing
 
-int64_t GetTime()
-{
-    int64_t mocktime = nMockTime.load(std::memory_order_relaxed);
-    if (mocktime) return mocktime;
-
-    time_t now = time(nullptr);
-    assert(now > 0);
-    return now;
-}
-
 bool ChronoSanityCheck()
 {
     // std::chrono::system_clock.time_since_epoch and time_t(0) are not guaranteed
@@ -80,11 +70,12 @@ template <typename T>
 T GetTime()
 {
     const std::chrono::seconds mocktime{nMockTime.load(std::memory_order_relaxed)};
-
-    return std::chrono::duration_cast<T>(
+    const auto ret{
         mocktime.count() ?
             mocktime :
-            std::chrono::microseconds{GetTimeMicros()});
+            std::chrono::duration_cast<T>(std::chrono::system_clock::now().time_since_epoch())};
+    assert(ret > 0s);
+    return ret;
 }
 template std::chrono::seconds GetTime();
 template std::chrono::milliseconds GetTime();
@@ -128,6 +119,8 @@ int64_t GetTimeSeconds()
 {
     return int64_t{GetSystemTime<std::chrono::seconds>().count()};
 }
+
+int64_t GetTime() { return GetTime<std::chrono::seconds>().count(); }
 
 std::string FormatISO8601DateTime(int64_t nTime) {
     struct tm ts;

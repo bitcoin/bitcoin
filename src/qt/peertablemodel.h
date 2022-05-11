@@ -47,6 +47,7 @@ public:
 
     enum ColumnIndex {
         NetNodeId = 0,
+        Age,
         Address,
         Direction,
         ConnectionType,
@@ -82,6 +83,9 @@ private:
         /*: Title of Peers Table column which contains a
             unique number used to identify a connection. */
         tr("Peer"),
+        /*: Title of Peers Table column which indicates the duration (length of time)
+            since the peer connection started. */
+        tr("Age"),
         /*: Title of Peers Table column which contains the
             IP/Onion/I2P address of the connected peer. */
         tr("Address"),

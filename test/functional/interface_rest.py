@@ -219,7 +219,7 @@ class RESTTest (BitcoinTestFramework):
 
         self.generate(self.nodes[0], 1)  # generate block to not affect upcoming tests
 
-        self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
+        self.log.info("Test the /block, /blockhashbyheight, /headers, and /blockfilterheaders URIs")
         bb_hash = self.nodes[0].getbestblockhash()
 
         # Check result if block does not exists
@@ -300,6 +300,12 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(first_filter_header, rpc_blockfilter['header'])
         assert_equal(json_obj['filter'], rpc_blockfilter['filter'])
 
+        # Test blockfilterheaders with an invalid hash and filtertype
+        resp = self.test_rest_request(f"/blockfilterheaders/{INVALID_PARAM}/{bb_hash}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Unknown filtertype {INVALID_PARAM}")
+        resp = self.test_rest_request(f"/blockfilterheaders/basic/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
+
         # Test number parsing
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
             assert_equal(
@@ -326,6 +332,10 @@ class RESTTest (BitcoinTestFramework):
 
         # Check that there are our submitted transactions in the TX memory pool
         json_obj = self.test_rest_request("/mempool/contents")
+        raw_mempool_verbose = self.nodes[0].getrawmempool(verbose=True)
+
+        assert_equal(json_obj, raw_mempool_verbose)
+
         for i, tx in enumerate(txs):
             assert tx in json_obj
             assert_equal(json_obj[tx]['spentby'], txs[i + 1:i + 2])
@@ -360,6 +370,10 @@ class RESTTest (BitcoinTestFramework):
 
         json_obj = self.test_rest_request("/chaininfo")
         assert_equal(json_obj['bestblockhash'], bb_hash)
+
+        # Compare with normal RPC getblockchaininfo response
+        blockchain_info = self.nodes[0].getblockchaininfo()
+        assert_equal(blockchain_info, json_obj)
 
         # Test compatibility of deprecated and newer endpoints
         self.log.info("Test compatibility of deprecated and newer endpoints")

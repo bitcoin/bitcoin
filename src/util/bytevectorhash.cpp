@@ -8,8 +8,8 @@
 
 ByteVectorHash::ByteVectorHash()
 {
-    GetRandBytes(reinterpret_cast<unsigned char*>(&m_k0), sizeof(m_k0));
-    GetRandBytes(reinterpret_cast<unsigned char*>(&m_k1), sizeof(m_k1));
+    GetRandBytes({reinterpret_cast<unsigned char*>(&m_k0), sizeof(m_k0)});
+    GetRandBytes({reinterpret_cast<unsigned char*>(&m_k1), sizeof(m_k1)});
 }
 
 size_t ByteVectorHash::operator()(const std::vector<unsigned char>& input) const

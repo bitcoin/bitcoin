@@ -98,7 +98,7 @@ test/functional/test_runner.py --extended
 In order to run backwards compatibility tests, download the previous node binaries:
 
 ```
-test/get_previous_releases.py -b v22.0 v0.21.0 v0.20.1 v0.19.1 v0.18.1 v0.17.2 v0.16.3 v0.15.2 v0.14.3
+test/get_previous_releases.py -b v23.0 v22.0 v0.21.0 v0.20.1 v0.19.1 v0.18.1 v0.17.2 v0.16.3 v0.15.2 v0.14.3
 ```
 
 By default, up to 4 tests will be run in parallel by test_runner. To specify
@@ -305,11 +305,11 @@ Use the `-v` option for verbose output.
 
 | Lint test | Dependency |
 |-----------|:----------:|
-| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8)
-| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy)
-| [`lint-python.sh`](lint/lint-python.sh) | [pyzmq](https://github.com/zeromq/pyzmq)
+| [`lint-python.py`](lint/lint-python.py) | [flake8](https://gitlab.com/pycqa/flake8)
+| [`lint-python.py`](lint/lint-python.py) | [mypy](https://github.com/python/mypy)
+| [`lint-python.py`](lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
 | [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
-| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck)
+| [`lint-shell.py`](lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
 | [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
 
 In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
@@ -327,7 +327,7 @@ test/lint/lint-files.py
 You can run all the shell-based lint tests by running:
 
 ```
-test/lint/lint-all.sh
+test/lint/lint-all.py
 ```
 
 # Writing functional tests

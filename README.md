@@ -3,7 +3,7 @@ Navcoin Core integration/staging tree
 
 Navcoin Core is a fork of [Bitcoin Core](https://github.com/bitcoin/bitcoin). This
 repository hosts the source code for the next version of Navcoin Core, which is *not
-ready for production yet*. 
+ready for production yet*.
 
 https://navcoin.org
 

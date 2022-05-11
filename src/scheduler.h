@@ -5,13 +5,18 @@
 #ifndef BITCOIN_SCHEDULER_H
 #define BITCOIN_SCHEDULER_H
 
+#include <attributes.h>
+#include <sync.h>
+#include <threadsafety.h>
+
+#include <chrono>
 #include <condition_variable>
+#include <cstddef>
 #include <functional>
 #include <list>
 #include <map>
 #include <thread>
-
-#include <sync.h>
+#include <utility>
 
 /**
  * Simple class for background tasks that should be run
@@ -117,7 +122,7 @@ private:
 class SingleThreadedSchedulerClient
 {
 private:
-    CScheduler* m_pscheduler;
+    CScheduler& m_scheduler;
 
     Mutex m_callbacks_mutex;
     std::list<std::function<void()>> m_callbacks_pending GUARDED_BY(m_callbacks_mutex);
@@ -127,7 +132,7 @@ private:
     void ProcessQueue();
 
 public:
-    explicit SingleThreadedSchedulerClient(CScheduler* pschedulerIn) : m_pscheduler(pschedulerIn) {}
+    explicit SingleThreadedSchedulerClient(CScheduler& scheduler LIFETIMEBOUND) : m_scheduler{scheduler} {}
 
     /**
      * Add a callback to be executed. Callbacks are executed serially
