@@ -470,6 +470,8 @@ fi
 dnl Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
 AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fno-extended-identifiers"], [], [$CXXFLAG_WERROR])
 
+enable_arm_crc=no
+enable_arm_shani=no
 enable_sse42=no
 enable_sse41=no
 enable_avx2=no
