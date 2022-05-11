@@ -44,13 +44,12 @@ class CCoinControl
 public:
     //! Custom change destination, if not set an address is generated
     CTxDestination destChange = CNoDestination();
-    //! If false, only selected inputs are used
-    bool m_add_inputs = true;
     //! If false, only safe inputs will be used
     bool m_include_unsafe_inputs = false;
-    //! If false, allows unselected inputs, but requires all selected inputs be used if fAllowOtherInputs is true (default)
-    bool fAllowOtherInputs = false;
-    //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with fAllowOtherInputs
+    //! If true, the selection process can add extra unselected inputs from the wallet
+    //! while requires all selected inputs be used
+    bool m_allow_other_inputs = false;
+    //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with m_allow_other_inputs
     bool fRequireAllInputs = true;
     //! Includes watch only addresses which are solvable
     bool fAllowWatchOnly = false;

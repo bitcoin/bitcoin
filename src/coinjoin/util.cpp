@@ -128,7 +128,7 @@ CTransactionBuilder::CTransactionBuilder(CWallet& wallet, const CompactTallyItem
     // Change always goes back to origin
     coinControl.destChange = tallyItemIn.txdest;
     // Only allow tallyItems inputs for tx creation
-    coinControl.fAllowOtherInputs = false;
+    coinControl.m_allow_other_inputs = false;
     // Create dummy tx to calculate the exact required fees upfront for accurate amount and fee calculations
     CMutableTransaction dummyTx;
     // Select all tallyItem outputs in the coinControl so that CreateTransaction knows what to use

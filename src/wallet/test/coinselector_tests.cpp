@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(coins, *wallet, 3 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(coins, *wallet, 2 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         CCoinControl coin_control;
-        coin_control.fAllowOtherInputs = true;
+        coin_control.m_allow_other_inputs = true;
         coin_control.Select(coins.at(0).outpoint);
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
         const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         expected_result.Clear();
         add_coin(9 * CENT, 2, expected_result);
         add_coin(1 * CENT, 2, expected_result);
-        coin_control.fAllowOtherInputs = true;
+        coin_control.m_allow_other_inputs = true;
         coin_control.Select(coins.at(1).outpoint); // pre select 9 coin
         const auto result13 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result13));
@@ -933,10 +933,10 @@ BOOST_AUTO_TEST_CASE(minimum_inputs_test)
     add_coin(coins, *wallet, 16 * COIN, CFeeRate(0), /*nAge=*/6*24, /*fIsFromMe=*/false, /*nInput=*/0, /*spendable=*/true);
     add_coin(coins, *wallet, 24 * COIN, CFeeRate(0), /*nAge=*/6*24, /*fIsFromMe=*/false, /*nInput=*/0, /*spendable=*/true);
 
-    // Setup coin control to select from the given coins (!fAllowOtherInputs) *but* consume as little
+    // Setup coin control to select from the given coins (!m_allow_other_inputs) *but* consume as little
     // as possible (!fRequireAllInputs) and select our coins.
     CCoinControl coin_control{};
-    coin_control.fAllowOtherInputs = false;
+    coin_control.m_allow_other_inputs = false;
     coin_control.fRequireAllInputs = false;
     for (const auto& coin : coins) {
         coin_control.Select(coin.outpoint);

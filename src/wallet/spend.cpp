@@ -165,17 +165,12 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                     break;
                 }
             } // no default case, so the compiler can warn about missing cases
-            if(!found) continue;
-
-            // Only consider selected coins if add_inputs is false
-            if (coinControl && !coinControl->m_add_inputs && !coinControl->IsSelected(outpoint)) {
-                continue;
-            }
+            if (!found) continue;
 
             if (output.nValue < nMinimumAmount || output.nValue > nMaximumAmount)
                 continue;
 
-            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(outpoint))
+            if (coinControl && coinControl->HasSelected() && !coinControl->m_allow_other_inputs && !coinControl->IsSelected(outpoint))
                 continue;
 
             if (wallet.IsLockedCoin(outpoint) && nCoinType != CoinType::ONLY_MASTERNODE_COLLATERAL)
@@ -454,41 +449,6 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
 
     OutputGroup preset_inputs(coin_selection_params);
 
-    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
-    {
-        for (const COutput& out : vCoins) {
-            if (!out.spendable) continue;
-            /* Set ancestors and descendants to 0 as these don't matter for preset inputs as no actual selection is being done.
-             * positive_only is set to false because we want to include all preset inputs, even if they are dust.
-             */
-            preset_inputs.Insert(out, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
-        }
-        SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
-        bool all_inputs{coin_control.fRequireAllInputs};
-        if (!all_inputs) {
-            // Calculate the smallest set of inputs required to meet nTargetValue
-            bool success{false};
-            OutputGroup preset_candidates(coin_selection_params);
-            for (const auto& output : preset_inputs.m_outputs) {
-                preset_candidates.Insert(output, /*ancestors=*/0, /*descendants=*/0, /*positive_only=*/false);
-                if (preset_candidates.GetSelectionAmount() >= nTargetValue) {
-                    result.AddInput(preset_candidates);
-                    success = true;
-                    break;
-                }
-            }
-            // Couldn't meet target, add all inputs
-            if (!success) all_inputs = true;
-        }
-        if (all_inputs) {
-            result.AddInput(preset_inputs);
-        }
-        if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
-        result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
-        return result;
-    }
-
     // calculate value from preset inputs and store them
     std::set<COutPoint> preset_coins;
 
@@ -497,15 +457,14 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     for (const COutPoint& outpoint : vPresetInputs) {
         int input_bytes = -1;
         CTxOut txout;
-        std::map<uint256, CWalletTx>::const_iterator it = wallet.mapWallet.find(outpoint.hash);
-        if (it != wallet.mapWallet.end()) {
-            const CWalletTx& wtx = it->second;
+        auto ptr_wtx = wallet.GetWalletTx(outpoint.hash);
+        if (ptr_wtx) {
             // Clearly invalid input, fail
-            if (wtx.tx->vout.size() <= outpoint.n) {
+            if (ptr_wtx->tx->vout.size() <= outpoint.n) {
                 return std::nullopt;
             }
-            input_bytes = GetTxSpendSize(wallet, wtx, outpoint.n, false);
-            txout = wtx.tx->vout.at(outpoint.n);
+            input_bytes = GetTxSpendSize(wallet, *ptr_wtx, outpoint.n, false);
+            txout = ptr_wtx->tx->vout.at(outpoint.n);
         } else {
             // The input is external. We did not find the tx in mapWallet.
             if (!coin_control.GetExternalOutput(outpoint, txout)) {
@@ -534,6 +493,36 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
          * positive_only is set to false because we want to include all preset inputs, even if they are dust.
          */
         preset_inputs.Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
+    }
+
+    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
+    if (coin_control.HasSelected() && !coin_control.m_allow_other_inputs) {
+        SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
+        bool all_inputs{coin_control.fRequireAllInputs};
+        if (!all_inputs) {
+            // Calculate the smallest set of inputs required to meet nTargetValue from vCoins
+            bool success{false};
+            OutputGroup preset_candidates(coin_selection_params);
+            for (const COutput& out : vCoins) {
+                if (!out.spendable) continue;
+                if (preset_coins.count(out.outpoint)) {
+                    preset_candidates.Insert(out, /*ancestors=*/0, /*descendants=*/0, /*positive_only=*/false);
+                }
+                if (preset_candidates.GetSelectionAmount() >= nTargetValue) {
+                    result.AddInput(preset_candidates);
+                    success = true;
+                    break;
+                }
+            }
+            // Couldn't meet target, add all inputs
+            if (!success) all_inputs = true;
+        }
+        if (all_inputs) {
+            result.AddInput(preset_inputs);
+        }
+        if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
+        result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+        return result;
     }
 
     // remove preset inputs from vCoins so that Coin Selection doesn't pick them.
@@ -1101,8 +1090,6 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
-
-    coinControl.fAllowOtherInputs = true;
 
     // Acquire the locks to prevent races to the new locked unspents between the
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).
