@@ -29,6 +29,7 @@ static void SetupBenchArgs(ArgsManager& argsman)
     argsman.AddArg("-min_time=<milliseconds>", strprintf("Minimum runtime per benchmark, in milliseconds (default: %d)", DEFAULT_MIN_TIME_MS), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-output_csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-output_json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-sanity-check", "Run benchmarks for only one iteration", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 // parses a comma separated list like "10,20,30,50"
@@ -112,6 +113,7 @@ int main(int argc, char** argv)
     args.output_csv = argsman.GetPathArg("-output_csv");
     args.output_json = argsman.GetPathArg("-output_json");
     args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
+    args.sanity_check = argsman.GetBoolArg("-sanity-check", false);
 
     benchmark::BenchRunner::RunAll(args);
 
