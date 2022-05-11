@@ -32,8 +32,13 @@ def call_rpc(node, settings, rpc):
     return {"status": code, "json": json_ret['result']}
 
 class RPCWhitelistTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 1
+        if self.is_wallet_compiled():
+            self.skip_if_no_wallet()
 
     def setup_chain(self):
         super().setup_chain()
@@ -68,8 +73,6 @@ class RPCWhitelistTest(BitcoinTestFramework):
 
     def run_test(self):
         if self.is_wallet_compiled():
-            if '' not in self.nodes[0].listwallets():
-                self.nodes[0].createwallet('')
             self.nodes[0].createwallet('second')
 
         self.log.info("Test getrpcwhitelist")
@@ -80,7 +83,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         assert_equal(200, result['status'])
         assert_equal(result['json']['methods'], whitelisted)
         if self.is_wallet_compiled():
-            assert_equal(result['json']['wallets'], {'':None, 'second':None})
+            assert_equal(result['json']['wallets'], {self.default_wallet_name: None, 'second': None})
         else:
             assert_equal(result['json']['wallets'], {})
 
