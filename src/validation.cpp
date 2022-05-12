@@ -2454,9 +2454,9 @@ bool CChainState::FlushStateToDisk(
             full_flush_completed = true;
             TRACE5(utxocache, flush,
                    (int64_t)(GetTimeMicros() - nNow.count()), // in microseconds (µs)
-                   (u_int32_t)mode,
-                   (u_int64_t)coins_count,
-                   (u_int64_t)coins_mem_usage,
+                   (uint32_t)mode,
+                   (uint64_t)coins_count,
+                   (uint64_t)coins_mem_usage,
                    (bool)fFlushForPrune);
         }
     }
