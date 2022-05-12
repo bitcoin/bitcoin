@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <string_view>
+
 BOOST_AUTO_TEST_SUITE(blockfilter_tests)
 
 BOOST_AUTO_TEST_CASE(gcsfilter_test)
@@ -160,14 +162,14 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         CTxUndo& tx_undo = block_undo.vtxundo.back();
         const UniValue& prev_scripts = test[pos++].get_array();
         for (unsigned int ii = 0; ii < prev_scripts.size(); ii++) {
-            std::vector<unsigned char> raw_script = ParseHex(prev_scripts[ii].get_str());
+            std::vector<unsigned char> raw_script = ParseHex(std::string_view{prev_scripts[ii].get_str()});
             CTxOut txout(0, CScript(raw_script.begin(), raw_script.end()));
             tx_undo.vprevout.emplace_back(txout, 0, false);
         }
 
         uint256 prev_filter_header_basic;
         BOOST_CHECK(ParseHashStr(test[pos++].get_str(), prev_filter_header_basic));
-        std::vector<unsigned char> filter_basic = ParseHex(test[pos++].get_str());
+        std::vector<unsigned char> filter_basic = ParseHex(std::string_view{test[pos++].get_str()});
         uint256 filter_header_basic;
         BOOST_CHECK(ParseHashStr(test[pos++].get_str(), filter_header_basic));
 
