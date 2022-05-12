@@ -90,6 +90,21 @@ example:
 BUILDDIR=$PWD/build contrib/devtools/gen-manpages.py
 ```
 
+gen-bitcoin-conf.sh
+===================
+
+Generates a bitcoin.conf file in `share/examples/` by parsing the output from `bitcoind --help`. This script is run during the
+release process to include a bitcoin.conf with the release binaries and can also be run by users to generate a file locally.
+When generating a file as part of the release process, make sure to commit the changes after running the script.
+
+With in-tree builds this tool can be run from any directory within the
+repository. To use this tool with out-of-tree builds set `BUILDDIR`. For
+example:
+
+```bash
+BUILDDIR=$PWD/build contrib/devtools/gen-bitcoin-conf.sh
+```
+
 security-check.py and test-security-check.py
 ============================================
 

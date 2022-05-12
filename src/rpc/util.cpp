@@ -9,14 +9,12 @@
 #include <script/descriptor.h>
 #include <script/signingprovider.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
 
 #include <tuple>
-
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "bc1q02ad21edsxd23d32dfgqqsz4vv4nmtfzuklhy3"};
@@ -513,8 +511,7 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
 {
     std::set<std::string> named_args;
     for (const auto& arg : m_args) {
-        std::vector<std::string> names;
-        boost::split(names, arg.m_names, boost::is_any_of("|"));
+        std::vector<std::string> names = SplitString(arg.m_names, '|');
         // Should have unique named arguments
         for (const std::string& name : names) {
             CHECK_NONFATAL(named_args.insert(name).second);
@@ -542,7 +539,7 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
                 // Null values are accepted in all arguments
                 break;
             default:
-                CHECK_NONFATAL(false);
+                NONFATAL_UNREACHABLE();
                 break;
             }
         }
@@ -665,8 +662,7 @@ UniValue RPCHelpMan::GetArgMap() const
     UniValue arr{UniValue::VARR};
     for (int i{0}; i < int(m_args.size()); ++i) {
         const auto& arg = m_args.at(i);
-        std::vector<std::string> arg_names;
-        boost::split(arg_names, arg.m_names, boost::is_any_of("|"));
+        std::vector<std::string> arg_names = SplitString(arg.m_names, '|');
         for (const auto& arg_name : arg_names) {
             UniValue map{UniValue::VARR};
             map.push_back(m_name);
@@ -793,7 +789,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         return;
     }
     case Type::ANY: {
-        CHECK_NONFATAL(false); // Only for testing
+        NONFATAL_UNREACHABLE(); // Only for testing
     }
     case Type::NONE: {
         sections.PushSection({indent + "null" + maybe_separator, Description("json null")});
@@ -860,7 +856,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         return;
     }
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 bool RPCResult::MatchesType(const UniValue& result) const
@@ -938,7 +934,7 @@ bool RPCResult::MatchesType(const UniValue& result) const
         return true;
     }
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 void RPCResult::CheckInnerDoc() const
@@ -984,9 +980,9 @@ std::string RPCArg::ToStringObj(const bool oneline) const
     case Type::OBJ:
     case Type::OBJ_USER_KEYS:
         // Currently unused, so avoid writing dead code
-        CHECK_NONFATAL(false);
+        NONFATAL_UNREACHABLE();
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 std::string RPCArg::ToString(const bool oneline) const
@@ -1021,7 +1017,7 @@ std::string RPCArg::ToString(const bool oneline) const
         return "[" + res + "...]";
     }
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 static std::pair<int64_t, int64_t> ParseRange(const UniValue& value)

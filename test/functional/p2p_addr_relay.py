@@ -21,8 +21,19 @@ from test_framework.p2p import (
     P2P_SERVICES,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_greater_than_or_equal
+)
 
+ONE_MINUTE  = 60
+TEN_MINUTES = 10 * ONE_MINUTE
+ONE_HOUR    = 60 * ONE_MINUTE
+TWO_HOURS   =  2 * ONE_HOUR
+ONE_DAY     = 24 * ONE_HOUR
+
+ADDR_DESTINATIONS_THRESHOLD = 4
 
 class AddrReceiver(P2PInterface):
     num_ipv4_received = 0
@@ -84,6 +95,9 @@ class AddrTest(BitcoinTestFramework):
         self.oversized_addr_test()
         self.relay_tests()
         self.inbound_blackhole_tests()
+
+        self.destination_rotates_once_in_24_hours_test()
+        self.destination_rotates_more_than_once_over_several_days_test()
 
         # This test populates the addrman, which can impact the node's behavior
         # in subsequent tests
@@ -361,6 +375,56 @@ class AddrTest(BitcoinTestFramework):
             self.send_addrs_and_test_rate_limiting(peer, no_relay, new_addrs=200, total_addrs=1610)
 
             self.nodes[0].disconnect_p2ps()
+
+    def get_nodes_that_received_addr(self, peer, receiver_peer, addr_receivers,
+                                     time_interval_1, time_interval_2):
+
+        # Clean addr response related to the initial getaddr. There is no way to avoid initial
+        # getaddr because the peer won't self-announce then.
+        for addr_receiver in addr_receivers:
+            addr_receiver.num_ipv4_received = 0
+
+        for _ in range(10):
+            self.mocktime += time_interval_1
+            self.msg.addrs[0].time = self.mocktime + TEN_MINUTES
+            self.nodes[0].setmocktime(self.mocktime)
+            with self.nodes[0].assert_debug_log(['received: addr (31 bytes) peer=0']):
+                peer.send_and_ping(self.msg)
+                self.mocktime += time_interval_2
+                self.nodes[0].setmocktime(self.mocktime)
+                receiver_peer.sync_with_ping()
+        return [node for node in addr_receivers if node.addr_received()]
+
+    def destination_rotates_once_in_24_hours_test(self):
+        self.restart_node(0, [])
+
+        self.log.info('Test within 24 hours an addr relay destination is rotated at most once')
+        self.mocktime = int(time.time())
+        self.msg = self.setup_addr_msg(1)
+        self.addr_receivers = []
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        receiver_peer = self.nodes[0].add_p2p_connection(AddrReceiver())
+        addr_receivers = [self.nodes[0].add_p2p_connection(AddrReceiver()) for _ in range(20)]
+        nodes_received_addr = self.get_nodes_that_received_addr(peer, receiver_peer, addr_receivers, 0, TWO_HOURS)  # 10 intervals of 2 hours
+        # Per RelayAddress, we would announce these addrs to 2 destinations per day.
+        # Since it's at most one rotation, at most 4 nodes can receive ADDR.
+        assert_greater_than_or_equal(ADDR_DESTINATIONS_THRESHOLD, len(nodes_received_addr))
+        self.nodes[0].disconnect_p2ps()
+
+    def destination_rotates_more_than_once_over_several_days_test(self):
+        self.restart_node(0, [])
+
+        self.log.info('Test after several days an addr relay destination is rotated more than once')
+        self.msg = self.setup_addr_msg(1)
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        receiver_peer = self.nodes[0].add_p2p_connection(AddrReceiver())
+        addr_receivers = [self.nodes[0].add_p2p_connection(AddrReceiver()) for _ in range(20)]
+        # 10 intervals of 1 day (+ 1 hour, which should be enough to cover 30-min Poisson in most cases)
+        nodes_received_addr = self.get_nodes_that_received_addr(peer, receiver_peer, addr_receivers, ONE_DAY, ONE_HOUR)
+        # Now that there should have been more than one rotation, more than
+        # ADDR_DESTINATIONS_THRESHOLD nodes should have received ADDR.
+        assert_greater_than(len(nodes_received_addr), ADDR_DESTINATIONS_THRESHOLD)
+        self.nodes[0].disconnect_p2ps()
 
 
 if __name__ == '__main__':

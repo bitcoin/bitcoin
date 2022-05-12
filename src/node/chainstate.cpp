@@ -32,8 +32,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     chainman.m_total_coinstip_cache = nCoinCacheUsage;
     chainman.m_total_coinsdb_cache = nCoinDBCache;
 
-    UnloadBlockIndex(mempool, chainman);
-
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
     // new CBlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
@@ -49,7 +47,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
     if (shutdown_requested && shutdown_requested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
 
-    // LoadBlockIndex will load fHavePruned if we've ever removed a
+    // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
     // Note that it also sets fReindex based on the disk flag!
     // From here on out fReindex and fReset mean something different!
@@ -65,7 +63,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
     // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
     // in the past, but is now trying to run unpruned.
-    if (fHavePruned && !fPruneMode) {
+    if (chainman.m_blockman.m_have_pruned && !fPruneMode) {
         return ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX;
     }
 

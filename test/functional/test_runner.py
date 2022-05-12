@@ -28,7 +28,7 @@ import logging
 import unittest
 
 # Formatting. Default colors to empty strings.
-BOLD, GREEN, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
+DEFAULT, BOLD, GREEN, RED = ("", ""), ("", ""), ("", ""), ("", "")
 try:
     # Make sure python thinks it can write unicode to its stdout
     "\u2713".encode("utf_8").decode(sys.stdout.encoding)
@@ -59,10 +59,10 @@ if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393): #type:ignore
         kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
+    DEFAULT = ('\033[0m', '\033[0m')
     BOLD = ('\033[0m', '\033[1m')
     GREEN = ('\033[0m', '\033[0;32m')
     RED = ('\033[0m', '\033[0;31m')
-    GREY = ('\033[0m', '\033[1;30m')
 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
@@ -82,6 +82,7 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     'feature_dbcrash.py',
+    'feature_index_prune.py',
 ]
 
 BASE_SCRIPTS = [
@@ -111,7 +112,6 @@ BASE_SCRIPTS = [
     'p2p_tx_download.py',
     'mempool_updatefromblock.py',
     'wallet_dump.py --legacy-wallet',
-    'feature_taproot.py --previous_release',
     'feature_taproot.py',
     'rpc_signer.py',
     'wallet_signer.py --descriptors',
@@ -145,6 +145,8 @@ BASE_SCRIPTS = [
     'wallet_txn_doublespend.py --mineblock',
     'tool_wallet.py --legacy-wallet',
     'tool_wallet.py --descriptors',
+    'tool_signet_miner.py --legacy-wallet',
+    'tool_signet_miner.py --descriptors',
     'wallet_txn_clone.py',
     'wallet_txn_clone.py --segwit',
     'rpc_getchaintips.py',
@@ -168,6 +170,7 @@ BASE_SCRIPTS = [
     'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
+    'interface_usdt_coinselection.py',
     'interface_usdt_net.py',
     'interface_usdt_utxocache.py',
     'interface_usdt_validation.py',
@@ -252,6 +255,7 @@ BASE_SCRIPTS = [
     'rpc_bind.py --ipv4',
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
+    'wallet_crosschain.py',
     'mining_basic.py',
     'feature_signet.py',
     'wallet_bumpfee.py --legacy-wallet',
@@ -330,7 +334,6 @@ BASE_SCRIPTS = [
     'feature_help.py',
     'feature_shutdown.py',
     'p2p_ibd_txrelay.py',
-    'feature_blockfilterindex_prune.py'
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
@@ -369,11 +372,11 @@ def main():
 
     args, unknown_args = parser.parse_known_args()
     if not args.ansi:
-        global BOLD, GREEN, RED, GREY
+        global DEFAULT, BOLD, GREEN, RED
+        DEFAULT = ("", "")
         BOLD = ("", "")
         GREEN = ("", "")
         RED = ("", "")
-        GREY = ("", "")
 
     # args to be passed on always start with two dashes; tests are the remaining unknown args
     tests = [arg for arg in unknown_args if arg[:2] != "--"]
@@ -717,7 +720,7 @@ class TestResult():
             color = RED
             glyph = CROSS
         elif self.status == "Skipped":
-            color = GREY
+            color = DEFAULT
             glyph = CIRCLE
 
         return color[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), glyph, self.status.ljust(7), self.time) + color[0]

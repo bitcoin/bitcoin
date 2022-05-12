@@ -130,6 +130,7 @@ chain for " target " development."))
       (license (package-license xgcc)))))
 
 (define base-gcc gcc-10)
+(define base-linux-kernel-headers linux-libre-headers-5.15)
 
 ;; Building glibc with stack smashing protector first landed in glibc 2.25, use
 ;; this function to disable for older glibcs
@@ -148,7 +149,7 @@ chain for " target " development."))
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc gcc-7)
-                                       (base-kernel-headers linux-libre-headers-4.9)
+                                       (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
@@ -162,9 +163,10 @@ desirable for building Bitcoin Core release binaries."
 (define (make-gcc-with-pthreads gcc)
   (package-with-extra-configure-variable gcc "--enable-threads" "posix"))
 
-(define (make-mingw-w64-cross-gcc-vmov-alignment cross-gcc)
+(define (make-mingw-w64-cross-gcc cross-gcc)
   (package-with-extra-patches cross-gcc
-    (search-our-patches "vmov-alignment.patch")))
+    (search-our-patches "vmov-alignment.patch"
+                        "gcc-broken-longjmp.patch")))
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
@@ -172,7 +174,7 @@ desirable for building Bitcoin Core release binaries."
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target
-                                    #:xgcc (make-ssp-fixed-gcc (make-mingw-w64-cross-gcc-vmov-alignment base-gcc))
+                                    #:xgcc (make-ssp-fixed-gcc (make-mingw-w64-cross-gcc base-gcc))
                                     #:xbinutils xbinutils
                                     #:libc pthreads-xlibc))))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
@@ -572,8 +574,6 @@ inspecting signatures in Mach-O binaries.")
         bzip2
         gzip
         xz
-        zlib
-        (list zlib "static")
         ;; Build tools
         gnu-make
         libtool
@@ -605,7 +605,7 @@ inspecting signatures in Mach-O binaries.")
                  (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
                                                       #:base-libc glibc-2.27/bitcoin-patched
-                                                      #:base-kernel-headers linux-libre-headers-4.19))
+                                                      #:base-kernel-headers base-linux-kernel-headers))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")

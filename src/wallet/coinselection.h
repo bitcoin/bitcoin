@@ -239,21 +239,34 @@ struct OutputGroup
  */
 [[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng);
 
+enum class SelectionAlgorithm : uint8_t
+{
+    BNB = 0,
+    KNAPSACK = 1,
+    SRD = 2,
+    MANUAL = 3,
+};
+
+std::string GetAlgorithmName(const SelectionAlgorithm algo);
+
 struct SelectionResult
 {
 private:
     /** Set of inputs selected by the algorithm to use in the transaction */
     std::set<COutput> m_selected_inputs;
-    /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
-    const CAmount m_target;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
     bool m_use_effective{false};
     /** The computed waste */
     std::optional<CAmount> m_waste;
 
 public:
-    explicit SelectionResult(const CAmount target)
-        : m_target(target) {}
+    /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
+    const CAmount m_target;
+    /** The algorithm used to produce this result */
+    const SelectionAlgorithm m_algo;
+
+    explicit SelectionResult(const CAmount target, SelectionAlgorithm algo)
+        : m_target(target), m_algo(algo) {}
 
     SelectionResult() = delete;
 

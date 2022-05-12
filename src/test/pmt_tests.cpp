@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <arith_uint256.h>
 #include <consensus/merkle.h>
 #include <merkleblock.h>
 #include <serialize.h>
@@ -107,13 +106,13 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
 
 BOOST_AUTO_TEST_CASE(pmt_malleability)
 {
-    std::vector<uint256> vTxid = {
-        ArithToUint256(1), ArithToUint256(2),
-        ArithToUint256(3), ArithToUint256(4),
-        ArithToUint256(5), ArithToUint256(6),
-        ArithToUint256(7), ArithToUint256(8),
-        ArithToUint256(9), ArithToUint256(10),
-        ArithToUint256(9), ArithToUint256(10),
+    std::vector<uint256> vTxid{
+        uint256{1}, uint256{2},
+        uint256{3}, uint256{4},
+        uint256{5}, uint256{6},
+        uint256{7}, uint256{8},
+        uint256{9}, uint256{10},
+        uint256{9}, uint256{10},
     };
     std::vector<bool> vMatch = {false, false, false, false, false, false, false, false, false, true, true, false};
 

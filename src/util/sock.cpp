@@ -7,6 +7,7 @@
 #include <threadinterrupt.h>
 #include <tinyformat.h>
 #include <util/sock.h>
+#include <util/syserror.h>
 #include <util/system.h>
 #include <util/time.h>
 
@@ -103,6 +104,11 @@ std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
 int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     return getsockopt(m_socket, level, opt_name, static_cast<char*>(opt_val), opt_len);
+}
+
+int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const
+{
+    return setsockopt(m_socket, level, opt_name, static_cast<const char*>(opt_val), opt_len);
 }
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
@@ -339,19 +345,8 @@ std::string NetworkErrorString(int err)
 #else
 std::string NetworkErrorString(int err)
 {
-    char buf[256];
-    buf[0] = 0;
-    /* Too bad there are two incompatible implementations of the
-     * thread-safe strerror. */
-    const char *s;
-#ifdef STRERROR_R_CHAR_P /* GNU variant can return a pointer outside the passed buffer */
-    s = strerror_r(err, buf, sizeof(buf));
-#else /* POSIX variant always returns message in buffer */
-    s = buf;
-    if (strerror_r(err, buf, sizeof(buf)))
-        buf[0] = 0;
-#endif
-    return strprintf("%s (%d)", s, err);
+    // On BSD sockets implementations, NetworkErrorString is the same as SysErrorString.
+    return SysErrorString(err);
 }
 #endif
 

@@ -32,12 +32,9 @@
 #include <any>
 #include <string>
 
-#include <boost/algorithm/string.hpp>
-
 #include <univalue.h>
 
 using node::GetTransaction;
-using node::IsBlockPruned;
 using node::NodeContext;
 using node::ReadBlockFromDisk;
 
@@ -192,8 +189,7 @@ static bool rest_headers(const std::any& context,
         return false;
     std::string param;
     const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
-    std::vector<std::string> path;
-    boost::split(path, param, boost::is_any_of("/"));
+    std::vector<std::string> path = SplitString(param, '/');
 
     std::string raw_count;
     std::string hashStr;
@@ -295,10 +291,10 @@ static bool rest_block(const std::any& context,
     CBlock block;
     const CBlockIndex* pblockindex = nullptr;
     const CBlockIndex* tip = nullptr;
+    ChainstateManager* maybe_chainman = GetChainman(context, req);
+    if (!maybe_chainman) return false;
+    ChainstateManager& chainman = *maybe_chainman;
     {
-        ChainstateManager* maybe_chainman = GetChainman(context, req);
-        if (!maybe_chainman) return false;
-        ChainstateManager& chainman = *maybe_chainman;
         LOCK(cs_main);
         tip = chainman.ActiveChain().Tip();
         pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
@@ -306,7 +302,7 @@ static bool rest_block(const std::any& context,
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
         }
 
-        if (IsBlockPruned(pblockindex))
+        if (chainman.m_blockman.IsBlockPruned(pblockindex))
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not available (pruned data)");
 
         if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
@@ -333,7 +329,7 @@ static bool rest_block(const std::any& context,
     }
 
     case RESTResponseFormat::JSON: {
-        UniValue objBlock = blockToJSON(block, tip, pblockindex, tx_verbosity);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -363,8 +359,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     std::string param;
     const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
-    std::vector<std::string> uri_parts;
-    boost::split(uri_parts, param, boost::is_any_of("/"));
+    std::vector<std::string> uri_parts = SplitString(param, '/');
     std::string raw_count;
     std::string raw_blockhash;
     if (uri_parts.size() == 3) {
@@ -484,8 +479,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
     const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
     // request is sent over URI scheme /rest/blockfilter/filtertype/blockhash
-    std::vector<std::string> uri_parts;
-    boost::split(uri_parts, param, boost::is_any_of("/"));
+    std::vector<std::string> uri_parts = SplitString(param, '/');
     if (uri_parts.size() != 2) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilter/<filtertype>/<blockhash>");
     }
@@ -713,7 +707,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     if (param.length() > 1)
     {
         std::string strUriParams = param.substr(1);
-        boost::split(uriParts, strUriParams, boost::is_any_of("/"));
+        uriParts = SplitString(strUriParams, '/');
     }
 
     // throw exception in case of an empty request

@@ -107,7 +107,7 @@
 /src/dbwrapper.*                            @aguycalled
 
 # Linter
-/test/lint/lint-shell.sh                    @aguycalled
+/test/lint/lint-shell.py                    @aguycalled
 
 # Bech32
 /src/bech32.*                               @aguycalled

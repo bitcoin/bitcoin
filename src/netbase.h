@@ -221,10 +221,8 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
  */
 bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
 
-/** Disable or enable blocking-mode for a socket */
-bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
-/** Set the TCP_NODELAY flag on a socket */
-bool SetSocketNoDelay(const SOCKET& hSocket);
+/** Enable non-blocking mode for a socket */
+bool SetSocketNonBlocking(const SOCKET& hSocket);
 void InterruptSocks5(bool interrupt);
 
 /**
