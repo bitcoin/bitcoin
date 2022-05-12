@@ -99,7 +99,7 @@ void BerkeleyEnvironment::Close()
     if (ret != 0)
         LogPrintf("BerkeleyEnvironment::Close: Error %d closing database environment: %s\n", ret, DbEnv::strerror(ret));
     if (!fMockDb)
-        DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
+        DbEnv((uint32_t)0).remove(strPath.c_str(), 0);
 
     if (error_file) fclose(error_file);
 
@@ -248,7 +248,7 @@ const void* BerkeleyBatch::SafeDbt::get_data() const
     return m_dbt.get_data();
 }
 
-u_int32_t BerkeleyBatch::SafeDbt::get_size() const
+uint32_t BerkeleyBatch::SafeDbt::get_size() const
 {
     return m_dbt.get_size();
 }
