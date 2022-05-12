@@ -947,21 +947,6 @@ libbitcoinkernel_la_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   warnings.cpp
-<<<<<<< HEAD
-bitcoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-bitcoin_chainstate_LDADD = \
-  $(LIBBITCOIN_CRYPTO) \
-  $(LIBUNIVALUE) \
-  $(LIBBLS) \
-  $(LIBMCL) \
-  $(LIBSECP256K1) \
-  $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
-  $(LIBMEMENV)
-=======
->>>>>>> btc/master
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
