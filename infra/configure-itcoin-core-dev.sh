@@ -27,6 +27,7 @@ cd "${MY_DIR}/.."
     --enable-determinism \
     --enable-suppress-external-warnings \
     --enable-wallet \
+    --enable-werror \
     --disable-bench \
     --disable-gui-tests \
     --disable-man \
