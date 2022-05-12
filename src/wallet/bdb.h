@@ -34,7 +34,7 @@ static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
 static const bool DEFAULT_WALLET_PRIVDB = true;
 
 struct WalletDatabaseFileId {
-    u_int8_t value[DB_FILE_ID_LEN];
+    uint8_t value[DB_FILE_ID_LEN];
     bool operator==(const WalletDatabaseFileId& rhs) const;
 };
 
@@ -182,7 +182,7 @@ class BerkeleyBatch : public DatabaseBatch
 
         // delegate to Dbt
         const void* get_data() const;
-        u_int32_t get_size() const;
+        uint32_t get_size() const;
 
         // conversion operator to access the underlying Dbt
         operator Dbt*();
