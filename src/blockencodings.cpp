@@ -15,9 +15,9 @@
 #include <util/system.h>
 
 #include <unordered_map>
-
+// SYSCOIN
 CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID, bool fMoveNEVMData) :
-        nonce(GetRand(std::numeric_limits<uint64_t>::max())),
+        nonce(GetRand<uint64_t>()),
         shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
     FillShortTxIDSelector();
     //TODO: Use our mempool prior to block acceptance to predictively fill more than just the coinbase
