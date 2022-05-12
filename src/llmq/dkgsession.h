@@ -70,7 +70,7 @@ public:
         contributions = std::make_shared<CBLSIESMultiRecipientObjects<CBLSSecretKey>>(std::move(tmp2));
     }
 
-    uint256 GetSignHash() const
+    [[nodiscard]] uint256 GetSignHash() const
     {
         CHashWriter hw(SER_GETHASH, 0);
         SerializeWithoutSig(hw);
@@ -106,7 +106,7 @@ public:
                 );
     }
 
-    uint256 GetSignHash() const
+    [[nodiscard]] uint256 GetSignHash() const
     {
         CDKGComplaint tmp(*this);
         tmp.sig = CBLSSignature();
@@ -130,7 +130,7 @@ public:
         READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
     }
 
-    uint256 GetSignHash() const
+    [[nodiscard]] uint256 GetSignHash() const
     {
         CDKGJustification tmp(*this);
         tmp.sig = CBLSSignature();
@@ -161,9 +161,9 @@ public:
     explicit CDKGPrematureCommitment(const Consensus::LLMQParams& params) :
             validMembers((size_t)params.size) {};
 
-    int CountValidMembers() const
+    [[nodiscard]] int CountValidMembers() const
     {
-        return (int)std::count(validMembers.begin(), validMembers.end(), true);
+        return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
 public:
@@ -181,7 +181,7 @@ public:
                 );
     }
 
-    uint256 GetSignHash() const
+    [[nodiscard]] uint256 GetSignHash() const
     {
         return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
     }

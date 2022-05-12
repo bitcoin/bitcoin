@@ -248,12 +248,12 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     if (clsig.IsNull()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
     }
-    result.pushKV("blockhash", clsig.blockHash.GetHex());
-    result.pushKV("height", clsig.nHeight);
-    result.pushKV("signature", clsig.sig.ToString());
+    result.pushKV("blockhash", clsig.getBlockHash().GetHex());
+    result.pushKV("height", clsig.getHeight());
+    result.pushKV("signature", clsig.getSig().ToString());
 
     LOCK(cs_main);
-    result.pushKV("known_block", ::BlockIndex().count(clsig.blockHash) > 0);
+    result.pushKV("known_block", ::BlockIndex().count(clsig.getBlockHash()) > 0);
     return result;
 }
 

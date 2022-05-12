@@ -16,22 +16,30 @@ extern const std::string CLSIG_REQUESTID_PREFIX;
 
 class CChainLockSig
 {
-public:
+private:
     int32_t nHeight{-1};
     uint256 blockHash;
     CBLSSignature sig;
 
 public:
+    CChainLockSig(int32_t nHeight, const uint256& blockHash, const CBLSSignature& sig) :
+        nHeight(nHeight),
+        blockHash(blockHash),
+        sig(sig)
+    {}
+    CChainLockSig() = default;
+
+
+    [[nodiscard]] int32_t getHeight() const;
+    [[nodiscard]] const uint256& getBlockHash() const;
+    [[nodiscard]] const CBLSSignature& getSig() const;
+    [[nodiscard]] bool IsNull() const;
+    [[nodiscard]] std::string ToString() const;
+
     SERIALIZE_METHODS(CChainLockSig, obj)
     {
         READWRITE(obj.nHeight, obj.blockHash, obj.sig);
     }
-
-    bool IsNull() const
-    {
-        return nHeight == -1 && blockHash == uint256();
-    }
-    std::string ToString() const;
 };
 } // namespace llmq
 

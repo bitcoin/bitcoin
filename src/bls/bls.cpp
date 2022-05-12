@@ -38,12 +38,12 @@ void CBLSSecretKey::AggregateInsecure(const CBLSSecretKey& o)
 CBLSSecretKey CBLSSecretKey::AggregateInsecure(const std::vector<CBLSSecretKey>& sks)
 {
     if (sks.empty()) {
-        return CBLSSecretKey();
+        return {};
     }
 
     std::vector<bls::PrivateKey> v;
     v.reserve(sks.size());
-    for (auto& sk : sks) {
+    for (const auto& sk : sks) {
         v.emplace_back(sk.impl);
     }
 
@@ -57,7 +57,7 @@ CBLSSecretKey CBLSSecretKey::AggregateInsecure(const std::vector<CBLSSecretKey>&
 #ifndef BUILD_BITCOIN_INTERNAL
 void CBLSSecretKey::MakeNewKey()
 {
-    unsigned char buf[32];
+    unsigned char buf[SerSize];
     while (true) {
         GetStrongRandBytes(buf, sizeof(buf));
         try {
@@ -103,7 +103,7 @@ bool CBLSSecretKey::SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const 
 CBLSPublicKey CBLSSecretKey::GetPublicKey() const
 {
     if (!IsValid()) {
-        return CBLSPublicKey();
+        return {};
     }
 
     CBLSPublicKey pubKey;
@@ -116,7 +116,7 @@ CBLSPublicKey CBLSSecretKey::GetPublicKey() const
 CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
 {
     if (!IsValid()) {
-        return CBLSSignature();
+        return {};
     }
 
     CBLSSignature sigRet;
@@ -138,12 +138,12 @@ void CBLSPublicKey::AggregateInsecure(const CBLSPublicKey& o)
 CBLSPublicKey CBLSPublicKey::AggregateInsecure(const std::vector<CBLSPublicKey>& pks, const bool fLegacy)
 {
     if (pks.empty()) {
-        return CBLSPublicKey();
+        return {};
     }
 
     std::vector<bls::G1Element> vecPublicKeys;
     vecPublicKeys.reserve(pks.size());
-    for (auto& pk : pks) {
+    for (const auto& pk : pks) {
         vecPublicKeys.emplace_back(pk.impl);
     }
 
@@ -207,12 +207,12 @@ void CBLSSignature::AggregateInsecure(const CBLSSignature& o)
 CBLSSignature CBLSSignature::AggregateInsecure(const std::vector<CBLSSignature>& sigs, const bool fLegacy)
 {
     if (sigs.empty()) {
-        return CBLSSignature();
+        return {};
     }
 
     std::vector<bls::G2Element> v;
     v.reserve(sigs.size());
-    for (auto& pk : sigs) {
+    for (const auto& pk : sigs) {
         v.emplace_back(pk.impl);
     }
 
@@ -229,18 +229,18 @@ CBLSSignature CBLSSignature::AggregateSecure(const std::vector<CBLSSignature>& s
                                              const bool fLegacy)
 {
     if (sigs.size() != pks.size() || sigs.empty()) {
-        return CBLSSignature();
+        return {};
     }
 
     std::vector<bls::G1Element> vecPublicKeys;
     vecPublicKeys.reserve(pks.size());
-    for (auto& pk : pks) {
+    for (const auto& pk : pks) {
         vecPublicKeys.push_back(pk.impl);
     }
 
     std::vector<bls::G2Element> vecSignatures;
     vecSignatures.reserve(pks.size());
-    for (auto& sig : sigs) {
+    for (const auto& sig : sigs) {
         vecSignatures.push_back(sig.impl);
     }
 
@@ -283,7 +283,7 @@ bool CBLSSignature::VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& p
     hashes2.reserve(hashes.size());
     pubKeyVec.reserve(pubKeys.size());
     for (size_t i = 0; i < pubKeys.size(); i++) {
-        auto& p = pubKeys[i];
+        const auto& p = pubKeys[i];
         if (!p.IsValid()) {
             return false;
         }
@@ -376,7 +376,7 @@ static void* secure_allocate(size_t n)
 
 static void secure_free(void* p)
 {
-    if (!p) {
+    if (p == nullptr) {
         return;
     }
 

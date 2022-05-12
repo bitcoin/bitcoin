@@ -110,14 +110,14 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
             return;
         }
 
-        if (!bestChainLock.IsNull() && clsig.nHeight <= bestChainLock.nHeight) {
+        if (!bestChainLock.IsNull() && clsig.getHeight() <= bestChainLock.getHeight()) {
             // no need to process/relay older CLSIGs
             return;
         }
     }
 
-    const uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.nHeight));
-    if (!llmq::CSigningManager::VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, clsig.nHeight, requestId, clsig.blockHash, clsig.sig)) {
+    const uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.getHeight()));
+    if (!llmq::CSigningManager::VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, clsig.getHeight(), requestId, clsig.getBlockHash(), clsig.getSig())) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
             LOCK(cs_main);
@@ -126,7 +126,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         return;
     }
 
-    CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(clsig.blockHash));
+    CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(clsig.getBlockHash()));
 
     {
         LOCK(cs);
@@ -135,7 +135,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
 
         if (pindex != nullptr) {
 
-            if (pindex->nHeight != clsig.nHeight) {
+            if (pindex->nHeight != clsig.getHeight()) {
                 // Should not happen, same as the conflict check from above.
                 LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
                         __func__, clsig.ToString(), pindex->nHeight);
@@ -173,10 +173,10 @@ void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
 {
     LOCK(cs);
 
-    if (pindexNew->GetBlockHash() == bestChainLock.blockHash) {
+    if (pindexNew->GetBlockHash() == bestChainLock.getBlockHash()) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- block header %s came in late, updating and enforcing\n", __func__, pindexNew->GetBlockHash().ToString());
 
-        if (bestChainLock.nHeight != pindexNew->nHeight) {
+        if (bestChainLock.getHeight() != pindexNew->nHeight) {
             // Should not happen, same as the conflict check from ProcessNewChainLock.
             LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
                       __func__, bestChainLock.ToString(), pindexNew->nHeight);
@@ -261,7 +261,7 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
 
-        if (bestChainLock.nHeight >= pindex->nHeight) {
+        if (bestChainLock.getHeight() >= pindex->nHeight) {
             // already got the same CLSIG or a better one
             return;
         }
@@ -326,7 +326,7 @@ void CChainLocksHandler::TrySignChainTip()
 
     {
         LOCK(cs);
-        if (bestChainLock.nHeight >= pindex->nHeight) {
+        if (bestChainLock.getHeight() >= pindex->nHeight) {
             // might have happened while we didn't hold cs
             return;
         }
@@ -519,7 +519,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     }
 
     GetMainSignals().NotifyChainLock(currentBestChainLockBlockIndex, clsig);
-    uiInterface.NotifyChainLock(clsig->blockHash.ToString(), clsig->nHeight);
+    uiInterface.NotifyChainLock(clsig->getBlockHash().ToString(), clsig->getHeight());
 }
 
 void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
@@ -536,14 +536,13 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
             // this is not what we signed, so lets not create a CLSIG for it
             return;
         }
-        if (bestChainLock.nHeight >= lastSignedHeight) {
+        if (bestChainLock.getHeight() >= lastSignedHeight) {
             // already got the same or a better CLSIG through the CLSIG message
             return;
         }
 
-        clsig.nHeight = lastSignedHeight;
-        clsig.blockHash = lastSignedMsgHash;
-        clsig.sig = recoveredSig.sig.Get();
+
+        clsig = CChainLockSig(lastSignedHeight, lastSignedMsgHash, recoveredSig.sig.Get());
     }
     ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
 }

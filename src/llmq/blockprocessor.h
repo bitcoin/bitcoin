@@ -15,8 +15,6 @@
 #include <sync.h>
 #include <optional>
 
-#include <unordered_map>
-
 class CNode;
 class CConnman;
 class CValidationState;

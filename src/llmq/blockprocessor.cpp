@@ -42,86 +42,82 @@ CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb, CConnman& _connman)
 
 void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
-    if (msg_type == NetMsgType::QFCOMMITMENT) {
-        CFinalCommitment qc;
-        vRecv >> qc;
-
-        {
-            LOCK(cs_main);
-            EraseObjectRequest(pfrom->GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc)));
-        }
-
-        if (qc.IsNull()) {
-            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, pfrom->GetId());
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-
-        if (!Params().HasLLMQ(qc.llmqType)) {
-            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
-                     uint8_t(qc.llmqType), pfrom->GetId());
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-        auto type = qc.llmqType;
-
-        // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
-        const CBlockIndex* pQuorumBaseBlockIndex;
-        {
-            LOCK(cs_main);
-            pQuorumBaseBlockIndex = LookupBlockIndex(qc.quorumHash);
-            if (pQuorumBaseBlockIndex == nullptr) {
-                LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
-                         qc.quorumHash.ToString(), pfrom->GetId());
-                // can't really punish the node here, as we might simply be the one that is on the wrong chain or not
-                // fully synced
-                return;
-            }
-            if (::ChainActive().Tip()->GetAncestor(pQuorumBaseBlockIndex->nHeight) != pQuorumBaseBlockIndex) {
-                LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
-                         qc.quorumHash.ToString(), pfrom->GetId());
-                // same, can't punish
-                return;
-            }
-            int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % GetLLMQParams(type).dkgInterval) + int(qc.quorumIndex);
-            if (quorumHeight != pQuorumBaseBlockIndex->nHeight) {
-                LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
-                         qc.quorumHash.ToString(), pfrom->GetId());
-                Misbehaving(pfrom->GetId(), 100);
-                return;
-            }
-        }
-
-        {
-            // Check if we already got a better one locally
-            // We do this before verifying the commitment to avoid DoS
-            LOCK(minableCommitmentsCs);
-            auto k = std::make_pair(type, qc.quorumHash);
-            auto it = minableCommitmentsByQuorum.find(k);
-            if (it != minableCommitmentsByQuorum.end()) {
-                auto jt = minableCommitments.find(it->second);
-                if (jt != minableCommitments.end() && jt->second.CountSigners() <= qc.CountSigners()) {
-                    return;
-                }
-            }
-        }
-
-        if (!qc.Verify(pQuorumBaseBlockIndex, true)) {
-            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid quorumIndex[%d] nversion[%d], peer=%d\n",
-                     __func__, qc.quorumHash.ToString(),
-                     uint8_t(qc.llmqType), qc.quorumIndex, qc.nVersion, pfrom->GetId());
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-
-        LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
-                 qc.quorumHash.ToString(), uint8_t(qc.llmqType), qc.CountValidMembers(), qc.CountSigners(), pfrom->GetId());
-
-        AddMineableCommitment(qc);
+    if (msg_type != NetMsgType::QFCOMMITMENT) {
+        return;
     }
+
+    CFinalCommitment qc;
+    vRecv >> qc;
+
+    WITH_LOCK(cs_main, EraseObjectRequest(pfrom->GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc))));
+
+    if (qc.IsNull()) {
+        LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, pfrom->GetId());
+        WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+        return;
+    }
+
+    if (!Params().HasLLMQ(qc.llmqType)) {
+        LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
+                 uint8_t(qc.llmqType), pfrom->GetId());
+        WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+        return;
+    }
+    auto type = qc.llmqType;
+
+    // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
+    const CBlockIndex* pQuorumBaseBlockIndex;
+    {
+        LOCK(cs_main);
+        pQuorumBaseBlockIndex = LookupBlockIndex(qc.quorumHash);
+        if (pQuorumBaseBlockIndex == nullptr) {
+            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
+                     qc.quorumHash.ToString(), pfrom->GetId());
+            // can't really punish the node here, as we might simply be the one that is on the wrong chain or not
+            // fully synced
+            return;
+        }
+        if (::ChainActive().Tip()->GetAncestor(pQuorumBaseBlockIndex->nHeight) != pQuorumBaseBlockIndex) {
+            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
+                     qc.quorumHash.ToString(), pfrom->GetId());
+            // same, can't punish
+            return;
+        }
+        int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % GetLLMQParams(type).dkgInterval) + int(qc.quorumIndex);
+        if (quorumHeight != pQuorumBaseBlockIndex->nHeight) {
+            LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
+                     qc.quorumHash.ToString(), pfrom->GetId());
+            Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
+    }
+
+    {
+        // Check if we already got a better one locally
+        // We do this before verifying the commitment to avoid DoS
+        LOCK(minableCommitmentsCs);
+        auto k = std::make_pair(type, qc.quorumHash);
+        auto it = minableCommitmentsByQuorum.find(k);
+        if (it != minableCommitmentsByQuorum.end()) {
+            auto jt = minableCommitments.find(it->second);
+            if (jt != minableCommitments.end() && jt->second.CountSigners() <= qc.CountSigners()) {
+                return;
+            }
+        }
+    }
+
+    if (!qc.Verify(pQuorumBaseBlockIndex, true)) {
+        LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid quorumIndex[%d] nversion[%d], peer=%d\n",
+                 __func__, qc.quorumHash.ToString(),
+                 uint8_t(qc.llmqType), qc.quorumIndex, qc.nVersion, pfrom->GetId());
+        WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+        return;
+    }
+
+    LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
+             qc.quorumHash.ToString(), uint8_t(qc.llmqType), qc.CountValidMembers(), qc.CountSigners(), pfrom->GetId());
+
+    AddMineableCommitment(qc);
 }
 
 bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck, bool fBLSChecks)
