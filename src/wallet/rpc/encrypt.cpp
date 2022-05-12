@@ -2,10 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/util.h>
-#include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
+#include <rpc/util.h>
+#include <wallet/rpc/util.h>
+
+#include <algorithm>
 
 namespace wallet {
 RPCHelpMan walletpassphrase()
@@ -59,11 +61,9 @@ RPCHelpMan walletpassphrase()
         if (nSleepTime < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
         }
-        // Clamp timeout
-        constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
-        if (nSleepTime > MAX_SLEEP_TIME) {
-            nSleepTime = MAX_SLEEP_TIME;
-        }
+        // Maximum time to keep the decryption key, in seconds (~3 years). Larger values trigger a macOS/libevent bug?
+        constexpr int64_t MAX_SLEEP_TIME{100'000'000};
+        nSleepTime = std::min(nSleepTime, MAX_SLEEP_TIME);
 
         if (strWalletPass.empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");

@@ -67,6 +67,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/util/strencodings.cpp"\
           " src/util/syserror.cpp"\
           " src/util/url.cpp"\
+          " src/wallet/rpc/encrypt.cpp"\
           " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"
 fi
 
