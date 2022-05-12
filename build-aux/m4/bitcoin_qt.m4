@@ -265,6 +265,8 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       QT_LIBS="$QT_LIBS $QT_WINEXTRAS_LIBS"
       AC_DEFINE(BITCOIN_QT_WIN_TASKBAR, 1, [Define this symbol if building with QWinTaskbarProgress])
     fi
+  ],[
+    AC_MSG_RESULT([no, not building GUI])
   ])
 
   AC_SUBST(QT_PIE_FLAGS)
