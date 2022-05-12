@@ -57,28 +57,40 @@ about Git.
   - Push changes to your fork
   - Create pull request
 
-The title of the pull request should be prefixed by the component or area that
-the pull request affects. Valid areas as:
+Pull request titles should follow the Conventional Commits specification which
+uses the `<type>(optional scope): <description>` scheme. Please see the
+specification linked below for valid types. When making a change to a specific
+component, please specify the name of the component inside the scope. For
+example, if you are developing a new feature related to consensus, the PR title
+should look like this: `feat(consensus): amazing new feature`. Breaking changes
+should be designated by appending an exclamation point after `<type>(scope)`
+like this: `feat(rpc)!: remove deprecated rpc`.
 
-  - *Consensus* for changes to consensus critical code
-  - *Doc* for changes to the documentation
-  - *Qt* for changes to dash-qt
-  - *Log* Changes to log messages
-  - *Mining* for changes to the mining code
-  - *Net* or *P2P* for changes to the peer-to-peer network code
-  - *Refactor* for structural changes that do not change behavior
-  - *RPC/REST/ZMQ* for changes to the RPC, REST or ZMQ APIs
-  - *Scripts and tools* for changes to the scripts and tools
-  - *Test* for changes to the unit tests or QA tests
-  - *Utils and libraries* for changes to the utils and libraries
-  - *Wallet* for changes to the wallet code
+For more details on allowed types and more information about Conventional
+Commits, please see the [Conventional Commits
+specification](https://www.conventionalcommits.org/en/v1.0.0/). In addition to
+typical types, the `backport` type should be used for bitcoin backport PRs. For
+all available types and scopes, please see the
+[.github/semantic.yml](.github/semantic.yml) file. Commonly used scopes ones
+include:
+
+  - *consensus* for changes to consensus critical code
+  - *qt* for changes to dash-qt
+  - *log* Changes to log messages
+  - *mining* for changes to the mining code
+  - *net* for changes to the peer-to-peer network code
+  - *rpc/rest/zmq* for changes to the RPC, REST or ZMQ APIs
+  - *scripts* for changes to the scripts and tools
+  - *utils* for changes to the utils and libraries
+  - *wallet* for changes to the wallet code
 
 Examples:
 
-    Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
-    Net: Automatically create hidden service, listen on Tor
-    Qt: Add feed bump button
-    Log: Fix typo in log message
+    feat(consensus): add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
+    feat(net): automatically create hidden service, listen on Tor
+    feat(qt): add feed bump button
+    fix(log): fix typo in log message
+    feat(rpc)!: modify gettransaction parameter type
 
 Note that translations should not be submitted as pull requests. Please see
 [Translation Process](https://github.com/dashpay/dash/blob/master/doc/translation_process.md)

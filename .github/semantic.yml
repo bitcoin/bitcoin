@@ -1,0 +1,29 @@
+# https://github.com/zeke/semantic-pull-requests#configuration
+
+titleOnly: true
+
+scopes:
+  - consensus
+  - qt
+  - log
+  - mining
+  - net
+  - rpc/rest/zmq
+  - scripts
+  - utils
+  - wallet
+
+types:
+  - feat
+  - fix
+  - docs
+  - style
+  - refactor
+  - perf
+  - test
+  - build
+  - ci
+  - chore
+  - revert
+  - trivial
+  - backport
