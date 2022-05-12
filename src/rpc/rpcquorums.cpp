@@ -34,13 +34,13 @@ static void quorum_list_help(const JSONRPCRequest& request)
             {"count", RPCArg::Type::NUM, /* default */ "", "Number of quorums to list. Will list active quorums if \"count\" is not specified."},
         },
         RPCResult{
-    "{\n"
-    "  \"quorumName\" : [                    (array of strings) List of quorum hashes per some quorum type.\n"
-    "     \"quorumHash\"                     (string) Quorum hash. Note: most recent quorums come first.\n"
-    "     ,...\n"
-    "  ],\n"
-    "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::ARR, "quorumName", "List of quorum hashes per some quorum type",
+                {
+                    {RPCResult::Type::STR_HEX, "quorumHash", "Quorum hash. Note: most recent quorums come first."},
+                }},
+            }},
         RPCExamples{
             HelpExampleCli("quorum", "list")
     + HelpExampleCli("quorum", "list 10")
@@ -51,12 +51,11 @@ static void quorum_list_help(const JSONRPCRequest& request)
 
 static UniValue quorum_list(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
-        quorum_list_help(request);
+    quorum_list_help(request);
 
     int count = -1;
-    if (!request.params[1].isNull()) {
-        count = ParseInt32V(request.params[1], "count");
+    if (!request.params[0].isNull()) {
+        count = ParseInt32V(request.params[0], "count");
         if (count < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
         }
@@ -135,18 +134,17 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMem
 
 static UniValue quorum_info(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4))
-        quorum_info_help(request);
+    quorum_info_help(request);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[1], "llmqType");
+    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
     if (!Params().HasLLMQ(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
+    uint256 quorumHash = ParseHashV(request.params[1], "quorumHash");
     bool includeSkShare = false;
-    if (!request.params[3].isNull()) {
-        includeSkShare = ParseBoolV(request.params[3], "includeSkShare");
+    if (!request.params[2].isNull()) {
+        includeSkShare = ParseBoolV(request.params[2], "includeSkShare");
     }
 
     auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
@@ -174,13 +172,11 @@ static void quorum_dkgstatus_help(const JSONRPCRequest& request)
 
 static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() < 1 || request.params.size() > 2)) {
-        quorum_dkgstatus_help(request);
-    }
+    quorum_dkgstatus_help(request);
 
     int detailLevel = 0;
-    if (!request.params[1].isNull()) {
-        detailLevel = ParseInt32V(request.params[1], "detail_level");
+    if (!request.params[0].isNull()) {
+        detailLevel = ParseInt32V(request.params[0], "detail_level");
         if (detailLevel < 0 || detailLevel > 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid detail_level");
         }
@@ -280,14 +276,12 @@ static void quorum_memberof_help(const JSONRPCRequest& request)
 
 static UniValue quorum_memberof(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() < 2 || request.params.size() > 3)) {
-        quorum_memberof_help(request);
-    }
+    quorum_memberof_help(request);
 
-    uint256 protxHash = ParseHashV(request.params[1], "proTxHash");
+    uint256 protxHash = ParseHashV(request.params[0], "proTxHash");
     int scanQuorumsCount = -1;
-    if (!request.params[2].isNull()) {
-        scanQuorumsCount = ParseInt32V(request.params[2], "scanQuorumsCount");
+    if (!request.params[1].isNull()) {
+        scanQuorumsCount = ParseInt32V(request.params[1], "scanQuorumsCount");
         if (scanQuorumsCount <= 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid scanQuorumsCount parameter");
         }
@@ -332,11 +326,10 @@ static void quorum_sign_help(const JSONRPCRequest& request)
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
             {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "", "The quorum identifier."},
-            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true."},
+            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true. "
+                                                                "Returns an object containing the signature share if this is false."},
         },
-        RPCResult{
-    "\nReturns an object containing the signature share if this is false.\n"
-        },
+        RPCResults{},
         RPCExamples{""},
     }.Check(request);
 }
@@ -406,21 +399,17 @@ static void quorum_isconflicting_help(const JSONRPCRequest& request)
 
 static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
 {
-    auto cmd = request.params[0].get_str();
-    if (request.fHelp || (request.params.size() != 4)) {
-        if (cmd == "sign") {
-            if ((request.params.size() < 4) || (request.params.size() > 6)) {
-                quorum_sign_help(request);
-            }
-        } else if (cmd == "verify") {
-            if (request.params.size() < 5 || request.params.size() > 7) {
-                quorum_verify_help(request);
-            }
-        } else if (cmd == "hasrecsig") {
+    auto cmd = request.strMethod;
+    if (request.fHelp || (request.params.size() != 3)) {
+        if (cmd == "quorumsign") {
+            quorum_sign_help(request);
+        } else if (cmd == "quorumverify") {
+            quorum_verify_help(request);
+        } else if (cmd == "quorumhasrecsig") {
             quorum_hasrecsig_help(request);
-        } else if (cmd == "getrecsig") {
+        } else if (cmd == "quorumgetrecsig") {
             quorum_getrecsig_help(request);
-        } else if (cmd == "isconflicting") {
+        } else if (cmd == "quorumisconflicting") {
             quorum_isconflicting_help(request);
         } else {
             // shouldn't happen as it's already handled by the caller
@@ -428,22 +417,22 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
         }
     }
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[1], "llmqType");
+    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
     if (!Params().HasLLMQ(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id = ParseHashV(request.params[2], "id");
-    uint256 msgHash = ParseHashV(request.params[3], "msgHash");
+    uint256 id = ParseHashV(request.params[1], "id");
+    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
 
-    if (cmd == "sign") {
+    if (cmd == "quorumsign") {
         uint256 quorumHash;
-        if (!request.params[4].isNull() && !request.params[4].get_str().empty()) {
-            quorumHash = ParseHashV(request.params[4], "quorumHash");
+        if (!request.params[3].isNull() && !request.params[3].get_str().empty()) {
+            quorumHash = ParseHashV(request.params[3], "quorumHash");
         }
         bool fSubmit{true};
-        if (!request.params[5].isNull()) {
-            fSubmit = ParseBoolV(request.params[5], "submit");
+        if (!request.params[4].isNull()) {
+            fSubmit = ParseBoolV(request.params[4], "submit");
         }
         if (fSubmit) {
             return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
@@ -478,23 +467,23 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
 
             return obj;
         }
-    } else if (cmd == "verify") {
+    } else if (cmd == "quorumverify") {
         CBLSSignature sig;
-        if (!sig.SetHexStr(request.params[4].get_str())) {
+        if (!sig.SetHexStr(request.params[3].get_str())) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
         }
 
-        if (request.params[5].isNull() || (request.params[5].get_str().empty() && !request.params[6].isNull())) {
+        if (request.params[4].isNull() || (request.params[4].get_str().empty() && !request.params[5].isNull())) {
             int signHeight{-1};
-            if (!request.params[6].isNull()) {
-                signHeight = ParseInt32V(request.params[6], "signHeight");
+            if (!request.params[5].isNull()) {
+                signHeight = ParseInt32V(request.params[5], "signHeight");
             }
             // First check against the current active set, if it fails check against the last active set
             int signOffset{llmq::GetLLMQParams(llmqType).dkgInterval};
             return llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, msgHash, sig, 0) ||
                    llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, msgHash, sig, signOffset);
         } else {
-            uint256 quorumHash = ParseHashV(request.params[5], "quorumHash");
+            uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
             llmq::CQuorumCPtr quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
 
             if (!quorum) {
@@ -504,9 +493,9 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
             return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
         }
-    } else if (cmd == "hasrecsig") {
+    } else if (cmd == "quorumhasrecsig") {
         return llmq::quorumSigningManager->HasRecoveredSig(llmqType, id, msgHash);
-    } else if (cmd == "getrecsig") {
+    } else if (cmd == "quorumgetrecsig") {
         llmq::CRecoveredSig recSig;
         if (!llmq::quorumSigningManager->GetRecoveredSigForId(llmqType, id, recSig)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "recovered signature not found");
@@ -515,7 +504,7 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "recovered signature not found");
         }
         return recSig.ToJson();
-    } else if (cmd == "isconflicting") {
+    } else if (cmd == "quorumisconflicting") {
         return llmq::quorumSigningManager->IsConflicting(llmqType, id, msgHash);
     } else {
         // shouldn't happen as it's already handled by the caller
@@ -538,16 +527,14 @@ static void quorum_selectquorum_help(const JSONRPCRequest& request)
 
 static UniValue quorum_selectquorum(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 3) {
-        quorum_selectquorum_help(request);
-    }
+    quorum_selectquorum_help(request);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[1], "llmqType");
+    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
     if (!Params().HasLLMQ(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id = ParseHashV(request.params[2], "id");
+    uint256 id = ParseHashV(request.params[1], "id");
 
     UniValue ret(UniValue::VOBJ);
 
@@ -583,12 +570,10 @@ static void quorum_dkgsimerror_help(const JSONRPCRequest& request)
 
 static UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 3)) {
-        quorum_dkgsimerror_help(request);
-    }
+    quorum_dkgsimerror_help(request);
 
-    std::string type = request.params[1].get_str();
-    double rate = ParseDoubleV(request.params[2], "rate");
+    std::string type = request.params[0].get_str();
+    double rate = ParseDoubleV(request.params[1], "rate");
 
     if (rate < 0 || rate > 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid rate. Must be between 0 and 1");
@@ -621,20 +606,18 @@ static void quorum_getdata_help(const JSONRPCRequest& request)
 
 static UniValue quorum_getdata(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() < 5 || request.params.size() > 6)) {
-        quorum_getdata_help(request);
-    }
+    quorum_getdata_help(request);
 
-    NodeId nodeId = ParseInt64V(request.params[1], "nodeId");
-    Consensus::LLMQType llmqType = static_cast<Consensus::LLMQType>(ParseInt32V(request.params[2], "llmqType"));
-    uint256 quorumHash = ParseHashV(request.params[3], "quorumHash");
-    uint16_t nDataMask = static_cast<uint16_t>(ParseInt32V(request.params[4], "dataMask"));
+    NodeId nodeId = ParseInt64V(request.params[0], "nodeId");
+    Consensus::LLMQType llmqType = static_cast<Consensus::LLMQType>(ParseInt32V(request.params[1], "llmqType"));
+    uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
+    uint16_t nDataMask = static_cast<uint16_t>(ParseInt32V(request.params[3], "dataMask"));
     uint256 proTxHash;
 
     // Check if request wants ENCRYPTED_CONTRIBUTIONS data
     if (nDataMask & llmq::CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
-        if (!request.params[5].isNull()) {
-            proTxHash = ParseHashV(request.params[5], "proTxHash");
+        if (!request.params[4].isNull()) {
+            proTxHash = ParseHashV(request.params[4], "proTxHash");
             if (proTxHash.IsNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
             }
@@ -649,37 +632,33 @@ static UniValue quorum_getdata(const JSONRPCRequest& request)
     });
 }
 
-static void quorum_rotationinfo_help()
+static void quorum_rotationinfo_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{
-            "quorum rotationinfo",
-            "Get quorum rotation information\n",
-            {
-                {"blockRequestHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The blockHash of the request"},
-                {"extraShare", RPCArg::Type::BOOL, /* default */ "false", "Extra share"},
-                {"baseBlockHash...", RPCArg::Type::STR_HEX, /* default*/ "", "baseBlockHashes"},
-            },
-            RPCResults{},
-            RPCExamples{""},
-        }
-        .ToString());
+    RPCHelpMan{
+        "quorum rotationinfo",
+        "Get quorum rotation information\n",
+        {
+            {"blockRequestHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The blockHash of the request."},
+            {"extraShare", RPCArg::Type::BOOL, /* default */ "false", "Extra share"},
+            {"baseBlockHash...", RPCArg::Type::STR_HEX, /* default*/ "", "baseBlockHashes"},
+        },
+        RPCResults{},
+        RPCExamples{""},
+    }.Check(request);
 }
 
 static UniValue quorum_rotationinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() < 2)) {
-        quorum_rotationinfo_help();
-    }
+    quorum_rotationinfo_help(request);
 
     llmq::CGetQuorumRotationInfo cmd;
     llmq::CQuorumRotationInfo quorumRotationInfoRet;
     std::string strError;
 
-    cmd.blockRequestHash = ParseHashV(request.params[1], "blockRequestHash");
-    cmd.extraShare = request.params[2].isNull() ? false : ParseBoolV(request.params[2], "extraShare");
+    cmd.blockRequestHash = ParseHashV(request.params[0], "blockRequestHash");
+    cmd.extraShare = request.params[1].isNull() ? false : ParseBoolV(request.params[1], "extraShare");
 
-    size_t idx = 3;
+    size_t idx = 2;
     while (!request.params[idx].isNull()) {
         cmd.baseBlockHashes.emplace_back(ParseHashV(request.params[idx], "baseBlockHash"));
         ++idx;
@@ -727,33 +706,27 @@ static UniValue quorum_rotationinfo(const JSONRPCRequest& request)
 
 static UniValue _quorum(const JSONRPCRequest& request)
 {
-    if (request.fHelp && request.params.empty()) {
-        quorum_help();
-    }
+    const JSONRPCRequest new_request{request.strMethod == "quorum" ? request.squashed() : request};
+    const std::string command{new_request.strMethod};
 
-    std::string command;
-    if (!request.params[0].isNull()) {
-        command = request.params[0].get_str();
-    }
-
-    if (command == "list") {
-        return quorum_list(request);
-    } else if (command == "info") {
-        return quorum_info(request);
-    } else if (command == "dkgstatus") {
-        return quorum_dkgstatus(request);
-    } else if (command == "memberof") {
-        return quorum_memberof(request);
-    } else if (command == "sign" || command == "verify" || command == "hasrecsig" || command == "getrecsig" || command == "isconflicting") {
-        return quorum_sigs_cmd(request);
-    } else if (command == "selectquorum") {
-        return quorum_selectquorum(request);
-    } else if (command == "dkgsimerror") {
-        return quorum_dkgsimerror(request);
-    } else if (command == "getdata") {
-        return quorum_getdata(request);
-    } else if (command == "rotationinfo") {
-        return quorum_rotationinfo(request);
+    if (command == "quorumlist") {
+        return quorum_list(new_request);
+    } else if (command == "quoruminfo") {
+        return quorum_info(new_request);
+    } else if (command == "quorumdkgstatus") {
+        return quorum_dkgstatus(new_request);
+    } else if (command == "quorummemberof") {
+        return quorum_memberof(new_request);
+    } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" || command == "quorumgetrecsig" || command == "quorumisconflicting") {
+        return quorum_sigs_cmd(new_request);
+    } else if (command == "quorumselectquorum") {
+        return quorum_selectquorum(new_request);
+    } else if (command == "quorumdkgsimerror") {
+        return quorum_dkgsimerror(new_request);
+    } else if (command == "quorumgetdata") {
+        return quorum_getdata(new_request);
+    } else if (command == "quorumrotationinfo") {
+        return quorum_rotationinfo(new_request);
     } else {
         quorum_help();
     }
@@ -775,9 +748,7 @@ static void verifychainlock_help(const JSONRPCRequest& request)
 
 static UniValue verifychainlock(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3) {
-        verifychainlock_help(request);
-    }
+    verifychainlock_help(request);
 
     const uint256 nBlockHash = ParseHashV(request.params[0], "blockHash");
 
@@ -819,9 +790,7 @@ static void verifyislock_help(const JSONRPCRequest& request)
 
 static UniValue verifyislock(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 3 || request.params.size() > 4) {
-        verifyislock_help(request);
-    }
+    verifyislock_help(request);
 
     uint256 id = ParseHashV(request.params[0], "id");
     uint256 txid = ParseHashV(request.params[1], "txid");

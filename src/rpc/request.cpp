@@ -184,3 +184,17 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
+
+const JSONRPCRequest JSONRPCRequest::squashed() const
+{
+   if (params.empty()) {
+        return *this;
+    }
+    JSONRPCRequest new_request{*this};
+    new_request.strMethod = strMethod + params[0].get_str();
+    new_request.params.setArray();
+    for (unsigned int i = 1; i < params.size(); ++i) {
+        new_request.params.push_back(params[i]);
+    }
+    return new_request;
+}

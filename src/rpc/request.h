@@ -37,6 +37,8 @@ public:
 
     JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
     void parse(const UniValue& valRequest);
+    // Returns new JSONRPCRequest with the first param "squashed' into strMethod
+    const JSONRPCRequest squashed() const;
 };
 
 #endif // BITCOIN_RPC_REQUEST_H

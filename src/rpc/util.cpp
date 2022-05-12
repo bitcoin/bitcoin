@@ -170,7 +170,7 @@ std::string HelpExampleRpc(const std::string& methodname, const std::string& arg
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;'"
-        " http://127.0.0.1:" + strprintf("%d", gArgs.GetArg("-rpcport", BaseParams().RPCPort())) + "/\n";
+        " http://127.0.0.1:9998/\n";
 }
 
 // Converts a hex string to a public key if possible
@@ -421,13 +421,9 @@ std::string RPCResults::ToDescriptionString() const
         } else {
             result += "\nResult (" + r.m_cond + "):\n";
         }
-        if (r.m_legacy) {
-            result += r.m_result;
-        } else {
-            Sections sections;
-            r.ToSections(sections);
-            result += sections.ToString();
-        }
+        Sections sections;
+        r.ToSections(sections);
+        result += sections.ToString();
     }
     return result;
 }
