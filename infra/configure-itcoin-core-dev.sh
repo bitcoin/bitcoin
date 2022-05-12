@@ -22,13 +22,13 @@ cd "${MY_DIR}/.."
 
 "${MY_DIR}"/../configure \
     --prefix="${INSTALL_DIR}" \
+    --enable-c++17 \
     --enable-debug \
     --enable-determinism \
-    --enable-wallet \
-    --enable-c++17 \
     --enable-suppress-external-warnings \
-    --disable-gui-tests \
+    --enable-wallet \
     --disable-bench \
+    --disable-gui-tests \
     --disable-man \
     --with-boost="${MY_DIR}/../../itcoin-pbft/usrlocal" \
     --with-incompatible-bdb \
