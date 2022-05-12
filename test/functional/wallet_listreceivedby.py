@@ -131,6 +131,9 @@ class ReceivedByTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
         self.sync_all()
 
+        # getreceivedbylabel returns an error if the wallet doesn't own the label
+        assert_raises_rpc_error(-4, "Label not found in wallet", self.nodes[0].getreceivedbylabel, "dummy")
+
         # listreceivedbylabel should return received_by_label_json because of 0 confirmations
         assert_array_result(self.nodes[1].listreceivedbylabel(),
                             {"label": label},
