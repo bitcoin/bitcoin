@@ -105,6 +105,7 @@ EXPECTED_HOLDER_NAMES = [
     r"Intel Corporation ?",
     r"The Zcash developers",
     r"Jeremy Rubin",
+    r"The Navcoin Core developers",
 ]
 
 DOMINANT_STYLE_COMPILED = {}
