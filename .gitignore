@@ -2,18 +2,18 @@
 
 *.exe
 *.pdb
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-gui
-src/bitcoin-node
-src/bitcoin-tx
-src/bitcoin-util
-src/bitcoin-chainstate
-src/bitcoin-wallet
+src/navcoin
+src/navcoind
+src/navcoin-cli
+src/navcoin-gui
+src/navcoin-node
+src/navcoin-tx
+src/navcoin-util
+src/navcoin-chainstate
+src/navcoin-wallet
 src/test/fuzz/fuzz
-src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
+src/test/test_navcoin
+src/qt/test/test_navcoin-qt
 
 # autoreconf
 Makefile.in
@@ -94,15 +94,15 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-src/qt/bitcoin-qt
-Bitcoin-Qt.app
+src/qt/navcoin-qt
+Navcoin-Qt.app
 
 # Qt Creator
 Makefile.am.user
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+navcoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
