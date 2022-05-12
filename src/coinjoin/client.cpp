@@ -1697,6 +1697,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
 
         // Go big to small
         for (auto nDenomValue : denoms) {
+            if (nBalanceToDenominate <= 0) break;
             int nOutputs = 0;
 
             // Number of denoms we can create given our denom and the amount of funds we have left
