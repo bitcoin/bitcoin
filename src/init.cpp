@@ -1837,7 +1837,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                     "for the automatically created Tor onion service."),
                                   onion_service_target.ToStringAddrPort()));
         }
-        StartTorControl(onion_service_target);
+        bilingual_str error;
+        if (!StartTorControl(onion_service_target, error)) return InitError(error);
     }
 
     if (connOptions.bind_on_any) {

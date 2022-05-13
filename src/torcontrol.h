@@ -18,12 +18,13 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <util/translation.h>
 
 constexpr int DEFAULT_TOR_CONTROL_PORT = 9051;
 extern const std::string DEFAULT_TOR_CONTROL;
 static const bool DEFAULT_LISTEN_ONION = true;
 
-void StartTorControl(CService onion_service_target);
+bool StartTorControl(CService onion_service_target, bilingual_str& error);
 void InterruptTorControl();
 void StopTorControl();
 
