@@ -259,7 +259,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
         settings.setValue("fReset", false);
     }
     /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the bitcoin.conf file in the default data directory
+     * override -datadir in the navcoin.conf file in the default data directory
      * (to be consistent with bitcoind behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
