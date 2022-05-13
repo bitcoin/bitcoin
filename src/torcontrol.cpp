@@ -658,9 +658,32 @@ static void TorControlThread(CService onion_service_target)
     event_base_dispatch(gBase);
 }
 
-void StartTorControl(CService onion_service_target)
+bool TorControlOptCheck(bilingual_str& error)
+{
+    NetworkAddrError eOpt = HasValidHostPort(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    switch (eOpt) {
+        case NetworkAddrError::OK:
+            error = Untranslated("No error");
+            return true;
+        case NetworkAddrError::NO_HOST:
+            error = Untranslated("No hostname specified in -torcontrol");
+            return false;
+        case NetworkAddrError::NO_PORT:
+            error = Untranslated("No port specified in -torcontrol");
+            return false;
+        case NetworkAddrError::NO_HOSTPORT:
+            error = Untranslated("No hostname:port specified in torcontrol");
+            return false;
+        // no default case, so the compiler can warn about missing cases
+    }
+    assert(false);
+}
+
+bool StartTorControl(CService onion_service_target, bilingual_str& error)
 {
     assert(!gBase);
+    if (!TorControlOptCheck(error))
+        return false;
 #ifdef WIN32
     evthread_use_windows_threads();
 #else
@@ -668,13 +691,14 @@ void StartTorControl(CService onion_service_target)
 #endif
     gBase = event_base_new();
     if (!gBase) {
-        LogPrintf("tor: Unable to create event_base\n");
-        return;
+        error = Untranslated("tor: Unable to create event_base");
+        return false;
     }
 
     torControlThread = std::thread(&util::TraceThread, "torcontrol", [onion_service_target] {
         TorControlThread(onion_service_target);
     });
+    return true;
 }
 
 void InterruptTorControl()
