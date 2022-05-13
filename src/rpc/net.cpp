@@ -999,7 +999,7 @@ static RPCHelpMan addpeeraddress()
     }
 
     const std::string& addr_string{request.params[0].get_str()};
-    const uint16_t port = request.params[1].getInt<int>();
+    const auto port{request.params[1].getInt<uint16_t>()};
     const bool tried{request.params[2].isTrue()};
 
     UniValue obj(UniValue::VOBJ);

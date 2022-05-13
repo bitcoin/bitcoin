@@ -341,6 +341,10 @@ class NetTest(DashTestFramework):
         assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
         assert_equal(node.getnodeaddresses(count=0), [])
 
+        self.log.debug("Test that adding an address with invalid port fails")
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress,address="1.2.3.4", port=65536)
+
         self.log.debug("Test that adding a valid address to the tried table succeeds")
         assert_equal(node.addpeeraddress(address="1.2.3.4", tried=True, port=8333), {"success": True})
         with node.assert_debug_log(expected_msgs=["CheckAddrman: new 0, tried 1, total 1 started"]):
