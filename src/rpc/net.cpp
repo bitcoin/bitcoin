@@ -412,7 +412,7 @@ static RPCHelpMan disconnectnode()
         success = connman.DisconnectNode(address_arg.get_str());
     } else if (!id_arg.isNull() && (address_arg.isNull() || (address_arg.isStr() && address_arg.get_str().empty()))) {
         /* handle disconnect-by-id */
-        NodeId nodeid = (NodeId) id_arg.get_int64();
+        NodeId nodeid = (NodeId) id_arg.getInt<int64_t>();
         success = connman.DisconnectNode(nodeid);
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Only one of address and nodeid should be provided.");
@@ -720,7 +720,7 @@ static RPCHelpMan setban()
 
         int64_t banTime = 0; //use standard bantime if not specified
         if (!request.params[2].isNull())
-            banTime = request.params[2].get_int64();
+            banTime = request.params[2].getInt<int64_t>();
 
         bool absolute = false;
         if (request.params[3].isTrue())
@@ -879,7 +879,7 @@ static RPCHelpMan getnodeaddresses()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
-    const int count{request.params[0].isNull() ? 1 : request.params[0].get_int()};
+    const int count{request.params[0].isNull() ? 1 : request.params[0].getInt<int>()};
     if (count < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
 
     const std::optional<Network> network{request.params[1].isNull() ? std::nullopt : std::optional<Network>{ParseNetwork(request.params[1].get_str())}};

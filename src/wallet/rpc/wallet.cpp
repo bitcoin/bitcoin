@@ -559,7 +559,7 @@ static RPCHelpMan upgradewallet()
 
     int version = 0;
     if (!request.params[0].isNull()) {
-        version = request.params[0].get_int();
+        version = request.params[0].getInt<int>();
     }
     bilingual_str error;
     const int previous_version{pwallet->GetVersion()};
