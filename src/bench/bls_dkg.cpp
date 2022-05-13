@@ -99,7 +99,7 @@ struct DKG
 
             std::set<size_t> invalidIndexes;
             for (int i = 0; i < invalidCount; i++) {
-                int shareIdx = GetRandInt(receivedSkShares.size());
+                int shareIdx = GetRand(receivedSkShares.size());
                 receivedSkShares[shareIdx].MakeNewKey();
                 invalidIndexes.emplace(shareIdx);
             }

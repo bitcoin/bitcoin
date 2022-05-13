@@ -180,7 +180,7 @@ AuxpowMiner::submitAuxBlock (const node::JSONRPCRequest& request,
   shared_block->SetAuxpow (std::move (pow));
   CHECK_NONFATAL(shared_block->GetHash ().GetHex () == hashHex);
 
-  return chainman.ProcessNewBlock (Params (), shared_block, true, nullptr);
+  return chainman.ProcessNewBlock(shared_block, true, nullptr);
 }
 
 AuxpowMiner&

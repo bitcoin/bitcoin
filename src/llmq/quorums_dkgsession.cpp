@@ -961,7 +961,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
 
     int lieType = -1;
     if (ShouldSimulateError("commit-lie")) {
-        lieType = GetRandInt(5);
+        lieType = GetRand(5);
         logger.Batch("lying on commitment. lieType=%d", lieType);
     }
 

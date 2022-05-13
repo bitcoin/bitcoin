@@ -2354,7 +2354,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                 }
 
                 if (!pending.empty()) {
-                    connectToDmn = pending[GetRandInt(pending.size())];
+                    connectToDmn = pending[GetRand(pending.size())];
                     LogPrint(BCLog::NET, "CConnman::%s -- opening quorum connection to %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
                 }
             }
@@ -2386,7 +2386,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                 }
 
                 if (!pending.empty()) {
-                    connectToDmn = pending[GetRandInt(pending.size())];
+                    connectToDmn = pending[GetRand(pending.size())];
                     masternodePendingProbes.erase(connectToDmn->proTxHash);
                     isProbe = true;
 

@@ -221,7 +221,7 @@ static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& ben
     std::set<size_t> prevalidated;
 
     while (prevalidated.size() < 900) {
-        int idx = GetRandInt((int)pubKeys.size());
+        int idx = GetRand((int)pubKeys.size());
         if (prevalidated.count((size_t)idx)) {
             continue;
         }
