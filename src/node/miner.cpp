@@ -62,7 +62,7 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman, const std
 
     const CBlockIndex* prev_block = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock));
     // SYSCOIN
-    GenerateCoinbaseCommitment(block, prev_block, Params().GetConsensus(), vchExtraData);
+    chainman.GenerateCoinbaseCommitment(block, prev_block, vchExtraData);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
@@ -136,11 +136,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CBlockIndex* pindexPrev = m_chainstate.m_chain.Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
+    // SYSCOIN
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
     bool NEVMActive_context = nHeight >= chainparams.GetConsensus().nNEVMStartBlock;
     if(nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock) {
         const int32_t nChainId = chainparams.GetConsensus ().nAuxpowChainId;
-        const int32_t nVersion = g_versionbitscache.ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
+        const int32_t nVersion = m_chainstate.m_chainman.m_versionbitscache.ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
         pblock->SetBaseVersion(nVersion, nChainId);
     } else {
         pblock->SetOldBaseVersion(4, chainparams.GetConsensus ().nAuxpowOldChainId);
@@ -238,7 +239,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vchCoinbaseCommitmentExtra = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
     const auto bytesVecNEVM = MakeUCharSpan(dsNEVM);
     pblocktemplate->vchCoinbaseCommitmentExtra.insert( pblocktemplate->vchCoinbaseCommitmentExtra.end(), bytesVecNEVM.begin(), bytesVecNEVM.end() );
-    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus(), pblocktemplate->vchCoinbaseCommitmentExtra);
+    pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev, pblocktemplate->vchCoinbaseCommitmentExtra);
     // add coinbase payload if not witness commitment which would append it after witness data, in this case we can assume no witness commitment
     if(pblocktemplate->vchCoinbaseCommitment.empty() && !pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
         SetTxPayload(coinbaseTx, pblocktemplate->vchCoinbaseCommitmentExtra);

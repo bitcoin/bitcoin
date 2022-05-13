@@ -68,7 +68,7 @@ CTxIn MineBlock(const node::NodeContext& node, const CScript& coinbase_scriptPub
         assert(block->nNonce);
     }
 
-    bool processed{Assert(node.chainman)->ProcessNewBlock(Params(), block, true, nullptr)};
+    bool processed{Assert(node.chainman)->ProcessNewBlock(block, true, nullptr)};
     assert(processed);
 
     return CTxIn{block->vtx[0]->GetHash(), 0};

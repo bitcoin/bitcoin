@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Chainstate
-    ChainstateManager chainman;
+    ChainstateManager chainman{chainparams};
     // SYSCOIN
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<PeerManager> peerman;
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
             LOCK(cs_main);
             const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock);
             if (pindex) {
-                UpdateUncommittedBlockStructures(block, pindex, chainparams.GetConsensus());
+                chainman.UpdateUncommittedBlockStructures(block, pindex);
             }
         }
 
@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
         bool new_block;
         auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
         RegisterSharedValidationInterface(sc);
-        bool accepted = chainman.ProcessNewBlock(chainparams, blockptr, /*force_processing=*/true, /*new_block=*/&new_block);
+        bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*new_block=*/&new_block);
         UnregisterSharedValidationInterface(sc);
         if (!new_block && accepted) {
             std::cerr << "duplicate" << std::endl;
