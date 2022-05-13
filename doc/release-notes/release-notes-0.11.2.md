@@ -19,7 +19,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+navcoind/navcoin-qt (on Linux).
 
 Downgrade warning
 ------------------
@@ -176,8 +176,8 @@ git merge commit are mentioned.
 - #6351 `6af25b0` Add BIP65 to getblockchaininfo softforks list
 - #6688 `01878c9` Fix locking in GetTransaction
 - #6653 `b3eaa30` [Qt] Raise debug window when requested
-- #6600 `1e672ae` Debian/Ubuntu: Include bitcoin-tx binary
-- #6600 `2394f4d` Debian/Ubuntu: Split bitcoin-tx into its own package
+- #6600 `1e672ae` Debian/Ubuntu: Include navcoin-tx binary
+- #6600 `2394f4d` Debian/Ubuntu: Split navcoin-tx into its own package
 - #5987 `33d6825` Bugfix: Allow mining on top of old tip blocks for testnet
 - #6852 `21e58b8` build: make sure OpenSSL heeds noexecstack
 - #6846 `af6edac` alias `-h` for `--help`

@@ -75,7 +75,7 @@ this parameter.
 
 Additional information relating to running on low-memory systems can be found
 here:
-[reducing-bitcoind-memory-usage.md](https://gist.github.com/laanwj/efe29c7661ce9b6620a7).
+[reducing-navcoind-memory-usage.md](https://gist.github.com/laanwj/efe29c7661ce9b6620a7).
 
 0.14.1 Change log
 =================
@@ -117,7 +117,7 @@ git merge commit are mentioned.
 ### Miscellaneous
 - #10037 `4d8e660` Trivial: Fix typo in help getrawtransaction RPC (keystrike)
 - #10120 `e4c9a90` util: Work around (virtual) memory exhaustion on 32-bit w/ glibc (laanwj)
-- #10130 `ecc5232` bitcoin-tx input verification (awemany, jnewbery)
+- #10130 `ecc5232` navcoin-tx input verification (awemany, jnewbery)
 
 Credits
 =======

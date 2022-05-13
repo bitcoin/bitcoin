@@ -19,7 +19,7 @@ For Ubuntu users, there is a ppa maintained by Matt Corallo which
 you can add to your system so that it will automatically keep
 bitcoin up-to-date.  Just type
 sudo apt-add-repository ppa:bitcoin/bitcoin
-in your terminal, then install the bitcoin-qt package.
+in your terminal, then install the navcoin-qt package.
 
 
 KNOWN ISSUES
@@ -54,7 +54,7 @@ transactions and less traffic on the bitcoin
 network. The shorter keys are already supported
 by the network but wallet.dat files containing
 short keys are not compatible with earlier
-versions of Bitcoin-Qt/bitcoind.
+versions of Bitcoin-Qt/navcoind.
 
 New command-line argument -blocknotify=<command>
 that will spawn a shell process to run <command> 

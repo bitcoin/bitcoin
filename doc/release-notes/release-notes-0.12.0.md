@@ -17,7 +17,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+navcoind/navcoin-qt (on Linux).
 
 Downgrade warning
 -----------------
@@ -173,7 +173,7 @@ overridden with the option `-rpccookiefile`.
 This is similar to Tor's CookieAuthentication: see
 https://www.torproject.org/docs/tor-manual.html.en
 
-This allows running bitcoind without having to do any manual configuration.
+This allows running navcoind without having to do any manual configuration.
 
 Relay: Any sequence of pushdatas in OP_RETURN outputs now allowed
 -----------------------------------------------------------------
@@ -379,7 +379,7 @@ and are affected by this change:
 - RPC `decodescript`
 - REST `/rest/tx/` (JSON format)
 - REST `/rest/block/` (JSON format when including extended tx details)
-- `bitcoin-tx -json`
+- `navcoin-tx -json`
 
 For example, the `scriptSig.asm` property of a transaction input that
 previously showed an assembly representation of:
@@ -436,7 +436,7 @@ caching. A sample config for apache2 could look like:
         # AuthType Digest
         # ...
 
-        # optional bypass bitcoind rpc basic auth
+        # optional bypass navcoind rpc basic auth
         # RequestHeader set Authorization "Basic <hash>"
         # get the <hash> from the shell with: base64 <<< bitcoinrpc:<password>
     </Location>
@@ -459,7 +459,7 @@ Other P2P Changes
 -----------------
 
 The list of banned peers is now stored on disk rather than in memory.
-Restarting bitcoind will no longer clear out the list of banned peers; instead
+Restarting navcoind will no longer clear out the list of banned peers; instead
 a new RPC call (`clearbanned`) can be used to manually clear the list.  The new
 `setban` RPC call can also be used to manually ban or unban a peer.
 
@@ -644,7 +644,7 @@ git merge commit are mentioned.
 - #6373 `1ae3196` depends: non-qt bumps for 0.12 (Cory Fields)
 - #6434 `059b352` Preserve user-passed CXXFLAGS with --enable-debug (Gavin Andresen)
 - #6501 `fee6554` Misc build fixes (Cory Fields)
-- #6600 `ef4945f` Include bitcoin-tx binary on Debian/Ubuntu (Zak Wilcox)
+- #6600 `ef4945f` Include navcoin-tx binary on Debian/Ubuntu (Zak Wilcox)
 - #6619 `4862708` depends: bump miniupnpc and ccache (Michael Ford)
 - #6801 `ae69a75` [depends] Latest config.guess and config.sub (Michael Ford)
 - #6938 `193f7b5` build: If both Qt4 and Qt5 are installed, use Qt5 (Wladimir J. van der Laan)
@@ -719,7 +719,7 @@ git merge commit are mentioned.
 - #6337 `0564c5b` Testing infrastructure: mocktime fixes (Gavin Andresen)
 - #6350 `60abba1` add unit tests for the decodescript rpc (mruddy)
 - #5881 `3203a08` Fix and improve txn_doublespend.py test (Tom Harding)
-- #6390 `6a73d66` tests: Fix bitcoin-tx signing test case (Wladimir J. van der Laan)
+- #6390 `6a73d66` tests: Fix navcoin-tx signing test case (Wladimir J. van der Laan)
 - #6368 `7fc25c2` CLTV: Add more tests to improve coverage (Esteban Ordano)
 - #6414 `5121c68` Fix intermittent test failure, reduce test time (Tom Harding)
 - #6417 `44fa82d` [QA] fix possible reorg issue in (fund)rawtransaction(s).py RPC test (Jonas Schnelli)
@@ -732,7 +732,7 @@ git merge commit are mentioned.
 - #6509 `bb4faee` Fix race condition on test node shutdown (Casey Rodarmor)
 - #6523 `561f8af` Add p2p-fullblocktest.py (Casey Rodarmor)
 - #6590 `981fd92` Fix stale socket rebinding and re-enable python tests for Windows (Cory Fields)
-- #6730 `cb4d6d0` build: Remove dependency of bitcoin-cli on secp256k1 (Wladimir J. van der Laan)
+- #6730 `cb4d6d0` build: Remove dependency of navcoin-cli on secp256k1 (Wladimir J. van der Laan)
 - #6616 `5ab5dca` Regression Tests: Migrated rpc-tests.sh to all Python rpc-tests.py (Peter Tschipper)
 - #6720 `d479311` Creates unittests for addrman, makes addrman more testable. (Ethan Heilman)
 - #6853 `c834f56` Added fPowNoRetargeting field to Consensus::Params (Eric Lombrozo)
@@ -764,7 +764,7 @@ git merge commit are mentioned.
 - #5975 `1fea667` Consensus: Decouple ContextualCheckBlockHeader from checkpoints (Jorge Timón)
 - #6061 `eba2f06` Separate Consensus::CheckTxInputs and GetSpendHeight in CheckInputs (Jorge Timón)
 - #5994 `786ed11` detach wallet from miner (Jonas Schnelli)
-- #6387 `11576a5` [bitcoin-cli] improve error output (Jonas Schnelli)
+- #6387 `11576a5` [navcoin-cli] improve error output (Jonas Schnelli)
 - #6401 `6db53b4` Add BITCOIND_SIGTERM_TIMEOUT to OpenRC init scripts (Florian Schmaus)
 - #6430 `b01981e` doc: add documentation for shared library libbitcoinconsensus (Braydon Fuller)
 - #6372 `dcc495e` Update Linearize tool to support Windows paths; fix variable scope; update README and example configuration (Paul Georgiou)

@@ -266,17 +266,17 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 
       - Install the new Bitcoin Core release
 
-      - Run bitcoind on regtest
+      - Run navcoind on regtest
 
       - Clone the [bitcoincore.org repository](https://github.com/bitcoin-core/bitcoincore.org)
 
-      - Run: `go run generate.go` while being in `contrib/doc-gen` folder, and with bitcoin-cli in PATH
+      - Run: `go run generate.go` while being in `contrib/doc-gen` folder, and with navcoin-cli in PATH
 
       - Add the generated files to git
 
   - Update packaging repo
 
-      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2
+      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.bitcoincore.navcoin-qt/pull/2
 
       - Push the snap, see https://github.com/bitcoin-core/packaging/blob/master/snap/build.md
 

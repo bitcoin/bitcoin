@@ -1,6 +1,6 @@
 # assumeutxo
 
-Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
+Assumeutxo is a feature that allows fast bootstrapping of a validating navcoind
 instance with a very similar security model to assumevalid.
 
 The RPC commands `dumptxoutset` and `loadtxoutset` are used to respectively generate
@@ -55,7 +55,7 @@ data.
 
 `ChainstateManager` manages a single CChainState object, for which
 `m_snapshot_blockhash` is null. This chainstate is (maybe obviously)
-considered active. This is the "traditional" mode of operation for bitcoind.
+considered active. This is the "traditional" mode of operation for navcoind.
 
 |    |    |
 | ---------- | ----------- |
@@ -121,14 +121,14 @@ The background chainstate data lingers on disk until shutdown, when in
 | number of chainstates | 2 (ibd has `m_stop_use=true`) |
 | active chainstate | snapshot |
 
-**Failure consideration:** if bitcoind unexpectedly halts after `m_stop_use` is set on
+**Failure consideration:** if navcoind unexpectedly halts after `m_stop_use` is set on
 the background chainstate but before `CompleteSnapshotValidation()` can finish, the
 need to complete snapshot validation will be detected on subsequent init by
 `ChainstateManager::CheckForUncleanShutdown()`.
 
 ### Bitcoind restarts sometime after snapshot validation has completed
 
-When bitcoind initializes again, what began as the snapshot chainstate is now
+When navcoind initializes again, what began as the snapshot chainstate is now
 indistinguishable from a chainstate that has been built from the traditional IBD
 process, and will be initialized as such.
 

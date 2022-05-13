@@ -15,12 +15,12 @@ The following are some helpful notes on how to run Bitcoin Core on your native p
 
 Unpack the files into a directory and run:
 
-- `bin/bitcoin-qt` (GUI) or
-- `bin/bitcoind` (headless)
+- `bin/navcoin-qt` (GUI) or
+- `bin/navcoind` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run bitcoin-qt.exe.
+Unpack the files into a directory, and then run navcoin-qt.exe.
 
 ### macOS
 

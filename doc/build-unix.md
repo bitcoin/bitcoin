@@ -24,7 +24,7 @@ make # use "-j N" for N parallel jobs
 make install # optional
 ```
 
-This will build bitcoin-qt as well, if the dependencies are met.
+This will build navcoin-qt as well, if the dependencies are met.
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
@@ -86,7 +86,7 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
 GUI dependencies:
 
-If you want to build bitcoin-qt, make sure that the required packages for Qt development
+If you want to build navcoin-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
 To build without GUI pass `--without-gui`.
 
@@ -102,7 +102,7 @@ libqrencode (optional) can be installed with:
 
     sudo apt-get install libqrencode-dev
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
+Once these are installed, they will be found by configure and a navcoin-qt executable will be
 built by default.
 
 
@@ -147,7 +147,7 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
 GUI dependencies:
 
-If you want to build bitcoin-qt, make sure that the required packages for Qt development
+If you want to build navcoin-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
 To build without GUI pass `--without-gui`.
 
@@ -163,12 +163,12 @@ libqrencode (optional) can be installed with:
 
     sudo dnf install qrencode-devel
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
+Once these are installed, they will be found by configure and a navcoin-qt executable will be
 built by default.
 
 Notes
 -----
-The release is built with GCC and then "strip bitcoind" to strip the debug
+The release is built with GCC and then "strip navcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 miniupnpc

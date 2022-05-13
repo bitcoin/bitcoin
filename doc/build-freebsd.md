@@ -2,7 +2,7 @@
 
 **Updated for FreeBSD [12.3](https://www.freebsd.org/releases/12.3R/announce/)**
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.
+This guide describes how to build navcoind, command-line utilities, and GUI on FreeBSD.
 
 ## Preparation
 
@@ -25,7 +25,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 ### 3. Install Optional Dependencies
 
 #### Wallet Dependencies
-It is not necessary to build wallet functionality to run either `bitcoind` or `bitcoin-qt`.
+It is not necessary to build wallet functionality to run either `navcoind` or `navcoin-qt`.
 
 ###### Descriptor Wallet Support
 
