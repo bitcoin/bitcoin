@@ -18,6 +18,7 @@
 #include <memory>
 #include <stdint.h>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -95,6 +96,15 @@ bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(const Proxy &addrProxy);
 bool HaveNameProxy();
 bool GetNameProxy(Proxy &nameProxyOut);
+
+enum class NetworkAddrError {
+    OK, //!< No error
+    NO_HOST,
+    NO_PORT,
+    NO_HOSTPORT,
+};
+
+NetworkAddrError HasValidHostPort(std::string_view networkAddr);
 
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;

@@ -132,6 +132,21 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     return names;
 }
 
+NetworkAddrError HasValidHostPort(std::string_view networkAddr)
+{
+    uint16_t port{0};
+    std::string hostname;
+    bool validPort = SplitHostPort(networkAddr, port, hostname);
+
+    NetworkAddrError res = NetworkAddrError::OK;
+    if (!validPort || port == 0)
+        res = NetworkAddrError::NO_PORT;
+    if (hostname.empty() || hostname.find(' ') != std::string::npos)
+        res = (res == NetworkAddrError::NO_PORT) ? NetworkAddrError::NO_HOSTPORT
+            : NetworkAddrError::NO_HOST;
+    return res;
+}
+
 static bool LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     vIP.clear();
