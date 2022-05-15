@@ -10,10 +10,6 @@
 #ifndef BITCOIN_UTIL_SYSTEM_H
 #define BITCOIN_UTIL_SYSTEM_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <compat/compat.h>
 #include <compat/assumptions.h>
 #include <fs.h>
@@ -31,8 +27,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-class UniValue;
 
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
@@ -97,12 +91,6 @@ bool CheckDataDirOption();
 fs::path GetConfigFile(const fs::path& configuration_file_path);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
-#endif
-#ifndef WIN32
-std::string ShellEscape(const std::string& arg);
-#endif
-#if HAVE_SYSTEM
-void runCommand(const std::string& strCommand);
 #endif
 
 /**

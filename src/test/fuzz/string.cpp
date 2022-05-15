@@ -24,6 +24,7 @@
 #include <util/fees.h>
 #include <util/message.h>
 #include <util/settings.h>
+#include <util/shell.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>

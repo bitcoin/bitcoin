@@ -70,6 +70,7 @@
 #include <util/asmap.h>
 #include <util/check.h>
 #include <util/moneystr.h>
+#include <util/shell.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/syscall_sandbox.h>

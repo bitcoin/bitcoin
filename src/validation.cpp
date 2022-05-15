@@ -49,6 +49,7 @@
 #include <util/hasher.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/shell.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/time.h>

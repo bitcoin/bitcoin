@@ -33,6 +33,7 @@
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/shell.h>
 #include <util/string.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>

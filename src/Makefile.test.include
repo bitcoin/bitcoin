@@ -125,6 +125,7 @@ BITCOIN_TESTS =\
   test/result_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
+  test/run_command_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
   test/script_p2sh_tests.cpp \
@@ -143,7 +144,6 @@ BITCOIN_TESTS =\
   test/sock_tests.cpp \
   test/streams_tests.cpp \
   test/sync_tests.cpp \
-  test/system_tests.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
