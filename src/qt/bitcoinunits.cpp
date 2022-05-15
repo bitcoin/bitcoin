@@ -31,10 +31,14 @@ QList<BitcoinUnit> BitcoinUnits::availableUnits()
 QString BitcoinUnits::longName(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return QString("BTC");
-    case Unit::mBTC: return QString("mBTC");
-    case Unit::uBTC: return QString::fromUtf8("µBTC (bits)");
-    case Unit::SAT: return QString("Satoshi (sat)");
+    //: "BTC" as a unit name in dropbox selector
+    case Unit::BTC: return tr("BTC", "long unit name");
+    //: "mBTC" as a unit name in dropbox selector
+    case Unit::mBTC: return tr("mBTC", "long unit name");
+    //: "µBTC" as a unit name in dropbox selector
+    case Unit::uBTC: return tr("µBTC (bits)", "long unit name");
+    //: Base unit name in dropbox selector
+    case Unit::SAT: return tr("Satoshi (sat)", "long unit name");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -42,10 +46,14 @@ QString BitcoinUnits::longName(Unit unit)
 QString BitcoinUnits::shortName(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return longName(unit);
-    case Unit::mBTC: return longName(unit);
-    case Unit::uBTC: return QString("bits");
-    case Unit::SAT: return QString("sat");
+    //: "BTC" as a unit suffix
+    case Unit::BTC: return tr("BTC", "unit suffix");
+    //: "mBTC" as a unit suffix
+    case Unit::mBTC: return tr("mBTC", "unit suffix");
+    //: "µBTC" as a unit suffix
+    case Unit::uBTC: return tr("bits", "unit suffix");
+    //: Base unit suffix
+    case Unit::SAT: return tr("sat", "unit suffix");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -53,10 +61,14 @@ QString BitcoinUnits::shortName(Unit unit)
 QString BitcoinUnits::description(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return QString("Bitcoins");
-    case Unit::mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case Unit::uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case Unit::SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    //: Tooltip description of "BTC" unit in dropbox selector
+    case Unit::BTC: return tr("Bitcoins", "unit description");
+    //: Tooltip description of "mBTC" unit in dropbox selector
+    case Unit::mBTC: return tr("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)", "unit description");
+    //: Tooltip description of "µBTC" unit in dropbox selector
+    case Unit::uBTC: return tr("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)", "unit description");
+    //: Tooltip description of base unit in dropbox selector
+    case Unit::SAT: return tr("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)", "unit description");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
