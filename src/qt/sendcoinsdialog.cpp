@@ -403,8 +403,9 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
     ssTx << psbtx;
     GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
     QMessageBox msgBox;
-    msgBox.setText("Unsigned Transaction");
-    msgBox.setInformativeText("The PSBT has been copied to the clipboard. You can also save it.");
+    //: Caption of "PSBT has been copied" messagebox
+    msgBox.setText(tr("Unsigned Transaction", "PSBT copied"));
+    msgBox.setInformativeText(tr("The PSBT has been copied to the clipboard. You can also save it."));
     msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard);
     msgBox.setDefaultButton(QMessageBox::Discard);
     switch (msgBox.exec()) {
@@ -432,7 +433,8 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
         std::ofstream out{filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary};
         out << ssTx.str();
         out.close();
-        Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);
+        //: Popup message when a PSBT has been saved to a file
+        Q_EMIT message(tr("PSBT saved"), tr("PSBT saved to disk"), CClientUIInterface::MSG_INFORMATION);
         break;
     }
     case QMessageBox::Discard:
