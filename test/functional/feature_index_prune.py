@@ -8,7 +8,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    p2p_port,
 )
 
 
@@ -132,11 +131,11 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             self.nodes[i].assert_start_raises_init_error(extra_args=self.extra_args[i], expected_msg=msg)
 
         self.log.info("make sure the nodes start again with the indices and an additional -reindex arg")
-        ip_port = "127.0.0.1:" + str(p2p_port(3))
         for i in range(3):
-            # The nodes need to be reconnected to the non-pruning node upon restart, otherwise they will be stuck
-            restart_args = self.extra_args[i]+["-reindex", f"-connect={ip_port}"]
+            restart_args = self.extra_args[i]+["-reindex"]
             self.restart_node(i, extra_args=restart_args)
+            # The nodes need to be reconnected to the non-pruning node upon restart, otherwise they will be stuck
+            self.connect_nodes(i, 3)
 
         self.sync_blocks(timeout=300)
 
