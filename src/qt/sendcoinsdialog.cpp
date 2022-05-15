@@ -469,8 +469,9 @@ bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, 
         return false;
     }
     if (err != TransactionError::OK) {
-        tfm::format(std::cerr, "Failed to sign PSBT");
         processSendCoinsReturn(WalletModel::TransactionCreationFailed);
+        const QString msg = tr("Failed to sign PSBT");
+        QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
     // fillPSBT does not always properly finalize
