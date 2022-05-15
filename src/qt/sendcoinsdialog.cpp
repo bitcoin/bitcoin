@@ -454,12 +454,14 @@ bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, 
     }
     if (err == TransactionError::EXTERNAL_SIGNER_NOT_FOUND) {
         //: "External signer" means using devices such as hardware wallets.
-        QMessageBox::critical(nullptr, tr("External signer not found"), "External signer not found");
+        const QString msg = tr("External signer not found");
+        QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
     if (err == TransactionError::EXTERNAL_SIGNER_FAILED) {
         //: "External signer" means using devices such as hardware wallets.
-        QMessageBox::critical(nullptr, tr("External signer failure"), "External signer failure");
+        const QString msg = tr("External signer failure");
+        QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
     if (err != TransactionError::OK) {
