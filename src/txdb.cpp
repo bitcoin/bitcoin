@@ -6,6 +6,7 @@
 #include <txdb.h>
 
 #include <chain.h>
+#include <logging.h>
 #include <pow.h>
 #include <random.h>
 #include <shutdown.h>

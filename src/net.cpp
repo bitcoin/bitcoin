@@ -19,6 +19,7 @@
 #include <node/eviction.h>
 #include <fs.h>
 #include <i2p.h>
+#include <logging.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>

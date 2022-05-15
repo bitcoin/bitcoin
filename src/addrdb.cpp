@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <fs.h>
 #include <hash.h>
+#include <logging.h>
 #include <logging/timer.h>
 #include <netbase.h>
 #include <netgroup.h>
