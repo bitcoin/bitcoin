@@ -16,7 +16,7 @@
 
 #include <unordered_map>
 
-CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID) :
+CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block) :
         nonce(GetRand<uint64_t>()),
         shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
     FillShortTxIDSelector();
@@ -24,7 +24,7 @@ CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool f
     prefilledtxn[0] = {0, block.vtx[0]};
     for (size_t i = 1; i < block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
-        shorttxids[i - 1] = GetShortID(fUseWTXID ? tx.GetWitnessHash() : tx.GetHash());
+        shorttxids[i - 1] = GetShortID(tx.GetWitnessHash());
     }
 }
 
