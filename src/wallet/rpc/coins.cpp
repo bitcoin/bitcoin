@@ -18,12 +18,17 @@
 namespace wallet {
 static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
-    std::set<CTxDestination> address_set;
+    std::set<CScript> output_scripts;
 
     if (by_label) {
         // Get the set of addresses assigned to label
         std::string label = LabelFromValue(params[0]);
-        address_set = wallet.GetLabelAddresses(label);
+        for (const auto& address : wallet.GetLabelAddresses(label)) {
+            auto output_script{GetScriptForDestination(address)};
+            if (wallet.IsMine(output_script)) {
+                output_scripts.insert(output_script);
+            }
+        }
     } else {
         // Get the address
         CTxDestination dest = DecodeDestination(params[0].get_str());
@@ -34,7 +39,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         if (!wallet.IsMine(script_pub_key)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Address not found in wallet");
         }
-        address_set.insert(dest);
+        output_scripts.insert(script_pub_key);
     }
 
     // Minimum confirmations
@@ -66,8 +71,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         }
 
         for (const CTxOut& txout : wtx.tx->vout) {
-            CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && wallet.IsMine(address) && address_set.count(address)) {
+            if (output_scripts.count(txout.scriptPubKey) > 0) {
                 amount += txout.nValue;
             }
         }
