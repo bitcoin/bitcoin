@@ -100,6 +100,11 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
             add_address_type(OutputType::BECH32M, tr("Bech32m (Taproot)"), tr("Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited."));
         }
 
+        connect(_model->getOptionsModel(), &OptionsModel::addresstypeChanged, [this](const OutputType type) {
+            const int index = ui->addressType->findData((int) type);
+            if (index != -1) ui->addressType->setCurrentIndex(index);
+        });
+
         // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
         ui->receiveButton->setEnabled(model->wallet().canGetAddresses());
 
