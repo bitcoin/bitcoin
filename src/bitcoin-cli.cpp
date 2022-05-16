@@ -439,7 +439,6 @@ private:
         if (conn_type == "addr-fetch") return "addr";
         return "";
     }
-    const int64_t m_time_now{count_seconds(Now<CliSeconds>())};
 
 public:
     static constexpr int ID_PEERINFO = 0;
@@ -471,6 +470,7 @@ public:
         if (networkinfo["version"].get_int() < 209900) {
             throw std::runtime_error("-netinfo requires bitcoind server to be running v0.21.0 and up");
         }
+        const int64_t time_now{count_seconds(Now<CliSeconds>())};
 
         // Count peer connection totals, and if DetailsRequested(), store peer data in a vector of structs.
         for (const UniValue& peer : batch[ID_PEERINFO]["result"].getValues()) {
@@ -501,7 +501,7 @@ public:
                 const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
                 const std::string addr{peer["addr"].get_str()};
-                const std::string age{conn_time == 0 ? "" : ToString((m_time_now - conn_time) / 60)};
+                const std::string age{conn_time == 0 ? "" : ToString((time_now - conn_time) / 60)};
                 const std::string sub_version{peer["subver"].get_str()};
                 const bool is_addr_relay_enabled{peer["addr_relay_enabled"].isNull() ? false : peer["addr_relay_enabled"].get_bool()};
                 const bool is_bip152_hb_from{peer["bip152_hb_from"].get_bool()};
@@ -537,10 +537,10 @@ public:
                     peer.network,
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
-                    peer.last_send ? ToString(m_time_now - peer.last_send) : "",
-                    peer.last_recv ? ToString(m_time_now - peer.last_recv) : "",
-                    peer.last_trxn ? ToString((m_time_now - peer.last_trxn) / 60) : peer.is_block_relay ? "*" : "",
-                    peer.last_blck ? ToString((m_time_now - peer.last_blck) / 60) : "",
+                    peer.last_send ? ToString(time_now - peer.last_send) : "",
+                    peer.last_recv ? ToString(time_now - peer.last_recv) : "",
+                    peer.last_trxn ? ToString((time_now - peer.last_trxn) / 60) : peer.is_block_relay ? "*" : "",
+                    peer.last_blck ? ToString((time_now - peer.last_blck) / 60) : "",
                     strprintf("%s%s", peer.is_bip152_hb_to ? "." : " ", peer.is_bip152_hb_from ? "*" : " "),
                     m_max_addr_processed_length, // variable spacing
                     peer.addr_processed ? ToString(peer.addr_processed) : peer.is_addr_relay_enabled ? "" : ".",
