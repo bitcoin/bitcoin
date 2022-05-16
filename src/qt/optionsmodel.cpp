@@ -145,19 +145,19 @@ static const QString fontchoice_str_custom_prefix{QStringLiteral("custom, ")};
 static const std::map<OutputType, std::pair<const char*, const char*>> UntranslatedOutputTypeDescriptions{
     {OutputType::LEGACY, {
         QT_TRANSLATE_NOOP("Output type name", "Base58 (Legacy)"),
-        QT_TRANSLATE_NOOP("Output type description", "Not recommended due to higher fees and less protection against typos."),
+        QT_TRANSLATE_NOOP("Output type description", "Widest compatibility and best for health of the Bitcoin network, but may result in higher fees later. Recommended."),
     }},
     {OutputType::P2SH_SEGWIT, {
         QT_TRANSLATE_NOOP("Output type name", "Base58 (P2SH-SegWit)"),
-        QT_TRANSLATE_NOOP("Output type description", "Generates an address compatible with older wallets."),
+        QT_TRANSLATE_NOOP("Output type description", "Compatible with most older wallets, and may result in lower fees than Legacy."),
     }},
     {OutputType::BECH32, {
-        QT_TRANSLATE_NOOP("Output type name", "Bech32 (SegWit)"),
-        QT_TRANSLATE_NOOP("Output type description", "Generates a native segwit address (BIP-173). Some old wallets don't support it."),
+        QT_TRANSLATE_NOOP("Output type name", "Native Segwit (Bech32)"),
+        QT_TRANSLATE_NOOP("Output type description", "Lower fees than Base58, but some old wallets don't support it."),
     }},
     {OutputType::BECH32M, {
-        QT_TRANSLATE_NOOP("Output type name", "Bech32m (Taproot)"),
-        QT_TRANSLATE_NOOP("Output type description", "Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited."),
+        QT_TRANSLATE_NOOP("Output type name", "Taproot (Bech32m)"),
+        QT_TRANSLATE_NOOP("Output type description", "Lowest fees, but wallet support is still limited."),
     }},
 };
 
