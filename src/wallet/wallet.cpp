@@ -1804,6 +1804,7 @@ void CWallet::ReacceptWalletTransactions()
 bool CWallet::CanTxBeResent(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
+
     return
         // Can't relay if wallet is not broadcasting
         GetBroadcastTransactions() &&
@@ -1821,6 +1822,7 @@ bool CWallet::CanTxBeResent(const CWalletTx& wtx) const
 bool CWallet::SubmitTxMemoryPoolAndRelay(const CWalletTx& wtx, bilingual_str& err_string, bool relay) const
 {
     AssertLockHeld(cs_wallet);
+
     if (!CanTxBeResent(wtx)) return false;
 
     // Submit transaction to mempool for relay
@@ -1842,12 +1844,10 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(const CWalletTx& wtx, bilingual_str& er
 std::set<uint256> CWallet::GetTxConflicts(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
-    std::set<uint256> result;
-    {
-        uint256 myHash = wtx.GetHash();
-        result = GetConflicts(myHash);
-        result.erase(myHash);
-    }
+
+    const uint256 myHash{wtx.GetHash()};
+    std::set<uint256> result{GetConflicts(myHash)};
+    result.erase(myHash);
     return result;
 }
 
@@ -3459,8 +3459,11 @@ bool CWallet::IsTxChainLocked(const CWalletTx& wtx) const
 
 int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
 {
-    if (!wtx.IsCoinBase())
+    AssertLockHeld(cs_wallet);
+
+    if (!wtx.IsCoinBase()) {
         return 0;
+    }
     int chain_depth = GetTxDepthInMainChain(wtx);
     assert(chain_depth >= 0); // coinbase tx should not be conflicted
     return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
@@ -3468,6 +3471,8 @@ int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
 
 bool CWallet::IsTxImmatureCoinBase(const CWalletTx& wtx) const
 {
+    AssertLockHeld(cs_wallet);
+
     // note GetBlocksToMaturity is 0 for non-coinbase tx
     return GetTxBlocksToMaturity(wtx) > 0;
 }
