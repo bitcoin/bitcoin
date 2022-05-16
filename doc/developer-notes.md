@@ -32,6 +32,7 @@ Developer Notes
     - [C++ data structures](#c-data-structures)
     - [Strings and formatting](#strings-and-formatting)
     - [Shadowing](#shadowing)
+    - [Lifetimebound](#lifetimebound)
     - [Threads and synchronization](#threads-and-synchronization)
     - [Scripts](#scripts)
         - [Shebang](#shebang)
@@ -96,7 +97,10 @@ code.
     Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
     which recommend using `snake_case`.  Please use what seems appropriate.
   - Class names, function names, and method names are UpperCamelCase
-    (PascalCase). Do not prefix class names with `C`.
+    (PascalCase). Do not prefix class names with `C`. See [Internal interface
+    naming style](#internal-interface-naming-style) for an exception to this
+    convention.
+
   - Test suite naming convention: The Boost test suite in file
     `src/test/foo_tests.cpp` should be named `foo_tests`. Test suite names
     must be unique.
@@ -137,6 +141,27 @@ public:
 }
 } // namespace foo
 ```
+
+Coding Style (C++ functions and methods)
+--------------------
+
+- When ordering function parameters, place input parameters first, then any
+  in-out parameters, followed by any output parameters.
+
+- *Rationale*: API consistency.
+
+- Prefer returning values directly to using in-out or output parameters. Use
+  `std::optional` where helpful for returning values.
+
+- *Rationale*: Less error-prone (no need for assumptions about what the output
+  is initialized to on failure), easier to read, and often the same or better
+  performance.
+
+- Generally, use `std::optional` to represent optional by-value inputs (and
+  instead of a magic default value, if there is no real default). Non-optional
+  input parameters should usually be values or const references, while
+  non-optional in-out and output parameters should usually be references, as
+  they cannot be null.
 
 Coding Style (C++ named arguments)
 ------------------------------
@@ -657,10 +682,6 @@ Wallet
 
 - Make sure that no crashes happen with run-time option `-disablewallet`.
 
-- Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set.
-
-  - *Rationale*: Otherwise compilation of the disable-wallet build will fail in environments without BerkeleyDB.
-
 General C++
 -------------
 
@@ -863,12 +884,22 @@ from using a different variable with the same name),
 please name variables so that their names do not shadow variables defined in the source code.
 
 When using nested cycles, do not name the inner cycle variable the same as in
-the upper cycle, etc.
+the outer cycle, etc.
+
+Lifetimebound
+--------------
+
+The [Clang `lifetimebound`
+attribute](https://clang.llvm.org/docs/AttributeReference.html#lifetimebound)
+can be used to tell the compiler that a lifetime is bound to an object and
+potentially see a compile-time warning if the object has a shorter lifetime from
+the invalid use of a temporary. You can use the attribute by adding a `LIFETIMEBOUND`
+annotation defined in `src/attributes.h`; please grep the codebase for examples.
 
 Threads and synchronization
 ----------------------------
 
-- Prefer `Mutex` type to `RecursiveMutex` one
+- Prefer `Mutex` type to `RecursiveMutex` one.
 
 - Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
   get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
@@ -946,6 +977,8 @@ TRY_LOCK(cs_vNodes, lockNodes);
 
 Scripts
 --------------------------
+
+Write scripts in Python rather than bash, when possible.
 
 ### Shebang
 
@@ -1389,22 +1422,9 @@ communication:
   virtual boost::signals2::scoped_connection connectTipChanged(TipChangedFn fn) = 0;
   ```
 
-- For consistency and friendliness to code generation tools, interface method
-  input and inout parameters should be ordered first and output parameters
-  should come last.
+- Interface methods should not be overloaded.
 
-  Example:
-
-  ```c++
-  // Good: error output param is last
-  virtual bool broadcastTransaction(const CTransactionRef& tx, CAmount max_fee, std::string& error) = 0;
-
-  // Bad: error output param is between input params
-  virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& error, CAmount max_fee) = 0;
-  ```
-
-- For friendliness to code generation tools, interface methods should not be
-  overloaded:
+  *Rationale*: consistency and friendliness to code generation tools.
 
   Example:
 
@@ -1418,9 +1438,12 @@ communication:
   virtual bool disconnect(NodeId id) = 0;
   ```
 
-- For consistency and friendliness to code generation tools, interface method
-  names should be `lowerCamelCase` and standalone function names should be
+### Internal interface naming style
+
+- Interface method names should be `lowerCamelCase` and standalone function names should be
   `UpperCamelCase`.
+
+  *Rationale*: consistency and friendliness to code generation tools.
 
   Examples:
 
