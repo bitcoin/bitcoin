@@ -182,6 +182,8 @@ CAmount CachedTxGetImmatureWatchOnlyCredit(const CWallet& wallet, const CWalletT
 
 CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, bool fUseCache, const isminefilter& filter)
 {
+    AssertLockHeld(wallet.cs_wallet);
+
     // Avoid caching ismine for NO or ALL cases (could remove this check and simplify in the future).
     bool allow_cache = (filter & ISMINE_ALL) && (filter & ISMINE_ALL) != ISMINE_ALL;
 
