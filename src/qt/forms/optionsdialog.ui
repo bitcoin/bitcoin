@@ -227,6 +227,27 @@
         </widget>
        </item>
        <item>
+        <layout class="QHBoxLayout">
+         <item>
+          <widget class="QLabel">
+           <property name="text">
+            <string>Address type:</string>
+           </property>
+           <property name="buddy">
+            <cstring>addressType</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="addressType">
+           <property name="toolTip">
+            <string>Choose the default address type to select when receiving coins.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>Expert</string>
@@ -291,57 +312,6 @@
              </widget>
             </item>
            </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBoxAddressType">
-         <property name="title">
-          <string>Address type</string>
-         </property>
-         <property name="checkable">
-          <bool>false</bool>
-         </property>
-         <layout class="QHBoxLayout" name="layoutAddressType">
-          <item>
-           <widget class="QRadioButton" name="addressTypeLegacy">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Legacy</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="addressTypeP2SH_Segwit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>P2SH Segwit</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="addressTypeBech32">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Native Segwit (bech32)</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </widget>
