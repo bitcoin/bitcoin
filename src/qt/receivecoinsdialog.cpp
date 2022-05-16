@@ -87,17 +87,18 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
             &ReceiveCoinsDialog::recentRequestsView_selectionChanged);
 
         // Populate address type dropdown and select default
-        auto add_address_type = [&](OutputType type, const QString& text, const QString& tooltip) {
+        auto add_address_type = [&](OutputType type) {
+            const auto [text, tooltip] = GetOutputTypeDescription(type);
             const auto index = ui->addressType->count();
             ui->addressType->addItem(text, (int) type);
             ui->addressType->setItemData(index, tooltip, Qt::ToolTipRole);
             if (model->wallet().getDefaultAddressType() == type) ui->addressType->setCurrentIndex(index);
         };
-        add_address_type(OutputType::LEGACY, tr("Base58 (Legacy)"), tr("Not recommended due to higher fees and less protection against typos."));
-        add_address_type(OutputType::P2SH_SEGWIT, tr("Base58 (P2SH-SegWit)"), tr("Generates an address compatible with older wallets."));
-        add_address_type(OutputType::BECH32, tr("Bech32 (SegWit)"), tr("Generates a native segwit address (BIP-173). Some old wallets don't support it."));
+        add_address_type(OutputType::LEGACY);
+        add_address_type(OutputType::P2SH_SEGWIT);
+        add_address_type(OutputType::BECH32);
         if (model->wallet().taprootEnabled()) {
-            add_address_type(OutputType::BECH32M, tr("Bech32m (Taproot)"), tr("Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited."));
+            add_address_type(OutputType::BECH32M);
         }
 
         connect(_model->getOptionsModel(), &OptionsModel::addresstypeChanged, [this](const OutputType type) {

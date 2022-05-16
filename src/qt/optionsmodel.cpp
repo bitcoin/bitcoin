@@ -142,6 +142,33 @@ static const QLatin1String fontchoice_str_embedded{"embedded"};
 static const QLatin1String fontchoice_str_best_system{"best_system"};
 static const QString fontchoice_str_custom_prefix{QStringLiteral("custom, ")};
 
+static const std::map<OutputType, std::pair<const char*, const char*>> UntranslatedOutputTypeDescriptions{
+    {OutputType::LEGACY, {
+        QT_TRANSLATE_NOOP("Output type name", "Base58 (Legacy)"),
+        QT_TRANSLATE_NOOP("Output type description", "Not recommended due to higher fees and less protection against typos."),
+    }},
+    {OutputType::P2SH_SEGWIT, {
+        QT_TRANSLATE_NOOP("Output type name", "Base58 (P2SH-SegWit)"),
+        QT_TRANSLATE_NOOP("Output type description", "Generates an address compatible with older wallets."),
+    }},
+    {OutputType::BECH32, {
+        QT_TRANSLATE_NOOP("Output type name", "Bech32 (SegWit)"),
+        QT_TRANSLATE_NOOP("Output type description", "Generates a native segwit address (BIP-173). Some old wallets don't support it."),
+    }},
+    {OutputType::BECH32M, {
+        QT_TRANSLATE_NOOP("Output type name", "Bech32m (Taproot)"),
+        QT_TRANSLATE_NOOP("Output type description", "Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited."),
+    }},
+};
+
+std::pair<QString, QString> GetOutputTypeDescription(const OutputType type)
+{
+    auto& untr = UntranslatedOutputTypeDescriptions.at(type);
+    QString text = QCoreApplication::translate("Output type name", untr.first);
+    QString tooltip = QCoreApplication::translate("Output type description", untr.second);
+    return std::make_pair(text, tooltip);
+}
+
 QString OptionsModel::FontChoiceToString(const OptionsModel::FontChoice& f)
 {
     if (std::holds_alternative<FontChoiceAbstract>(f)) {
