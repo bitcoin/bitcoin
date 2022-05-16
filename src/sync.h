@@ -83,8 +83,6 @@ void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLi
 inline void DeleteLock(void* cs) {}
 inline bool LockStackEmpty() { return true; }
 #endif
-#define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
-#define AssertLockNotHeld(cs) AssertLockNotHeldInternal(#cs, __FILE__, __LINE__, &cs)
 
 /**
  * Template mixin that adds -Wthread-safety locking annotations and lock order
@@ -129,7 +127,13 @@ public:
 using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
 
 /** Wrapped mutex: supports waiting but not recursive locking */
-typedef AnnotatedMixin<std::mutex> Mutex;
+using Mutex = AnnotatedMixin<std::mutex>;
+
+#define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
+
+inline void AssertLockNotHeldInline(const char* name, const char* file, int line, Mutex* cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) { AssertLockNotHeldInternal(name, file, line, cs); }
+inline void AssertLockNotHeldInline(const char* name, const char* file, int line, RecursiveMutex* cs) LOCKS_EXCLUDED(cs) { AssertLockNotHeldInternal(name, file, line, cs); }
+#define AssertLockNotHeld(cs) AssertLockNotHeldInline(#cs, __FILE__, __LINE__, &cs)
 
 /** Wrapper around std::unique_lock style lock for Mutex. */
 template <typename Mutex, typename Base = typename Mutex::UniqueLock>
