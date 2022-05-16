@@ -245,7 +245,6 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             }
     }
     assert(false);
-    return ""_mst;
 }
 
 size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys) {
@@ -278,7 +277,6 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::THRESH: return subsize + n_subs + BuildScript(k).size();
     }
     assert(false);
-    return 0;
 }
 
 std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script)

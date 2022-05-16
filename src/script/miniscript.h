@@ -532,7 +532,6 @@ public:
                 }
             }
             assert(false);
-            return {};
         };
         return TreeEval<CScript>(false, downfn, upfn);
     }
@@ -632,9 +631,9 @@ public:
                     }
                     return std::move(str) + ")";
                 }
-                default: assert(false);
+                default: break;
             }
-            return ""; // Should never be reached.
+            assert(false);
         };
 
         return TreeEvalMaybe<std::string>(false, downfn, upfn);
@@ -711,7 +710,6 @@ public:
             }
         }
         assert(false);
-        return {0, {}, {}};
     }
 
     internal::StackSize CalcStackSize() const {
@@ -762,7 +760,6 @@ public:
             }
         }
         assert(false);
-        return {{}, {}};
     }
 
     /** Check whether any key is repeated.
