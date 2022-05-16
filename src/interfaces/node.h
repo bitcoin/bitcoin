@@ -112,6 +112,10 @@ public:
     //! source, but not being persisted.
     virtual void forceSetting(const std::string& name, const util::SettingsValue& value) = 0;
 
+    //! Clear all settings in <datadir>/settings.json and store a backup of
+    //! previous settings in <datadir>/settings.json.bak.
+    virtual void resetSettings() = 0;
+
     //! Map port.
     virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
 
