@@ -251,6 +251,9 @@ static void BackupSettings(const fs::path& filename, const QSettings& src)
 
 void OptionsModel::Reset()
 {
+    // Backup and reset settings.json
+    node().resetSettings();
+
     QSettings settings;
 
     // Backup old settings to chain-specific datadir for troubleshooting
