@@ -90,6 +90,17 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.recover_non_hd()
 
+        self.log.info("No mnemonic, no mnemonic passphrase, no wallet passphrase, should result in completely different keys")
+        self.stop_node(0)
+        self.start_node(0, extra_args=['-keypool=10'])
+        assert node.upgradetohd("", "", "", True)
+        # Completely different keys, no HD coins should be recovered
+        assert mnemonic != node.dumphdinfo()['mnemonic']
+        assert chainid != node.getwalletinfo()['hdchainid']
+        assert_equal(balance_non_HD, node.getbalance())
+
+        self.recover_non_hd()
+
         self.log.info("Same mnemonic, another mnemonic passphrase, no wallet passphrase, should result in a different set of keys")
         new_mnemonic_passphrase = "somewords"
         assert node.upgradetohd(mnemonic, new_mnemonic_passphrase)
@@ -123,6 +134,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
         node.keypoolrefill(5)
+        assert balance_after != node.getbalance()
         node.rescanblockchain()
         assert_equal(balance_after, node.getbalance())
 
@@ -134,6 +146,19 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         assert node.upgradetohd(mnemonic)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
         assert_equal(chainid, node.getwalletinfo()['hdchainid'])
+        # All coins should be recovered
+        assert_equal(balance_after, node.getbalance())
+
+        self.recover_non_hd()
+
+        self.log.info("Same mnemonic, no mnemonic passphrase, no wallet passphrase, large enough keepool, rescan is skipped initially, should recover all coins after rescanblockchain")
+        self.stop_node(0)
+        self.start_node(0, extra_args=['-keypool=10'])
+        assert node.upgradetohd(mnemonic, "", "", False)
+        assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])
+        assert_equal(chainid, node.getwalletinfo()['hdchainid'])
+        assert balance_after != node.getbalance()
+        node.rescanblockchain()
         # All coins should be recovered
         assert_equal(balance_after, node.getbalance())
 
