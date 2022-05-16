@@ -722,6 +722,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                     continue;
                 }
             }
+            Q_EMIT addresstypeChanged(newvalue);
         }
         break;
     }
