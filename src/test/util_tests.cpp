@@ -2710,6 +2710,14 @@ BOOST_AUTO_TEST_CASE(message_verify)
             "Hello World"),
         MessageVerificationResult::OK);
 
+    // BIP322 signature created using buidl-python library with same parameters as test on line 2596
+    BOOST_CHECK_EQUAL(
+        MessageVerify(
+            "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+         "AkgwRQIhAOzyynlqt93lOKJr+wmmxIens//zPzl9tqIOua93wO6MAiBi5n5EyAcPScOjf1lAqIUIQtr3zKNeavYabHyR8eGhowEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy",
+            "Hello World"),
+        MessageVerificationResult::OK);
+
     // wrong address
 
     BOOST_CHECK_EQUAL(
