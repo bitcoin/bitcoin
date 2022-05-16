@@ -260,7 +260,7 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::SHA256: return 4 + 2 + 33;
         case Fragment::HASH160:
         case Fragment::RIPEMD160: return 4 + 2 + 21;
-        case Fragment::MULTI: return 3 + (n_keys > 16) + (k > 16) + 34 * n_keys;
+        case Fragment::MULTI: return 1 + BuildScript(n_keys).size() + BuildScript(k).size() + 34 * n_keys;
         case Fragment::AND_V: return subsize;
         case Fragment::WRAP_V: return subsize + (sub0typ << "x"_mst);
         case Fragment::WRAP_S:
