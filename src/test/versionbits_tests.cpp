@@ -6,7 +6,6 @@
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <test/util/setup_common.h>
-#include <validation.h>
 #include <versionbits.h>
 
 #include <boost/test/unit_test.hpp>
@@ -183,7 +182,7 @@ public:
     CBlockIndex* Tip() { return vpblock.empty() ? nullptr : vpblock.back(); }
 };
 
-BOOST_FIXTURE_TEST_SUITE(versionbits_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(versionbits_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(versionbits_test)
 {
@@ -413,7 +412,7 @@ static void check_computeblockversion(VersionBitsCache& versionbitscache, const 
 
 BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 {
-    VersionBitsCache vbcache; // don't use chainman versionbitscache since we want custom chain params
+    VersionBitsCache vbcache;
 
     // check that any deployment on any chain can conceivably reach both
     // ACTIVE and FAILED states in roughly the way we expect
