@@ -180,6 +180,8 @@ inline constexpr Type operator"" _mst(const char* c, size_t l) {
     return typ;
 }
 
+using Opcode = std::pair<opcodetype, std::vector<unsigned char>>;
+
 template<typename Key> struct Node;
 template<typename Key> using NodeRef = std::shared_ptr<const Node<Key>>;
 
@@ -1269,10 +1271,10 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
  * and OP_EQUALVERIFY are decomposed into OP_CHECKSIG, OP_CHECKMULTISIG, OP_EQUAL
  * respectively, plus OP_VERIFY.
  */
-std::optional<std::vector<std::pair<opcodetype, std::vector<unsigned char>>>> DecomposeScript(const CScript& script);
+std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script);
 
 /** Determine whether the passed pair (created by DecomposeScript) is pushing a number. */
-std::optional<int64_t> ParseScriptNumber(const std::pair<opcodetype, std::vector<unsigned char>>& in);
+std::optional<int64_t> ParseScriptNumber(const Opcode& in);
 
 enum class DecodeContext {
     /** A single expression of type B, K, or V. Specifically, this can't be an

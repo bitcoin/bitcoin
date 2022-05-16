@@ -281,9 +281,9 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
     return 0;
 }
 
-std::optional<std::vector<std::pair<opcodetype, std::vector<unsigned char>>>> DecomposeScript(const CScript& script)
+std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script)
 {
-    std::vector<std::pair<opcodetype, std::vector<unsigned char>>> out;
+    std::vector<Opcode> out;
     CScript::const_iterator it = script.begin(), itend = script.end();
     while (it != itend) {
         std::vector<unsigned char> push_data;
@@ -317,7 +317,7 @@ std::optional<std::vector<std::pair<opcodetype, std::vector<unsigned char>>>> De
     return out;
 }
 
-std::optional<int64_t> ParseScriptNumber(const std::pair<opcodetype, std::vector<unsigned char>>& in) {
+std::optional<int64_t> ParseScriptNumber(const Opcode& in) {
     if (in.first == OP_0) {
         return 0;
     }
