@@ -539,6 +539,11 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     # Call abandon to make sure the wallet doesn't attempt to resubmit
     # the bump tx and hope the wallet does not rebroadcast before we call.
     rbf_node.abandontransaction(bumpid)
+
+    tx_bump_abandoned = rbf_node.gettransaction(bumpid)
+    for tx in tx_bump_abandoned['details']:
+        assert_equal(tx['abandoned'], True)
+
     assert bumpid not in rbf_node.getrawmempool()
     assert rbfid in rbf_node.getrawmempool()
 
