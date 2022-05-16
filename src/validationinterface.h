@@ -17,9 +17,7 @@ class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
-class CConnman;
 class CValidationInterface;
-class uint256;
 class CScheduler;
 enum class MemPoolRemovalReason;
 
@@ -177,10 +175,10 @@ protected:
     friend class ValidationInterfaceTest;
 };
 
-struct MainSignalsInstance;
+class MainSignalsImpl;
 class CMainSignals {
 private:
-    std::unique_ptr<MainSignalsInstance> m_internals;
+    std::unique_ptr<MainSignalsImpl> m_internals;
 
     friend void ::RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface>);
     friend void ::UnregisterValidationInterface(CValidationInterface*);

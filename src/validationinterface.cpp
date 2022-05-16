@@ -16,14 +16,16 @@
 #include <unordered_map>
 #include <utility>
 
-//! The MainSignalsInstance manages a list of shared_ptr<CValidationInterface>
-//! callbacks.
-//!
-//! A std::unordered_map is used to track what callbacks are currently
-//! registered, and a std::list is to used to store the callbacks that are
-//! currently registered as well as any callbacks that are just unregistered
-//! and about to be deleted when they are done executing.
-struct MainSignalsInstance {
+/**
+ * MainSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.
+ *
+ * A std::unordered_map is used to track what callbacks are currently
+ * registered, and a std::list is used to store the callbacks that are
+ * currently registered as well as any callbacks that are just unregistered
+ * and about to be deleted when they are done executing.
+ */
+class MainSignalsImpl
+{
 private:
     Mutex m_mutex;
     //! List entries consist of a callback pointer and reference count. The
@@ -40,7 +42,7 @@ public:
     // our own queue here :(
     SingleThreadedSchedulerClient m_schedulerClient;
 
-    explicit MainSignalsInstance(CScheduler& scheduler LIFETIMEBOUND) : m_schedulerClient(scheduler) {}
+    explicit MainSignalsImpl(CScheduler& scheduler LIFETIMEBOUND) : m_schedulerClient(scheduler) {}
 
     void Register(std::shared_ptr<CValidationInterface> callbacks)
     {
@@ -92,7 +94,7 @@ static CMainSignals g_signals;
 void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler)
 {
     assert(!m_internals);
-    m_internals = std::make_unique<MainSignalsInstance>(scheduler);
+    m_internals = std::make_unique<MainSignalsImpl>(scheduler);
 }
 
 void CMainSignals::UnregisterBackgroundSignalScheduler()
