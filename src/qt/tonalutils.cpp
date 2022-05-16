@@ -10,7 +10,7 @@
 #include <QRegExpValidator>
 #include <QString>
 
-static const QList<QChar> tonal_digits{0xe9df, 0xe9de, 0xe9dd, 0xe9dc, 0xe9db, 0xe9da, 0xe9d9, '8', '7', '6', '5', '4', '3', '2', '1', '0'};
+static const QList<QChar> tonal_digits{0xe8ef, 0xe8ee, 0xe8ed, 0xe8ec, 0xe8eb, 0xe8ea, 0xe8e9, '8', '7', '6', '5', '4', '3', '2', '1', '0'};
 
 namespace {
 
@@ -52,13 +52,13 @@ void TonalUtils::ConvertFromHex(QString&str)
     {
         ushort c = str[i].unicode();
         if (c == '9')
-            str[i] = 0xe9d9;
+            str[i] = 0xe8e9;
         else
         if (c >= 'A' && c <= 'F')
-            str[i] = c + 0xe999;
+            str[i] = c + (0xe8ea - 'A');
         else
         if (c >= 'a' && c <= 'f')
-            str[i] = c + 0xe979;
+            str[i] = c + (0xe8ea - 'a');
     }
 }
 
