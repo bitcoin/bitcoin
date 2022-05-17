@@ -839,11 +839,11 @@ public:
     //! Whether successful non-malleable satisfactions are guaranteed to be valid.
     bool ValidSatisfactions() const { return IsValid() && CheckOpsLimit() && CheckStackSize(); }
 
-    //! Whether the apparent policy of this node matches its script semantics.
-    bool IsSane() const { return ValidSatisfactions() && IsNonMalleable() && CheckTimeLocksMix() && CheckDuplicateKey(); }
+    //! Whether the apparent policy of this node matches its script semantics. Doesn't guarantee it is a safe script on its own.
+    bool IsSaneSubexpression() const { return ValidSatisfactions() && IsNonMalleable() && CheckTimeLocksMix() && CheckDuplicateKey(); }
 
     //! Check whether this node is safe as a script on its own.
-    bool IsSaneTopLevel() const { return IsValidTopLevel() && IsSane() && NeedsSignature(); }
+    bool IsSane() const { return IsValidTopLevel() && IsSaneSubexpression() && NeedsSignature(); }
 
     //! Equality testing.
     bool operator==(const Node<Key>& arg) const { return Compare(*this, arg) == 0; }
