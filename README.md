@@ -1,3 +1,4 @@
+# metadata.xmp1.0
 Bitcoin Core integration/staging tree
 =====================================
 
@@ -76,3 +77,106 @@ Translations are periodically pulled from Transifex and merged into the git repo
 
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
+
+# metadata.xmp1.0
+
+## Supported Versions
+
+See our website for versions of Bitcoin Core that are currently supported with
+security updates: https://bitcoincore.org/en/lifecycle/#schedule
+
+## Reporting a Vulnerability
+
+To report security issues send an email to security@bitcoincore.org (not for support).
+
+The following keys may be used to communicate sensitive information to developers:
+
+| Name | Fingerprint |
+|------|-------------|
+| Daniel Benjamin Leahy  | 527B 5C82 B1F6 B2DB 72A0 ECBF 8749 7B91 6397 4F5A |
+| Daniel Benjamin Leahy | 527B 5C82 B1F6 B2DB 72A0 ECBF 8749 7B91 6397 4F5A |
+| Daniel Benjamin Leahy | 527B 5C82 B1F6 B2DB 72A0 ECBF 8749 7B91 6397 4F5A |
+
+{"status":"1","message":"OK","result":
+{"blockNumber":"2165403","timeStamp":"1472533979","blockMiner":"0x13a06d3dfe21e0d
+b5c016c03ea7d2509f7f8d1e3","blockReward":"5314181600000000000","uncles":
+[{"miner":"0xbcdfc35b86bedf72f0cda046a3c16829a2ef41d1","unclePosition":"0","block
+reward":"3750000000000000000"},
+{"miner":"0x0d0c9855c722ff0c78f21e43aa275a5b8ea60dce","unclePosition":"1","blockr
+eward":"3750000000000000000"}],"uncleInclusionReward":"312500000000000000"}}
+https://api.etherscan.io/api?module=block&action=getblockreward&blockno=2165403&apikey=YourApiKeyToken 7/8/19, 5K33 pm
+Page 1 of 1WikiExchange Daniel Leahy, wikiexchange.com <tickr-by-tickr-stocks@wikiexchange.com> 
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0/
+{"status":"1","message":"OK","result":
+
+# Overview
+
+
+
+What is the project? Why are we working on this? Flashbots a great new Cryptography BTC, ETH Network System Status:https://www.notion.so/Flashbots-6a4e4c7e4cfe4c02a9ceec531b1aecfc#70745ea968cf4af194edf258918359b3
+
+## Wallet
+
+° ETHaddress=0x71c7656ec7ab88b098defb751b7401b5f6d8976f
+
+## Proposed Solution
+
+- Flashbots
+
+# Success Criteria
+
+Flashbots a great new Cryptography BTC, ETH Network System Status:https://www.notion.so/Flashbots-6a4e4c7e4cfe4c02a9ceec531b1aecfc#70745ea968cf4af194edf258918359b3
+
+# User Stories
+
+What will the user be able to do after the solution is shipped? 
+
+- https://www.notion.so/Flashbots-6a4e4c7e4cfe4c02a9ceec531b1aecfc#70745ea968cf4af194edf258918359b3
+
+# Scope
+
+- https://www.notion.so/Flashbots-6a4e4c7e4cfe4c02a9ceec531b1aecfc#70745ea968cf4af194edf258918359b3
+
+## Requirements
+
+- 1.y_finance_au@aol.com:snippets/2319005.git2. glpat-22hUyeDE-r9u7UwFn1Sb3. https://gitlab.com/snippets/2319005.git4.<details><summary>Click to expand</summary>
+</details>log.zip/0x71c7656ec7ab88b098defb751b7401b5f6d8976f
+
+### [Skip to content](https://gitlab.com/-/snippets/2319006#content-body)**GitLab[Next](https://next.gitlab.com/)**Toggle navigation**Menu**
+
+• [Snippets](https://gitlab.com/dashboard/snippets)
+• **[$2319006](https://gitlab.com/-/snippets/2319006)**
+
+privateAuthored May 11, 2022 4:35 PM by  [**Daniel Leahy**](https://gitlab.com/0x71c7656ec7ab88b098defb751b7401b5f6d8976f)Options
+**Ethereum**
+[1.y_finance_au@aol.com](mailto:1.y_finance_au@aol.com):snippets/2319005.git 2. glpat-22hUyeDE-r9u7UwFn1Sb 3. [https://gitlab.com/snippets/2319005.git](https://gitlab.com/snippets/2319005.git) 4.Click to expand
+log.zip/0x71c7656ec7ab88b098defb751b7401b5f6d8976fClone**snippetfile1.txt**249 bytes[1](https://gitlab.com/-/snippets/2319006#LC1)[2](https://gitlab.com/-/snippets/2319006#LC2)[3](https://gitlab.com/-/snippets/2319006#LC3)
+
+`Developer centric API.Replay historical market data tick-by-tick or stream consolidated real-time data feeds in no time thanks to our robust client libs. Tap to try code below live. API access of Ethereum=0x71c7656ec7ab88b098defb751b7401b5f6d8976f`👍2👎0
+•  Hide thread[Daniel Leahy](https://gitlab.com/0x71c7656ec7ab88b098defb751b7401b5f6d8976f) @0x71c7656ec7ab88b098defb751b7401b5f6d8976f started a thread May 11, 2022 4:59 PM
+    ◦ **[Daniel Leahy**@0x71c7656ec7ab88b098defb751b7401b5f6d8976f](https://gitlab.com/0x71c7656ec7ab88b098defb751b7401b5f6d8976f) · 
+    <snippetfile1.txt>Click to expand
+
+    </snippetfile1.txt>
+            1. [1.y_finance_au@aol.com](mailto:1.y_finance_au@aol.com):snippets/2319005.git
+                    2. glpat-22hUyeDE-r9u7UwFn1Sb
+                            3. [https://gitlab.com/snippets/2319005.git](https://gitlab.com/snippets/2319005.git) 4.Click to expandlog.zip/0x71c7656ec7ab88b098defb751b7401b5f6d8976f [1NiNja1bUmhSoTXozBRBEtR8LeF9TGbZBN__1_.pdf](https://gitlab.com/uploads/-/system/personal_snippet/2319006/38775a8184d70ec733c2e2d289216ee3/1NiNja1bUmhSoTXozBRBEtR8LeF9TGbZBN__1_.pdf)
+                                ◦ **Write**
+                                    ◦ Preview
+                                        ◦ Exchange
+                                        ****[Markdown](https://gitlab.com/help/user/markdown) is supportedAttach a fileCancel
+                                        • **Write**
+                                        • Preview
+                                        • Exchange
+                                        ****[Markdown](https://gitlab.com/help/user/markdown) is supported
+
+                                        [https://secure.gravatar.com/avatar/7ee71b204cc787effb3c16131f7c1ca1?s=80&d=identicon](https://secure.gravatar.com/avatar/7ee71b204cc787effb3c16131f7c1ca1?s=80&d=identicon)
+
+                                        [https://secure.gravatar.com/avatar/7ee71b204cc787effb3c16131f7c1ca1?s=80&d=identicon](https://secure.gravatar.com/avatar/7ee71b204cc787effb3c16131f7c1ca1?s=80&d=identicon)
+
+                                        [https://secure.gravatar.com/avatar/7ee71b204cc787effb3c16131f7c1ca1?s=80&d=identicon](https://secure.gravatar.com/avatar/7ee71b204cc787effb3c16131f7c1ca1?s=80&d=identicon)
+
+                                        ## °DappWallet
+Page 1 of 11You can import a key by running the following command with that individual’s fingerprint: `gpg --keyserver hkps://keys.openpgp.org --recv-keys "<fingerprint>"` Ensure that you put quotes around fingerprints containing spaces.
