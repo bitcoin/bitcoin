@@ -3865,11 +3865,11 @@ void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeigh
     }
 }
 
-void CChainState::LoadMempool(const ArgsManager& args)
+void CChainState::LoadMempool(const ArgsManager& args, FopenFn mockable_fopen_function)
 {
     if (!m_mempool) return;
     if (args.GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        ::LoadMempool(*m_mempool, *this);
+        ::LoadMempool(*m_mempool, *this, mockable_fopen_function);
     }
     m_mempool->SetLoadTried(!ShutdownRequested());
 }
