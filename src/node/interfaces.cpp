@@ -42,6 +42,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/system.h>
 #include <util/translation.h>

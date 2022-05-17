@@ -8,7 +8,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <streams.h>
-#include <util/system.h>
+#include <util/args.h>
 #include <validation.h>
 
 // These are the two major time-sinks which happen after we have fully received

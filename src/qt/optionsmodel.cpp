@@ -17,6 +17,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h>       // for -dbcache defaults
+#include <util/args.h>
 #include <util/string.h>
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
 #include <wallet/wallet.h> // For DEFAULT_SPEND_ZEROCONF_CHANGE

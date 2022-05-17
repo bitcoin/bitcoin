@@ -19,6 +19,7 @@
 #include <pow.h>
 #include <primitives/transaction.h>
 #include <timedata.h>
+#include <util/args.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <validation.h>

@@ -7,6 +7,7 @@
 #include <index/disktxpos.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <util/args.h>
 #include <util/system.h>
 #include <validation.h>
 

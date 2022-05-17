@@ -5,6 +5,7 @@
 #include <wallet/walletutil.h>
 
 #include <logging.h>
+#include <util/args.h>
 #include <util/system.h>
 
 namespace wallet {

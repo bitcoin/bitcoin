@@ -11,6 +11,7 @@
 #include <node/blockstorage.h>
 #include <serialize.h>
 #include <txdb.h>
+#include <util/args.h>
 #include <undo.h>
 #include <util/system.h>
 #include <validation.h>

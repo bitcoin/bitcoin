@@ -43,6 +43,7 @@
 #include <utility>
 #include <vector>
 
+class ArgsManager;
 class Chainstate;
 class CBlockTreeDB;
 class CTxMemPool;

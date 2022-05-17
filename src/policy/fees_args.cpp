@@ -4,7 +4,7 @@
 
 #include <policy/fees_args.h>
 
-#include <util/system.h>
+#include <util/args.h>
 
 namespace {
 const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";

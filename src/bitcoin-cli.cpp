@@ -19,6 +19,7 @@
 #include <rpc/request.h>
 #include <tinyformat.h>
 #include <univalue.h>
+#include <util/args.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
 #include <util/system.h>

@@ -10,6 +10,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/signingprovider.h>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/fees.h>
 #include <util/moneystr.h>

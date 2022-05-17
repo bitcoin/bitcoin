@@ -8,8 +8,8 @@
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
+#include <util/args.h>
 #include <util/check.h>
-#include <util/system.h>
 
 #include <memory>
 

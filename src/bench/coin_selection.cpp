@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
+#include <util/args.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>

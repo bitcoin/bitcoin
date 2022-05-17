@@ -20,6 +20,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/args.h>
 #include <util/error.h>
 #include <util/fees.h>
 #include <util/message.h>

@@ -14,6 +14,7 @@
 #include <pubkey.h>
 #include <random.h>
 #include <stdexcept>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/string.h>
 #include <util/system.h>

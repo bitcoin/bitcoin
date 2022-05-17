@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 EXPECTED_CIRCULAR_DEPENDENCIES = (
-    "chainparamsbase -> util/system -> chainparamsbase",
+    "chainparamsbase -> util/args -> chainparamsbase",
     "node/blockstorage -> validation -> node/blockstorage",
     "node/utxo_snapshot -> validation -> node/utxo_snapshot",
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel",
@@ -37,7 +37,7 @@ def main():
 
     os.chdir(CODE_DIR)
     files = subprocess.check_output(
-        ['git', 'ls-files', '--', '*.h', '*.cpp'],
+        ["git", "ls-files", "--", "*.h", "*.cpp"],
         universal_newlines=True,
     ).splitlines()
 

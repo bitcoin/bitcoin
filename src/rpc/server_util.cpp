@@ -10,6 +10,7 @@
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <txmempool.h>
+#include <util/args.h>
 #include <util/system.h>
 #include <validation.h>
 

@@ -25,6 +25,7 @@
 #include <test/fuzz/util.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/overflow.h>

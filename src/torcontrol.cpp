@@ -12,6 +12,7 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <util/args.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>

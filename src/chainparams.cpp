@@ -10,6 +10,7 @@
 #include <deploymentinfo.h>
 #include <hash.h> // for signet block challenge hash
 #include <script/interpreter.h>
+#include <util/args.h>
 #include <util/string.h>
 #include <util/system.h>
 

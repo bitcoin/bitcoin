@@ -67,6 +67,7 @@
 #include <torcontrol.h>
 #include <txdb.h>
 #include <txmempool.h>
+#include <util/args.h>
 #include <util/asmap.h>
 #include <util/check.h>
 #include <util/fs.h>

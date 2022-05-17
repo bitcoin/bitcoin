@@ -47,6 +47,7 @@
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
+class ArgsManager;
 class CScript;
 enum class FeeEstimateMode;
 struct bilingual_str;

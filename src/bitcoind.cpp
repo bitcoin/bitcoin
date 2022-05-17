@@ -18,6 +18,7 @@
 #include <node/interface_ui.h>
 #include <noui.h>
 #include <shutdown.h>
+#include <util/args.h>
 #include <util/check.h>
 #include <util/exception.h>
 #include <util/strencodings.h>

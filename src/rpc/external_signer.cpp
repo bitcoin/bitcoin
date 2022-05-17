@@ -6,6 +6,7 @@
 #include <external_signer.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <util/args.h>
 #include <util/strencodings.h>
 #include <rpc/protocol.h>
 
