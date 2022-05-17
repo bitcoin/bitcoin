@@ -50,6 +50,10 @@ P2P and network changes
 Updated RPCs
 ------------
 
+- The `-deprecatedrpc=softforks` configuration option has been removed.  The
+  RPC `getblockchaininfo` no longer returns the `softforks` field, which was
+  previously deprecated in 23.0. (#23508) Information on soft fork status is
+  now only available via the `getdeploymentinfo` RPC.
 
 Changes to wallet related RPCs can be found in the Wallet section below.
 
