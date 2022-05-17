@@ -441,11 +441,11 @@ class WalletTaprootTest(BitcoinTestFramework):
 
         self.log.info("Sending everything back...")
 
-        txid = self.rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=self.rpc_online.getbalance(), subtractfeefromamount=True)
+        txid = self.rpc_online.sendall(recipients=[self.boring.getnewaddress()])["txid"]
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
         assert(self.rpc_online.gettransaction(txid)["confirmations"] > 0)
 
-        psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): self.psbt_online.getbalance()}], None, {"subtractFeeFromOutputs": [0]})['psbt']
+        psbt = self.psbt_online.sendall(recipients=[self.boring.getnewaddress()], options={"psbt": True})["psbt"]
         res = self.psbt_offline.walletprocesspsbt(psbt)
         assert(res['complete'])
         rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
