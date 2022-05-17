@@ -10,6 +10,8 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <optional>
+
 namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction.
  * use_max_sig indicates whether to use the maximum sized, 72 byte signature when calculating the
@@ -82,12 +84,22 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+struct CreatedTransactionResult
+{
+    CTransactionRef tx;
+    CAmount fee;
+    int change_pos;
+
+    CreatedTransactionResult(CTransactionRef tx, CAmount fee, int change_pos)
+        : tx(tx), fee(fee), change_pos(change_pos) {}
+};
+
 /**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
- * @note passing nChangePosInOut as -1 will result in setting a random position
+ * @note passing change_pos as -1 will result in setting a random position
  */
-bool CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true);
+std::optional<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true);
 
 /**
  * Insert additional inputs into the transaction by
