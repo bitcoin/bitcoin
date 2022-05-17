@@ -333,7 +333,7 @@ QVariant NetWatchLogModel::data(const CBlockIndex& blockindex, int txout_index, 
             return QString::fromStdString(blockindex.GetBlockHash().GetHex());
         case Header::Address:
         case Header::Value: {
-            if (blockindex.nTx == 0 || !(blockindex.nStatus & BLOCK_HAVE_DATA)) {
+            if (blockindex.nTx == 0 || !(WITH_LOCK(::cs_main, return blockindex.nStatus) & BLOCK_HAVE_DATA)) {
                 return QVariant();
             }
             CBlock block;
