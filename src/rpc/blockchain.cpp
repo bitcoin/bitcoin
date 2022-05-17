@@ -2910,11 +2910,19 @@ static RPCHelpMan getblocklocations()
 
     UniValue result(UniValue::VARR);
     do {
+        int64_t file_num;
+        uint64_t data_pos, undo_pos;
+        {
+            LOCK(::cs_main);
+            file_num = pblockindex->nFile;
+            data_pos = pblockindex->nDataPos;
+            undo_pos = pblockindex->nUndoPos;
+        }
         UniValue location(UniValue::VOBJ);
-        location.pushKV("file", (uint64_t)pblockindex->nFile);
-        location.pushKV("data", (uint64_t)pblockindex->nDataPos);
-        if (pblockindex->nUndoPos) {
-            location.pushKV("undo", (uint64_t)pblockindex->nUndoPos);
+        location.pushKV("file", file_num);
+        location.pushKV("data", data_pos);
+        if (undo_pos) {
+            location.pushKV("undo", undo_pos);
         }
         if (pblockindex->pprev) {
             location.pushKV("prev", pblockindex->pprev->GetBlockHash().GetHex());
