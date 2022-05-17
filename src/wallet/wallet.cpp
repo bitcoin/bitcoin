@@ -31,6 +31,7 @@
 #include <util/check.h>
 #include <util/error.h>
 #include <util/fees.h>
+#include <util/fs.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/shell.h>
