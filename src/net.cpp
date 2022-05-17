@@ -108,7 +108,7 @@ const std::string NET_MESSAGE_TYPE_OTHER = "*other*";
 
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
 static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // SHA256("localhostnonce")[0:8]
-static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256("addrcache")[0:8]
+static const uint64_t RANDOMIZER_ID_UNIQUE_NETWORK_ID = 0x898bb3e22b4b2e2fULL; // SHA256("uniquenetid")[0:8]
 //
 // Global state variables
 //
@@ -263,6 +263,18 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
     }
     // Address is unroutable. Don't advertise.
     return std::nullopt;
+}
+
+uint64_t GetUniqueNetworkID(const CConnman& connman, const CNode& node)
+{
+    const auto local_socket_bytes = node.addrBind.GetAddrBytes();
+    return connman.GetDeterministicRandomizer(RANDOMIZER_ID_UNIQUE_NETWORK_ID)
+        .Write(node.ConnectedThroughNetwork())
+        .Write(local_socket_bytes.data(), local_socket_bytes.size())
+        // For outbound connections, the port of the bound address is randomly
+        // assigned by the OS and would therefore not be useful for seeding.
+        .Write(node.IsInboundConn() ? node.addrBind.GetPort() : 0)
+        .Finalize();
 }
 
 /**
@@ -2472,16 +2484,8 @@ std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pc
 
 std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct)
 {
-    auto local_socket_bytes = requestor.addrBind.GetAddrBytes();
-    uint64_t cache_id = GetDeterministicRandomizer(RANDOMIZER_ID_ADDRCACHE)
-        .Write(requestor.ConnectedThroughNetwork())
-        .Write(local_socket_bytes.data(), local_socket_bytes.size())
-        // For outbound connections, the port of the bound address is randomly
-        // assigned by the OS and would therefore not be useful for seeding.
-        .Write(requestor.IsInboundConn() ? requestor.addrBind.GetPort() : 0)
-        .Finalize();
     const auto current_time = GetTime<std::chrono::microseconds>();
-    auto r = m_addr_response_caches.emplace(cache_id, CachedAddrResponse{});
+    auto r = m_addr_response_caches.emplace(GetUniqueNetworkID(*this, requestor), CachedAddrResponse{});
     CachedAddrResponse& cache_entry = r.first->second;
     if (cache_entry.m_cache_entry_expiration < current_time) { // If emplace() added new one it has expiration 0.
         cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct, /*network=*/std::nullopt);

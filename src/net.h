@@ -1167,6 +1167,13 @@ private:
     friend struct ConnmanTestMsg;
 };
 
+/**
+ * Get a unique identifier for the network (e.g. Tor, IPv4/6) of a connection.
+ * The id is derived from the connection's network and local socket (address
+ * and port).
+ */
+uint64_t GetUniqueNetworkID(const CConnman& connman, const CNode& node);
+
 /** Dump binary message to file, with timestamp */
 void CaptureMessageToFile(const CAddress& addr,
                           const std::string& msg_type,
