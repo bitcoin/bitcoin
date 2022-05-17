@@ -10,6 +10,8 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <optional>
+
 namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction */
 int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig = false);
@@ -134,13 +136,23 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
 bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset,
                 const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used, const int& nVersion=0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+struct CreatedTransactionResult
+{
+    CTransactionRef tx;
+    CAmount fee;
+    int change_pos;
+
+    CreatedTransactionResult(CTransactionRef tx, CAmount fee, int change_pos)
+        : tx(tx), fee(fee), change_pos(change_pos) {}
+};
+
 /**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
- * @note passing nChangePosInOut as -1 will result in setting a random position
+ * @note passing change_pos as -1 will result in setting a random position
  */
 // SYSCOIN
-bool CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, const int& nVersion = 2);
+std::optional<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, const int& nVersion = 2);
 
 /**
  * Insert additional inputs into the transaction by
@@ -148,6 +160,6 @@ bool CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, 
  */
 // SYSCOIN
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl&);
-bool GetBudgetSystemCollateralTX(CWallet& wallet, CTransactionRef &tx, uint256 hash, CAmount amount, const COutPoint& outpoint);
+std::optional<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wallet, uint256 hash, CAmount amount, const COutPoint& outpoint);
 } // namespace wallet
 #endif // SYSCOIN_WALLET_SPEND_H

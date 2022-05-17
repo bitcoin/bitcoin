@@ -408,14 +408,13 @@ static RPCHelpMan syscoinburntoassetallocation()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid change address");
         }
     }
-    int nChangePosRet = -1;
+    int nChangePosInOut = -1;
     bilingual_str error;
-    CAmount nFeeRequired = 0;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(*pwallet, vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-    }
+    std::optional<CreatedTransactionResult> txr = CreateTransaction(*pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION);
+    if (!txr) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    tx = txr->tx;
     CMutableTransaction mtx(*tx);
     // Script verification errors
     std::map<int, bilingual_str> input_errors;
@@ -884,17 +883,16 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     if(recp.nAmount > 0)
         vecSend.push_back(recp);
     vecSend.push_back(opreturnRecipient);
-    CAmount nFeeRequired = 0;
     bilingual_str error;
-    int nChangePosRet = -1;
+    int nChangePosInOut = -1;
     coin_control.m_signal_bip125_rbf = pwallet.m_signal_rbf;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(pwallet, vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn)) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-    }
+    std::optional<CreatedTransactionResult> txr = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn);
+    if (!txr) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    tx = txr->tx;
     
     CMutableTransaction mtx(*tx);
     // Script verification errors

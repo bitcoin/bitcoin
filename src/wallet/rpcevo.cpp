@@ -98,15 +98,13 @@ static void FundSpecialTx(wallet::CWallet& pwallet, CMutableTransaction& tx, con
         if (!coinControl.HasSelected()) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
         }
-        CAmount nFeeRequired = 0;
-        int nChangePosRet = -1;
+        int nChangePosInOut = -1;
         bilingual_str error;
         CTransactionRef wtx;
         FeeCalculation fee_calc_out;
-        bool fCreated = CreateTransaction(pwallet, vecSend, wtx, nFeeRequired, nChangePosRet, error, coinControl, fee_calc_out);
-        if (!fCreated)
-            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-
+        std::optional<CreatedTransactionResult> txr = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coinControl, fee_calc_out);
+        if (!txr) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+        wtx = txr->tx;
         tx.vin = wtx->vin;
         tx.vout = wtx->vout;
     }
