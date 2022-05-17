@@ -38,6 +38,7 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <undo.h>
+#include <util/check.h> // For NDEBUG compile time check
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <util/validation.h>
@@ -61,10 +62,6 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp> // Required for boost::this_thread::interruption_point();
-
-#if defined(NDEBUG)
-# error "Dash Core cannot be compiled without assertions."
-#endif
 
 #define MICRO 0.000001
 #define MILLI 0.001

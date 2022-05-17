@@ -15,6 +15,7 @@
 #include <scheduler.h>
 #include <txdb.h>
 #include <txmempool.h>
+#include <util/check.h>
 
 #include <type_traits>
 

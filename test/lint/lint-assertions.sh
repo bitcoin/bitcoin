@@ -23,7 +23,7 @@ fi
 # Macro CHECK_NONFATAL(condition) should be used instead of assert for RPC code, where it
 # is undesirable to crash the whole program. See: src/util/check.h
 # src/rpc/server.cpp is excluded from this check since it's mostly meta-code.
-OUTPUT=$(git grep -nE 'assert *\(.*\);' -- "src/rpc/" "src/wallet/rpc*" ":(exclude)src/rpc/server.cpp")
+OUTPUT=$(git grep -nE '\<(A|a)ssert *\(.*\);' -- "src/rpc/" "src/wallet/rpc*" ":(exclude)src/rpc/server.cpp")
 if [[ ${OUTPUT} != "" ]]; then
     echo "CHECK_NONFATAL(condition) should be used instead of assert for RPC code."
     echo

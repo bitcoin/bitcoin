@@ -19,6 +19,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>
+#include <psbt.h>
 #include <ui_interface.h>
 #include <util/system.h> // for GetBoolArg
 #include <util/translation.h>

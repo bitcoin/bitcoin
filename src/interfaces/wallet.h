@@ -25,11 +25,13 @@ class CCoinControl;
 class CFeeRate;
 class CKey;
 class CWallet;
-enum isminetype : unsigned int;
 enum class FeeReason;
-typedef uint8_t isminefilter;
+enum class TransactionError;
+enum isminetype : unsigned int;
 struct bilingual_str;
 struct CRecipient;
+struct PartiallySignedTransaction;
+typedef uint8_t isminefilter;
 
 namespace interfaces {
 

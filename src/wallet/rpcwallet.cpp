@@ -78,7 +78,7 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
 
     if (request.fHelp) return nullptr;
 
-    if (!HasWallets()) {
+    if (wallets.empty()) {
         throw JSONRPCError(
             RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
     }
@@ -2668,7 +2668,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     RPCHelpMan{"loadwallet",
         "\nLoads a wallet from a wallet file or directory."
         "\nNote that all wallet command-line options used when starting dashd will be"
-        "\napplied to the new wallet (eg -zapwallettxes, upgradewallet, rescan, etc).\n",
+        "\napplied to the new wallet (eg -upgradewallet, rescan, etc).\n",
         {
             {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
         },

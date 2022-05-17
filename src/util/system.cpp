@@ -931,21 +931,26 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
             return false;
         }
-        // if there is an -includeconf in the override args, but it is empty, that means the user
-        // passed '-noincludeconf' on the command line, in which case we should not include anything
-        bool emptyIncludeConf;
+        // `-includeconf` cannot be included in the command line arguments except
+        // as `-noincludeconf` (which indicates that no conf file should be used).
+        bool use_conf_file{true};
         {
             LOCK(cs_args);
-            emptyIncludeConf = m_override_args.count("-includeconf") == 0;
+            auto it = m_override_args.find("-includeconf");
+            if (it != m_override_args.end()) {
+                // ParseParameters() fails if a non-negated -includeconf is passed on the command-line
+                assert(it->second.empty());
+                use_conf_file = false;
+            }
         }
-        if (emptyIncludeConf) {
+        if (use_conf_file) {
             std::string chain_id = GetChainName();
-            std::vector<std::string> includeconf(GetArgs("-includeconf"));
+            std::vector<std::string> conf_file_names(GetArgs("-includeconf"));
             {
                 // We haven't set m_network yet (that happens in SelectParams()), so manually check
                 // for network.includeconf args.
                 std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
-                includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
+                conf_file_names.insert(conf_file_names.end(), includeconf_net.begin(), includeconf_net.end());
             }
 
             // Remove -includeconf from configuration, so we can warn about recursion
@@ -956,33 +961,31 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                 m_config_args.erase(std::string("-") + chain_id + ".includeconf");
             }
 
-            for (const std::string& to_include : includeconf) {
-                fsbridge::ifstream include_config(GetConfigFile(to_include));
-                if (include_config.good()) {
-                    if (!ReadConfigStream(include_config, to_include, error, ignore_invalid_keys)) {
+            for (const std::string& conf_file_name : conf_file_names) {
+                fsbridge::ifstream conf_file_stream(GetConfigFile(conf_file_name));
+                if (conf_file_stream.good()) {
+                    if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
                     }
-                    LogPrintf("Included configuration file %s\n", to_include);
+                    LogPrintf("Included configuration file %s\n", conf_file_name);
                 } else {
-                    error = "Failed to include configuration file " + to_include;
+                    error = "Failed to include configuration file " + conf_file_name;
                     return false;
                 }
             }
 
             // Warn about recursive -includeconf
-            includeconf = GetArgs("-includeconf");
-            {
-                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
-                includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
-                std::string chain_id_final = GetChainName();
-                if (chain_id_final != chain_id) {
-                    // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
-                    includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
-                    includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
-                }
+            conf_file_names = GetArgs("-includeconf");
+            std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
+            conf_file_names.insert(conf_file_names.end(), includeconf_net.begin(), includeconf_net.end());
+            std::string chain_id_final = GetChainName();
+            if (chain_id_final != chain_id) {
+                // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
+                includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
+                conf_file_names.insert(conf_file_names.end(), includeconf_net.begin(), includeconf_net.end());
             }
-            for (const std::string& to_include : includeconf) {
-                tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include);
+            for (const std::string& conf_file_name : conf_file_names) {
+                tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
             }
         }
     } else {
