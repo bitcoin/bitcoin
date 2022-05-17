@@ -151,7 +151,7 @@ jobs:
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
       - name: install dependencies
         run: |
-          brew install ccache automake berkeley-db boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
+          brew install ccache automake berkeley-db@4 boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
       - name: Extract branch name & commit
         id: extract_branch
         run: |
