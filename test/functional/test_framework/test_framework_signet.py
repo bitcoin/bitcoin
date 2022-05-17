@@ -77,7 +77,7 @@ class NodeWrapper:
 
         :return: the callable function.
         """
-        return lambda command=None, *args, **kwargs: miner.bitcoin_cli(self.test_node.cli.send_cli, command, *args, **kwargs)
+        return lambda command=None, *args, **kwargs: miner.bitcoin_cli(self.test_node.cli, command, *args, **kwargs)
 
     def _import_private_key(self) -> None:
         """Import the private key into the node's wallet."""

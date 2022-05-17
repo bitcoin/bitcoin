@@ -30,6 +30,7 @@ from test_framework.conftest import ITCOIN_PBFT_ROOT_DIR
 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
 from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, uint256_from_str # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
+from test_framework.test_node import TestNodeCLI
 
 # ITCOIN_SPECIFIC - START
 #
@@ -457,7 +458,8 @@ def do_sign_block(args, block: CBlock, signet_spk) -> CBlock:
 
     # sign block
     psbt = do_createpsbt(block, signme, spendme)
-    psbt_signed = args.bcli("walletprocesspsbt", psbt, "true", "ALL")
+    input_stream = os.linesep.join([psbt, "true", "ALL"])
+    psbt_signed = args.bcli("-stdin", "walletprocesspsbt", input=input_stream)
     if not psbt_signed.get("complete",False):
         logging.debug("Generated PSBT: %s" % (psbt,))
         sys.stderr.write("PSBT signing failed")
@@ -499,7 +501,8 @@ def do_sign_block_partial(args: DoGenerateArgs, block: CBlock, signet_spk: str) 
 
     psbt = do_createpsbt(block, signme, spendme)
 
-    partially_signed_psbt = args.bcli("walletprocesspsbt", psbt, "true", "ALL")
+    input_stream = os.linesep.join([psbt, "true", "ALL"])
+    partially_signed_psbt = args.bcli("-stdin", "walletprocesspsbt", input=input_stream)
     return partially_signed_psbt["psbt"], partially_signed_psbt["complete"]
 
 
@@ -561,7 +564,7 @@ def do_propagate_block(args, block: CBlock):
     logging.debug(f"with block_header = {CBlockHeader(block).serialize().hex()}")
 
     # submit block
-    r = args.bcli("submitblock", ToHex(block))
+    r = args.bcli("-stdin", "submitblock", input=block.serialize().hex())
     return r
 # ITCOIN_SPECIFIC END
 
@@ -778,36 +781,50 @@ def do_calibrate(args):
     print("nbits=%08x for %ds average mining time" % (target_to_nbits(want_targ), want_time))
     return 0
 
-def bitcoin_cli(cli_function, command, *args, **kwargs):
+# ITCOIN_SPECIFIC - START
+def bitcoin_cli(cli_object: TestNodeCLI, command, *args, **kwargs):
     """A generic bitcoin_cli function
+
+       This function keeps almost unchanged the upstream miner interface,
+       while wrapping the TestNodeCLI.send_cli method of the Bitcoin test framework.
+
+       :param cli_object: an instance of TestNodeCLI
+       :param command: string, the first argument to be passed to bitcoin-cli command line, e.g. getblockchaininfo for a normal operation or -stdin to invoke
+       :param *args: strings, other arguments to be passed to bitcoin-cli command line
+       :param **kwargs: named arguments to the bitcoin-cli command line or input="" when used together with -stdin (in this case the input is encoded)
+
+       :return: the result of the bitcoin JSON-RPC command. The result is decoded from json if json.loads on the result string is successful, otherwise a string is returned
     """
     logging.debug("Calling bitcoin-cli: %r %r", command, list(args))
-    result = cli_function(command, *args,  **kwargs)
+
+    # Build the command line as result of command and *args
+    cmd_line = [command]+list(args)
+
+    # Derive the options for bitcoin-cli.
+    # They will be passed to TestNodeCLI method using the __call__(self, *options, input=None) function
+    options = []
+    for opt in cmd_line:
+        if opt.startswith("-"):
+            options.append(cmd_line.pop(0))
+        else:
+            break
+
+    # Get the command for TestNodeCLI send_cli
+    cmd_command = cmd_line.pop(0)
+
+    # What is left are the args for TestNodeCLI send_cli
+    cmd_args = cmd_line
+
+    # Derive the input for TestNodeCLI method call
+    # What is left will be passed as kwargs to the send_cli method
+    cmd_input =  kwargs.pop("input", None)
+
+    # Finally use the callable function with options and input
+    result = cli_object(*options, input=cmd_input).send_cli(cmd_command, *cmd_args,  **kwargs)
+
     logging.debug("Result of bitcoin-cli: %r %r", command, result)
     return result
-
-def subprocess_bitcoin_cli(basecmd, args, **kwargs):
-    """A bitcoin_cli function that calls subprocess
-    """
-    cmd = basecmd + ["-signet"] + args
-    logging.debug("Calling bitcoin-cli: %r", cmd)
-    out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True,
-        env={ "LD_LIBRARY_PATH": f'$LD_LIBRARY_PATH:{ITCOIN_PBFT_ROOT_DIR}/usrlocal/lib' }
-    ).stdout
-
-    # Convert bytes to string
-    if isinstance(out, bytes):
-        out = out.decode('utf8')
-        out = out.strip()
-
-    # If json, convert string to dict
-    try:
-        out = json.loads(out)
-    except ValueError as e:
-        pass
-
-    logging.debug("Result of bitcoin-cli: %r %r", cmd, out)
-    return out
+# ITCOIN_SPECIFIC - END
 
 def main():
     parser = argparse.ArgumentParser()
@@ -848,7 +865,16 @@ def main():
 
     args = parser.parse_args(sys.argv[1:])
 
-    args.bcli = lambda *a, input=b"", **kwargs: subprocess_bitcoin_cli(args.cli.split(" "), list(a), input=input, **kwargs)
+    # ITCOIN_SPECIFIC - START
+    # We keep unchanged the command-line miner interface, but internally we use the TestNodeCLI object
+    # via the bitcoin_cli method that calls send_cli
+    inner_argv = args.cli.split(" ")
+    inner_parser = argparse.ArgumentParser()
+    inner_parser.add_argument("-datadir", default="~/.bitcoin", type=str, help="bitcoin datadir")
+    inner_args = inner_parser.parse_args(inner_argv[1:])
+    cli : TestNodeCLI = TestNodeCLI(inner_argv[0], inner_args.datadir)
+    args.bcli = lambda command=None, *args, **kwargs: bitcoin_cli(cli, command, *args, **kwargs)
+    # ITCOIN_SPECIFIC - END
 
     if hasattr(args, "address") and hasattr(args, "descriptor"):
         if args.address is None and args.descriptor is None:
