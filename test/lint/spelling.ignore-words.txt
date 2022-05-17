@@ -11,6 +11,7 @@ inout
 invokable
 keypair
 mor
+nd
 nin
 ser
 unparseable
