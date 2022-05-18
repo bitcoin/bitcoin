@@ -2138,6 +2138,7 @@ bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
     if(!NEVMDataVecOut.empty()) {
         return pnevmdatadb->FlushErase(NEVMDataVecOut);
     }
+    return true;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
 bool ProcessNEVMData(const std::shared_ptr<const CBlock> pblock, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
