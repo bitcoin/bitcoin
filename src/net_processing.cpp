@@ -982,7 +982,6 @@ private:
      * about and we fully-validated them at some point.
      */
     bool BlockRequestAllowed(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
 
@@ -2082,11 +2081,6 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
     }
 
     return m_recent_rejects.contains(hash) || m_mempool.exists(gtxid);
-}
-
-bool PeerManagerImpl::AlreadyHaveBlock(const uint256& block_hash)
-{
-    return m_chainman.m_blockman.LookupBlockIndex(block_hash) != nullptr;
 }
 
 void PeerManagerImpl::SendPings()
@@ -3713,8 +3707,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
 
             if (inv.IsMsgBlk()) {
-                const bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
-                LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
+                const bool fAlreadyHave{LookupBlockIndexForPeer(pfrom, inv.hash) != nullptr};
+                LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "maybe new", pfrom.GetId());
 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !IsBlockRequested(inv.hash)) {
