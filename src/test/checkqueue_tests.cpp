@@ -95,7 +95,7 @@ struct MemoryCheck {
     {
         return true;
     }
-    MemoryCheck(){};
+    MemoryCheck() = default;
     MemoryCheck(const MemoryCheck& x)
     {
         // We have to do this to make sure that destructor calls are paired
@@ -129,7 +129,7 @@ struct FrozenCleanupCheck {
     {
         return true;
     }
-    FrozenCleanupCheck() {}
+    FrozenCleanupCheck() = default;
     ~FrozenCleanupCheck()
     {
         if (should_freeze) {

@@ -61,9 +61,7 @@ WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, QWidget* parent)
     walletStack->addWidget(masternodeListPage);
 }
 
-WalletFrame::~WalletFrame()
-{
-}
+WalletFrame::~WalletFrame() = default;
 
 void WalletFrame::setClientModel(ClientModel *_clientModel)
 {

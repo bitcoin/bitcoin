@@ -257,11 +257,11 @@ private:
     CScriptWitness scriptWitness;
     CTransactionRef creditTx;
     CMutableTransaction spendTx;
-    bool havePush;
+    bool havePush{false};
     std::vector<unsigned char> push;
     std::string comment;
     uint32_t flags;
-    int scriptError;
+    int scriptError{SCRIPT_ERR_OK};
     CAmount nValue;
 
     void DoPush()
@@ -280,7 +280,7 @@ private:
     }
 
 public:
-    TestBuilder(const CScript& script_, const std::string& comment_, uint32_t flags_, bool P2SH = false, WitnessMode wm = WitnessMode::NONE, int witnessversion = 0, CAmount nValue_ = 0) : script(script_), havePush(false), comment(comment_), flags(flags_), scriptError(SCRIPT_ERR_OK), nValue(nValue_)
+    TestBuilder(const CScript& script_, const std::string& comment_, uint32_t flags_, bool P2SH = false, WitnessMode wm = WitnessMode::NONE, int witnessversion = 0, CAmount nValue_ = 0) : script(script_), comment(comment_), flags(flags_), nValue(nValue_)
     {
         CScript scriptPubKey = script;
         if (wm == WitnessMode::PKH) {
