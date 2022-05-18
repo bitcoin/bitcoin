@@ -3220,9 +3220,9 @@ UniValue WriteUTXOSnapshot(
     const auto line_separator = MakeByteSpan("\n").first(1);
 
     if (!is_human_readable) {
-        SnapshotMetadata metadata{chainstate.m_chainman.GetParams().MessageStart(), tip->GetBlockHash(), maybe_stats->coins_count};
+    SnapshotMetadata metadata{chainstate.m_chainman.GetParams().MessageStart(), tip->GetBlockHash(), maybe_stats->coins_count};
 
-        afile << metadata;
+    afile << metadata;
     } else if (show_header) {
         afile.write(MakeByteSpan("#(blockhash " + tip->GetBlockHash().ToString() + " ) "));
         for (auto it = std::begin(requested); it != std::end(requested); ++it) {
@@ -3265,12 +3265,12 @@ UniValue WriteUTXOSnapshot(
         ++iter;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
             if (!is_human_readable) {
-                if (key.hash != last_hash) {
-                    write_coins_to_file(afile, last_hash, coins, written_coins_count);
-                    last_hash = key.hash;
-                    coins.clear();
-                }
-                coins.emplace_back(key.n, coin);
+            if (key.hash != last_hash) {
+                write_coins_to_file(afile, last_hash, coins, written_coins_count);
+                last_hash = key.hash;
+                coins.clear();
+            }
+            coins.emplace_back(key.n, coin);
             } else {
                 for (auto it = std::begin(requested); it != std::end(requested); ++it) {
                     if (it != std::begin(requested))
