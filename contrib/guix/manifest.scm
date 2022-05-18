@@ -120,7 +120,6 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
       (propagated-inputs
        `(("binutils" ,xbinutils)
          ("libc" ,xlibc)
-         ("libc:static" ,xlibc "static")
          ("gcc" ,xgcc)
          ("gcc-lib" ,xgcc "lib")))
       (synopsis (string-append "Complete GCC tool chain for " target))
