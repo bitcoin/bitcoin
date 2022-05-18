@@ -9,7 +9,11 @@ feature_llmq_rotation.py
 Checks LLMQs Quorum Rotation
 
 '''
+from io import BytesIO
+
 from test_framework.test_framework import DashTestFramework
+from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, QuorumId
+from test_framework.mininode import P2PInterface
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -27,6 +31,25 @@ def intersection(lst1, lst2):
 def extract_quorum_members(quorum_info):
     return [d['proTxHash'] for d in quorum_info["members"]]
 
+class TestP2PConn(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.last_mnlistdiff = None
+
+    def on_mnlistdiff(self, message):
+        self.last_mnlistdiff = message
+
+    def wait_for_mnlistdiff(self, timeout=30):
+        def received_mnlistdiff():
+            return self.last_mnlistdiff is not None
+        return wait_until(received_mnlistdiff, timeout=timeout)
+
+    def getmnlistdiff(self, baseBlockHash, blockHash):
+        msg = msg_getmnlistd(baseBlockHash, blockHash)
+        self.last_mnlistdiff = None
+        self.send_message(msg)
+        self.wait_for_mnlistdiff()
+        return self.last_mnlistdiff
 
 class LLMQQuorumRotationTest(DashTestFramework):
     def set_test_params(self):
@@ -34,9 +57,10 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.set_dash_llmq_test_params(4, 4)
 
     def run_test(self):
-
         llmq_type=103
         llmq_type_name="llmq_test_dip0024"
+
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
 
         # Connect all nodes to node1 so that we always have the whole network connected
         # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
@@ -63,12 +87,25 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.move_to_next_cycle()
         self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
 
+        b_0 = self.nodes[0].getbestblockhash()
+
         (quorum_info_0_0, quorum_info_0_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
         quorum_members_0_0 = extract_quorum_members(quorum_info_0_0)
         quorum_members_0_1 = extract_quorum_members(quorum_info_0_1)
         assert_equal(len(intersection(quorum_members_0_0, quorum_members_0_1)), 0)
         self.log.info("Quorum #0_0 members: " + str(quorum_members_0_0))
         self.log.info("Quorum #0_1 members: " + str(quorum_members_0_1))
+
+        q_100_0 = QuorumId(100, int(quorum_info_0_0["quorumHash"], 16))
+        q_102_0 = QuorumId(102, int(quorum_info_0_0["quorumHash"], 16))
+        q_104_0 = QuorumId(104, int(quorum_info_0_0["quorumHash"], 16))
+        q_103_0_0 = QuorumId(103, int(quorum_info_0_0["quorumHash"], 16))
+        q_103_0_1 = QuorumId(103, int(quorum_info_0_1["quorumHash"], 16))
+
+        b_1 = self.nodes[0].getbestblockhash()
+        expectedDeleted = []
+        expectedNew = [q_100_0, q_102_0, q_104_0, q_103_0_0, q_103_0_1]
+        quorumList = self.test_getmnlistdiff_quorums(b_0, b_1, {}, expectedDeleted, expectedNew)
 
         (quorum_info_1_0, quorum_info_1_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
         quorum_members_1_0 = extract_quorum_members(quorum_info_1_0)
@@ -77,12 +114,32 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.log.info("Quorum #1_0 members: " + str(quorum_members_1_0))
         self.log.info("Quorum #1_1 members: " + str(quorum_members_1_1))
 
+        q_100_1 = QuorumId(100, int(quorum_info_1_0["quorumHash"], 16))
+        q_102_1 = QuorumId(102, int(quorum_info_1_0["quorumHash"], 16))
+        q_103_1_0 = QuorumId(103, int(quorum_info_1_0["quorumHash"], 16))
+        q_103_1_1 = QuorumId(103, int(quorum_info_1_1["quorumHash"], 16))
+
+        b_2 = self.nodes[0].getbestblockhash()
+        expectedDeleted = [q_103_0_0, q_103_0_1]
+        expectedNew = [q_100_1, q_102_1, q_103_1_0, q_103_1_1]
+        quorumList = self.test_getmnlistdiff_quorums(b_1, b_2, quorumList, expectedDeleted, expectedNew)
+
         (quorum_info_2_0, quorum_info_2_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
         quorum_members_2_0 = extract_quorum_members(quorum_info_2_0)
         quorum_members_2_1 = extract_quorum_members(quorum_info_2_1)
         assert_equal(len(intersection(quorum_members_2_0, quorum_members_2_1)), 0)
         self.log.info("Quorum #2_0 members: " + str(quorum_members_2_0))
         self.log.info("Quorum #2_1 members: " + str(quorum_members_2_1))
+
+        q_100_2 = QuorumId(100, int(quorum_info_2_0["quorumHash"], 16))
+        q_102_2 = QuorumId(102, int(quorum_info_2_0["quorumHash"], 16))
+        q_103_2_0 = QuorumId(103, int(quorum_info_2_0["quorumHash"], 16))
+        q_103_2_1 = QuorumId(103, int(quorum_info_2_1["quorumHash"], 16))
+
+        b_3 = self.nodes[0].getbestblockhash()
+        expectedDeleted = [q_100_0, q_102_0, q_103_1_0, q_103_1_1]
+        expectedNew = [q_100_2, q_102_2, q_103_2_0, q_103_2_1]
+        quorumList = self.test_getmnlistdiff_quorums(b_2, b_3, quorumList, expectedDeleted, expectedNew)
 
         mninfos_online = self.mninfo.copy()
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
@@ -101,7 +158,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         assert_greater_than_or_equal(len(intersection(quorum_members_1_0, quorum_members_2_0)), 3)
         assert_greater_than_or_equal(len(intersection(quorum_members_1_1, quorum_members_2_1)), 3)
 
-        self.log.info("mine a quorum to invalidate")
+        self.log.info("Mine a quorum to invalidate")
         (quorum_info_3_0, quorum_info_3_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
 
         new_quorum_list = self.nodes[0].quorum("list", llmq_type)
@@ -127,6 +184,59 @@ class LLMQQuorumRotationTest(DashTestFramework):
         wait_until(lambda: self.nodes[0].getbestblockhash() == new_quorum_blockhash, sleep=1)
         assert_equal(self.nodes[0].quorum("list", llmq_type), new_quorum_list)
 
+    def test_getmnlistdiff_quorums(self, baseBlockHash, blockHash, baseQuorumList, expectedDeleted, expectedNew):
+        d = self.test_getmnlistdiff_base(baseBlockHash, blockHash)
+
+        assert_equal(set(d.deletedQuorums), set(expectedDeleted))
+        assert_equal(set([QuorumId(e.llmqType, e.quorumHash) for e in d.newQuorums]), set(expectedNew))
+
+        newQuorumList = baseQuorumList.copy()
+
+        for e in d.deletedQuorums:
+            newQuorumList.pop(e)
+
+        for e in d.newQuorums:
+            newQuorumList[QuorumId(e.llmqType, e.quorumHash)] = e
+
+        cbtx = CCbTx()
+        cbtx.deserialize(BytesIO(d.cbTx.vExtraPayload))
+
+        if cbtx.version >= 2:
+            hashes = []
+            for qc in newQuorumList.values():
+                hashes.append(hash256(qc.serialize()))
+            hashes.sort()
+            merkleRoot = CBlock.get_merkle_root(hashes)
+            assert_equal(merkleRoot, cbtx.merkleRootQuorums)
+
+        return newQuorumList
+
+
+    def test_getmnlistdiff_base(self, baseBlockHash, blockHash):
+        hexstr = self.nodes[0].getblockheader(blockHash, False)
+        header = FromHex(CBlockHeader(), hexstr)
+
+        d = self.test_node.getmnlistdiff(int(baseBlockHash, 16), int(blockHash, 16))
+        assert_equal(d.baseBlockHash, int(baseBlockHash, 16))
+        assert_equal(d.blockHash, int(blockHash, 16))
+
+        # Check that the merkle proof is valid
+        proof = CMerkleBlock(header, d.merkleProof)
+        proof = proof.serialize().hex()
+        assert_equal(self.nodes[0].verifytxoutproof(proof), [d.cbTx.hash])
+
+        # Check if P2P messages match with RPCs
+        d2 = self.nodes[0].protx("diff", baseBlockHash, blockHash)
+        assert_equal(d2["baseBlockHash"], baseBlockHash)
+        assert_equal(d2["blockHash"], blockHash)
+        assert_equal(d2["cbTxMerkleTree"], d.merkleProof.serialize().hex())
+        assert_equal(d2["cbTx"], d.cbTx.serialize().hex())
+        assert_equal(set([int(e, 16) for e in d2["deletedMNs"]]), set(d.deletedMNs))
+        assert_equal(set([int(e["proRegTxHash"], 16) for e in d2["mnList"]]), set([e.proRegTxHash for e in d.mnList]))
+        assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["deletedQuorums"]]), set(d.deletedQuorums))
+        assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["newQuorums"]]), set([QuorumId(e.llmqType, e.quorumHash) for e in d.newQuorums]))
+
+        return d
 
 if __name__ == '__main__':
     LLMQQuorumRotationTest().main()
