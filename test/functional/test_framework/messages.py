@@ -1103,7 +1103,7 @@ class CSimplifiedMNListEntry:
 
 
 class CFinalCommitment:
-    __slots__ = ("nVersion", "llmqType", "quorumHash", "signers", "validMembers", "quorumPublicKey",
+    __slots__ = ("nVersion", "llmqType", "quorumHash", "quorumIndex", "signers", "validMembers", "quorumPublicKey",
                  "quorumVvecHash", "quorumSig", "membersSig")
 
     def __init__(self):
@@ -1113,6 +1113,7 @@ class CFinalCommitment:
         self.nVersion = 0
         self.llmqType = 0
         self.quorumHash = 0
+        self.quorumIndex = 0
         self.signers = []
         self.validMembers = []
         self.quorumPublicKey = b'\\x0' * 48
@@ -1124,6 +1125,8 @@ class CFinalCommitment:
         self.nVersion = struct.unpack("<H", f.read(2))[0]
         self.llmqType = struct.unpack("<B", f.read(1))[0]
         self.quorumHash = deser_uint256(f)
+        if self.nVersion == 2:
+            self.quorumIndex = struct.unpack("<H", f.read(2))[0]
         self.signers = deser_dyn_bitset(f, False)
         self.validMembers = deser_dyn_bitset(f, False)
         self.quorumPublicKey = f.read(48)
@@ -1136,6 +1139,8 @@ class CFinalCommitment:
         r += struct.pack("<H", self.nVersion)
         r += struct.pack("<B", self.llmqType)
         r += ser_uint256(self.quorumHash)
+        if self.nVersion == 2:
+            r += struct.pack("<H", self.quorumIndex)
         r += ser_dyn_bitset(self.signers, False)
         r += ser_dyn_bitset(self.validMembers, False)
         r += self.quorumPublicKey
@@ -1144,6 +1149,11 @@ class CFinalCommitment:
         r += self.membersSig
         return r
 
+    def __repr__(self):
+        return "CFinalCommitment(nVersion={} llmqType={} quorumHash={:x} quorumIndex={} signers={}" \
+               " validMembers={} quorumPublicKey={} quorumVvecHash={:x}) quorumSig={} membersSig={})" \
+            .format(self.nVersion, self.llmqType, self.quorumHash, self.quorumIndex, repr(self.signers),
+                    repr(self.validMembers), self.quorumPublicKey.hex(), self.quorumVvecHash, self.quorumSig.hex(), self.membersSig.hex())
 
 class CGovernanceObject:
     __slots__ = ("nHashParent", "nRevision", "nTime", "nCollateralHash", "vchData", "nObjectType",
