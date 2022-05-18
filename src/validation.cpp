@@ -2097,6 +2097,107 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
     }
     return res;
 }
+// before propogating blocks/txs out to peers we need to fill the OPRETURN with the NEVM DA payload from seperate store
+bool FillNEVMData(const std::shared_ptr<const CBlock> pblock) {
+    CBlock &block = const_cast<CBlock&>(*pblock);
+    return FillNEVMData(block);
+}
+bool FillNEVMData(CBlock& block) {
+    for (auto tx : block.vtx) {
+        if(tx->IsNEVMData()) {
+            if(!FillNEVMData(tx)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool FillNEVMData(CTransactionRef tx) {
+    if(!tx->IsNEVMData()) {
+        return true;
+    }
+    const auto &nOut = GetSyscoinDataOutput(*tx);
+    if (nOut == -1) {
+        return false;
+    }
+    CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
+    CNEVMData nevmData(*tx);
+    if(nevmData.IsNull()) {
+        return false;
+    }
+    // script already has payload
+    if(!nevmData.vchData.empty()) {
+        return true;
+    }
+    if(pnevmdatadb->ReadData(nevmData.vchVersionHash, nevmData.vchData)) {
+        scriptPubKey << nevmData.vchData;
+    }
+    return true; 
+}
+bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
+    if(!NEVMDataVecOut.empty()) {
+        return pnevmdatadb->FlushErase(NEVMDataVecOut);
+    }
+}
+// when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
+bool ProcessNEVMData(const std::shared_ptr<const CBlock> pblock, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+    CBlock &block = const_cast<CBlock&>(*pblock);
+    return ProcessNEVMData(block, nevmDataVecOut, nMedianTime);
+}
+bool ProcessNEVMData(CBlock &block, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+    for (auto tx : block.vtx) {
+        if(tx->IsNEVMData()) {
+            if(!ProcessNEVMData(tx, nevmDataVecOut, nMedianTime)) {
+                return false;
+            }    
+        }
+    }
+    return true;
+}
+bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+    if(!tx->IsNEVMData()) {
+        return true;
+    }
+    const auto &nOut = GetSyscoinDataOutput(*tx);
+    if (nOut == -1) {
+        return false;
+    }
+    CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
+    CNEVMData nevmData(*tx);
+    if(nevmData.IsNull()) {
+        return false;
+    }
+    int64_t nTimeNow = GetAdjustedTime();
+    bool enforceNotHaveData = nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+    bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+    if(enforceHaveData && nevmData.vchData.empty()) {
+        LogPrint(BCLog::SYS, "ProcessNEVMData: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+        return false;
+    } else if(enforceNotHaveData && !nevmData.vchData.empty()) {
+        LogPrint(BCLog::SYS, "ProcessNEVMData: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+        return false;
+    }
+    const bool existsInDb = pnevmdatadb->Exists(nevmData.vchVersionHash);
+    if(!nevmData.vchData.empty() && !existsInDb) {
+        BlockValidationState state;
+        // if not in DB then we need to verify it via Geth KZG blob verification
+        GetMainSignals().NotifyCheckNEVMBlob(nevmData, state);
+        if(state.IsInvalid()) {
+            LogPrint(BCLog::SYS, "ProcessNEVMData: Invalid blob %s", state.ToString());
+            return false;
+        }
+    }
+    if(!existsInDb && !pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
+        return false;
+    }
+    nevmDataVecOut.push_back(nevmData.vchVersionHash);
+    // upon receiving block we prune data and store in seperate db
+    nevmData.vchData.clear();
+    std::vector<unsigned char> newdata;
+    nevmData.SerializeData(newdata);
+    scriptPubKey = CScript() << OP_RETURN << newdata; 
+    return true;
+}
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
 // SYSCOIN

@@ -15,8 +15,6 @@
 #include <util/system.h>
 
 #include <unordered_map>
-// SYSCOIN
-#include <services/assetconsensus.h>
 CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID, bool fMoveNEVMData) :
         nonce(GetRand<uint64_t>()),
         shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
@@ -218,9 +216,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
     BlockValidationState state;
     if (!CheckBlock(block, state, Params().GetConsensus())) {
         // SYSCOIN
-        if(!nevmDataVecOut.empty()) {
-            pnevmdatadb->FlushErase(nevmDataVecOut);
-        }
+        EraseNEVMData(nevmDataVecOut);
         // TODO: We really want to just check merkle tree manually here,
         // but that is expensive, and CheckBlock caches a block's
         // "checked-status" (in the CBlock?). CBlock should be able to

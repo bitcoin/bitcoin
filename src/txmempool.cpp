@@ -22,8 +22,8 @@
 #include <util/rbf.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
-#include <evo/deterministicmns.h>
-#include <services/assetconsensus.h>
+#include <evo/deterministicmns.h>   
+extern bool EraseNEVMData(NEVMDataVec&);
 extern NEVMMintTxMap mapMintKeysMempool;
 extern std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 
@@ -663,15 +663,13 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         if(!mintSyscoin.IsNull())
             mapMintKeysMempool.erase(mintSyscoin.nTxHash);
     }
-    else if(it->GetTx().IsNEVMData()) {
+    // completely remove data if not removing for block (if block we should keep data alive for some time)
+    else if(it->GetTx().IsNEVMData() && reason != MemPoolRemovalReason::BLOCK) {
         CNEVMData nevmData(it->GetTx());
         if(!nevmData.IsNull()){
-            NEVMDataVec nevmDataVec;
-            nevmDataVec.emplace_back(nevmData.vchVersionHash);
-            // completely remove data if not removing for block (if block we should keep data alive for some time)
-            if(reason != MemPoolRemovalReason::BLOCK) {
-                pnevmdatadb->FlushErase(nevmDataVec);
-            }
+            NEVMDataVec nevmDataVecOut;
+            nevmDataVecOut.emplace_back(nevmData.vchVersionHash);
+            EraseNEVMData(nevmDataVecOut);
         }
     }
     cachedInnerUsage -= memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());

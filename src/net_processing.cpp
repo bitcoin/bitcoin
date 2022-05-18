@@ -60,7 +60,6 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_chainlocks.h>
-#include <services/assetconsensus.h>
 #include <optional>
 #include <typeinfo>
 
@@ -3799,9 +3798,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 state.ToString());
             MaybePunishNodeForTx(pfrom.GetId(), state);
             // SYSCOIN
-            if(!nevmDataVecOut.empty()) {
-                pnevmdatadb->FlushErase(nevmDataVecOut);
-            }
+            EraseNEVMData(nevmDataVecOut);
         }
         return;
     }
@@ -4166,9 +4163,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         // SYSCOIN
         if(!ProcessBlock(pfrom, pblock, forceProcessing)) {
-            if(!nevmDataVecOut.empty()) {
-                pnevmdatadb->FlushErase(nevmDataVecOut);
-            }
+            EraseNEVMData(nevmDataVecOut);
         }
         return;
     }
