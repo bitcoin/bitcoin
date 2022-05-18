@@ -272,7 +272,6 @@ CBlock TestChain100Setup::CreateBlock(
     const CScript& scriptPubKey,
     CChainState& chainstate)
 {
-    const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
     CBlock block = BlockAssembler{chainstate, empty_pool}.CreateNewBlock(scriptPubKey)->block;
 
@@ -282,7 +281,7 @@ CBlock TestChain100Setup::CreateBlock(
     }
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
 
     return block;
 }

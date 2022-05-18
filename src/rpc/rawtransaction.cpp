@@ -217,7 +217,7 @@ static RPCHelpMan getrawtransaction()
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
     const CBlockIndex* blockindex = nullptr;
 
-    if (hash == Params().GenesisBlock().hashMerkleRoot) {
+    if (hash == chainman.GetParams().GenesisBlock().hashMerkleRoot) {
         // Special exception for the genesis block coinbase transaction
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
     }
@@ -245,7 +245,7 @@ static RPCHelpMan getrawtransaction()
     }
 
     uint256 hash_block;
-    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), hash, Params().GetConsensus(), hash_block);
+    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), hash, chainman.GetConsensus(), hash_block);
     if (!tx) {
         std::string errmsg;
         if (blockindex) {

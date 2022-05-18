@@ -119,9 +119,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     block_hash.SetNull();
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    CChainParams chainparams(Params());
-
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
+    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainman.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
         --max_tries;
     }
@@ -349,7 +347,6 @@ static RPCHelpMan generateblock()
         }
     }
 
-    CChainParams chainparams(Params());
     CBlock block;
 
     ChainstateManager& chainman = EnsureChainman(node);
@@ -374,7 +371,7 @@ static RPCHelpMan generateblock()
         LOCK(cs_main);
 
         BlockValidationState state;
-        if (!TestBlockValidity(state, chainparams, chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
+        if (!TestBlockValidity(state, chainman.GetParams(), chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
     }
@@ -429,7 +426,7 @@ static RPCHelpMan getmininginfo()
     obj.pushKV("difficulty",       (double)GetDifficulty(active_chain.Tip()));
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
-    obj.pushKV("chain",            Params().NetworkIDString());
+    obj.pushKV("chain", chainman.GetParams().NetworkIDString());
     obj.pushKV("warnings",         GetWarnings(false).original);
     return obj;
 },
@@ -643,7 +640,7 @@ static RPCHelpMan getblocktemplate()
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
             BlockValidationState state;
-            TestBlockValidity(state, Params(), active_chainstate, block, pindexPrev, false, true);
+            TestBlockValidity(state, chainman.GetParams(), active_chainstate, block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
         }
 
@@ -665,7 +662,7 @@ static RPCHelpMan getblocktemplate()
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
-    if (!Params().IsTestChain()) {
+    if (!chainman.GetParams().IsTestChain()) {
         const CConnman& connman = EnsureConnman(node);
         if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
@@ -726,7 +723,7 @@ static RPCHelpMan getblocktemplate()
         // TODO: Maybe recheck connections/IBD and (if something wrong) send an expires-immediately template to stop miners?
     }
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const Consensus::Params& consensusParams = chainman.GetParams().GetConsensus();
 
     // GBT must be called with 'signet' set in the rules for signet chains
     if (consensusParams.signet_blocks && setClientRules.count("signet") != 1) {

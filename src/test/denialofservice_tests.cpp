@@ -133,7 +133,6 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
     NodeId id{0};
-    const CChainParams& chainparams = Params();
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr,
                                        *m_node.chainman, *m_node.mempool, false);
@@ -146,7 +145,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
     const auto time_init{GetTime<std::chrono::seconds>()};
     SetMockTime(time_init);
-    const auto time_later{time_init + 3 * std::chrono::seconds{chainparams.GetConsensus().nPowTargetSpacing} + 1s};
+    const auto time_later{time_init + 3 * std::chrono::seconds{m_node.chainman->GetConsensus().nPowTargetSpacing} + 1s};
     connman->Init(options);
     std::vector<CNode *> vNodes;
 

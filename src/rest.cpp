@@ -305,7 +305,7 @@ static bool rest_block(const std::any& context,
         if (chainman.m_blockman.IsBlockPruned(pblockindex))
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not available (pruned data)");
 
-        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
+        if (!ReadBlockFromDisk(block, pblockindex, chainman.GetParams().GetConsensus()))
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
