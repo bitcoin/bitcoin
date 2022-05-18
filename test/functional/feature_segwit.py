@@ -25,6 +25,10 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     tx_from_hex,
+    #  SYSCOIN
+    MAX_BLOCK_SERIALIZED_SIZE,
+    MAX_NEVM_DATA_BLOCK,
+
 )
 from test_framework.script import (
     CScript,
@@ -127,7 +131,7 @@ class SegWitTest(SyscoinTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         # SYSCOIN
-        assert_equal(tmpl['sizelimit'], (4000000 + (32 << 20) + 10485760) / 4)
+        assert_equal(tmpl['sizelimit'], (MAX_BLOCK_SERIALIZED_SIZE + MAX_NEVM_DATA_BLOCK)/4)
         assert 'weightlimit' not in tmpl
         assert_equal(tmpl['sigoplimit'], 20000)
         assert_equal(tmpl['transactions'][0]['hash'], txid)
