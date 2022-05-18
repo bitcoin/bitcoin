@@ -350,6 +350,7 @@ void Shutdown(node::NodeContext& node)
         pnevmtxrootsdb.reset();
         pnevmtxmintdb.reset();
         pblockindexdb.reset();
+        pnevmdatadb.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
         evoDb.reset();

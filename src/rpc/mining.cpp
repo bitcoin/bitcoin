@@ -957,7 +957,8 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("mutable", aMutable);
     result.pushKV("noncerange", "00000000ffffffff");
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
-    int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
+    // SYSCOIN
+    int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE + MAX_NEVM_DATA_BLOCK;
     if (fPreSegWit) {
         CHECK_NONFATAL(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
         nSigOpLimit /= WITNESS_SCALE_FACTOR;

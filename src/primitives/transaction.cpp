@@ -60,7 +60,6 @@ std::string CTxIn::ToString() const
     str += ")";
     return str;
 }
-// SYSCOIN
 CTxOut::CTxOut(const CAmount& nValueIn,  const CScript &scriptPubKeyIn)
 {
     nValue = nValueIn;
@@ -328,10 +327,17 @@ bool CTransaction::HasAssets() const
 {
     return IsSyscoinTx(nVersion);
 }
-
+bool CTransaction::IsNEVMData() const
+{
+    return IsSyscoinNEVMDataTx(nVersion);
+}
 bool CMutableTransaction::HasAssets() const
 {
     return IsSyscoinTx(nVersion);
+}
+bool CMutableTransaction::IsNEVMData() const
+{
+    return IsSyscoinNEVMDataTx(nVersion);
 }
 bool CTransaction::IsMnTx() const
 {
@@ -454,6 +460,10 @@ bool IsAssetTx(const int &nVersion) {
 bool IsAssetAllocationTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION ||
         nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+}
+
+bool IsSyscoinNEVMDataTx(const int &nVersion) {
+    return nVersion == SYSCOIN_TX_VERSION_NEVM_DATA;
 }
 
 bool IsZdagTx(const int &nVersion) {
@@ -741,26 +751,106 @@ bool CBurnSyscoin::UnserializeFromTx(const CMutableTransaction &mtx) {
 void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsAsset);
-    const auto bytesVec = MakeUCharSpan(dsAsset);
+    const auto &bytesVec = MakeUCharSpan(dsAsset);
 	vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 
 }
 void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsMint);
-    const auto bytesVec = MakeUCharSpan(dsMint);
+    const auto &bytesVec = MakeUCharSpan(dsMint);
     vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }
 
 void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsBurn);
-    const auto bytesVec = MakeUCharSpan(dsBurn);
+    const auto &bytesVec = MakeUCharSpan(dsBurn);
     vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }
 void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
     SerializeTx(dsAsset);
-    const auto bytesVec = MakeUCharSpan(dsAsset);
+    const auto &bytesVec = MakeUCharSpan(dsAsset);
+	vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
+}
+CNEVMData::CNEVMData(const CTransaction &tx) {
+    SetNull();
+    UnserializeFromTx(tx);
+}
+CNEVMData::CNEVMData(const CMutableTransaction &mtx) {
+    SetNull();
+    UnserializeFromTx(mtx);
+}
+CNEVMData::CNEVMData(const CScript &script) {
+    SetNull();
+    UnserializeFromScript(script);
+}
+int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload) {
+    try {
+		CDataStream dsNEVMData(vchPayload, SER_NETWORK, PROTOCOL_VERSION);
+		Unserialize(dsNEVMData);
+        if(!vchData.empty() && nSize != vchData.size()) {
+            SetNull();
+            return -1;
+        }
+        if(nSize > MAX_NEVM_DATA_BLOB) {
+            SetNull();
+            return -1;    
+        }
+        return dsNEVMData.size();
+    } catch (std::exception &e) {
+		SetNull();
+    }
+	return -1;
+}
+bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
+	std::vector<unsigned char> vchData;
+	if (!GetSyscoinData(scriptPubKey, vchData))
+	{
+		SetNull();
+		return false;
+	}
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	}
+    return true;
+}
+bool CNEVMData::UnserializeFromTx(const CTransaction &tx) {
+	std::vector<unsigned char> vchData;
+	int nOut;
+	if (!GetSyscoinData(tx, vchData, nOut))
+	{
+		SetNull();
+		return false;
+	}
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	}
+    return true;
+}
+bool CNEVMData::UnserializeFromTx(const CMutableTransaction &mtx) {
+	std::vector<unsigned char> vchData;
+	int nOut;
+	if (!GetSyscoinData(mtx, vchData, nOut))
+	{
+		SetNull();
+		return false;
+	}
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	}
+    return true;
+}
+void CNEVMData::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsNEVMAsset(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsNEVMAsset);
+    const auto &bytesVec = MakeUCharSpan(dsNEVMAsset);
 	vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }

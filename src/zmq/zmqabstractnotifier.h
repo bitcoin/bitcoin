@@ -20,6 +20,8 @@ class CNEVMHeader;
 class CBlock;
 class BlockValidationState;
 class uint256;
+class CNEVMData;
+typedef std::vector<std::vector<uint8_t> > NEVMDataVec;
 using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 
 class CZMQAbstractNotifier
@@ -68,9 +70,10 @@ public:
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
-    virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash);
+    virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut);
     virtual bool NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash);
     virtual bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state);
+    virtual bool NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state);
     virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
     virtual bool NotifyNEVMComms(const std::string& commMessage, bool &bResponse);
 

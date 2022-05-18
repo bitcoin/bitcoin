@@ -33,7 +33,26 @@ public:
     bool FlushErase(const NEVMMintTxMap &mapMintKeys);
     bool FlushWrite(const NEVMMintTxMap &mapMintKeys);
 };
-
+class CNEVMDataDB : public CDBWrapper {
+public:
+    explicit CNEVMDataDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    bool FlushErase(const NEVMDataVec &vecDataKeys);
+    bool FlushResetMPTs(const NEVMDataVec &vecDataKeys);
+    bool FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime);
+    bool EraseData(const std::vector<uint8_t>& nVersionhash) {
+        const auto& pair = std::make_pair(nVersionhash, true);
+        return Erase(nVersionhash);
+    }   
+    bool ReadData(const std::vector<uint8_t>& nVersionhash,  std::vector<uint8_t>& nData) {
+        const auto& pair = std::make_pair(nVersionhash, true);
+        return Read(pair, nData);
+    } 
+    bool WriteData(const std::vector<uint8_t>& nVersionhash, const std::vector<uint8_t>& nData) {
+        const auto& pair = std::make_pair(nVersionhash, true);
+        return Write(pair, nData);
+    }
+    bool Prune(CDBBatch &batch, int64_t nMedianTime);
+};
 class CAssetDB : public CDBWrapper {
 public:
     explicit CAssetDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
@@ -69,15 +88,22 @@ extern std::unique_ptr<CAssetNFTDB> passetnftdb;
 extern std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
 extern std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
+extern std::unique_ptr<CNEVMDataDB> pnevmdatadb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txHash, const CTxUndo& txundo, AssetMap &mapAssets);
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMintTxMap &mapMintKeys);
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys);
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut);
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const uint32_t& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys);
 bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
-bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState &tstate, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
-bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState &tstate, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut);
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut);
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 uint256 GetNotarySigHash(const CTransaction &tx, const CAssetOut &vecOut);
+bool FillNEVMData(const std::shared_ptr<const CBlock> pblock);
+bool FillNEVMData(CBlock& block);
+bool FillNEVMData(CTransactionRef tx);
+bool ProcessNEVMData(const std::shared_ptr<const CBlock> pblock, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime);
+bool ProcessNEVMData(CBlock &block, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime);
+bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

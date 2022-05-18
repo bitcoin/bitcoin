@@ -358,9 +358,6 @@ enum class MemPoolRemovalReason {
     BLOCK,       //!< Removed for block
     CONFLICT,    //!< Removed for conflict with in-block transaction
     REPLACED,    //!< Removed for replacement
-    // SYSCOIN
-    SYSCOININPUT,     //!< Removed for failure of asset consensus
-    SYSCOINCONSENSUS,     //!< Removed for failure of asset consensus
 };
 
 /**

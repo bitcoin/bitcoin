@@ -189,9 +189,10 @@ protected:
     virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
     virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
-    virtual void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash) {}
+    virtual void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) {}
     virtual void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) {}
     virtual void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) {}
+    virtual void NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state) {}
     virtual void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {}
     virtual void NotifyNEVMComms(const std::string& commMessage, bool &bResponse) {}
     friend class ValidationInterfaceTest;
@@ -233,9 +234,10 @@ public:
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
-    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash);
+    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut);
     void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash);
     void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state);
+    void NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state);
     void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
     void NotifyNEVMComms(const std::string& commMessage, bool &bResponse);
 };

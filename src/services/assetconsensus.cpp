@@ -15,11 +15,13 @@
 #include <util/rbf.h>
 #include <undo.h>
 #include <validationinterface.h>
+#include <timedata.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetNFTDB> passetnftdb;
 std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
 std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
+std::unique_ptr<CNEVMDataDB> pnevmdatadb;
 RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const uint32_t& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
@@ -258,16 +260,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut) {
     if(!fRegTest && nHeight < (uint32_t)params.nUTXOAssetsBlock)
         return !IsSyscoinTx(tx.nVersion);
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
-    return CheckSyscoinInputs(false, params, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut);
+    return CheckSyscoinInputs(false, params, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut, NEVMDataVecOut);
 }
 
-bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
@@ -279,6 +281,16 @@ bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const 
         else if (IsAssetTx(tx.nVersion)) {
             good = CheckAssetInputs(params, tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck, mapAssetIn, mapAssetOut);
         } 
+        else if (!fJustCheck && tx.IsNEVMData()) {
+            CNEVMData nevmData(tx);
+            if(nevmData.IsNull()) {
+                 return FormatSyscoinErrorMessage(state, "nevm-data-invalid", bSanityCheck);  
+            }
+            if(!nevmData.vchData.empty()) {
+                return FormatSyscoinErrorMessage(state, "nevm-data-unexpected", bSanityCheck);  
+            }
+            NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
+        }
     } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
     }
@@ -295,7 +307,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMint
     return true;
 }
 
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys) {
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut) {
  
     if(IsSyscoinMintTx(tx.nVersion)) {
         if(!DisconnectMintAsset(tx, txHash, mapMintKeys))
@@ -313,8 +325,19 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
             else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
                 if(!DisconnectAssetActivate(tx, txHash, mapAssets))
                     return false;
-            }     
-        }
+            }   
+        } else if (tx.IsNEVMData()) {
+            CNEVMData nevmData(tx);
+            if(nevmData.IsNull()) {
+                LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: nevm-data-invalid\n");
+                return false; 
+            }
+            if(!nevmData.vchData.empty()) {
+                LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: nevm-data-unexpected\n");
+                return false;  
+            }
+            NEVMDataVecOut.emplace_back(nevmData.vchVersionHash); 
+        } 
     } 
     return true;       
 }
@@ -1145,4 +1168,166 @@ CAssetNFTDB::CAssetNFTDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapp
 }
 
 CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "assets", nCacheSize, fMemory, fWipe) {
+}
+
+CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmdata", nCacheSize, fMemory, fWipe) {
+}
+
+// before propogating blocks/txs out to peers we need to fill the OPRETURN with the NEVM DA payload from seperate store
+bool FillNEVMData(const std::shared_ptr<const CBlock> pblock) {
+    CBlock &block = const_cast<CBlock&>(*pblock);
+    return FillNEVMData(block);
+}
+bool FillNEVMData(CBlock& block) {
+    for (auto tx : block.vtx) {
+        if(tx->IsNEVMData()) {
+            if(!FillNEVMData(tx)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool FillNEVMData(CTransactionRef tx) {
+    if(!tx->IsNEVMData()) {
+        return true;
+    }
+    const auto &nOut = GetSyscoinDataOutput(*tx);
+    if (nOut == -1) {
+        return false;
+    }
+    CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
+    CNEVMData nevmData(*tx);
+    if(nevmData.IsNull()) {
+        return false;
+    }
+    // script already has payload
+    if(!nevmData.vchData.empty()) {
+        return true;
+    }
+    if(pnevmdatadb->ReadData(nevmData.vchVersionHash, nevmData.vchData)) {
+        scriptPubKey << nevmData.vchData;
+    }
+    return true; 
+}
+// when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
+bool ProcessNEVMData(const std::shared_ptr<const CBlock> pblock, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+    CBlock &block = const_cast<CBlock&>(*pblock);
+    return ProcessNEVMData(block, nevmDataVecOut, nMedianTime);
+}
+bool ProcessNEVMData(CBlock &block, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+    for (auto tx : block.vtx) {
+        if(tx->IsNEVMData()) {
+            if(!ProcessNEVMData(tx, nevmDataVecOut, nMedianTime)) {
+                return false;
+            }    
+        }
+    }
+    return true;
+}
+bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+    if(!tx->IsNEVMData()) {
+        return true;
+    }
+    const auto &nOut = GetSyscoinDataOutput(*tx);
+    if (nOut == -1) {
+        return false;
+    }
+    CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
+    CNEVMData nevmData(*tx);
+    if(nevmData.IsNull()) {
+        return false;
+    }
+    int64_t nTimeNow = GetAdjustedTime();
+    bool enforceNotHaveData = nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+    bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+    if(enforceHaveData && nevmData.vchData.empty()) {
+        LogPrint(BCLog::SYS, "ProcessNEVMData: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+        return false;
+    } else if(enforceNotHaveData && !nevmData.vchData.empty()) {
+        LogPrint(BCLog::SYS, "ProcessNEVMData: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+        return false;
+    }
+    const bool existsInDb = pnevmdatadb->Exists(nevmData.vchVersionHash);
+    if(!nevmData.vchData.empty() && !existsInDb) {
+        BlockValidationState state;
+        // if not in DB then we need to verify it via Geth KZG blob verification
+        GetMainSignals().NotifyCheckNEVMBlob(nevmData, state);
+        if(state.IsInvalid()) {
+            LogPrint(BCLog::SYS, "ProcessNEVMData: Invalid blob %s", state.ToString());
+            return false;
+        }
+    }
+    if(!existsInDb && !pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
+        return false;
+    }
+    nevmDataVecOut.push_back(nevmData.vchVersionHash);
+    // upon receiving block we prune data and store in seperate db
+    nevmData.vchData.clear();
+    std::vector<unsigned char> newdata;
+    nevmData.SerializeData(newdata);
+    scriptPubKey = CScript() << OP_RETURN << newdata; 
+    return true;
+}
+// called on connect - put median passed time into index so we can track pruning
+bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime) {
+    CDBBatch batch(*this);    
+    for (const auto &key : vecDataKeys) {
+        const auto& pair = std::make_pair(key, false);
+        batch.Write(pair, nMedianTime);
+    }
+    if(!vecDataKeys.empty())
+        LogPrint(BCLog::SYS, "Flushing, setting %d nevm heights\n", vecDataKeys.size());
+    // prune older entries
+    return Prune(batch, nMedianTime);
+}
+bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
+    CDBBatch batch(*this);    
+    for (const auto &key : vecDataKeys) {
+        const auto& pair = std::make_pair(key, false);
+        if(Exists(pair))
+            batch.Write(pair, 0);
+    }
+    if(!vecDataKeys.empty())
+        LogPrint(BCLog::SYS, "Flushing, resetting %d nevm heights\n", vecDataKeys.size());
+    return WriteBatch(batch);
+}
+bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
+    CDBBatch batch(*this);    
+    for (const auto &key : vecDataKeys) {
+        // erase data and time keys
+        const auto& pairData = std::make_pair(key, true);
+        const auto& pairTime = std::make_pair(key, false);
+        if(Exists(pairData))
+            batch.Erase(pairData);
+        if(Exists(pairTime))   
+            batch.Erase(pairTime);
+    }
+    if(!vecDataKeys.empty())
+        LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
+    return WriteBatch(batch);
+}
+bool CNEVMDataDB::Prune(CDBBatch &batch, const int64_t nMedianTime) {
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    std::pair<std::vector<unsigned char>, bool> pair;
+    int64_t nTime;
+    int64_t nExpiryTime = nMedianTime - NEVM_DATA_EXPIRE_TIME;
+    while (pcursor->Valid()) {
+        try {
+            // check if expired if so delete data
+            if(pcursor->GetKey(pair) && pair.second == false && pcursor->GetValue(nTime) && nTime > 0 && nTime < nExpiryTime) {
+               // erase both pairs
+               batch.Erase(pair);
+               pair.second = true;
+               if(Exists(pair))   
+                  batch.Erase(pair);
+            }
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    return WriteBatch(batch);
 }

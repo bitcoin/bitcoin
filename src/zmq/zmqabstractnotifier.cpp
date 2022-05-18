@@ -28,7 +28,7 @@ bool CZMQAbstractNotifier::NotifyNEVMComms(const std::string& commMessage, bool 
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash)
+bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut)
 {
     return true;
 }
@@ -37,6 +37,10 @@ bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state
     return true;
 }
 bool CZMQAbstractNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state)
+{
+    return true;
+}
+bool CZMQAbstractNotifier::NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state)
 {
     return true;
 }

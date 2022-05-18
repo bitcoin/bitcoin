@@ -25,6 +25,7 @@
 // SYSCOIN
 #include <governance/governancevote.h>
 #include <governance/governanceobject.h>
+#include <services/assetconsensus.h>
 #include <core_io.h>
 #include <validationinterface.h>
 #include <shutdown.h>
@@ -43,6 +44,7 @@ static const char *MSG_NEVMCOMMS  = "nevmcomms";
 static const char *MSG_NEVMBLOCKDISCONNECT  = "nevmdisconnect";
 static const char *MSG_NEVMBLOCK  = "nevmblock";
 static const char *MSG_NEVMBLOCKINFO  = "nevmblockinfo";
+static const char *MSG_NEVMCHECKBLOB  = "nevmcheckblob";
 static const char *MSG_RAWMEMPOOLTX  = "rawmempooltx";
 static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
@@ -343,7 +345,7 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
     }
     return true;
 }
-bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nSYSBlockHash)
+bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut)
 {
     LOCK(cs_nevm);
     // clear state so subsequent calls can rely on new state being set if error
@@ -369,7 +371,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block connect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash;
+    ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash << NEVMDataVecOut;
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-not-sent");
 
@@ -470,6 +472,40 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
         if(!ParseUInt64(parts[1], &nHeight))
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-unserialize");
             
+    } else {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
+    }
+    return true;
+}
+bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state)
+{
+    LOCK(cs_nevm);
+    if(bFirstTime) {
+        bFirstTime = false;
+        bool bResponse = false;
+        GetMainSignals().NotifyNEVMComms("status", bResponse);
+        if(!bResponse) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+        }
+    }
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << nevmData.vchVersionHash << nevmData.vchData;
+    LogPrint(BCLog::ZMQ, "zmq: Publish nevm check blob to %s, subscriber %s\n", this->address, this->addresssub);
+    if(!SendZmqMessageNEVM(MSG_NEVMCHECKBLOB, &(*ss.begin()), ss.size()))
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-check-blob-not-sent");
+
+    std::vector<std::string> parts;
+    if(ReceiveZmqMessage(parts)) {
+        if(parts.size() != 2) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-parts");
+        }
+        if(parts[0] != MSG_NEVMCHECKBLOB) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
+        }
+        if(parts[1] != "success") {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-check-blob-response-invalid");
+        }
+
     } else {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
     }

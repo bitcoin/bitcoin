@@ -104,12 +104,17 @@ private:
 
     const int nType;
     const int nVersion;
+    int nTxVersion;
 public:
 
-    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
+    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn), nTxVersion(0) {}
 
     int GetType() const { return nType; }
     int GetVersion() const { return nVersion; }
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    void seek(size_t _nSize) {return;}
+    int GetTxVersion() { return nTxVersion; }
 
     void write(Span<const std::byte> src)
     {

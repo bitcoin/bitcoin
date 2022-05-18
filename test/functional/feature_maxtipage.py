@@ -13,8 +13,8 @@ import time
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
-
-DEFAULT_MAX_TIP_AGE = 24 * 60 * 60
+# SYSCOIN
+DEFAULT_MAX_TIP_AGE = 6 * 60 * 60
 
 
 class MaxTipAgeTest(SyscoinTestFramework):

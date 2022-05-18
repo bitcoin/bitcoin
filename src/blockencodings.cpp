@@ -16,6 +16,7 @@
 
 #include <unordered_map>
 // SYSCOIN
+#include <services/assetconsensus.h>
 CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID, bool fMoveNEVMData) :
         nonce(GetRand<uint64_t>()),
         shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
@@ -184,7 +185,7 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
     return txn_available[index] != nullptr;
 }
 
-ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockDataIn) {
+ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockDataIn, const int64_t nMedianTime) {
     assert(!header.IsNull());
     uint256 hash = header.GetHash();
     block = header;
@@ -209,8 +210,17 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
     // SYSCOIN
     if(!vchNEVMBlockDataIn.empty() && block.vchNEVMBlockData.empty())
         block.vchNEVMBlockData = std::move(vchNEVMBlockDataIn);
+    // SYSCOIN
+    NEVMDataVec nevmDataVecOut;
+    if(!ProcessNEVMData(block, nevmDataVecOut, nMedianTime)) {
+        return READ_STATUS_INVALID;
+    }
     BlockValidationState state;
     if (!CheckBlock(block, state, Params().GetConsensus())) {
+        // SYSCOIN
+        if(!nevmDataVecOut.empty()) {
+            pnevmdatadb->FlushErase(nevmDataVecOut);
+        }
         // TODO: We really want to just check merkle tree manually here,
         // but that is expensive, and CheckBlock caches a block's
         // "checked-status" (in the CBlock?). CBlock should be able to

@@ -13,6 +13,7 @@ class CNEVMBlock;
 class CNEVMHeader;
 class CBlock;
 class uint256;
+class CNEVMData;
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
 private:
@@ -54,10 +55,16 @@ class CZMQPublishNEVMBlockNotifier : public CZMQAbstractPublishNotifier
 public:
     bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) override;
 };
+class CZMQPublishNEVMBlobNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state) override;
+};
+
 class CZMQPublishNEVMBlockConnectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash) override;
+    bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) override;
 };
 class CZMQPublishNEVMBlockDisconnectNotifier : public CZMQAbstractPublishNotifier
 {
