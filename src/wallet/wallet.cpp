@@ -365,12 +365,17 @@ void CWallet::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metadata, CKey
 
     // derive child key at next index, skip keys already known to the wallet
     CExtKey childKey;
+    CKeyMetadata metadataTmp;
     uint32_t nChildIndex = fInternal ? acc.nInternalChainCounter : acc.nExternalChainCounter;
     do {
-        hdChainTmp.DeriveChildExtKey(nAccountIndex, fInternal, nChildIndex, childKey, metadata);
+        // NOTE: DeriveChildExtKey updates metadata, use temporary structure to make sure
+        // we start with the original (non-updated) data each time.
+        metadataTmp = metadata;
+        hdChainTmp.DeriveChildExtKey(nAccountIndex, fInternal, nChildIndex, childKey, metadataTmp);
         // increment childkey index
         nChildIndex++;
     } while (HaveKey(childKey.key.GetPubKey().GetID()));
+    metadata = metadataTmp;
     secretRet = childKey.key;
 
     CPubKey pubkey = secretRet.GetPubKey();
@@ -5037,7 +5042,9 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(wallet_path);
 
     try {
-        return database->Verify(error_string);
+        if (!database->Verify(error_string)) {
+            return false;
+        }
     } catch (const fs::filesystem_error& e) {
         error_string = Untranslated(strprintf("Error loading wallet %s. %s", location.GetName(), fsbridge::get_filesystem_error_message(e)));
         return false;
@@ -5048,6 +5055,8 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     if (!tempWallet->AutoBackupWallet(wallet_path, error_string, warnings) && !error_string.original.empty()) {
         return false;
     }
+
+    return true;
 }
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings, uint64_t wallet_creation_flags)

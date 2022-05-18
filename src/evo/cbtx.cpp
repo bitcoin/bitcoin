@@ -167,34 +167,32 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
     int64_t nTime1 = GetTimeMicros();
 
-    static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorumsCached;
-    static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashesCached;
-
     // The returned quorums are in reversed order, so the most recent one is at index 0
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
     std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
+    std::map<Consensus::LLMQType, std::map<int16_t, uint256>> qcIndexedHashes;
     size_t hashCount = 0;
 
     int64_t nTime2 = GetTimeMicros(); nTimeMinedAndActive += nTime2 - nTime1;
     LogPrint(BCLog::BENCHMARK, "            - GetMinedAndActiveCommitmentsUntilBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeMinedAndActive * 0.000001);
 
-    if (quorums == quorumsCached) {
-        qcHashes = qcHashesCached;
-    } else {
-        for (const auto& p : quorums) {
-            auto& v = qcHashes[p.first];
-            v.reserve(p.second.size());
-            for (const auto& p2 : p.second) {
-                uint256 minedBlockHash;
-                llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
-                if (qc == nullptr) return state.DoS(100, false, REJECT_INVALID, "commitment-not-found");
-                v.emplace_back(::SerializeHash(*qc));
-                hashCount++;
+    for (const auto& p : quorums) {
+        auto& v = qcHashes[p.first];
+        v.reserve(p.second.size());
+        for (const auto& p2 : p.second) {
+            uint256 minedBlockHash;
+            llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
+            if (qc == nullptr) return state.DoS(100, false, REJECT_INVALID, "commitment-not-found");
+            if (llmq::CLLMQUtils::IsQuorumRotationEnabled(qc->llmqType, pindexPrev)) {
+                auto& qi = qcIndexedHashes[p.first];
+                qi.insert(std::make_pair(qc->quorumIndex, ::SerializeHash(*qc)));
+                continue;
             }
+            v.emplace_back(::SerializeHash(*qc));
+            hashCount++;
         }
-        quorumsCached = quorums;
-        qcHashesCached = qcHashes;
     }
+
 
     int64_t nTime3 = GetTimeMicros(); nTimeMined += nTime3 - nTime2;
     LogPrint(BCLog::BENCHMARK, "            - GetMinedCommitment: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeMined * 0.000001);
@@ -215,6 +213,11 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             auto qcHash = ::SerializeHash(qc.commitment);
             const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
             auto& v = qcHashes[llmq_params.type];
+            if (llmq::CLLMQUtils::IsQuorumRotationEnabled(qc.commitment.llmqType, pindexPrev)) {
+                auto& qi = qcIndexedHashes[qc.commitment.llmqType];
+                qi[qc.commitment.quorumIndex] = qcHash;
+                continue;
+            }
             if (v.size() == size_t(llmq_params.signingActiveQuorumCount)) {
                 // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
                 // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
@@ -225,6 +228,16 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             hashCount++;
             if (v.size() > uint64_t(llmq_params.signingActiveQuorumCount)) {
                 return state.DoS(100, false, REJECT_INVALID, "excess-quorums-calc-cbtx-quorummerkleroot");
+            }
+        }
+    }
+
+    if (!qcIndexedHashes.empty()) {
+        for (const auto& q : qcIndexedHashes) {
+            auto& v = qcHashes[q.first];
+            for (const auto& qq : q.second) {
+                v.emplace_back(qq.second);
+                hashCount++;
             }
         }
     }

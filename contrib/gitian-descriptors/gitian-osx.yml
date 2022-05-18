@@ -1,5 +1,5 @@
 ---
-name: "dash-osx-18.0"
+name: "dash-osx-18"
 enable_cache: true
 distro: "ubuntu"
 suites:
