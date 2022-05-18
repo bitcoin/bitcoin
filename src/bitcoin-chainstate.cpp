@@ -76,7 +76,6 @@ int main(int argc, char* argv[])
                                    std::ref(chainman),
                                    nullptr,
                                    false,
-                                   chainparams.GetConsensus(),
                                    false,
                                    2 << 20,
                                    2 << 22,
@@ -91,7 +90,6 @@ int main(int argc, char* argv[])
         auto maybe_verify_error = node::VerifyLoadedChainstate(std::ref(chainman),
                                                                false,
                                                                false,
-                                                               chainparams.GetConsensus(),
                                                                DEFAULT_CHECKBLOCKS,
                                                                DEFAULT_CHECKLEVEL);
         if (maybe_verify_error.has_value()) {

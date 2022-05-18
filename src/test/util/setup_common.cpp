@@ -201,7 +201,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            *Assert(m_node.chainman.get()),
                                            Assert(m_node.mempool.get()),
                                            fPruneMode,
-                                           chainparams.GetConsensus(),
                                            m_args.GetBoolArg("-reindex-chainstate", false),
                                            m_cache_sizes.block_tree_db,
                                            m_cache_sizes.coins_db,
@@ -214,7 +213,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         *Assert(m_node.chainman),
         fReindex.load(),
         m_args.GetBoolArg("-reindex-chainstate", false),
-        chainparams.GetConsensus(),
         m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
         m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL));
     assert(!maybe_verify_error.has_value());
