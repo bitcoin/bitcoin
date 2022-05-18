@@ -40,7 +40,7 @@ protected:
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
     void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) override;
-    void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) override;
+    void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) override;
     void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState& state) override;
     void NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state) override;
     void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState& state) override;

@@ -32,7 +32,7 @@ bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, c
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash)
+bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut)
 {
     return true;
 }

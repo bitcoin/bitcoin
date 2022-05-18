@@ -2083,13 +2083,13 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
 
     return res;
 }
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) {
     CNEVMHeader evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }
     if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockDisconnect(state, nBlockHash);
+        GetMainSignals().NotifyNEVMBlockDisconnect(state, nBlockHash, NEVMDataVecOut);
     }
     bool res = state.IsValid() || !fNEVMConnection;
     if(res) {
@@ -2172,7 +2172,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     } 
     BlockValidationState state;
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
+    if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash(), NEVMDataVecOut)) {
         const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
         error(errStr.c_str());
         return DISCONNECT_FAILED; 

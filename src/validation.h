@@ -1061,7 +1061,7 @@ bool StartGethNode(const std::string &gethDescriptorURL);
 bool StopGethNode(bool bOnStart = false);
 
 // SYSCOIN
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, NEVMDataVec &NEVMDataVecOut) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
