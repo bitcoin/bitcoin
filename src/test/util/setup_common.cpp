@@ -192,7 +192,6 @@ ChainTestingSetup::~ChainTestingSetup()
 TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : ChainTestingSetup(chainName, extra_args)
 {
-    const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
@@ -228,7 +227,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
-    m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman,
+    m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
                                        *m_node.mempool, false);
     {

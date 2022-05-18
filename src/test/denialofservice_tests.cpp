@@ -44,11 +44,10 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 // work.
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
-    const CChainParams& chainparams = Params();
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
     // Disable inactivity checks for this test to avoid interference
     static_cast<ConnmanTestMsg*>(connman.get())->SetPeerConnectTimeout(99999s);
-    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr,
                                        *m_node.chainman, *m_node.mempool, false);
 
     // Mock an outbound peer
@@ -136,7 +135,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     NodeId id{0};
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr,
                                        *m_node.chainman, *m_node.mempool, false);
 
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
@@ -212,9 +211,8 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 {
     NodeId id{0};
-    const CChainParams& chainparams = Params();
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr,
                                        *m_node.chainman, *m_node.mempool, false);
 
     constexpr int max_outbound_block_relay{MAX_BLOCK_RELAY_ONLY_CONNECTIONS};
@@ -274,10 +272,9 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 
 BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
-    const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(),
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(),
                                        *m_node.chainman, *m_node.mempool, false);
 
     CNetAddr tor_netaddr;
@@ -390,10 +387,9 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
-    const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(),
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(),
                                        *m_node.chainman, *m_node.mempool, false);
 
     banman->ClearBanned();
