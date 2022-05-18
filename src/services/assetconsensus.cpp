@@ -1250,8 +1250,13 @@ bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int6
     }
     const bool existsInDb = pnevmdatadb->Exists(nevmData.vchVersionHash);
     if(!nevmData.vchData.empty() && !existsInDb) {
-        if(!ProcessNEVMBlob(nevmData))
+        BlockValidationState state;
+        // if not in DB then we need to verify it via Geth KZG blob verification
+        GetMainSignals().NotifyCheckNEVMBlob(nevmData, state);
+        if(state.IsInvalid()) {
+            LogPrint(BCLog::SYS, "ProcessNEVMData: Invalid blob %s", state.ToString());
             return false;
+        }
     }
     if(!existsInDb && !pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
         return false;

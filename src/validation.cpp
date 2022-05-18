@@ -6321,16 +6321,6 @@ bool StartGethNode(const std::string &gethDescriptorURL)
         LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
     return true;
 }
-bool ProcessNEVMBlob(const CNEVMData &nevmData) {
-    BlockValidationState state;
-    // if not in DB then we need to verify it via Geth KZG blob verification
-    GetMainSignals().NotifyCheckNEVMBlob(nevmData, state);
-    if(state.IsInvalid()) {
-        LogPrint(BCLog::SYS, "ProcessNEVMBlob: Invalid blob %s", state.ToString());
-        return false;
-    }
-    return true;
-}
 bool StopGethNode(bool bOnStart)
 {
     if(!fNEVMConnection) {
