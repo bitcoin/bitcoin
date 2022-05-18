@@ -836,7 +836,7 @@ private:
 
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
-    const CChainParams& m_chainparams;
+    const CChainParams m_chainparams;
 
     const std::function<int64_t()> m_adjusted_time_callback;
 
