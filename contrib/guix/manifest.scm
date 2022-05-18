@@ -148,9 +148,9 @@ chain for " target " development."))
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc gcc-7)
+                                       (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-without-ssp glibc-2.24))
+                                       (base-libc (make-glibc-without-ssp (make-glibc-without-werror glibc-2.24)))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -518,6 +518,9 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
+(define (make-glibc-without-werror glibc)
+  (package-with-extra-configure-variable glibc "enable_werror" "no"))
+
 (define-public glibc-2.24
   (package
     (inherit glibc-2.31)
@@ -534,7 +537,8 @@ inspecting signatures in Mach-O binaries.")
               (patches (search-our-patches "glibc-ldd-x86_64.patch"
                                            "glibc-versioned-locpath.patch"
                                            "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
-                                           "glibc-2.24-no-build-time-cxx-header-run.patch"))))))
+                                           "glibc-2.24-no-build-time-cxx-header-run.patch"
+                                           "glibc-2.24-fcommon.patch"))))))
 
 (define-public glibc-2.27/bitcoin-patched
   (package
@@ -550,7 +554,8 @@ inspecting signatures in Mach-O binaries.")
                (base32
                 "1b2n1gxv9f4fd5yy68qjbnarhf8mf4vmlxk10i3328c1w5pmp0ca"))
               (patches (search-our-patches "glibc-ldd-x86_64.patch"
-                                           "glibc-2.27-riscv64-Use-__has_include__-to-include-asm-syscalls.h.patch"))))))
+                                           "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
+                                           "glibc-2.27-dont-redefine-nss-database.patch"))))))
 
 (packages->manifest
  (append
@@ -581,6 +586,9 @@ inspecting signatures in Mach-O binaries.")
         automake
         pkg-config
         bison
+        ;; Native GCC 10 toolchain
+        gcc-toolchain-10
+        (list gcc-toolchain-10 "static")
         ;; Scripting
         perl
         python-3
@@ -591,26 +599,17 @@ inspecting signatures in Mach-O binaries.")
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list ;; Native GCC 10 toolchain
-                 gcc-toolchain-10
-                 (list gcc-toolchain-10 "static")
-                 zip
+           (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 7 toolchain
-                 gcc-toolchain-7
-                 (list gcc-toolchain-7 "static")
-                 (cond ((string-contains target "riscv64-")
+           (list (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
-                                                      #:base-libc glibc-2.27/bitcoin-patched
+                                                      #:base-libc (make-glibc-without-werror glibc-2.27/bitcoin-patched)
                                                       #:base-kernel-headers base-linux-kernel-headers))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list ;; Native GCC 10 toolchain
-                 gcc-toolchain-10
-                 (list gcc-toolchain-10 "static")
-                 clang-toolchain-10 binutils cmake xorriso python-signapple))
+           (list clang-toolchain-10 binutils cmake xorriso python-signapple))
           (else '())))))
