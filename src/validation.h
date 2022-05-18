@@ -88,8 +88,7 @@ static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
 static const int MAX_SCRIPTCHECK_THREADS = 15;
 /** -par default (number of script-checking threads, 0 = auto) */
 static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
-// SYSCOIN
-static const int64_t DEFAULT_MAX_TIP_AGE = 6 * 60 * 60;
+static const int64_t DEFAULT_MAX_TIP_AGE = 24 * 60 * 60;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
 static constexpr bool DEFAULT_COINSTATSINDEX{false};
