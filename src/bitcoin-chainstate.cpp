@@ -93,8 +93,7 @@ int main(int argc, char* argv[])
                                                                false,
                                                                chainparams.GetConsensus(),
                                                                DEFAULT_CHECKBLOCKS,
-                                                               DEFAULT_CHECKLEVEL,
-                                                               /*get_unix_time_seconds=*/static_cast<int64_t (*)()>(GetTime));
+                                                               DEFAULT_CHECKLEVEL);
         if (maybe_verify_error.has_value()) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;

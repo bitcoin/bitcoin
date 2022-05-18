@@ -80,8 +80,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 bool fReindexChainState,
                                                                 const Consensus::Params& consensus_params,
                                                                 int check_blocks,
-                                                                int check_level,
-                                                                std::function<int64_t()> get_unix_time_seconds);
+                                                                int check_level);
 } // namespace node
 
 #endif // BITCOIN_NODE_CHAINSTATE_H
