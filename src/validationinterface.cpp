@@ -281,8 +281,8 @@ void CMainSignals::NotifyNEVMComms(const std::string& commMessage, bool &bRespon
 void CMainSignals::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockConnect(evmBlock, block, state, nBlockHash, NEVMDataVecOut); });
 }
-void CMainSignals::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) {
-    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockDisconnect(state, nBlockHash, NEVMDataVecOut); });
+void CMainSignals::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockDisconnect(state, nBlockHash); });
 }
 void CMainSignals::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGetNEVMBlockInfo(nHeight, state);});

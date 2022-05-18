@@ -404,7 +404,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
 
     return true;
 }
-bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut)
+bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nSYSBlockHash)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
@@ -427,7 +427,7 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockVali
     std::vector<std::string> parts;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block disconnect %s to %s, subscriber %s\n", nSYSBlockHash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << nSYSBlockHash << NEVMDataVecOut;
+    ss << nSYSBlockHash;
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-not-sent");
     if(ReceiveZmqMessage(parts)) {

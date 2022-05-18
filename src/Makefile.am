@@ -779,6 +779,7 @@ libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
   services/asset.cpp \
   services/assetconsensus.cpp \
+  timedata.cpp \
   auxpow.cpp \
   base58.cpp \
   bech32.cpp \

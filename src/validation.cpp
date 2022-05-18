@@ -2083,13 +2083,13 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
 
     return res;
 }
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) {
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash) {
     CNEVMHeader evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }
     if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockDisconnect(state, nBlockHash, NEVMDataVecOut);
+        GetMainSignals().NotifyNEVMBlockDisconnect(state, nBlockHash);
     }
     bool res = state.IsValid() || !fNEVMConnection;
     if(res) {
@@ -2172,7 +2172,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     } 
     BlockValidationState state;
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash(), NEVMDataVecOut)) {
+    if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash())) {
         const std::string &errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
         error(errStr.c_str());
         return DISCONNECT_FAILED; 
@@ -6319,6 +6319,16 @@ bool StartGethNode(const std::string &gethDescriptorURL)
     #endif
     if(pid > 0)
         LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
+    return true;
+}
+bool ProcessNEVMBlob(const CNEVMData &nevmData) {
+    BlockValidationState state;
+    // if not in DB then we need to verify it via Geth KZG blob verification
+    GetMainSignals().NotifyCheckNEVMBlob(nevmData, state);
+    if(state.IsInvalid()) {
+        LogPrint(BCLog::SYS, "ProcessNEVMBlob: Invalid blob %s", state.ToString());
+        return false;
+    }
     return true;
 }
 bool StopGethNode(bool bOnStart)

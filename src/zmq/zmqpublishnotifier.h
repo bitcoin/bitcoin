@@ -69,7 +69,7 @@ public:
 class CZMQPublishNEVMBlockDisconnectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) override;
+    bool NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) override;
 };
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
 {
