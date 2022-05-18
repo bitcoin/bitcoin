@@ -194,6 +194,8 @@ class WalletTaprootTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.extra_args = [['-keypool=100'], ['-keypool=100']]
+        for ea in self.extra_args:
+            ea.append('-addresstype=bech32m')
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
