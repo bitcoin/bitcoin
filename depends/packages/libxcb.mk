@@ -44,5 +44,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf share/man share/doc
+  rm -rf share/man share/doc lib/*.la
 endef

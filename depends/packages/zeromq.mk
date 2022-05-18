@@ -31,5 +31,5 @@ endef
 
 define $(package)_postprocess_cmds
   sed -i.old "s/ -lstdc++//" lib/pkgconfig/libzmq.pc && \
-  rm -rf bin share
+  rm -rf bin share lib/*.la
 endef
