@@ -56,8 +56,6 @@ const TrafficGraphData::GraphRange INITIAL_TRAFFIC_GRAPH_SETTING = TrafficGraphD
 // Repair parameters
 const QString RESCAN1("-rescan=1");
 const QString RESCAN2("-rescan=2");
-const QString ZAPTXES1("-zapwallettxes=1 -persistmempool=0");
-const QString ZAPTXES2("-zapwallettxes=2 -persistmempool=0");
 const QString UPGRADEWALLET("-upgradewallet");
 const QString REINDEX("-reindex");
 
@@ -494,13 +492,9 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     // Disable wallet repair options that require a wallet (enable them later when a wallet is added)
     ui->btn_rescan1->setEnabled(false);
     ui->btn_rescan2->setEnabled(false);
-    ui->btn_zapwallettxes1->setEnabled(false);
-    ui->btn_zapwallettxes2->setEnabled(false);
     ui->btn_upgradewallet->setEnabled(false);
     connect(ui->btn_rescan1, &QPushButton::clicked, this, &RPCConsole::walletRescan1);
     connect(ui->btn_rescan2, &QPushButton::clicked, this, &RPCConsole::walletRescan2);
-    connect(ui->btn_zapwallettxes1, &QPushButton::clicked, this, &RPCConsole::walletZaptxes1);
-    connect(ui->btn_zapwallettxes2, &QPushButton::clicked, this, &RPCConsole::walletZaptxes2);
     connect(ui->btn_upgradewallet, &QPushButton::clicked, this, &RPCConsole::walletUpgrade);
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
@@ -736,8 +730,6 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
     }
     ui->btn_rescan1->setEnabled(true);
     ui->btn_rescan2->setEnabled(true);
-    ui->btn_zapwallettxes1->setEnabled(true);
-    ui->btn_zapwallettxes2->setEnabled(true);
     ui->btn_upgradewallet->setEnabled(true);
 }
 
@@ -751,8 +743,6 @@ void RPCConsole::removeWallet(WalletModel * const walletModel)
     if (ui->WalletSelector->count() == 1) {
         ui->btn_rescan1->setEnabled(false);
         ui->btn_rescan2->setEnabled(false);
-        ui->btn_zapwallettxes1->setEnabled(false);
-        ui->btn_zapwallettxes2->setEnabled(false);
         ui->btn_upgradewallet->setEnabled(false);
     }
 }
@@ -814,18 +804,6 @@ void RPCConsole::walletRescan2()
     buildParameterlist(RESCAN2);
 }
 
-/** Restart wallet with "-zapwallettxes=1" */
-void RPCConsole::walletZaptxes1()
-{
-    buildParameterlist(ZAPTXES1);
-}
-
-/** Restart wallet with "-zapwallettxes=2" */
-void RPCConsole::walletZaptxes2()
-{
-    buildParameterlist(ZAPTXES2);
-}
-
 /** Restart wallet with "-upgradewallet" */
 void RPCConsole::walletUpgrade()
 {
@@ -857,8 +835,6 @@ void RPCConsole::buildParameterlist(QString arg)
     // Remove existing repair-options
     args.removeAll(RESCAN1);
     args.removeAll(RESCAN2);
-    args.removeAll(ZAPTXES1);
-    args.removeAll(ZAPTXES2);
     args.removeAll(UPGRADEWALLET);
     args.removeAll(REINDEX);
 

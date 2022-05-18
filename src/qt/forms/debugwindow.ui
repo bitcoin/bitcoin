@@ -1428,49 +1428,11 @@
         <string>Rescan blockchain files 2</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="btn_zapwallettxes1">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>200</y>
-         <width>301</width>
-         <height>23</height>
-        </rect>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>180</width>
-         <height>23</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Recover transactions 1</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btn_zapwallettxes2">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>250</y>
-         <width>301</width>
-         <height>23</height>
-        </rect>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>180</width>
-         <height>23</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Recover transactions 2</string>
-       </property>
-      </widget>
       <widget class="QPushButton" name="btn_upgradewallet">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>300</y>
+         <y>200</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1533,43 +1495,11 @@
         <bool>true</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="label_repair_zap1">
-       <property name="geometry">
-        <rect>
-         <x>330</x>
-         <y>190</y>
-         <width>411</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_repair_zap2">
-       <property name="geometry">
-        <rect>
-         <x>330</x>
-         <y>240</y>
-         <width>411</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
       <widget class="QLabel" name="label_repair_upgrade">
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>290</y>
+         <y>190</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1601,7 +1531,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>350</y>
+         <y>250</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1614,7 +1544,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>340</y>
+         <y>240</y>
          <width>411</width>
          <height>41</height>
         </rect>
