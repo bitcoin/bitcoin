@@ -3041,7 +3041,7 @@ static int64_t nTimePostConnect = 0;
 struct PerBlockConnectTrace {
     CBlockIndex* pindex = nullptr;
     std::shared_ptr<const CBlock> pblock;
-    PerBlockConnectTrace() {}
+    PerBlockConnectTrace() = default;
 };
 /**
  * Used to track blocks whose transactions were applied to the UTXO state as a

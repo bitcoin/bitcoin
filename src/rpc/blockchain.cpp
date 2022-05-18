@@ -2354,9 +2354,9 @@ static std::atomic<bool> g_should_abort_scan;
 class CoinsViewScanReserver
 {
 private:
-    bool m_could_reserve;
+    bool m_could_reserve{false};
 public:
-    explicit CoinsViewScanReserver() : m_could_reserve(false) {}
+    explicit CoinsViewScanReserver() = default;
 
     bool reserve() {
         CHECK_NONFATAL(!m_could_reserve);

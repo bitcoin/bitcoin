@@ -153,9 +153,7 @@ WalletView::WalletView(WalletModel* wallet_model, QWidget* parent)
     GUIUtil::disableMacFocusRect(this);
 }
 
-WalletView::~WalletView()
-{
-}
+WalletView::~WalletView() = default;
 
 void WalletView::setClientModel(ClientModel *_clientModel)
 {

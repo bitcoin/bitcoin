@@ -43,7 +43,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     explicit TxViewDelegate(QObject* parent = nullptr)
-        : QAbstractItemDelegate(parent), unit(BitcoinUnit::DASH)
+        : QAbstractItemDelegate(parent)
     {
         connect(this, &TxViewDelegate::width_changed, this, &TxViewDelegate::sizeHintChanged);
     }
@@ -126,7 +126,7 @@ public:
         return {ITEM_HEIGHT + 8 + minimum_text_width, ITEM_HEIGHT};
     }
 
-    BitcoinUnit unit;
+    BitcoinUnit unit{BitcoinUnit::DASH};
 
 Q_SIGNALS:
     //! An intermediate signal for emitting from the `paint() const` member function.

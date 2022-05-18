@@ -38,12 +38,12 @@ static CAmount parse(const QString &text, BitcoinUnit nUnit, bool *valid_out= nu
 class AmountValidator : public QValidator
 {
     Q_OBJECT
-    BitcoinUnit currentUnit;
+    BitcoinUnit currentUnit{BitcoinUnit::DASH};
 
 public:
     explicit AmountValidator(QObject *parent) :
-        QValidator(parent),
-        currentUnit(BitcoinUnit::DASH) {}
+        QValidator(parent)
+        {}
 
     State validate(QString &input, int &pos) const override
     {
@@ -70,8 +70,7 @@ class AmountLineEdit: public QLineEdit
     AmountValidator* amountValidator;
 public:
     explicit AmountLineEdit(QWidget *parent):
-        QLineEdit(parent),
-        currentUnit(BitcoinUnit::DASH)
+        QLineEdit(parent)
     {
         setAlignment(Qt::AlignLeft);
         amountValidator = new AmountValidator(this);

@@ -99,7 +99,7 @@ bool fAllowPrivateNet = DEFAULT_ALLOWPRIVATENET;
  *
  * @note This address is considered invalid by CNetAddr::IsValid()
  */
-CNetAddr::CNetAddr() {}
+CNetAddr::CNetAddr() = default;
 
 void CNetAddr::SetIP(const CNetAddr& ipIn)
 {

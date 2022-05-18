@@ -340,8 +340,7 @@ public:
     std::map<std::pair<uint256, CKeyID>, std::pair<std::vector<unsigned char>, std::vector<unsigned char>>> crypted_mnemonics;
     bool tx_corrupt{false};
 
-    CWalletScanState() {
-    }
+    CWalletScanState() = default;
 };
 
 static bool

@@ -210,7 +210,7 @@ public:
     // cache warmup on instantiation.
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256&hashBlockIn):
         CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
-    ~CCoinsViewDBCursor() {}
+    ~CCoinsViewDBCursor() = default;
 
     bool GetKey(COutPoint &key) const override;
     bool GetValue(Coin &coin) const override;

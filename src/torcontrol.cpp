@@ -314,8 +314,7 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
 
 TorController::TorController(struct event_base* _base, const std::string& tor_control_center, const CService& target):
     base(_base),
-    m_tor_control_center(tor_control_center), conn(base), reconnect(true), reconnect_ev(nullptr),
-    reconnect_timeout(RECONNECT_TIMEOUT_START),
+    m_tor_control_center(tor_control_center), conn(base), reconnect(true), reconnect_timeout(RECONNECT_TIMEOUT_START),
     m_target(target)
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
