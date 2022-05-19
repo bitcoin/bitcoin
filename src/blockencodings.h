@@ -105,7 +105,7 @@ public:
     // Dummy for deserialization
     CBlockHeaderAndShortTxIDs() {}
     // SYSCOIN
-    CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID, bool fMoveNEVMData = false);
+    CBlockHeaderAndShortTxIDs(const CBlock& block, bool fMoveNEVMData = false);
 
     uint64_t GetShortID(const uint256& txhash) const;
 

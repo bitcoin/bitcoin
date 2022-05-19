@@ -1586,7 +1586,7 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
  */
 void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock)
 {
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs> (*pblock, true);
+    auto pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs>(*pblock);
     const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
 
     LOCK(cs_main);
@@ -2006,7 +2006,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, *a_recent_compact_block));
                 } else {
                     // SYSCOIN
-                    CBlockHeaderAndShortTxIDs cmpctblock(*pblock, true, bRecent);
+                    CBlockHeaderAndShortTxIDs cmpctblock{*pblock, bRecent};
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, cmpctblock));
                 }
             } else {
@@ -5094,7 +5094,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
                         assert(ret);
                         // SYSCOIN
-                        CBlockHeaderAndShortTxIDs cmpctblock(block, true, true);
+                        CBlockHeaderAndShortTxIDs cmpctblock{block, true};
                         m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::CMPCTBLOCK, cmpctblock));
                     }
                     state.pindexBestHeaderSent = pBestIndex;
