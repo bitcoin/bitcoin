@@ -87,38 +87,64 @@ struct Peer {
 
     /** Whether this peer relays txs via wtxid */
     std::atomic<bool> m_wtxid_relay{false};
+    /** The feerate in the most recent BIP133 `feefilter` message sent to the peer.
+     *  It is *not* a p2p protocol violation for the peer to send us
+     *  transactions with a lower fee rate than this. See BIP133. */
+    CAmount m_fee_filter_sent{0};
+    /** Timestamp after which we will send the next BIP133 `feefilter` message
+      * to the peer. */
+    std::chrono::microseconds m_next_send_feefilter{0};
 
     struct TxRelay {
         mutable RecursiveMutex m_bloom_filter_mutex;
-        // We use m_relay_txs for two purposes -
-        // a) it allows us to not relay tx invs before receiving the peer's version message
-        // b) the peer may tell us in its version message that we should not relay tx invs
-        //    unless it loads a bloom filter.
+        /** Whether the peer wishes to receive transaction announcements.
+         *
+         * This is initially set based on the fRelay flag in the received
+         * `version` message. If initially set to false, it can only be flipped
+         * to true if we have offered the peer NODE_BLOOM services and it sends
+         * us a `filterload` or `filterclear` message. See BIP37. */
         bool m_relay_txs GUARDED_BY(m_bloom_filter_mutex){false};
+        /** A bloom filter for which transactions to announce to the peer. See BIP37. */
         std::unique_ptr<CBloomFilter> m_bloom_filter PT_GUARDED_BY(m_bloom_filter_mutex) GUARDED_BY(m_bloom_filter_mutex){nullptr};
 
         mutable RecursiveMutex m_tx_inventory_mutex;
+        /** A filter of all the txids and wtxids that the peer has announced to
+         *  us or we have announced to the peer. We use this to avoid announcing
+         *  the same txid/wtxid to a peer that already has the transaction. */
         CRollingBloomFilter m_tx_inventory_known_filter GUARDED_BY(m_tx_inventory_mutex){50000, 0.000001};
-        // Set of transaction ids we still have to announce.
-        // They are sorted by the mempool before relay, so the order is not important.
+        /** Set of transaction ids we still have to announce (txid for
+         *  non-wtxid-relay peers, wtxid for wtxid-relay peers). We use the
+         *  mempool to sort transactions in dependency order before relay, so
+         *  this does not have to be sorted. */
         std::set<uint256> m_tx_inventory_to_send;
-        // Used for BIP35 mempool sending
+        /** Whether the peer has requested us to send our complete mempool. Only
+         *  permitted if the peer has NetPermissionFlags::Mempool. See BIP35. */
         bool m_send_mempool GUARDED_BY(m_tx_inventory_mutex){false};
-        // Last time a "MEMPOOL" request was serviced.
+        /** The last time a BIP35 `mempool` request was serviced. */
         std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
+        /** The next time after which we will send an `inv` message containing
+         *  transaction announcements to this peer. */
         std::chrono::microseconds m_next_inv_send_time{0};
 
-        /** Minimum fee rate with which to filter inv's to this node */
+        /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
         std::atomic<CAmount> m_fee_filter_received{0};
-        CAmount m_fee_filter_sent{0};
-        std::chrono::microseconds m_next_send_feefilter{0};
         // SYSCOIN
         std::set<CInv> m_tx_inventory_to_send_other;
     };
 
-    /** Transaction relay data. Will be a nullptr if we're not relaying
-     *  transactions with this peer (e.g. if it's a block-relay-only peer) */
-    std::unique_ptr<TxRelay> m_tx_relay;
+    /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
+    TxRelay* SetTxRelay()
+    {
+        LOCK(m_tx_relay_mutex);
+        Assume(!m_tx_relay);
+        m_tx_relay = std::make_unique<Peer::TxRelay>();
+        return m_tx_relay.get();
+    };
+
+    TxRelay* GetTxRelay()
+    {
+        return WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get());
+    };
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
     std::vector<CAddress> m_addrs_to_send;
@@ -180,13 +206,20 @@ struct Peer {
     // SYSCOIN
     /** This peer's a masternode connection */
     std::atomic<bool> m_masternode_connection{false};
-    explicit Peer(NodeId id, bool tx_relay)
-        : m_id(id)
-        , m_tx_relay(tx_relay ? std::make_unique<TxRelay>() : nullptr)
+    Peer(NodeId id)
+        : m_id{id}
     {}
-};
-using PeerRef = std::shared_ptr<Peer>;
 
+private:
+    Mutex m_tx_relay_mutex;
+
+    /** Transaction relay data. Will be a nullptr if we're not relaying
+     *  transactions with this peer (e.g. if it's a block-relay-only peer or
+     *  the peer has sent us fRelay=false with bloom filters disabled). */
+    std::unique_ptr<TxRelay> m_tx_relay GUARDED_BY(m_tx_relay_mutex);
+};
+
+using PeerRef = std::shared_ptr<Peer>;
 class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
