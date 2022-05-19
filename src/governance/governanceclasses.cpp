@@ -416,7 +416,7 @@ CSuperblock::
     UniValue obj = pGovObj->GetJSONObject();
 
     // FIRST WE GET THE START HEIGHT, THE BLOCK HEIGHT AT WHICH THE PAYMENT SHALL OCCUR
-    nBlockHeight = obj["event_block_height"].get_int();
+    nBlockHeight = obj["event_block_height"].getInt<int>();
 
     // NEXT WE GET THE PAYMENT INFORMATION AND RECONSTRUCT THE PAYMENT VECTOR
     std::string strAddresses = obj["payment_addresses"].get_str();

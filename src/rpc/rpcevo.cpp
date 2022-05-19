@@ -78,7 +78,7 @@ static RPCHelpMan protx_list()
         bool detailed = !request.params[1].isNull() ? request.params[1].get_bool() : false;
         {
             LOCK(cs_main);
-            int height = !request.params[2].isNull() ? request.params[2].get_int() : node.chainman->ActiveHeight();
+            int height = !request.params[2].isNull() ? request.params[2].getInt<int>() : node.chainman->ActiveHeight();
             if (height < 1 || height > node.chainman->ActiveHeight()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
             }
@@ -132,7 +132,7 @@ static uint256 ParseBlock(ChainstateManager& chainman, const UniValue& v, std::s
         return ParseHashV(v, strName);
     } catch (...) {
         LOCK(cs_main);
-        int h = v.get_int();
+        int h = v.getInt<int>();
         if (h < 1 || h > chainman.ActiveHeight())
             throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
         return *chainman.ActiveChain()[h]->phashBlock;

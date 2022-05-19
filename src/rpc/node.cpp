@@ -119,7 +119,7 @@ static RPCHelpMan spork()
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
-        int64_t nValue = request.params[1].get_int64();
+        int64_t nValue = request.params[1].getInt<int64_t>();;
 
         //broadcast new spork
         if(sporkManager.UpdateSpork(nSporkID, nValue, *node.peerman)){
@@ -174,7 +174,7 @@ static RPCHelpMan mnauth()
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
 
-    int nodeId = request.params[0].get_int();
+    int nodeId = request.params[0].getInt<int>();
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
@@ -220,7 +220,7 @@ static RPCHelpMan setmocktime()
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    const int64_t time{request.params[0].get_int64()};
+    const int64_t time{request.params[0].getInt<int64_t>()};
     if (time < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime cannot be negative: %s.", time));
     }
@@ -275,7 +275,7 @@ static RPCHelpMan mockscheduler()
 
     // check params are valid values
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    int64_t delta_seconds = request.params[0].get_int64();
+    int64_t delta_seconds = request.params[0].getInt<int64_t>();
     if (delta_seconds <= 0 || delta_seconds > 3600) {
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }

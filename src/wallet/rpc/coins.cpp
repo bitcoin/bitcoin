@@ -46,7 +46,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
     // Minimum confirmations
     int min_depth = 1;
     if (!params[1].isNull())
-        min_depth = params[1].get_int();
+        min_depth = params[1].getInt<int>();
 
     const bool include_immature_coinbase{params[2].isNull() ? false : params[2].get_bool()};
 
@@ -205,7 +205,7 @@ RPCHelpMan getbalance()
 
     int min_depth = 0;
     if (!request.params[1].isNull()) {
-        min_depth = request.params[1].get_int();
+        min_depth = request.params[1].getInt<int>();
     }
 
     bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
@@ -329,7 +329,7 @@ RPCHelpMan lockunspent()
             });
 
         const uint256 txid(ParseHashO(o, "txid"));
-        const int nOutput = find_value(o, "vout").get_int();
+        const int nOutput = find_value(o, "vout").getInt<int>();
         if (nOutput < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
         }
@@ -577,13 +577,13 @@ RPCHelpMan listunspent()
     int nMinDepth = 1;
     if (!request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-        nMinDepth = request.params[0].get_int();
+        nMinDepth = request.params[0].getInt<int>();
     }
 
     int nMaxDepth = 9999999;
     if (!request.params[1].isNull()) {
         RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
-        nMaxDepth = request.params[1].get_int();
+        nMaxDepth = request.params[1].getInt<int>();
     }
 
     std::set<CTxDestination> destinations;
@@ -645,7 +645,7 @@ RPCHelpMan listunspent()
             nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
 
         if (options.exists("maximumCount"))
-            nMaximumCount = options["maximumCount"].get_int64();
+            nMaximumCount = options["maximumCount"].getInt<int64_t>();
         // SYSCOIN
         if (options.exists("assetGuid")) {
             if(!ParseUInt64(options["assetGuid"].get_str(), &nAsset))

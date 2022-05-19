@@ -365,7 +365,7 @@ void CGovernanceObject::LoadData()
         GetData(objResult);
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::LoadData -- GetDataAsPlainString = %s\n", GetDataAsPlainString());
         UniValue obj = GetJSONObject();
-        nObjectType = obj["type"].get_int();
+        nObjectType = obj["type"].getInt<int>();
     } catch (std::exception& e) {
         fUnparsable = true;
         std::ostringstream ostr;

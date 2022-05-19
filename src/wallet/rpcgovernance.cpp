@@ -94,7 +94,7 @@ static RPCHelpMan gobject_list_prepared()
     if (!pwallet) return NullUniValue;
     EnsureWalletIsUnlocked(*pwallet);
 
-    int nCount = request.params.size() > 0 ? request.params[0].get_int() : 10;
+    int nCount = request.params.size() > 0 ? request.params[0].getInt<int>() : 10;
     if (nCount < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     }
@@ -158,8 +158,8 @@ static RPCHelpMan gobject_prepare()
         hashParent = ParseHashV(request.params[0], "feeTxid");
     }
 
-    int nRevision = request.params[1].get_int();
-    int64_t nTime = request.params[2].get_int64();
+    int nRevision = request.params[1].getInt<int>();
+    int64_t nTime = request.params[2].getInt<int64_t>();
     std::string strDataHex = request.params[3].get_str();
 
     // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
@@ -197,7 +197,7 @@ static RPCHelpMan gobject_prepare()
     outpoint.SetNull();
     if (!request.params[4].isNull() && !request.params[5].isNull()) {
         uint256 collateralHash = ParseHashV(request.params[4], "outputHash");
-        int32_t collateralIndex = request.params[5].get_int();
+        int32_t collateralIndex = request.params[5].getInt<int>();
         if (collateralHash.IsNull() || collateralIndex < 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }

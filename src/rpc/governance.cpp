@@ -161,8 +161,8 @@ static RPCHelpMan gobject_submit()
 
     // GET THE PARAMETERS FROM USER
 
-    int nRevision = request.params[1].get_int();
-    int64_t nTime = request.params[2].get_int64();
+    int nRevision = request.params[1].getInt<int>();
+    int64_t nTime = request.params[2].getInt<int64_t>();
     std::string strDataHex = request.params[3].get_str();
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
@@ -571,7 +571,7 @@ static RPCHelpMan gobject_getcurrentvotes()
     COutPoint mnCollateralOutpoint;
     if (!request.params[1].isNull() && !request.params[2].isNull()) {
         uint256 txid = ParseHashV(request.params[1], "Masternode Collateral hash");
-        int nVout = request.params[2].get_int();
+        int nVout = request.params[2].getInt<int>();
         mnCollateralOutpoint = COutPoint(txid, (uint32_t)nVout);
     }
 
@@ -627,7 +627,7 @@ static RPCHelpMan voteraw()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     uint256 hashMnCollateralTx = ParseHashV(request.params[0], "mn collateral tx hash");
-    int nMnCollateralTxIndex = request.params[1].get_int();
+    int nMnCollateralTxIndex = request.params[1].getInt<int>();
     COutPoint outpoint = COutPoint(hashMnCollateralTx, nMnCollateralTxIndex);
 
     uint256 hashGovObj = ParseHashV(request.params[2], "Governance hash");
@@ -656,7 +656,7 @@ static RPCHelpMan voteraw()
         govObjType = pGovObj->GetObjectType();
     }
 
-    int64_t nTime = request.params[5].get_int64();
+    int64_t nTime = request.params[5].getInt<int64_t>();
     std::string strSig = request.params[6].get_str();
     auto vchSig = DecodeBase64(strSig);
 
@@ -746,7 +746,7 @@ static RPCHelpMan getsuperblockbudget()
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    int nBlockHeight = request.params[0].get_int();
+    int nBlockHeight = request.params[0].getInt<int>();
     if (nBlockHeight < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
     }

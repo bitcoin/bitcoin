@@ -233,7 +233,7 @@ static RPCHelpMan protx_register()
     ptx.nVersion = CProRegTx::CURRENT_VERSION;
 
     uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
-    int32_t collateralIndex = request.params[paramIdx + 1].get_int();
+    int32_t collateralIndex = request.params[paramIdx + 1].getInt<int>();
     if (collateralHash.IsNull() || collateralIndex < 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
     }
@@ -509,7 +509,7 @@ static RPCHelpMan protx_register_prepare()
     ptx.nVersion = CProRegTx::CURRENT_VERSION;
 
     uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
-    int32_t collateralIndex = request.params[paramIdx + 1].get_int();
+    int32_t collateralIndex = request.params[paramIdx + 1].getInt<int>();
     if (collateralHash.IsNull() || collateralIndex < 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
     }
@@ -883,7 +883,7 @@ static RPCHelpMan protx_revoke()
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
 
     if (!request.params[2].isNull()) {
-        int32_t nReason = request.params[2].get_int();
+        int32_t nReason = request.params[2].getInt<int>();
         if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
         }
@@ -1031,9 +1031,9 @@ static RPCHelpMan protx_list_wallet()
     }
     LOCK2(pwallet->cs_wallet, cs_main);
 
-    int detailed = !request.params[0].isNull() ? request.params[0].get_int() : 0;
+    int detailed = !request.params[0].isNull() ? request.params[0].getInt<int>() : 0;
 
-    int height = !request.params[1].isNull() ? request.params[1].get_int() : *pwallet->chain().getHeight();
+    int height = !request.params[1].isNull() ? request.params[1].getInt<int>() : *pwallet->chain().getHeight();
     if (height < 1 || height > pwallet->chain().getHeight()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
     }
