@@ -1678,7 +1678,7 @@ static void AssetTest(const UniValue& test)
     CMutableTransaction mtx = TxFromHex(test["tx"].get_str());
     const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
     BOOST_CHECK(prevouts.size() == mtx.vin.size());
-    size_t idx = test["index"].get_int64();
+    size_t idx = test["index"].getInt<int64_t>();
     uint32_t test_flags{ParseScriptFlags(test["flags"].get_str())};
     bool fin = test.exists("final") && test["final"].get_bool();
 
@@ -1760,7 +1760,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
         for (const auto& utxo_spent : vec["given"]["utxosSpent"].getValues()) {
             auto script_bytes = ParseHex(utxo_spent["scriptPubKey"].get_str());
             CScript script{script_bytes.begin(), script_bytes.end()};
-            CAmount amount{utxo_spent["amountSats"].get_int()};
+            CAmount amount{utxo_spent["amountSats"].getInt<int>()};
             utxos.emplace_back(amount, script);
         }
 
@@ -1775,8 +1775,8 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
         BOOST_CHECK_EQUAL(HexStr(txdata.m_sequences_single_hash), vec["intermediary"]["hashSequences"].get_str());
 
         for (const auto& input : vec["inputSpending"].getValues()) {
-            int txinpos = input["given"]["txinIndex"].get_int();
-            int hashtype = input["given"]["hashType"].get_int();
+            int txinpos = input["given"]["txinIndex"].getInt<int>();
+            int hashtype = input["given"]["hashType"].getInt<int>();
 
             // Load key.
             auto privkey = ParseHex(input["given"]["internalPrivkey"].get_str());
