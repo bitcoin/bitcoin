@@ -413,8 +413,8 @@ class CNode
     friend struct ConnmanTestMsg;
 
 public:
-    std::unique_ptr<TransportDeserializer> m_deserializer;
-    std::unique_ptr<const TransportSerializer> m_serializer;
+    const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
+    const std::unique_ptr<const TransportSerializer> m_serializer;
 
     NetPermissionFlags m_permissionFlags{NetPermissionFlags::None};
     std::atomic<ServiceFlags> nServices{NODE_NONE};
