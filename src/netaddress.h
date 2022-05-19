@@ -20,6 +20,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <ios>
 #include <string>
 #include <vector>
@@ -438,7 +439,7 @@ private:
             // disk.
             if (HasPrefix(m_addr, INTERNAL_IN_IPV6_PREFIX)) {
                 m_net = NET_INTERNAL;
-                memmove(m_addr.data(), m_addr.data() + INTERNAL_IN_IPV6_PREFIX.size(),
+                std::memmove(m_addr.data(), m_addr.data() + INTERNAL_IN_IPV6_PREFIX.size(),
                         ADDR_INTERNAL_SIZE);
                 m_addr.resize(ADDR_INTERNAL_SIZE);
                 return;

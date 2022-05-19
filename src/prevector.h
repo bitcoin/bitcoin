@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
+#include <cstring>
 
 #include <algorithm>
 #include <cstddef>
@@ -353,7 +353,7 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + 1, ptr, (size() - p) * sizeof(T));
+        std::memmove(ptr + 1, ptr, (size() - p) * sizeof(T));
         _size++;
         new(static_cast<void*>(ptr)) T(value);
         return iterator(ptr);
@@ -366,7 +366,7 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
+        std::memmove(ptr + count, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(item_ptr(p), count, value);
     }
@@ -380,7 +380,7 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
+        std::memmove(ptr + count, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(ptr, first, last);
     }
@@ -414,7 +414,7 @@ public:
         iterator p = first;
         char* endp = (char*)&(*end());
         _size -= last - p;
-        memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
+        std::memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
         return first;
     }
 
