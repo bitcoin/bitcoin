@@ -33,6 +33,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -200,7 +201,7 @@ public:
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
     {
         m_context.chain = MakeChain(m_context);
-        return AppInitMain(m_context, tip_info);
+        return AppInitMain(m_context_ref, m_context, tip_info);
     }
     void appShutdown() override
     {
@@ -287,8 +288,8 @@ public:
     }
     int64_t getTotalBytesRecv() override { return m_context.connman ? m_context.connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return m_context.connman ? m_context.connman->GetTotalBytesSent() : 0; }
-    size_t getMempoolSize() override { return ::mempool.size(); }
-    size_t getMempoolDynamicUsage() override { return ::mempool.DynamicMemoryUsage(); }
+    size_t getMempoolSize() override { return m_context.mempool ? m_context.mempool->size() : 0; }
+    size_t getMempoolDynamicUsage() override { return m_context.mempool ? m_context.mempool->DynamicMemoryUsage() : 0; }
     bool getHeaderTip(int& height, int64_t& block_time) override
     {
         LOCK(::cs_main);
@@ -351,7 +352,7 @@ public:
     CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
-        JSONRPCRequest req;
+        JSONRPCRequest req(m_context_ref);
         req.params = params;
         req.strMethod = command;
         req.URI = uri;
@@ -477,6 +478,7 @@ public:
     }
     NodeContext* context() override { return &m_context; }
     NodeContext m_context;
+    util::Ref m_context_ref{m_context};
 };
 
 } // namespace

@@ -63,7 +63,8 @@ static UniValue coinjoin(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        bool result = it->second->DoAutomaticDenominating(*g_rpc_node->connman);
+        NodeContext& node = EnsureNodeContext(request.context);
+        bool result = it->second->DoAutomaticDenominating(*node.connman);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses().original + ", will retry"));
     }
 

@@ -12,8 +12,12 @@
 class CBlock;
 class CBlockIndex;
 class CTxMemPool;
+class ChainstateManager;
 class UniValue;
 struct NodeContext;
+namespace util {
+class Ref;
+} // namespace util
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 
@@ -43,11 +47,8 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_size);
 
-//! Pointer to node state that needs to be declared as a global to be accessible
-//! RPC methods. Due to limitations of the RPC framework, there's currently no
-//! direct way to pass in state to RPC methods without globals.
-extern NodeContext* g_rpc_node;
-
-CTxMemPool& EnsureMemPool();
+NodeContext& EnsureNodeContext(const util::Ref& context);
+CTxMemPool& EnsureMemPool(const util::Ref& context);
+ChainstateManager& EnsureChainman(const util::Ref& context);
 
 #endif

@@ -79,8 +79,9 @@ static UniValue masternode_connect(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
     // TODO: Pass CConnman instance somehow and don't use global variable.
-    g_rpc_node->connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!g_rpc_node->connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+    NodeContext& node = EnsureNodeContext(request.context);
+    node.connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+    if (!node.connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 
     return "successfully connected";
@@ -196,9 +197,8 @@ static UniValue masternode_outputs(const JSONRPCRequest& request)
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_MASTERNODE_COLLATERAL;
     {
-        auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, &coin_control);
+        pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
     }
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {

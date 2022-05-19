@@ -216,7 +216,8 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
                                                                                       pQuorumBaseBlockIndex, proTxHash,
                                                                                       true);
                     std::map<uint256, CAddress> foundConnections;
-                    g_rpc_node->connman->ForEachNode([&](const CNode* pnode) {
+                    NodeContext& node = EnsureNodeContext(request.context);
+                    node.connman->ForEachNode([&](const CNode* pnode) {
                         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
                         if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
                             foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
@@ -626,8 +627,9 @@ static UniValue quorum_getdata(const JSONRPCRequest& request)
         }
     }
 
+    NodeContext& node = EnsureNodeContext(request.context);
     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
-    return g_rpc_node->connman->ForNode(nodeId, [&](CNode* pNode) {
+    return node.connman->ForNode(nodeId, [&](CNode* pNode) {
         return llmq::quorumManager->RequestQuorumData(pNode, llmqType, pQuorumBaseBlockIndex, nDataMask, proTxHash);
     });
 }

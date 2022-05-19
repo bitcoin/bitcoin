@@ -12,6 +12,7 @@
 #include <validationinterface.h>
 
 class CTxMemPool;
+class ChainstateManager;
 
 extern CCriticalSection cs_main;
 
@@ -28,11 +29,12 @@ class PeerLogicValidation final : public CValidationInterface, public NetEventsI
 private:
     CConnman* const connman;
     BanMan* const m_banman;
+    ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
 
     bool SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 public:
-    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, CTxMemPool& pool, bool enable_bip61);
+    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool, bool enable_bip61);
 
     /**
      * Overridden from CValidationInterface.
@@ -76,6 +78,8 @@ public:
     void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
     void EvictExtraOutboundPeers(int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
+    void ReattemptInitialBroadcast(CScheduler& scheduler) const;
 
 private:
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip

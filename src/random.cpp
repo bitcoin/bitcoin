@@ -549,6 +549,11 @@ std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) 
     return std::chrono::microseconds{GetRand(duration_max.count())};
 }
 
+std::chrono::milliseconds GetRandMillis(std::chrono::milliseconds duration_max) noexcept
+{
+    return std::chrono::milliseconds{GetRand(duration_max.count())};
+}
+
 void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
 void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }

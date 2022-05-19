@@ -235,6 +235,7 @@ BASE_SCRIPTS = [
     'p2p_blockfilters.py',
     'feature_asmap.py',
     'feature_includeconf.py',
+    'mempool_unbroadcast.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',

@@ -200,6 +200,7 @@ BITCOIN_TESTS =\
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
   test/ratecheck_tests.cpp \
+  test/ref_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
@@ -228,6 +229,7 @@ BITCOIN_TESTS =\
   test/uint256_tests.cpp \
   test/util_tests.cpp \
   test/validation_block_tests.cpp \
+  test/validation_chainstatemanager_tests.cpp \
   test/validation_flush_tests.cpp \
   test/versionbits_tests.cpp
 
