@@ -22,6 +22,8 @@
 #include <variant>
 #include <vector>
 
+static constexpr bool DEFAULT_RPC_DOC_CHECK{false};
+
 /**
  * String used to describe UNIX epoch time in documentation, factored out to a
  * constant for consistency.
