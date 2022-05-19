@@ -441,15 +441,14 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     for (const COutPoint& outpoint : vPresetInputs) {
         int input_bytes = -1;
         CTxOut txout;
-        std::map<uint256, CWalletTx>::const_iterator it = wallet.mapWallet.find(outpoint.hash);
-        if (it != wallet.mapWallet.end()) {
-            const CWalletTx& wtx = it->second;
+        auto ptr_wtx = wallet.GetWalletTx(outpoint.hash);
+        if (ptr_wtx) {
             // Clearly invalid input, fail
-            if (wtx.tx->vout.size() <= outpoint.n) {
+            if (ptr_wtx->tx->vout.size() <= outpoint.n) {
                 return std::nullopt;
             }
-            input_bytes = GetTxSpendSize(wallet, wtx, outpoint.n, false);
-            txout = wtx.tx->vout.at(outpoint.n);
+            input_bytes = GetTxSpendSize(wallet, *ptr_wtx, outpoint.n, false);
+            txout = ptr_wtx->tx->vout.at(outpoint.n);
         } else {
             // The input is external. We did not find the tx in mapWallet.
             if (!coin_control.GetExternalOutput(outpoint, txout)) {
