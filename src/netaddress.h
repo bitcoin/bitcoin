@@ -341,7 +341,7 @@ private:
         } // no default case, so the compiler can warn about missing cases
 
         // Serialize ONION, I2P and CJDNS as all-zeros.
-        memset(arr, 0x0, V1_SERIALIZATION_SIZE);
+        std::memset(arr, 0x0, V1_SERIALIZATION_SIZE);
     }
 
     /**

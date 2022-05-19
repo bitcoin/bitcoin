@@ -41,7 +41,7 @@ struct KeyOriginInfo
 
     void clear()
     {
-        memset(fingerprint, 0, 4);
+        std::memset(fingerprint, 0, 4);
         path.clear();
     }
 };

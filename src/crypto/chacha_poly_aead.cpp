@@ -12,7 +12,7 @@
 #include <support/cleanse.h>
 
 #include <assert.h>
-#include <string.h>
+#include <cstring>
 
 #include <cstdio>
 #include <limits>
@@ -56,7 +56,7 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
     }
 
     unsigned char expected_tag[POLY1305_TAGLEN], poly_key[POLY1305_KEYLEN];
-    memset(poly_key, 0, sizeof(poly_key));
+    std::memset(poly_key, 0, sizeof(poly_key));
     m_chacha_main.SetIV(seqnr_payload);
 
     // block counter 0 for the poly1305 key

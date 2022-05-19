@@ -29,7 +29,7 @@ std::string base_blob<BITS>::GetHex() const
 template <unsigned int BITS>
 void base_blob<BITS>::SetHex(const char* psz)
 {
-    memset(m_data, 0, sizeof(m_data));
+    std::memset(m_data, 0, sizeof(m_data));
 
     // skip leading spaces
     while (IsSpace(*psz))

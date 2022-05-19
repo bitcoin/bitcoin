@@ -4,7 +4,7 @@
 
 #include <crypto/aes.h>
 
-#include <string.h>
+#include <cstring>
 
 extern "C" {
 #include <crypto/ctaes/ctaes.c>
@@ -17,7 +17,7 @@ AES256Encrypt::AES256Encrypt(const unsigned char key[32])
 
 AES256Encrypt::~AES256Encrypt()
 {
-    memset(&ctx, 0, sizeof(ctx));
+    std::memset(&ctx, 0, sizeof(ctx));
 }
 
 void AES256Encrypt::Encrypt(unsigned char ciphertext[16], const unsigned char plaintext[16]) const
@@ -32,7 +32,7 @@ AES256Decrypt::AES256Decrypt(const unsigned char key[32])
 
 AES256Decrypt::~AES256Decrypt()
 {
-    memset(&ctx, 0, sizeof(ctx));
+    std::memset(&ctx, 0, sizeof(ctx));
 }
 
 void AES256Decrypt::Decrypt(unsigned char plaintext[16], const unsigned char ciphertext[16]) const
@@ -131,7 +131,7 @@ int AES256CBCEncrypt::Encrypt(const unsigned char* data, int size, unsigned char
 
 AES256CBCEncrypt::~AES256CBCEncrypt()
 {
-    memset(iv, 0, sizeof(iv));
+    std::memset(iv, 0, sizeof(iv));
 }
 
 AES256CBCDecrypt::AES256CBCDecrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn)
@@ -148,5 +148,5 @@ int AES256CBCDecrypt::Decrypt(const unsigned char* data, int size, unsigned char
 
 AES256CBCDecrypt::~AES256CBCDecrypt()
 {
-    memset(iv, 0, sizeof(iv));
+    std::memset(iv, 0, sizeof(iv));
 }

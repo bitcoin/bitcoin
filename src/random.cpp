@@ -644,7 +644,7 @@ bool Random_SanityCheck()
     int tries = 0;
     /* Loop until all bytes have been overwritten at least once, or max number tries reached */
     do {
-        memset(data, 0, NUM_OS_RANDOM_BYTES);
+        std::memset(data, 0, NUM_OS_RANDOM_BYTES);
         GetOSRand(data);
         for (int x=0; x < NUM_OS_RANDOM_BYTES; ++x) {
             overwritten[x] |= (data[x] != 0);

@@ -168,7 +168,7 @@ int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_
     if (overflow) {
         /* Overwrite the result again with a correctly-parsed but invalid
            signature if parsing failed. */
-        memset(tmpsig, 0, 64);
+        std::memset(tmpsig, 0, 64);
         secp256k1_ecdsa_signature_parse_compact(ctx, sig, tmpsig);
     }
     return 1;

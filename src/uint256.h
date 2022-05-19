@@ -40,7 +40,7 @@ public:
 
     void SetNull()
     {
-        memset(m_data, 0, sizeof(m_data));
+        std::memset(m_data, 0, sizeof(m_data));
     }
 
     inline int Compare(const base_blob& other) const { return memcmp(m_data, other.m_data, sizeof(m_data)); }

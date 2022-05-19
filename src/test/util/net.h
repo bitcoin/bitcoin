@@ -139,13 +139,13 @@ public:
     {
         if (addr != nullptr) {
             // Pretend all connections come from 5.5.5.5:6789
-            memset(addr, 0x00, *addr_len);
+            std::memset(addr, 0x00, *addr_len);
             const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in));
             if (*addr_len >= write_len) {
                 *addr_len = write_len;
                 sockaddr_in* addr_in = reinterpret_cast<sockaddr_in*>(addr);
                 addr_in->sin_family = AF_INET;
-                memset(&addr_in->sin_addr, 0x05, sizeof(addr_in->sin_addr));
+                std::memset(&addr_in->sin_addr, 0x05, sizeof(addr_in->sin_addr));
                 addr_in->sin_port = htons(6789);
             }
         }

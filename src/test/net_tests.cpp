@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
 
     // the peer claims to be reaching us via IPv6
     in6_addr ipv6AddrLocal;
-    memset(ipv6AddrLocal.s6_addr, 0, 16);
+    std::memset(ipv6AddrLocal.s6_addr, 0, 16);
     ipv6AddrLocal.s6_addr[0] = 0xcc;
     CAddress addrLocal = CAddress(CService(ipv6AddrLocal, 7777), NODE_NETWORK);
     pnode->SetAddrLocal(addrLocal);
@@ -769,7 +769,7 @@ CNetAddr UtilBuildAddress(unsigned char p1, unsigned char p2, unsigned char p3, 
     unsigned char ip[] = {p1, p2, p3, p4};
 
     struct sockaddr_in sa;
-    memset(&sa, 0, sizeof(sockaddr_in)); // initialize the memory block
+    std::memset(&sa, 0, sizeof(sockaddr_in)); // initialize the memory block
     memcpy(&(sa.sin_addr), &ip, sizeof(ip));
     return CNetAddr(sa.sin_addr);
 }

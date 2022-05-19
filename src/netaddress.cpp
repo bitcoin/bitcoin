@@ -882,7 +882,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
             return false;
         *addrlen = sizeof(struct sockaddr_in);
         struct sockaddr_in *paddrin = (struct sockaddr_in*)paddr;
-        memset(paddrin, 0, *addrlen);
+        std::memset(paddrin, 0, *addrlen);
         if (!GetInAddr(&paddrin->sin_addr))
             return false;
         paddrin->sin_family = AF_INET;
@@ -894,7 +894,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
             return false;
         *addrlen = sizeof(struct sockaddr_in6);
         struct sockaddr_in6 *paddrin6 = (struct sockaddr_in6*)paddr;
-        memset(paddrin6, 0, *addrlen);
+        std::memset(paddrin6, 0, *addrlen);
         if (!GetIn6Addr(&paddrin6->sin6_addr))
             return false;
         paddrin6->sin6_scope_id = m_scope_id;
@@ -938,7 +938,7 @@ std::string CService::ToString() const
 CSubNet::CSubNet():
     valid(false)
 {
-    memset(netmask, 0, sizeof(netmask));
+    std::memset(netmask, 0, sizeof(netmask));
 }
 
 CSubNet::CSubNet(const CNetAddr& addr, uint8_t mask) : CSubNet()
@@ -1020,7 +1020,7 @@ CSubNet::CSubNet(const CNetAddr& addr) : CSubNet()
     case NET_IPV6:
         valid = true;
         assert(addr.m_addr.size() <= sizeof(netmask));
-        memset(netmask, 0xFF, addr.m_addr.size());
+        std::memset(netmask, 0xFF, addr.m_addr.size());
         break;
     case NET_ONION:
     case NET_I2P:

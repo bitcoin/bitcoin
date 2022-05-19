@@ -36,7 +36,7 @@ static secp256k1_context* secp256k1_context_sign = nullptr;
  */
 int ec_seckey_import_der(const secp256k1_context* ctx, unsigned char *out32, const unsigned char *seckey, size_t seckeylen) {
     const unsigned char *end = seckey + seckeylen;
-    memset(out32, 0, 32);
+    std::memset(out32, 0, 32);
     /* sequence header */
     if (end - seckey < 1 || *seckey != 0x30u) {
         return 0;
@@ -75,7 +75,7 @@ int ec_seckey_import_der(const secp256k1_context* ctx, unsigned char *out32, con
     }
     memcpy(out32 + (32 - oslen), seckey, oslen);
     if (!secp256k1_ec_seckey_verify(ctx, out32)) {
-        memset(out32, 0, 32);
+        std::memset(out32, 0, 32);
         return 0;
     }
     return 1;
@@ -349,7 +349,7 @@ void CExtKey::SetSeed(Span<const std::byte> seed)
     memcpy(chaincode.begin(), vout.data() + 32, 32);
     nDepth = 0;
     nChild = 0;
-    memset(vchFingerprint, 0, sizeof(vchFingerprint));
+    std::memset(vchFingerprint, 0, sizeof(vchFingerprint));
 }
 
 CExtPubKey CExtKey::Neuter() const {
