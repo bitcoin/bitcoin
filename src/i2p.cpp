@@ -340,7 +340,7 @@ Binary Session::MyDestination() const
     static constexpr size_t CERT_LEN_POS = 385;
 
     uint16_t cert_len;
-    memcpy(&cert_len, &m_private_key.at(CERT_LEN_POS), sizeof(cert_len));
+    std::memcpy(&cert_len, &m_private_key.at(CERT_LEN_POS), sizeof(cert_len));
     cert_len = be16toh(cert_len);
 
     const size_t dest_len = DEST_LEN_BASE + cert_len;

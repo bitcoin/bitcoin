@@ -147,7 +147,7 @@ int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_
     if (rlen > 32) {
         overflow = 1;
     } else {
-        memcpy(tmpsig + 32 - rlen, input + rpos, rlen);
+        std::memcpy(tmpsig + 32 - rlen, input + rpos, rlen);
     }
 
     /* Ignore leading zeroes in S */
@@ -159,7 +159,7 @@ int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_
     if (slen > 32) {
         overflow = 1;
     } else {
-        memcpy(tmpsig + 64 - slen, input + spos, slen);
+        std::memcpy(tmpsig + 64 - slen, input + spos, slen);
     }
 
     if (!overflow) {
@@ -318,7 +318,7 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     assert(size() == COMPRESSED_SIZE);
     unsigned char out[64];
     BIP32Hash(cc, nChild, *begin(), begin()+1, out);
-    memcpy(ccChild.begin(), out+32, 32);
+    std::memcpy(ccChild.begin(), out+32, 32);
     secp256k1_pubkey pubkey;
     assert(secp256k1_context_verify && "secp256k1_context_verify must be initialized to use CPubKey.");
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size())) {
@@ -336,38 +336,38 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
 
 void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
-    memcpy(code+1, vchFingerprint, 4);
+    std::memcpy(code+1, vchFingerprint, 4);
     WriteBE32(code+5, nChild);
-    memcpy(code+9, chaincode.begin(), 32);
+    std::memcpy(code+9, chaincode.begin(), 32);
     assert(pubkey.size() == CPubKey::COMPRESSED_SIZE);
-    memcpy(code+41, pubkey.begin(), CPubKey::COMPRESSED_SIZE);
+    std::memcpy(code+41, pubkey.begin(), CPubKey::COMPRESSED_SIZE);
 }
 
 void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
-    memcpy(vchFingerprint, code+1, 4);
+    std::memcpy(vchFingerprint, code+1, 4);
     nChild = ReadBE32(code+5);
-    memcpy(chaincode.begin(), code+9, 32);
+    std::memcpy(chaincode.begin(), code+9, 32);
     pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
     if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || !pubkey.IsFullyValid()) pubkey = CPubKey();
 }
 
 void CExtPubKey::EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const
 {
-    memcpy(code, version, 4);
+    std::memcpy(code, version, 4);
     Encode(&code[4]);
 }
 
 void CExtPubKey::DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE])
 {
-    memcpy(version, code, 4);
+    std::memcpy(version, code, 4);
     Decode(&code[4]);
 }
 
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
     out.nDepth = nDepth + 1;
     CKeyID id = pubkey.GetID();
-    memcpy(out.vchFingerprint, &id, 4);
+    std::memcpy(out.vchFingerprint, &id, 4);
     out.nChild = _nChild;
     return pubkey.Derive(out.pubkey, out.chaincode, _nChild, chaincode);
 }

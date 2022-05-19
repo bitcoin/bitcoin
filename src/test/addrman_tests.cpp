@@ -693,14 +693,14 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     pos = str.find(new2_raw, 0, sizeof(new2_raw));
     BOOST_REQUIRE(pos != std::string::npos);
     BOOST_REQUIRE(pos + sizeof(new2_raw_replacement) <= stream.size());
-    memcpy(stream.data() + pos, new2_raw_replacement, sizeof(new2_raw_replacement));
+    std::memcpy(stream.data() + pos, new2_raw_replacement, sizeof(new2_raw_replacement));
 
     const char tried2_raw[]{8, 8, 8, 8};
     const uint8_t tried2_raw_replacement[]{255, 255, 255, 255}; // 255.255.255.255 is !IsValid()
     pos = str.find(tried2_raw, 0, sizeof(tried2_raw));
     BOOST_REQUIRE(pos != std::string::npos);
     BOOST_REQUIRE(pos + sizeof(tried2_raw_replacement) <= stream.size());
-    memcpy(stream.data() + pos, tried2_raw_replacement, sizeof(tried2_raw_replacement));
+    std::memcpy(stream.data() + pos, tried2_raw_replacement, sizeof(tried2_raw_replacement));
 
     addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     stream >> *addrman;

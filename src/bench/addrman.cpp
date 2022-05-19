@@ -33,10 +33,10 @@ static void CreateAddresses()
 
     auto randAddr = [&rng]() {
         in6_addr addr;
-        memcpy(&addr, rng.randbytes(sizeof(addr)).data(), sizeof(addr));
+        std::memcpy(&addr, rng.randbytes(sizeof(addr)).data(), sizeof(addr));
 
         uint16_t port;
-        memcpy(&port, rng.randbytes(sizeof(port)).data(), sizeof(port));
+        std::memcpy(&port, rng.randbytes(sizeof(port)).data(), sizeof(port));
         if (port == 0) {
             port = 1;
         }

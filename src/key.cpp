@@ -73,7 +73,7 @@ int ec_seckey_import_der(const secp256k1_context* ctx, unsigned char *out32, con
     if (oslen > 32 || end - seckey < oslen) {
         return 0;
     }
-    memcpy(out32 + (32 - oslen), seckey, oslen);
+    std::memcpy(out32 + (32 - oslen), seckey, oslen);
     if (!secp256k1_ec_seckey_verify(ctx, out32)) {
         std::memset(out32, 0, 32);
         return 0;
@@ -115,9 +115,9 @@ int ec_seckey_export_der(const secp256k1_context *ctx, unsigned char *seckey, si
             0x8C,0xD0,0x36,0x41,0x41,0x02,0x01,0x01,0xA1,0x24,0x03,0x22,0x00
         };
         unsigned char *ptr = seckey;
-        memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
-        memcpy(ptr, key32, 32); ptr += 32;
-        memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
+        std::memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
+        std::memcpy(ptr, key32, 32); ptr += 32;
+        std::memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         pubkeylen = CPubKey::COMPRESSED_SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
         ptr += pubkeylen;
@@ -141,9 +141,9 @@ int ec_seckey_export_der(const secp256k1_context *ctx, unsigned char *seckey, si
             0x8C,0xD0,0x36,0x41,0x41,0x02,0x01,0x01,0xA1,0x44,0x03,0x42,0x00
         };
         unsigned char *ptr = seckey;
-        memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
-        memcpy(ptr, key32, 32); ptr += 32;
-        memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
+        std::memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
+        std::memcpy(ptr, key32, 32); ptr += 32;
+        std::memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         pubkeylen = CPubKey::SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
         ptr += pubkeylen;
@@ -324,8 +324,8 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
         assert(size() == 32);
         BIP32Hash(cc, nChild, 0, begin(), vout.data());
     }
-    memcpy(ccChild.begin(), vout.data()+32, 32);
-    memcpy((unsigned char*)keyChild.begin(), begin(), 32);
+    std::memcpy(ccChild.begin(), vout.data()+32, 32);
+    std::memcpy((unsigned char*)keyChild.begin(), begin(), 32);
     bool ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
@@ -335,7 +335,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     out.nDepth = nDepth + 1;
     CKeyID id = key.GetPubKey().GetID();
-    memcpy(out.vchFingerprint, &id, 4);
+    std::memcpy(out.vchFingerprint, &id, 4);
     out.nChild = _nChild;
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
@@ -346,7 +346,7 @@ void CExtKey::SetSeed(Span<const std::byte> seed)
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     CHMAC_SHA512{hashkey, sizeof(hashkey)}.Write(UCharCast(seed.data()), seed.size()).Finalize(vout.data());
     key.Set(vout.data(), vout.data() + 32, true);
-    memcpy(chaincode.begin(), vout.data() + 32, 32);
+    std::memcpy(chaincode.begin(), vout.data() + 32, 32);
     nDepth = 0;
     nChild = 0;
     std::memset(vchFingerprint, 0, sizeof(vchFingerprint));
@@ -355,7 +355,7 @@ void CExtKey::SetSeed(Span<const std::byte> seed)
 CExtPubKey CExtKey::Neuter() const {
     CExtPubKey ret;
     ret.nDepth = nDepth;
-    memcpy(ret.vchFingerprint, vchFingerprint, 4);
+    std::memcpy(ret.vchFingerprint, vchFingerprint, 4);
     ret.nChild = nChild;
     ret.pubkey = key.GetPubKey();
     ret.chaincode = chaincode;
@@ -364,19 +364,19 @@ CExtPubKey CExtKey::Neuter() const {
 
 void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
-    memcpy(code+1, vchFingerprint, 4);
+    std::memcpy(code+1, vchFingerprint, 4);
     WriteBE32(code+5, nChild);
-    memcpy(code+9, chaincode.begin(), 32);
+    std::memcpy(code+9, chaincode.begin(), 32);
     code[41] = 0;
     assert(key.size() == 32);
-    memcpy(code+42, key.begin(), 32);
+    std::memcpy(code+42, key.begin(), 32);
 }
 
 void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
-    memcpy(vchFingerprint, code+1, 4);
+    std::memcpy(vchFingerprint, code+1, 4);
     nChild = ReadBE32(code+5);
-    memcpy(chaincode.begin(), code+9, 32);
+    std::memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
     if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || code[41] != 0) key = CKey();
 }

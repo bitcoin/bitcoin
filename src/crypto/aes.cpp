@@ -54,14 +54,14 @@ static int CBCEncrypt(const T& enc, const unsigned char iv[AES_BLOCKSIZE], const
     if (!pad && padsize != 0)
         return 0;
 
-    memcpy(mixed, iv, AES_BLOCKSIZE);
+    std::memcpy(mixed, iv, AES_BLOCKSIZE);
 
     // Write all but the last block
     while (written + AES_BLOCKSIZE <= size) {
         for (int i = 0; i != AES_BLOCKSIZE; i++)
             mixed[i] ^= *data++;
         enc.Encrypt(out + written, mixed);
-        memcpy(mixed, out + written, AES_BLOCKSIZE);
+        std::memcpy(mixed, out + written, AES_BLOCKSIZE);
         written += AES_BLOCKSIZE;
     }
     if (pad) {
@@ -121,7 +121,7 @@ static int CBCDecrypt(const T& dec, const unsigned char iv[AES_BLOCKSIZE], const
 AES256CBCEncrypt::AES256CBCEncrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn)
     : enc(key), pad(padIn)
 {
-    memcpy(iv, ivIn, AES_BLOCKSIZE);
+    std::memcpy(iv, ivIn, AES_BLOCKSIZE);
 }
 
 int AES256CBCEncrypt::Encrypt(const unsigned char* data, int size, unsigned char* out) const
@@ -137,7 +137,7 @@ AES256CBCEncrypt::~AES256CBCEncrypt()
 AES256CBCDecrypt::AES256CBCDecrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn)
     : dec(key), pad(padIn)
 {
-    memcpy(iv, ivIn, AES_BLOCKSIZE);
+    std::memcpy(iv, ivIn, AES_BLOCKSIZE);
 }
 
 

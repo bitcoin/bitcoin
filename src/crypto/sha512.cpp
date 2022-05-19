@@ -162,7 +162,7 @@ CSHA512& CSHA512::Write(const unsigned char* data, size_t len)
     size_t bufsize = bytes % 128;
     if (bufsize && bufsize + len >= 128) {
         // Fill the buffer, and process it.
-        memcpy(buf + bufsize, data, 128 - bufsize);
+        std::memcpy(buf + bufsize, data, 128 - bufsize);
         bytes += 128 - bufsize;
         data += 128 - bufsize;
         sha512::Transform(s, buf);
@@ -176,7 +176,7 @@ CSHA512& CSHA512::Write(const unsigned char* data, size_t len)
     }
     if (end > data) {
         // Fill the buffer with what remains.
-        memcpy(buf + bufsize, data, end - data);
+        std::memcpy(buf + bufsize, data, end - data);
         bytes += end - data;
     }
     return *this;

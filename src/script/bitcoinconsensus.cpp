@@ -36,7 +36,7 @@ public:
             throw std::ios_base::failure(std::string(__func__) + ": bad source buffer");
         }
 
-        memcpy(dst.data(), m_data, dst.size());
+        std::memcpy(dst.data(), m_data, dst.size());
         m_remaining -= dst.size();
         m_data += dst.size();
     }

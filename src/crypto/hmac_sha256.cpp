@@ -10,7 +10,7 @@ CHMAC_SHA256::CHMAC_SHA256(const unsigned char* key, size_t keylen)
 {
     unsigned char rkey[64];
     if (keylen <= 64) {
-        memcpy(rkey, key, keylen);
+        std::memcpy(rkey, key, keylen);
         std::memset(rkey + keylen, 0, 64 - keylen);
     } else {
         CSHA256().Write(key, keylen).Finalize(rkey);

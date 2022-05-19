@@ -89,7 +89,7 @@ const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMes
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
 {
-    memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
+    std::memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
 
     // Copy the command name
     size_t i = 0;

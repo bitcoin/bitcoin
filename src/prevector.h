@@ -175,7 +175,7 @@ private:
                 T* indirect = indirect_ptr(0);
                 T* src = indirect;
                 T* dst = direct_ptr(0);
-                memcpy(dst, src, size() * sizeof(T));
+                std::memcpy(dst, src, size() * sizeof(T));
                 free(indirect);
                 _size -= N + 1;
             }
@@ -192,7 +192,7 @@ private:
                 assert(new_indirect);
                 T* src = direct_ptr(0);
                 T* dst = reinterpret_cast<T*>(new_indirect);
-                memcpy(dst, src, size() * sizeof(T));
+                std::memcpy(dst, src, size() * sizeof(T));
                 _union.indirect_contents.indirect = new_indirect;
                 _union.indirect_contents.capacity = new_capacity;
                 _size += N + 1;

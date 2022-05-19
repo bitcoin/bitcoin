@@ -100,7 +100,7 @@ class CVectorWriter
         assert(nPos <= vchData.size());
         size_t nOverwrite = std::min(src.size(), vchData.size() - nPos);
         if (nOverwrite) {
-            memcpy(vchData.data() + nPos, src.data(), nOverwrite);
+            std::memcpy(vchData.data() + nPos, src.data(), nOverwrite);
         }
         if (nOverwrite < src.size()) {
             vchData.insert(vchData.end(), UCharCast(src.data()) + nOverwrite, UCharCast(src.end()));
@@ -172,7 +172,7 @@ public:
         if (dst.size() > m_data.size()) {
             throw std::ios_base::failure("SpanReader::read(): end of data");
         }
-        memcpy(dst.data(), m_data.data(), dst.size());
+        std::memcpy(dst.data(), m_data.data(), dst.size());
         m_data = m_data.subspan(dst.size());
     }
 };
@@ -286,7 +286,7 @@ public:
         if (!next_read_pos.has_value() || next_read_pos.value() > vch.size()) {
             throw std::ios_base::failure("CDataStream::read(): end of data");
         }
-        memcpy(dst.data(), &vch[m_read_pos], dst.size());
+        std::memcpy(dst.data(), &vch[m_read_pos], dst.size());
         if (next_read_pos.value() == vch.size()) {
             m_read_pos = 0;
             vch.clear();
@@ -678,7 +678,7 @@ public:
                 nNow = vchBuf.size() - pos;
             if (nNow + m_read_pos > nSrcPos)
                 nNow = nSrcPos - m_read_pos;
-            memcpy(dst.data(), &vchBuf[pos], nNow);
+            std::memcpy(dst.data(), &vchBuf[pos], nNow);
             m_read_pos += nNow;
             dst = dst.subspan(nNow);
         }

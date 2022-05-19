@@ -157,7 +157,7 @@ CSHA1& CSHA1::Write(const unsigned char* data, size_t len)
     size_t bufsize = bytes % 64;
     if (bufsize && bufsize + len >= 64) {
         // Fill the buffer, and process it.
-        memcpy(buf + bufsize, data, 64 - bufsize);
+        std::memcpy(buf + bufsize, data, 64 - bufsize);
         bytes += 64 - bufsize;
         data += 64 - bufsize;
         sha1::Transform(s, buf);
@@ -171,7 +171,7 @@ CSHA1& CSHA1::Write(const unsigned char* data, size_t len)
     }
     if (end > data) {
         // Fill the buffer with what remains.
-        memcpy(buf + bufsize, data, end - data);
+        std::memcpy(buf + bufsize, data, end - data);
         bytes += end - data;
     }
     return *this;

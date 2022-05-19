@@ -355,7 +355,7 @@ public:
         CHashWriter h(SER_DISK, 0);
         h << consensus.signet_challenge;
         uint256 hash = h.GetHash();
-        memcpy(pchMessageStart, hash.begin(), 4);
+        std::memcpy(pchMessageStart, hash.begin(), 4);
 
         nDefaultPort = 38333;
         nPruneAfterHeight = 1000;

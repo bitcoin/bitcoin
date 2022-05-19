@@ -317,19 +317,19 @@ private:
         switch (m_net) {
         case NET_IPV6:
             assert(m_addr.size() == sizeof(arr));
-            memcpy(arr, m_addr.data(), m_addr.size());
+            std::memcpy(arr, m_addr.data(), m_addr.size());
             return;
         case NET_IPV4:
             prefix_size = sizeof(IPV4_IN_IPV6_PREFIX);
             assert(prefix_size + m_addr.size() == sizeof(arr));
-            memcpy(arr, IPV4_IN_IPV6_PREFIX.data(), prefix_size);
-            memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
+            std::memcpy(arr, IPV4_IN_IPV6_PREFIX.data(), prefix_size);
+            std::memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
             return;
         case NET_INTERNAL:
             prefix_size = sizeof(INTERNAL_IN_IPV6_PREFIX);
             assert(prefix_size + m_addr.size() == sizeof(arr));
-            memcpy(arr, INTERNAL_IN_IPV6_PREFIX.data(), prefix_size);
-            memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
+            std::memcpy(arr, INTERNAL_IN_IPV6_PREFIX.data(), prefix_size);
+            std::memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
             return;
         case NET_ONION:
         case NET_I2P:

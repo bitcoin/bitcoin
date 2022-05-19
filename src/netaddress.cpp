@@ -200,7 +200,7 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
     hasher.Finalize(checksum_full);
 
-    memcpy(checksum, checksum_full, sizeof(checksum));
+    std::memcpy(checksum, checksum_full, sizeof(checksum));
 }
 
 }; // namespace torv3
@@ -652,7 +652,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
     if (!IsIPv4())
         return false;
     assert(sizeof(*pipv4Addr) == m_addr.size());
-    memcpy(pipv4Addr, m_addr.data(), m_addr.size());
+    std::memcpy(pipv4Addr, m_addr.data(), m_addr.size());
     return true;
 }
 
@@ -672,7 +672,7 @@ bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
         return false;
     }
     assert(sizeof(*pipv6Addr) == m_addr.size());
-    memcpy(pipv6Addr, m_addr.data(), m_addr.size());
+    std::memcpy(pipv6Addr, m_addr.data(), m_addr.size());
     return true;
 }
 
@@ -1003,7 +1003,7 @@ CSubNet::CSubNet(const CNetAddr& addr, const CNetAddr& mask) : CSubNet()
 
     assert(mask.m_addr.size() <= sizeof(netmask));
 
-    memcpy(netmask, mask.m_addr.data(), mask.m_addr.size());
+    std::memcpy(netmask, mask.m_addr.data(), mask.m_addr.size());
 
     network = addr;
 

@@ -13,7 +13,7 @@ template <unsigned int BITS>
 base_blob<BITS>::base_blob(const std::vector<unsigned char>& vch)
 {
     assert(vch.size() == sizeof(m_data));
-    memcpy(m_data, vch.data(), sizeof(m_data));
+    std::memcpy(m_data, vch.data(), sizeof(m_data));
 }
 
 template <unsigned int BITS>

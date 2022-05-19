@@ -692,7 +692,7 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
     unsigned int nRemaining = CMessageHeader::HEADER_SIZE - nHdrPos;
     unsigned int nCopy = std::min<unsigned int>(nRemaining, msg_bytes.size());
 
-    memcpy(&hdrbuf[nHdrPos], msg_bytes.data(), nCopy);
+    std::memcpy(&hdrbuf[nHdrPos], msg_bytes.data(), nCopy);
     nHdrPos += nCopy;
 
     // if header incomplete, exit
@@ -737,7 +737,7 @@ int V1TransportDeserializer::readData(Span<const uint8_t> msg_bytes)
     }
 
     hasher.Write(msg_bytes.first(nCopy));
-    memcpy(&vRecv[nDataPos], msg_bytes.data(), nCopy);
+    std::memcpy(&vRecv[nDataPos], msg_bytes.data(), nCopy);
     nDataPos += nCopy;
 
     return nCopy;
@@ -794,7 +794,7 @@ void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
 
     // create header
     CMessageHeader hdr(Params().MessageStart(), msg.m_type.c_str(), msg.data.size());
-    memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
+    std::memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
 
     // serialize header
     header.reserve(CMessageHeader::HEADER_SIZE);

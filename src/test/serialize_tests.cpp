@@ -26,7 +26,7 @@ public:
     CSerializeMethodsTestSingle() = default;
     CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const uint8_t* charstrvalin, const CTransactionRef& txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), txval(txvalin)
     {
-        memcpy(charstrval, charstrvalin, sizeof(charstrval));
+        std::memcpy(charstrval, charstrvalin, sizeof(charstrval));
     }
 
     SERIALIZE_METHODS(CSerializeMethodsTestSingle, obj)

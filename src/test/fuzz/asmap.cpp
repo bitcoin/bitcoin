@@ -54,7 +54,7 @@ FUZZ_TARGET(asmap)
     } else {
         assert(addr_size == ADDR_IPV4_SIZE);
         in_addr ipv4;
-        memcpy(&ipv4, addr_data, addr_size);
+        std::memcpy(&ipv4, addr_data, addr_size);
         net_addr.SetIP(CNetAddr{ipv4});
     }
     NetGroupManager netgroupman{asmap};

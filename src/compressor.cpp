@@ -21,7 +21,7 @@ static bool IsToKeyID(const CScript& script, CKeyID &hash)
     if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
                             && script[2] == 20 && script[23] == OP_EQUALVERIFY
                             && script[24] == OP_CHECKSIG) {
-        memcpy(&hash, &script[3], 20);
+        std::memcpy(&hash, &script[3], 20);
         return true;
     }
     return false;
@@ -31,7 +31,7 @@ static bool IsToScriptID(const CScript& script, CScriptID &hash)
 {
     if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20
                             && script[22] == OP_EQUAL) {
-        memcpy(&hash, &script[2], 20);
+        std::memcpy(&hash, &script[2], 20);
         return true;
     }
     return false;
@@ -58,20 +58,20 @@ bool CompressScript(const CScript& script, CompressedScript& out)
     if (IsToKeyID(script, keyID)) {
         out.resize(21);
         out[0] = 0x00;
-        memcpy(&out[1], &keyID, 20);
+        std::memcpy(&out[1], &keyID, 20);
         return true;
     }
     CScriptID scriptID;
     if (IsToScriptID(script, scriptID)) {
         out.resize(21);
         out[0] = 0x01;
-        memcpy(&out[1], &scriptID, 20);
+        std::memcpy(&out[1], &scriptID, 20);
         return true;
     }
     CPubKey pubkey;
     if (IsToPubKey(script, pubkey)) {
         out.resize(33);
-        memcpy(&out[1], &pubkey[1], 32);
+        std::memcpy(&out[1], &pubkey[1], 32);
         if (pubkey[0] == 0x02 || pubkey[0] == 0x03) {
             out[0] = pubkey[0];
             return true;
@@ -100,7 +100,7 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
         script[0] = OP_DUP;
         script[1] = OP_HASH160;
         script[2] = 20;
-        memcpy(&script[3], in.data(), 20);
+        std::memcpy(&script[3], in.data(), 20);
         script[23] = OP_EQUALVERIFY;
         script[24] = OP_CHECKSIG;
         return true;
@@ -108,7 +108,7 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
         script.resize(23);
         script[0] = OP_HASH160;
         script[1] = 20;
-        memcpy(&script[2], in.data(), 20);
+        std::memcpy(&script[2], in.data(), 20);
         script[22] = OP_EQUAL;
         return true;
     case 0x02:
@@ -116,21 +116,21 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
         script.resize(35);
         script[0] = 33;
         script[1] = nSize;
-        memcpy(&script[2], in.data(), 32);
+        std::memcpy(&script[2], in.data(), 32);
         script[34] = OP_CHECKSIG;
         return true;
     case 0x04:
     case 0x05:
         unsigned char vch[33] = {};
         vch[0] = nSize - 2;
-        memcpy(&vch[1], in.data(), 32);
+        std::memcpy(&vch[1], in.data(), 32);
         CPubKey pubkey{vch};
         if (!pubkey.Decompress())
             return false;
         assert(pubkey.size() == 65);
         script.resize(67);
         script[0] = 65;
-        memcpy(&script[1], pubkey.begin(), 65);
+        std::memcpy(&script[1], pubkey.begin(), 65);
         script[66] = OP_CHECKSIG;
         return true;
     }

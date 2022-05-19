@@ -422,12 +422,12 @@ public:
             // Finalize the hasher
             hasher.Finalize(buf);
             // Store the last 32 bytes of the hash output as new RNG state.
-            memcpy(m_state, buf + 32, 32);
+            std::memcpy(m_state, buf + 32, 32);
         }
         // If desired, copy (up to) the first 32 bytes of the hash output as output.
         if (num) {
             assert(out != nullptr);
-            memcpy(out, buf, num);
+            std::memcpy(out, buf, num);
         }
         // Best effort cleanup of internal state
         hasher.Reset();
@@ -609,7 +609,7 @@ uint256 FastRandomContext::rand256() noexcept
         FillByteBuffer();
     }
     uint256 ret;
-    memcpy(ret.begin(), bytebuf + 64 - bytebuf_size, 32);
+    std::memcpy(ret.begin(), bytebuf + 64 - bytebuf_size, 32);
     bytebuf_size -= 32;
     return ret;
 }

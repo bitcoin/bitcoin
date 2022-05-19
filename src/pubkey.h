@@ -90,7 +90,7 @@ public:
     {
         int len = pend == pbegin ? 0 : GetLen(pbegin[0]);
         if (len && len == (pend - pbegin))
-            memcpy(vch, (unsigned char*)&pbegin[0], len);
+            std::memcpy(vch, (unsigned char*)&pbegin[0], len);
         else
             Invalidate();
     }

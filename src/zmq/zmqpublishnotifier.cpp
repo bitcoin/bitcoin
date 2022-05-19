@@ -52,7 +52,7 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
         }
 
         void *buf = zmq_msg_data(&msg);
-        memcpy(buf, data, size);
+        std::memcpy(buf, data, size);
 
         data = va_arg(args, const void*);
 

@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
                 v &= ~(uint64_t{1} << 63);
                 if (x & 256) v |= (uint64_t{1} << 63);
                 double f;
-                memcpy(&f, &v, 8);
+                std::memcpy(&f, &v, 8);
                 uint64_t v2 = TestDouble(f);
                 if (!std::isnan(f)) BOOST_CHECK_EQUAL(v, v2);
             }

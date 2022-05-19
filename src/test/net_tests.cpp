@@ -770,7 +770,7 @@ CNetAddr UtilBuildAddress(unsigned char p1, unsigned char p2, unsigned char p3, 
 
     struct sockaddr_in sa;
     std::memset(&sa, 0, sizeof(sockaddr_in)); // initialize the memory block
-    memcpy(&(sa.sin_addr), &ip, sizeof(ip));
+    std::memcpy(&(sa.sin_addr), &ip, sizeof(ip));
     return CNetAddr(sa.sin_addr);
 }
 
