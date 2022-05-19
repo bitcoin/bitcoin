@@ -289,7 +289,7 @@ struct Peer {
          *  non-wtxid-relay peers, wtxid for wtxid-relay peers). We use the
          *  mempool to sort transactions in dependency order before relay, so
          *  this does not have to be sorted. */
-        std::set<uint256> m_tx_inventory_to_send;
+        std::set<uint256> m_tx_inventory_to_send GUARDED_BY(m_tx_inventory_mutex);
         /** Whether the peer has requested us to send our complete mempool. Only
          *  permitted if the peer has NetPermissionFlags::Mempool. See BIP35. */
         bool m_send_mempool GUARDED_BY(m_tx_inventory_mutex){false};
@@ -648,7 +648,7 @@ private:
     std::atomic<int> m_best_height{-1};
 
     /** Next time to check for stale tip */
-    std::chrono::seconds m_stale_tip_check_time{0s};
+    std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
 
     /** Whether this node is running in -blocksonly mode */
     const bool m_ignore_incoming_txs;
@@ -657,7 +657,7 @@ private:
 
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */
-    bool m_initial_sync_finished{false};
+    bool m_initial_sync_finished GUARDED_BY(cs_main){false};
 
     /** Protects m_peer_map. This mutex must not be locked while holding a lock
      *  on any of the mutexes inside a Peer object. */

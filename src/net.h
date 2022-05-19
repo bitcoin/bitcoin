@@ -368,7 +368,7 @@ public:
 
     RecursiveMutex cs_vProcessMsg;
     std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
-    size_t nProcessQueueSize{0};
+    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
 
     RecursiveMutex cs_sendProcessing;
 
