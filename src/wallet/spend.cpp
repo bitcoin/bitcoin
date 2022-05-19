@@ -171,7 +171,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (output.nValue < nMinimumAmount || output.nValue > nMaximumAmount)
                 continue;
 
-            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(outpoint))
+            if (coinControl && coinControl->HasSelected() && !coinControl->m_allow_other_inputs && !coinControl->IsSelected(outpoint))
                 continue;
 
             if (wallet.IsLockedCoin(outpoint))
@@ -480,7 +480,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     }
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs) {
+    if (coin_control.HasSelected() && !coin_control.m_allow_other_inputs) {
         SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         result.AddInput(preset_inputs);
         if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
