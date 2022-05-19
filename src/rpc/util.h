@@ -22,7 +22,13 @@
 #include <variant>
 #include <vector>
 
-static constexpr bool DEFAULT_RPC_DOC_CHECK{false};
+static constexpr bool DEFAULT_RPC_DOC_CHECK{
+#ifdef RPC_DOC_CHECK
+    true
+#else
+    false
+#endif
+};
 
 /**
  * String used to describe UNIX epoch time in documentation, factored out to a
