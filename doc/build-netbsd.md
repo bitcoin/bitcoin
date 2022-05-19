@@ -1,6 +1,6 @@
-NetBSD build guide
+NetBSD Build Guide
 ======================
-(updated for NetBSD 8.0)
+**Updated for NetBSD [8.0](https://www.netbsd.org/releases/formal-8/NetBSD-8.0.html)**
 
 This guide describes how to build bitcoind and command-line utilities on NetBSD.
 
