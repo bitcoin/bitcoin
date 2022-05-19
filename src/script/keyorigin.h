@@ -21,7 +21,7 @@ struct KeyOriginInfo
     friend bool operator<(const KeyOriginInfo& a, const KeyOriginInfo& b)
     {
         // Compare the fingerprints lexicographically
-        int fpr_cmp = memcmp(a.fingerprint, b.fingerprint, 4);
+        int fpr_cmp = std::memcmp(a.fingerprint, b.fingerprint, 4);
         if (fpr_cmp < 0) {
             return true;
         } else if (fpr_cmp > 0) {

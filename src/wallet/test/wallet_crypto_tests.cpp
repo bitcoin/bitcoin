@@ -24,10 +24,10 @@ static void TestPassphraseSingle(const std::vector<unsigned char>& vchSalt, cons
     crypt.SetKeyFromPassphrase(passphrase, vchSalt, rounds, 0);
 
     if(!correctKey.empty())
-        BOOST_CHECK_MESSAGE(memcmp(crypt.vchKey.data(), correctKey.data(), crypt.vchKey.size()) == 0, \
+        BOOST_CHECK_MESSAGE(std::memcmp(crypt.vchKey.data(), correctKey.data(), crypt.vchKey.size()) == 0, \
             HexStr(crypt.vchKey) + std::string(" != ") + HexStr(correctKey));
     if(!correctIV.empty())
-        BOOST_CHECK_MESSAGE(memcmp(crypt.vchIV.data(), correctIV.data(), crypt.vchIV.size()) == 0,
+        BOOST_CHECK_MESSAGE(std::memcmp(crypt.vchIV.data(), correctIV.data(), crypt.vchIV.size()) == 0,
             HexStr(crypt.vchIV) + std::string(" != ") + HexStr(correctIV));
 }
 

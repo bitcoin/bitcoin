@@ -168,11 +168,11 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     TmpL.SetHex(ZeroL.ToString()); BOOST_CHECK(TmpL == uint256());
 
     TmpL.SetHex(R1L.ToString());
-    BOOST_CHECK(memcmp(R1L.begin(), R1Array, 32)==0);
-    BOOST_CHECK(memcmp(TmpL.begin(), R1Array, 32)==0);
-    BOOST_CHECK(memcmp(R2L.begin(), R2Array, 32)==0);
-    BOOST_CHECK(memcmp(ZeroL.begin(), ZeroArray, 32)==0);
-    BOOST_CHECK(memcmp(OneL.begin(), OneArray, 32)==0);
+    BOOST_CHECK(std::memcmp(R1L.begin(), R1Array, 32)==0);
+    BOOST_CHECK(std::memcmp(TmpL.begin(), R1Array, 32)==0);
+    BOOST_CHECK(std::memcmp(R2L.begin(), R2Array, 32)==0);
+    BOOST_CHECK(std::memcmp(ZeroL.begin(), ZeroArray, 32)==0);
+    BOOST_CHECK(std::memcmp(OneL.begin(), OneArray, 32)==0);
     BOOST_CHECK(R1L.size() == sizeof(R1L));
     BOOST_CHECK(sizeof(R1L) == 32);
     BOOST_CHECK(R1L.size() == 32);
@@ -214,11 +214,11 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     TmpS.SetHex(ZeroS.ToString()); BOOST_CHECK(TmpS == uint160());
 
     TmpS.SetHex(R1S.ToString());
-    BOOST_CHECK(memcmp(R1S.begin(), R1Array, 20)==0);
-    BOOST_CHECK(memcmp(TmpS.begin(), R1Array, 20)==0);
-    BOOST_CHECK(memcmp(R2S.begin(), R2Array, 20)==0);
-    BOOST_CHECK(memcmp(ZeroS.begin(), ZeroArray, 20)==0);
-    BOOST_CHECK(memcmp(OneS.begin(), OneArray, 20)==0);
+    BOOST_CHECK(std::memcmp(R1S.begin(), R1Array, 20)==0);
+    BOOST_CHECK(std::memcmp(TmpS.begin(), R1Array, 20)==0);
+    BOOST_CHECK(std::memcmp(R2S.begin(), R2Array, 20)==0);
+    BOOST_CHECK(std::memcmp(ZeroS.begin(), ZeroArray, 20)==0);
+    BOOST_CHECK(std::memcmp(OneS.begin(), OneArray, 20)==0);
     BOOST_CHECK(R1S.size() == sizeof(R1S));
     BOOST_CHECK(sizeof(R1S) == 20);
     BOOST_CHECK(R1S.size() == 20);

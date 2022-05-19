@@ -52,7 +52,7 @@ std::map<std::string, std::weak_ptr<BerkeleyEnvironment>> g_dbenvs GUARDED_BY(cs
 
 bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
 {
-    return memcmp(value, &rhs.value, sizeof(value)) == 0;
+    return std::memcmp(value, &rhs.value, sizeof(value)) == 0;
 }
 
 /**

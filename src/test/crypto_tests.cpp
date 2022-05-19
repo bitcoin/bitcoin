@@ -627,13 +627,13 @@ static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aa
 
     // verify ciphertext & mac against the test vector
     BOOST_CHECK_EQUAL(expected_ciphertext_and_mac.size(), ciphertext_buf.size());
-    BOOST_CHECK(memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac.data(), ciphertext_buf.size()) == 0);
+    BOOST_CHECK(std::memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac.data(), ciphertext_buf.size()) == 0);
 
     // manually construct the AAD keystream
     cmp_ctx.SetIV(seqnr_aad);
     cmp_ctx.Seek(0);
     cmp_ctx.Keystream(cmp_ctx_buffer.data(), 64);
-    BOOST_CHECK(memcmp(expected_aad_keystream.data(), cmp_ctx_buffer.data(), expected_aad_keystream.size()) == 0);
+    BOOST_CHECK(std::memcmp(expected_aad_keystream.data(), cmp_ctx_buffer.data(), expected_aad_keystream.size()) == 0);
     // crypt the 3 length bytes and compare the length
     uint32_t len_cmp = 0;
     len_cmp = (ciphertext_buf[0] ^ cmp_ctx_buffer[aad_pos + 0]) |
@@ -651,11 +651,11 @@ static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aa
         BOOST_CHECK(res);
 
         // make sure we repetitive get the same plaintext
-        BOOST_CHECK(memcmp(plaintext_buf.data(), plaintext_buf_new.data(), plaintext_buf.size()) == 0);
+        BOOST_CHECK(std::memcmp(plaintext_buf.data(), plaintext_buf_new.data(), plaintext_buf.size()) == 0);
 
         // compare sequence number 999 against the test vector
         if (seqnr_payload == 999) {
-            BOOST_CHECK(memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac_sequence999.data(), expected_ciphertext_and_mac_sequence999.size()) == 0);
+            BOOST_CHECK(std::memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac_sequence999.data(), expected_ciphertext_and_mac_sequence999.size()) == 0);
         }
         // set nonce and block counter, output the keystream
         cmp_ctx.SetIV(seqnr_aad);
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE(sha256d64)
             CHash256().Write({in + 64 * j, 64}).Finalize({out1 + 32 * j, 32});
         }
         SHA256D64(out2, in, i);
-        BOOST_CHECK(memcmp(out1, out2, 32 * i) == 0);
+        BOOST_CHECK(std::memcmp(out1, out2, 32 * i) == 0);
     }
 }
 

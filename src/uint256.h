@@ -43,7 +43,7 @@ public:
         std::memset(m_data, 0, sizeof(m_data));
     }
 
-    inline int Compare(const base_blob& other) const { return memcmp(m_data, other.m_data, sizeof(m_data)); }
+    inline int Compare(const base_blob& other) const { return std::memcmp(m_data, other.m_data, sizeof(m_data)); }
 
     friend inline bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
     friend inline bool operator!=(const base_blob& a, const base_blob& b) { return a.Compare(b) != 0; }

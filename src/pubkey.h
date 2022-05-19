@@ -119,7 +119,7 @@ public:
     friend bool operator==(const CPubKey& a, const CPubKey& b)
     {
         return a.vch[0] == b.vch[0] &&
-               memcmp(a.vch, b.vch, a.size()) == 0;
+               std::memcmp(a.vch, b.vch, a.size()) == 0;
     }
     friend bool operator!=(const CPubKey& a, const CPubKey& b)
     {
@@ -128,12 +128,12 @@ public:
     friend bool operator<(const CPubKey& a, const CPubKey& b)
     {
         return a.vch[0] < b.vch[0] ||
-               (a.vch[0] == b.vch[0] && memcmp(a.vch, b.vch, a.size()) < 0);
+               (a.vch[0] == b.vch[0] && std::memcmp(a.vch, b.vch, a.size()) < 0);
     }
     friend bool operator>(const CPubKey& a, const CPubKey& b)
     {
         return a.vch[0] > b.vch[0] ||
-               (a.vch[0] == b.vch[0] && memcmp(a.vch, b.vch, a.size()) > 0);
+               (a.vch[0] == b.vch[0] && std::memcmp(a.vch, b.vch, a.size()) > 0);
     }
 
     //! Implement serialization, as if this was a byte vector.
@@ -302,7 +302,7 @@ struct CExtPubKey {
     friend bool operator==(const CExtPubKey &a, const CExtPubKey &b)
     {
         return a.nDepth == b.nDepth &&
-            memcmp(a.vchFingerprint, b.vchFingerprint, sizeof(vchFingerprint)) == 0 &&
+            std::memcmp(a.vchFingerprint, b.vchFingerprint, sizeof(vchFingerprint)) == 0 &&
             a.nChild == b.nChild &&
             a.chaincode == b.chaincode &&
             a.pubkey == b.pubkey;

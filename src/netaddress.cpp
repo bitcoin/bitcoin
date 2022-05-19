@@ -425,7 +425,7 @@ bool CNetAddr::IsLocal() const
 
     // IPv6 loopback (::1/128)
     static const unsigned char pchLocal[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
-    if (IsIPv6() && memcmp(m_addr.data(), pchLocal, sizeof(pchLocal)) == 0) {
+    if (IsIPv6() && std::memcmp(m_addr.data(), pchLocal, sizeof(pchLocal)) == 0) {
         return true;
     }
 
@@ -446,7 +446,7 @@ bool CNetAddr::IsValid() const
 {
     // unspecified IPv6 address (::/128)
     unsigned char ipNone6[16] = {};
-    if (IsIPv6() && memcmp(m_addr.data(), ipNone6, sizeof(ipNone6)) == 0) {
+    if (IsIPv6() && std::memcmp(m_addr.data(), ipNone6, sizeof(ipNone6)) == 0) {
         return false;
     }
 
@@ -1136,5 +1136,5 @@ bool operator==(const CSubNet& a, const CSubNet& b)
 
 bool operator<(const CSubNet& a, const CSubNet& b)
 {
-    return (a.network < b.network || (a.network == b.network && memcmp(a.netmask, b.netmask, 16) < 0));
+    return (a.network < b.network || (a.network == b.network && std::memcmp(a.netmask, b.netmask, 16) < 0));
 }
