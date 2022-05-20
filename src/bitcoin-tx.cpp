@@ -284,7 +284,8 @@ bool freezeTx(enumJurat action,
     ss << nLockBlockHeight;
     ss << nonce;
     uint256 juratSigDataHash = ss.GetHash();
-    out.pushKV(keyJuratDataHash, HexStr(juratSigDataHash));
+    out.pushKV(keyJuratDataHash+"Hex", HexStr(juratSigDataHash));
+    out.pushKV(keyJuratDataHash, EncodeBase58(juratSigDataHash));
     
     jurat::JuratVerifier verifier(tx, srcScriptPubKey);
     if(!verifier.isJuratTx())
@@ -328,46 +329,47 @@ static bool attachWitness(CMutableTransaction& mutableTx,
         return false;
     }
     
-    std::vector<unsigned char> vchJuratDataHash = ParseHex(out[keyJuratDataHash].get_str());
+    std::vector<unsigned char> vchJuratDataHash;
+    std::string juratDataHash = out[keyJuratDataHash].get_str();
+    if(IsHex(juratDataHash)){
+        vchJuratDataHash = ParseHex(out[keyJuratDataHash].get_str());
+    }else if(!DecodeBase58(juratDataHash, vchJuratDataHash, std::numeric_limits<int>::max() - 4)){
+        out.pushKV("error", "jurat hash is invalid, needs to be hex or base58 encoded");
+        return false;
+    }
+    
+    if(vchJuratDataHash.size()!=32){
+        out.pushKV("error", "jurat hash is not 32 byte, needs to be sha256(data) a 32 byte hash in hex or base58 encoded format");
+        return false;
+    }
+
     CScriptWitness witness;
     std::vector<unsigned char> emptyChunk;
     witness.stack.push_back(emptyChunk);
     bool signatureCheck = true;
     for(int i=0;i<(int)jsigs.size();i++){
-        
+        std::vector<unsigned char> vchSignature;
         if(IsHex(jsigs[i])) {
-            std::vector<unsigned char> vchSignature = ParseHex(jsigs[i]);
-            int verifierIndx = findSignatureIndex(vchSignature, vchJuratDataHash);
-            if(verifierIndx >=0){
-                vchSignature.push_back((unsigned char)verifierIndx);
-                tfm::format(std::cout, "witness push hex signature => %s\n",jsigs[i]);
-                witness.stack.push_back(vchSignature);
-            }else{
-                std::string str = tfm::format("could not verify witness signature with any of the witness pub keys ..%s",jsigs[i]);
-                err = err + "; " + str;
-            }
-            
-        } else {
-            //try base64 decoding
-            bool isInvalid = false;
-            std::vector<unsigned char> vchSignature = DecodeBase64(jsigs[i].c_str(),&isInvalid);
-            if(isInvalid){
-                signatureCheck = false;
-                std::string str = tfm::format("witness signature is not a valid base64 encoded string ..%s",jsigs[i]);
-                err = err + "; " + str;
-                continue;
-            }else{
-                int verifierIndx = findSignatureIndex(vchSignature, vchJuratDataHash);
-                if(verifierIndx >=0){
-                    vchSignature.push_back((unsigned char)verifierIndx);
-                    witness.stack.push_back(vchSignature);
-                    tfm::format(std::cout, "witness push base64 decoded signature  %s => %s\n",jsigs[i],HexStr(vchSignature));
-                }else{
-                    std::string str = tfm::format("could not verify witness signature with any of the witness pub keys ..%s",jsigs[i]);
-                    err = err + "; " + str;
-                }
-                
-            }
+            vchSignature = ParseHex(jsigs[i]);
+            tfm::format(std::cout, "read witness signature in hex-format  => %s\n",jsigs[i]);
+        }else if(DecodeBase58(jsigs[i], vchSignature , std::numeric_limits<int>::max() - 4)){
+            tfm::format(std::cout, "read witness signature in Base58-format  => %s\n",jsigs[i]);
+        }else {
+            std::string str = tfm::format("witness signature is not a valid hex or Base58 format ..%s",jsigs[i]);
+            err = err + ";\n " + str;
+            signatureCheck=false;
+            continue;
+        }
+        int verifierIndx = findSignatureIndex(vchSignature, vchJuratDataHash);
+        if(verifierIndx >=0){
+            vchSignature.push_back((unsigned char)verifierIndx);
+            tfm::format(std::cout, "witness push hex signature => %s\n",jsigs[i]);
+            witness.stack.push_back(vchSignature);
+        }else {
+            std::string str = tfm::format("could not verify witness signature with any of the witness pub keys ..%s",jsigs[i]);
+            err = err + ";\n " + str;
+            signatureCheck=false;
+            continue;
         }
     }
     
@@ -768,8 +770,21 @@ static void genericJuratCmd(const UniValue& in, UniValue& out){
 
 
 static bool signWithKeysIfProvided(const UniValue& uniVal,
-                const std::vector<unsigned char>& vchJuratDataHash,
+                const std::string& juratDataHash,
                 std::vector<std::string>& sigs) {
+    
+    std::vector<unsigned char> vchJuratDataHash;
+    if(IsHex(juratDataHash)){
+        vchJuratDataHash = ParseHex(juratDataHash);
+    }else if(!DecodeBase58(juratDataHash, vchJuratDataHash, std::numeric_limits<int>::max() - 4)){
+        tfm::format(std::cout, "jurat hash is neither hex nor base58... %s", juratDataHash);
+        return false;
+    }
+    
+    if(vchJuratDataHash.size()!=32){
+        tfm::format(std::cout, "jurat hash is not 32 byte,should be sha256(data) hex or base58... %s", juratDataHash);
+        return false;
+    }
     
     uint256 hash(vchJuratDataHash);
     bool isSigned = true;
@@ -853,8 +868,6 @@ static bool runJuratCmd()
             return false;
         }
         
-        
-        const std::vector<unsigned char> vchJuratDataHash = ParseHex(out[keyJuratDataHash].get_str());
         // witness sigs
         std::vector<std::string> jsigs;
         if(!uniVal[keyJuratWitnessSig].isNull() &&
@@ -865,7 +878,8 @@ static bool runJuratCmd()
             }
         }else if(!uniVal[keyWitnessPrivKeys].isNull() &&
                  uniVal[keyWitnessPrivKeys].getType() == UniValue::VType::VARR) {
-            bool isSigned = signWithKeysIfProvided(uniVal, vchJuratDataHash, jsigs);
+            const std::string juratDataHash = out[keyJuratDataHash].get_str();
+            bool isSigned = signWithKeysIfProvided(uniVal, juratDataHash, jsigs);
             if(!isSigned){
                 out.pushKV("error", "jwsig is null or not an array");
                 printOutput(out);
