@@ -283,7 +283,7 @@ struct Peer {
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
-    TxRelay* SetTxRelay()
+    TxRelay* SetTxRelay() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_relay_mutex)
     {
         LOCK(m_tx_relay_mutex);
         Assume(!m_tx_relay);
