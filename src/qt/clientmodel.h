@@ -28,6 +28,7 @@ class Node;
 namespace Masternode {
     class Sync;
 }
+struct BlockTip;
 }
 
 QT_BEGIN_NAMESPACE
@@ -127,6 +128,7 @@ private:
     mutable RecursiveMutex cs_mnlinst; // protects mnListCached
     CDeterministicMNListPtr mnListCached;
 
+    void TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header);
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
@@ -146,12 +148,6 @@ Q_SIGNALS:
     // SYSCOIN
     void masternodeListChanged() const;
     void additionalDataSyncProgressChanged(double nSyncProgress);
-
-public Q_SLOTS:
-    void updateNumConnections(int numConnections);
-    void updateNetworkActive(bool networkActive);
-    void updateAlert();
-    void updateBanlist();
 };
 
 #endif // SYSCOIN_QT_CLIENTMODEL_H
