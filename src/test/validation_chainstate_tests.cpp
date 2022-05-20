@@ -3,13 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <chainparams.h>
-#include <random.h>
-#include <uint256.h>
 #include <consensus/validation.h>
-#include <sync.h>
+#include <random.h>
 #include <rpc/blockchain.h>
+#include <sync.h>
 #include <test/util/chainstate.h>
 #include <test/util/setup_common.h>
+#include <timedata.h>
+#include <uint256.h>
 #include <validation.h>
 
 #include <vector>
@@ -22,8 +23,12 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, TestingSetup)
 //!
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
-    const CChainParams& chainparams = Params();
-    ChainstateManager manager(chainparams);
+    const ChainstateManager::Options chainman_opts{
+        Params(),
+        GetAdjustedTime,
+    };
+    ChainstateManager manager{chainman_opts};
+
     WITH_LOCK(::cs_main, manager.m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true));
     CTxMemPool mempool;
 

@@ -70,7 +70,11 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Chainstate
-    ChainstateManager chainman{chainparams};
+    const ChainstateManager::Options chainman_opts{
+        chainparams,
+        static_cast<int64_t(*)()>(GetTime),
+    };
+    ChainstateManager chainman{chainman_opts};
 
     auto rv = node::LoadChainstate(false,
                                    std::ref(chainman),

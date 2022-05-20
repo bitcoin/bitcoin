@@ -14,6 +14,7 @@
 #include <attributes.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <kernel/chainstatemanager_opts.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <fs.h>
@@ -361,6 +362,7 @@ bool TestBlockValidity(BlockValidationState& state,
                        CChainState& chainstate,
                        const CBlock& block,
                        CBlockIndex* pindexPrev,
+                       const std::function<int64_t()>& adjusted_time_callback,
                        bool fCheckPOW = true,
                        bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -834,7 +836,9 @@ private:
 
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
-    const CChainParams& m_chainparams;
+    const CChainParams m_chainparams;
+
+    const std::function<int64_t()> m_adjusted_time_callback;
 
     //! Internal helper for ActivateSnapshot().
     [[nodiscard]] bool PopulateAndValidateSnapshot(
@@ -853,7 +857,11 @@ private:
     friend CChainState;
 
 public:
-    explicit ChainstateManager(const CChainParams& chainparams) : m_chainparams{chainparams} { }
+    using Options = ChainstateManagerOpts;
+
+    explicit ChainstateManager(const Options& opts)
+        : m_chainparams{opts.chainparams},
+          m_adjusted_time_callback{Assert(opts.adjusted_time_callback)} {};
 
     const CChainParams& GetParams() const { return m_chainparams; }
     const Consensus::Params& GetConsensus() const { return m_chainparams.GetConsensus(); }
