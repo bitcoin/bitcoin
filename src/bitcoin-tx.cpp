@@ -47,6 +47,9 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 std::string JURAT_CREATE_TX = "juratCreateTx";
 std::string JURAT_SIGN_TX = "juratSignTx";
 std::string JURAT_GENERIC_CMD = "juratGenricCmd";
+std::string JURAT_CONVERT_KEY_CMD = "juratConvertKeyCmd";
+std::string JURAT_SIGN_DATA_CMD = "juratSignDataCmd";
+std::string JURAT_DECODE_ADDRESS_CMD = "juratDecodeAddressCmd";
 
 const std::string keyJudicialAction = "judicialAction";
 const std::string keyNonce = "nonce";
@@ -62,7 +65,7 @@ const std::string keyLockHeight = "lockHeight";
 const std::string keyJuratWitnessSig = "jwsig";
 const std::string keySigs = "sigs";
 const std::string keyTxHex = "txHex";
-const std::string keyPrivKeys = "privkeys";
+const std::string keyWitnessPrivKeys = "jwPrivkeys";
 
 const std::string keyJuratDataHash = "juratDataHash";
 
@@ -559,12 +562,136 @@ static void privateKeyFormats(std::string& base58CheckPrivateKey, bool isCompres
     
 }
 
+
+static void decodeAddressCmd(const UniValue& in, UniValue& out){
+    
+    std::string errMsg;
+    std::string address = in[keySrcAddr].get_str();
+    tfm::format(std::cout, "[address]: input: %s\n",address);
+    CTxDestination destination = DecodeDestination(address, errMsg);
+    const bool isValid = IsValidDestination(destination);
+    if(!isValid) {
+        tfm::format(std::cout, "[address]: invalid destination %s  %s\n",address, errMsg);
+        return;
+    }
+    
+    CScript scriptPubKey = GetScriptForDestination(destination);
+    std::vector<std::vector<unsigned char>> vSolutionsRet;
+    TxoutType txOutType = Solver(scriptPubKey, vSolutionsRet);
+    std::string addressType = GetTxnOutputType(txOutType);
+    tfm::format(std::cout, "[address]: type: %s\n",addressType);
+    tfm::format(std::cout, "[accress]: scriptPubKey: %s\n",HexStr(scriptPubKey));
+    int idx=0;
+    for(std::vector<unsigned char> vch : vSolutionsRet){
+        tfm::format(std::cout, "[address]: vSolutionsRet[%d] %s\n",idx,HexStr(vch));
+    }
+    
+    
+}
+
+
+
+///signs the given hash256 data with the given private keys
+static void signDataHashCmd(const UniValue& in, UniValue& out){
+    
+    std::vector<unsigned char> vchDataHash;
+    std::string strDataHash = in[keyJuratDataHash].get_str();
+    if(IsHex(strDataHash)){
+        vchDataHash = ParseHex(strDataHash);
+    }else if(!DecodeBase58(strDataHash, vchDataHash, std::numeric_limits<int>::max() - 4)){
+        return;
+    }
+    
+    uint256 hash(vchDataHash);
+    for (const UniValue& univalJsig : in[keyWitnessPrivKeys].getValues()) {
+        std::string privKeyStr = univalJsig.get_str();
+        tfm::format(std::cout, "[priv-key]: ====>>  %s\n",privKeyStr);
+        CKey privKey = DecodeSecret(privKeyStr);
+        if(!privKey.IsValid()){
+            tfm::format(std::cout, "[input-key]: not a valid key %s\n", privKeyStr);
+            continue;
+        }
+        
+        std::vector<unsigned char> vchSig;
+        bool isSigned = privKey.Sign(hash, vchSig);
+        if(isSigned){
+            tfm::format(std::cout, "[hash256 Hex]: %s\n", HexStr(vchDataHash));
+            tfm::format(std::cout, "[hash256 Base58]: %s\n", EncodeBase58(vchDataHash));
+            tfm::format(std::cout, "[hash256 Base58Check]: %s\n", EncodeBase58Check(vchDataHash));
+            tfm::format(std::cout, "[signature Hex]: %s\n", HexStr(vchSig));
+            tfm::format(std::cout, "[signature Base58]: %s\n", EncodeBase58(vchSig));
+            tfm::format(std::cout, "[signature Base58Check]: %s\n", EncodeBase58Check(vchSig));
+        }
+        
+    }
+    
+}
+
+///converts a given Base58Check key to its mainnet and testnet format
+static void convertKeyCmd(const UniValue& in, UniValue& out){
+    initWitnessKeys();
+    for (const UniValue& univalJsig : in[keyWitnessPrivKeys].getValues()) {
+        std::string privKeyStr = univalJsig.get_str();
+        CKey privKey = DecodeSecret(privKeyStr);
+        if(!privKey.IsValid()){
+            tfm::format(std::cout, "[input-key]: not a valid key %s\n", privKeyStr);
+            continue;
+        }
+        
+        std::vector<unsigned char> keyBytes;
+        bool isCompressed = privKey.IsCompressed();
+        
+        //mainnet
+        keyBytes.push_back(0x80);
+        keyBytes.insert(keyBytes.end(), privKey.begin(), privKey.end());
+        if(isCompressed){
+            keyBytes.push_back(0x01);
+        }
+        std::string mainnetKey = EncodeBase58Check(keyBytes);
+        
+        //testnet
+        keyBytes.clear();
+        keyBytes.push_back(0xef);
+        keyBytes.insert(keyBytes.end(), privKey.begin(), privKey.end());
+        if(isCompressed){
+            keyBytes.push_back(0x01);
+        }
+        std::string testnetKey = EncodeBase58Check(keyBytes);
+        tfm::format(std::cout,"=====> ");
+        tfm::format(std::cout, "[input-key]: %s\n[mainnet]: %s\n[testnet]: %s\n",
+                    privKeyStr, mainnetKey, testnetKey);
+    }
+    
+}
+
 static void genericJuratCmd(const UniValue& in, UniValue& out){
     
     {
         initWitnessKeys();
         const std::vector<unsigned char>& privkey_prefix = Params().Base58Prefix(CChainParams::SECRET_KEY);
         tfm::format(std::cout, "privkey_prefix [%s]\n", HexStr(privkey_prefix));
+        
+        std::string addr1 = "36DNCAPcqJJt4XPpKZd4358Mzd64UC5U6g";
+        std::vector<unsigned char> vchHash1;
+        CScript addrScriptPubKey1;
+        std::string err1;
+        checkAddr(addr1, vchHash1, addrScriptPubKey1, err1);
+        
+        std::string prevScriptHex = "76a914f96dfa59966d2be08c3557881b948d3dabd27d1d88ac";
+        std::vector<unsigned char> vchPrev = ParseHex(prevScriptHex);
+        CScript script(vchPrev.begin(), vchPrev.end());
+        int version=-1;
+        std::vector<unsigned char> program;
+        bool isWitness = script.IsWitnessProgram(version, program);
+        if(isWitness){
+            tfm::format(std::cout, "program = ", HexStr(program));
+        }
+        
+        std::string err_msg;
+        std::string addr = "bc1q2xhqyr0wt4qs6k2jjv5m0h35lexey4pezm3v3j";
+        std::vector<unsigned char> vcaddrHash;
+        CScript addrScriptPubKey;
+        checkAddr(addr, vcaddrHash, addrScriptPubKey, err_msg);
         
         std::string pvtKey = "";
     
@@ -614,6 +741,12 @@ static void genericJuratCmd(const UniValue& in, UniValue& out){
             tfm::format(std::cout, "sign success priv-key=%s hashHex=%s\n signatureHex=%s\n",
                         signingKeys[i], juratDataHash, HexStr(vchJuratSig));
             
+            std::string base58Hash = EncodeBase58(hash256);
+            std::string base58Sig = EncodeBase58(vchJuratSig);
+            tfm::format(std::cout, "sign success priv-key=%s hashBase58=%s\n signatureBase58=%s\n",
+                        signingKeys[i], base58Hash, base58Sig);
+            
+            
         }else {
             tfm::format(std::cout,"failed to sign with key=%s\n",signingKeys[i]);
         }
@@ -631,6 +764,27 @@ static void genericJuratCmd(const UniValue& in, UniValue& out){
         }
     }
     std::cout.flush();
+}
+
+
+static bool signWithKeysIfProvided(const UniValue& uniVal,
+                const std::vector<unsigned char>& vchJuratDataHash,
+                std::vector<std::string>& sigs) {
+    
+    uint256 hash(vchJuratDataHash);
+    bool isSigned = true;
+    for (const UniValue& univalJsig : uniVal[keyWitnessPrivKeys].getValues()){
+        std::string jwPrivKey = univalJsig.get_str();
+        CKey privKey = DecodeSecret(jwPrivKey);
+        std::vector<unsigned char> vchWitnessSignature;
+        bool sign = privKey.Sign(hash, vchWitnessSignature);
+        if(!sign){
+            isSigned=false;
+        }
+        sigs.push_back(HexStr(vchWitnessSignature));
+    }
+    
+    return isSigned;
 }
 
 static bool runJuratCmd()
@@ -655,6 +809,30 @@ static bool runJuratCmd()
         return false;
     }
     
+    if(registers.find(JURAT_CONVERT_KEY_CMD) != registers.end()) {
+        const UniValue uniVal = registers[JURAT_CONVERT_KEY_CMD];
+        UniValue out(UniValue::VOBJ);
+        out.pushKV("request", uniVal);
+        convertKeyCmd(uniVal, out);
+        return true;
+    }
+    
+    if(registers.find(JURAT_SIGN_DATA_CMD) != registers.end()) {
+        const UniValue uniVal = registers[JURAT_SIGN_DATA_CMD];
+        UniValue out(UniValue::VOBJ);
+        out.pushKV("request", uniVal);
+        signDataHashCmd(uniVal, out);
+        return true;
+    }
+    
+    if(registers.find(JURAT_DECODE_ADDRESS_CMD) != registers.end()) {
+        const UniValue uniVal = registers[JURAT_DECODE_ADDRESS_CMD];
+        UniValue out(UniValue::VOBJ);
+        out.pushKV("request", uniVal);
+        decodeAddressCmd(uniVal, out);
+        return true;
+    }
+    
     if(registers.find(JURAT_GENERIC_CMD) != registers.end()) {
         const UniValue uniVal = registers[JURAT_GENERIC_CMD];
         UniValue out(UniValue::VOBJ);
@@ -675,19 +853,31 @@ static bool runJuratCmd()
             return false;
         }
         
-        if(uniVal[keyJuratWitnessSig].isNull() ||
-           uniVal[keyJuratWitnessSig].getType() != UniValue::VType::VARR) {
+        
+        const std::vector<unsigned char> vchJuratDataHash = ParseHex(out[keyJuratDataHash].get_str());
+        // witness sigs
+        std::vector<std::string> jsigs;
+        if(!uniVal[keyJuratWitnessSig].isNull() &&
+           uniVal[keyJuratWitnessSig].getType() == UniValue::VType::VARR) {
+            for (const UniValue& univalJsig : uniVal[keyJuratWitnessSig].getValues()){
+                std::string jwsig = univalJsig.get_str();
+                jsigs.push_back(jwsig);
+            }
+        }else if(!uniVal[keyWitnessPrivKeys].isNull() &&
+                 uniVal[keyWitnessPrivKeys].getType() == UniValue::VType::VARR) {
+            bool isSigned = signWithKeysIfProvided(uniVal, vchJuratDataHash, jsigs);
+            if(!isSigned){
+                out.pushKV("error", "jwsig is null or not an array");
+                printOutput(out);
+                return false;
+            }
+            
+        }else{
             out.pushKV("error", "jwsig is null or not an array");
             printOutput(out);
             return false;
         }
         
-        //attach witness
-        std::vector<std::string> jsigs;
-        for (const UniValue& univalJsig : uniVal[keyJuratWitnessSig].getValues()){
-            std::string jwsig = univalJsig.get_str();
-            jsigs.push_back(jwsig);
-        }
         int nInToSign = 0;
         CAmount satoshiTxInTotalAmount = (int64_t) (COIN* uniVal[keyTotalAmt].get_real());
         bool isWitessAttached = attachWitness(mutableTx, nInToSign, satoshiTxInTotalAmount,jsigs, out);

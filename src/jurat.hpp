@@ -22,6 +22,7 @@
 #include <iostream>
 #include <fstream>
 #include <univalue.h>
+#include <fs.h>
 
 
 
@@ -30,8 +31,6 @@ namespace jurat {
 ///jurat keys
 int N_JURAT_MIN_SIGS = 2;
 
-std::string JURAT_WITNESS_KEYFILE_PATH = "./witness_keys.json";
-std::string JURAT_WITNESS_KEYFILE_PATH_TEST = "./witness_keys_test.json";
 std::string JURAT_WITNESS_KEYFILE_PATH_ENV = "JURAT_WITNESS_PUBKEYS";
 std::string JSON_TOKEN_VERIFIER_PUBKEYS = "witness_public_keys";
 std::string JSON_TOKEN_MIN_VERIFIERS = "min_verifiers";
@@ -57,47 +56,47 @@ static void initWitnessKeys() {
     if(isWitnessKeysInitialized)
         return;
     
-    std::string keyFilePath;
-    if(Params().IsTestChain()){
-        keyFilePath = JURAT_WITNESS_KEYFILE_PATH_TEST;
-    }else{
-        keyFilePath = JURAT_WITNESS_KEYFILE_PATH;
-    }
+    //default verifier keys
+    judicialVerifierPubKeys.push_back("024a5d2b6ceb5d8291b6d97fdec2de4b50024d981c4a13f31673c0bd8bc493f70c");
+    judicialVerifierPubKeys.push_back("02b5efb6fa70adbe1aa9a70347699ed6948a660bf8eca9826cb4824b644a1484bb");
     
+    std::string keyFilePath;
+    std::cout << "current path is " << fs::current_path() << '\n';
+
     //check override in env property
     char* witness_keyfile_path = std::getenv(JURAT_WITNESS_KEYFILE_PATH_ENV.c_str());
     if(witness_keyfile_path){
         keyFilePath = witness_keyfile_path;
-    }
-    
-    tfm::format(std::cout, "opening witness public keys file... %s\n", witness_keyfile_path);
-    std::ifstream keyFile;
-    UniValue val;
-    keyFile.open(keyFilePath);
-    if(keyFile.is_open()){
-        std::string strJson;
-        std::string line;
-        while(getline(keyFile, line)){
-            strJson.append(line);
+        tfm::format(std::cout, "opening witness public keys file... %s\n", witness_keyfile_path);
+        std::ifstream keyFile;
+        UniValue val;
+        keyFile.open(keyFilePath);
+        if(keyFile.is_open()){
+            std::string strJson;
+            std::string line;
+            while(getline(keyFile, line)){
+                strJson.append(line);
+            }
+            keyFile.close();
+            if (!val.read(strJson)) {
+                throw std::runtime_error("error parsing jurat witness pubkeys json");
+            }
+            printJson(val);
+            
+            UniValue keys = find_value(val, JSON_TOKEN_VERIFIER_PUBKEYS);
+            const std::vector<UniValue>& pubKeys = keys.getValues();
+            
+            judicialVerifierPubKeys.clear();
+            for(const UniValue& k : pubKeys){
+                std::string strPubKey = k.get_str();
+                judicialVerifierPubKeys.push_back(strPubKey);
+            }
+            
+            UniValue uniMinVerifiers = find_value(val, JSON_TOKEN_MIN_VERIFIERS);
+            N_JURAT_MIN_SIGS = uniMinVerifiers.get_int();
         }
-        keyFile.close();
-        if (!val.read(strJson)) {
-            throw std::runtime_error("error parsing jurat witness pubkeys json");
-        }
-        printJson(val);
     }
     
-    UniValue keys = find_value(val, JSON_TOKEN_VERIFIER_PUBKEYS);
-    const std::vector<UniValue>& pubKeys = keys.getValues();
-    judicialVerifierPubKeys.clear();
-    
-    for(const UniValue& k : pubKeys){
-        std::string strPubKey = k.get_str();
-        judicialVerifierPubKeys.push_back(strPubKey);
-    }
-    
-    UniValue uniMinVerifiers = find_value(val, JSON_TOKEN_MIN_VERIFIERS);
-    N_JURAT_MIN_SIGS = uniMinVerifiers.get_int();
     
     tfm::format(std::cout,"jurat witness %d keys loaded from...%s\n",
                 judicialVerifierPubKeys.size(),keyFilePath);
@@ -107,6 +106,7 @@ static void initWitnessKeys() {
         keyCount++;
     }
     tfm::format(std::cout, "min no of verifiers %d of %d\n",N_JURAT_MIN_SIGS, keyCount);
+    
     isWitnessKeysInitialized = true;
     
 }
@@ -185,6 +185,15 @@ bool checkAddr(std::string addr, std::vector<unsigned char>& vchHash,
     }
     
     CScript scriptPubKey = GetScriptForDestination(dest);
+    tfm::format(std::cout,"scriptPubKey: %s\n",HexStr(scriptPubKey));
+    
+    int witnessVersion;
+    std::vector<unsigned char> witnessProgram;
+    if(scriptPubKey.IsWitnessProgram(witnessVersion, witnessProgram)){
+        tfm::format(std::cout,"witness program: [%d] %s\n",witnessVersion, HexStr(witnessProgram));
+    }
+    
+    
     std::vector<std::vector<unsigned char>> vSolutionsRet;
     TxoutType txOutType = Solver(scriptPubKey, vSolutionsRet);
     std::string strSrcAddrType = GetTxnOutputType(txOutType);
@@ -197,11 +206,18 @@ bool checkAddr(std::string addr, std::vector<unsigned char>& vchHash,
         vchPKHash =vSolutionsRet[0];
     } else if(txOutType == TxoutType::WITNESS_V0_KEYHASH){
         vchPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::SCRIPTHASH){
+        vchPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::WITNESS_V0_SCRIPTHASH){
+        vchPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::MULTISIG){
+        vchPKHash = vSolutionsRet[0];
     } else {
         //address is unsupported
         err =  "unsupported address type: " + GetTxnOutputType(txOutType);
         return false;
     }
+    
     
     copy(vchPKHash.begin(), vchPKHash.end(), back_inserter(vchHash));
     addrScriptPubKey = scriptPubKey;
@@ -411,6 +427,12 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
     } else if(txOutType == TxoutType::PUBKEYHASH){
         srcAddrPKHash =vSolutionsRet[0];
     } else if(txOutType == TxoutType::WITNESS_V0_KEYHASH){
+        srcAddrPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::SCRIPTHASH){
+        srcAddrPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::WITNESS_V0_SCRIPTHASH){
+        srcAddrPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::MULTISIG){
         srcAddrPKHash =vSolutionsRet[0];
     } else {
         //address is unsupported
