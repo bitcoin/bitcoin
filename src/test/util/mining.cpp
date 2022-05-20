@@ -77,7 +77,7 @@ CTxIn MineBlock(const node::NodeContext& node, const CScript& coinbase_scriptPub
 std::shared_ptr<CBlock> PrepareBlock(const node::NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = std::make_shared<CBlock>(
-        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), *Assert(node.mempool), Params()}
+        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), *Assert(node.mempool)}
             .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 

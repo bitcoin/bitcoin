@@ -275,7 +275,7 @@ public:
     uint256 getBestBlockHash() override
     {
         const CBlockIndex* tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
-        return tip ? tip->GetBlockHash() : Params().GenesisBlock().GetHash();
+        return tip ? tip->GetBlockHash() : chainman().GetParams().GenesisBlock().GetHash();
     }
     int64_t getLastBlockTime() override
     {
@@ -283,7 +283,7 @@ public:
         if (chainman().ActiveChain().Tip()) {
             return chainman().ActiveChain().Tip()->GetBlockTime();
         }
-        return Params().GenesisBlock().GetBlockTime(); // Genesis block's time of current network
+        return chainman().GetParams().GenesisBlock().GetBlockTime(); // Genesis block's time of current network
     }
     double getVerificationProgress() override
     {
@@ -292,7 +292,7 @@ public:
             LOCK(::cs_main);
             tip = chainman().ActiveChain().Tip();
         }
-        return GuessVerificationProgress(Params().TxData(), tip);
+        return GuessVerificationProgress(chainman().GetParams().TxData(), tip);
     }
     bool isInitialBlockDownload() override {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
@@ -596,7 +596,7 @@ public:
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
-        return GuessVerificationProgress(Params().TxData(), chainman().m_blockman.LookupBlockIndex(block_hash));
+        return GuessVerificationProgress(chainman().GetParams().TxData(), chainman().m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasBlocks(const uint256& block_hash, int min_height, std::optional<int> max_height) override
     {
