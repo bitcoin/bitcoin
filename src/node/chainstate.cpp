@@ -13,7 +13,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
                                                      CTxMemPool* mempool,
                                                      bool fPruneMode,
-                                                     const Consensus::Params& consensus_params,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
@@ -57,7 +56,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     }
 
     if (!chainman.BlockIndex().empty() &&
-            !chainman.m_blockman.LookupBlockIndex(consensus_params.hashGenesisBlock)) {
+            !chainman.m_blockman.LookupBlockIndex(chainman.GetConsensus().hashGenesisBlock)) {
         return ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK;
     }
 
@@ -126,10 +125,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManager& chainman,
                                                                 bool fReset,
                                                                 bool fReindexChainState,
-                                                                const Consensus::Params& consensus_params,
                                                                 int check_blocks,
-                                                                int check_level,
-                                                                std::function<int64_t()> get_unix_time_seconds)
+                                                                int check_level)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
@@ -140,12 +137,12 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
     for (CChainState* chainstate : chainman.GetAll()) {
         if (!is_coinsview_empty(chainstate)) {
             const CBlockIndex* tip = chainstate->m_chain.Tip();
-            if (tip && tip->nTime > get_unix_time_seconds() + MAX_FUTURE_BLOCK_TIME) {
+            if (tip && tip->nTime > GetTime() + MAX_FUTURE_BLOCK_TIME) {
                 return ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE;
             }
 
             if (!CVerifyDB().VerifyDB(
-                    *chainstate, consensus_params, chainstate->CoinsDB(),
+                    *chainstate, chainman.GetConsensus(), chainstate->CoinsDB(),
                     check_level,
                     check_blocks)) {
                 return ChainstateLoadVerifyError::ERROR_CORRUPTED_BLOCK_DB;
