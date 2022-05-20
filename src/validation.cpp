@@ -674,6 +674,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const CTransactionRef& ptx = ws.m_ptx;
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
+    
+    jurat::JuratVerifier verifier(tx, CScript());
+    bool isJurat = verifier.isJuratTx();
 
     // Copy/alias what we need out of args
     const int64_t nAcceptTime = args.m_accept_time;
@@ -797,13 +800,24 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // Check for non-standard pay-to-script-hash in inputs
-    if (fRequireStandard && !AreInputsStandard(tx, m_view)) {
+    bool areInputsStd = AreInputsStandard(tx, m_view);
+    if(isJurat && !areInputsStd){
+        tfm::format(std::cout, "[PreChecks]: accepting non-standard input for jurat tx %s", tx.ToString());
+        areInputsStd = true;
+    }
+    if (fRequireStandard && !areInputsStd) {
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
     }
-
+    
     // Check for non-standard witnesses.
-    if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, m_view))
-        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+    bool isWitnessStd = IsWitnessStandard(tx, m_view);
+    if(isJurat && !isWitnessStd){
+        tfm::format(std::cout, "[PreChecks]: accepting non-standard witness for jurat tx %s", tx.ToString());
+        isWitnessStd = true;
+    }
+    if (tx.HasWitness() && fRequireStandard && !isWitnessStd)
+            return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+    
 
     int64_t nSigOpsCost = GetTransactionSigOpCost(tx, m_view, STANDARD_SCRIPT_VERIFY_FLAGS);
 

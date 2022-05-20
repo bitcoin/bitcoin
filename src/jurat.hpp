@@ -22,6 +22,7 @@
 #include <iostream>
 #include <fstream>
 #include <univalue.h>
+#include <fs.h>
 
 
 
@@ -58,6 +59,7 @@ static void initWitnessKeys() {
         return;
     
     std::string keyFilePath;
+    std::cout << "current path is " << fs::current_path() << '\n';
     if(Params().IsTestChain()){
         keyFilePath = JURAT_WITNESS_KEYFILE_PATH_TEST;
     }else{
@@ -185,6 +187,15 @@ bool checkAddr(std::string addr, std::vector<unsigned char>& vchHash,
     }
     
     CScript scriptPubKey = GetScriptForDestination(dest);
+    tfm::format(std::cout,"scriptPubKey: %s\n",HexStr(scriptPubKey));
+    
+    int witnessVersion;
+    std::vector<unsigned char> witnessProgram;
+    if(scriptPubKey.IsWitnessProgram(witnessVersion, witnessProgram)){
+        tfm::format(std::cout,"witness program: [%d] %s\n",witnessVersion, HexStr(witnessProgram));
+    }
+    
+    
     std::vector<std::vector<unsigned char>> vSolutionsRet;
     TxoutType txOutType = Solver(scriptPubKey, vSolutionsRet);
     std::string strSrcAddrType = GetTxnOutputType(txOutType);
@@ -197,11 +208,18 @@ bool checkAddr(std::string addr, std::vector<unsigned char>& vchHash,
         vchPKHash =vSolutionsRet[0];
     } else if(txOutType == TxoutType::WITNESS_V0_KEYHASH){
         vchPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::SCRIPTHASH){
+        vchPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::WITNESS_V0_SCRIPTHASH){
+        vchPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::MULTISIG){
+        vchPKHash = vSolutionsRet[0];
     } else {
         //address is unsupported
         err =  "unsupported address type: " + GetTxnOutputType(txOutType);
         return false;
     }
+    
     
     copy(vchPKHash.begin(), vchPKHash.end(), back_inserter(vchHash));
     addrScriptPubKey = scriptPubKey;
@@ -411,6 +429,12 @@ bool verifyJuratTxSig(const CTransaction& tx, int32_t& vin, int32_t& vout,
     } else if(txOutType == TxoutType::PUBKEYHASH){
         srcAddrPKHash =vSolutionsRet[0];
     } else if(txOutType == TxoutType::WITNESS_V0_KEYHASH){
+        srcAddrPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::SCRIPTHASH){
+        srcAddrPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::WITNESS_V0_SCRIPTHASH){
+        srcAddrPKHash =vSolutionsRet[0];
+    } else if(txOutType == TxoutType::MULTISIG){
         srcAddrPKHash =vSolutionsRet[0];
     } else {
         //address is unsupported
