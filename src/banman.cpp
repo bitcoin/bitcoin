@@ -179,10 +179,11 @@ void BanMan::GetBanned(banmap_t& banmap)
 
 void BanMan::SweepBanned()
 {
+    AssertLockHeld(m_cs_banned);
+
     int64_t now = GetTime();
     bool notify_ui = false;
     {
-        LOCK(m_cs_banned);
         banmap_t::iterator it = m_banned.begin();
         while (it != m_banned.end()) {
             CSubNet sub_net = (*it).first;
