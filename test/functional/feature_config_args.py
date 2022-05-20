@@ -85,7 +85,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
     def test_invalid_command_line_options(self):
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error: No proxy server specified. Use -proxy=<ip> or -proxy=<ip:port>.',
+            expected_msg='Error: Error parsing command line arguments: Can not set -proxy with no value. Please specify value with -proxy=value.',
             extra_args=['-proxy'],
         )
 
