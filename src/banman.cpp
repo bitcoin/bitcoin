@@ -183,20 +183,20 @@ void BanMan::SweepBanned()
 
     int64_t now = GetTime();
     bool notify_ui = false;
-    {
-        banmap_t::iterator it = m_banned.begin();
-        while (it != m_banned.end()) {
-            CSubNet sub_net = (*it).first;
-            CBanEntry ban_entry = (*it).second;
-            if (!sub_net.IsValid() || now > ban_entry.nBanUntil) {
-                m_banned.erase(it++);
-                m_is_dirty = true;
-                notify_ui = true;
-                LogPrint(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
-            } else
-                ++it;
+    banmap_t::iterator it = m_banned.begin();
+    while (it != m_banned.end()) {
+        CSubNet sub_net = (*it).first;
+        CBanEntry ban_entry = (*it).second;
+        if (!sub_net.IsValid() || now > ban_entry.nBanUntil) {
+            m_banned.erase(it++);
+            m_is_dirty = true;
+            notify_ui = true;
+            LogPrint(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
+        } else {
+            ++it;
         }
     }
+
     // update UI
     if (notify_ui && m_client_interface) {
         m_client_interface->BannedListChanged();
