@@ -105,7 +105,7 @@ private:
     //! A thread to interact with m_node asynchronously
     QThread* const m_thread;
 
-    void TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header);
+    void TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header) EXCLUSIVE_LOCKS_REQUIRED(!m_cached_tip_mutex);
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
