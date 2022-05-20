@@ -22,7 +22,7 @@
 #include <QPoint>
 #include <QSystemTrayIcon>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include <qt/macos_appnap.h>
 #endif
 
@@ -175,7 +175,7 @@ private:
 
     QMenu* m_network_context_menu = new QMenu(this);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
 #endif
 
