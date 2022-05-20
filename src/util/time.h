@@ -14,6 +14,16 @@
 
 using namespace std::chrono_literals;
 
+/** Mockable clock in the context of tests, otherwise the system clock */
+struct NodeClock : public std::chrono::system_clock {
+    using time_point = std::chrono::time_point<NodeClock>;
+    /** Return current system time or mocked time, if set */
+    static time_point now() noexcept;
+    static std::time_t to_time_t(const time_point&) = delete; // unused
+    static time_point from_time_t(std::time_t) = delete;      // unused
+};
+using NodeSeconds = std::chrono::time_point<NodeClock, std::chrono::seconds>;
+
 using SteadySeconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::seconds>;
 using SteadyMilliseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
 using SteadyMicroseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::microseconds>;
@@ -30,10 +40,10 @@ void UninterruptibleSleep(const std::chrono::microseconds& n);
  * This helper is used to convert durations/time_points before passing them over an
  * interface that doesn't support std::chrono (e.g. RPC, debug log, or the GUI)
  */
-template <typename Clock>
-constexpr int64_t count_seconds(std::chrono::time_point<Clock, std::chrono::seconds> t)
+template <typename Duration, typename Timepoint>
+constexpr auto TicksSinceEpoch(Timepoint t)
 {
-    return t.time_since_epoch().count();
+    return std::chrono::time_point_cast<Duration>(t).time_since_epoch().count();
 }
 constexpr int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
 constexpr int64_t count_milliseconds(std::chrono::milliseconds t) { return t.count(); }
@@ -48,7 +58,11 @@ inline double CountSecondsDouble(SecondsDouble t) { return t.count(); }
 
 /**
  * DEPRECATED
- * Use either GetTimeSeconds (not mockable) or GetTime<T> (mockable)
+ * Use either ClockType::now() or Now<TimePointType>() if a cast is needed.
+ * ClockType is
+ * - std::chrono::steady_clock for steady time
+ * - std::chrono::system_clock for system time
+ * - NodeClock                 for mockable system time
  */
 int64_t GetTime();
 
@@ -71,9 +85,6 @@ void SetMockTime(std::chrono::seconds mock_time_in);
 /** For testing */
 std::chrono::seconds GetMockTime();
 
-/** Return system time (or mocked time, if set) */
-template <typename T>
-T GetTime();
 /**
  * Return the current time point cast to the given precicion. Only use this
  * when an exact precicion is needed, otherwise use T::clock::now() directly.
@@ -82,6 +93,12 @@ template <typename T>
 T Now()
 {
     return std::chrono::time_point_cast<typename T::duration>(T::clock::now());
+}
+/** DEPRECATED, see GetTime */
+template <typename T>
+T GetTime()
+{
+    return Now<std::chrono::time_point<NodeClock, T>>().time_since_epoch();
 }
 
 /**
