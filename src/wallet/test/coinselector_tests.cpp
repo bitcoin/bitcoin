@@ -344,6 +344,48 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);
     }
+    {
+        std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), "", m_args, CreateMockWalletDatabase());
+        wallet->LoadWallet();
+        LOCK(wallet->cs_wallet);
+        wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        wallet->SetupDescriptorScriptPubKeyMans();
+
+        std::vector<COutput> coins;
+
+        add_coin(coins, *wallet, 10 * CENT, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 9 * CENT, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 1 * CENT, 6 * 24, false, 0, true);
+
+        // single coin should be selected when effective fee > long term fee
+        expected_result.Clear();
+        add_coin(10 * CENT, 2, expected_result);
+        CCoinControl coin_control;
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
+        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
+        const auto result11 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
+        BOOST_CHECK(EquivalentResult(expected_result, *result11));
+
+        // more coins should be selected when effective fee < long term fee
+        expected_result.Clear();
+        add_coin(9 * CENT, 2, expected_result);
+        add_coin(1 * CENT, 2, expected_result);
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(3000);
+        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(5000);
+        const auto result12 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
+        BOOST_CHECK(EquivalentResult(expected_result, *result12));
+
+        // pre selected coin should be selected even if disadvantageous
+        expected_result.Clear();
+        add_coin(9 * CENT, 2, expected_result);
+        add_coin(1 * CENT, 2, expected_result);
+        coin_control.fAllowOtherInputs = true;
+        coin_control.Select(coins.at(1).outpoint); // pre select 9 coin
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
+        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
+        const auto result13 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
+        BOOST_CHECK(EquivalentResult(expected_result, *result13));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)
