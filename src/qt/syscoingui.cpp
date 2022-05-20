@@ -26,7 +26,7 @@
 #include <qt/walletview.h>
 #endif // ENABLE_WALLET
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include <qt/macdockiconhandler.h>
 #endif
 
@@ -66,11 +66,12 @@
 #include <QUrlQuery>
 #include <QVBoxLayout>
 #include <QWindow>
+
 // SYSCOIN
 #include <qt/masternodelist.h>
 #include <QStringList>
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
         "macosx"
 #elif defined(Q_OS_WIN)
         "windows"
@@ -220,7 +221,7 @@ SyscoinGUI::SyscoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &SyscoinGUI::showModalOverlay);
     connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &SyscoinGUI::showModalOverlay);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     m_app_nap_inhibitor = new CAppNapInhibitor;
 #endif
 
@@ -236,7 +237,7 @@ SyscoinGUI::~SyscoinGUI()
     settings.setValue("MainWindowGeometry", saveGeometry());
     if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
         trayIcon->hide();
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     delete m_app_nap_inhibitor;
     delete appMenuBar;
     MacDockIconHandler::cleanup();
@@ -286,7 +287,7 @@ void SyscoinGUI::createActions()
         masternodeAction->setStatusTip(tr("Browse masternodes"));
         masternodeAction->setToolTip(masternodeAction->statusTip());
         masternodeAction->setCheckable(true);
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
         masternodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
 #else
         masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
@@ -464,7 +465,7 @@ void SyscoinGUI::createActions()
 
 void SyscoinGUI::createMenuBar()
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // Create a decoupled menu bar on Mac which stays even if the window is closed
     appMenuBar = new QMenuBar();
 #else
@@ -514,7 +515,7 @@ void SyscoinGUI::createMenuBar()
         minimize_action->setEnabled(window != nullptr && (window->flags() & Qt::Dialog) != Qt::Dialog && window->windowState() != Qt::WindowMinimized);
     });
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QAction* zoom_action = window_menu->addAction(tr("Zoom"));
     connect(zoom_action, &QAction::triggered, [] {
         QWindow* window = qApp->focusWindow();
@@ -531,7 +532,7 @@ void SyscoinGUI::createMenuBar()
 #endif
 
     if (walletFrame) {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
         window_menu->addSeparator();
         QAction* main_window_action = window_menu->addAction(tr("Main Window"));
         connect(main_window_action, &QAction::triggered, [this] {
@@ -794,7 +795,7 @@ void SyscoinGUI::createTrayIcon()
 {
     assert(QSystemTrayIcon::isSystemTrayAvailable());
 
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
         trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
         QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->getTitleAddText();
@@ -805,17 +806,17 @@ void SyscoinGUI::createTrayIcon()
 
 void SyscoinGUI::createTrayIconMenu()
 {
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     if (!trayIcon) return;
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
     // Configuration of the tray icon (or Dock icon) menu.
     QAction* show_hide_action{nullptr};
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // Note: On macOS, the Dock icon's menu already has Show / Hide action.
     show_hide_action = trayIconMenu->addAction(QString(), this, &SyscoinGUI::toggleHidden);
     trayIconMenu->addSeparator();
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
     QAction* send_action{nullptr};
     QAction* receive_action{nullptr};
@@ -833,7 +834,7 @@ void SyscoinGUI::createTrayIconMenu()
     options_action->setMenuRole(QAction::PreferencesRole);
     QAction* node_window_action = trayIconMenu->addAction(openRPCConsoleAction->text(), openRPCConsoleAction, &QAction::trigger);
     QAction* quit_action{nullptr};
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // Note: On macOS, the Dock icon's menu already has Quit action.
     trayIconMenu->addSeparator();
     quit_action = trayIconMenu->addAction(quitAction->text(), quitAction, &QAction::trigger);
@@ -853,7 +854,7 @@ void SyscoinGUI::createTrayIconMenu()
         activateWindow();
     });
     trayIconMenu->setAsDockMenu();
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
     connect(
         // Using QSystemTrayIcon::Context is not reliable.
@@ -1059,7 +1060,7 @@ void SyscoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
 void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state)
 {
 // Disabling macOS App Nap on initial sync, disk and reindex operations.
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     if (sync_state == SynchronizationState::POST_INIT) {
         m_app_nap_inhibitor->enableAppNap();
     } else {
@@ -1293,7 +1294,7 @@ void SyscoinGUI::changeEvent(QEvent *e)
 
     QMainWindow::changeEvent(e);
 
-#ifndef Q_OS_MAC // Ignored on Mac
+#ifndef Q_OS_MACOS // Ignored on Mac
     if(e->type() == QEvent::WindowStateChange)
     {
         if(clientModel && clientModel->getOptionsModel() && clientModel->getOptionsModel()->getMinimizeToTray())
@@ -1316,7 +1317,7 @@ void SyscoinGUI::changeEvent(QEvent *e)
 
 void SyscoinGUI::closeEvent(QCloseEvent *event)
 {
-#ifndef Q_OS_MAC // Ignored on Mac
+#ifndef Q_OS_MACOS // Ignored on Mac
     if(clientModel && clientModel->getOptionsModel())
     {
         if(!clientModel->getOptionsModel()->getMinimizeOnClose())
