@@ -477,7 +477,7 @@ public:
             const int8_t network_id{NetworkStringToId(network)};
             if (network_id == UNKNOWN_NETWORK) continue;
             const bool is_outbound{!peer["inbound"].get_bool()};
-            const bool is_block_relay{!peer["relaytxes"].get_bool()};
+            const bool is_block_relay{peer["relaytxes"].isNull() ? false : !peer["relaytxes"].get_bool()};
             const std::string conn_type{peer["connection_type"].get_str()};
             ++m_counts.at(is_outbound).at(network_id);      // in/out by network
             ++m_counts.at(is_outbound).at(NETWORKS.size()); // in/out overall
