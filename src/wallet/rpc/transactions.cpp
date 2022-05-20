@@ -95,14 +95,6 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         has_filtered_address = true;
     }
 
-    // Excluding coinbase outputs is deprecated
-    // It can be enabled by setting deprecatedrpc=exclude_coinbase
-    const bool include_coinbase{!wallet.chain().rpcEnableDeprecated("exclude_coinbase")};
-
-    if (include_immature_coinbase && !include_coinbase) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "include_immature_coinbase is incompatible with deprecated exclude_coinbase");
-    }
-
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
     for (const std::pair<const uint256, CWalletTx>& pairWtx : wallet.mapWallet) {
@@ -113,7 +105,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             continue;
 
         // Coinbase with less than 1 confirmation is no longer in the main chain
-        if ((wtx.IsCoinBase() && (nDepth < 1 || !include_coinbase))
+        if ((wtx.IsCoinBase() && (nDepth < 1))
             || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase))
         {
             continue;
