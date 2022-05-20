@@ -33,7 +33,7 @@ It is not necessary to build wallet functionality to run either `bitcoind` or `b
 
 `sqlite3` is required to support [descriptor wallets](descriptors.md).
 
-``` bash
+```bash
 pkg_add install sqlite3
 ```
 
@@ -68,7 +68,6 @@ pkg_add qt5
 
 Preparation:
 ```bash
-
 # Adapt the following for the version you installed (major.minor only):
 export AUTOCONF_VERSION=2.71
 export AUTOMAKE_VERSION=1.16

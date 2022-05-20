@@ -11,14 +11,13 @@ Run the following as root to install the base dependencies for building.
 
 ```bash
 pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
-
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
 ### 2. Clone Bitcoin Repo
 Now that `git` and all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory. All build scripts and commands will run from this directory.
-``` bash
+```bash
 git clone https://github.com/bitcoin/bitcoin.git
 ```
 
@@ -31,7 +30,7 @@ It is not necessary to build wallet functionality to run either `bitcoind` or `b
 
 `sqlite3` is required to support [descriptor wallets](descriptors.md).
 Skip if you don't intend to use descriptor wallets.
-``` bash
+```bash
 pkg install sqlite3
 ```
 
@@ -101,7 +100,7 @@ This enables support for both wallet types and disables the GUI, assuming
 ```
 
 ##### No Wallet or GUI
-``` bash
+```bash
 ./autogen.sh
 ./configure --without-wallet --with-gui=no MAKE=gmake
 ```
