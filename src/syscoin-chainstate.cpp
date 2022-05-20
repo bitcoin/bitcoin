@@ -74,7 +74,11 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Chainstate
-    ChainstateManager chainman{chainparams};
+    const ChainstateManager::Options chainman_opts{
+        chainparams,
+        static_cast<int64_t(*)()>(GetTime),
+    };
+    ChainstateManager chainman{chainman_opts};
     // SYSCOIN
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<PeerManager> peerman;

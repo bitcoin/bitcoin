@@ -1665,7 +1665,11 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     for (fLoaded = false; !fLoaded && !ShutdownRequested();) {
         node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), mempool_check_ratio);
 
-        node.chainman = std::make_unique<ChainstateManager>(chainparams);
+        const ChainstateManager::Options chainman_opts{
+            chainparams,
+            GetAdjustedTime,
+        };
+        node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
         ChainstateManager& chainman = *node.chainman;
         // SYSCOIN
         node.peerman = PeerManager::make(*node.connman, *node.addrman, node.banman.get(),
