@@ -36,8 +36,7 @@ struct CNodeStateStats {
 };
 // SYSCOIN
 extern RecursiveMutex g_cs_orphans;
-/**
- * Data structure for an individual peer. This struct is not protected by
+/** Data structure for an individual peer. This struct is not protected by
  * cs_main since it does not contain validation-critical data.
  *
  * Memory is owned by shared pointers and this object is destructed when
@@ -133,7 +132,7 @@ struct Peer {
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
-    TxRelay* SetTxRelay()
+    TxRelay* SetTxRelay() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_relay_mutex)
     {
         LOCK(m_tx_relay_mutex);
         Assume(!m_tx_relay);
@@ -220,6 +219,7 @@ private:
 };
 
 using PeerRef = std::shared_ptr<Peer>;
+
 class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
