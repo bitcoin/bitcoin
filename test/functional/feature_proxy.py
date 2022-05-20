@@ -36,6 +36,7 @@ addnode connect to a CJDNS address
 - Test passing invalid -i2psam
 - Test passing -onlynet=onion without -proxy or -onion
 - Test passing -onlynet=onion with -onion=0 and with -noonion
+- Test passing unknown -onlynet
 """
 
 import socket
@@ -348,6 +349,11 @@ class ProxyTest(BitcoinTestFramework):
         for arg in ["-onion=0", "-noonion"]:
             self.nodes[1].extra_args = ["-onlynet=onion", arg]
             self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing unknown network to -onlynet raises expected init error")
+        self.nodes[1].extra_args = ["-onlynet=abc"]
+        msg = "Error: Unknown network specified in -onlynet: 'abc'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
 
 if __name__ == '__main__':
