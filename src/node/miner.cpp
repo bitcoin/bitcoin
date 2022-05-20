@@ -232,15 +232,19 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     }
 }
 
-int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
-        indexed_modified_transaction_set &mapModifiedTx)
+/** Add descendants of given transactions to mapModifiedTx with ancestor
+ * state updated assuming given transactions are inBlock. Returns number
+ * of updated descendants. */
+static int UpdatePackagesForAdded(const CTxMemPool& mempool,
+                                  const CTxMemPool::setEntries& alreadyAdded,
+                                  indexed_modified_transaction_set& mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs)
 {
-    AssertLockHeld(m_mempool.cs);
+    AssertLockHeld(mempool.cs);
 
     int nDescendantsUpdated = 0;
     for (CTxMemPool::txiter it : alreadyAdded) {
         CTxMemPool::setEntries descendants;
-        m_mempool.CalculateDescendants(it, descendants);
+        mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
         for (CTxMemPool::txiter desc : descendants) {
             if (alreadyAdded.count(desc)) {
@@ -421,7 +425,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         ++nPackagesSelected;
 
         // Update transactions that depend on each of these
-        nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+        nDescendantsUpdated += UpdatePackagesForAdded(m_mempool, ancestors, mapModifiedTx);
     }
 }
 } // namespace node
