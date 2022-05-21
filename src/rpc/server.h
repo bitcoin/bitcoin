@@ -10,10 +10,10 @@
 #include <rpc/request.h>
 #include <rpc/util.h>
 
+#include <functional>
 #include <map>
 #include <stdint.h>
 #include <string>
-#include <functional>
 
 #include <univalue.h>
 
@@ -27,6 +27,9 @@ namespace RPCServer
 
 /** Query whether RPC is running */
 bool IsRPCRunning();
+
+/** Throw JSONRPCError if RPC is not running */
+void RpcInterruptionPoint();
 
 /**
  * Set the RPC warmup status.  When this is done, all RPC calls will error out
