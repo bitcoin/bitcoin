@@ -64,8 +64,6 @@ void CInstantSendDb::Upgrade()
     if (!db->Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
         CDBBatch batch(*db);
         CInstantSendLock islock;
-        CTransactionRef tx;
-        uint256 hashBlock;
 
         auto it = std::unique_ptr<CDBIterator>(db->NewIterator());
         auto firstKey = std::make_tuple(DB_ISLOCK_BY_HASH, uint256());
@@ -76,7 +74,9 @@ void CInstantSendDb::Upgrade()
             if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_ISLOCK_BY_HASH) {
                 break;
             }
-            if (it->GetValue(islock) && !GetTransaction(islock.txid, tx, Params().GetConsensus(), hashBlock)) {
+            uint256 hashBlock;
+            CTransactionRef tx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, islock.txid, Params().GetConsensus(), hashBlock);
+            if (it->GetValue(islock) && !tx) {
                 // Drop locks for unknown txes
                 batch.Erase(std::make_tuple(DB_HASH_BY_TXID, islock.txid));
                 for (auto& in : islock.inputs) {
@@ -603,10 +603,10 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
         return false;
     }
 
-    CTransactionRef tx;
     uint256 hashBlock;
+    CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, outpoint.hash, params, hashBlock);
     // this relies on enabled txindex and won't work if we ever try to remove the requirement for txindex for masternodes
-    if (!GetTransaction(outpoint.hash, tx, params, hashBlock)) {
+    if (!tx) {
         if (printDebug) {
             LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: failed to find parent TX %s\n", __func__,
                      txHash.ToString(), outpoint.hash.ToString());
@@ -661,9 +661,9 @@ void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& re
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    CTransactionRef tx;
     uint256 hashBlock;
-    if (!GetTransaction(txid, tx, Params().GetConsensus(), hashBlock)) {
+    CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, txid, Params().GetConsensus(), hashBlock);
+    if (!tx) {
         return;
     }
 
@@ -1048,11 +1048,11 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         return;
     }
 
-    CTransactionRef tx;
     uint256 hashBlock;
+    CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, islock->txid, Params().GetConsensus(), hashBlock);
     const CBlockIndex* pindexMined{nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
-    if (GetTransaction(islock->txid, tx, Params().GetConsensus(), hashBlock) && !hashBlock.IsNull()) {
+    if (tx && !hashBlock.IsNull()) {
         pindexMined = WITH_LOCK(cs_main, return LookupBlockIndex(hashBlock));
 
         // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,

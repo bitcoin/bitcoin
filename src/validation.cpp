@@ -566,9 +566,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
     llmq::CInstantSendLockPtr conflictLock = llmq::quorumInstantSendManager->GetConflictingLock(tx);
     if (conflictLock) {
-        CTransactionRef txConflict;
         uint256 hashBlock;
-        if (GetTransaction(conflictLock->txid, txConflict, chainparams.GetConsensus(), hashBlock)) {
+        CTransactionRef txConflict = GetTransaction(/* block_index */ nullptr, &pool, conflictLock->txid, chainparams.GetConsensus(), hashBlock);
+        if (txConflict) {
             GetMainSignals().NotifyInstantSendDoubleSpendAttempt(ptx, txConflict);
         }
         return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with locked TX %s",
@@ -890,44 +890,32 @@ bool GetAddressUnspent(uint160 addressHash, int type,
     return true;
 }
 
-/**
- * Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock.
- * If blockIndex is provided, the transaction is fetched from the corresponding block.
- */
-bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus::Params& consensusParams, uint256& hashBlock, const CBlockIndex* const block_index)
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
 {
     LOCK(cs_main);
 
-    if (!block_index) {
-        CTransactionRef ptx = mempool.get(hash);
-        if (ptx) {
-            txOut = ptx;
-            return true;
-        }
-
-        if (g_txindex) {
-            return g_txindex->FindTx(hash, hashBlock, txOut);
-        }
-    } else {
+    if (block_index) {
         CBlock block;
         if (ReadBlockFromDisk(block, block_index, consensusParams)) {
             for (const auto& tx : block.vtx) {
                 if (tx->GetHash() == hash) {
-                    txOut = tx;
                     hashBlock = block_index->GetBlockHash();
-                    return true;
+                    return tx;
                 }
             }
         }
+        return nullptr;
     }
-
-    return false;
+    if (mempool) {
+        CTransactionRef ptx = mempool->get(hash);
+        if (ptx) return ptx;
+    }
+    if (g_txindex) {
+        CTransactionRef tx;
+        if (g_txindex->FindTx(hash, hashBlock, tx)) return tx;
+    }
+    return nullptr;
 }
-
-
-
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 //

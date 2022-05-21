@@ -2001,7 +2001,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
 
-                llmq::InitLLMQSystem(*evoDb, *node.connman, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, *node.mempool, *node.connman, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

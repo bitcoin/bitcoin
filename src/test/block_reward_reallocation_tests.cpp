@@ -94,20 +94,20 @@ static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const
     }
 }
 
-static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
+static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, const CKey& coinbaseKey)
 {
     CBasicKeyStore tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
-        CTransactionRef txFrom;
         uint256 hashBlock;
-        BOOST_ASSERT(GetTransaction(tx.vin[i].prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
+        CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, tx.vin[i].prevout.hash, Params().GetConsensus(), hashBlock);
+        BOOST_ASSERT(txFrom);
         BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }
 }
 
-static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
+static CMutableTransaction CreateProRegTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
@@ -126,7 +126,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     FundTransaction(tx, utxos, scriptPayout, 1000 * COIN);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     SetTxPayload(tx, proTx);
-    SignTransaction(tx, coinbaseKey);
+    SignTransaction(mempool, tx, coinbaseKey);
 
     return tx;
 }
@@ -187,7 +187,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     CKey ownerKey;
     CBLSSecretKey operatorKey;
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
-    auto tx = CreateProRegTx(utxos, 1, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
+    auto tx = CreateProRegTx(*m_node.mempool, utxos, 1, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
 
     CreateAndProcessBlock({tx}, coinbaseKey);
 

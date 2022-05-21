@@ -23,9 +23,9 @@ namespace llmq
 {
 CChainLocksHandler* chainLocksHandler;
 
-CChainLocksHandler::CChainLocksHandler(CConnman& _connman) :
+CChainLocksHandler::CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman) :
     scheduler(std::make_unique<CScheduler>()),
-    connman(_connman)
+    mempool(_mempool), connman(_connman)
 {
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler.get());
     scheduler_thread = std::make_unique<std::thread>(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
@@ -647,9 +647,9 @@ void CChainLocksHandler::Cleanup()
         }
     }
     for (auto it = txFirstSeenTime.begin(); it != txFirstSeenTime.end(); ) {
-        CTransactionRef tx;
         uint256 hashBlock;
-        if (!GetTransaction(it->first, tx, Params().GetConsensus(), hashBlock)) {
+        CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, it->first, Params().GetConsensus(), hashBlock);
+        if (!tx) {
             // tx has vanished, probably due to conflicts
             it = txFirstSeenTime.erase(it);
         } else if (!hashBlock.IsNull()) {

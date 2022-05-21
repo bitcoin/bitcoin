@@ -143,7 +143,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     g_txindex = MakeUnique<TxIndex>(1 << 20, true);
     g_txindex->Start();
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
-    llmq::InitLLMQSystem(*evoDb, *m_node.connman, true);
+    llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, true);
     ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
