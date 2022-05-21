@@ -137,6 +137,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_locked_wallet()
         self.test_many_inputs_fee()
         self.test_many_inputs_send()
+        self.test_witness_only()
         self.test_op_return()
         self.test_watchonly()
         self.test_all_watched_funds()
@@ -215,6 +216,38 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert len(dec_tx['vin']) > 0  #test that we have enough inputs
+
+    def check_witness_inputs(self, vins):
+        for vin in vins:
+            # check vin is a segwit input
+            utxo = self.nodes[2].gettxout(vin['txid'], vin['vout'])
+            info = self.nodes[2].getaddressinfo(utxo['scriptPubKey']['address'])
+            if not info['iswitness']:
+                return False
+
+        return True
+
+    def test_witness_only(self):
+        self.log.info("Testing fundrawtxn with witness inputs only")
+
+        inputs  = [ ]
+
+        # make sure legacy inputs are not accepted in witness only mode if no witness inputs are found
+        self.generatetoaddress(self.nodes[2], 2, self.nodes[2].getnewaddress(address_type='legacy'))
+        outputs = { self.nodes[2].getnewaddress() : 10.0 }
+        rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx, {'segwit_inputs_only': True })
+
+        # make sure all inputs are of type witness
+        outputs = { self.nodes[2].getnewaddress() : 300.0 } # will generate many inputs
+        rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
+        self.generatetoaddress(self.nodes[2], 150, self.nodes[2].getnewaddress(address_type='bech32'))
+        rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'segwit_inputs_only': True })
+        dec_tx = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
+
+        assert len(dec_tx['vin']) > 0
+        assert(self.check_witness_inputs(dec_tx['vin']))
+
 
     def test_simple_two_coins(self):
         self.log.info("Test fundrawtxn with 2 coins")
