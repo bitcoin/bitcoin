@@ -23,6 +23,7 @@
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
 #include <versionbits.h>
+#include <serialize.h>
 #include <spentindex.h>
 
 #include <algorithm>

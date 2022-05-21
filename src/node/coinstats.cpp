@@ -87,6 +87,7 @@ static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, 
 template <typename T>
 static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj)
 {
+    stats = CCoinsStats();
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
 
@@ -111,6 +112,7 @@ static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj)
             }
             prevkey = key.hash;
             outputs[key.n] = std::move(coin);
+            stats.coins_count++;
         } else {
             return error("%s: unable to read value", __func__);
         }
