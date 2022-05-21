@@ -1255,7 +1255,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
 
-#if defined(HAVE_SYSTEM)
+#if HAVE_SYSTEM
     // notify an external script when a wallet transaction comes in or is updated
     std::string strCmd = gArgs.GetArg("-walletnotify", "");
 
@@ -5484,7 +5484,7 @@ void CWallet::NotifyTransactionLock(const CTransactionRef &tx, const std::shared
     if (mi != mapWallet.end()){
         NotifyTransactionChanged(this, txHash, CT_UPDATED);
         NotifyISLockReceived();
-#if defined(HAVE_SYSTEM)
+#if HAVE_SYSTEM
         // notify an external script
         std::string strCmd = gArgs.GetArg("-instantsendnotify", "");
         if (!strCmd.empty()) {
