@@ -486,6 +486,16 @@ static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
     return args;
 }
 
+static inline OutputType parseOutputType(const std::string& outputTypeStr)
+{
+    const auto outputType = ParseOutputType(outputTypeStr);
+    if (!outputType) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown input type '%s'", outputTypeStr));
+    }
+
+    return *outputType;
+}
+
 void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, const UniValue& options, CCoinControl& coinControl, bool override_min_fee)
 {
     // Make sure the results are valid at least up to the most recent block
@@ -530,11 +540,20 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
                 {"input_weights", UniValueType(UniValue::VARR)},
+                {"filter_inputs_by", UniValueType(UniValue::VARR)},
             },
             true, true);
 
         if (options.exists("add_inputs")) {
             coinControl.m_allow_other_inputs = options["add_inputs"].get_bool();
+        }
+
+        if (options.exists("filter_inputs_by")) {
+            UniValue v = options["filter_inputs_by"].get_array();
+            coinControl.m_filter_inputs = 0;
+            for (size_t i = 0; i < v.size(); i++) {
+                *coinControl.m_filter_inputs |= (1 << static_cast<unsigned int>(parseOutputType(v[i].get_str())));
+            }
         }
 
         if (options.exists("changeAddress") || options.exists("change_address")) {
@@ -772,7 +791,14 @@ RPCHelpMan fundrawtransaction()
                                         "so the maximum DER signatures size of 73 bytes should be used when considering ECDSA signatures."
                                         "Remember to convert serialized sizes to weight units when necessary."},
                                 },
-                             },
+                            },
+                            {"filter_inputs_by", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Filter inputs by type.\n"
+                                                                                                         "Only inputs of the specified type(s) will be selected.\n"
+                                                                                                         "Valid types are: \"legacy\", \"p2sh-segwit\", \"bech32\" and \"bech32m\".",
+                                {
+                                    {"type", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The type of input to filter by."},
+                                },
+                            },
                         },
                         FundTxDoc()),
                         "options"},
@@ -1597,6 +1623,13 @@ RPCHelpMan walletcreatefundedpsbt()
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
+                            {"filter_inputs_by", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Filter inputs by type.\n"
+                                                                                                         "Only inputs of the specified type(s) will be selected.\n"
+                                                                                                         "Valid types are: \"legacy\", \"p2sh-segwit\", \"bech32\" and \"bech32m\".",
+                                {
+                                    {"type", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The type of input to filter by."},
+                                },
+                            },
                         },
                         FundTxDoc()),
                         "options"},
@@ -1648,6 +1681,13 @@ RPCHelpMan walletcreatefundedpsbt()
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
+    if (options.exists("filter_inputs_by")) {
+        UniValue v = options["filter_inputs_by"].get_array();
+        coin_control.m_filter_inputs = 0;
+        for (size_t i = 0; i < v.size(); i++) {
+            *coin_control.m_filter_inputs |= (1 << static_cast<unsigned int>(parseOutputType(v[i].get_str())));
+        }
+    }
     SetOptionsInputWeights(request.params[0], options);
     FundTransaction(wallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/true);
 

@@ -28,6 +28,7 @@ but still know when to expect mixing due to the wallet being close to empty.
 """
 
 import random
+from test_framework.address import is_bech32_address, is_bech32m_address, is_legacy_address, is_p2sh_segwit_address
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import COINBASE_MATURITY
 
@@ -38,33 +39,6 @@ ADDRESS_TYPES = [
     "legacy",
 ]
 
-
-def is_bech32_address(node, addr):
-    """Check if an address contains a bech32 output."""
-    addr_info = node.getaddressinfo(addr)
-    return addr_info['desc'].startswith('wpkh(')
-
-
-def is_bech32m_address(node, addr):
-    """Check if an address contains a bech32m output."""
-    addr_info = node.getaddressinfo(addr)
-    return addr_info['desc'].startswith('tr(')
-
-
-def is_p2sh_segwit_address(node, addr):
-    """Check if an address contains a P2SH-Segwit output.
-       Note: this function does not actually determine the type
-       of P2SH output, but is sufficient for this test in that
-       we are only generating P2SH-Segwit outputs.
-    """
-    addr_info = node.getaddressinfo(addr)
-    return addr_info['desc'].startswith('sh(wpkh(')
-
-
-def is_legacy_address(node, addr):
-    """Check if an address contains a legacy output."""
-    addr_info = node.getaddressinfo(addr)
-    return addr_info['desc'].startswith('pkh(')
 
 
 def is_same_type(node, tx):
@@ -85,13 +59,14 @@ def is_same_type(node, tx):
     has_bech32m = False
 
     for addr in inputs:
-        if is_legacy_address(node, addr):
+        addr_info = node.getaddressinfo(addr)
+        if is_legacy_address(addr_info):
             has_legacy = True
-        if is_p2sh_segwit_address(node, addr):
+        if is_p2sh_segwit_address(addr_info):
             has_p2sh = True
-        if is_bech32_address(node, addr):
+        if is_bech32_address(addr_info):
             has_bech32 = True
-        if is_bech32m_address(node, addr):
+        if is_bech32m_address(addr_info):
             has_bech32m = True
 
     return (sum([has_legacy, has_p2sh, has_bech32, has_bech32m]) == 1)

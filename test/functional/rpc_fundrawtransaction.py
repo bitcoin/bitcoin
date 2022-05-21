@@ -8,6 +8,8 @@
 from decimal import Decimal
 from itertools import product
 from math import ceil
+from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.address import is_bech32_address, is_bech32m_address, is_legacy_address, is_p2sh_segwit_address
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
@@ -129,6 +131,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_locked_wallet()
         self.test_many_inputs_fee()
         self.test_many_inputs_send()
+        self.test_filter_inputs()
         self.test_op_return()
         self.test_watchonly()
         self.test_all_watched_funds()
@@ -180,6 +183,68 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert len(dec_tx['vin']) > 0  #test that we have enough inputs
+
+    def check_segwit_inputs(self, vins):
+        for vin in vins:
+            # check vin is a segwit input
+            utxo = self.nodes[2].gettxout(vin['txid'], vin['vout'])
+            info = self.nodes[2].getaddressinfo(utxo['scriptPubKey']['address'])
+            if not info['iswitness']:
+                return False
+
+        return True
+
+    def test_filter_inputs(self):
+        self.log.info("Test fundrawtxn with specific inputs only")
+
+        self.generate(self.nodes[0], COINBASE_MATURITY + 10)
+
+        output_types = ['legacy', 'p2sh-segwit', 'bech32', 'bech32m']
+        # Create coins
+        for _ in range(10):
+            for output_type in output_types:
+                self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(address_type=output_type), 1)
+
+        self.generate(self.nodes[0], 1)
+
+        # Check inputs are filtered
+        for output_type in output_types:
+            inputs = [ ]
+
+            outputs = { self.nodes[2].getnewaddress(address_type=output_type) : 1 }
+            rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
+            rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'filter_inputs_by': [output_type]})
+            dec_tx = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
+
+            for txin in dec_tx['vin']:
+                utxo = self.nodes[2].gettxout(txin['txid'], txin['vout'])
+                info = self.nodes[2].getaddressinfo(utxo['scriptPubKey']['address'])
+                if output_type == 'legacy':
+                    assert is_legacy_address(info)
+                elif output_type == 'p2sh-segwit':
+                    assert is_p2sh_segwit_address(info)
+                elif output_type == 'bech32':
+                    assert is_bech32_address(info)
+                elif output_type == 'bech32m':
+                    assert is_bech32m_address(info)
+                else:
+                    assert False
+
+        # Check with multiple inputs in filter
+        inputs = []
+        outputs = { self.nodes[2].getnewaddress(address_type='legacy') : 1 }
+        rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'filter_inputs_by': ['legacy', 'p2sh-segwit']})
+        dec_tx = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
+
+        for txin in dec_tx['vin']:
+            utxo = self.nodes[2].gettxout(txin['txid'], txin['vout'])
+            info = self.nodes[2].getaddressinfo(utxo['scriptPubKey']['address'])
+            assert is_legacy_address(info) or is_p2sh_segwit_address(info)
+
+        # test invalid filter
+        assert_raises_rpc_error(-8, "Unknown input type 'invalid'", self.nodes[2].fundrawtransaction, rawtx, {'filter_inputs_by': ['invalid']})
+
 
     def test_simple_two_coins(self):
         self.log.info("Test fundrawtxn with 2 coins")

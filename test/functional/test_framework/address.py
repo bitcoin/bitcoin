@@ -158,6 +158,29 @@ def check_script(script):
         return script
     assert False
 
+def is_bech32_address(addr_info):
+    """Check if an address contains a bech32 output."""
+    return addr_info['desc'].startswith('wpkh(')
+
+
+def is_bech32m_address(addr_info):
+    """Check if an address contains a bech32m output."""
+    return addr_info['desc'].startswith('tr(')
+
+
+def is_p2sh_segwit_address(addr_info):
+    """Check if an address contains a P2SH-Segwit output.
+       Note: this function does not actually determine the type
+       of P2SH output, but is sufficient for this test in that
+       we are only generating P2SH-Segwit outputs.
+    """
+    return addr_info['desc'].startswith('sh(wpkh(')
+
+
+def is_legacy_address(addr_info):
+    """Check if an address contains a legacy output."""
+    return addr_info['desc'].startswith('pkh(')
+
 
 class TestFrameworkScript(unittest.TestCase):
     def test_base58encodedecode(self):
