@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     }
 
     NodeContext node_context;
+    node_context.args = &::gArgs; // TODO: remove this patchfix to solve unexplained test failure
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode(&node_context);
 
     bool fInvalid = false;

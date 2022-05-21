@@ -190,13 +190,13 @@ public:
     uint64_t getAssumedBlockchainSize() override { return Params().AssumedBlockchainSize(); }
     uint64_t getAssumedChainStateSize() override { return Params().AssumedChainStateSize(); }
     std::string getNetwork() override { return Params().NetworkIDString(); }
-    void initLogging() override { InitLogging(); }
-    void initParameterInteraction() override { InitParameterInteraction(); }
+    void initLogging() override { InitLogging(gArgs); }
+    void initParameterInteraction() override { InitParameterInteraction(gArgs); }
     std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
     uint64_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
+        return AppInitBasicSetup(gArgs) && AppInitParameterInteraction(gArgs) && AppInitSanityChecks() &&
                AppInitLockDataDirectory();
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
