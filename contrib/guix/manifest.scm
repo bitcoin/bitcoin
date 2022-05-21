@@ -10,6 +10,7 @@
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
+             (gnu packages gnome)
              (gnu packages image)
              (gnu packages imagemagick)
              ((gnu packages installers) #:select (nsis-x86_64))
@@ -530,7 +531,7 @@ inspecting signatures in Mach-O binaries.")
         pkg-config
         imagemagick
         libicns
-        librsvg
+        librsvg-2.40
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
