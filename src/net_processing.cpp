@@ -2950,7 +2950,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
                              pfrom->GetId());
                 } else if (!fAlreadyHave) {
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
-                    if (allowWhileInIBD || (!fImporting && !fReindex && !::ChainstateActive().IsInitialBlockDownload())) {
+                    if (allowWhileInIBD || !chainman.ActiveChainstate().IsInitialBlockDownload()) {
                         RequestObject(State(pfrom->GetId()), inv, current_time);
                     }
                 }
