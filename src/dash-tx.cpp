@@ -38,7 +38,8 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static void SetupBitcoinTxArgs()
 {
-    gArgs.AddArg("-?", "This help message", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    SetupHelpOptions(gArgs);
+
     gArgs.AddArg("-create", "Create new, empty TX.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-json", "Select JSON output", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-txid", "Output only the hex-encoded transaction id of the resultant transaction.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -65,10 +66,6 @@ static void SetupBitcoinTxArgs()
 
     gArgs.AddArg("load=NAME:FILENAME", "Load JSON file FILENAME into register NAME", ArgsManager::ALLOW_ANY, OptionsCategory::REGISTER_COMMANDS);
     gArgs.AddArg("set=NAME:JSON-STRING", "Set register NAME to given JSON-STRING", ArgsManager::ALLOW_ANY, OptionsCategory::REGISTER_COMMANDS);
-
-    // Hidden
-    gArgs.AddArg("-h", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-help", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
 }
 
 //
