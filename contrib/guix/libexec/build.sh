@@ -230,7 +230,8 @@ GIT_ARCHIVE="${DIST_ARCHIVE_BASE}/${DISTNAME}.tar.gz"
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
-    git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
+    CONFIG_SITE="${BASEPREFIX}/${HOST}/share/config.site" \
+    contrib/guix/libexec/make_release_tarball.sh "${GIT_ARCHIVE}" "${DISTNAME}"
 fi
 
 mkdir -p "$OUTDIR"
@@ -282,8 +283,6 @@ mkdir -p "$DISTSRC"
 
     # Extract the source tarball
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
-
-    ./autogen.sh
 
     # Configure this DISTSRC for $HOST
     # shellcheck disable=SC2086
