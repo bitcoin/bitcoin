@@ -213,6 +213,28 @@ class ExampleTest(BitcoinTestFramework):
             for block in peer_receiving.block_receive_map.values():
                 assert_equal(block, 1)
 
+        self.log.info("Start chaincode labs test")
+        self.log.info("Add P2P connection to node1")
+        self.nodes[2].disconnect_p2ps()
+        peer_messaging = self.nodes[1].add_p2p_connection(BaseNode())
+
+        self.log.info("Creating a block and sending to node1")
+        block = create_block(self.tip, create_coinbase(height+1), self.block_time)
+        block.solve()
+        block_message = msg_block(block)
+        peer_messaging.send_message(block_message)
+        self.tip = block.sha256
+        blocks.append(self.tip)
+        self.block_time += 1
+        height += 1
+
+        self.log.info("Wait for node2 to receive all the blocks from node1")
+        self.sync_all()
+
+        self.log.info("Test if node2 has latest block")
+        assert_equal(self.tip, int(self.nodes[2].getbestblockhash(), 16))
+
+
 
 if __name__ == '__main__':
     ExampleTest().main()
