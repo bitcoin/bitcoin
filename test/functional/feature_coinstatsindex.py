@@ -52,6 +52,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self._test_use_index_option()
         self._test_reorg_index()
         self._test_index_rejects_hash_serialized()
+        self._test_init_index_after_reorg()
 
     def block_sanity_check(self, block_info):
         block_subsidy = 50
@@ -59,6 +60,9 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             block_info['prevout_spent'] + block_subsidy,
             block_info['new_outputs_ex_coinbase'] + block_info['coinbase'] + block_info['unspendable']
         )
+
+    def sync_index_node(self):
+        self.wait_until(lambda: self.nodes[1].getindexinfo()['coinstatsindex']['synced'] is True)
 
     def _test_coin_stats_index(self):
         node = self.nodes[0]
@@ -295,6 +299,26 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for use_index in {True, False, None}:
             assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=111, use_index=use_index)
+
+    def _test_init_index_after_reorg(self):
+        self.log.info("Test a reorg while the index is deactivated")
+        index_node = self.nodes[1]
+        block = self.nodes[0].getbestblockhash()
+        self.generate(index_node, 2, sync_fun=self.no_op)
+        self.sync_index_node()
+
+        # Restart without index
+        self.restart_node(1, extra_args=[])
+        self.connect_nodes(0, 1)
+        index_node.invalidateblock(block)
+        self.generatetoaddress(index_node, 5, getnewdestination()[2])
+        res = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
+
+        # Restart with index that still has its best block on the old chain
+        self.restart_node(1, extra_args=self.extra_args[1])
+        self.sync_index_node()
+        res1 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=True)
+        assert_equal(res["muhash"], res1["muhash"])
 
 
 if __name__ == '__main__':

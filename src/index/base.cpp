@@ -92,7 +92,13 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         SetBestBlockIndex(nullptr);
     } else {
-        SetBestBlockIndex(m_chainstate->FindForkInGlobalIndex(locator));
+        // Setting the best block to the locator's top block. If it is not part of the
+        // best chain, we will rewind to the fork point during index sync
+        const CBlockIndex* locator_index{m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0))};
+        if (!locator_index) {
+            return InitError(strprintf(Untranslated("%s: best block of the index not found. Please rebuild the index."), GetName()));
+        }
+        SetBestBlockIndex(locator_index);
     }
 
     // Note: this will latch to true immediately if the user starts up with an empty
