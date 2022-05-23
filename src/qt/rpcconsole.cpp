@@ -17,7 +17,6 @@
 #include <qt/guiutil.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/platformstyle.h>
-#include <qt/walletmodel.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
@@ -26,6 +25,10 @@
 #include <util/threadnames.h>
 
 #include <univalue.h>
+
+#ifdef ENABLE_WALLET
+#include <qt/walletmodel.h>
+#endif
 
 #include <QAbstractButton>
 #include <QAbstractItemModel>
