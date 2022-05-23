@@ -25,6 +25,7 @@
 #include <util/vector.h>
 
 #include <array>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -1035,7 +1036,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 {
     CHash256 out_sha;
     FILE* out_file = nullptr;
-    if (const char* out_path = getenv("ARGS_MERGE_TEST_OUT")) {
+    if (const char* out_path = std::getenv("ARGS_MERGE_TEST_OUT")) {
         out_file = fsbridge::fopen(out_path, "w");
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }
@@ -1170,7 +1171,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
 {
     CHash256 out_sha;
     FILE* out_file = nullptr;
-    if (const char* out_path = getenv("CHAIN_MERGE_TEST_OUT")) {
+    if (const char* out_path = std::getenv("CHAIN_MERGE_TEST_OUT")) {
         out_file = fsbridge::fopen(out_path, "w");
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }

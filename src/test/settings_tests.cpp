@@ -15,6 +15,7 @@
 #include <util/string.h>
 #include <util/system.h>
 
+#include <cstdlib>
 #include <fstream>
 #include <map>
 #include <string>
@@ -184,7 +185,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
 {
     CHash256 out_sha;
     FILE* out_file = nullptr;
-    if (const char* out_path = getenv("SETTINGS_MERGE_TEST_OUT")) {
+    if (const char* out_path = std::getenv("SETTINGS_MERGE_TEST_OUT")) {
         out_file = fsbridge::fopen(out_path, "w");
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }

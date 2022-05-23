@@ -68,6 +68,7 @@
 
 #include <univalue.h>
 
+#include <cstdlib>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -864,7 +865,7 @@ fs::path GetDefaultDataDir()
     return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
 #else
     fs::path pathRet;
-    char* pszHome = getenv("HOME");
+    char* pszHome = std::getenv("HOME");
     if (pszHome == nullptr || strlen(pszHome) == 0)
         pathRet = fs::path("/");
     else

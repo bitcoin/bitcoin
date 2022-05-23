@@ -67,6 +67,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <string>
@@ -574,9 +575,9 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
 fs::path static GetAutostartDir()
 {
-    char* pszConfigHome = getenv("XDG_CONFIG_HOME");
+    char* pszConfigHome = std::getenv("XDG_CONFIG_HOME");
     if (pszConfigHome) return fs::path(pszConfigHome) / "autostart";
-    char* pszHome = getenv("HOME");
+    char* pszHome = std::getenv("HOME");
     if (pszHome) return fs::path(pszHome) / ".config" / "autostart";
     return fs::path();
 }
