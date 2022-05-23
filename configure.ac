@@ -2003,9 +2003,11 @@ if test "$enable_wallet" != "no"; then
     echo "    with sqlite   = $use_sqlite"
     echo "    with bdb      = $use_bdb"
 fi
-echo "  with gui / qt   = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then
+    echo "  with gui / qt   = $bitcoin_enable_qt, $qt_lib_prefix"
     echo "    with qr       = $use_qr"
+else
+    echo "  with gui / qt   = $bitcoin_enable_qt"
 fi
 echo "  with zmq        = $use_zmq"
 if test $enable_fuzz = "no"; then

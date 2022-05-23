@@ -5,7 +5,7 @@ dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcoin_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "$bitcoin_qt_want_version" = "auto" && test "$bitcoin_qt_force" != "yes"; then
+  if test "$bitcoin_qt_want_version" = "auto"; then
     if test "$bitcoin_enable_qt" != "no"; then
       AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
     fi
@@ -53,15 +53,9 @@ dnl CAUTION: Do not use this inside of a conditional.
 AC_DEFUN([BITCOIN_QT_INIT],[
   dnl enable qt support
   AC_ARG_WITH([gui],
-    [AS_HELP_STRING([--with-gui@<:@=no|qt5|auto@:>@],
-    [build bitcoin-qt GUI (default=auto)])],
-    [
-     bitcoin_qt_want_version=$withval
-     if test "$bitcoin_qt_want_version" = "yes"; then
-       bitcoin_qt_force=yes
-       bitcoin_qt_want_version=auto
-     fi
-    ],
+    [AS_HELP_STRING([--with-gui@<:@=no|qt5|qt6|auto@:>@],
+    [build bitcoin-qt GUI (default=auto), qt6 is supported for Homebrew's Qt 6 on macOS only])],
+    [bitcoin_qt_want_version=$withval],
     [bitcoin_qt_want_version=auto])
 
   AS_IF([test "$with_gui" = "qt5_debug"],
@@ -106,6 +100,13 @@ dnl Outputs: bitcoin_enable_qt, bitcoin_enable_qt_dbus, bitcoin_enable_qt_test
 AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   qt_version=">= $1"
   qt_lib_prefix="Qt5"
+
+  if test "$bitcoin_qt_want_version" = "qt6"; then
+    AS_CASE([$build_os],
+            [*darwin*], [qt_lib_prefix="Qt6"; qt6_prefix=$($BREW --prefix qt@6 2>/dev/null)],
+            [AC_MSG_ERROR([qt6 is supported for Homebrew's Qt 6 on macOS only])])
+  fi
+
   BITCOIN_QT_CHECK([_BITCOIN_QT_FIND_LIBS])
 
   dnl This is ugly and complicated. Yuck. Works as follows:
@@ -220,9 +221,17 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     ])
   fi
 
-  BITCOIN_QT_PATH_PROGS([MOC], [moc-qt5 moc5 moc], $qt_bin_path)
-  BITCOIN_QT_PATH_PROGS([UIC], [uic-qt5 uic5 uic], $qt_bin_path)
-  BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt5 rcc5 rcc], $qt_bin_path)
+  if test "$bitcoin_qt_want_version" = "qt6"; then
+    qt_bin_path="${qt6_prefix}/bin"
+    qt_libexec_path="${qt6_prefix}/share/qt/libexec"
+    RCC_OPTIONS="--compress-algo=zlib"
+  else
+    qt_libexec_path="${qt_bin_path}"
+  fi
+  AC_SUBST(RCC_OPTIONS)
+  BITCOIN_QT_PATH_PROGS([MOC], [moc-qt5 moc5 moc], $qt_libexec_path)
+  BITCOIN_QT_PATH_PROGS([UIC], [uic-qt5 uic5 uic], $qt_libexec_path)
+  BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt5 rcc5 rcc], $qt_libexec_path)
   BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt5 lrelease5 lrelease], $qt_bin_path)
   BITCOIN_QT_PATH_PROGS([LUPDATE], [lupdate-qt5 lupdate5 lupdate],$qt_bin_path, yes)
   BITCOIN_QT_PATH_PROGS([LCONVERT], [lconvert-qt5 lconvert5 lconvert], $qt_bin_path, yes)
@@ -371,27 +380,49 @@ dnl
 dnl Outputs: All necessary QT_* variables are set.
 dnl Outputs: have_qt_test and have_qt_dbus are set (if applicable) to yes|no.
 AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
-  BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_CORE], [${qt_lib_prefix}Core${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_CORE_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_CORE_LIBS $QT_LIBS"],
-                      [BITCOIN_QT_FAIL([${qt_lib_prefix}Core${qt_lib_suffix} $qt_version not found])])
-  ])
-  BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_GUI], [${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_GUI_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_GUI_LIBS $QT_LIBS"],
-                      [BITCOIN_QT_FAIL([${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version not found])])
-  ])
-  BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_WIDGETS], [${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_WIDGETS_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_WIDGETS_LIBS $QT_LIBS"],
-                      [BITCOIN_QT_FAIL([${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version not found])])
-  ])
-  BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_NETWORK], [${qt_lib_prefix}Network${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_NETWORK_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_NETWORK_LIBS $QT_LIBS"],
-                      [BITCOIN_QT_FAIL([${qt_lib_prefix}Network${qt_lib_suffix} $qt_version not found])])
-  ])
+  if test "$bitcoin_qt_want_version" = "qt6"; then
+    TEMP_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -F${qt6_prefix}/Frameworks"
+    AX_CHECK_LINK_FLAG([-framework QtCore],
+                       [QT_LIBS="-framework QtCore $QT_LIBS"; QT_INCLUDES="-I${qt6_prefix}/include/QtCore $QT_INCLUDES"],
+                       [AC_MSG_ERROR([could not link against QtCore framework])])
+    AX_CHECK_LINK_FLAG([-framework QtGui],
+                       [QT_LIBS="-framework QtGui $QT_LIBS"; QT_INCLUDES="-I${qt6_prefix}/include/QtGui $QT_INCLUDES"],
+                       [AC_MSG_ERROR([could not link against QtGui framework])])
+    AX_CHECK_LINK_FLAG([-framework QtWidgets],
+                       [QT_LIBS="-framework QtWidgets $QT_LIBS"; QT_INCLUDES="-I${qt6_prefix}/include/QtWidgets $QT_INCLUDES"],
+                       [AC_MSG_ERROR([could not link against QtWidgets framework])])
+    AX_CHECK_LINK_FLAG([-framework QtNetwork],
+                       [QT_LIBS="-framework QtNetwork $QT_LIBS"; QT_INCLUDES="-I${qt6_prefix}/include/QtNetwork $QT_INCLUDES"],
+                       [AC_MSG_ERROR([could not link against QtNetwork framework])])
+    AX_CHECK_LINK_FLAG([-framework QtTest],
+                       [have_qt_test="yes"; QT_TEST_LIBS="-framework QtTest"; QT_TEST_INCLUDES="-I${qt6_prefix}/include/QtTest"],
+                       [have_qt_test="no"])
+    LDFLAGS="$TEMP_LDFLAGS"
+    QT_LIBS="-F${qt6_prefix}/Frameworks $QT_LIBS"
+  else
+    BITCOIN_QT_CHECK([
+      PKG_CHECK_MODULES([QT_CORE], [${qt_lib_prefix}Core${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_CORE_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_CORE_LIBS $QT_LIBS"],
+                        [BITCOIN_QT_FAIL([${qt_lib_prefix}Core${qt_lib_suffix} $qt_version not found])])
+    ])
+    BITCOIN_QT_CHECK([
+      PKG_CHECK_MODULES([QT_GUI], [${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_GUI_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_GUI_LIBS $QT_LIBS"],
+                        [BITCOIN_QT_FAIL([${qt_lib_prefix}Gui${qt_lib_suffix} $qt_version not found])])
+    ])
+    BITCOIN_QT_CHECK([
+      PKG_CHECK_MODULES([QT_WIDGETS], [${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_WIDGETS_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_WIDGETS_LIBS $QT_LIBS"],
+                        [BITCOIN_QT_FAIL([${qt_lib_prefix}Widgets${qt_lib_suffix} $qt_version not found])])
+    ])
+    BITCOIN_QT_CHECK([
+      PKG_CHECK_MODULES([QT_NETWORK], [${qt_lib_prefix}Network${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_NETWORK_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_NETWORK_LIBS $QT_LIBS"],
+                        [BITCOIN_QT_FAIL([${qt_lib_prefix}Network${qt_lib_suffix} $qt_version not found])])
+    ])
 
-  BITCOIN_QT_CHECK([
-    PKG_CHECK_MODULES([QT_TEST], [${qt_lib_prefix}Test${qt_lib_suffix} $qt_version], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
-    if test "$use_dbus" != "no"; then
-      PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
-    fi
-  ])
+    BITCOIN_QT_CHECK([
+      PKG_CHECK_MODULES([QT_TEST], [${qt_lib_prefix}Test${qt_lib_suffix} $qt_version], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
+      if test "$use_dbus" != "no"; then
+        PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
+      fi
+    ])
+  fi
 ])
