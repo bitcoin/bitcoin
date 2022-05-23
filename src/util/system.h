@@ -15,7 +15,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <attributes.h>
 #include <compat/assumptions.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>

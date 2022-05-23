@@ -9,7 +9,6 @@
 #ifndef BITCOIN_UTIL_MONEYSTR_H
 #define BITCOIN_UTIL_MONEYSTR_H
 
-#include <attributes.h>
 #include <consensus/amount.h>
 
 #include <optional>

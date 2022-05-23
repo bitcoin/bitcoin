@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_STANDARD_H
 #define BITCOIN_SCRIPT_STANDARD_H
 
+#include <pubkey.h>
 #include <script/interpreter.h>
 #include <uint256.h>
 #include <util/hash_type.h>

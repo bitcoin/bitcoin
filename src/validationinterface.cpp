@@ -5,6 +5,7 @@
 
 #include <validationinterface.h>
 
+#include <attributes.h>
 #include <chain.h>
 #include <consensus/validation.h>
 #include <logging.h>
