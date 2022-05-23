@@ -45,6 +45,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/strencodings.cpp \
+  bench/timedata.cpp \
   bench/util_time.cpp \
   bench/verify_script.cpp
 
