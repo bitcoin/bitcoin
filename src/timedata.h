@@ -6,7 +6,9 @@
 #define BITCOIN_TIMEDATA_H
 
 #include <algorithm>
+#include <array>
 #include <assert.h>
+#include <cstring>
 #include <stdint.h>
 #include <vector>
 
@@ -18,53 +20,75 @@ class CNetAddr;
  * Median filter over a stream of values.
  * Returns the median of the last N numbers
  */
-template <typename T>
+template <typename T, uint32_t N>
 class CMedianFilter
 {
 private:
-    std::vector<T> vValues;
     std::vector<T> vSorted;
-    unsigned int nSize;
+    std::array<T, N> vValues;
+    size_t vIdx;
 
 public:
-    CMedianFilter(unsigned int _size, T initial_value) : nSize(_size)
+    CMedianFilter(T initial_value) : vIdx(0)
     {
-        vValues.reserve(_size);
-        vValues.push_back(initial_value);
-        vSorted = vValues;
+        static_assert(std::is_trivially_copyable<T>::value);
+        static_assert(N > 1);
+        static_assert(N <= 256,
+                      "Implement algorithm that does not require maintaining a sorted array");
+
+        vValues[vIdx++] = initial_value;
+        vSorted.reserve(N);
+        vSorted.emplace_back(initial_value);
     }
 
     void input(T value)
     {
-        if (vValues.size() == nSize) {
-            vValues.erase(vValues.begin());
-        }
-        vValues.push_back(value);
+        T tmp = vValues[vIdx];
+        vValues[vIdx++] = value;
+        if (vIdx >= N) vIdx = 0;
 
-        vSorted.resize(vValues.size());
-        std::copy(vValues.begin(), vValues.end(), vSorted.begin());
-        std::sort(vSorted.begin(), vSorted.end());
+        if (vSorted.size() < N) {
+            vSorted.insert(std::upper_bound(vSorted.begin(), vSorted.end(), value), value);
+            return;
+        }
+
+        // Find current element to remove and where new element should be inserted
+        // [0, 2, 2, 4, 5 ,7, 8, 9, 11, 14, 15, 16]
+        //        ^              ^
+        //        e              i
+        // Shift entire block of memory either left or right and insert new value
+
+        const auto erase_it = std::find(vSorted.begin(), vSorted.end(), tmp);
+        auto insert_it = std::upper_bound(vSorted.begin(), vSorted.end(), value);
+        assert(erase_it != vSorted.end());
+
+        if (erase_it == insert_it) {
+            *insert_it = value;
+        } else if (erase_it < insert_it) {
+            // Left rotate ensures |insert_it > vSorted.begin()|
+            std::rotate(erase_it, erase_it + 1, insert_it);
+            --insert_it;
+            *insert_it = value;
+        } else {
+            // Right rotate
+            std::rotate(insert_it, erase_it, erase_it + 1);
+            *insert_it = value;
+        }
     }
 
     T median() const
     {
-        int vSortedSize = vSorted.size();
-        assert(vSortedSize > 0);
-        if (vSortedSize & 1) // Odd number of elements
-        {
-            return vSorted[vSortedSize / 2];
-        } else // Even number of elements
-        {
-            return (vSorted[vSortedSize / 2 - 1] + vSorted[vSortedSize / 2]) / 2;
-        }
+        return vSorted.size() & 1 ?
+                   vSorted[vSorted.size() / 2] :
+                   (vSorted[vSorted.size() / 2 - 1] + vSorted[vSorted.size() / 2]) / 2;
     }
 
-    int size() const
+    size_t size() const
     {
-        return vValues.size();
+        return vSorted.size();
     }
 
-    std::vector<T> sorted() const
+    const std::vector<T>& sorted()
     {
         return vSorted;
     }

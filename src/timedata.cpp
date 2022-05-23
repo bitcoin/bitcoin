@@ -40,7 +40,7 @@ int64_t GetAdjustedTime()
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
 
 static std::set<CNetAddr> g_sources;
-static CMedianFilter<int64_t> g_time_offsets{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+static CMedianFilter<int64_t, BITCOIN_TIMEDATA_MAX_SAMPLES> g_time_offsets(0);
 static bool g_warning_emitted;
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
@@ -75,7 +75,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
     //
     if (g_time_offsets.size() >= 5 && g_time_offsets.size() % 2 == 1) {
         int64_t nMedian = g_time_offsets.median();
-        std::vector<int64_t> vSorted = g_time_offsets.sorted();
+        const std::vector<int64_t>& vSorted = g_time_offsets.sorted();
         // Only let other nodes change our time by so much
         int64_t max_adjustment = std::max<int64_t>(0, gArgs.GetIntArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT));
         if (nMedian >= -max_adjustment && nMedian <= max_adjustment) {
@@ -115,6 +115,6 @@ void TestOnlyResetTimeData()
     LOCK(g_timeoffset_mutex);
     nTimeOffset = 0;
     g_sources.clear();
-    g_time_offsets = CMedianFilter<int64_t>{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+    g_time_offsets = CMedianFilter<int64_t, BITCOIN_TIMEDATA_MAX_SAMPLES>(0);
     g_warning_emitted = false;
 }

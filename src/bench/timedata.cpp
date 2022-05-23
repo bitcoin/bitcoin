@@ -18,7 +18,7 @@ static void ComputeMedian256_1000(benchmark::Bench& bench)
     }
 
     bench.run([&rand_num] {
-        CMedianFilter<int> median_filter(256, 15);
+        CMedianFilter<int, 256> median_filter(15);
 
         for (size_t i = 0; i < 1000; ++i) {
             median_filter.input(rand_num[i]);
@@ -38,7 +38,7 @@ static void ComputeMedian20_1000(benchmark::Bench& bench)
     }
 
     bench.run([&rand_num] {
-        CMedianFilter<int> median_filter(20,15);
+        CMedianFilter<int, 20> median_filter(15);
 
         for (size_t i = 0; i < 1000; ++i) {
             median_filter.input(rand_num[i]);
@@ -58,7 +58,7 @@ static void ComputeMedian10_1000(benchmark::Bench& bench)
     }
 
     bench.run([&rand_num] {
-        CMedianFilter<int> median_filter(10, 15);
+        CMedianFilter<int, 10> median_filter(15);
 
         for (size_t i = 0; i < 1000; ++i) {
             median_filter.input(rand_num[i]);

@@ -20,7 +20,7 @@ BOOST_FIXTURE_TEST_SUITE(timedata_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_MedianFilter)
 {
-    CMedianFilter<int> filter(5, 15);
+    CMedianFilter<int, 5> filter(15);
 
     BOOST_CHECK_EQUAL(filter.median(), 15);
 
@@ -41,6 +41,87 @@ BOOST_AUTO_TEST_CASE(util_MedianFilter)
 
     filter.input(0); // [0 3 7 18 30]
     BOOST_CHECK_EQUAL(filter.median(), 7);
+}
+
+BOOST_AUTO_TEST_CASE(util_MedianFilter2)
+{
+    CMedianFilter<int, 5> filter(0);
+
+    filter.input(2); // [0 2]
+    filter.input(5); // [0 2 5]
+    filter.input(7); // [0 2 5 7]
+    filter.input(8); // [0 2 5 7 8]
+
+    filter.input(6); // [2 5 6 7 8]
+    BOOST_CHECK_EQUAL(filter.median(), 6);
+}
+
+BOOST_AUTO_TEST_CASE(util_MedianFilter3)
+{
+    CMedianFilter<int, 5> filter(7);
+
+    filter.input(2); // [2 7]
+    filter.input(5); // [2 5 7]
+    filter.input(0); // [0 2 5 7]
+    filter.input(8); // [0 2 5 7 8]
+
+    filter.input(1); // [0 1 2 5 8]
+    BOOST_CHECK_EQUAL(filter.median(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(util_MedianFilter4)
+{
+    CMedianFilter<int, 2> filter(0);
+
+    filter.input(2); // [0 2]
+    BOOST_CHECK_EQUAL(filter.median(), 1);
+
+    filter.input(3); // [2 3]
+    BOOST_CHECK_EQUAL(filter.median(), 2);
+
+    filter.input(7); // [3 7]
+    BOOST_CHECK_EQUAL(filter.median(), 5);
+
+    filter.input(7); // [7 7]
+    BOOST_CHECK_EQUAL(filter.median(), 7);
+
+    filter.input(0); // [0 7]
+    BOOST_CHECK_EQUAL(filter.median(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(util_MedianFilter_rand)
+{
+    // Use a ring buffer to maintain the last 20 elements and sort them when
+    // it is time to compute the median
+    //
+    // CMedianFilter "maintains" a sorted array which should be equal to the one above
+
+    constexpr size_t ring_buffer_size = 20;
+    CMedianFilter<int, ring_buffer_size> filter(0);
+
+    std::array<int, ring_buffer_size> values;
+    size_t idx = 0;
+
+    for (size_t i = 0; i < 1'000'000; ++i) {
+        const int r = rand();
+        filter.input(r);
+
+        values[idx++] = r;
+        if (idx >= ring_buffer_size) idx = 0;
+
+        // Skip check since they won't be equal until they reach 20 elements each
+        if (i < ring_buffer_size) continue;
+
+        std::vector<int> sorted_values(values.begin(), values.end());
+        std::sort(sorted_values.begin(), sorted_values.end());
+
+        // Check that both sorted arrays are the same
+        const std::vector<int> filter_sorted_values = filter.sorted();
+        BOOST_CHECK_EQUAL(filter_sorted_values.size(), sorted_values.size());
+        for (size_t j = 0; j < sorted_values.size(); ++j) {
+            BOOST_CHECK_EQUAL(filter_sorted_values[j], sorted_values[j]);
+        }
+    }
 }
 
 static void MultiAddTimeData(int n, int64_t offset)
