@@ -153,6 +153,8 @@ private:
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
     CChainState& m_chainstate;
+    // SYSCOIN
+    int nNumNEVMDataTxs;
 
 public:
     struct Options {

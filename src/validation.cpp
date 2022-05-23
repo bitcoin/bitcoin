@@ -2140,19 +2140,75 @@ bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
+bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) { 
+    // first sanity test times to ensure data should or shouldn't exist and save to another vector
+    std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
+    for (auto &nevmDataEntry : vecNevmData) {
+        int64_t nTimeNow = GetAdjustedTime();
+        bool enforceNotHaveData = nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+        bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+        if(enforceHaveData && nevmDataEntry.nevmData->vchData.empty()) {
+            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+            return false;
+        } else if(enforceNotHaveData && !nevmDataEntry.nevmData->vchData.empty()) {
+            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+            return false;
+        }
+        if(!nevmDataEntry.nevmData->vchData.empty() && !pnevmdatadb->Exists(nevmDataEntry.nevmData->vchVersionHash)) {
+            vecNEVMDataToProcess.emplace_back(nevmDataEntry);
+        }
+    }
+    // process new vector in batch checking the blobs
+    BlockValidationState state;
+    // if not in DB then we need to verify it via Geth KZG blob verification
+    GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
+    if(state.IsInvalid()) {
+        LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s", state.ToString());
+        return false;
+    }
+    // upon success write version hashes to db and strip scriptPubKeys
+    for (auto &nevmDataEntry : vecNEVMDataToProcess) {
+        if(!pnevmdatadb->WriteData(nevmDataEntry.nevmData->vchVersionHash, nevmDataEntry.nevmData->vchData)) {
+            return false;
+        }
+        // save the version hashes so we can remove from db (above) if something goes wrong with proceeding block/tx validations
+        nevmDataVecOut.emplace_back(std::move(nevmDataEntry.nevmData->vchVersionHash));
+        // upon receiving block we prune data and store in seperate db
+        nevmDataEntry.nevmData->vchData.clear();
+        nevmDataEntry.nevmData->vchCommitment.clear();
+        std::vector<unsigned char> newdata;
+        nevmDataEntry.nevmData->SerializeData(newdata);
+        nevmDataEntry.scriptPubKey[0] = CScript() << OP_RETURN << newdata; 
+    }
+    return true;
+}
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
 bool ProcessNEVMData(const std::shared_ptr<const CBlock> pblock, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
     CBlock &block = const_cast<CBlock&>(*pblock);
     return ProcessNEVMData(block, nevmDataVecOut, nMedianTime);
 }
 bool ProcessNEVMData(CBlock &block, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+    std::vector<CNEVMDataProcessHelper> vecNevmData;
     for (auto tx : block.vtx) {
         if(tx->IsNEVMData()) {
-            if(!ProcessNEVMData(tx, nevmDataVecOut, nMedianTime)) {
+            const auto &nOut = GetSyscoinDataOutput(*tx);
+            if (nOut == -1) {
                 return false;
-            }    
+            }
+            CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
+            CNEVMData nevmData(*tx);
+            if(nevmData.IsNull()) {
+                return false;
+            }
+            CNEVMDataProcessHelper entry;
+            entry.nevmData = &nevmData;
+            entry.scriptPubKey = &scriptPubKey;
+            vecNevmData.emplace_back(entry);
         }
     }
+    if(!ProcessNEVMDataHelper(vecNevmData, nevmDataVecOut, nMedianTime)) {
+        return false;
+    }  
     return true;
 }
 bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
@@ -2163,40 +2219,19 @@ bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int6
     if (nOut == -1) {
         return false;
     }
+    std::vector<CNEVMDataProcessHelper> vecNevmData;
     CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
     CNEVMData nevmData(*tx);
     if(nevmData.IsNull()) {
         return false;
     }
-    int64_t nTimeNow = GetAdjustedTime();
-    bool enforceNotHaveData = nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
-    bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-    if(enforceHaveData && nevmData.vchData.empty()) {
-        LogPrint(BCLog::SYS, "ProcessNEVMData: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+    CNEVMDataProcessHelper entry;
+    entry.nevmData = &nevmData;
+    entry.scriptPubKey = &scriptPubKey;
+    vecNevmData.emplace_back(entry);
+    if(!ProcessNEVMDataHelper(vecNevmData, nevmDataVecOut, nMedianTime)) {
         return false;
-    } else if(enforceNotHaveData && !nevmData.vchData.empty()) {
-        LogPrint(BCLog::SYS, "ProcessNEVMData: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-        return false;
-    }
-    const bool existsInDb = pnevmdatadb->Exists(nevmData.vchVersionHash);
-    if(!nevmData.vchData.empty() && !existsInDb) {
-        BlockValidationState state;
-        // if not in DB then we need to verify it via Geth KZG blob verification
-        GetMainSignals().NotifyCheckNEVMBlob(nevmData, state);
-        if(state.IsInvalid()) {
-            LogPrint(BCLog::SYS, "ProcessNEVMData: Invalid blob %s", state.ToString());
-            return false;
-        }
-    }
-    if(!existsInDb && !pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
-        return false;
-    }
-    nevmDataVecOut.push_back(nevmData.vchVersionHash);
-    // upon receiving block we prune data and store in seperate db
-    nevmData.vchData.clear();
-    std::vector<unsigned char> newdata;
-    nevmData.SerializeData(newdata);
-    scriptPubKey = CScript() << OP_RETURN << newdata; 
+    }  
     return true;
 }
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.

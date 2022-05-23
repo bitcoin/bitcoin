@@ -192,7 +192,8 @@ protected:
     virtual void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) {}
     virtual void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) {}
     virtual void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) {}
-    virtual void NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state) {}
+    virtual void NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state) {}
+    virtual void NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state) {}
     virtual void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {}
     virtual void NotifyNEVMComms(const std::string& commMessage, bool &bResponse) {}
     friend class ValidationInterfaceTest;
@@ -237,7 +238,8 @@ public:
     void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut);
     void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash);
     void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state);
-    void NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state);
+    void NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state);
+    void NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state);
     void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
     void NotifyNEVMComms(const std::string& commMessage, bool &bResponse);
 };

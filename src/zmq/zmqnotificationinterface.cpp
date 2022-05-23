@@ -99,7 +99,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         notifier3->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
         notifiers.push_back(std::move(notifier3));
 
-        pubCmd = "pubnevmcheckblob";
+        pubCmd = "pubnevmcheckblobs";
         CZMQNotifierFactory factory4 = CZMQAbstractNotifier::Create<CZMQPublishNEVMBlobNotifier>;
         arg = std::string("-zmq" + pubCmd);
         std::unique_ptr<CZMQAbstractNotifier> notifier4 = factory4();
@@ -108,6 +108,16 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         notifier4->SetAddress(strPub);
         notifier4->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
         notifiers.push_back(std::move(notifier4));
+
+        pubCmd = "pubnevmcreateblob";
+        CZMQNotifierFactory factory5 = CZMQAbstractNotifier::Create<CZMQPublishNEVMCreateBlobNotifier>;
+        arg = std::string("-zmq" + pubCmd);
+        std::unique_ptr<CZMQAbstractNotifier> notifier5 = factory5();
+        notifier5->SetAddressSub(strPub);
+        notifier5->SetType(pubCmd);
+        notifier5->SetAddress(strPub);
+        notifier5->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+        notifiers.push_back(std::move(notifier5));
 
     }
     
@@ -247,11 +257,17 @@ void CZMQNotificationInterface::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockV
         return notifier->NotifyGetNEVMBlockInfo(nHeight, state);
     });
 }
-void CZMQNotificationInterface::NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state)
+void CZMQNotificationInterface::NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state)
 {
     TryForEach(notifiers, [&nevmData, &state](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyCheckNEVMBlob(nevmData, state);
+        return notifier->NotifyCheckNEVMBlobs(nevmData, state);
     });
+}
+
+void CZMQNotificationInterface::NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state) {
+    TryForEach(notifiers, [&vchData, &nevmData, &state](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyCreateNEVMBlob(vchData, nevmData, state);
+    });  
 }
 
 void CZMQNotificationInterface::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state)

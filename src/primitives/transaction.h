@@ -68,8 +68,9 @@ const int SYSCOIN_TX_VERSION_NEVM_DATA = 136;
 const int SYSCOIN_TX_MIN_ASSET_GUID = SYSCOIN_TX_VERSION_ALLOCATION_SEND * 10;
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
 const int MAX_MEMO = 256;
-const int MAX_NEVM_DATA_BLOB = 3276800; // ~21845 bytes per second
-const int MAX_NEVM_DATA_BLOCK = (MAX_BLOCK_WEIGHT/WITNESS_SCALE_FACTOR)*NEVM_DATA_SCALE_FACTOR; // 100MB
+const int MAX_NEVM_DATA_BLOB = 2097120;
+const int MAX_DATA_BLOBS = 32;
+const int MAX_NEVM_DATA_BLOCK = MAX_NEVM_DATA_BLOB * MAX_DATA_BLOBS; // 64MB
 const int NEVM_DATA_EXPIRE_TIME = 360*3600; // 6 hour
 const int NEVM_DATA_ENFORCE_TIME_HAVE_DATA = 120*3600; // 2 hour
 const int NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA = NEVM_DATA_ENFORCE_TIME_HAVE_DATA*4; // 8 hour
@@ -428,6 +429,7 @@ bool IsSyscoinNEVMDataTx(const int &nVersion);
 class CNEVMData {
 public:
     std::vector<uint8_t> vchVersionHash;
+    std::vector<uint8_t> vchCommitment;
     uint32_t nSize;
     std::vector<uint8_t> vchData;
     CNEVMData() {
@@ -439,11 +441,12 @@ public:
     
     inline void ClearData() {
         vchVersionHash.clear();
+        vchCommitment.clear();
         vchData.clear();
         nSize = 0;
     }
     SERIALIZE_METHODS(CNEVMData, obj) {
-        READWRITE(obj.vchVersionHash, obj.nSize, obj.vchData);
+        READWRITE(obj.vchVersionHash, obj.nSize, obj.vchCommitment, obj.vchData);
     }
     inline void SetNull() { ClearData(); }
     inline bool IsNull() const { return (vchVersionHash.empty() || nSize == 0); }
@@ -452,6 +455,10 @@ public:
     bool UnserializeFromScript(const CScript& script);
     int UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
+};
+struct CNEVMDataProcessHelper {
+    CNEVMData* nevmData;
+    CScript *scriptPubKey;
 };
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.

@@ -42,7 +42,8 @@ protected:
     void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) override;
     void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) override;
     void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState& state) override;
-    void NotifyCheckNEVMBlob(const CNEVMData &nevmData, BlockValidationState &state) override;
+    void NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state) override;
+    void NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state) override;
     void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState& state) override;
     void NotifyNEVMComms(const std::string& commMessage, bool &bResponse) override;
 private:
