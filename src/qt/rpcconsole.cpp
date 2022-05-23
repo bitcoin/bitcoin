@@ -17,7 +17,6 @@
 #include <qt/guiutil.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/platformstyle.h>
-#include <qt/walletmodel.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
@@ -28,6 +27,7 @@
 #include <univalue.h>
 
 #ifdef ENABLE_WALLET
+#include <qt/walletmodel.h>
 #ifdef USE_BDB
 #include <wallet/bdb.h>
 #endif
