@@ -38,7 +38,6 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
                 const CBlockIndex* pindex = pindexLast;
                 while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
-
                 return pindex->nBits;
             }
         }
