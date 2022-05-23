@@ -114,6 +114,9 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 
             CTxOut out(0, CScript() << OP_RETURN << data);
             rawTx.vout.push_back(out);
+        // SYSCOIN
+        } else if (name_ == "version") {
+            rawTx.nVersion = outputs[name_].get_int();
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {

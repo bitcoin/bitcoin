@@ -39,9 +39,13 @@ public:
     bool FlushErase(const NEVMDataVec &vecDataKeys);
     bool FlushResetMPTs(const NEVMDataVec &vecDataKeys);
     bool FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime);
-    bool ReadData(const std::vector<uint8_t>& nVersionhash,  std::vector<uint8_t>& nData) {
+    bool ReadData(const std::vector<uint8_t>& nVersionhash, std::vector<uint8_t>& nData) {
         const auto& pair = std::make_pair(nVersionhash, true);
         return Read(pair, nData);
+    } 
+    bool ReadMPT(const std::vector<uint8_t>& nVersionhash, int64_t &nMedianTime) {
+        const auto& pair = std::make_pair(nVersionhash, false);
+        return Read(pair, nMedianTime);
     } 
     bool WriteData(const std::vector<uint8_t>& nVersionhash, const std::vector<uint8_t>& nData) {
         const auto& pair = std::make_pair(nVersionhash, true);

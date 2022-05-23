@@ -1901,6 +1901,119 @@ static RPCHelpMan assetallocationburn()
     };
 }
 
+
+static RPCHelpMan syscoincreaterawnevmblob()
+{
+    return RPCHelpMan{"syscoincreaterawnevmblob",
+        "\nCreate NEVM blob data used by rollups via a custom raw blob\n",
+        {
+            {"rawdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "rawdata"}
+        },
+        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCExamples{
+            HelpExampleCli("syscoincreaterawnevmblob", "\"rawdata\"")
+            + HelpExampleRpc("syscoincreaterawnevmblob", "\"rawdata\"")
+        },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{ 
+	const UniValue &params = request.params;
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(*pwallet);
+    std::vector<uint8_t> vchData = ParseHex(request.params[0].get_str());
+    UniValue output(UniValue::VARR);
+    UniValue outputObj(UniValue::VOBJ);
+    UniValue addressObj(UniValue::VOBJ);
+    CTxDestination dest;
+    bilingual_str errorStr;
+    if (!pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
+    }
+
+    CTxOut change_prototype_txout(0, GetScriptForDestination(dest));
+    auto dust = GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet));
+    addressObj.__pushKV(EncodeDestination(dest), ValueFromAmount(dust));
+    outputObj.__pushKV("address", addressObj);
+    outputObj.__pushKV("data", HexStr(vchData));
+    outputObj.__pushKV("version", SYSCOIN_TX_VERSION_NEVM_DATA);
+    output.push_back(outputObj);
+    UniValue paramsSend(UniValue::VARR);
+    paramsSend.push_back(output);
+    node::JSONRPCRequest requestSend;
+    requestSend.context = request.context;
+    requestSend.params = paramsSend;
+    requestSend.URI = request.URI;
+    return send().HandleRequest(requestSend);
+},
+    };
+}
+
+static RPCHelpMan syscoincreatenevmblob()
+{
+    return RPCHelpMan{"syscoincreatenevmblob",
+        "\nCreate NEVM blob data used by rollups\n",
+        {
+            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data"}
+        },
+        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCExamples{
+            HelpExampleCli("syscoincreatenevmblob", "\"data\"")
+            + HelpExampleRpc("syscoincreatenevmblob", "\"data\"")
+        },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{ 
+    if(!fNEVMConnection) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "NEVM not configured to run, required to create blobs");  
+    }
+	const UniValue &params = request.params;
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(*pwallet);
+    std::vector<uint8_t> vchData = ParseHex(request.params[0].get_str());
+    // process new vector in batch checking the blobs
+    BlockValidationState state;
+    CNEVMData nevmData;
+    // if not in DB then we need to verify it via Geth KZG blob verification
+    GetMainSignals().NotifyCreateNEVMBlob(vchData, nevmData, state);
+    if(state.IsInvalid()) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not create NEVM blob data");   
+    }
+    std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
+    CNEVMDataProcessHelper entry;
+    entry.nevmData = &nevmData;
+    vecNEVMDataToProcess.emplace_back(entry);
+    GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
+    if(state.IsInvalid()) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not verify NEVM blob data");   
+    }
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << nevmData;   
+    UniValue output(UniValue::VARR);
+    UniValue outputObj(UniValue::VOBJ);
+    outputObj.__pushKV("rawdata", stream.str());
+    output.push_back(outputObj);
+    UniValue paramsSend(UniValue::VARR);
+    paramsSend.push_back(output);
+    node::JSONRPCRequest requestSend;
+    requestSend.context = request.context;
+    requestSend.params = paramsSend;
+    requestSend.URI = request.URI;
+    return syscoincreaterawnevmblob().HandleRequest(requestSend);
+},
+    };
+}
+
+
 std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
      std::vector<unsigned char> arrayOfByte(2);
      for (int i = 0; i < 2; i++)
@@ -2859,6 +2972,8 @@ Span<const CRPCCommand> wallet::GetAssetWalletRPCCommands()
         {"syscoinwallet", &addressbalance},
         {"syscoinwallet", &assetallocationbalance},
         {"syscoinwallet", &sendfrom},
+        {"syscoinwallet", &syscoincreatenevmblob},
+        {"syscoinwallet", &syscoincreaterawnevmblob},
         /** Auxpow wallet functions */
         {"syscoinwallet", &getauxblock},
     };

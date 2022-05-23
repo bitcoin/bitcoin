@@ -502,6 +502,45 @@ static RPCHelpMan getnevmblockchaininfo()
     };
 }
 
+static RPCHelpMan getnevmblobdata()
+{
+    return RPCHelpMan{"getnevmblobdata",
+        "\nReturn NEVM blob information and status from a version hash.\n",
+        {
+            {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The version hash of the NEVM blob"},
+            {"getdata", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Optional, retrieve the blob data"}
+        },
+        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCExamples{
+            HelpExampleCli("getnevmblobdata", "")
+            + HelpExampleRpc("getnevmblobdata", "")
+        },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    std::string vhStr = request.params[0].get_str();
+    bool bGetData = false;
+    if(request.params.size() > 1) {
+        bGetData = request.params[1].get_bool();
+    }
+    UniValue oNEVM(UniValue::VOBJ);
+    BlockValidationState state;
+    std::vector<uint8_t> vchVH = ParseHex(vhStr);
+    std::vector<uint8_t> vchData;
+    if(!pnevmdatadb->ReadData(vchVH, vchData)) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not find data");
+    }
+    int64_t mpt;
+    pnevmdatadb->ReadMPT(vchVH, mpt);
+    oNEVM.__pushKV("versionhash", vhStr);
+    oNEVM.__pushKV("mpt", mpt);
+    oNEVM.__pushKV("datasize", (int)vchData.size());
+    if(bGetData) {  
+        oNEVM.__pushKV("data", HexStr(vchData));
+    }
+    return oNEVM;
+},
+    };
+}
 static RPCHelpMan assetinfo()
 {
     return RPCHelpMan{"assetinfo",
@@ -977,6 +1016,7 @@ void RegisterAssetRPCCommands(CRPCTable &t)
         {"syscoin", &assettransactionnotarize},
         {"syscoin", &getnotarysighash},
         {"syscoin", &getnevmblockchaininfo},
+        {"syscoin", &getnevmblobdata},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

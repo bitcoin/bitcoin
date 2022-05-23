@@ -265,6 +265,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listassets", 0, "count" },
     { "listassets", 1, "from" },
     { "listassets", 2, "options" },
+    { "getnevmblobdata", 1, "getdata" },
     { "protx_list_wallet", 0, "detailed" },
     { "protx_list_wallet", 1, "height" },
     { "protx_list", 1, "detailed" },

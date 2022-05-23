@@ -2158,13 +2158,15 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, NEV
             vecNEVMDataToProcess.emplace_back(nevmDataEntry);
         }
     }
-    // process new vector in batch checking the blobs
-    BlockValidationState state;
-    // if not in DB then we need to verify it via Geth KZG blob verification
-    GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
-    if(state.IsInvalid()) {
-        LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s", state.ToString());
-        return false;
+    if(fNEVMConnection) {
+        // process new vector in batch checking the blobs
+        BlockValidationState state;
+        // if not in DB then we need to verify it via Geth KZG blob verification
+        GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
+        if(state.IsInvalid()) {
+            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s", state.ToString());
+            return false;
+        }
     }
     // upon success write version hashes to db and strip scriptPubKeys
     for (auto &nevmDataEntry : vecNEVMDataToProcess) {
