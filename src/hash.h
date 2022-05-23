@@ -6,7 +6,6 @@
 #ifndef SYSCOIN_HASH_H
 #define SYSCOIN_HASH_H
 
-#include <attributes.h>
 #include <crypto/common.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>

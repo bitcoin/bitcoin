@@ -14,7 +14,6 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <attributes.h>
 #include <compat.h>
 #include <compat/assumptions.h>
 #include <fs.h>

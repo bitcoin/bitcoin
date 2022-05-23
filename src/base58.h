@@ -14,7 +14,6 @@
 #ifndef SYSCOIN_BASE58_H
 #define SYSCOIN_BASE58_H
 
-#include <attributes.h>
 #include <span.h>
 
 #include <string>

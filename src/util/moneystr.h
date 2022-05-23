@@ -9,7 +9,6 @@
 #ifndef SYSCOIN_UTIL_MONEYSTR_H
 #define SYSCOIN_UTIL_MONEYSTR_H
 
-#include <attributes.h>
 #include <consensus/amount.h>
 
 #include <optional>

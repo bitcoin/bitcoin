@@ -9,7 +9,6 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <attributes.h>
 #include <compat.h>
 #include <crypto/siphash.h>
 #include <prevector.h>

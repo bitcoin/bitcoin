@@ -9,7 +9,6 @@
 #ifndef SYSCOIN_UTIL_STRENCODINGS_H
 #define SYSCOIN_UTIL_STRENCODINGS_H
 
-#include <attributes.h>
 #include <span.h>
 #include <util/string.h>
 
