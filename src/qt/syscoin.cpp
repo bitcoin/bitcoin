@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -305,7 +305,9 @@ void SyscoinApplication::startThread()
 
     /*  communication to and from thread */
     connect(&m_executor.value(), &InitExecutor::initializeResult, this, &SyscoinApplication::initializeResult);
-    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &QCoreApplication::quit);
+    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, [] {
+        QCoreApplication::exit(0);
+    });
     connect(&m_executor.value(), &InitExecutor::runawayException, this, &SyscoinApplication::handleRunawayException);
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
