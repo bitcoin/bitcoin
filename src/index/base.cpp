@@ -23,6 +23,8 @@
 #include <string>
 #include <utility>
 
+using node::g_indexes_ready_to_sync;
+
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
 constexpr auto SYNC_LOG_INTERVAL{30s};
@@ -105,7 +107,9 @@ bool BaseIndex::Init()
     // datadir and an index enabled. If this is the case, indexation will happen solely
     // via `BlockConnected` signals until, possibly, the next restart.
     m_synced = m_best_block_index.load() == active_chain.Tip();
-    if (!m_synced) {
+
+    // Skip pruning check if indexes are not ready to sync (because reindex-chainstate has wiped the chain).
+    if (!m_synced && g_indexes_ready_to_sync) {
         bool prune_violation = false;
         if (!m_best_block_index) {
             // index is not built yet
@@ -161,6 +165,12 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
 void BaseIndex::ThreadSync()
 {
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::TX_INDEX);
+    // Wait for a possible reindex-chainstate to finish until continuing
+    // with the index sync
+    while (!g_indexes_ready_to_sync) {
+        if (!m_interrupt.sleep_for(std::chrono::milliseconds(500))) return;
+    }
+
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
         std::chrono::steady_clock::time_point last_log_time{0s};

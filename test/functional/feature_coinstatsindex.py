@@ -231,18 +231,16 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.log.info("Test that the index works with -reindex")
 
         self.restart_node(1, extra_args=["-coinstatsindex", "-reindex"])
+        self.sync_index_node()
         res11 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res11, res10)
 
-        self.log.info("Test that -reindex-chainstate is disallowed with coinstatsindex")
+        self.log.info("Test that the index works with -reindex-chainstate")
 
-        self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(
-            expected_msg='Error: -reindex-chainstate option is not compatible with -coinstatsindex. '
-            'Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.',
-            extra_args=['-coinstatsindex', '-reindex-chainstate'],
-        )
-        self.restart_node(1, extra_args=["-coinstatsindex"])
+        self.restart_node(1, extra_args=["-coinstatsindex", "-reindex-chainstate"])
+        self.sync_index_node()
+        res12 = index_node.gettxoutsetinfo('muhash')
+        assert_equal(res12, res10)
 
     def _test_use_index_option(self):
         self.log.info("Test use_index option for nodes running the index")
@@ -261,6 +259,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         index_node = self.nodes[1]
         reorg_blocks = self.generatetoaddress(index_node, 2, getnewdestination()[2])
         reorg_block = reorg_blocks[1]
+        self.sync_index_node()
         res_invalid = index_node.gettxoutsetinfo('muhash')
         index_node.invalidateblock(reorg_blocks[0])
         assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 110)
