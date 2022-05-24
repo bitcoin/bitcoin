@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
+#include <policy/fees.h> // for FeeCalculation
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
@@ -107,10 +108,11 @@ struct CreatedTransactionResult
 {
     CTransactionRef tx;
     CAmount fee;
+    FeeCalculation fee_calc;
     int change_pos;
 
-    CreatedTransactionResult(CTransactionRef tx, CAmount fee, int change_pos)
-        : tx(tx), fee(fee), change_pos(change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, int _change_pos, const FeeCalculation& _fee_calc)
+        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
 };
 
 /**
@@ -118,7 +120,7 @@ struct CreatedTransactionResult
  * selected by SelectCoins(); Also create the change output, when needed
  * @note passing change_pos as -1 will result in setting a random position
  */
-std::optional<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true);
+std::optional<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, bool sign = true);
 
 /**
  * Insert additional inputs into the transaction by

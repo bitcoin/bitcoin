@@ -45,7 +45,6 @@ using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wall
 
 class CScript;
 enum class FeeEstimateMode;
-struct FeeCalculation;
 struct bilingual_str;
 
 namespace wallet {

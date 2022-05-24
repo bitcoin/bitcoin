@@ -258,9 +258,8 @@ public:
         bilingual_str& fail_reason) override
     {
         LOCK(m_wallet->cs_wallet);
-        FeeCalculation fee_calc_out;
         std::optional<CreatedTransactionResult> txr = CreateTransaction(*m_wallet, recipients, change_pos,
-                fail_reason, coin_control, fee_calc_out, sign);
+                fail_reason, coin_control, sign);
         if (!txr) return {};
         fee = txr->fee;
         change_pos = txr->change_pos;

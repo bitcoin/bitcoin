@@ -220,8 +220,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
     constexpr int RANDOM_CHANGE_POSITION = -1;
     bilingual_str fail_reason;
-    FeeCalculation fee_calc_out;
-    std::optional<CreatedTransactionResult> txr = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, fail_reason, new_coin_control, fee_calc_out, false);
+    std::optional<CreatedTransactionResult> txr = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, fail_reason, new_coin_control, false);
     if (!txr) {
         errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
         return Result::WALLET_ERROR;
