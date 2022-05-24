@@ -182,13 +182,13 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     search_line->setText("io");
     QCOMPARE(table_view->model()->rowCount(), 2);
 
-    // Check wilcard "?".
+    // Check wildcard "?".
     search_line->setText("io?new");
     QCOMPARE(table_view->model()->rowCount(), 0);
     search_line->setText("io???new");
     QCOMPARE(table_view->model()->rowCount(), 2);
 
-    // Check wilcard "*".
+    // Check wildcard "*".
     search_line->setText("io*new");
     QCOMPARE(table_view->model()->rowCount(), 2);
     search_line->setText("*");
