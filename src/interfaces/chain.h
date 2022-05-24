@@ -10,6 +10,7 @@
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/result.h>
 
+#include <any>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -390,6 +391,8 @@ class ChainClient
 {
 public:
     virtual ~ChainClient() = default;
+
+    virtual void assignContextHACK(std::any&) {};
 
     //! Register rpcs.
     virtual void registerRpcs() = 0;
