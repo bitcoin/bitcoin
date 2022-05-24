@@ -16,7 +16,7 @@ public:
     explicit OptionTests(interfaces::Node& node) : m_node(node) {}
 
 private Q_SLOTS:
-    void optionTests();
+    void integerGetArgBug();
     void parametersInteraction();
 
 private:
