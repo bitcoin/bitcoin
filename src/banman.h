@@ -60,24 +60,24 @@ class BanMan
 public:
     ~BanMan();
     BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
-    void Ban(const CNetAddr& net_addr, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
-    void Ban(const CSubNet& sub_net, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
-    void Discourage(const CNetAddr& net_addr);
-    void ClearBanned();
+    void Ban(const CNetAddr& net_addr, int64_t ban_time_offset = 0, bool since_unix_epoch = false) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+    void Ban(const CSubNet& sub_net, int64_t ban_time_offset = 0, bool since_unix_epoch = false) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+    void Discourage(const CNetAddr& net_addr) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+    void ClearBanned() EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
     //! Return whether net_addr is banned
-    bool IsBanned(const CNetAddr& net_addr);
+    bool IsBanned(const CNetAddr& net_addr) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
     //! Return whether sub_net is exactly banned
-    bool IsBanned(const CSubNet& sub_net);
+    bool IsBanned(const CSubNet& sub_net) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
     //! Return whether net_addr is discouraged.
-    bool IsDiscouraged(const CNetAddr& net_addr);
+    bool IsDiscouraged(const CNetAddr& net_addr) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
-    bool Unban(const CNetAddr& net_addr);
-    bool Unban(const CSubNet& sub_net);
-    void GetBanned(banmap_t& banmap);
-    void DumpBanlist();
+    bool Unban(const CNetAddr& net_addr) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+    bool Unban(const CSubNet& sub_net) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+    void GetBanned(banmap_t& banmap) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+    void DumpBanlist() EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
 private:
     void LoadBanlist() EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
