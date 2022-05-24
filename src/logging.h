@@ -166,9 +166,14 @@ namespace BCLog {
 
 BCLog::Logger& LogInstance();
 
-/** Return true if log accepts specified category */
-static inline bool LogAcceptCategory(BCLog::LogFlags category)
+/** Return true if log accepts specified category, at the specified level. */
+static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
 {
+    // Log messages at Warning and Error level unconditionally, so that
+    // important troubleshooting information doesn't get lost.
+    if (level >= BCLog::Level::Warning) {
+        return true;
+    }
     return LogInstance().WillLogCategory(category);
 }
 
@@ -203,14 +208,14 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 // evaluating arguments when logging for the category is not enabled.
 #define LogPrint(category, ...)                                        \
     do {                                                               \
-        if (LogAcceptCategory((category))) {                           \
+        if (LogAcceptCategory((category), BCLog::Level::Debug)) {      \
             LogPrintLevel_(category, BCLog::Level::None, __VA_ARGS__); \
         }                                                              \
     } while (0)
 
 #define LogPrintLevel(level, category, ...)               \
     do {                                                  \
-        if (LogAcceptCategory((category))) {              \
+        if (LogAcceptCategory((category), (level))) {     \
             LogPrintLevel_(category, level, __VA_ARGS__); \
         }                                                 \
     } while (0)
