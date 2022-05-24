@@ -10,7 +10,6 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <key.h>
-#include <node/coinstats.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
@@ -25,10 +24,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-
-using node::CCoinsStats;
-using node::CoinStatsHashType;
-using node::GetUTXOStats;
 
 namespace {
 const TestingSetup* g_setup;
@@ -268,16 +263,6 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                     return;
                 }
                 (void)GetTransactionSigOpCost(transaction, coins_view_cache, flags);
-            },
-            [&] {
-                CCoinsStats stats{CoinStatsHashType::HASH_SERIALIZED};
-                bool expected_code_path = false;
-                try {
-                    (void)GetUTXOStats(&coins_view_cache, g_setup->m_node.chainman->m_blockman, stats);
-                } catch (const std::logic_error&) {
-                    expected_code_path = true;
-                }
-                assert(expected_code_path);
             },
             [&] {
                 (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache);

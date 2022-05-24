@@ -14,7 +14,6 @@ import sys
 EXPECTED_CIRCULAR_DEPENDENCIES = (
     "chainparamsbase -> util/system -> chainparamsbase",
     "node/blockstorage -> validation -> node/blockstorage",
-    "index/coinstatsindex -> node/coinstats -> index/coinstatsindex",
     "policy/fees -> txmempool -> policy/fees",
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel",
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel",
@@ -22,7 +21,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel",
     "wallet/fees -> wallet/wallet -> wallet/fees",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
-    "node/coinstats -> validation -> node/coinstats",
+    "kernel/coinstats -> validation -> kernel/coinstats",
 )
 
 CODE_DIR = "src"
