@@ -574,13 +574,18 @@ public:
     }
     ~WalletLoaderImpl() override { UnloadWallets(m_context); }
 
+    //! HACK to workaround libc++ bugs (assigning from other locations such as sweepprivkeys breaks std::any_cast type checking); see also https://github.com/llvm/llvm-project/issues/55684
+    void assignContextHACK(std::any& a) override
+    {
+        a = &m_context;
+    }
     //! ChainClient methods
     void registerRpcs() override
     {
         for (const CRPCCommand& command : GetWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
                 JSONRPCRequest wallet_request = request;
-                wallet_request.context = &m_context;
+                assignContextHACK(wallet_request.context);
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
