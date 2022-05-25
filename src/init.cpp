@@ -1094,7 +1094,21 @@ static bool LockDataDirectory(bool probeOnly)
 bool AppInitSanityChecks(const kernel::Context& kernel)
 {
     // ********************************************************* Step 4: sanity checks
-    if (!kernel::SanityChecks(kernel)) {
+    auto maybe_error = kernel::SanityChecks(kernel);
+
+    if (maybe_error.has_value()) {
+        switch (maybe_error.value()) {
+        case kernel::SanityCheckError::ERROR_ECC:
+            InitError(Untranslated("Elliptic curve cryptography sanity check failure. Aborting."));
+            break;
+        case kernel::SanityCheckError::ERROR_RANDOM:
+            InitError(Untranslated("OS cryptographic RNG sanity check failure. Aborting."));
+            break;
+        case kernel::SanityCheckError::ERROR_CHRONO:
+            InitError(Untranslated("Clock epoch mismatch. Aborting."));
+            break;
+        } // no default case, so the compiler can warn about missing cases
+
         return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), PACKAGE_NAME));
     }
 
