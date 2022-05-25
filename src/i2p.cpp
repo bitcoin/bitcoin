@@ -135,7 +135,7 @@ bool Session::Listen(Connection& conn)
         conn.sock = StreamAccept();
         return true;
     } catch (const std::runtime_error& e) {
-        Log("Error listening: %s", e.what());
+        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error listening: %s\n", e.what());
         CheckControlSock();
     }
     return false;
@@ -163,7 +163,7 @@ bool Session::Accept(Connection& conn)
             return true;
         }
     } catch (const std::runtime_error& e) {
-        Log("Error accepting: %s", e.what());
+        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error accepting: %s\n", e.what());
         CheckControlSock();
     }
     return false;
@@ -221,7 +221,7 @@ bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
 
         throw std::runtime_error(strprintf("\"%s\"", connect_reply.full));
     } catch (const std::runtime_error& e) {
-        Log("Error connecting to %s: %s", to.ToString(), e.what());
+        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error connecting to %s: %s\n", to.ToString(), e.what());
         CheckControlSock();
         return false;
     }
@@ -304,7 +304,7 @@ void Session::CheckControlSock()
 
     std::string errmsg;
     if (!m_control_sock->IsConnected(errmsg)) {
-        Log("Control socket error: %s", errmsg);
+        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Control socket error: %s\n", errmsg);
         Disconnect();
     }
 }
@@ -355,7 +355,7 @@ void Session::CreateIfNotCreatedAlready()
         return;
     }
 
-    Log("Creating SAM session with %s", m_control_host.ToString());
+    LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Creating SAM session with %s\n", m_control_host.ToString());
 
     auto sock = Hello();
 
@@ -376,8 +376,8 @@ void Session::CreateIfNotCreatedAlready()
     m_session_id = session_id;
     m_control_sock = std::move(sock);
 
-    LogPrintfCategory(BCLog::I2P, "SAM session created: session id=%s, my address=%s\n",
-                      m_session_id, m_my_addr.ToString());
+    LogPrintLevel(BCLog::I2P, BCLog::Level::Info, "SAM session created: session id=%s, my address=%s\n",
+                  m_session_id, m_my_addr.ToString());
 }
 
 std::unique_ptr<Sock> Session::StreamAccept()
@@ -405,9 +405,9 @@ void Session::Disconnect()
 {
     if (m_control_sock->Get() != INVALID_SOCKET) {
         if (m_session_id.empty()) {
-            Log("Destroying incomplete session");
+            LogPrintLevel(BCLog::I2P, BCLog::Level::Warning, "Destroying incomplete session\n");
         } else {
-            Log("Destroying session %s", m_session_id);
+            LogPrintLevel(BCLog::I2P, BCLog::Level::Info, "Destroying session %s\n", m_session_id);
         }
     }
     m_control_sock = std::make_unique<Sock>(INVALID_SOCKET);
