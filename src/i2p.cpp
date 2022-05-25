@@ -239,12 +239,6 @@ std::string Session::Reply::Get(const std::string& key) const
     return pos->second.value();
 }
 
-template <typename... Args>
-void Session::Log(const std::string& fmt, const Args&... args) const
-{
-    LogPrint(BCLog::I2P, "%s\n", tfm::format(fmt, args...));
-}
-
 Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
                                                const std::string& request,
                                                bool check_result_ok) const
