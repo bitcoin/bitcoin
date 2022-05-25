@@ -304,7 +304,7 @@ void Shutdown(NodeContext& node)
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    init::UnsetGlobals();
+    node.kernel.reset();
     node.mempool.reset();
     node.fee_estimator.reset();
     node.chainman.reset();
@@ -1092,9 +1092,6 @@ static bool LockDataDirectory(bool probeOnly)
 bool AppInitSanityChecks()
 {
     // ********************************************************* Step 4: sanity checks
-
-    init::SetGlobals();
-
     if (!init::SanityChecks()) {
         return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), PACKAGE_NAME));
     }

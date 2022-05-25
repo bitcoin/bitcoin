@@ -188,11 +188,14 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
+
+        node.kernel = std::make_unique<kernel::Context>();
         if (!AppInitSanityChecks())
         {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
+
         if (args.GetBoolArg("-daemon", DEFAULT_DAEMON) || args.GetBoolArg("-daemonwait", DEFAULT_DAEMONWAIT)) {
 #if HAVE_DECL_FORK
             tfm::format(std::cout, PACKAGE_NAME " starting\n");

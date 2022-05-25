@@ -19,6 +19,9 @@ class ArgsManager;
 namespace interfaces {
 struct BlockAndHeaderTipInfo;
 }
+namespace kernel {
+struct Context;
+}
 namespace node {
 struct NodeContext;
 } // namespace node

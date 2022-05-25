@@ -90,8 +90,16 @@ public:
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        return AppInitBasicSetup(gArgs) && AppInitParameterInteraction(gArgs, /*use_syscall_sandbox=*/false) && AppInitSanityChecks() &&
-               AppInitLockDataDirectory() && AppInitInterfaces(*m_context);
+        if (!AppInitBasicSetup(gArgs)) return false;
+        if (!AppInitParameterInteraction(gArgs, /*use_syscall_sandbox=*/false)) return false;
+
+        m_context->kernel = std::make_unique<kernel::Context>();
+        if (!AppInitSanityChecks()) return false;
+
+        if (!AppInitLockDataDirectory()) return false;
+        if (!AppInitInterfaces(*m_context)) return false;
+
+        return true;
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
     {

@@ -126,7 +126,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     InitLogging(*m_node.args);
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
-    init::SetGlobals();
+    m_node.kernel = std::make_unique<kernel::Context>();
     SetupEnvironment();
     SetupNetworking();
     InitSignatureCache();
@@ -146,7 +146,6 @@ BasicTestingSetup::~BasicTestingSetup()
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
     gArgs.ClearArgs();
-    init::UnsetGlobals();
 }
 
 ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
