@@ -88,6 +88,7 @@ BITCOIN_TESTS =\
   test/cuckoocache_tests.cpp \
   test/dbwrapper_tests.cpp \
   test/denialofservice_tests.cpp \
+  test/deploymentinfo_tests.cpp \
   test/descriptor_tests.cpp \
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
