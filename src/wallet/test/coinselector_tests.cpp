@@ -74,11 +74,9 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     if (spendable) {
-        CTxDestination dest;
-        bilingual_str error;
-        const bool destination_ok = wallet.GetNewDestination(OutputType::BECH32, "", dest, error);
-        assert(destination_ok);
-        tx.vout[nInput].scriptPubKey = GetScriptForDestination(dest);
+        auto op_dest = wallet.GetNewDestination(OutputType::BECH32, "");
+        assert(op_dest.HasRes());
+        tx.vout[nInput].scriptPubKey = GetScriptForDestination(op_dest.GetObj());
     }
     uint256 txid = tx.GetHash();
 
