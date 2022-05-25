@@ -16,12 +16,12 @@ from subprocess import check_output
 
 
 def main():
-    logs_list = check_output(["git", "grep", "--extended-regexp", r"(LogPrintLevel|LogPrintf?)\(", "--", "*.cpp"], universal_newlines=True, encoding="utf8").splitlines()
+    logs_list = check_output(["git", "grep", "--extended-regexp", r"(LogPrintLevel|LogPrintfCategory|LogPrintf?)\(", "--", "*.cpp"], universal_newlines=True, encoding="utf8").splitlines()
 
     unterminated_logs = [line for line in logs_list if not re.search(r'(\\n"|/\* Continued \*/)', line)]
 
     if unterminated_logs != []:
-        print("All calls to LogPrintf(), LogPrint(), LogPrintLevel(), and WalletLogPrintf() should be terminated with \"\\n\".")
+        print("All calls to LogPrintf(), LogPrintfCategory(), LogPrint(), LogPrintLevel(), and WalletLogPrintf() should be terminated with \"\\n\".")
         print("")
 
         for line in unterminated_logs:
