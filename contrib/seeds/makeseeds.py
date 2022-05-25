@@ -7,12 +7,13 @@
 #
 
 import argparse
+import ipaddress
 import re
 import sys
 import collections
 from typing import List, Dict, Union
 
-from asmap import ASMap
+from asmap import ASMap, net_to_prefix
 
 NSEEDS=512
 
@@ -145,8 +146,8 @@ def filterbyasn(asmap: ASMap, ips: List[Dict], max_per_asn: Dict, max_per_net: i
             # do not add this ip as we already too many
             # ips from this network
             continue
-        asn = asmap.lookup_asn(ip['ip'])
-        if asn is None or asn_count[ip['net'], asn] == max_per_asn[ip['net']]:
+        asn = asmap.lookup(net_to_prefix(ipaddress.ip_network(ip['ip'])))
+        if not asn or asn_count[ip['net'], asn] == max_per_asn[ip['net']]:
             # do not add this ip as we already have too many
             # ips from this ASN on this network
             continue
@@ -177,7 +178,8 @@ def main():
     args = parse_args()
 
     print(f'Loading asmap database "{args.asmap}"…', end='', file=sys.stderr, flush=True)
-    asmap = ASMap(args.asmap)
+    with open(args.asmap, 'rb') as f:
+        asmap = ASMap.from_binary(f.read())
     print('Done.', file=sys.stderr)
 
     print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
