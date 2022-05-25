@@ -213,7 +213,7 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
         }                                                              \
     } while (0)
 
-#define LogPrintLevel(level, category, ...)               \
+#define LogPrintLevel(category, level, ...)               \
     do {                                                  \
         if (LogAcceptCategory((category), (level))) {     \
             LogPrintLevel_(category, level, __VA_ARGS__); \
