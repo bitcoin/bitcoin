@@ -1262,6 +1262,7 @@ struct NodeEvictionCandidate
     bool m_is_local;
     Network m_network;
     bool m_noban;
+    ConnectionType m_conn_type;
 };
 
 /**

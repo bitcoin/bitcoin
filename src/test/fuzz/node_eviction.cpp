@@ -33,6 +33,7 @@ FUZZ_TARGET(node_eviction)
             /*m_is_local=*/fuzzed_data_provider.ConsumeBool(),
             /*m_network=*/fuzzed_data_provider.PickValueInArray(ALL_NETWORKS),
             /*m_noban=*/fuzzed_data_provider.ConsumeBool(),
+            /*m_conn_type=*/fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES),
         });
     }
     // Make a copy since eviction_candidates may be in some valid but otherwise
