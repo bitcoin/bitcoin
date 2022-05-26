@@ -13,7 +13,7 @@ set -ex
 GIT_ARCHIVE="$1"
 DISTNAME="$2"
 
-git archive --prefix="${DISTNAME}/" HEAD | tar -xp --exclude '*minisketch*'
+git archive --prefix="${DISTNAME}/" HEAD | tar -xp --exclude '*minisketch*' --exclude 'doc/release-notes'
 
 # Generate correct build info file from git, before we lose git
 GIT_BUILD_INFO="$(share/genbuild.sh /dev/stdout)"
