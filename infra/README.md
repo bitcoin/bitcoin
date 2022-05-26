@@ -90,5 +90,5 @@ Or run single tests with:
 
 ```bash
 cd ~/itcoin-core
-LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib test/functional/feature_signet_solution_independent_blockchain_1_of_2.py 
+LD_LIBRARY_PATH=/home/ubuntu/itcoin-pbft/usrlocal/lib test/functional/feature_itcoin_solution_independent_blockchain_1_of_2.py 
 ```
