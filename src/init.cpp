@@ -400,7 +400,6 @@ void Shutdown(node::NodeContext& node)
     }
     UninterruptibleSleep(std::chrono::milliseconds{200});
 
-    node.args = nullptr;
     curl_global_cleanup();
     LogPrintf("%s: done\n", __func__);
 }
