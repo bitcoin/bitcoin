@@ -1925,7 +1925,6 @@ static RPCHelpMan syscoincreaterawnevmblob()
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
-	const UniValue &params = request.params;
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
@@ -2014,7 +2013,6 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!fNEVMConnection) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "NEVM not configured to run, required to create blobs");  
     }
-	const UniValue &params = request.params;
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
@@ -2054,7 +2052,6 @@ static RPCHelpMan syscoincreatenevmblob()
     UniValue resObj = res.get_obj();
     if(!resObj.isNull()) {
         if(!find_value(resObj, "txid").isNull()) {
-            const uint256 &txid = ParseHashO(resObj, "txid");
             UniValue resRet(UniValue::VOBJ);
             resObj.__pushKV("versionhash", HexStr(nevmData.vchVersionHash));
             resObj.__pushKV("datasize", nevmData.nSize);
