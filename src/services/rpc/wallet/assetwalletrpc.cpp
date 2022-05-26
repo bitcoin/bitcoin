@@ -1930,7 +1930,8 @@ static RPCHelpMan syscoincreaterawnevmblob()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    TRY_LOCK(pwallet->cs_wallet, lockWallet);
+
+    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
     const std::vector<unsigned char>& vchData = ParseHex(request.params[1].get_str());
