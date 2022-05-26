@@ -1,0 +1,9 @@
+
+BITCOIN VS US DOLLAR
+BTC/USD
+
+Initially launched in early January 2009 following its introduction into the world by the pseudonymous Satoshi Nakamoto, Bitcoin is an open-source digital currency without an individual administrator or controlling entity. Bitcoin uses peer-to-peer network technology in order to operate whereby each transaction is verified by an entire network of individual computers and stored in a publicly available decentralized ledger referred to as a blockchain. Each new block of transactions stems from the previous and is added to the blockchain only if the data within is confirmed by the majority of the network. Miners broadcast each new block to be verified by the network after using computer processing power to calculate a form of cryptographic proof called Proof-of-Work. Mining facilitates all transaction on the blockchain, acts as a record keeping service and generates a reward of newly minted bitcoins plus associated transaction fees to the miner. This reward is halved approximately every 4 years until the supply limit of 21 million bitcoins is reached.
+
+Bitcoins can be controlled by using a Wallet which contains the digital credentials required to access individual wallet addresses and transact bitcoins. Through the use of asymmetric cryptography wallets use one public and one private key to maintain security. Users are able to share the public address but must maintain the security of the private key as this is the ultimate evidence of ownership to bitcoins and the only way to digitally sign any transaction.
+
+Since its inception 13 years ago Bitcoin inspired the creation of other cryptocurrencies and has continuously increased in popularity with multitudes of use cases such as a store of value similar to that of gold, an accepted form of payment for goods or services as well as for investment purposes.
