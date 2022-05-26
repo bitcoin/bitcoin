@@ -76,6 +76,12 @@ private:
 public:
     EvictionManager();
     ~EvictionManager();
+
+    void AddCandidate(NodeId id, std::chrono::seconds connected,
+                      uint64_t keyed_net_group, bool prefer_evict,
+                      bool is_local, Network network,
+                      bool noban, ConnectionType conn_type);
+    bool RemoveCandidate(NodeId id);
 };
 
 #endif // BITCOIN_NODE_EVICTION_H
