@@ -76,7 +76,7 @@ The option to set the PUB socket's outbound message high water mark
     -zmqpubhashblockhwm=n
     -zmqpubrawblockhwm=n
     -zmqpubrawtxhwm=n
-    -zmqpubsequencehwm=address
+    -zmqpubsequencehwm=n
 
 The high water mark value must be an integer greater than or equal to 0.
 
