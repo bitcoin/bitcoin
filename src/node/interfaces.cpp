@@ -112,6 +112,46 @@ public:
         }
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
+    bool isSettingIgnored(const std::string& name) override
+    {
+        bool ignored = false;
+        gArgs.LockSettings([&](util::Settings& settings) {
+            if (auto* options = util::FindKey(settings.command_line_options, name)) {
+                ignored = !options->empty();
+            }
+        });
+        return ignored;
+    }
+    util::SettingsValue getPersistentSetting(const std::string& name) override { return gArgs.GetPersistentSetting(name); }
+    void updateRwSetting(const std::string& name, const util::SettingsValue& value) override
+    {
+        gArgs.LockSettings([&](util::Settings& settings) {
+            if (value.isNull()) {
+                settings.rw_settings.erase(name);
+            } else {
+                settings.rw_settings[name] = value;
+            }
+        });
+        gArgs.WriteSettingsFile();
+    }
+    void forceSetting(const std::string& name, const util::SettingsValue& value) override
+    {
+        gArgs.LockSettings([&](util::Settings& settings) {
+            if (value.isNull()) {
+                settings.forced_settings.erase(name);
+            } else {
+                settings.forced_settings[name] = value;
+            }
+        });
+    }
+    void resetSettings() override
+    {
+        gArgs.WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
+        gArgs.LockSettings([&](util::Settings& settings) {
+            settings.rw_settings.clear();
+        });
+        gArgs.WriteSettingsFile();
+    }
     void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
     bool getProxy(Network net, Proxy& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(ConnectionDirection flags) override
