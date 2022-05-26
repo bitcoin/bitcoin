@@ -271,7 +271,9 @@ BITCOIN_CORE_H = \
   node/blockstorage.h \
   node/coin.h \
   node/coinstats.h \
+  node/connection_types.h \
   node/context.h \
+  node/eviction.h \
   node/psbt.h \
   node/transaction.h \
   node/ui_interface.h \
@@ -499,7 +501,9 @@ libbitcoin_server_a_SOURCES = \
   node/blockstorage.cpp \
   node/coin.cpp \
   node/coinstats.cpp \
+  node/connection_types.cpp \
   node/context.cpp \
+  node/eviction.cpp \
   node/interfaces.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
