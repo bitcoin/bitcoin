@@ -1931,7 +1931,6 @@ static RPCHelpMan syscoincreaterawnevmblob()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
     const std::vector<unsigned char>& vchData = ParseHex(request.params[1].get_str());
@@ -2019,7 +2018,6 @@ static RPCHelpMan syscoincreatenevmblob()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(*pwallet);
     const std::vector<uint8_t> &vchData = ParseHex(request.params[0].get_str());
     // process new vector in batch checking the blobs
