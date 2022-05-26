@@ -7,7 +7,7 @@ import time
 import sys, os
 
 # Import the test primitives
-from test_framework.test_framework_signet import BaseSignetTest
+from test_framework.test_framework_itcoin import BaseSignetTest
 from test_framework.util import assert_equal
 
 # import itcoin's miner
