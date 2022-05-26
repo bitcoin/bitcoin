@@ -63,6 +63,9 @@
            <property name="toolTip">
             <string>Filter proposal list</string>
            </property>
+           <property name="placeholderText">
+            <string>Filter by Title</string>
+           </property>
           </widget>
          </item>
          <item>
