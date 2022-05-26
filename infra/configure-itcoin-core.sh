@@ -32,6 +32,7 @@ cd "${MY_DIR}/.."
     --disable-man \
     --disable-tests \
     --with-boost="${MY_DIR}/../../itcoin-pbft/usrlocal" \
+    --with-gui=no \
     --with-incompatible-bdb \
     --with-zmq \
     --without-miniupnpc \
