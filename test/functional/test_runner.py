@@ -125,6 +125,7 @@ BASE_SCRIPTS = [
     'feature_asset_nft.py',
     'feature_asset_zdag.py',
     'feature_asset_verify_zdag.py',
+    'feature_nevm_data.py',
     'rpc_signer.py',
     'wallet_signer.py --descriptors',
     # vv Tests less than 60s vv
