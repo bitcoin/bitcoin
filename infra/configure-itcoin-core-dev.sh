@@ -12,7 +12,8 @@ set -eu
 # https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself#246128
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-INSTALL_DIR=$(realpath "${MY_DIR}/../target")
+USR_DIR=${1:-$(realpath "${MY_DIR}/../../itcoin-pbft/usrlocal")}
+INSTALL_DIR=${2:-$(realpath "${MY_DIR}/../target")}
 
 # autogen always assumes that the user is calling it from the same directory
 # in which the script is placed. This is not always true (like in our case),
@@ -37,7 +38,7 @@ cd "${MY_DIR}/.."
     --disable-bench \
     --disable-gui-tests \
     --disable-man \
-    --with-boost="${MY_DIR}/../../itcoin-pbft/usrlocal" \
+    --with-boost="${USR_DIR}" \
     --with-incompatible-bdb \
     --with-zmq \
     --without-gui \
