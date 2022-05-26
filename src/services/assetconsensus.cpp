@@ -260,16 +260,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut) {
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState& state, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
     if(!fRegTest && nHeight < (uint32_t)params.nUTXOAssetsBlock)
         return !IsSyscoinTx(tx.nVersion);
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
-    return CheckSyscoinInputs(false, params, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut, NEVMDataVecOut);
+    return CheckSyscoinInputs(false, params, tx, txHash, state, true, nHeight, nTime, uint256(), bSanityCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut);
 }
 
-bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut) {
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
@@ -281,16 +281,6 @@ bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const 
         else if (IsAssetTx(tx.nVersion)) {
             good = CheckAssetInputs(params, tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck, mapAssetIn, mapAssetOut);
         } 
-        else if (!fJustCheck && tx.IsNEVMData()) {
-            CNEVMData nevmData(tx);
-            if(nevmData.IsNull()) {
-                 return FormatSyscoinErrorMessage(state, "nevm-data-invalid", bSanityCheck);  
-            }
-            if(!nevmData.vchData.empty()) {
-                return FormatSyscoinErrorMessage(state, "nevm-data-unexpected", bSanityCheck);  
-            }
-            NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
-        }
     } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
     }

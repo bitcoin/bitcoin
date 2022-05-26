@@ -30,6 +30,10 @@
 #include <wallet/rpc/coins.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/rpc/spend.h>
+#include <rpc/server_util.h>
+#include <index/txindex.h>
+#include <node/context.h>
+#include <services/assetconsensus.h>
 using namespace wallet;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -1905,14 +1909,19 @@ static RPCHelpMan assetallocationburn()
 static RPCHelpMan syscoincreaterawnevmblob()
 {
     return RPCHelpMan{"syscoincreaterawnevmblob",
-        "\nCreate NEVM blob data used by rollups via a custom raw blob\n",
+        "\nCreate NEVM blob data used by rollups via a custom raw parameters\n",
         {
-            {"rawdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "rawdata"}
+            {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the KZG commitment"},
+            {"rawdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "raw blob"},
+            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
+            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+                        "       \"" + FeeModes("\"\n\"") + "\""},
+            {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreaterawnevmblob", "\"rawdata\"")
-            + HelpExampleRpc("syscoincreaterawnevmblob", "\"rawdata\"")
+            HelpExampleCli("syscoincreaterawnevmblob", "\"rawdata\" 6 economical 25")
+            + HelpExampleRpc("syscoincreaterawnevmblob", "\"rawdata\" 6 economical 25")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -1925,30 +1934,61 @@ static RPCHelpMan syscoincreaterawnevmblob()
 
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(*pwallet);
-    std::vector<uint8_t> vchData = ParseHex(request.params[0].get_str());
+    CNEVMData nevmData;
+    const std::vector<unsigned char>& vchData = ParseHex(request.params[1].get_str());
+    nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
+    nevmData.nSize = vchData.size();
+    std::vector<unsigned char> data;
+    nevmData.SerializeData(data);
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
-    UniValue addressObj(UniValue::VOBJ);
-    CTxDestination dest;
-    bilingual_str errorStr;
-    if (!pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
-    }
-
-    CTxOut change_prototype_txout(0, GetScriptForDestination(dest));
-    auto dust = GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet));
-    addressObj.__pushKV(EncodeDestination(dest), ValueFromAmount(dust));
-    outputObj.__pushKV("address", addressObj);
-    outputObj.__pushKV("data", HexStr(vchData));
-    outputObj.__pushKV("version", SYSCOIN_TX_VERSION_NEVM_DATA);
+    UniValue optionsObj(UniValue::VOBJ);
+    // should fill in VH and Size and fill in data through GETDATA net protocol by putting vchData into DB which it will read from
+    outputObj.__pushKV("data", HexStr(data));
+    optionsObj.__pushKV("version", SYSCOIN_TX_VERSION_NEVM_DATA);
     output.push_back(outputObj);
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(output);
+    paramsSend.push_back(request.params[2]);
+    paramsSend.push_back(request.params[3]);
+    paramsSend.push_back(request.params[4]);
+    paramsSend.push_back(optionsObj);
     node::JSONRPCRequest requestSend;
     requestSend.context = request.context;
     requestSend.params = paramsSend;
     requestSend.URI = request.URI;
-    return send().HandleRequest(requestSend);
+    if(fNEVMConnection) {
+        std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
+        CNEVMDataProcessHelper nevmHelper;
+        nevmHelper.nevmData = &nevmData;
+        vecNEVMDataToProcess.emplace_back(nevmHelper);
+        // process new vector in batch checking the blobs
+        BlockValidationState state;
+        // if not in DB then we need to verify it via Geth KZG blob verification
+        GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
+        if(state.IsInvalid()) {
+            throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not verify NEVM blob data: %s", state.ToString()));
+        }
+    }
+    if(pnevmdatadb->ExistsData(nevmData.vchVersionHash)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "NEVM data already exists in DB");
+    }
+    // FillNEVMData should fill in this data prior to relay
+    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, vchData)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not commit NEVM data to DB");
+    }
+    const UniValue& res = send().HandleRequest(requestSend);
+    const UniValue &txidObj = find_value(res.get_obj(), "txid");
+    if(txidObj.isNull()) {
+        NEVMDataVec nevmDataVecOut;
+        nevmDataVecOut.emplace_back(nevmData.vchVersionHash);
+        if(!EraseNEVMData(nevmDataVecOut)) {
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not rollback NEVM data commit from DB");
+        }
+    } else {
+        return res;
+    }
+    throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or invalid");
 },
     };
 }
@@ -1958,7 +1998,11 @@ static RPCHelpMan syscoincreatenevmblob()
     return RPCHelpMan{"syscoincreatenevmblob",
         "\nCreate NEVM blob data used by rollups\n",
         {
-            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data"}
+            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data"},
+            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
+            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+                        "       \"" + FeeModes("\"\n\"") + "\""},
+            {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
@@ -1979,7 +2023,7 @@ static RPCHelpMan syscoincreatenevmblob()
 
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(*pwallet);
-    std::vector<uint8_t> vchData = ParseHex(request.params[0].get_str());
+    const std::vector<uint8_t> &vchData = ParseHex(request.params[0].get_str());
     // process new vector in batch checking the blobs
     BlockValidationState state;
     CNEVMData nevmData;
@@ -1988,27 +2032,40 @@ static RPCHelpMan syscoincreatenevmblob()
     if(state.IsInvalid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not create NEVM blob data");   
     }
-    std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
-    CNEVMDataProcessHelper entry;
-    entry.nevmData = &nevmData;
-    vecNEVMDataToProcess.emplace_back(entry);
-    GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
-    if(state.IsInvalid()) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not verify NEVM blob data");   
-    }
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
-    stream << nevmData;   
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
-    outputObj.__pushKV("rawdata", stream.str());
+    outputObj.__pushKV("rawdata", HexStr(nevmData.vchData));
     output.push_back(outputObj);
+    UniValue vh(UniValue::VARR);
+    UniValue vhObj(UniValue::VOBJ);
+    vhObj.__pushKV("versionhash", HexStr(nevmData.vchVersionHash));
+    vh.push_back(vhObj);
     UniValue paramsSend(UniValue::VARR);
+    paramsSend.push_back(vh);
     paramsSend.push_back(output);
+    paramsSend.push_back(request.params[1]);
+    paramsSend.push_back(request.params[2]);
+    paramsSend.push_back(request.params[3]);
     node::JSONRPCRequest requestSend;
     requestSend.context = request.context;
     requestSend.params = paramsSend;
     requestSend.URI = request.URI;
-    return syscoincreaterawnevmblob().HandleRequest(requestSend);
+    const UniValue &res = syscoincreaterawnevmblob().HandleRequest(requestSend);
+    UniValue resObj = res.get_obj();
+    if(!resObj.isNull()) {
+        if(!find_value(resObj, "txid").isNull()) {
+            const uint256 &txid = ParseHashO(resObj, "txid");
+            UniValue resRet(UniValue::VOBJ);
+            resObj.__pushKV("versionhash", HexStr(nevmData.vchVersionHash));
+            resObj.__pushKV("datasize", nevmData.nSize);
+            resObj.__pushKV("data", HexStr(nevmData.vchData));
+            resRet.push_back(resObj);
+            return resRet;
+        } else {
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   
+        }  
+    }
+    throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or invalid");
 },
     };
 }

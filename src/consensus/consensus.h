@@ -8,10 +8,10 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-
-/** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 // SYSCOIN 32MB max NEVM payload
-static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000 + (32 << 20);
+static const int MAX_NEVM_BLOCK_SIZE = 32 << 20;
+/** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
+static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000 + MAX_NEVM_BLOCK_SIZE;
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
 /** The maximum allowed number of signature check operations in a block (network rule) */

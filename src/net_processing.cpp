@@ -1950,14 +1950,13 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         pblock = a_recent_block;
         bRecent = true;
     } else if (inv.IsMsgWitnessBlk()) {
-        // Fast-path: in this case it is possible to serve the block directly from disk,
-        // as the network format matches the format on disk
-        std::vector<uint8_t> block_data;
-        if (!ReadRawBlockFromDisk(block_data, pindex->GetBlockPos(), m_chainparams.MessageStart())) {
+        // SYSCOIN
+        // Send block from disk
+        std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
+        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus())) {
             assert(!"cannot load block from disk");
         }
-        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, Span{block_data}));
-        // Don't set pblock as we've sent the block
+        pblock = pblockRead;
     } else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
@@ -1966,15 +1965,11 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         }
         pblock = pblockRead;
     }
-    if (pblock) {
+    if (pblock && FillNEVMData(pblock)) {
         if (inv.IsMsgBlk()) {
-            // SYSCOIN
-            if(FillNEVMData(pblock))
-                m_connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, *pblock));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, *pblock));
         } else if (inv.IsMsgWitnessBlk()) {
-            // SYSCOIN
-            if(FillNEVMData(pblock))
-                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
         } else if (inv.IsMsgFilteredBlk()) {
             bool sendMerkleBlock = false;
             CMerkleBlock merkleBlock;
@@ -1995,9 +1990,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                 // however we MUST always provide at least what the remote peer needs
                 typedef std::pair<unsigned int, uint256> PairType;
                 for (PairType& pair : merkleBlock.vMatchedTxn) {
-                    // SYSCOIN
-                    if(FillNEVMData(pblock->vtx[pair.first]))
-                        m_connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::TX, *pblock->vtx[pair.first]));
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::TX, *pblock->vtx[pair.first]));
                 }
             }
             // else
@@ -2018,9 +2011,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                     m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
                 }
             } else {
-                // SYSCOIN
-                if(FillNEVMData(pblock))
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCK, *pblock));
+                m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCK, *pblock));
             }
         }
     }
@@ -2284,6 +2275,10 @@ uint32_t PeerManagerImpl::GetFetchFlags(const CNode& pfrom) const EXCLUSIVE_LOCK
 
 void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req)
 {
+    if(!FillNEVMData(block)) {
+        Misbehaving(pfrom.GetId(), 100, "getblocktxn cannot fill NEVM data in block");
+        return;
+    }
     BlockTransactions resp(req);
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
@@ -3452,9 +3447,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // Unlock m_most_recent_block_mutex to avoid cs_main lock inversion
         }
         if (recent_block) {
-            // SYSCOIN
-            if(FillNEVMData(recent_block))
-                SendBlockTransactions(pfrom, *recent_block, req);
+            SendBlockTransactions(pfrom, *recent_block, req);
             return;
         }
 
@@ -3471,9 +3464,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 CBlock block;
                 bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus());
                 assert(ret);
-                // SYSCOIN
-                if(FillNEVMData(block))
-                    SendBlockTransactions(pfrom, block, req);
+                SendBlockTransactions(pfrom, block, req);
                 return;
             }
         }
@@ -3601,7 +3592,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> ptx;
         // SYSCOIN
         NEVMDataVec nevmDataVecOut;
-        if(!ProcessNEVMData(ptx, nevmDataVecOut, m_chainman.ActiveChain().Tip()->GetMedianTimePast())) {
+        if(!ProcessNEVMData(ptx, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), nevmDataVecOut)) {
             LogPrint(BCLog::NET, "NEVM data transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -4142,7 +4133,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> *pblock;
         // SYSCOIN
         NEVMDataVec nevmDataVecOut;
-        if(!ProcessNEVMData(pblock, nevmDataVecOut, nMedianTime)) {
+        if(!ProcessNEVMData(*pblock, nMedianTime, nevmDataVecOut)) {
             LogPrint(BCLog::NET, "Unexpected NEVM block message received from peer %d\n", pfrom.GetId());
             return;  
         }

@@ -517,21 +517,20 @@ static RPCHelpMan getnevmblobdata()
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    std::string vhStr = request.params[0].get_str();
     bool bGetData = false;
     if(request.params.size() > 1) {
         bGetData = request.params[1].get_bool();
     }
     UniValue oNEVM(UniValue::VOBJ);
     BlockValidationState state;
-    std::vector<uint8_t> vchVH = ParseHex(vhStr);
+    std::vector<uint8_t> vchVH = ParseHex(request.params[0].get_str());
     std::vector<uint8_t> vchData;
     if(!pnevmdatadb->ReadData(vchVH, vchData)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not find data");
     }
     int64_t mpt;
     pnevmdatadb->ReadMPT(vchVH, mpt);
-    oNEVM.__pushKV("versionhash", vhStr);
+    oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
     oNEVM.__pushKV("datasize", (int)vchData.size());
     if(bGetData) {  

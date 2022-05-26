@@ -429,7 +429,6 @@ bool IsSyscoinNEVMDataTx(const int &nVersion);
 class CNEVMData {
 public:
     std::vector<uint8_t> vchVersionHash;
-    std::vector<uint8_t> vchCommitment;
     uint32_t nSize;
     std::vector<uint8_t> vchData;
     CNEVMData() {
@@ -441,12 +440,11 @@ public:
     
     inline void ClearData() {
         vchVersionHash.clear();
-        vchCommitment.clear();
         vchData.clear();
         nSize = 0;
     }
     SERIALIZE_METHODS(CNEVMData, obj) {
-        READWRITE(obj.vchVersionHash, obj.nSize, obj.vchCommitment, obj.vchData);
+        READWRITE(obj.vchVersionHash, obj.nSize, obj.vchData);
     }
     inline void SetNull() { ClearData(); }
     inline bool IsNull() const { return (vchVersionHash.empty() || nSize == 0); }
@@ -480,20 +478,27 @@ public:
     
    SERIALIZE_METHODS(CTxOut, obj)
     {
-        READWRITE(obj.nValue, obj.scriptPubKey);
-        if (s.GetType() == SER_SIZE && obj.scriptPubKey.IsUnspendable() && IsSyscoinNEVMDataTx(s.GetTxVersion())) {
+        const bool &bProcessData = (s.GetType() == SER_GETHASH) || (s.GetType() == SER_SIZE);
+        if(bProcessData && obj.scriptPubKey.IsUnspendable() && IsSyscoinNEVMDataTx(s.GetTxVersion())) {
             CNEVMData nevmData(obj.scriptPubKey);
             if(nevmData.IsNull()) {
                 throw std::ios_base::failure("Unknown transaction nevm data");
             }
-            // do not expect payload here
-            if(!nevmData.vchData.empty()) {
-                throw std::ios_base::failure("Unknown transaction nevm data payload expected empty");
+            if(s.GetType() == SER_SIZE) {
+                int nSize = nevmData.nSize;
+                nSize /= NEVM_DATA_SCALE_FACTOR;
+                s.seek(nSize);
             }
-            int nSize = nevmData.nSize;
-            nSize /= NEVM_DATA_SCALE_FACTOR;
-            s.seek(nSize);
+            if(!nevmData.vchData.empty()) {
+                std::vector<unsigned char> data;
+                nevmData.vchData.clear();
+                nevmData.SerializeData(data);
+                CScript scriptPubKey = CScript() << OP_RETURN << data;
+                READWRITE(obj.nValue, scriptPubKey);
+                return;
+            }
         }
+        READWRITE(obj.nValue, obj.scriptPubKey);
     }
 
 

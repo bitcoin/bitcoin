@@ -861,7 +861,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN
     CAssetsMap mapAssetIn;
     CAssetsMap mapAssetOut;
-    NEVMDataVec NEVMDataVecOut;
     if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees, mapAssetIn, mapAssetOut)) {
         return false; // state filled in by CheckTxInputs
     }
@@ -871,10 +870,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const auto& params = args.m_chainparams.GetConsensus();
     if(tx.HasAssets()) {
         isAssetTx = IsAssetTx(tx.nVersion);
-        if (!CheckSyscoinInputs(tx, params, hash, state, (uint32_t)m_active_chainstate.m_chain.Tip()->nHeight, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut, NEVMDataVecOut)) {
+        if (!CheckSyscoinInputs(tx, params, hash, state, (uint32_t)m_active_chainstate.m_chain.Tip()->nHeight, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
             return false; // state filled in by CheckSyscoinInputs
         } 
-    }  
+    }
     // Check for non-standard pay-to-script-hash in inputs
     if (fRequireStandard && !AreInputsStandard(tx, m_view)) {
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
@@ -2098,12 +2097,16 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
     return res;
 }
 // before propogating blocks/txs out to peers we need to fill the OPRETURN with the NEVM DA payload from seperate store
-bool FillNEVMData(const std::shared_ptr<const CBlock> pblock) {
+bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock) {
     CBlock &block = const_cast<CBlock&>(*pblock);
     return FillNEVMData(block);
 }
+bool FillNEVMData(const CBlock &blockIn) {
+    CBlock &block = const_cast<CBlock&>(blockIn);
+    return FillNEVMData(block);
+}
 bool FillNEVMData(CBlock& block) {
-    for (auto tx : block.vtx) {
+    for (auto &tx : block.vtx) {
         if(tx->IsNEVMData()) {
             if(!FillNEVMData(tx)) {
                 return false;
@@ -2121,7 +2124,7 @@ bool FillNEVMData(CTransactionRef tx) {
         return false;
     }
     CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
-    CNEVMData nevmData(*tx);
+    CNEVMData nevmData(scriptPubKey);
     if(nevmData.IsNull()) {
         return false;
     }
@@ -2130,7 +2133,9 @@ bool FillNEVMData(CTransactionRef tx) {
         return true;
     }
     if(pnevmdatadb->ReadData(nevmData.vchVersionHash, nevmData.vchData)) {
-        scriptPubKey << nevmData.vchData;
+        std::vector<unsigned char> data;
+        nevmData.SerializeData(data);
+        scriptPubKey = CScript() << OP_RETURN << data;
     }
     return true; 
 }
@@ -2140,25 +2145,29 @@ bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
-bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) { 
+bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) { 
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
     std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
     for (auto &nevmDataEntry : vecNevmData) {
         int64_t nTimeNow = GetAdjustedTime();
-        bool enforceNotHaveData = nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
-        bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-        if(enforceHaveData && nevmDataEntry.nevmData->vchData.empty()) {
+        bool enforceNotHaveData = nMedianTime > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+        bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+        bool dataDoesntExistsInDb = nMedianTime == 0 || !pnevmdatadb->ExistsData(nevmDataEntry.nevmData->vchVersionHash);
+        // dataDoesntExistInDb is checked here as its not OK semantically for data to be empty within the time window but pragmatically its fine protocol wise as we have the data
+        // however this situation is possible since in PartiallyDownloadedBlock::InitData it will use mempool (local txs) that have already stripped data so its expected for the vchData to be empty for those (they are local anyway)
+        // it wouldn't be OK for enforceNotHaveData if data existed when it shouldn't (means a peer is spamming)
+        if(enforceHaveData && dataDoesntExistsInDb && nevmDataEntry.nevmData->vchData.empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
             return false;
         } else if(enforceNotHaveData && !nevmDataEntry.nevmData->vchData.empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
             return false;
         }
-        if(!nevmDataEntry.nevmData->vchData.empty() && !pnevmdatadb->Exists(nevmDataEntry.nevmData->vchVersionHash)) {
+        if(!nevmDataEntry.nevmData->vchData.empty() && dataDoesntExistsInDb) {
             vecNEVMDataToProcess.emplace_back(nevmDataEntry);
         }
     }
-    if(fNEVMConnection) {
+    if(fNEVMConnection && nMedianTime > 0) {
         // process new vector in batch checking the blobs
         BlockValidationState state;
         // if not in DB then we need to verify it via Geth KZG blob verification
@@ -2170,50 +2179,53 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, NEV
     }
     // upon success write version hashes to db and strip scriptPubKeys
     for (auto &nevmDataEntry : vecNEVMDataToProcess) {
-        if(!pnevmdatadb->WriteData(nevmDataEntry.nevmData->vchVersionHash, nevmDataEntry.nevmData->vchData)) {
+        if(nMedianTime > 0 && !pnevmdatadb->WriteData(nevmDataEntry.nevmData->vchVersionHash, nevmDataEntry.nevmData->vchData)) {
             return false;
         }
-        // save the version hashes so we can remove from db (above) if something goes wrong with proceeding block/tx validations
-        nevmDataVecOut.emplace_back(std::move(nevmDataEntry.nevmData->vchVersionHash));
         // upon receiving block we prune data and store in seperate db
+        std::vector<unsigned char> data;
         nevmDataEntry.nevmData->vchData.clear();
-        nevmDataEntry.nevmData->vchCommitment.clear();
-        std::vector<unsigned char> newdata;
-        nevmDataEntry.nevmData->SerializeData(newdata);
-        nevmDataEntry.scriptPubKey[0] = CScript() << OP_RETURN << newdata; 
+        nevmDataEntry.nevmData->SerializeData(data);
+        nevmDataEntry.scriptPubKey[0] = CScript() << OP_RETURN << data;
+        // save the version hashes so we can remove from db (above) if something goes wrong with proceeding block/tx validations
+        nevmDataVecOut.emplace_back(nevmDataEntry.nevmData->vchVersionHash);
     }
     return true;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
-bool ProcessNEVMData(const std::shared_ptr<const CBlock> pblock, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
-    CBlock &block = const_cast<CBlock&>(*pblock);
-    return ProcessNEVMData(block, nevmDataVecOut, nMedianTime);
-}
-bool ProcessNEVMData(CBlock &block, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
-    for (auto tx : block.vtx) {
+    for (auto &tx : block.vtx) {
         if(tx->IsNEVMData()) {
             const auto &nOut = GetSyscoinDataOutput(*tx);
             if (nOut == -1) {
                 return false;
             }
+              
             CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
-            CNEVMData nevmData(*tx);
-            if(nevmData.IsNull()) {
+            CNEVMData *nevmData = new CNEVMData(scriptPubKey);
+            if(nevmData->IsNull()) {
                 return false;
             }
+            
             CNEVMDataProcessHelper entry;
-            entry.nevmData = &nevmData;
+            entry.nevmData = nevmData;
             entry.scriptPubKey = &scriptPubKey;
             vecNevmData.emplace_back(entry);
         }
     }
-    if(!ProcessNEVMDataHelper(vecNevmData, nevmDataVecOut, nMedianTime)) {
+    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, nevmDataVecOut)) {
+        for (auto &nevmDataEntry : vecNevmData) {
+            delete nevmDataEntry.nevmData;
+        }
         return false;
-    }  
+    }
+    for (auto &nevmDataEntry : vecNevmData) {
+        delete nevmDataEntry.nevmData;
+    }
     return true;
 }
-bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime) {
+bool ProcessNEVMData(CTransactionRef& tx, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) {
     if(!tx->IsNEVMData()) {
         return true;
     }
@@ -2223,7 +2235,7 @@ bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int6
     }
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
-    CNEVMData nevmData(*tx);
+    CNEVMData nevmData(scriptPubKey);
     if(nevmData.IsNull()) {
         return false;
     }
@@ -2231,7 +2243,7 @@ bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int6
     entry.nevmData = &nevmData;
     entry.scriptPubKey = &scriptPubKey;
     vecNevmData.emplace_back(entry);
-    if(!ProcessNEVMDataHelper(vecNevmData, nevmDataVecOut, nMedianTime)) {
+    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, nevmDataVecOut)) {
         return false;
     }  
     return true;
@@ -2609,12 +2621,19 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             if(hasAssets){
                 TxValidationState tx_statesys;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, m_params.GetConsensus(), tx, txHash, tx_statesys, false, (uint32_t)pindex->nHeight, m_chain.Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut, NEVMDataVecOut)){
+                if (!CheckSyscoinInputs(ibd, m_params.GetConsensus(), tx, txHash, tx_statesys, false, (uint32_t)pindex->nHeight, m_chain.Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_statesys.GetRejectReason(), tx_statesys.GetDebugMessage());
                     return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
                 }
+            }
+            else if (tx.IsNEVMData()) {
+                CNEVMData nevmData(tx);
+                if(nevmData.IsNull()) {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-data-invalid");
+                }
+                NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
             }
             nFees += txfee;
             if (!MoneyRange(nFees)) {
@@ -4040,6 +4059,9 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     if(block.IsNEVM() && block.vchNEVMBlockData.empty() && !fRegTest) {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-data-not-found");
     }
+    if(block.vchNEVMBlockData.size() > MAX_NEVM_BLOCK_SIZE) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-size");
+    }
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
@@ -4821,9 +4843,16 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                     return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, txHash.ToString(), tx_state.ToString());
                 }
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, chainParams, *tx, txHash, tx_state, false, (uint32_t)pindex->nHeight, m_chain.Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut, NEVMDataVecOut)) {
+                if (!CheckSyscoinInputs(ibd, chainParams, *tx, txHash, tx_state, false, (uint32_t)pindex->nHeight, m_chain.Tip()->GetMedianTimePast(), blockHash, false, mapAssets, mapMintKeys, mapAssetIn, mapAssetOut)) {
                     return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, txHash.ToString(), tx_state.ToString());
                 }
+            }
+            else if (tx->IsNEVMData()) {
+                CNEVMData nevmData(*tx);
+                if(nevmData.IsNull()) {
+                    return error("%s: Consensus::CheckTxInputs %s nevm-data-invalid", __func__, txHash.ToString());
+                }
+                NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
             }
             vecTXIDPairs.emplace_back(txHash, pindex->nHeight);
 

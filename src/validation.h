@@ -1063,13 +1063,13 @@ bool ProcessNEVMBlob(const CNEVMData &nevmData);
 // SYSCOIN
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
-bool FillNEVMData(const std::shared_ptr<const CBlock> pblock);
+bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock);
+bool FillNEVMData(const CBlock &block);
 bool FillNEVMData(CBlock& block);
 bool FillNEVMData(CTransactionRef tx);
 bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut);
-bool ProcessNEVMData(const std::shared_ptr<const CBlock> pblock, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime);
-bool ProcessNEVMData(CBlock &block, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime);
-bool ProcessNEVMData(CTransactionRef tx, NEVMDataVec &nevmDataVecOut, const int64_t nMedianTime);
+bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut);
+bool ProcessNEVMData(CTransactionRef &tx, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

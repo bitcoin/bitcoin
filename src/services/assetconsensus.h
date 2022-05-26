@@ -39,16 +39,20 @@ public:
     bool FlushErase(const NEVMDataVec &vecDataKeys);
     bool FlushResetMPTs(const NEVMDataVec &vecDataKeys);
     bool FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime);
-    bool ReadData(const std::vector<uint8_t>& nVersionhash, std::vector<uint8_t>& nData) {
-        const auto& pair = std::make_pair(nVersionhash, true);
+    bool ExistsData(const std::vector<uint8_t>& nVersionHash) {
+        const auto& pair = std::make_pair(nVersionHash, true);
+        return Exists(pair);
+    } 
+    bool ReadData(const std::vector<uint8_t>& nVersionHash, std::vector<uint8_t>& nData) {
+        const auto& pair = std::make_pair(nVersionHash, true);
         return Read(pair, nData);
     } 
-    bool ReadMPT(const std::vector<uint8_t>& nVersionhash, int64_t &nMedianTime) {
-        const auto& pair = std::make_pair(nVersionhash, false);
+    bool ReadMPT(const std::vector<uint8_t>& nVersionHash, int64_t &nMedianTime) {
+        const auto& pair = std::make_pair(nVersionHash, false);
         return Read(pair, nMedianTime);
     } 
-    bool WriteData(const std::vector<uint8_t>& nVersionhash, const std::vector<uint8_t>& nData) {
-        const auto& pair = std::make_pair(nVersionhash, true);
+    bool WriteData(const std::vector<uint8_t>& nVersionHash, const std::vector<uint8_t>& nData) {
+        const auto& pair = std::make_pair(nVersionHash, true);
         return Write(pair, nData);
     }
     bool Prune(CDBBatch &batch, int64_t nMedianTime);
@@ -96,8 +100,8 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMint
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut);
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const uint32_t& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys);
 bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
-bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState &tstate, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut);
-bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut, NEVMDataVec& NEVMDataVecOut);
+bool CheckSyscoinInputs(const CTransaction& tx, const Consensus::Params& params, const uint256& txHash, TxValidationState &tstate, const uint32_t &nHeight, const int64_t& nTime, NEVMMintTxMap &mapMintKeys, const bool &bSanityCheck, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
+bool CheckSyscoinInputs(const bool &ibd, const Consensus::Params& params, const CTransaction& tx,  const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, const CAssetsMap& mapAssetIn, const CAssetsMap& mapAssetOut);
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const uint32_t &nHeight, const uint256& blockhash, const bool &bSanityCheck, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut);
 uint256 GetNotarySigHash(const CTransaction &tx, const CAssetOut &vecOut);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

@@ -208,9 +208,9 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
     // SYSCOIN
     if(!vchNEVMBlockDataIn.empty() && block.vchNEVMBlockData.empty())
         block.vchNEVMBlockData = std::move(vchNEVMBlockDataIn);
-    // SYSCOIN
+
     NEVMDataVec nevmDataVecOut;
-    if(!ProcessNEVMData(block, nevmDataVecOut, nMedianTime)) {
+    if(!ProcessNEVMData(block, nMedianTime, nevmDataVecOut)) {
         return READ_STATUS_INVALID;
     }
     BlockValidationState state;

@@ -790,7 +790,7 @@ int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload)
     try {
 		CDataStream dsNEVMData(vchPayload, SER_NETWORK, PROTOCOL_VERSION);
 		Unserialize(dsNEVMData);
-        if(!vchData.empty() && nSize != vchData.size()) {
+        if(vchVersionHash.size() != 32 || (!vchData.empty() && nSize != vchData.size())) {
             SetNull();
             return -1;
         }
@@ -848,7 +848,7 @@ bool CNEVMData::UnserializeFromTx(const CMutableTransaction &mtx) {
 	}
     return true;
 }
-void CNEVMData::SerializeData( std::vector<unsigned char> &vchData) {
+void CNEVMData::SerializeData(std::vector<unsigned char> &vchData) {
     CDataStream dsNEVMAsset(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsNEVMAsset);
     const auto &bytesVec = MakeUCharSpan(dsNEVMAsset);

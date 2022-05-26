@@ -20,8 +20,6 @@
 #include <wallet/wallet.h>
 
 #include <univalue.h>
-
-
 namespace wallet {
 static void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, std::vector<CRecipient>& recipients)
 {
@@ -75,7 +73,6 @@ static void InterpretFeeEstimationInstructions(const UniValue& conf_target, cons
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
     }
 }
-
 static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, const CMutableTransaction& rawTx)
 {
     // Make a blank psbt
@@ -509,6 +506,8 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         RPCTypeCheckArgument(options, UniValue::VOBJ);
         RPCTypeCheckObj(options,
             {
+                // SYSCOIN
+                {"version", UniValueType(UniValue::VNUM)},
                 {"add_inputs", UniValueType(UniValue::VBOOL)},
                 {"include_unsafe", UniValueType(UniValue::VBOOL)},
                 {"add_to_wallet", UniValueType(UniValue::VBOOL)},
@@ -1153,6 +1152,8 @@ RPCHelpMan send()
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                 Cat<std::vector<RPCArg>>(
                 {
+                    // SYSCOIN
+                    {"version", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Custom transaction version."},
                     {"add_inputs", RPCArg::Type::BOOL, RPCArg::Default{false}, "If inputs are specified, automatically include more if they are not enough."},
                     {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
@@ -1236,13 +1237,16 @@ RPCHelpMan send()
             int change_position;
             bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
+            // SYSCOIN
+            if(options.exists("version")) {
+                rawTx.nVersion = options["version"].get_int();
+            }
             CCoinControl coin_control;
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
             coin_control.m_add_inputs = rawTx.vin.size() == 0;
             SetOptionsInputWeights(options["inputs"], options);
             FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/false);
-
             return FinishTransaction(pwallet, options, rawTx);
         }
     };
