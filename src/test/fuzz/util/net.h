@@ -103,7 +103,6 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const NodeId node_id = node_id_in.value_or(fuzzed_data_provider.ConsumeIntegralInRange<NodeId>(0, std::numeric_limits<NodeId>::max()));
     const auto sock = std::make_shared<FuzzedSock>(fuzzed_data_provider);
     const CAddress address = ConsumeAddress(fuzzed_data_provider);
-    const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
     const uint64_t local_host_nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
     const CAddress addr_bind = ConsumeAddress(fuzzed_data_provider);
     const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
@@ -114,7 +113,6 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
         return std::make_unique<CNode>(node_id,
                                        sock,
                                        address,
-                                       keyed_net_group,
                                        local_host_nonce,
                                        addr_bind,
                                        addr_name,
@@ -125,7 +123,6 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
         return CNode{node_id,
                      sock,
                      address,
-                     keyed_net_group,
                      local_host_nonce,
                      addr_bind,
                      addr_name,
