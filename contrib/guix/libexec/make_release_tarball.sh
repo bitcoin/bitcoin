@@ -17,6 +17,7 @@ DISTNAME="$2"
 git archive --prefix="${DISTNAME}/" HEAD |
  tar -xp \
   --exclude '*minisketch*' \
+  --exclude 'doc/release-notes' \
  # end of tar options
 tar \
   --format=ustar \
