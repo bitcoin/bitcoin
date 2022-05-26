@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/eviction.h>
+#include <node/eviction_impl.h>
 
 #include <algorithm>
 #include <array>
@@ -238,3 +239,10 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // Disconnect from the network group with the most connections
     return vEvictionCandidates.front().id;
 }
+
+EvictionManagerImpl::EvictionManagerImpl() {}
+EvictionManagerImpl::~EvictionManagerImpl() = default;
+
+EvictionManager::EvictionManager()
+    : m_impl(std::make_unique<EvictionManagerImpl>()) {}
+EvictionManager::~EvictionManager() = default;

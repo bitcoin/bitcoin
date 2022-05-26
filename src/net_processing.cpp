@@ -21,6 +21,7 @@
 #include <netbase.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
+#include <node/eviction.h>
 #include <node/txreconciliation.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -484,7 +485,7 @@ struct CNodeState {
 class PeerManagerImpl final : public PeerManager
 {
 public:
-    PeerManagerImpl(CConnman& connman, AddrMan& addrman,
+    PeerManagerImpl(CConnman& connman, AddrMan& addrman, EvictionManager& evictionman,
                     BanMan* banman, ChainstateManager& chainman,
                     CTxMemPool& pool, Options opts);
 
@@ -704,6 +705,7 @@ private:
     const CChainParams& m_chainparams;
     CConnman& m_connman;
     AddrMan& m_addrman;
+    EvictionManager& m_evictionman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
@@ -1804,19 +1806,20 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     return std::nullopt;
 }
 
-std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrman,
+std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrman, EvictionManager& evictionman,
                                                BanMan* banman, ChainstateManager& chainman,
                                                CTxMemPool& pool, Options opts)
 {
-    return std::make_unique<PeerManagerImpl>(connman, addrman, banman, chainman, pool, opts);
+    return std::make_unique<PeerManagerImpl>(connman, addrman, evictionman, banman, chainman, pool, opts);
 }
 
-PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
+PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman, EvictionManager& evictionman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, Options opts)
     : m_chainparams(chainman.GetParams()),
       m_connman(connman),
       m_addrman(addrman),
+      m_evictionman{evictionman},
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),

@@ -48,10 +48,10 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
-    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr,
-                                       *m_node.chainman, *m_node.mempool, false);
-
+    auto evictionman = std::make_unique<EvictionManager>();
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, *evictionman);
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, *evictionman, nullptr,
+                                       *m_node.chainman, *m_node.mempool, {});
     {
         // Disable inactivity checks for this test to avoid interference
         CConnman::Options opts;
@@ -140,8 +140,10 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
     NodeId id{0};
-    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, {});
+    auto evictionman = std::make_unique<EvictionManager>();
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, *evictionman);
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, *evictionman, nullptr,
+                                       *m_node.chainman, *m_node.mempool, {});
 
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
     CConnman::Options options;
@@ -216,8 +218,10 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 {
     NodeId id{0};
-    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, {});
+    auto evictionman = std::make_unique<EvictionManager>();
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, *evictionman);
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, *evictionman, nullptr,
+                                       *m_node.chainman, *m_node.mempool, {});
 
     constexpr int max_outbound_block_relay{MAX_BLOCK_RELAY_ONLY_CONNECTIONS};
     constexpr int64_t MINIMUM_CONNECT_TIME{30};
@@ -279,8 +283,10 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(), *m_node.chainman, *m_node.mempool, {});
+    auto evictionman = std::make_unique<EvictionManager>();
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, *evictionman);
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, *evictionman, banman.get(),
+                                       *m_node.chainman, *m_node.mempool, {});
 
     CNetAddr tor_netaddr;
     BOOST_REQUIRE(
@@ -381,8 +387,10 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(), *m_node.chainman, *m_node.mempool, {});
+    auto evictionman = std::make_unique<EvictionManager>();
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, *evictionman);
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, *evictionman, banman.get(),
+                                       *m_node.chainman, *m_node.mempool, {});
 
     banman->ClearBanned();
     int64_t nStartTime = GetTime();

@@ -13,6 +13,8 @@
 #include <optional>
 #include <vector>
 
+class EvictionManagerImpl;
+
 typedef int64_t NodeId;
 
 struct NodeEvictionCandidate {
@@ -65,5 +67,15 @@ struct NodeEvictionCandidate {
  * relative to IPv4/IPv6 peers, and favorise the diversity of peer connections.
  */
 void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates);
+
+class EvictionManager
+{
+private:
+    const std::unique_ptr<EvictionManagerImpl> m_impl;
+
+public:
+    EvictionManager();
+    ~EvictionManager();
+};
 
 #endif // BITCOIN_NODE_EVICTION_H
