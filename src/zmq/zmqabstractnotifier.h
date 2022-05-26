@@ -21,7 +21,7 @@ class CBlock;
 class BlockValidationState;
 class uint256;
 class CNEVMData;
-class CNEVMDataProcessHelper;
+struct CNEVMDataProcessHelper;
 typedef std::vector<std::vector<uint8_t> > NEVMDataVec;
 using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 

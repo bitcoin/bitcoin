@@ -14,7 +14,7 @@ class CNEVMHeader;
 class CBlock;
 class uint256;
 class CNEVMData;
-class CNEVMDataProcessHelper;
+struct CNEVMDataProcessHelper;
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
 private:
