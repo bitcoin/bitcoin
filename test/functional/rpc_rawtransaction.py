@@ -83,7 +83,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.getrawtransaction_tests()
         self.createrawtransaction_tests()
-        self.signrawtransactionwithwallet_tests()
         self.sendrawtransaction_tests()
         self.sendrawtransaction_testmempoolaccept_tests()
         self.decoderawtransaction_tests()
@@ -258,55 +257,6 @@ class RawTransactionsTest(BitcoinTestFramework):
             tx.serialize().hex(),
             self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=[{address: 99}, {address2: 99}, {'data': '99'}]),
         )
-
-    def signrawtransactionwithwallet_tests(self):
-        for type in ["bech32", "p2sh-segwit", "legacy"]:
-            self.log.info(f"Test signrawtransactionwithwallet with missing prevtx info ({type})")
-            addr = self.nodes[0].getnewaddress("", type)
-            addrinfo = self.nodes[0].getaddressinfo(addr)
-            pubkey = addrinfo["scriptPubKey"]
-            inputs = [{'txid': TXID, 'vout': 3, 'sequence': 1000}]
-            outputs = {self.nodes[0].getnewaddress(): 1}
-            rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
-
-            prevtx = dict(txid=TXID, scriptPubKey=pubkey, vout=3, amount=1)
-            succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
-            assert succ["complete"]
-
-            if type == "legacy":
-                del prevtx["amount"]
-                succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
-                assert succ["complete"]
-            else:
-                assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
-                    {
-                        "txid": TXID,
-                        "scriptPubKey": pubkey,
-                        "vout": 3,
-                    }
-                ])
-
-            assert_raises_rpc_error(-3, "Missing vout", self.nodes[0].signrawtransactionwithwallet, rawtx, [
-                {
-                    "txid": TXID,
-                    "scriptPubKey": pubkey,
-                    "amount": 1,
-                }
-            ])
-            assert_raises_rpc_error(-3, "Missing txid", self.nodes[0].signrawtransactionwithwallet, rawtx, [
-                {
-                    "scriptPubKey": pubkey,
-                    "vout": 3,
-                    "amount": 1,
-                }
-            ])
-            assert_raises_rpc_error(-3, "Missing scriptPubKey", self.nodes[0].signrawtransactionwithwallet, rawtx, [
-                {
-                    "txid": TXID,
-                    "vout": 3,
-                    "amount": 1
-                }
-            ])
 
     def sendrawtransaction_tests(self):
         self.log.info("Test sendrawtransaction with missing input")
