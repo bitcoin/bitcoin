@@ -1261,6 +1261,7 @@ struct NodeEvictionCandidate
     bool prefer_evict;
     bool m_is_local;
     Network m_network;
+    bool m_noban;
 };
 
 /**
