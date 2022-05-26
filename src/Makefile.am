@@ -149,6 +149,7 @@ BITCOIN_CORE_H = \
   dbwrapper.h \
   deploymentinfo.h \
   deploymentstatus.h \
+  node/eviction.h \
   external_signer.h \
   flatfile.h \
   fs.h \
@@ -371,6 +372,7 @@ libbitcoin_node_a_SOURCES = \
   node/coin.cpp \
   node/connection_types.cpp \
   node/context.cpp \
+  node/eviction.cpp \
   node/interfaces.cpp \
   node/miner.cpp \
   node/minisketchwrapper.cpp \

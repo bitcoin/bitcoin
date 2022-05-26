@@ -5,6 +5,7 @@
 #include <test/util/net.h>
 
 #include <chainparams.h>
+#include <node/eviction.h>
 #include <net.h>
 #include <span.h>
 
