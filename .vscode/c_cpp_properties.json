@@ -9,7 +9,7 @@
                 "/usr/local/include"
             ],
             "defines": [
-                "HAVE_CONFIG_H"
+                "HAVE_CONFIG_H", "DEBUG_LOCKORDER"
             ],
             "compilerPath": "/usr/bin/g++-10",
             "cStandard": "gnu17",
