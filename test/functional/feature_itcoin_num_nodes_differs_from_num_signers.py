@@ -7,14 +7,14 @@ import time
 import sys, os
 
 # Import the test primitives
-from test_framework.test_framework_itcoin import BaseSignetTest
+from test_framework.test_framework_itcoin import BaseItcoinTest
 from test_framework.util import assert_equal
 
 # import itcoin's miner
 from test_framework.itcoin_abs_import import import_miner
 miner = import_miner()
 
-class SignetNumNodesDiffersFromNumSigners(BaseSignetTest):
+class SignetNumNodesDiffersFromNumSigners(BaseItcoinTest):
 
     def set_test_params(self):
         self.num_nodes = 2

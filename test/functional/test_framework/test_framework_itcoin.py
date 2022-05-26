@@ -101,7 +101,7 @@ class NodeWrapper:
         return args
 
 
-class BaseSignetTest(BitcoinTestFramework):
+class BaseItcoinTest(BitcoinTestFramework):
 
     @property
     def signet_key_pairs(self) -> Sequence[TestNode.AddressKeyPair]:
