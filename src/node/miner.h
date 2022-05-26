@@ -147,7 +147,7 @@ private:
     int64_t m_lock_time_cutoff;
 
     const CChainParams& chainparams;
-    const CTxMemPool& m_mempool;
+    const CTxMemPool* const m_mempool;
     CChainState& m_chainstate;
 
 public:
@@ -157,8 +157,8 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool);
-    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const Options& options);
+    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool* mempool);
+    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool* mempool, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
@@ -177,7 +177,7 @@ private:
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
+    void addPackageTxs(const CTxMemPool& mempool, int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
