@@ -1,0 +1,2 @@
+
+-datadir=/media/telberrak/Blockchain
