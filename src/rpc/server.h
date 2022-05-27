@@ -132,14 +132,23 @@ public:
 
     /**
      * Execute the method corresponding to request.strMethod.
-     * @param request The JSONRPCRequest to execute
+     * @param request The JSONRPCRequest to execute.
      * @returns Result of the call.
      * @throws an exception (UniValue) when an error happens.
      */
     UniValue execute(const JSONRPCRequest &request) const;
 
+     /**
+     * Execute the method corresponding to method.
+     * @param method method to execute
+     * @param request The JSONRPCRequest to send to the method
+     * @returns Result of the call.
+     * @throws an exception (UniValue) when an error happens.
+     */
+    UniValue execute(const std::string& method, const JSONRPCRequest &request) const;
+
     /**
-    * Returns a list of registered commands
+    * Returns a list of registered commands.
     * @returns List of registered commands.
     */
     std::vector<std::string> listCommands() const;

@@ -551,7 +551,13 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
      * the user is asking for help information, and throw help when appropriate.
      */
     if (request.mode == JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
-        throw std::runtime_error(ToString());
+        std::string help_format = "default";
+        if (request.strMethod == "format") {
+            RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR});
+            help_format = request.params[1].get_str();
+        }
+
+        throw std::runtime_error(ToString(help_format));
     }
     UniValue arg_mismatch{UniValue::VOBJ};
     for (size_t i{0}; i < m_args.size(); ++i) {
@@ -660,6 +666,29 @@ std::string RPCHelpMan::ToString() const
     ret += m_examples.ToDescriptionString();
 
     return ret;
+}
+std::string RPCHelpMan::ToStringArgsCli() const
+{
+    std::string res;
+    for (const auto& arg : m_args) {
+        const bool is_file = ToLower(arg.m_description).find("file") != std::string::npos;
+        res += arg.m_names + ":" + (is_file ? "file" : arg.ToTypeString()) + ",";
+    }
+
+    if (res.size() > 0)
+        res.pop_back();
+
+    return res;
+}
+std::string RPCHelpMan::ToString(const std::string& format) const
+{
+    if (format == "default")
+        return this->ToString();
+
+    if (format == "args_cli")
+        return this->ToStringArgsCli();
+
+    throw std::runtime_error("unrecognized help format");
 }
 
 UniValue RPCHelpMan::GetArgMap() const
@@ -780,38 +809,7 @@ std::string RPCArg::ToDescriptionString(bool is_named_arg) const
     if (m_opts.type_str.size() != 0) {
         ret += m_opts.type_str.at(1);
     } else {
-        switch (m_type) {
-        case Type::STR_HEX:
-        case Type::STR: {
-            ret += "string";
-            break;
-        }
-        case Type::NUM: {
-            ret += "numeric";
-            break;
-        }
-        case Type::AMOUNT: {
-            ret += "numeric or string";
-            break;
-        }
-        case Type::RANGE: {
-            ret += "numeric or array";
-            break;
-        }
-        case Type::BOOL: {
-            ret += "boolean";
-            break;
-        }
-        case Type::OBJ:
-        case Type::OBJ_USER_KEYS: {
-            ret += "json object";
-            break;
-        }
-        case Type::ARR: {
-            ret += "json array";
-            break;
-        }
-        } // no default case, so the compiler can warn about missing cases
+        ret += this->ToTypeString();
     }
     if (m_fallback.index() == 1) {
         ret += ", optional, default=" + std::get<RPCArg::DefaultHint>(m_fallback);

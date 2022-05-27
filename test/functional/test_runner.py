@@ -173,6 +173,7 @@ BASE_SCRIPTS = [
     'feature_bind_extra.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
+    'tool_cli_completion.py --overwrite',
     'tool_wallet.py --legacy-wallet',
     'tool_wallet.py --descriptors',
     'tool_signet_miner.py --legacy-wallet',

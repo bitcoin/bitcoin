@@ -298,6 +298,47 @@ static RPCHelpMan deriveaddresses()
     };
 }
 
+static RPCHelpMan format()
+{
+    return RPCHelpMan{
+        "format",
+        "\nFormat data we have about an RPC command in the format specified by output.\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "Command to query" },
+            {"output",  RPCArg::Type::STR, RPCArg::Optional::NO, "Output format. Accepted values: args_cli" },
+        },
+        RPCResult{
+            RPCResult::Type::STR, "data", "Formatted data about command."
+        },
+        RPCExamples{" "},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& req) -> UniValue
+        {
+
+            RPCTypeCheck(req.params, {UniValue::VSTR, UniValue::VSTR});
+            const std::string command = req.params[0].get_str();
+
+            JSONRPCRequest jreq = req;
+            jreq.mode = JSONRPCRequest::GET_HELP;
+
+            try
+            {
+                tableRPC.execute(command, jreq);
+            }
+            catch (const UniValue& error)
+            {
+                // only catch exceptions thrown by the actor
+                if (error["code"].getInt<int>() != RPC_MISC_ERROR) {
+                    throw;
+                }
+
+                return error["message"];
+            }
+
+            return NullUniValue;
+        }
+    };
+}
+
 void RegisterOutputScriptRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -305,6 +346,8 @@ void RegisterOutputScriptRPCCommands(CRPCTable& t)
         {"util", &createmultisig},
         {"util", &deriveaddresses},
         {"util", &getdescriptorinfo},
+        /* Not shown in help */
+        {"hidden", &format},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
