@@ -101,6 +101,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
             /*m_network=*/ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
             /*m_noban=*/false,
             /*m_conn_type=*/ConnectionType::INBOUND,
+            /*m_blocks_in_flight=*/(int)random_context.randrange(16), // MAX_BLOCKS_IN_TRANSIT_PER_PEER in net_processing.cpp
         });
     }
     return candidates;

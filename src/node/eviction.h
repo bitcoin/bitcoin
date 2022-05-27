@@ -63,6 +63,10 @@ public:
     void UpdateRelayTxs(NodeId id);
 
     bool HasCandidate(NodeId id) const;
+
+    /** Update the candidate's number of blocks in flight. */
+    void AddBlockInFlight(NodeId id);
+    void RemoveBlockInFlight(NodeId id);
 };
 
 #endif // BITCOIN_NODE_EVICTION_H

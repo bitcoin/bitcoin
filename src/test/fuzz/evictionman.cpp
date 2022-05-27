@@ -98,6 +98,7 @@ public:
                 .m_network = network,
                 .m_noban = noban,
                 .m_conn_type = conn_type,
+                .m_blocks_in_flight = 0,
             });
 
         assert(inserted != already_added);
@@ -201,6 +202,15 @@ public:
     {
         m_evictionman.UpdateRelayTxs(id);
     }
+
+    void AddBlockInFlight(NodeId id)
+    {
+        m_evictionman.AddBlockInFlight(id);
+    }
+    void RemoveBlockInFlight(NodeId id)
+    {
+        m_evictionman.RemoveBlockInFlight(id);
+    }
 };
 
 FUZZ_TARGET(evictionman)
@@ -251,6 +261,12 @@ FUZZ_TARGET(evictionman)
             },
             [&] {
                 tester.UpdateRelayTxs(fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS));
+            },
+            [&] {
+                tester.AddBlockInFlight(fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS));
+            },
+            [&] {
+                tester.RemoveBlockInFlight(fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS));
             });
     }
 }

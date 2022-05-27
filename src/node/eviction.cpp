@@ -276,6 +276,7 @@ void EvictionManagerImpl::AddCandidate(NodeId id, std::chrono::seconds connected
         .m_network = network,
         .m_noban = noban,
         .m_conn_type = conn_type,
+        .m_blocks_in_flight = 0,
     };
     m_candidates.emplace_hint(m_candidates.end(), id, std::move(candidate));
 }
@@ -383,6 +384,22 @@ bool EvictionManagerImpl::HasCandidate(NodeId id) const
     return false;
 }
 
+void EvictionManagerImpl::AddBlockInFlight(NodeId id)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.m_blocks_in_flight++;
+    }
+}
+
+void EvictionManagerImpl::RemoveBlockInFlight(NodeId id)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.m_blocks_in_flight--;
+    }
+}
+
 EvictionManager::EvictionManager()
     : m_impl(std::make_unique<EvictionManagerImpl>()) {}
 EvictionManager::~EvictionManager() = default;
@@ -454,4 +471,14 @@ void EvictionManager::UpdateRelayTxs(NodeId id)
 bool EvictionManager::HasCandidate(NodeId id) const
 {
     return m_impl->HasCandidate(id);
+}
+
+void EvictionManager::AddBlockInFlight(NodeId id)
+{
+    m_impl->AddBlockInFlight(id);
+}
+
+void EvictionManager::RemoveBlockInFlight(NodeId id)
+{
+    m_impl->RemoveBlockInFlight(id);
 }
