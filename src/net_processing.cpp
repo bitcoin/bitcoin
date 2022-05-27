@@ -417,8 +417,9 @@ private:
                                bool via_compact_block);
 
     // SYSCOIN
-    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent);
-
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent = true);
+    template <typename T>
+    bool PrepareNEVMBlock(T &block, bool bRecent);
     /** Register with TxRequestTracker that an INV has been received from a
      *  peer. The announcement parameters are decided in PeerManager and then
      *  passed to TxRequestTracker. */
@@ -1966,7 +1967,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         }
         pblock = pblockRead;
     }
-    if (pblock && FillNEVMData(pblock, bRecent)) {
+    if (pblock && PrepareNEVMBlock(pblock, bRecent)) {
         if (inv.IsMsgBlk()) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, *pblock));
         } else if (inv.IsMsgWitnessBlk()) {
@@ -2273,10 +2274,16 @@ uint32_t PeerManagerImpl::GetFetchFlags(const CNode& pfrom) const EXCLUSIVE_LOCK
     }
     return nFetchFlags;
 }
-
+template <typename T>
+bool PeerManagerImpl::PrepareNEVMBlock(T &block, bool bRecent) {
+    // recent marks if a cached block is used by network code where we need to lock around the use of it through m_most_recent_block_mutex
+    if(bRecent)
+        LOCK(m_most_recent_block_mutex);
+    return FillNEVMData(block);
+}
 void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent)
 {
-    if(!FillNEVMData(block, bRecent)) {
+    if(!PrepareNEVMBlock(block, bRecent)) {
         Misbehaving(pfrom.GetId(), 100, "getblocktxn cannot fill NEVM data in block");
         return;
     }
