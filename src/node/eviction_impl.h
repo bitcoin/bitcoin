@@ -35,6 +35,21 @@ public:
 
     std::optional<NodeEvictionCandidate> GetCandidate(NodeId id) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    void UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+    std::optional<std::chrono::microseconds> GetMinPingTime(NodeId id) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    void UpdateLastBlockTime(NodeId id, std::chrono::seconds block_time)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+    std::optional<std::chrono::seconds> GetLastBlockTime(NodeId id) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    void UpdateLastTxTime(NodeId id, std::chrono::seconds tx_time)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+    std::optional<std::chrono::seconds> GetLastTxTime(NodeId id) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 };
 
 #endif // BITCOIN_NODE_EVICTION_IMPL_H

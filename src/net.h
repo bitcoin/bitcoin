@@ -522,25 +522,8 @@ public:
      *  eviction logic. */
     std::atomic_bool m_bloom_filter_loaded{false};
 
-    /** UNIX epoch time of the last block received from this peer that we had
-     * not yet seen (e.g. not already received from another peer), that passed
-     * preliminary validity checks and was saved to disk, even if we don't
-     * connect the block or it eventually fails connection. Used as an inbound
-     * peer eviction criterium in CConnman::AttemptToEvictConnection. */
-    std::atomic<std::chrono::seconds> m_last_block_time{0s};
-
-    /** UNIX epoch time of the last transaction received from this peer that we
-     * had not yet seen (e.g. not already received from another peer) and that
-     * was accepted into our mempool. Used as an inbound peer eviction criterium
-     * in CConnman::AttemptToEvictConnection. */
-    std::atomic<std::chrono::seconds> m_last_tx_time{0s};
-
     /** Last measured round-trip time. Used only for RPC/GUI stats/debugging.*/
     std::atomic<std::chrono::microseconds> m_last_ping_time{0us};
-
-    /** Lowest measured round-trip time. Used as an inbound peer eviction
-     * criterium in CConnman::AttemptToEvictConnection. */
-    std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
 
     CNode(NodeId id,
           std::shared_ptr<Sock> sock,
@@ -610,10 +593,9 @@ public:
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
-    /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
+    /** A ping-pong round trip has completed successfully. Update latest ping time. */
     void PongReceived(std::chrono::microseconds ping_time) {
         m_last_ping_time = ping_time;
-        m_min_ping_time = std::min(m_min_ping_time.load(), ping_time);
     }
 
 private:

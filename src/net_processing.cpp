@@ -3193,7 +3193,7 @@ void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlo
     bool new_block{false};
     m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
     if (new_block) {
-        node.m_last_block_time = GetTime<std::chrono::seconds>();
+        m_evictionman.UpdateLastBlockTime(node.GetId(), GetTime<std::chrono::seconds>());
         // In case this block came from a different peer than we requested
         // from, we can erase the block request now anyway (as we just stored
         // this block to disk).
@@ -4185,7 +4185,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
             m_orphanage.AddChildrenToWorkSet(tx);
 
-            pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
+            m_evictionman.UpdateLastTxTime(pfrom.GetId(), GetTime<std::chrono::seconds>());
 
             LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
                 pfrom.GetId(),
@@ -4763,6 +4763,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     if (ping_time.count() >= 0) {
                         // Let connman know about this successful ping-pong
                         pfrom.PongReceived(ping_time);
+                        m_evictionman.UpdateMinPingTime(pfrom.GetId(), ping_time);
                     } else {
                         // This should never happen
                         sProblem = "Timing mishap";
@@ -5108,7 +5109,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             if (pnode->GetId() > youngest_peer.first) {
                 next_youngest_peer = youngest_peer;
                 youngest_peer.first = pnode->GetId();
-                youngest_peer.second = pnode->m_last_block_time;
+                youngest_peer.second = *Assert(m_evictionman.GetLastBlockTime(pnode->GetId()));
             }
         });
         NodeId to_disconnect = youngest_peer.first;
@@ -5129,7 +5130,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                 (now - pnode->m_connected >= MINIMUM_CONNECT_TIME && node_state->vBlocksInFlight.empty())) {
                 pnode->fDisconnect = true;
                 LogPrint(BCLog::NET, "disconnecting extra block-relay-only peer=%d (last block received at time %d)\n",
-                         pnode->GetId(), count_seconds(pnode->m_last_block_time));
+                         pnode->GetId(), count_seconds(*Assert(m_evictionman.GetLastBlockTime(pnode->GetId()))));
                 return true;
             } else {
                 LogPrint(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",

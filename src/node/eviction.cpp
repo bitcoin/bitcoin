@@ -287,6 +287,57 @@ std::optional<NodeEvictionCandidate> EvictionManagerImpl::GetCandidate(NodeId id
     return {};
 }
 
+void EvictionManagerImpl::UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.m_min_ping_time = std::min(it->second.m_min_ping_time, ping_time);
+    }
+}
+
+std::optional<std::chrono::microseconds> EvictionManagerImpl::GetMinPingTime(NodeId id) const
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        return {it->second.m_min_ping_time};
+    }
+    return {};
+}
+
+void EvictionManagerImpl::UpdateLastBlockTime(NodeId id, std::chrono::seconds block_time)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.m_last_block_time = block_time;
+    }
+}
+
+std::optional<std::chrono::seconds> EvictionManagerImpl::GetLastBlockTime(NodeId id) const
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        return {it->second.m_last_block_time};
+    }
+    return {};
+}
+
+void EvictionManagerImpl::UpdateLastTxTime(NodeId id, std::chrono::seconds tx_time)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.m_last_tx_time = tx_time;
+    }
+}
+
+std::optional<std::chrono::seconds> EvictionManagerImpl::GetLastTxTime(NodeId id) const
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        return {it->second.m_last_tx_time};
+    }
+    return {};
+}
+
 EvictionManager::EvictionManager()
     : m_impl(std::make_unique<EvictionManagerImpl>()) {}
 EvictionManager::~EvictionManager() = default;
@@ -308,4 +359,34 @@ bool EvictionManager::RemoveCandidate(NodeId id)
 std::optional<NodeEvictionCandidate> EvictionManager::GetCandidate(NodeId id) const
 {
     return m_impl->GetCandidate(id);
+}
+
+void EvictionManager::UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)
+{
+    m_impl->UpdateMinPingTime(id, ping_time);
+}
+
+std::optional<std::chrono::microseconds> EvictionManager::GetMinPingTime(NodeId id) const
+{
+    return m_impl->GetMinPingTime(id);
+}
+
+void EvictionManager::UpdateLastBlockTime(NodeId id, std::chrono::seconds block_time)
+{
+    m_impl->UpdateLastBlockTime(id, block_time);
+}
+
+std::optional<std::chrono::seconds> EvictionManager::GetLastBlockTime(NodeId id) const
+{
+    return m_impl->GetLastBlockTime(id);
+}
+
+void EvictionManager::UpdateLastTxTime(NodeId id, std::chrono::seconds tx_time)
+{
+    m_impl->UpdateLastTxTime(id, tx_time);
+}
+
+std::optional<std::chrono::seconds> EvictionManager::GetLastTxTime(NodeId id) const
+{
+    return m_impl->GetLastTxTime(id);
 }

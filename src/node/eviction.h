@@ -84,6 +84,18 @@ public:
     bool RemoveCandidate(NodeId id);
 
     std::optional<NodeEvictionCandidate> GetCandidate(NodeId id) const;
+
+    /** A ping-pong round trip has completed successfully. Update the candidate's minimum ping time. */
+    void UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time);
+    std::optional<std::chrono::microseconds> GetMinPingTime(NodeId id) const;
+
+    /** A new valid block was received. Update the candidate's last block time. */
+    void UpdateLastBlockTime(NodeId id, std::chrono::seconds block_time);
+    std::optional<std::chrono::seconds> GetLastBlockTime(NodeId id) const;
+
+    /** A new valid transaction was received. Update the candidate's last tx time. */
+    void UpdateLastTxTime(NodeId id, std::chrono::seconds tx_time);
+    std::optional<std::chrono::seconds> GetLastTxTime(NodeId id) const;
 };
 
 #endif // BITCOIN_NODE_EVICTION_H
