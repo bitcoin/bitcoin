@@ -3,8 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
+import uuid
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, MAX_INITIAL_BROADCAST_DELAY
+from test_framework.messages import NEVM_DATA_EXPIRE_TIME, MAX_DATA_BLOBS
 from decimal import Decimal
 class NEVMDataTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -16,9 +18,36 @@ class NEVMDataTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
         self.skip_if_no_bdb()
 
+    def nevm_data_limits(self):
+        self.blobVHs = []
+        for i in range(0, MAX_DATA_BLOBS*2):
+            vh = uuid.uuid4().hex+uuid.uuid4().hex
+            self.blobVHs.append(vh)
+            self.nodes[0].syscoincreaterawnevmblob(vh, uuid.uuid4().hex)
+        self.generate(self.nodes[0], 1)
+        foundCount = 0
+        for i, blobVH in enumerate(self.blobVHs):
+            mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
+            # mps > 0 means it got confirmed
+            if(mpt > 0):
+                foundCount += 1
+
+        assert_equal(foundCount, MAX_DATA_BLOBS)
+        # clear the rest of the blobs
+        self.generate(self.nodes[0], 1)
+        foundCount = 0
+        for i, blobVH in enumerate(self.blobVHs):
+            mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
+            # mps > 0 means it got confirmed
+            if(mpt > 0):
+                foundCount += 1
+
+        assert_equal(foundCount, MAX_DATA_BLOBS*2)
+
     def basic_nevm_data(self):
         # test relay with block
         self.stop_node(4)
+        self.starttime = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']
         self.nodes[0].syscoincreaterawnevmblob('a37fca4d23174bf6aa93e965f9ff39c8a072a5a241f4e773f67edfa2b6d39edc', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
         self.nodes[1].syscoincreaterawnevmblob('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         self.nodes[0].syscoincreaterawnevmblob('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
@@ -49,20 +78,42 @@ class NEVMDataTest(SyscoinTestFramework):
         self.restart_node(1, extra_args=["-reindex"])
         force_finish_mnsync(self.nodes[1])
         self.connect_nodes(1, 0)
-        self.nodes[1].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_blocks(self.nodes[0:3])
         assert_equal(self.nodes[1].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[1].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
-        assert_equal(self.nodes[1].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
+        assert_equal(self.nodes[1].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
 
         self.start_node(4)
         force_finish_mnsync(self.nodes[4])
         self.connect_nodes(4, 0)
-        self.nodes[4].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.sync_blocks()
         assert_equal(self.nodes[4].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[4].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
+        assert_equal(self.nodes[4].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
+        self.mocktime = self.starttime
+        self.bump_mocktime(NEVM_DATA_EXPIRE_TIME-1) # right before expiry
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[1], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[2], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[3], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[4], 1, sync_fun=self.no_op)
         assert_equal(self.nodes[4].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
+        assert_equal(self.nodes[4].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
+        assert_equal(self.nodes[4].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
+        self.bump_mocktime(1) # push median time over expiry
+        self.generate(self.nodes[0], 5, sync_fun=self.no_op)
+        self.generate(self.nodes[1], 5, sync_fun=self.no_op)
+        self.generate(self.nodes[2], 5, sync_fun=self.no_op)
+        self.generate(self.nodes[3], 5, sync_fun=self.no_op)
+        self.generate(self.nodes[4], 5, sync_fun=self.no_op)
+        assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
+        assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
+        assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
+        assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[4].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
+        assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[3].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
+        assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[2].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
+        assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[1].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
+
     def run_test(self):
         self.generate(self.nodes[0], 10)
         self.sync_blocks()
@@ -70,6 +121,7 @@ class NEVMDataTest(SyscoinTestFramework):
         self.sync_blocks()
         self.generate(self.nodes[3], 102)
         self.sync_blocks()
+        self.nevm_data_limits()
         self.basic_nevm_data()
 
 

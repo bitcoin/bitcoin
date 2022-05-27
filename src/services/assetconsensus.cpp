@@ -1206,11 +1206,10 @@ bool CNEVMDataDB::Prune(CDBBatch &batch, const int64_t nMedianTime) {
     pcursor->SeekToFirst();
     std::pair<std::vector<unsigned char>, bool> pair;
     int64_t nTime;
-    int64_t nExpiryTime = nMedianTime - NEVM_DATA_EXPIRE_TIME;
     while (pcursor->Valid()) {
         try {
             // check if expired if so delete data
-            if(pcursor->GetKey(pair) && pair.second == false && pcursor->GetValue(nTime) && nTime > 0 && nTime < nExpiryTime) {
+            if(pcursor->GetKey(pair) && pair.second == false && pcursor->GetValue(nTime) && nTime > 0 && nMedianTime > (nTime+NEVM_DATA_EXPIRE_TIME)) {
                // erase both pairs
                batch.Erase(pair);
                pair.second = true;

@@ -296,15 +296,14 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package) const
 {
     // SYSCOIN
-    int nCountAncestorNEVMDataTxs = -1; // allow the adding tx to pass through under max limit but any ancestors need to be flagged if crossing threshold
+    int nCountAncestorNEVMDataTxs = 0;
     AssertLockHeld(m_mempool.cs);
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
             return false;
         }
         // SYSCOIN
-        const bool IsDataTx = it->GetTx().IsNEVMData();
-        if(IsDataTx) {
+        if(it->GetTx().IsNEVMData()) {
             nCountAncestorNEVMDataTxs++;
             // >= MAX_DATA_BLOBS is checked already and so we should add in tx even if it matches threshold of MAX_DATA_BLOBS as the last one possible
             if((nNumNEVMDataTxs+nCountAncestorNEVMDataTxs) > MAX_DATA_BLOBS) {
@@ -469,6 +468,14 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         }
         // SYSCOIN
         if(nNumNEVMDataTxs >= MAX_DATA_BLOBS && iter->GetTx().IsNEVMData()) {
+            if (fUsingModified) {
+                // Since we always look at the best entry in mapModifiedTx,
+                // we must erase failed entries so that we can consider the
+                // next best entry on the next loop iteration
+                mapModifiedTx.get<ancestor_score>().erase(modit);
+                failedTx.insert(iter);
+            }
+            LogPrintf("nNumNEVMDataTxs over limit\n");
             continue;
         }
 

@@ -2195,8 +2195,14 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
 bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
+    int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
         if(tx->IsNEVMData()) {
+            nCountBlobs++;
+            if(nCountBlobs > MAX_DATA_BLOBS) {
+                LogPrintf("ProcessNEVMData nCountBlobs > MAX_DATA_BLOBS, nCountBlobs: %d\n", nCountBlobs);
+                return false;
+            }
             const auto &nOut = GetSyscoinDataOutput(*tx);
             if (nOut == -1) {
                 return false;

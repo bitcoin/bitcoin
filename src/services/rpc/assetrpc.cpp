@@ -528,7 +528,7 @@ static RPCHelpMan getnevmblobdata()
     if(!pnevmdatadb->ReadData(vchVH, vchData)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not find data");
     }
-    int64_t mpt;
+    int64_t mpt = 0;
     pnevmdatadb->ReadMPT(vchVH, mpt);
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
