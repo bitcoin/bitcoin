@@ -511,11 +511,10 @@ public:
     // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
     std::atomic<bool> m_bip152_highbandwidth_from{false};
 
-    /** Whether this peer provides all services that we want. Used for eviction decisions */
-    std::atomic_bool m_has_all_wanted_services{false};
-
-    /** Whether we should relay transactions to this peer. This only changes
-     * from false to true. It will never change back to false. */
+    /** Whether we should relay transactions to this peer (their version
+     *  message did not include fRelay=false and this is not a block-relay-only
+     *  connection). This only changes from false to true. It will never change
+     *  back to false. Used only in inbound eviction logic. */
     std::atomic_bool m_relays_txs{false};
 
     /** Whether this peer has loaded a bloom filter. Used only in inbound

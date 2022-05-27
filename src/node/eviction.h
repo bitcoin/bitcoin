@@ -96,6 +96,9 @@ public:
     /** A new valid transaction was received. Update the candidate's last tx time. */
     void UpdateLastTxTime(NodeId id, std::chrono::seconds tx_time);
     std::optional<std::chrono::seconds> GetLastTxTime(NodeId id) const;
+
+    /** Update the candidate's relevant services flag. */
+    void UpdateRelevantServices(NodeId id, bool has_relevant_flags);
 };
 
 #endif // BITCOIN_NODE_EVICTION_H

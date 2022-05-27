@@ -3399,7 +3399,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
         }
 
-        pfrom.m_has_all_wanted_services = HasAllDesirableServiceFlags(nServices);
+        m_evictionman.UpdateRelevantServices(pfrom.GetId(), HasAllDesirableServiceFlags(nServices));
         peer->m_their_services = nServices;
         pfrom.SetAddrLocal(addrMe);
         {

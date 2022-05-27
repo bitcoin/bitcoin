@@ -50,6 +50,9 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
     std::optional<std::chrono::seconds> GetLastTxTime(NodeId id) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    void UpdateRelevantServices(NodeId id, bool has_relevant_flags)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 };
 
 #endif // BITCOIN_NODE_EVICTION_IMPL_H

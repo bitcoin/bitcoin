@@ -338,6 +338,14 @@ std::optional<std::chrono::seconds> EvictionManagerImpl::GetLastTxTime(NodeId id
     return {};
 }
 
+void EvictionManagerImpl::UpdateRelevantServices(NodeId id, bool has_relevant_flags)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.fRelevantServices = has_relevant_flags;
+    }
+}
+
 EvictionManager::EvictionManager()
     : m_impl(std::make_unique<EvictionManagerImpl>()) {}
 EvictionManager::~EvictionManager() = default;
@@ -389,4 +397,9 @@ void EvictionManager::UpdateLastTxTime(NodeId id, std::chrono::seconds tx_time)
 std::optional<std::chrono::seconds> EvictionManager::GetLastTxTime(NodeId id) const
 {
     return m_impl->GetLastTxTime(id);
+}
+
+void EvictionManager::UpdateRelevantServices(NodeId id, bool has_relevant_flags)
+{
+    m_impl->UpdateRelevantServices(id, has_relevant_flags);
 }
