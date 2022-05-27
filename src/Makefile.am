@@ -171,6 +171,7 @@ BITCOIN_CORE_H = \
   interfaces/node.h \
   interfaces/wallet.h \
   kernel/chainstatemanager_opts.h \
+  kernel/checks.h \
   kernel/coinstats.h \
   kernel/context.h \
   key.h \
@@ -356,6 +357,7 @@ libbitcoin_node_a_SOURCES = \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
+  kernel/checks.cpp \
   kernel/coinstats.cpp \
   kernel/context.cpp \
   mapport.cpp \
@@ -866,6 +868,7 @@ libbitcoinkernel_la_SOURCES = \
   flatfile.cpp \
   fs.cpp \
   hash.cpp \
+  kernel/checks.cpp \
   kernel/coinstats.cpp \
   kernel/context.cpp \
   key.cpp \

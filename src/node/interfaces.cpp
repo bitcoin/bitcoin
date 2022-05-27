@@ -94,7 +94,7 @@ public:
         if (!AppInitParameterInteraction(gArgs, /*use_syscall_sandbox=*/false)) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
-        if (!AppInitSanityChecks()) return false;
+        if (!AppInitSanityChecks(*m_context->kernel)) return false;
 
         if (!AppInitLockDataDirectory()) return false;
         if (!AppInitInterfaces(*m_context)) return false;

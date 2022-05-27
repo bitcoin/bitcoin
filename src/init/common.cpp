@@ -8,10 +8,8 @@
 
 #include <clientversion.h>
 #include <fs.h>
-#include <key.h>
 #include <logging.h>
 #include <node/ui_interface.h>
-#include <random.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/time.h>
@@ -22,23 +20,6 @@
 #include <vector>
 
 namespace init {
-bool SanityChecks()
-{
-    if (!ECC_InitSanityCheck()) {
-        return InitError(Untranslated("Elliptic curve cryptography sanity check failure. Aborting."));
-    }
-
-    if (!Random_SanityCheck()) {
-        return InitError(Untranslated("OS cryptographic RNG sanity check failure. Aborting."));
-    }
-
-    if (!ChronoSanityCheck()) {
-        return InitError(Untranslated("Clock epoch mismatch. Aborting."));
-    }
-
-    return true;
-}
-
 void AddLoggingArgs(ArgsManager& argsman)
 {
     argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (-nodebuglogfile to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);

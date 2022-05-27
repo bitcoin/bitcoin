@@ -190,7 +190,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         }
 
         node.kernel = std::make_unique<kernel::Context>();
-        if (!AppInitSanityChecks())
+        if (!AppInitSanityChecks(*node.kernel))
         {
             // InitError will have been called with detailed error, which ends up on console
             return false;
