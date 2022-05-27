@@ -593,6 +593,89 @@ static RPCHelpMan getmempoolentry()
     };
 }
 
+static RPCHelpMan gettxspendingprevout()
+{
+    return RPCHelpMan{"gettxspendingprevout",
+        "Scans the mempool to find transactions spending any of the given outputs",
+        {
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The transaction outputs that we want to check, and within each, the txid (string) vout (numeric).",
+                {
+                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                        },
+                    },
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "txid", "the transaction id of the checked output"},
+                    {RPCResult::Type::NUM, "vout", "the vout value of the checked output"},
+                    {RPCResult::Type::STR_HEX, "spendingtxid", /*optional=*/true, "the transaction id of the mempool transaction spending this output (omitted if unspent)"},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
+            + HelpExampleRpc("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            RPCTypeCheckArgument(request.params[0], UniValue::VARR);
+            const UniValue& output_params = request.params[0];
+            if (output_params.empty()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, outputs are missing");
+            }
+
+            std::vector<COutPoint> prevouts;
+            prevouts.reserve(output_params.size());
+
+            for (unsigned int idx = 0; idx < output_params.size(); idx++) {
+                const UniValue& o = output_params[idx].get_obj();
+
+                RPCTypeCheckObj(o,
+                                {
+                                    {"txid", UniValueType(UniValue::VSTR)},
+                                    {"vout", UniValueType(UniValue::VNUM)},
+                                }, /*fAllowNull=*/false, /*fStrict=*/true);
+
+                const uint256 txid(ParseHashO(o, "txid"));
+                const int nOutput{o.find_value("vout").getInt<int>()};
+                if (nOutput < 0) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
+                }
+
+                prevouts.emplace_back(txid, nOutput);
+            }
+
+            const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+            LOCK(mempool.cs);
+
+            UniValue result{UniValue::VARR};
+
+            for (const COutPoint& prevout : prevouts) {
+                UniValue o(UniValue::VOBJ);
+                o.pushKV("txid", prevout.hash.ToString());
+                o.pushKV("vout", (uint64_t)prevout.n);
+
+                const CTransaction* spendingTx = mempool.GetConflictTx(prevout);
+                if (spendingTx != nullptr) {
+                    o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
+                }
+
+                result.push_back(o);
+            }
+
+            return result;
+        },
+    };
+}
+
 UniValue MempoolInfoToJSON(const CTxMemPool& pool, const llmq::CInstantSendManager& isman)
 {
     // Make sure this call is atomic in the pool.
@@ -688,6 +771,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &getmempoolancestors},
         {"blockchain", &getmempooldescendants},
         {"blockchain", &getmempoolentry},
+        {"blockchain", &gettxspendingprevout},
         {"blockchain", &getmempoolinfo},
         {"blockchain", &getrawmempool},
         {"blockchain", &savemempool},
