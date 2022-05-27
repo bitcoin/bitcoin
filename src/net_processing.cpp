@@ -473,9 +473,6 @@ struct CNodeState {
 
     ChainSyncTimeoutState m_chain_sync;
 
-    //! Time of last new block announcement
-    int64_t m_last_block_announcement{0};
-
     //! Whether this peer is an inbound connection
     const bool m_is_inbound;
 
@@ -523,7 +520,6 @@ public:
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
-    void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
 
 private:
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
@@ -1461,13 +1457,6 @@ void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid,
         m_txrequest.CountInFlight(nodeid) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
     m_txrequest.ReceivedInv(nodeid, gtxid, preferred, current_time + delay);
-}
-
-void PeerManagerImpl::UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
-{
-    LOCK(cs_main);
-    CNodeState *state = State(node);
-    if (state) state->m_last_block_announcement = time_in_seconds;
 }
 
 void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
@@ -2768,7 +2757,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
     // are still present, however, as belt-and-suspenders.
 
     if (received_new_header && last_header.nChainWork > m_chainman.ActiveChain().Tip()->nChainWork) {
-        nodestate->m_last_block_announcement = GetTime();
+        m_evictionman.UpdateLastBlockAnnounceTime(pfrom.GetId(), GetTime<std::chrono::seconds>());
     }
 
     // If we're in IBD, we want outbound peers that will serve us a useful
@@ -4389,7 +4378,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // If this was a new header with more work than our tip, update the
         // peer's last block announcement time
         if (received_new_header && pindex->nChainWork > m_chainman.ActiveChain().Tip()->nChainWork) {
-            nodestate->m_last_block_announcement = GetTime();
+            m_evictionman.UpdateLastBlockAnnounceTime(pfrom.GetId(), GetTime<std::chrono::seconds>());
         }
 
         if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
@@ -5164,9 +5153,10 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
-            if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
+            auto last_announcement{count_seconds(*Assert(m_evictionman.GetLastBlockAnnounceTime(pnode->GetId())))};
+            if (last_announcement < oldest_block_announcement || (last_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
                 worst_peer = pnode->GetId();
-                oldest_block_announcement = state->m_last_block_announcement;
+                oldest_block_announcement = last_announcement;
             }
         });
         if (worst_peer != -1) {

@@ -277,6 +277,7 @@ void EvictionManagerImpl::AddCandidate(NodeId id, std::chrono::seconds connected
         .m_noban = noban,
         .m_conn_type = conn_type,
         .m_blocks_in_flight = 0,
+        .m_last_block_announcement = 0s,
     };
     m_candidates.emplace_hint(m_candidates.end(), id, std::move(candidate));
 }
@@ -400,6 +401,23 @@ void EvictionManagerImpl::RemoveBlockInFlight(NodeId id)
     }
 }
 
+void EvictionManagerImpl::UpdateLastBlockAnnounceTime(NodeId id, std::chrono::seconds last_block_announcement)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.m_last_block_announcement = last_block_announcement;
+    }
+}
+
+std::optional<std::chrono::seconds> EvictionManagerImpl::GetLastBlockAnnounceTime(NodeId id) const
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        return {it->second.m_last_block_announcement};
+    }
+    return {};
+}
+
 EvictionManager::EvictionManager()
     : m_impl(std::make_unique<EvictionManagerImpl>()) {}
 EvictionManager::~EvictionManager() = default;
@@ -481,4 +499,14 @@ void EvictionManager::AddBlockInFlight(NodeId id)
 void EvictionManager::RemoveBlockInFlight(NodeId id)
 {
     m_impl->RemoveBlockInFlight(id);
+}
+
+void EvictionManager::UpdateLastBlockAnnounceTime(NodeId id, std::chrono::seconds last_block_announcement)
+{
+    m_impl->UpdateLastBlockAnnounceTime(id, last_block_announcement);
+}
+
+std::optional<std::chrono::seconds> EvictionManager::GetLastBlockAnnounceTime(NodeId id) const
+{
+    return m_impl->GetLastBlockAnnounceTime(id);
 }

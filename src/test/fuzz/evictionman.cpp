@@ -99,6 +99,7 @@ public:
                 .m_noban = noban,
                 .m_conn_type = conn_type,
                 .m_blocks_in_flight = 0,
+                .m_last_block_announcement = 0s,
             });
 
         assert(inserted != already_added);
@@ -211,6 +212,11 @@ public:
     {
         m_evictionman.RemoveBlockInFlight(id);
     }
+
+    void UpdateLastBlockAnnounceTime(NodeId id)
+    {
+        m_evictionman.UpdateLastBlockAnnounceTime(id, Now<>());
+    }
 };
 
 FUZZ_TARGET(evictionman)
@@ -267,6 +273,9 @@ FUZZ_TARGET(evictionman)
             },
             [&] {
                 tester.RemoveBlockInFlight(fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS));
+            },
+            [&] {
+                tester.UpdateLastBlockAnnounceTime(fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS));
             });
     }
 }

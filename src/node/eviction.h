@@ -67,6 +67,10 @@ public:
     /** Update the candidate's number of blocks in flight. */
     void AddBlockInFlight(NodeId id);
     void RemoveBlockInFlight(NodeId id);
+
+    /** Update the candidate's timestamp of last block announcement. */
+    void UpdateLastBlockAnnounceTime(NodeId id, std::chrono::seconds last_block_announcement);
+    std::optional<std::chrono::seconds> GetLastBlockAnnounceTime(NodeId id) const;
 };
 
 #endif // BITCOIN_NODE_EVICTION_H
