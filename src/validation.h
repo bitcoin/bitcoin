@@ -1063,9 +1063,9 @@ bool ProcessNEVMBlob(const CNEVMData &nevmData);
 // SYSCOIN
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
-bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock);
-bool FillNEVMData(const CBlock &block);
-bool FillNEVMData(CBlock& block);
+bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock, bool bRecent = false);
+bool FillNEVMData(const CBlock &block, bool bRecent = false);
+bool FillNEVMData(CBlock& block, bool bRecent = false);
 bool FillNEVMData(CTransactionRef tx);
 bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut);
 bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut);

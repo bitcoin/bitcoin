@@ -2097,15 +2097,18 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
     return res;
 }
 // before propogating blocks/txs out to peers we need to fill the OPRETURN with the NEVM DA payload from seperate store
-bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock) {
+bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock, bool bRecent) {
     CBlock &block = const_cast<CBlock&>(*pblock);
-    return FillNEVMData(block);
+    return FillNEVMData(block, bRecent);
 }
-bool FillNEVMData(const CBlock &blockIn) {
+bool FillNEVMData(const CBlock &blockIn, bool bRecent) {
     CBlock &block = const_cast<CBlock&>(blockIn);
-    return FillNEVMData(block);
+    return FillNEVMData(block, bRecent);
 }
-bool FillNEVMData(CBlock& block) {
+bool FillNEVMData(CBlock& block, bool bRecent) {
+    // recent marks if a cached block is used by network code where we need to lock around the use of it through m_most_recent_block_mutex
+    if(bRecent)
+        LOCK(m_most_recent_block_mutex);
     for (auto &tx : block.vtx) {
         if(tx->IsNEVMData()) {
             if(!FillNEVMData(tx)) {

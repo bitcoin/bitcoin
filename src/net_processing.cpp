@@ -416,7 +416,8 @@ private:
                                const std::vector<CBlockHeader>& headers,
                                bool via_compact_block);
 
-    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
+    // SYSCOIN
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent);
 
     /** Register with TxRequestTracker that an INV has been received from a
      *  peer. The announcement parameters are decided in PeerManager and then
@@ -1965,7 +1966,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         }
         pblock = pblockRead;
     }
-    if (pblock && FillNEVMData(pblock)) {
+    if (pblock && FillNEVMData(pblock, bRecent)) {
         if (inv.IsMsgBlk()) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, *pblock));
         } else if (inv.IsMsgWitnessBlk()) {
@@ -2273,12 +2274,13 @@ uint32_t PeerManagerImpl::GetFetchFlags(const CNode& pfrom) const EXCLUSIVE_LOCK
     return nFetchFlags;
 }
 
-void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req)
+void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent)
 {
-    if(!FillNEVMData(block)) {
+    if(!FillNEVMData(block, bRecent)) {
         Misbehaving(pfrom.GetId(), 100, "getblocktxn cannot fill NEVM data in block");
         return;
     }
+    
     BlockTransactions resp(req);
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
@@ -3447,7 +3449,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // Unlock m_most_recent_block_mutex to avoid cs_main lock inversion
         }
         if (recent_block) {
-            SendBlockTransactions(pfrom, *recent_block, req);
+            // SYSCOIN
+            SendBlockTransactions(pfrom, *recent_block, req, true);
             return;
         }
 
@@ -3464,7 +3467,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 CBlock block;
                 bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus());
                 assert(ret);
-                SendBlockTransactions(pfrom, block, req);
+                // SYSCOIN false as we don't use recent cached block
+                SendBlockTransactions(pfrom, block, req, false);
                 return;
             }
         }
