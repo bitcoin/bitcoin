@@ -277,14 +277,16 @@ bool EvictionManagerImpl::RemoveCandidate(NodeId id)
     return m_candidates.erase(id) != 0;
 }
 
-std::optional<NodeEvictionCandidate> EvictionManagerImpl::GetCandidate(NodeId id) const
+std::optional<NodeId> EvictionManagerImpl::SelectNodeToEvict() const
 {
-    LOCK(m_candidates_mutex);
-    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
-        return {it->second};
+    std::vector<NodeEvictionCandidate> candidates;
+    {
+        LOCK(m_candidates_mutex);
+        for (const auto& [id, candidate] : m_candidates) {
+            candidates.push_back(candidate);
+        }
     }
-
-    return {};
+    return ::SelectNodeToEvict(std::move(candidates));
 }
 
 void EvictionManagerImpl::UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)
@@ -380,9 +382,9 @@ bool EvictionManager::RemoveCandidate(NodeId id)
     return m_impl->RemoveCandidate(id);
 }
 
-std::optional<NodeEvictionCandidate> EvictionManager::GetCandidate(NodeId id) const
+std::optional<NodeId> EvictionManager::SelectNodeToEvict() const
 {
-    return m_impl->GetCandidate(id);
+    return m_impl->SelectNodeToEvict();
 }
 
 void EvictionManager::UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)

@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <net.h>
 #include <netaddress.h>
+#include <node/eviction_impl.h>
 #include <random.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>

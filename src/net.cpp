@@ -894,20 +894,7 @@ size_t CConnman::SocketSendData(CNode& node) const
  */
 bool CConnman::AttemptToEvictConnection()
 {
-    std::vector<NodeEvictionCandidate> vEvictionCandidates;
-    {
-        LOCK(m_nodes_mutex);
-        for (const CNode* node : m_nodes) {
-            if (node->fDisconnect)
-                continue;
-
-            auto eviction_candidate{m_evictionman.GetCandidate(node->GetId())};
-            assert(eviction_candidate);
-
-            vEvictionCandidates.push_back(*eviction_candidate);
-        }
-    }
-    const std::optional<NodeId> node_id_to_evict = SelectNodeToEvict(std::move(vEvictionCandidates));
+    const std::optional<NodeId> node_id_to_evict = m_evictionman.SelectNodeToEvict();
     if (!node_id_to_evict) {
         return false;
     }
