@@ -99,6 +99,12 @@ public:
 
     /** Update the candidate's relevant services flag. */
     void UpdateRelevantServices(NodeId id, bool has_relevant_flags);
+
+    /** Update the candidate's bloom filter loaded flag. */
+    void UpdateLoadedBloomFilter(NodeId id, bool bloom_filter_loaded);
+
+    /** Set the candidate's tx relay status to true. */
+    void UpdateRelayTxs(NodeId id);
 };
 
 #endif // BITCOIN_NODE_EVICTION_H

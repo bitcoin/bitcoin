@@ -53,6 +53,11 @@ public:
 
     void UpdateRelevantServices(NodeId id, bool has_relevant_flags)
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    void UpdateLoadedBloomFilter(NodeId id, bool bloom_filter_loaded)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    void UpdateRelayTxs(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 };
 
 #endif // BITCOIN_NODE_EVICTION_IMPL_H

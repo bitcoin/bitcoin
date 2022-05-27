@@ -346,6 +346,22 @@ void EvictionManagerImpl::UpdateRelevantServices(NodeId id, bool has_relevant_fl
     }
 }
 
+void EvictionManagerImpl::UpdateLoadedBloomFilter(NodeId id, bool bloom_filter_loaded)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.fBloomFilter = bloom_filter_loaded;
+    }
+}
+
+void EvictionManagerImpl::UpdateRelayTxs(NodeId id)
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        it->second.m_relay_txs = true;
+    }
+}
+
 EvictionManager::EvictionManager()
     : m_impl(std::make_unique<EvictionManagerImpl>()) {}
 EvictionManager::~EvictionManager() = default;
@@ -402,4 +418,14 @@ std::optional<std::chrono::seconds> EvictionManager::GetLastTxTime(NodeId id) co
 void EvictionManager::UpdateRelevantServices(NodeId id, bool has_relevant_flags)
 {
     m_impl->UpdateRelevantServices(id, has_relevant_flags);
+}
+
+void EvictionManager::UpdateLoadedBloomFilter(NodeId id, bool bloom_filter_loaded)
+{
+    m_impl->UpdateLoadedBloomFilter(id, bloom_filter_loaded);
+}
+
+void EvictionManager::UpdateRelayTxs(NodeId id)
+{
+    m_impl->UpdateRelayTxs(id);
 }

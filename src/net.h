@@ -511,16 +511,6 @@ public:
     // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
     std::atomic<bool> m_bip152_highbandwidth_from{false};
 
-    /** Whether we should relay transactions to this peer (their version
-     *  message did not include fRelay=false and this is not a block-relay-only
-     *  connection). This only changes from false to true. It will never change
-     *  back to false. Used only in inbound eviction logic. */
-    std::atomic_bool m_relays_txs{false};
-
-    /** Whether this peer has loaded a bloom filter. Used only in inbound
-     *  eviction logic. */
-    std::atomic_bool m_bloom_filter_loaded{false};
-
     /** Last measured round-trip time. Used only for RPC/GUI stats/debugging.*/
     std::atomic<std::chrono::microseconds> m_last_ping_time{0us};
 

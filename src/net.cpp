@@ -904,9 +904,6 @@ bool CConnman::AttemptToEvictConnection()
             auto eviction_candidate{m_evictionman.GetCandidate(node->GetId())};
             assert(eviction_candidate);
 
-            eviction_candidate->m_relay_txs = node->m_relays_txs.load();
-            eviction_candidate->fBloomFilter = node->m_bloom_filter_loaded.load();
-
             vEvictionCandidates.push_back(*eviction_candidate);
         }
     }
