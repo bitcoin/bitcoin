@@ -10,6 +10,7 @@ from enum import Enum
 from random import choice
 from typing import (
     Any,
+    List,
     Optional,
 )
 from test_framework.address import (
@@ -147,7 +148,7 @@ class MiniWallet:
         assert_equal(self._mode, MiniWalletMode.ADDRESS_OP_TRUE)
         return self._address
 
-    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True):
+    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True) -> dict:
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
@@ -208,14 +209,21 @@ class MiniWallet:
         return {'new_utxos': [self.get_utxo(txid=txid, vout=vout) for vout in range(len(tx.vout))],
                 'txid': txid, 'hex': tx.serialize().hex(), 'tx': tx}
 
-    def create_self_transfer_multi(self, *, from_node, utxos_to_spend=None, num_outputs=1, fee_per_output=1000):
+    def create_self_transfer_multi(
+            self, *, from_node,
+            utxos_to_spend: Optional[List[dict]] = None,
+            num_outputs=1,
+            sequence=0,
+            fee_per_output=1000):
         """
         Create and return a transaction that spends the given UTXOs and creates a
         certain number of outputs with equal amounts.
         """
         utxos_to_spend = utxos_to_spend or [self.get_utxo()]
         # create simple tx template (1 input, 1 output)
-        tx = self.create_self_transfer(fee_rate=0, from_node=from_node, utxo_to_spend=utxos_to_spend[0], mempool_valid=False)['tx']
+        tx = self.create_self_transfer(
+            fee_rate=0, from_node=from_node,
+            utxo_to_spend=utxos_to_spend[0], sequence=sequence, mempool_valid=False)['tx']
 
         # duplicate inputs, witnesses and outputs
         tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
