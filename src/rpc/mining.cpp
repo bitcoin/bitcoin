@@ -127,13 +127,20 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     CChainParams chainparams(Params());
 
+
+    //This is where we increment nNonce and generate a hash
     while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
         --max_tries;
     }
+
+    //max_tries exhausted
+
     if (max_tries == 0 || ShutdownRequested()) {
         return false;
     }
+
+    //nNonce reached the maximum allowed
     if (block.nNonce == std::numeric_limits<uint32_t>::max()) {
         return true;
     }
