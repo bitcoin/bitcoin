@@ -173,6 +173,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setwalletflag", 1, "value" },
     { "getmempoolancestors", 1, "verbose" },
     { "getmempooldescendants", 1, "verbose" },
+    { "gettxspendingprevout", 0, "outputs" },
     { "bumpfee", 1, "options" },
     { "psbtbumpfee", 1, "options" },
     { "logging", 0, "include" },
