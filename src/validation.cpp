@@ -2192,7 +2192,7 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
     }
     return true;
 }
-bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, int nOut) {
+bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     for (unsigned int i = 0; i<vout.size();i++) {
         if(vout[i].nValue == 0 && i != nOut) {
             return false;
@@ -2216,7 +2216,7 @@ bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevm
                 return false;
             }
             // OPRETURN should be 0 value
-            if(!EnsureOnlyOutputZero(tx->vout, nOut)){
+            if(!EnsureOnlyOutputZero(tx->vout, (unsigned int)nOut)){
                 return false;
             }
               
