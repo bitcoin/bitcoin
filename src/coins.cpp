@@ -115,7 +115,12 @@ void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coi
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
+    // SYSCOIN
+    const bool IsNEVMData = tx.IsNEVMData();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
+        // SYSCOIN
+        if(IsNEVMData && tx.vout[i].nValue == 0)
+            continue;
         bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
