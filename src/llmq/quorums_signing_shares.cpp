@@ -1336,7 +1336,7 @@ void CSigSharesManager::Cleanup()
                 auto& oneSigShare = m->begin()->second;
 
                 std::string strMissingMembers;
-                if (LogAcceptCategory(BCLog::LLMQ_SIGS)) {
+                if (LogAcceptCategory(BCLog::LLMQ_SIGS, BCLog::Level::Debug)) {
                     if (const auto quorumIt = quorums.find(std::make_pair(oneSigShare.llmqType, oneSigShare.quorumHash)); quorumIt != quorums.end()) {
                         const auto& quorum = quorumIt->second;
                         for (size_t i = 0; i < quorum->members.size(); i++) {

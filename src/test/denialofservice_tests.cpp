@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     const auto time_init{GetTime<std::chrono::seconds>()};
     SetMockTime(time_init);
     // SYSCOIN we increased stale time to 10x bitcoin's because our target spacing is 1 min vs 10 min
-    const auto time_later{time_init + 30 * std::chrono::seconds{m_node.chainman.GetConsensus().nPowTargetSpacing} + 1s};
+    const auto time_later{time_init + 30 * std::chrono::seconds{m_node.chainman->GetConsensus().nPowTargetSpacing} + 1s};
     connman->Init(options);
     std::vector<CNode *> vNodes;
 

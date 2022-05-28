@@ -226,7 +226,7 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "mempool";
     case BCLog::LogFlags::HTTP:
         return "http";
-    case BCLog::LogFlags::BENCH:
+    case BCLog::LogFlags::BENCHMARK:
         return "bench";
     case BCLog::LogFlags::ZMQ:
         return "zmq";
@@ -244,7 +244,7 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "reindex";
     case BCLog::LogFlags::CMPCTBLOCK:
         return "cmpctblock";
-    case BCLog::LogFlags::RAND:
+    case BCLog::LogFlags::RANDOM:
         return "rand";
     case BCLog::LogFlags::PRUNE:
         return "prune";
@@ -262,6 +262,24 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "leveldb";
     case BCLog::LogFlags::VALIDATION:
         return "validation";
+    case BCLog::LogFlags::CHAINLOCKS:
+        return "chainlocks";
+    case BCLog::LogFlags::GOBJECT:
+        return "gobject";
+    case BCLog::LogFlags::LLMQ:
+        return "llmq";
+    case BCLog::LogFlags::LLMQ_DKG:
+        return "llmq-dkg";
+    case BCLog::LogFlags::LLMQ_SIGS:
+        return "llmq-sigs";
+    case BCLog::LogFlags::MNPAYMENTS:
+        return "mnpayments";
+    case BCLog::LogFlags::MNSYNC:
+        return "mnsync";
+    case BCLog::LogFlags::SYS:
+        return "syscoin";
+    case BCLog::LogFlags::SPORK:
+        return "spork";
     case BCLog::LogFlags::I2P:
         return "i2p";
     case BCLog::LogFlags::IPC:

@@ -14,6 +14,7 @@ private:
     bool accept;
     std::string header;
     std::string msg;
+    BCLog::LogFlags category;
 public:
     CBatchedLogger(BCLog::LogFlags _category, const std::string& _header);
     virtual ~CBatchedLogger();
