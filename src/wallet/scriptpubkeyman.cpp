@@ -244,8 +244,7 @@ isminetype LegacyScriptPubKeyMan::IsMine(const DestinationAddr& script) const
             return ISMINE_NO;
         }
 
-        CPubKey pubkey(mweb_address.GetSpendPubKey().vec());
-        return HaveKey(pubkey.GetID()) ? ISMINE_SPENDABLE : ISMINE_NO;
+        return HaveKey(mweb_address.GetSpendPubKey().GetID()) ? ISMINE_SPENDABLE : ISMINE_NO;
     }
 
     switch (IsMineInner(*this, script.GetScript(), IsMineSigVersion::TOP)) {
@@ -1444,11 +1443,11 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
         bool fMWEB = (purpose == KeyPurpose::MWEB) && IsHDEnabled() && m_storage.CanSupportFeature(FEATURE_HD_SPLIT);
 
         auto fn_get_keypool = [this](const bool internal, const bool mweb) -> std::set<int64_t>& {
-            if (!set_pre_split_keypool.empty()) {
-                return set_pre_split_keypool;
-            } else if (mweb) {
+             if (mweb) {
                 return set_mweb_keypool;
-            } else if (internal) {
+             } else if (!set_pre_split_keypool.empty()) {
+                 return set_pre_split_keypool;
+             } else if (internal) {
                 return setInternalKeyPool;
             }
 
@@ -1474,8 +1473,11 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
         if (!GetPubKey(keypool.vchPubKey.GetID(), pk)) {
             throw std::runtime_error(std::string(__func__) + ": unknown key in key pool");
         }
+        if (keypool.fMWEB != fMWEB) {
+            throw std::runtime_error(std::string(__func__) + ": keypool entry misclassified");
+        }
         // If the key was pre-split keypool, we don't care about what type it is
-        if (set_pre_split_keypool.empty() && (keypool.fInternal != fReturningInternal || keypool.fMWEB != fMWEB)) {
+        if (set_pre_split_keypool.empty() && keypool.fInternal != fReturningInternal) {
             throw std::runtime_error(std::string(__func__) + ": keypool entry misclassified");
         }
         if (!keypool.vchPubKey.IsValid()) {
@@ -1548,8 +1550,7 @@ void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
 std::vector<CKeyID> GetAffectedKeys(const DestinationAddr& spk, const SigningProvider& provider)
 {
     if (spk.IsMWEB()) {
-        CPubKey spend_pubkey(spk.GetMWEBAddress().GetSpendPubKey().vec());
-        return std::vector<CKeyID>{spend_pubkey.GetID()};
+        return std::vector<CKeyID>{spk.GetMWEBAddress().GetSpendPubKey().GetID()};
     }
 
     std::vector<DestinationAddr> dummy;

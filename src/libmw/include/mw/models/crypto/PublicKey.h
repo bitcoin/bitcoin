@@ -3,6 +3,8 @@
 #include <mw/common/Traits.h>
 #include <mw/models/crypto/BigInteger.h>
 #include <mw/models/crypto/SecretKey.h>
+#include <pubkey.h>
+
 #include <boost/functional/hash.hpp>
 
 class PublicKey :
@@ -45,6 +47,7 @@ public:
     static PublicKey Random();
 
     const BigInt<33>& GetBigInt() const { return m_compressed; }
+    CKeyID GetID() const { return CPubKey(vec()).GetID(); }
     std::array<uint8_t, 33> array() const { return m_compressed.ToArray(); }
     const std::vector<uint8_t>& vec() const { return m_compressed.vec(); }
     const uint8_t& operator[](const size_t x) const { return m_compressed[x]; }

@@ -196,7 +196,7 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
         }
     }
     if (auto stealth_address = boost::get<StealthAddress>(&dest)) {
-        return CPubKey(stealth_address->B().vec()).GetID();
+        return stealth_address->B().GetID();
     }
     return CKeyID();
 }
