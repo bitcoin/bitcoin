@@ -999,7 +999,7 @@ static RPCHelpMan assetupdate()
     if(strContract == "''")
         strContract.clear();
     if(!strContract.empty())
-        RemovePrefix = RemovePrefix(strContract, "0x");  // strip 0x if exist
+        strContract = RemovePrefix(strContract, "0x");  // strip 0x if exist
     std::vector<unsigned char> vchContract = ParseHex(strContract);
     
     
