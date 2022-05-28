@@ -1564,6 +1564,8 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
             m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
         }
     }
+    // fix data race due to PrepareNEVMBlock
+    LOCK(m_most_recent_block_mutex);
 }
 
 void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
