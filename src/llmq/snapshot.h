@@ -7,6 +7,7 @@
 
 #include <evo/evodb.h>
 #include <evo/simplifiedmns.h>
+#include <llmq/commitment.h>
 #include <llmq/params.h>
 #include <saltedhasher.h>
 #include <serialize.h>
@@ -115,7 +116,7 @@ public:
     std::optional<CQuorumSnapshot> quorumSnapshotAtHMinus4C;
     std::optional<CSimplifiedMNListDiff> mnListDiffAtHMinus4C;
 
-    std::vector<uint256> lastQuorumHashPerIndex;
+    std::vector<llmq::CFinalCommitment> lastCommitmentPerIndex;
     std::vector<CQuorumSnapshot> quorumSnapshotList;
     std::vector<CSimplifiedMNListDiff> mnListDiffList;
 
@@ -146,8 +147,8 @@ public:
             ::Serialize(s, mnListDiffAtHMinus4C.value());
         }
 
-        WriteCompactSize(s, lastQuorumHashPerIndex.size());
-        for (const auto& obj : lastQuorumHashPerIndex) {
+        WriteCompactSize(s, lastCommitmentPerIndex.size());
+        for (const auto& obj : lastCommitmentPerIndex) {
             ::Serialize(s, obj);
         }
 
@@ -178,8 +179,9 @@ public:
         size_t cnt = ReadCompactSize(s);
         for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             uint256 hash;
-            ::Unserialize(s, hash);
-            lastQuorumHashPerIndex.push_back(std::move(hash));
+            CFinalCommitment qc;
+            ::Unserialize(s, qc);
+            lastCommitmentPerIndex.push_back(std::move(qc));
         }
 
         cnt = ReadCompactSize(s);
