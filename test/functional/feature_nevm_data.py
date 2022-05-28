@@ -52,7 +52,7 @@ class NEVMDataTest(SyscoinTestFramework):
         tip = self.generate(self.nodes[0], 1)[-1]
         rpc_details = self.nodes[0].getblock(tip, True)
         print('Ensure fees will be proper calculated due to the block size being correctly calculated based on PoDA policy (100x factor of blob data)...')
-        assert(rpc_details["size"] == 678951 or rpc_details["size"]  == 678948)
+        assert(rpc_details["size"] > 670000 and rpc_details["size"]  < 680000)
         foundCount = 0
         print('Testing nodes to see if MAX_DATA_BLOBS blobs exist at 2MB each...')
         for i, blobVH in enumerate(self.blobVHs):
@@ -117,7 +117,7 @@ class NEVMDataTest(SyscoinTestFramework):
         self.nodes[0].syscoincreaterawnevmblob('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
         self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         self.nodes[3].syscoincreaterawnevmblob('f40bd0d7f1b38686c799d32c854e11cc3c05d8f203080147f2d7587847da31af', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcae')
-        self.sync_mempools([self.nodes[0], self.nodes[1], self.nodes[2]])
+        self.sync_mempools(self.nodes[0:4])
         print('Checking for duplicate blob cannot create...')
         assert_raises_rpc_error(-20, 'NEVM data already exists in DB', self.nodes[3].syscoincreaterawnevmblob, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aa')
         print('Generating blocks without waiting for mempools to sync...')
