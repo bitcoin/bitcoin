@@ -2192,6 +2192,14 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
     }
     return true;
 }
+bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, int nOut) {
+    for (int i = 0; i<vout.size();i++) {
+        if(vout[i].nValue == 0 && i != nOut) {
+            return false;
+        }
+    }
+    return vout[nOut].nValue == 0;
+}
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
 bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
@@ -2205,6 +2213,10 @@ bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevm
             }
             const auto &nOut = GetSyscoinDataOutput(*tx);
             if (nOut == -1) {
+                return false;
+            }
+            // OPRETURN should be 0 value
+            if(!EnsureOnlyOutputZero(tx->vout, nOut)){
                 return false;
             }
               
