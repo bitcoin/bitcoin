@@ -1129,11 +1129,12 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
              * This can happen when restoring an old wallet backup that does not contain
              * the mostly recently created transactions from newer versions of the wallet.
              */
-
+            // SYSCOIN
+            const bool IsNEVMData = tx.IsNEVMData();
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 // SYSCOIN
-                if(txout.nValue == 0)
+                if(IsNEVMData && txout.nValue == 0)
                     continue;
                 for (const auto& spk_man : GetScriptPubKeyMans(txout.scriptPubKey)) {
                     for (auto &dest : spk_man->MarkUnusedAddresses(txout.scriptPubKey)) {
@@ -1406,9 +1407,6 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
     AssertLockHeld(cs_wallet);
-    // SYSCOIN
-    if(txout.nValue == 0)
-        return isminetype::ISMINE_NO;
     return IsMine(txout.scriptPubKey);
 }
 
@@ -1431,9 +1429,15 @@ isminetype CWallet::IsMine(const CScript& script) const
 bool CWallet::IsMine(const CTransaction& tx) const
 {
     AssertLockHeld(cs_wallet);
-    for (const CTxOut& txout : tx.vout)
+    // SYSCOIN
+    const bool IsNEVMData = tx.IsNEVMData();
+    for (const CTxOut& txout : tx.vout) {
+        // SYSCOIN
+        if(IsNEVMData && txout.nValue == 0)
+            continue;
         if (IsMine(txout))
             return true;
+    }
     return false;
 }
 
