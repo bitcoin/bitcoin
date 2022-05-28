@@ -364,8 +364,8 @@ class ZMQTest (BitcoinTestFramework):
         assert type(self.nodes[0].getrawmempool()) is list
         assert type(self.nodes[0].getrawmempool(mempool_sequence=False)) is list
         assert "mempool_sequence" not in self.nodes[0].getrawmempool(verbose=True)
-            assert_raises_rpc_error(-8, "Verbose results cannot contain mempool sequence values.", self.nodes[0].getrawmempool, True, True)
-            assert_equal(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
+        assert_raises_rpc_error(-8, "Verbose results cannot contain mempool sequence values.", self.nodes[0].getrawmempool, True, True)
+        assert_equal(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
 
         self.log.info("Testing reorg notifications")
         # Manually invalidate the last block to test mempool re-entry
@@ -378,9 +378,9 @@ class ZMQTest (BitcoinTestFramework):
         self.nodes[0].invalidateblock(best_hash)
         sleep(2)  # Bit of room to make sure transaction things happened
 
-            # Make sure getrawmempool mempool_sequence results aren't "queued" but immediately reflective
-            # of the time they were gathered.
-            assert_greater_than(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
+        # Make sure getrawmempool mempool_sequence results aren't "queued" but immediately reflective
+        # of the time they were gathered.
+        assert_greater_than(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
 
         assert_equal((best_hash, "D", None), seq.receive_sequence())
         assert_equal((rbf_txid, "A", seq_num), seq.receive_sequence())
