@@ -321,7 +321,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_recent_confirmed_transactions_mutex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_recent_confirmed_transactions_mutex);
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, ChainstateManager& chainman, bool fInitialDownload) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void BlockChecked(const CBlock& block, const BlockValidationState& state) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -362,7 +362,7 @@ public:
     bool IsBanned(NodeId nodeid, BanMan& banman) override;
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef GetPeerRef(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    PeerRef GetPeerRef(NodeId id) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void AddKnownTx(Peer& peer, const uint256& hash) override;
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
 
