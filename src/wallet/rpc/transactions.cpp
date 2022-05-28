@@ -336,8 +336,8 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     CAmount nFee;
-    std::list<COutputEntry> listReceived;
-    std::list<COutputEntry> listSent;
+    std::vector<COutputEntry> listReceived;
+    std::vector<COutputEntry> listSent;
 
     CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine);
 

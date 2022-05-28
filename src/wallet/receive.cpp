@@ -223,8 +223,8 @@ CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, 
 }
 
 void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
-                  std::list<COutputEntry>& listReceived,
-                  std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter)
+                  std::vector<COutputEntry>& listReceived,
+                  std::vector<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter)
 {
     nFee = 0;
     listReceived.clear();
