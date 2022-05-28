@@ -2193,7 +2193,7 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
     return true;
 }
 bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, int nOut) {
-    for (int i = 0; i<vout.size();i++) {
+    for (unsigned int i = 0; i<vout.size();i++) {
         if(vout[i].nValue == 0 && i != nOut) {
             return false;
         }
