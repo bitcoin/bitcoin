@@ -16,7 +16,7 @@
 */
 
 #include <nevm/fixedhash.h>
-#include <boost/algorithm/string.hpp>
+#include <util/string.h>
 
 namespace dev
 {
@@ -27,7 +27,7 @@ h128 fromUUID(std::string const& _uuid)
 {
 	try
 	{
-		return h128(boost::replace_all_copy(_uuid, "-", ""));
+		return h128(ReplaceAllCopy(_uuid, "-", ""));
 	}
 	catch (...)
 	{

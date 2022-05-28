@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <validation.h>
 #include <node/blockstorage.h>
-#include <boost/algorithm/string.hpp>
 #include <rpc/util.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>
@@ -878,7 +877,7 @@ static RPCHelpMan syscoingettxroots()
 {
     LOCK(cs_setethstatus);
     std::string blockHashStr = request.params[0].get_str();
-    boost::erase_all(blockHashStr, "0x");  // strip 0x
+    blockHashStr = RemovePrefix(blockHashStr, "0x");  // strip 0x
     uint256 nBlockHash;
     if(!ParseHashStr(blockHashStr, nBlockHash)) {
          throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read block hash");
@@ -917,7 +916,7 @@ static RPCHelpMan syscoincheckmint()
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::string strTxHash = request.params[0].get_str();
-    boost::erase_all(strTxHash, "0x");  // strip 0x
+    strTxHash = RemovePrefix(strTxHash, "0x");  // strip 0x
     uint256 sysTxid;
     if(!pnevmtxmintdb || !pnevmtxmintdb->Read(uint256S(strTxHash), sysTxid)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin txid using mint transaction hash");
@@ -972,18 +971,18 @@ static RPCHelpMan syscoinsetethheaders()
             throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a NEVM header input, should be size of 3");
         std::string blockHashStr = tupleArray[0].get_str();
         uint256 nBlockHash;
-        boost::erase_all(blockHashStr, "0x");  // strip 0x
+        blockHashStr = RemovePrefix(blockHashStr, "0x");  // strip 0x
         if(!ParseHashStr(blockHashStr, nBlockHash)) {
              throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse block hash");
         }
         std::string strTxRoot = tupleArray[1].get_str();
-        boost::erase_all(strTxRoot, "0x");  // strip 0x
+        strTxRoot = RemovePrefix(strTxRoot, "0x");  // strip 0x
         // reverse endianness of root's as they are stored in eth as LE
         std::vector<unsigned char> vchTxRoot(ParseHex(strTxRoot));
         std::reverse(vchTxRoot.begin(), vchTxRoot.end());
         txRoot.nTxRoot = uint256S(HexStr(vchTxRoot));
         std::string strReceiptRoot = tupleArray[2].get_str();
-        boost::erase_all(strReceiptRoot, "0x");  // strip 0x
+        strReceiptRoot = RemovePrefix(strReceiptRoot, "0x");  // strip 0x
         std::vector<unsigned char> vchReceiptRoot(ParseHex(strReceiptRoot));
         std::reverse(vchReceiptRoot.begin(), vchReceiptRoot.end());
         txRoot.nReceiptRoot = uint256S(HexStr(vchReceiptRoot));

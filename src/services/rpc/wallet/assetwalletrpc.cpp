@@ -5,7 +5,6 @@
 
 #include <validation.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
-#include <boost/algorithm/string.hpp>
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
 #include <wallet/rpc/util.h>
@@ -543,7 +542,7 @@ RPCHelpMan assetnew()
     if(strContract == "''")
         strContract.clear();
     if(!strContract.empty())
-        boost::erase_all(strContract, "0x");  // strip 0x in hex str if exist
+        strContract = RemovePrefix(strContract, "0x");  // strip 0x in hex str if exist
 
     uint32_t precision = params[4].get_uint();
     UniValue param0 = params[0];
@@ -1000,7 +999,7 @@ static RPCHelpMan assetupdate()
     if(strContract == "''")
         strContract.clear();
     if(!strContract.empty())
-        boost::erase_all(strContract, "0x");  // strip 0x if exist
+        RemovePrefix = RemovePrefix(strContract, "0x");  // strip 0x if exist
     std::vector<unsigned char> vchContract = ParseHex(strContract);
     
     
@@ -1805,7 +1804,7 @@ static RPCHelpMan assetallocationburn()
     if(!params[4].isNull()) {
         fAllowWatchOnly = params[4].get_bool();
     }       
-    boost::erase_all(nevmAddress, "0x");  // strip 0x if exist
+    nevmAddress = RemovePrefix(nevmAddress, "0x");  // strip 0x if exist
     CScript scriptData;
     int32_t nVersionIn = 0;
 
@@ -2143,7 +2142,7 @@ static RPCHelpMan assetallocationmint()
     }        
     std::string blockStr = params[3].get_str();
     if(!blockStr.empty())
-        boost::erase_all(blockStr, "0x");  // strip 0x in hex str if exist
+        blockStr = RemovePrefix(blockStr, "0x");  // strip 0x in hex str if exist
     uint256 nBlockHash;
     if(!ParseHashStr(blockStr,nBlockHash)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not parse block hash");
