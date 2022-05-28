@@ -2277,8 +2277,10 @@ uint32_t PeerManagerImpl::GetFetchFlags(const CNode& pfrom) const EXCLUSIVE_LOCK
 template <typename T>
 bool PeerManagerImpl::PrepareNEVMBlock(T &block, bool bRecent) {
     // recent marks if a cached block is used by network code where we need to lock around the use of it through m_most_recent_block_mutex
-    if(bRecent)
+    if(bRecent) {
         LOCK(m_most_recent_block_mutex);
+        return FillNEVMData(block);
+    }
     return FillNEVMData(block);
 }
 void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent)
