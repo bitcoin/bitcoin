@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
-#define BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
+#ifndef SYSCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
+#define SYSCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 
 #include <cstdint>
 #include <functional>
@@ -20,4 +20,4 @@ struct ChainstateManagerOpts {
     const std::function<int64_t()> adjusted_time_callback{nullptr};
 };
 
-#endif // BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
+#endif // SYSCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
