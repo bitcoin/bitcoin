@@ -1132,6 +1132,9 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
 
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
+                // SYSCOIN
+                if(txout.nValue == 0)
+                    continue;
                 for (const auto& spk_man : GetScriptPubKeyMans(txout.scriptPubKey)) {
                     for (auto &dest : spk_man->MarkUnusedAddresses(txout.scriptPubKey)) {
                         // If internal flag is not defined try to infer it from the ScriptPubKeyMan
@@ -1403,6 +1406,9 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
     AssertLockHeld(cs_wallet);
+    // SYSCOIN
+    if(txout.nValue == 0)
+        return isminetype::ISMINE_NO;
     return IsMine(txout.scriptPubKey);
 }
 
