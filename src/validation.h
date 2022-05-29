@@ -1076,8 +1076,8 @@ bool FillNEVMData(const CBlock &block);
 bool FillNEVMData(CBlock& block);
 bool FillNEVMData(CTransactionRef tx);
 bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut);
-bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut);
-bool ProcessNEVMData(CTransactionRef &tx, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut);
+bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut);
+bool ProcessNEVMData(CTransactionRef &tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

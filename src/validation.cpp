@@ -72,7 +72,6 @@
 #include <signal.h>
 #include <node/transaction.h>
 #include <fstream>
-#include <timedata.h>
 // SYSCOIN
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
@@ -2145,11 +2144,13 @@ bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
-bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) { 
+bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
+    int64_t nTimeNow = 0;
+    if(nMedianTime > 0)
+        nTimeNow = adjusted_time_callback();
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
     std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
     for (auto &nevmDataEntry : vecNevmData) {
-        int64_t nTimeNow = GetAdjustedTime();
         bool enforceNotHaveData = nMedianTime > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
         bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         bool dataDoesntExistsInDb = nMedianTime == 0 || !pnevmdatadb->ExistsData(nevmDataEntry.nevmData->vchVersionHash);
@@ -2201,7 +2202,7 @@ bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     return vout[nOut].nValue == 0;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
-bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) {
+bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2232,7 +2233,7 @@ bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevm
             vecNevmData.emplace_back(entry);
         }
     }
-    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, nevmDataVecOut)) {
+    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         for (auto &nevmDataEntry : vecNevmData) {
             delete nevmDataEntry.nevmData;
         }
@@ -2243,7 +2244,7 @@ bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, NEVMDataVec &nevm
     }
     return true;
 }
-bool ProcessNEVMData(CTransactionRef& tx, const int64_t nMedianTime, NEVMDataVec &nevmDataVecOut) {
+bool ProcessNEVMData(CTransactionRef& tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
     if(!tx->IsNEVMData()) {
         return true;
     }
@@ -2261,7 +2262,7 @@ bool ProcessNEVMData(CTransactionRef& tx, const int64_t nMedianTime, NEVMDataVec
     entry.nevmData = &nevmData;
     entry.scriptPubKey = &scriptPubKey;
     vecNevmData.emplace_back(entry);
-    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, nevmDataVecOut)) {
+    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         return false;
     }  
     return true;
