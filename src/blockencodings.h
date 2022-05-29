@@ -6,7 +6,8 @@
 #define SYSCOIN_BLOCKENCODINGS_H
 
 #include <primitives/block.h>
-
+// SYSCOIN
+#include <functional>
 
 class CTxMemPool;
 
