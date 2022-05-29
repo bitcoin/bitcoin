@@ -252,8 +252,6 @@ static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, do
     bool invoked = QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
                               Q_ARG(double, nSyncProgress));
     assert(invoked);
-}
-{
     if (header) {
         // cache best headers time and height to reduce future cs_main locks
         cachedBestHeaderHeight = tip.block_height;
