@@ -13,6 +13,7 @@
 #include <map>
 #include <optional>
 #include <vector>
+#include <chrono>
 
 typedef int64_t NodeId;
 
@@ -36,6 +37,9 @@ struct NodeEvictionCandidate {
     bool m_slow_chain_protected;
     bool m_successfully_connected;
 };
+
+/** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict */
+static constexpr std::chrono::seconds MINIMUM_CONNECT_TIME{30};
 
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
 
@@ -87,6 +91,9 @@ public:
     std::optional<NodeId> SelectNodeToEvict() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 
+    std::tuple<std::optional<NodeId>, std::optional<NodeId>> SelectOutboundNodesToEvict(std::chrono::seconds now) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
     void UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
     std::optional<std::chrono::microseconds> GetMinPingTime(NodeId id) const
@@ -116,8 +123,6 @@ public:
     void RemoveBlockInFlight(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 
     void UpdateLastBlockAnnounceTime(NodeId id, std::chrono::seconds last_block_announcement)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
-    std::optional<std::chrono::seconds> GetLastBlockAnnounceTime(NodeId id) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 
     void UpdateSlowChainProtected(NodeId id)

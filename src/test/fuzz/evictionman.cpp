@@ -150,6 +150,27 @@ public:
         }
     }
 
+    void SelectOutboundNodesToEvict(bool remove)
+    {
+        const auto [block_relay_peer, full_relay_peer] =
+            m_evictionman.SelectOutboundNodesToEvict(Now<>());
+
+        if (block_relay_peer) {
+            auto candidate{GetMockCandidate(*block_relay_peer)};
+            assert(candidate->m_conn_type == ConnectionType::BLOCK_RELAY);
+        }
+
+        if (full_relay_peer) {
+            auto candidate{GetMockCandidate(*full_relay_peer)};
+            assert(candidate->m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY);
+        }
+
+        if (remove) {
+            if (full_relay_peer) RemoveCandidate(*full_relay_peer);
+            if (block_relay_peer) RemoveCandidate(*block_relay_peer);
+        }
+    }
+
     void UpdateMinPingTime(NodeId id, int delay)
     {
         m_evictionman.UpdateMinPingTime(id, DELAYS[delay]);
@@ -251,6 +272,9 @@ FUZZ_TARGET(evictionman)
             },
             [&] {
                 tester.SelectNodeToEvict(fuzzed_data_provider.ConsumeBool());
+            },
+            [&] {
+                tester.SelectOutboundNodesToEvict(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 tester.AddCandidate(/*id=*/fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS),

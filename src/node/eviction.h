@@ -42,6 +42,8 @@ public:
      */
     [[nodiscard]] std::optional<NodeId> SelectNodeToEvict() const;
 
+    [[nodiscard]] std::tuple<std::optional<NodeId>, std::optional<NodeId>> SelectOutboundNodesToEvict(std::chrono::seconds now) const;
+
     /** A ping-pong round trip has completed successfully. Update the candidate's minimum ping time. */
     void UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time);
     std::optional<std::chrono::microseconds> GetMinPingTime(NodeId id) const;
@@ -71,7 +73,6 @@ public:
 
     /** Update the candidate's timestamp of last block announcement. */
     void UpdateLastBlockAnnounceTime(NodeId id, std::chrono::seconds last_block_announcement);
-    std::optional<std::chrono::seconds> GetLastBlockAnnounceTime(NodeId id) const;
 
     /** Set the candidate's slow chain protection status to true. */
     void UpdateSlowChainProtected(NodeId id);
