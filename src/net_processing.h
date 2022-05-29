@@ -256,14 +256,14 @@ public:
     virtual void SetBestHeight(int height) = 0;
 
     // SYSCOIN
-    virtual size_t GetRequestedCount(NodeId nodeId) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
-    virtual void ReceivedResponse(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
-    virtual void ForgetTxHash(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
-    virtual void _RelayTransaction(const uint256& txid, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
-    virtual void PushTxInventory(Peer& peer, const uint256& txid, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
+    virtual size_t GetRequestedCount(NodeId nodeId) const = 0;
+    virtual void ReceivedResponse(NodeId nodeId, const uint256& hash) = 0;
+    virtual void ForgetTxHash(NodeId nodeId, const uint256& hash) = 0;
+    virtual void _RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
+    virtual void PushTxInventory(Peer& peer, const uint256& txid, const uint256& wtxid) = 0;
     virtual void RelayTransactionOther(const CInv& inv) = 0;
-    virtual void _RelayTransactionOther(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
-    virtual void PushTxInventoryOther(Peer& peer, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
+    virtual void _RelayTransactionOther(const CInv& inv) = 0;
+    virtual void PushTxInventoryOther(Peer& peer, const CInv& inv) = 0;
     virtual PeerRef GetPeerRef(NodeId id) const = 0;
     virtual void AddKnownTx(Peer& peer, const uint256& hash) = 0;
     virtual bool IsBanned(NodeId nodeid, BanMan& banman) = 0;
