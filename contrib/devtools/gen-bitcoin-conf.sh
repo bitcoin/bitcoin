@@ -49,6 +49,7 @@ EOF
 # parse the output from bitcoind --help
 # adding newlines is a bit funky to ensure portability for BSD
 # see here for more details: https://stackoverflow.com/a/24575385
+# shellcheck disable=SC1004
 ${BITCOIND} --help \
     | sed '1,/Print this help message and exit/d' \
     | sed -E 's/^[[:space:]]{2}\-/#/' \
