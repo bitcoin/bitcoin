@@ -1336,9 +1336,9 @@ protected:
     // SYSCOIN
     const int nProtocol;
     const int nVersion;
-    int nTxVersion;
+    int nTxVersion{0};
 public:
-    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn), nTxVersion(0) {}
+    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn) {}
 
     void write(Span<const std::byte> src)
     {

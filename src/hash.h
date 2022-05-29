@@ -103,10 +103,10 @@ private:
 
     const int nType;
     const int nVersion;
-    int nTxVersion;
+    int nTxVersion{0};
 public:
 
-    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn), nTxVersion(0) {}
+    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
 
     int GetType() const { return nType; }
     int GetVersion() const { return nVersion; }

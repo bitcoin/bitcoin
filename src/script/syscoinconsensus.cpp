@@ -19,8 +19,7 @@ public:
     TxInputStream(int nVersionIn, const unsigned char *txTo, size_t txToLen) :
     m_version(nVersionIn),
     m_data(txTo),
-    m_remaining(txToLen),
-    nTxVersion(0)
+    m_remaining(txToLen)
     {}
 
     void read(Span<std::byte> dst)
@@ -59,7 +58,7 @@ private:
     const int m_version;
     const unsigned char* m_data;
     size_t m_remaining;
-    int nTxVersion;
+    int nTxVersion{0};
 };
 
 inline int set_error(syscoinconsensus_error* ret, syscoinconsensus_error serror)
