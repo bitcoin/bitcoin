@@ -395,6 +395,7 @@ void Shutdown(NodeContext& node)
     // Shutdown part 2: delete wallet instance
     globalVerifyHandle.reset();
     ECC_Stop();
+    node.args = nullptr;
     node.mempool = nullptr;
     node.chainman = nullptr;
     node.scheduler.reset();
@@ -465,8 +466,11 @@ std::string GetSupportedSocketEventsStr()
     return strSupportedModes;
 }
 
-void SetupServerArgs()
+void SetupServerArgs(NodeContext& node)
 {
+    assert(!node.args);
+    node.args = &gArgs;
+
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
     const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);

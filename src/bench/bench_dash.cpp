@@ -61,6 +61,8 @@ int main(int argc, char** argv)
     args.output_csv = gArgs.GetArg("-output_csv", "");
     args.output_json = gArgs.GetArg("-output_json", "");
 
+    gArgs.ClearArgs(); // gArgs no longer needed. Clear it here to avoid interactions with the testing setup in the benches
+
     benchmark::BenchRunner::RunAll(args);
 
     return EXIT_SUCCESS;

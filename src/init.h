@@ -61,9 +61,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 void PrepareShutdown(NodeContext& node);
 
 /**
- * Setup the arguments for gArgs
+ * Register all arguments with the ArgsManager
  */
-void SetupServerArgs();
+void SetupServerArgs(NodeContext& node);
 
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
