@@ -955,9 +955,9 @@ static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn,
     bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn.pdmnState->keyIDVoting);
 
     bool ownsCollateral = false;
-    CTransactionRef collateralTx;
     uint256 tmpHashBlock;
-    if (GetTransaction(dmn.collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
+    CTransactionRef collateralTx = GetTransaction(/* block_index */ nullptr,  /* mempool */ nullptr, dmn.collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+    if (collateralTx) {
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn.collateralOutpoint.n].scriptPubKey);
     }
 

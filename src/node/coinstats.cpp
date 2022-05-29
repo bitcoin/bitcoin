@@ -85,8 +85,9 @@ static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, 
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj)
+static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point)
 {
+    stats = CCoinsStats();
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
 
@@ -101,7 +102,7 @@ static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj)
     uint256 prevkey;
     std::map<uint32_t, Coin> outputs;
     while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
+        interruption_point();
         COutPoint key;
         Coin coin;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
@@ -111,6 +112,7 @@ static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj)
             }
             prevkey = key.hash;
             outputs[key.n] = std::move(coin);
+            stats.coins_count++;
         } else {
             return error("%s: unable to read value", __func__);
         }
@@ -126,19 +128,19 @@ static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj)
     return true;
 }
 
-bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, CoinStatsHashType hash_type)
+bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, CoinStatsHashType hash_type, const std::function<void()>& interruption_point)
 {
     switch (hash_type) {
     case(CoinStatsHashType::HASH_SERIALIZED): {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        return GetUTXOStats(view, stats, ss);
+        return GetUTXOStats(view, stats, ss, interruption_point);
     }
     case(CoinStatsHashType::MUHASH): {
         MuHash3072 muhash;
-        return GetUTXOStats(view, stats, muhash);
+        return GetUTXOStats(view, stats, muhash, interruption_point);
     }
     case(CoinStatsHashType::NONE): {
-        return GetUTXOStats(view, stats, nullptr);
+        return GetUTXOStats(view, stats, nullptr, interruption_point);
     }
     } // no default case, so the compiler can warn about missing cases
     assert(false);

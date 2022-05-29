@@ -1056,13 +1056,14 @@ static bool InitSanityCheck()
     return true;
 }
 
-static bool AppInitServers(const util::Ref& context)
+static bool AppInitServers(const util::Ref& context, NodeContext& node)
 {
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
         return false;
     StartRPC();
+    node.rpc_interruption_point = RpcInterruptionPoint;
     if (!StartHTTPRPC(context))
         return false;
     if (gArgs.GetBoolArg("-rest", DEFAULT_REST_ENABLE)) StartREST(context);
@@ -1748,7 +1749,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     if (gArgs.GetBoolArg("-server", false))
     {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
-        if (!AppInitServers(context))
+        if (!AppInitServers(context, node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
@@ -1949,7 +1950,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
-    nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
+    int64_t nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t nEvoDbCache = 1024 * 1024 * 16; // TODO
     LogPrintf("Cache configuration:\n");
@@ -1982,7 +1983,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
             try {
                 LOCK(cs_main);
                 chainman.InitializeChainstate();
-                UnloadBlockIndex();
+                chainman.m_total_coinstip_cache = nCoinCacheUsage;
+                chainman.m_total_coinsdb_cache = nCoinDBCache;
+
+                UnloadBlockIndex(node.mempool);
 
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
@@ -1997,7 +2001,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
 
-                llmq::InitLLMQSystem(*evoDb, *node.connman, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, *node.mempool, *node.connman, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2100,7 +2104,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                     }
 
                     // The on-disk coinsdb is now in a good state, create the cache
-                    chainstate->InitCoinsCache();
+                    chainstate->InitCoinsCache(nCoinCacheUsage);
                     assert(chainstate->CanFlushToDisk());
 
                     // flush evodb

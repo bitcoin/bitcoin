@@ -13,6 +13,7 @@
 #include <dbwrapper.h>
 #include <primitives/transaction.h>
 #include <threadinterrupt.h>
+#include <txmempool.h>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -194,6 +195,7 @@ class CInstantSendManager : public CRecoveredSigsListener
 private:
     CInstantSendDb db;
     CConnman& connman;
+    CTxMemPool& mempool;
 
     std::atomic<bool> fUpgradedDB{false};
 
@@ -241,7 +243,7 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
 public:
-    explicit CInstantSendManager(CConnman& _connman, bool unitTests, bool fWipe) : db(unitTests, fWipe), connman(_connman) { workInterrupt.reset(); }
+    explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, bool unitTests, bool fWipe) : db(unitTests, fWipe), mempool(_mempool), connman(_connman) { workInterrupt.reset(); }
     ~CInstantSendManager() = default;
 
     void Start();

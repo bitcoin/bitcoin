@@ -416,15 +416,15 @@ static UniValue masternode_payments(const JSONRPCRequest& request)
         // Note: we have to actually calculate block reward from scratch instead of simply querying coinbase vout
         // because miners might collect less coins than they potentially could and this would break our calculations.
         CAmount nBlockFees{0};
+        NodeContext& node = EnsureNodeContext(request.context);
         for (const auto& tx : block.vtx) {
             if (tx->IsCoinBase()) {
                 continue;
             }
             CAmount nValueIn{0};
             for (const auto& txin : tx->vin) {
-                CTransactionRef txPrev;
                 uint256 blockHashTmp;
-                GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), blockHashTmp);
+                CTransactionRef txPrev = GetTransaction(/* block_index */ nullptr, node.mempool, txin.prevout.hash, Params().GetConsensus(), blockHashTmp);
                 nValueIn += txPrev->vout[txin.prevout.n].nValue;
             }
             nBlockFees += nValueIn - tx->GetValueOut();

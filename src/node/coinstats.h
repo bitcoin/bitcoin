@@ -10,6 +10,7 @@
 #include <uint256.h>
 
 #include <cstdint>
+#include <functional>
 
 class CCoinsView;
 
@@ -21,19 +22,20 @@ enum class CoinStatsHashType {
 
 struct CCoinsStats
 {
-    int nHeight;
-    uint256 hashBlock;
-    uint64_t nTransactions;
-    uint64_t nTransactionOutputs;
-    uint64_t nBogoSize;
-    uint256 hashSerialized;
-    uint64_t nDiskSize;
-    CAmount nTotalAmount;
+    int nHeight{0};
+    uint256 hashBlock{};
+    uint64_t nTransactions{0};
+    uint64_t nTransactionOutputs{0};
+    uint64_t nBogoSize{0};
+    uint256 hashSerialized{};
+    uint64_t nDiskSize{0};
+    CAmount nTotalAmount{0};
 
-    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nBogoSize(0), nDiskSize(0), nTotalAmount(0) {}
+    //! The number of coins contained.
+    uint64_t coins_count{0};
 };
 
 //! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, const CoinStatsHashType hash_type);
+bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, const CoinStatsHashType hash_type, const std::function<void()>& interruption_point = {});
 
 #endif // BITCOIN_NODE_COINSTATS_H

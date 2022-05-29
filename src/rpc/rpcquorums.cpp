@@ -809,9 +809,9 @@ static UniValue verifyislock(const JSONRPCRequest& request)
     CBlockIndex* pindexMined{nullptr};
     {
         LOCK(cs_main);
-        CTransactionRef tx;
         uint256 hash_block;
-        if (GetTransaction(txid, tx, Params().GetConsensus(), hash_block) && !hash_block.IsNull()) {
+        CTransactionRef tx = GetTransaction(/* block_index */ nullptr,  /* mempool */ nullptr, txid, Params().GetConsensus(), hash_block);
+        if (tx && !hash_block.IsNull()) {
             pindexMined = LookupBlockIndex(hash_block);
         }
     }

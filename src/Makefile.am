@@ -238,6 +238,7 @@ BITCOIN_CORE_H = \
   node/coinstats.h \
   node/context.h \
   node/transaction.h \
+  node/utxo_snapshot.h \
   noui.h \
   optional.h \
   policy/feerate.h \

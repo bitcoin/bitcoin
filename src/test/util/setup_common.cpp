@@ -143,8 +143,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     g_txindex = MakeUnique<TxIndex>(1 << 20, true);
     g_txindex->Start();
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
-    llmq::InitLLMQSystem(*evoDb, *m_node.connman, true);
-    ::ChainstateActive().InitCoinsCache();
+    llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, true);
+    ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
@@ -177,9 +177,9 @@ TestingSetup::~TestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.connman.reset();
     m_node.banman.reset();
+    UnloadBlockIndex(m_node.mempool);
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
-    UnloadBlockIndex();
     llmq::DestroyLLMQSystem();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
