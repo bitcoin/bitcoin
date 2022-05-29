@@ -1208,6 +1208,7 @@ bool CNEVMDataDB::Prune(CDBBatch &batch, const int64_t nMedianTime) {
     int64_t nTime;
     while (pcursor->Valid()) {
         try {
+            nTime = 0;
             // check if expired if so delete data
             if(pcursor->GetKey(pair) && pair.second == false && pcursor->GetValue(nTime) && nTime > 0 && nMedianTime > (nTime+NEVM_DATA_EXPIRE_TIME)) {
                // erase both pairs
