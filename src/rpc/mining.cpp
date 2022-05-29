@@ -367,8 +367,7 @@ static RPCHelpMan generateblock()
 
     CBlock block;
     // SYSCOIN
-    std::unique_ptr<CBlockTemplate> blocktemplate;
-
+    std::vector<unsigned char> vchCoinbaseCommitmentExtra;
     ChainstateManager& chainman = EnsureChainman(node);
     {
         LOCK(cs_main);
@@ -379,6 +378,8 @@ static RPCHelpMan generateblock()
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
         block = blocktemplate->block;
+        // SYSCOIN
+        vchCoinbaseCommitmentExtra = blocktemplate->vchCoinbaseCommitmentExtra;
     }
 
     CHECK_NONFATAL(block.vtx.size() == 1);
@@ -386,7 +387,7 @@ static RPCHelpMan generateblock()
     // Add transactions
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
     // SYSCOIN
-    RegenerateCommitments(block, chainman, blocktemplate->vchCoinbaseCommitmentExtra);
+    RegenerateCommitments(block, chainman, vchCoinbaseCommitmentExtra);
 
     {
         LOCK(cs_main);
