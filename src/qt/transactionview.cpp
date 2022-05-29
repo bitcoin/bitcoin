@@ -157,6 +157,9 @@ transactionView(nullptr), abandonAction(nullptr), columnResizingFixer(nullptr)
     QAction *editLabelAction = new QAction(tr("Edit address label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
     QAction *showAddressQRCodeAction = new QAction(tr("Show address QR code"), this);
+#ifndef USE_QRCODE
+    showAddressQRCodeAction->setEnabled(false);
+#endif
 
     contextMenu = new QMenu(this);
     contextMenu->setObjectName("contextMenu");
