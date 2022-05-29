@@ -583,7 +583,7 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
     }
     const UniValue ret = m_fun(*this, request);
     if (gArgs.GetBoolArg("-rpcdoccheck", DEFAULT_RPC_DOC_CHECK)) {
-        CHECK_NONFATAL(std::any_of(m_results.m_results.begin(), m_results.m_results.end(), [ret](const RPCResult& res) { return res.MatchesType(ret); }));
+        CHECK_NONFATAL(std::any_of(m_results.m_results.begin(), m_results.m_results.end(), [&ret](const RPCResult& res) { return res.MatchesType(ret); }));
     }
     return ret;
 }
