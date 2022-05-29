@@ -79,7 +79,7 @@ public:
   /** The auxpow's merkle branch (connecting it to the coinbase).  */
   std::vector<uint256> auxpowChainMerkleBranch;
   /** The auxpow's merkle tree index.  */
-  int auxpowChainIndex;
+  int auxpowChainIndex{-1};
 
   /**
    * Initialise everything.
@@ -152,7 +152,6 @@ public:
 };
 
 CAuxpowBuilder::CAuxpowBuilder (int baseVersion, int chainId)
-  : auxpowChainIndex(-1)
 {
   parentBlock.SetBaseVersion(baseVersion, chainId);
 }
