@@ -408,6 +408,8 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             ret.push_back(entry);
         }
     }
+    listSent.clear();
+    listReceived.clear();
 }
 
 
