@@ -829,6 +829,11 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, c
 FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp)
 {
     // SYSCOIN
+    NEVMDataVec dataVec;
+    if(!ProcessNEVMData(const_cast<CBlock&>(block), 0, dataVec)) {
+        error("%s: ProcessNEVMData failed", __func__); 
+        return FlatFilePos();
+    }
     unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION, SER_DISK);
     FlatFilePos blockPos;
     if (dbp != nullptr) {

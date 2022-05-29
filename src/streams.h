@@ -30,9 +30,9 @@ class OverrideStream
 
     const int nType;
     const int nVersion;
-
+    int nTxVersion;
 public:
-    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
+    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_), nTxVersion(0) {}
 
     template<typename T>
     OverrideStream<Stream>& operator<<(const T& obj)
@@ -62,6 +62,10 @@ public:
 
     int GetVersion() const { return nVersion; }
     int GetType() const { return nType; }
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
     size_t size() const { return stream->size(); }
     void ignore(size_t size) { return stream->ignore(size); }
 };
@@ -81,7 +85,7 @@ class CVectorWriter
  * @param[in]  nPosIn Starting position. Vector index where writes should start. The vector will initially
  *                    grow as necessary to max(nPosIn, vec.size()). So to append, use vec.size().
 */
-    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn) : nType(nTypeIn), nVersion(nVersionIn), vchData(vchDataIn), nPos(nPosIn)
+    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn) : nType(nTypeIn), nVersion(nVersionIn), vchData(vchDataIn), nPos(nPosIn), nTxVersion(0)
     {
         if(nPos > vchData.size())
             vchData.resize(nPos);
@@ -122,9 +126,14 @@ class CVectorWriter
     {
         return nType;
     }
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
 private:
     const int nType;
     const int nVersion;
+    int nTxVersion;
     std::vector<unsigned char>& vchData;
     size_t nPos;
 };
@@ -137,7 +146,7 @@ private:
     const int m_type;
     const int m_version;
     Span<const unsigned char> m_data;
-
+    int nTxVersion;
 public:
 
     /**
@@ -146,7 +155,7 @@ public:
      * @param[in]  data Referenced byte vector to overwrite/append
      */
     SpanReader(int type, int version, Span<const unsigned char> data)
-        : m_type(type), m_version(version), m_data(data) {}
+        : m_type(type), m_version(version), m_data(data), nTxVersion(0)  {}
 
     template<typename T>
     SpanReader& operator>>(T&& obj)
@@ -158,7 +167,10 @@ public:
 
     int GetVersion() const { return m_version; }
     int GetType() const { return m_type; }
-
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
     size_t size() const { return m_data.size(); }
     bool empty() const { return m_data.empty(); }
 
@@ -191,6 +203,7 @@ protected:
 
     int nType;
     int nVersion;
+    int nTxVersion;
 
 public:
     typedef vector_type::allocator_type   allocator_type;
@@ -205,18 +218,21 @@ public:
 
     explicit CDataStream(int nTypeIn, int nVersionIn)
         : nType{nTypeIn},
-          nVersion{nVersionIn} {}
+          nVersion{nVersionIn},
+          nTxVersion(0) {}
 
     explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
     explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
         : vch(sp.data(), sp.data() + sp.size()),
           nType{nTypeIn},
-          nVersion{nVersionIn} {}
+          nVersion{nVersionIn},
+          nTxVersion(0) {}
 
     template <typename... Args>
     CDataStream(int nTypeIn, int nVersionIn, Args&&... args)
         : nType{nTypeIn},
-          nVersion{nVersionIn}
+          nVersion{nVersionIn},
+          nTxVersion(0)
     {
         ::SerializeMany(*this, std::forward<Args>(args)...);
     }
@@ -276,7 +292,10 @@ public:
     int GetType() const          { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion() const       { return nVersion; }
-
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
     void read(Span<value_type> dst)
     {
         if (dst.size() == 0) return;
@@ -477,11 +496,11 @@ class CAutoFile
 private:
     const int nType;
     const int nVersion;
-
+    int nTxVersion;
     FILE* file;
 
 public:
-    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn)
+    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn), nTxVersion(0)
     {
         file = filenew;
     }
@@ -524,7 +543,10 @@ public:
     //
     int GetType() const          { return nType; }
     int GetVersion() const       { return nVersion; }
-
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
     void read(Span<std::byte> dst)
     {
         if (!file)
@@ -588,7 +610,7 @@ class CBufferedFile
 private:
     const int nType;
     const int nVersion;
-
+    int nTxVersion;
     FILE *src;            //!< source file
     uint64_t nSrcPos;     //!< how many bytes have been read from source
     uint64_t m_read_pos;    //!< how many bytes have been read from this
@@ -616,7 +638,7 @@ protected:
 
 public:
     CBufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn)
-        : nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), m_read_pos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
+        : nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), m_read_pos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0}), nTxVersion(0)
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
@@ -634,7 +656,10 @@ public:
 
     int GetVersion() const { return nVersion; }
     int GetType() const { return nType; }
-
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
     void fclose()
     {
         if (src) {

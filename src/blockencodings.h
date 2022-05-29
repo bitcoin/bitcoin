@@ -138,7 +138,7 @@ public:
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData);
     bool IsTxAvailable(size_t index) const;
     // SYSCOIN
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData);
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData, const int64_t nMedianTime = 0);
 };
 
 #endif // SYSCOIN_BLOCKENCODINGS_H

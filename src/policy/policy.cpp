@@ -84,7 +84,8 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     // SYSCOIN
     const bool &isSysTx = tx.HasAssets();
     const bool &IsMnTx = tx.IsMnTx();
-    if(!isSysTx && !IsMnTx){
+    const bool &IsNEVMDataTx = tx.IsNEVMData();
+    if(!isSysTx && !IsMnTx && !IsNEVMDataTx){
         if (tx.nVersion > TX_MAX_STANDARD_VERSION || tx.nVersion < 1) {
             reason = "version";
             return false;

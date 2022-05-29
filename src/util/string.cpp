@@ -10,3 +10,8 @@ void ReplaceAll(std::string& in_out, std::string_view search, std::string_view s
 {
     boost::replace_all(in_out, search, substitute);
 }
+// SYSCOIN
+std::string ReplaceAllCopy(const std::string& in_out, std::string_view search, std::string_view substitute)
+{
+    return boost::replace_all_copy(in_out, search, substitute);
+}

@@ -18,6 +18,8 @@
 #include <vector>
 
 void ReplaceAll(std::string& in_out, std::string_view search, std::string_view substitute);
+// SYSCOIN
+std::string ReplaceAllCopy(const std::string& in_out, std::string_view search, std::string_view substitute);
 
 [[nodiscard]] inline std::vector<std::string> SplitString(std::string_view str, char sep)
 {

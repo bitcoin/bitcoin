@@ -15,11 +15,13 @@
 #include <util/rbf.h>
 #include <undo.h>
 #include <validationinterface.h>
+#include <timedata.h>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetNFTDB> passetnftdb;
 std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
 std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
+std::unique_ptr<CNEVMDataDB> pnevmdatadb;
 RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const uint32_t& nHeight, const int64_t& nTime, const uint256& blockhash, NEVMMintTxMap &mapMintKeys, const CAssetsMap &mapAssetIn, const CAssetsMap &mapAssetOut) {
@@ -295,7 +297,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, NEVMMint
     return true;
 }
 
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys) {
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut) {
  
     if(IsSyscoinMintTx(tx.nVersion)) {
         if(!DisconnectMintAsset(tx, txHash, mapMintKeys))
@@ -313,8 +315,19 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
             else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
                 if(!DisconnectAssetActivate(tx, txHash, mapAssets))
                     return false;
-            }     
-        }
+            }   
+        } else if (tx.IsNEVMData()) {
+            CNEVMData nevmData(tx);
+            if(nevmData.IsNull()) {
+                LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: nevm-data-invalid\n");
+                return false; 
+            }
+            if(!nevmData.vchData.empty()) {
+                LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: nevm-data-unexpected\n");
+                return false;  
+            }
+            NEVMDataVecOut.emplace_back(nevmData.vchVersionHash); 
+        } 
     } 
     return true;       
 }
@@ -1145,4 +1158,69 @@ CAssetNFTDB::CAssetNFTDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapp
 }
 
 CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "assets", nCacheSize, fMemory, fWipe) {
+}
+
+CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmdata", nCacheSize, fMemory, fWipe) {
+}
+
+// called on connect - put median passed time into index so we can track pruning
+bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime) {
+    CDBBatch batch(*this);    
+    for (const auto &key : vecDataKeys) {
+        const auto& pair = std::make_pair(key, false);
+        batch.Write(pair, nMedianTime);
+    }
+    if(!vecDataKeys.empty())
+        LogPrint(BCLog::SYS, "Flushing, setting %d nevm heights\n", vecDataKeys.size());
+    // prune older entries
+    return Prune(batch, nMedianTime);
+}
+bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
+    CDBBatch batch(*this);    
+    for (const auto &key : vecDataKeys) {
+        const auto& pair = std::make_pair(key, false);
+        if(Exists(pair))
+            batch.Write(pair, 0);
+    }
+    if(!vecDataKeys.empty())
+        LogPrint(BCLog::SYS, "Flushing, resetting %d nevm heights\n", vecDataKeys.size());
+    return WriteBatch(batch);
+}
+bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
+    CDBBatch batch(*this);    
+    for (const auto &key : vecDataKeys) {
+        // erase data and time keys
+        const auto& pairData = std::make_pair(key, true);
+        const auto& pairTime = std::make_pair(key, false);
+        if(Exists(pairData))
+            batch.Erase(pairData);
+        if(Exists(pairTime))   
+            batch.Erase(pairTime);
+    }
+    if(!vecDataKeys.empty())
+        LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
+    return WriteBatch(batch);
+}
+bool CNEVMDataDB::Prune(CDBBatch &batch, const int64_t nMedianTime) {
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    std::pair<std::vector<unsigned char>, bool> pair;
+    int64_t nTime;
+    while (pcursor->Valid()) {
+        try {
+            // check if expired if so delete data
+            if(pcursor->GetKey(pair) && pair.second == false && pcursor->GetValue(nTime) && nTime > 0 && nMedianTime > (nTime+NEVM_DATA_EXPIRE_TIME)) {
+               // erase both pairs
+               batch.Erase(pair);
+               pair.second = true;
+               if(Exists(pair))   
+                  batch.Erase(pair);
+            }
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    return WriteBatch(batch);
 }

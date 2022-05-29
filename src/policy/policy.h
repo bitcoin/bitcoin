@@ -100,8 +100,8 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType);
 // adapting relay policy by bumping TX_MAX_STANDARD_VERSION, and then later
 // allowing the new transaction version in the wallet/RPC.
 static constexpr decltype(CTransaction::nVersion) TX_MAX_STANDARD_VERSION{2};
-// SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_ALLOCATION_SEND(135)
-static constexpr decltype(CTransaction::nVersion) TX_MAX_SYSCOIN_STANDARD_VERSION{135};
+// SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_NEVM_DATA(136)
+static constexpr decltype(CTransaction::nVersion) TX_MAX_SYSCOIN_STANDARD_VERSION{136};
     
 
 /**

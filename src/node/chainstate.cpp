@@ -54,6 +54,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     pnevmtxrootsdb.reset();
     pnevmtxmintdb.reset();
     pblockindexdb.reset();
+    pnevmdatadb.reset();
     llmq::DestroyLLMQSystem();
     evoDb.reset();
     evoDb.reset(new CEvoDB(nEvoDbCache, block_tree_db_in_memory, fReindexGeth));
@@ -67,6 +68,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nEvoDbCache, block_tree_db_in_memory, fReindexGeth));
     pnevmtxmintdb.reset(new CNEVMMintedTxDB(nEvoDbCache, block_tree_db_in_memory, fReindexGeth));
     pblockindexdb.reset(new CBlockIndexDB(nEvoDbCache, block_tree_db_in_memory, fReindexGeth));
+    pnevmdatadb.reset(new CNEVMDataDB(1000 << 20, block_tree_db_in_memory));
     if (!evoDb->CommitRootTransaction()) {
         return ChainstateLoadingError::ERROR_COMMIT_EVODB;
     }
@@ -173,6 +175,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         pnevmtxrootsdb.reset();
         pnevmtxmintdb.reset();
         pblockindexdb.reset();
+        pnevmdatadb.reset();
         llmq::DestroyLLMQSystem();
         evoDb.reset();
         evoDb.reset(new CEvoDB(nEvoDbCache, block_tree_db_in_memory, coinsViewEmpty));
@@ -184,6 +187,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         pnevmtxrootsdb.reset(new CNEVMTxRootsDB(nCoinDBCache, block_tree_db_in_memory, coinsViewEmpty));
         pnevmtxmintdb.reset(new CNEVMMintedTxDB(nCoinDBCache, block_tree_db_in_memory, coinsViewEmpty));
         pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, block_tree_db_in_memory, coinsViewEmpty));
+        pnevmdatadb.reset(new CNEVMDataDB(1000 << 20, block_tree_db_in_memory));
         if (!evoDb->CommitRootTransaction()) {
             return ChainstateLoadingError::ERROR_COMMIT_EVODB;
         }

@@ -1336,8 +1336,9 @@ protected:
     // SYSCOIN
     const int nProtocol;
     const int nVersion;
+    int nTxVersion;
 public:
-    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn) {}
+    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn), nTxVersion(0) {}
 
     void write(Span<const std::byte> src)
     {
@@ -1364,6 +1365,8 @@ public:
     int GetVersion() const { return nVersion; }
     // SYSCOIN
     int GetType() const { return nProtocol; }
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion() const { return nTxVersion; }
 };
 
 template<typename Stream>

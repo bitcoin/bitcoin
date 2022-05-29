@@ -12,28 +12,10 @@
 #include <util/strencodings.h>
 #include <validation.h>
 
-#include <boost/algorithm/string.hpp>
-
 #include <univalue.h>
 // DECLARE GLOBAL VARIABLES FOR GOVERNANCE CLASSES
 CGovernanceTriggerManager triggerman;
 
-// SPLIT UP STRING BY DELIMITER
-// http://www.boost.org/doc/libs/1_58_0/doc/html/boost/algorithm/split_idp202406848.html
-std::vector<std::string> SplitBy(const std::string& strCommand, const std::string& strDelimit)
-{
-    std::vector<std::string> vParts;
-    boost::split(vParts, strCommand, boost::is_any_of(strDelimit));
-
-    for (int q = 0; q < (int)vParts.size(); q++) {
-        if (strDelimit.find(vParts[q]) != std::string::npos) {
-            vParts.erase(vParts.begin() + q);
-            --q;
-        }
-    }
-
-    return vParts;
-}
 
 CAmount ParsePaymentAmount(const std::string& strAmount)
 {
@@ -856,8 +838,8 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
 
     std::vector<std::string> vecParsed1;
     std::vector<std::string> vecParsed2;
-    vecParsed1 = SplitBy(strPaymentAddresses, "|");
-    vecParsed2 = SplitBy(strPaymentAmounts, "|");
+    vecParsed1 = SplitString(strPaymentAddresses, "|");
+    vecParsed2 = SplitString(strPaymentAmounts, "|");
 
     // IF THESE DONT MATCH, SOMETHING IS WRONG
 

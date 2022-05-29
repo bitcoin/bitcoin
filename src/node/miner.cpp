@@ -112,6 +112,8 @@ void BlockAssembler::resetBlock()
     // These counters do not include coinbase tx
     nBlockTx = 0;
     nFees = 0;
+    // SYSCOIN
+    nNumNEVMDataTxs = 0;
 }
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
@@ -295,16 +297,26 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package) const
 {
     // SYSCOIN
+    int nCountAncestorNEVMDataTxs = 0;
     AssertLockHeld(m_mempool.cs);
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
             return false;
         }
         // SYSCOIN
+        if(it->GetTx().IsNEVMData()) {
+            nCountAncestorNEVMDataTxs++;
+            // >= MAX_DATA_BLOBS is checked already and so we should add in tx even if it matches threshold of MAX_DATA_BLOBS as the last one possible
+            if((nNumNEVMDataTxs+nCountAncestorNEVMDataTxs) > MAX_DATA_BLOBS) {
+                return false;
+            }
+        }
+  
         // If conflicting syscoin related dbl-spent input in this tx, skip it if its newer (prefer first tx based on time)
         if(!m_mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
             return false;
         } 
+
     }
     return true;
 }
@@ -319,7 +331,10 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     nBlockSigOpsCost += iter->GetSigOpCost();
     nFees += iter->GetFee();
     inBlock.insert(iter);
-
+    // SYSCOIN
+    if(iter->GetTx().IsNEVMData()) {
+        nNumNEVMDataTxs++;
+    }
     bool fPrintPriority = gArgs.GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
     if (fPrintPriority) {
         LogPrintf("fee rate %s txid %s\n",
@@ -447,6 +462,18 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
                 // Increment mi for the next loop iteration.
                 ++mi;
             }
+        }
+        // SYSCOIN
+        if(nNumNEVMDataTxs >= MAX_DATA_BLOBS && iter->GetTx().IsNEVMData()) {
+            if (fUsingModified) {
+                // Since we always look at the best entry in mapModifiedTx,
+                // we must erase failed entries so that we can consider the
+                // next best entry on the next loop iteration
+                mapModifiedTx.get<ancestor_score>().erase(modit);
+                failedTx.insert(iter);
+            }
+            LogPrintf("nNumNEVMDataTxs over limit\n");
+            continue;
         }
 
         // We skip mapTx entries that are inBlock, and mapModifiedTx shouldn't

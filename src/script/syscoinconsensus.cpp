@@ -19,7 +19,8 @@ public:
     TxInputStream(int nVersionIn, const unsigned char *txTo, size_t txToLen) :
     m_version(nVersionIn),
     m_data(txTo),
-    m_remaining(txToLen)
+    m_remaining(txToLen),
+    nTxVersion(0)
     {}
 
     void read(Span<std::byte> dst)
@@ -49,10 +50,16 @@ public:
     }
 
     int GetVersion() const { return m_version; }
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion() { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
+    int GetType() const { return SER_NETWORK; }
 private:
     const int m_version;
     const unsigned char* m_data;
     size_t m_remaining;
+    int nTxVersion;
 };
 
 inline int set_error(syscoinconsensus_error* ret, syscoinconsensus_error serror)
