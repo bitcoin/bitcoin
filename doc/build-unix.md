@@ -13,7 +13,7 @@ Run the following commands to install required packages:
 
 ##### Debian/Ubuntu:
 ```bash
-$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils
+$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils bison
 ```
 
 ##### Fedora:

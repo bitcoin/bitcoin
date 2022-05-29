@@ -6,7 +6,6 @@
 
 This file is modified from python-bitcoinlib.
 """
-import hashlib
 import struct
 import unittest
 
@@ -17,11 +16,13 @@ from .messages import (
     sha256,
 )
 
+from .ripemd160 import ripemd160
+
 MAX_SCRIPT_ELEMENT_SIZE = 520
 OPCODE_NAMES = {}
 
 def hash160(s):
-    return hashlib.new('ripemd160', sha256(s)).digest()
+    return ripemd160(sha256(s))
 
 def bn2vch(v):
     """Convert number to bitcoin-specific little endian format."""
