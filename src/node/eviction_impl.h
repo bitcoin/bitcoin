@@ -33,6 +33,7 @@ struct NodeEvictionCandidate {
     ConnectionType m_conn_type;
     int m_blocks_in_flight;
     std::chrono::seconds m_last_block_announcement;
+    bool m_slow_chain_protected;
 };
 
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
@@ -113,6 +114,9 @@ public:
     void UpdateLastBlockAnnounceTime(NodeId id, std::chrono::seconds last_block_announcement)
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
     std::optional<std::chrono::seconds> GetLastBlockAnnounceTime(NodeId id) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    void UpdateSlowChainProtected(NodeId id)
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 };
 

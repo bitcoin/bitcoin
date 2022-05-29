@@ -103,6 +103,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
             /*m_conn_type=*/ConnectionType::INBOUND,
             /*m_blocks_in_flight=*/(int)random_context.randrange(16), // MAX_BLOCKS_IN_TRANSIT_PER_PEER in net_processing.cpp
             /*m_last_block_announcement=*/std::chrono::seconds{random_context.randrange(100)},
+            /*m_slow_chain_protected=*/random_context.randbool(),
         });
     }
     return candidates;
