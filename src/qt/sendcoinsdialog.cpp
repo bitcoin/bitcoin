@@ -538,15 +538,8 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         }
     } else {
         // now send the prepared transaction
-        WalletModel::SendCoinsReturn sendStatus = model->sendCoins(*m_current_transaction, m_coin_control->IsUsingCoinJoin());
-        // process sendStatus and on error generate message shown to user
-        processSendCoinsReturn(sendStatus);
-
-        if (sendStatus.status == WalletModel::OK) {
-            Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
-        } else {
-            send_failure = true;
-        }
+        model->sendCoins(*m_current_transaction, m_coin_control->IsUsingCoinJoin());
+        Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
     }
     if (!send_failure) {
         accept();
