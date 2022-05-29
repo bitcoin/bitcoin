@@ -67,6 +67,9 @@ AddressBookPage::AddressBookPage(Mode _mode, Tabs _tab, QWidget* parent) :
     ui->setupUi(this);
 
     ui->showAddressQRCode->setIcon(QIcon());
+#ifndef USE_QRCODE
+    ui->showAddressQRCode->setEnabled(false);
+#endif
 
     switch(mode)
     {
@@ -110,6 +113,9 @@ AddressBookPage::AddressBookPage(Mode _mode, Tabs _tab, QWidget* parent) :
     QAction *editAction = new QAction(tr("&Edit"), this);
     QAction *showAddressQRCodeAction = new QAction(tr("&Show address QR code"), this);
     deleteAction = new QAction(ui->deleteAddress->text(), this);
+#ifndef USE_QRCODE
+    showAddressQRCodeAction->setEnabled(false);
+#endif
 
     // Build context menu
     contextMenu = new QMenu(this);
@@ -269,13 +275,17 @@ void AddressBookPage::selectionChanged()
             break;
         }
         ui->copyAddress->setEnabled(true);
+#ifdef USE_QRCODE
         ui->showAddressQRCode->setEnabled(true);
+#endif
     }
     else
     {
         ui->deleteAddress->setEnabled(false);
         ui->copyAddress->setEnabled(false);
+#ifdef USE_QRCODE
         ui->showAddressQRCode->setEnabled(false);
+#endif
     }
 }
 
