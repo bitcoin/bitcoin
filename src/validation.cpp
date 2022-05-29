@@ -72,6 +72,7 @@
 #include <signal.h>
 #include <node/transaction.h>
 #include <fstream>
+#include <timedata.h>
 // SYSCOIN
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
