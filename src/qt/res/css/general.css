@@ -1754,8 +1754,7 @@ QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton { /* Address Book B
 
 QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton,
 QStackedWidget#SendCoinsEntry .QToolButton#pasteButton,
-QStackedWidget#SendCoinsEntry .QToolButton#deleteButton,
-QStackedWidget#SendCoinsEntry .QToolButton#deleteButton_is {
+QStackedWidget#SendCoinsEntry .QToolButton#deleteButton {
 }
 
 QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
