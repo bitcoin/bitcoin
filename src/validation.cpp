@@ -2174,7 +2174,7 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
         // if not in DB then we need to verify it via Geth KZG blob verification
         GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
         if(state.IsInvalid()) {
-            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s", state.ToString());
+            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s\n", state.ToString());
             return false;
         }
     }
@@ -2185,24 +2185,18 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
         }
         // upon receiving block we prune data and store in seperate db
         std::vector<unsigned char> data;
-        nevmDataEntry.nevmData->vchData.clear();
-        nevmDataEntry.nevmData->SerializeData(data);
-        nevmDataEntry.scriptPubKey[0] = CScript() << OP_RETURN << data;
+        if(nevmDataEntry.scriptPubKey) {
+            nevmDataEntry.nevmData->vchData.clear();
+            nevmDataEntry.nevmData->SerializeData(data);
+            nevmDataEntry.scriptPubKey[0] = CScript() << OP_RETURN << data;
+        }
         // save the version hashes so we can remove from db (above) if something goes wrong with proceeding block/tx validations
         nevmDataVecOut.emplace_back(nevmDataEntry.nevmData->vchVersionHash);
     }
     return true;
 }
-bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
-    for (unsigned int i = 0; i<vout.size();i++) {
-        if(vout[i].nValue == 0 && i != nOut) {
-            return false;
-        }
-    }
-    return vout[nOut].nValue == 0;
-}
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
-bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
+bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2216,31 +2210,32 @@ bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::functi
             if (nOut == -1) {
                 return false;
             }
-            // OPRETURN should be 0 value
-            if(!EnsureOnlyOutputZero(tx->vout, (unsigned int)nOut)){
-                return false;
-            }
-              
-            CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
-            CNEVMData *nevmData = new CNEVMData(scriptPubKey);
+            
+            CNEVMDataProcessHelper entry;
+            CNEVMData *nevmData = new CNEVMData(tx->vout[nOut].scriptPubKey);
             if(nevmData->IsNull()) {
                 return false;
             }
-            
-            CNEVMDataProcessHelper entry;
             entry.nevmData = nevmData;
-            entry.scriptPubKey = &scriptPubKey;
+            CScript &scriptPubKey = const_cast<CScript&>(tx->vout[nOut].scriptPubKey);
+            entry.scriptPubKey = stripdata? &scriptPubKey: nullptr;
             vecNevmData.emplace_back(entry);
         }
     }
     if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         for (auto &nevmDataEntry : vecNevmData) {
-            delete nevmDataEntry.nevmData;
+            if(nevmDataEntry.nevmData) {
+                delete nevmDataEntry.nevmData;
+                nevmDataEntry.nevmData = nullptr;
+            }
         }
         return false;
     }
     for (auto &nevmDataEntry : vecNevmData) {
-        delete nevmDataEntry.nevmData;
+        if(nevmDataEntry.nevmData) {
+            delete nevmDataEntry.nevmData;
+            nevmDataEntry.nevmData = nullptr;
+        }
     }
     return true;
 }
