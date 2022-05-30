@@ -1370,17 +1370,18 @@ static UniValue listtransactions(const JSONRPCRequest& request)
                        {RPCResult::Type::STR, "address", "The dash address of the transaction. Not present for\n"
                              "move transactions (category = move)."},
                        {RPCResult::Type::STR, "category", "The transaction category.\n"
-                          "\"send\"                  Transactions sent.\n"
-                          "\"receive\"               Non-coinbase transactions received.\n"
-                          "\"move\"                  A local (off blockchain)\n"
-                                                          "transaction between accounts, and not associated with an address,\n"
-                                                          "transaction id or block..\n"},
+                           "\"send\"                  Transactions sent.\n"
+                           "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
+                           "\"receive\"               Non-coinbase transactions received.\n"
+                           "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                           "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                           "\"orphan\"                Orphaned coinbase transactions received.\n"},
                        {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
                             "for all other categories"},
-                           {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
-                           {RPCResult::Type::NUM, "vout", "the vout value"},
-                           {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                               "'send' category of transactions."},
+                       {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
+                       {RPCResult::Type::NUM, "vout", "the vout value"},
+                       {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                           "'send' category of transactions."},
                        {RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations for the transaction. Available for 'send' and\n"
                                                                "'receive' category of transactions. Negative confirmations indicate the\n"
                                                                "transaction conflicts with the block chain"},
@@ -1495,23 +1496,28 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                 {
                     {RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
                     {
-                        {RPCResult::Type::STR, "address", "The dash address of the transaction. Not present for move transactions (category = move)."},
-                        {RPCResult::Type::STR, "category", "The transaction category. 'send' has negative amounts, 'receive' has positive amounts."},
-                        {RPCResult::Type::NUM, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the 'move' category for moves \n"
-                                                                                            "outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds."},
+                        {RPCResult::Type::STR, "address", "The dash address of the transaction."},
+                        {RPCResult::Type::STR, "category", "The transaction category.\n"
+                            "\"send\"                  Transactions sent.\n"
+                            "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
+                            "\"receive\"               Non-coinbase transactions received.\n"
+                            "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                            "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                            "\"orphan\"                Orphaned coinbase transactions received.\n"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
+                            "for all other categories"},
                         {RPCResult::Type::NUM, "vout", "the vout value"},
                         {RPCResult::Type::NUM, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the 'send' category of transactions."},
-                        {RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
-                                                                "When it's < 0, it means the transaction conflicted that many blocks ago."},
+                        {RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction."},
                         {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions."},
                         {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions."},
                         {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block chainlock."},
-                        {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it. Available for 'send' and 'receive' category of transactions."},
+                        {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction."},
+                        {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it."},
                         {RPCResult::Type::NUM_TIME, "blocktime", "The block time in seconds since epoch (1 Jan 1970 GMT)."},
-                        {RPCResult::Type::STR_HEX, "txid", "The transaction id. Available for 'send' and 'receive' category of transactions."},
+                        {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
                         {RPCResult::Type::NUM_TIME, "time", "The transaction time in seconds since epoch (Jan 1 1970 GMT).."},
-                        {RPCResult::Type::NUM_TIME, "timereceived", "The time received in seconds since epoch (Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions."},
+                        {RPCResult::Type::NUM_TIME, "timereceived", "The time received in seconds since epoch (Jan 1 1970 GMT)."},
                         {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions."},
                         {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction."},
                         {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any."},
@@ -1676,7 +1682,13 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                             {RPCResult::Type::OBJ, "", "",
                                 {
                                     {RPCResult::Type::STR, "address", "The dash address involved in the transaction."},
-                                    {RPCResult::Type::STR, "category", "The category, either 'send' or 'receive'.\n"},
+                                    {RPCResult::Type::STR, "category", "The transaction category.\n"
+                                        "\"send\"                  Transactions sent.\n"
+                                        "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
+                                        "\"receive\"               Non-coinbase transactions received.\n"
+                                        "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                                        "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                                        "\"orphan\"                Orphaned coinbase transactions received.\n"},
                                     {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
                                     {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
                                     {RPCResult::Type::NUM, "vout", "the vout value"},

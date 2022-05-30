@@ -265,7 +265,7 @@ void CCoinsViewCache::ReallocateCache()
     ::new (&cacheCoins) CCoinsMap();
 }
 
-static const size_t MAX_OUTPUTS_PER_BLOCK = MaxBlockSize() /  ::GetSerializeSize(CTxOut(), SER_NETWORK, PROTOCOL_VERSION); // TODO: merge with similar definition in undo.h.
+static const size_t MAX_OUTPUTS_PER_BLOCK = MaxBlockSize() /  ::GetSerializeSize(CTxOut(), PROTOCOL_VERSION); // TODO: merge with similar definition in undo.h.
 
 const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
 {

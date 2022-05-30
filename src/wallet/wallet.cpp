@@ -22,6 +22,7 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <script/descriptor.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <txmempool.h>
@@ -277,48 +278,17 @@ std::string COutput::ToString() const
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
 }
 
-/** A class to identify which pubkeys a script and a keystore have in common. */
-class CAffectedKeysVisitor : public boost::static_visitor<void> {
-private:
-    const CKeyStore &keystore;
-    std::vector<CKeyID> &vKeys;
-
-public:
-    /**
-     * @param[in] keystoreIn The CKeyStore that is queried for the presence of a pubkey.
-     * @param[out] vKeysIn A vector to which a script's pubkey identifiers are appended if they are in the keystore.
-     */
-    CAffectedKeysVisitor(const CKeyStore &keystoreIn, std::vector<CKeyID> &vKeysIn) : keystore(keystoreIn), vKeys(vKeysIn) {}
-
-    /**
-     * Apply the visitor to each destination in a script, recursively to the redeemscript
-     * in the case of p2sh destinations.
-     * @param[in] script The CScript from which destinations are extracted.
-     * @post Any CKeyIDs that script and keystore have in common are appended to the visitor's vKeys.
-     */
-    void Process(const CScript &script) {
-        txnouttype type;
-        std::vector<CTxDestination> vDest;
-        int nRequired;
-        if (ExtractDestinations(script, type, vDest, nRequired)) {
-            for (const CTxDestination &dest : vDest)
-                boost::apply_visitor(*this, dest);
-        }
+std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& provider)
+{
+    std::vector<CScript> dummy;
+    FlatSigningProvider out;
+    InferDescriptor(spk, provider)->Expand(0, DUMMY_SIGNING_PROVIDER, dummy, out);
+    std::vector<CKeyID> ret;
+    for (const auto& entry : out.pubkeys) {
+        ret.push_back(entry.first);
     }
-
-    void operator()(const CKeyID &keyId) {
-        if (keystore.HaveKey(keyId))
-            vKeys.push_back(keyId);
-    }
-
-    void operator()(const CScriptID &scriptId) {
-        CScript script;
-        if (keystore.GetCScript(scriptId, script))
-            Process(script);
-    }
-
-    void operator()(const CNoDestination &none) {}
-};
+    return ret;
+}
 
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
@@ -1376,9 +1346,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 // extract addresses, check if they match with an unused keypool key, update metadata if needed
-                std::vector<CKeyID> vAffected;
-                CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
-                for (const CKeyID &keyid : vAffected) {
+                for (const auto& keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
                     std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
                     if (mi != m_pool_key_to_index.end()) {
                         WalletLogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
@@ -2286,7 +2254,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
     if (!wallet->DummySignTx(txNew, txouts, use_max_sig)) {
         return -1;
     }
-    return ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+    return ::GetSerializeSize(txNew, PROTOCOL_VERSION);
 }
 
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, bool use_max_sig)
@@ -2298,7 +2266,7 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, 
         // implies that we can sign for every input.
         return -1;
     }
-    return ::GetSerializeSize(txn.vin[0], SER_NETWORK, PROTOCOL_VERSION);
+    return ::GetSerializeSize(txn.vin[0], PROTOCOL_VERSION);
 }
 
 void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
@@ -4828,7 +4796,6 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t>& mapKeyBirth) c
         return;
 
     // find first block that affects those keys, if there are any left
-    std::vector<CKeyID> vAffected;
     for (const auto& entry : mapWallet) {
         // iterate over all wallet transactions...
         const CWalletTx &wtx = entry.second;
@@ -4836,14 +4803,12 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t>& mapKeyBirth) c
             // ... which are already in a block
             for (const CTxOut &txout : wtx.tx->vout) {
                 // iterate over all their outputs
-                CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
-                for (const CKeyID &keyid : vAffected) {
+                for (const auto &keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
                     // ... and all their affected keys
                     std::map<CKeyID, int>::iterator rit = mapKeyFirstBlock.find(keyid);
                     if (rit != mapKeyFirstBlock.end() && *height < rit->second)
                         rit->second = *height;
                 }
-                vAffected.clear();
             }
         }
     }
