@@ -5,12 +5,33 @@
 # This script configures the build for itcoin-core. It can be used both on bare
 # metal and inside a Docker container.
 #
+# Normally, the system's default C/C++ compilers are used. If you want to use
+# a specific compiler, define the environment variables CC and CCX before
+# calling the script.
+#
+# Please note that this script takes care of a bug in secp256k1's configure
+# script (at least as of 2022-07-08), that needs to set both CC and
+# CC_FOR_BUILD.
+#
+# EXAMPLE with custom compilers:
+#     $ export CC=/path/to/c-compiler
+#     $ export CXX=/path/to/c++-compiler
+#     $ ./configure-itcoin-core-dev.sh
+#
 # Author: Antonio Muci <antonio.muci@bancaditalia.it>
 
 set -eu
 
 # https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself#246128
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+if [[ ! -z "${CC-}" ]]; then
+    # The user requested a custom C compiler. Let's also set CC_FOR_BUILD to the
+    # same value, otherwise secp256k1 does not passes the configure step (tested
+    # on itcoin v0.21.x, Fedora 36, gcc 12.1).
+    echo "Custom C compiler ${CC} requested. Also setting the CC_FOR_BUILD variable"
+    export CC_FOR_BUILD="${CC}"
+fi
 
 # Using "--canonicalize-missing" allows USR_DIR to point to a non existing
 # directory by default. This is suboptimal, but it's useful when building in a
@@ -52,5 +73,3 @@ cd "${MY_DIR}/.."
     --with-zmq \
     --without-gui \
     --without-miniupnpc \
-    CXX="g++-10" \
-    CC="gcc-10"
