@@ -14,7 +14,7 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 INSTALL_DIR=$(realpath "${MY_DIR}/../target")
 
-# autogen always assumes that the user's is calling it from the same directory
+# autogen always assumes that the user is calling it from the same directory
 # in which the script is placed. This is not always true (like in our case),
 # but but we have to adapt, so let's cd one level lower.
 cd "${MY_DIR}/.."
