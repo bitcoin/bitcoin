@@ -2095,7 +2095,7 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
     }
     return res;
 }
-// before propogating blocks/txs out to peers we need to fill the OPRETURN with the NEVM DA payload from seperate store
+// before propagating blocks/txs out to peers we need to fill the OPRETURN with the NEVM DA payload from separate store
 bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock) {
     CBlock &block = const_cast<CBlock&>(*pblock);
     return FillNEVMData(block);
@@ -2183,7 +2183,7 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
         if(nMedianTime > 0 && !pnevmdatadb->WriteData(nevmDataEntry.nevmData->vchVersionHash, nevmDataEntry.nevmData->vchData)) {
             return false;
         }
-        // upon receiving block we prune data and store in seperate db
+        // upon receiving block we prune data and store in separate db
         std::vector<unsigned char> data;
         if(nevmDataEntry.scriptPubKey) {
             nevmDataEntry.nevmData->vchData.clear();
@@ -2203,7 +2203,7 @@ bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     }
     return vout[nOut].nValue == 0;
 }
-// when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store seperately
+// when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
 bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;

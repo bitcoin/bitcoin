@@ -2,12 +2,10 @@
 # Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-import time
 import secrets
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, MAX_INITIAL_BROADCAST_DELAY
+from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync
 from test_framework.messages import NEVM_DATA_EXPIRE_TIME, MAX_DATA_BLOBS, MAX_NEVM_DATA_BLOB
-from decimal import Decimal
 class NEVMDataTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -46,7 +44,7 @@ class NEVMDataTest(SyscoinTestFramework):
         for i in range(0, 17):
             vh = secrets.token_hex(32)
             self.blobVHs.append(vh)
-            self.nodes[1].syscoincreaterawnevmblob(vh, blobDataMax)  
+            self.nodes[1].syscoincreaterawnevmblob(vh, blobDataMax)
         print('Syncing mempools...')
         self.sync_mempools()
         print('Generating block...')
