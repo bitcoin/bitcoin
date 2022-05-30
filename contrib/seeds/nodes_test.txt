@@ -27,3 +27,5 @@
 202.238.193.15:19335
 203.216.0.105:19335
 212.83.174.255:19335
+mxk7vkfxvtap2aikbjqcx7b4eex2yiag5v5vhuljnvurpybv4a6q5cqd.onion:19335
+octnr6yzgosiupuuivgla67p3ml6pc5qpozqn7zpmpbxge6pq5iq4had.onion:19335
