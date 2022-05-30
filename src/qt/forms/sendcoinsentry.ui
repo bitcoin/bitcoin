@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>SendCoinsEntry</class>
- <widget class="QStackedWidget" name="SendCoinsEntry">
+ <widget class="QWidget" name="SendCoinsEntry">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -16,10 +16,6 @@
   <property name="autoFillBackground">
    <bool>false</bool>
   </property>
-  <widget class="QFrame" name="SendCoins">
-   <property name="frameShape">
-    <enum>QFrame::NoFrame</enum>
-   </property>
    <layout class="QGridLayout" name="gridLayout">
     <property name="topMargin">
      <number>8</number>
@@ -218,7 +214,6 @@
      </widget>
     </item>
    </layout>
-  </widget>
  </widget>
  <customwidgets>
   <customwidget>

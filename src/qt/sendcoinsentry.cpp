@@ -20,7 +20,7 @@
 #include <QClipboard>
 
 SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
-    QStackedWidget(parent),
+    QWidget(parent),
     ui(new Ui::SendCoinsEntry),
     model(nullptr),
     platformStyle(_platformStyle)
@@ -30,8 +30,6 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
     ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
     ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
     ui->deleteButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-
-    setCurrentWidget(ui->SendCoins);
 
     if (platformStyle->getUseExtraSpacing())
         ui->payToLayout->setSpacing(4);
@@ -227,7 +225,7 @@ void SendCoinsEntry::changeEvent(QEvent* e)
         ui->deleteButton->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
     }
 
-    QStackedWidget::changeEvent(e);
+    QWidget::changeEvent(e);
 }
 
 bool SendCoinsEntry::updateLabel(const QString &address)
