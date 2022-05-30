@@ -140,8 +140,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
-    g_txindex = MakeUnique<TxIndex>(1 << 20, true);
-    g_txindex->Start();
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
     llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, true);
     ::ChainstateActive().InitCoinsCache(1 << 23);
@@ -167,9 +165,6 @@ TestingSetup::~TestingSetup()
     deterministicMNManager.reset();
     llmq::InterruptLLMQSystem();
     llmq::StopLLMQSystem();
-    g_txindex->Interrupt();
-    g_txindex->Stop();
-    g_txindex.reset();
     threadGroup.interrupt_all();
     threadGroup.join_all();
     StopScriptCheckWorkerThreads();
@@ -201,6 +196,10 @@ TestChainSetup::TestChainSetup(int blockCount)
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
         m_coinbase_txns.push_back(b.vtx[0]);
     }
+
+    g_txindex = MakeUnique<TxIndex>(1 << 20, true);
+    g_txindex->Start();
+
     // Allow tx index to catch up with the block index.
     constexpr int64_t timeout_ms = 10 * 1000;
     int64_t time_start = GetTimeMillis();
@@ -293,6 +292,9 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
 
 TestChainSetup::~TestChainSetup()
 {
+    g_txindex->Interrupt();
+    g_txindex->Stop();
+    g_txindex.reset();
 }
 
 

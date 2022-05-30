@@ -20,10 +20,6 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, TestingSetup)
 //!
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
-    // TODO: this is a hack to avoid txindex crash on BlockConnected trigered by ActivateBestChain
-    g_txindex->Interrupt();
-    g_txindex->Stop();
-
     ChainstateManager manager;
 
     //! Create and add a Coin with DynamicMemoryUsage of 80 bytes to the given view.

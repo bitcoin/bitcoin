@@ -23,10 +23,6 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, TestingSetup)
 //! First create a legacy (IBD) chainstate, then create a snapshot chainstate.
 BOOST_AUTO_TEST_CASE(chainstatemanager)
 {
-    // TODO: this is a hack to avoid txindex crash on BlockConnected trigered by ActivateBestChain
-    g_txindex->Interrupt();
-    g_txindex->Stop();
-
     ChainstateManager manager;
     std::vector<CChainState*> chainstates;
     const CChainParams& chainparams = Params();
@@ -108,10 +104,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 //! Test rebalancing the caches associated with each chainstate.
 BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
 {
-    // TODO: this is a hack to avoid txindex crash on BlockConnected trigered by ActivateBestChain
-    g_txindex->Interrupt();
-    g_txindex->Stop();
-
     ChainstateManager manager;
     size_t max_cache = 10000;
     manager.m_total_coinsdb_cache = max_cache;
