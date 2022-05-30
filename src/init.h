@@ -43,7 +43,7 @@ bool AppInitBasicSetup(const ArgsManager& args);
  */
 bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandbox = true);
 /**
- * Initialization sanity checks: ecc init, sanity checks, dir lock.
+ * Initialization sanity checks.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitParameterInteraction should have been called.
  */
