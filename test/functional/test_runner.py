@@ -328,7 +328,6 @@ BASE_SCRIPTS = [
     'feature_presegwit_node_upgrade.py',
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
-    'rpc_mempool_entry_fee_fields_deprecation.py',
     'rpc_mempool_info.py',
     'rpc_help.py',
     'feature_dirsymlinks.py',
