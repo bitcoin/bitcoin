@@ -12,8 +12,10 @@ Before every minor and major release:
 * [ ] Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
 * [ ] Write release notes (see below). To clear the release notes: `cp doc/release-notes-empty-template.md doc/release-notes.md`
 * [ ] Update flatpak [metainfo file](contrib/flatpak/org.dash.dash-core.metainfo.xml) with latest release tag and estimated release date
-* [ ] Update `src/chainparams.cpp` `nMinimumChainWork` with information from the `getblockchaininfo` rpc.
-* [ ] Update `src/chainparams.cpp` `defaultAssumeValid` with information from the `getblockhash` rpc.
+* [ ] Update the following variables in [`src/chainparams.cpp`](/src/chainparams.cpp) for mainnet and testnet:
+  - `nMinimumChainWork` with the "chainwork" value of RPC `getblockheader` using the same height as that selected for the previous step.
+  - `defaultAssumeValid` with the output of RPC `getblockhash` using the `height` of `window_final_block_height` above
+    (and update the block height comment with that height), taking into account the following:
   - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
   - Testnet should be set some tens of thousands back from the tip due to reorgs there.
   - This update should be reviewed with a `reindex-chainstate` with `assumevalid=0` to catch any defect
@@ -27,9 +29,13 @@ Before every minor and major release:
 Before every major release:
 
 * [ ] Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/dashpay/dash/pull/5914) for an example.
-* [ ] Update [`src/chainparams.cpp`](/src/chainparams.cpp) `m_assumed_blockchain_size` and `m_assumed_chain_state_size` with the current size plus some overhead (see [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
-* [ ] Update [`src/chainparams.cpp`](/src/chainparams.cpp) `chainTxData` with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC, see
-  [this pull request](https://github.com/dashpay/dash/pull/5692) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
+* [ ] Update the following variables in [`src/chainparams.cpp`](/src/chainparams.cpp) for mainnet and testnet:
+  - `m_assumed_blockchain_size` and `m_assumed_chain_state_size` with the current size plus some overhead (see
+    [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
+  - `chainTxData` with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC with an
+    `nBlocks` of 4096 (28 days) and a `bestblockhash` of RPC `getbestblockhash`; see
+    [this pull request](https://github.com/dashpay/dash/pull/5692) for an example. Reviewers can verify the results by running
+    `getchaintxstats <window_block_count> <window_final_block_hash>` with the `window_block_count` and `window_final_block_hash` from your output.
 
 ### First time / New builders
 
@@ -281,15 +287,14 @@ checks. If the app is successfully notarized, the command line will include a li
 Both variables are used as a guideline for how much space the user needs on their drive in total, not just strictly for the blockchain.
 Note that all values should be taken from a **fully synced** node and have an overhead of 5-10% added on top of its base value.
 
-To calculate `m_assumed_blockchain_size`:
-- For `mainnet` -> Take the size of the data directory, excluding `/regtest` and `/testnet3` directories.
-- For `testnet` -> Take the size of the `/testnet3` directory.
+To calculate `m_assumed_blockchain_size`, take the size in GiB of these directories:
+- For `mainnet` -> the data directory, excluding the `/testnet3`, `/regtest` directories and any overly large files, e.g. a huge `debug.log`
+- For `testnet` -> `/testnet3`
 
-
-To calculate `m_assumed_chain_state_size`:
-- For `mainnet` -> Take the size of the `/chainstate` directory.
-- For `testnet` -> Take the size of the `/testnet3/chainstate` directory.
+To calculate `m_assumed_chain_state_size`, take the size in GiB of these directories:
+- For `mainnet` -> `/chainstate`
+- For `testnet` -> `/testnet3/chainstate`
 
 Notes:
 - When taking the size for `m_assumed_blockchain_size`, there's no need to exclude the `/chainstate` directory since it's a guideline value and an overhead will be added anyway.
-- The expected overhead for growth may change over time, so it may not be the same value as last release; pay attention to that when changing the variables.
+- The expected overhead for growth may change over time. Consider whether the percentage needs to be changed in response; if so, update it here in this section.
