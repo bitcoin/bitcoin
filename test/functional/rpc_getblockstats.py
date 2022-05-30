@@ -54,7 +54,7 @@ class GetblockstatsTest(SyscoinTestFramework):
         self.nodes[0].settxfee(amount=0.003)
         self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True)
         self.sync_all()
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
 
         self.expected_stats = self.get_stats()
 

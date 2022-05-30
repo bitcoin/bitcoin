@@ -243,7 +243,7 @@ class ToolWalletTest(SyscoinTestFramework):
         """
         self.start_node(0)
         self.log.info('Generating transaction to mutate wallet')
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         self.stop_node(0)
 
         self.log.info('Calling wallet tool info after generating a transaction, testing output')

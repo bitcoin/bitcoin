@@ -64,7 +64,7 @@ class MempoolCoinbaseTest(SyscoinTestFramework):
         wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_2['hex'])
         wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_3['hex'])
         self.log.info("Generate a block")
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         self.log.info("Check that time-locked transaction is still too immature to spend")
         assert_raises_rpc_error(-26, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 

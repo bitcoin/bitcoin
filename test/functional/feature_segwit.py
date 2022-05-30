@@ -28,7 +28,6 @@ from test_framework.messages import (
     #  SYSCOIN
     MAX_BLOCK_SERIALIZED_SIZE,
     MAX_NEVM_DATA_BLOCK,
-
 )
 from test_framework.script import (
     CScript,
@@ -137,7 +136,7 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(tmpl['transactions'][0]['hash'], txid)
         assert_equal(tmpl['transactions'][0]['sigops'], 2)
         assert '!segwit' not in tmpl['rules']
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # block 162
+        self.generate(self.nodes[0], 1)  # block 162
 
         balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
@@ -269,7 +268,7 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(tmpl['transactions'][0]['sigops'], expected_sigops)
         assert '!segwit' in tmpl['rules']
 
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)  # Mine a block to clear the gbt cache
+        self.generate(self.nodes[0], 1)  # Mine a block to clear the gbt cache
 
         self.log.info("Non-segwit miners are able to use GBT response after activation.")
         # Create a 3-tx chain: tx1 (non-segwit input, paying to a segwit output) ->
@@ -332,7 +331,7 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], tx.get_weight())
 
         # Mine a block to clear the gbt cache again.
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
 
         if not self.options.descriptors:
             self.log.info("Verify behaviour of importaddress and listunspent")

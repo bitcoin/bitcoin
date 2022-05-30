@@ -36,12 +36,12 @@ class CreateWalletWatchonlyTest(SyscoinTestFramework):
         wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_addr)['pubkey'])
         wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_change)['pubkey'])
 
-        # generate some btc for testing
+        # generate some sys for testing
         self.generatetoaddress(node, COINBASE_MATURITY + 1, a1)
 
         # send 1 sys to our watch-only address
         txid = def_wallet.sendtoaddress(wo_addr, 1)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
 
         # getbalance
         self.log.info('include_watchonly should default to true for watch-only wallets')

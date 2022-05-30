@@ -61,9 +61,9 @@ class WalletHDTest(SyscoinTestFramework):
                 assert_equal(hd_info["hdkeypath"], "m/0'/0'/" + str(i) + "'")
             assert_equal(hd_info["hdmasterfingerprint"], hd_fingerprint)
             self.nodes[0].sendtoaddress(hd_add, 1)
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+            self.generate(self.nodes[0], 1)
         self.nodes[0].sendtoaddress(non_hd_add, 1)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
 
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()

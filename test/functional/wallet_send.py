@@ -442,14 +442,14 @@ class WalletSendTest(SyscoinTestFramework):
         assert not res[0]["allowed"]
         assert_equal(res[0]["reject-reason"], "non-final")
         # It shouldn't be confirmed in the next block
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 0)
         # The mempool should allow it now:
         res = self.nodes[0].testmempoolaccept([hex])
         assert res[0]["allowed"]
         # Don't wait for wallet to add it to the mempool:
         res = self.nodes[0].sendrawtransaction(hex)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 1)
 
         self.log.info("Lock unspents...")

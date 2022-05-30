@@ -55,7 +55,7 @@ class ScantxoutsetTest(SyscoinTestFramework):
         self.sendtodestination("mxp7w7j8S1Aq6L8StS2PqVvtt4HGxXEvdy", 8.192)  # (m/1/1/1)
         self.sendtodestination("mpQ8rokAhp1TAtJQR6F6TaUmjAWkAWYYBq", 16.384)  # (m/1/1/1500)
 
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
 
         scan = self.nodes[0].scantxoutset("start", [])
         info = self.nodes[0].gettxoutsetinfo()
