@@ -19,7 +19,6 @@
 #include <chainparams.h>
 #include <context.h>
 #include <node/coinstats.h>
-#include <compat/sanity.h>
 #include <fs.h>
 #include <hash.h>
 #include <httpserver.h>
@@ -924,9 +923,6 @@ static bool InitSanityCheck()
     if (!ECC_InitSanityCheck()) {
         return InitError(Untranslated("Elliptic curve cryptography sanity check failure. Aborting."));
     }
-
-    if (!glibcxx_sanity_test())
-        return false;
 
     if (!BLSInit()) {
         return false;
