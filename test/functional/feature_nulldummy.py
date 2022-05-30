@@ -62,11 +62,9 @@ class NULLDUMMYTest(SyscoinTestFramework):
         self.nodes[0].createwallet(wallet_name='wmulti', disable_private_keys=True)
         wmulti = self.nodes[0].get_wallet_rpc('wmulti')
         w0 = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
-        # SYSCOIN
-        self.address = w0.getnewaddress(address_type='legacy')
+        self.address = w0.getnewaddress()
         self.pubkey = w0.getaddressinfo(self.address)['pubkey']
-        # SYSCOIN
-        self.ms_address = wmulti.addmultisigaddress(1, [self.pubkey], '', 'legacy')['address']
+        self.ms_address = wmulti.addmultisigaddress(1, [self.pubkey])['address']
         self.wit_address = w0.getnewaddress(address_type='p2sh-segwit')
         self.wit_ms_address = wmulti.addmultisigaddress(1, [self.pubkey], '', 'p2sh-segwit')['address']
         if not self.options.descriptors:

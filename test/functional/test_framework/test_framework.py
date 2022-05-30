@@ -118,7 +118,6 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         self.wallet_names = None
         # SYSCOIN
         self.mocktime = None
-        self.num_nodes = 1
         # By default the wallet is not required. Set to true by skip_if_no_wallet().
         # When False, we ignore wallet_names regardless of what it is.
         self.requires_wallet = False

@@ -95,8 +95,7 @@ class ListTransactionsTest(SyscoinTestFramework):
             # include_watchonly is a legacy wallet feature, so don't test it for descriptor wallets
             self.log.info("Test 'include_watchonly' feature (legacy wallet)")
             pubkey = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
-            # SYSCOIN
-            multisig = self.nodes[1].createmultisig(1, [pubkey], 'legacy')
+            multisig = self.nodes[1].createmultisig(1, [pubkey])
             self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
             txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
             self.generate(self.nodes[1], 1)
@@ -219,7 +218,7 @@ class ListTransactionsTest(SyscoinTestFramework):
             assert_equal(txs[txid_4], "unknown")
 
         self.log.info("Test mined transactions are no longer bip125-replaceable")
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         assert txid_3b not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
         assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")
