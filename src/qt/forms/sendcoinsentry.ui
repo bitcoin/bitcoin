@@ -161,7 +161,7 @@
    <item row="2" column="1">
     <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1,0">
      <item>
-      <widget class="BitcoinAmountField" name="payAmount">
+      <widget class="BitcoinAmountField" name="payAmount" native="true">
        <property name="toolTip">
         <string>The amount to send in the selected unit</string>
        </property>
@@ -223,8 +223,9 @@
   </customwidget>
   <customwidget>
    <class>BitcoinAmountField</class>
-   <extends>QLineEdit</extends>
+   <extends>QWidget</extends>
    <header>qt/bitcoinamountfield.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>
