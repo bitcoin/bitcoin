@@ -86,6 +86,17 @@ typedef void* sockopt_arg_type;
 typedef char* sockopt_arg_type;
 #endif
 
+#ifdef WIN32
+// Export main() and ensure working ASLR when using mingw-w64.
+// Exporting a symbol will prevent the linker from stripping
+// the .reloc section from the binary, which is a requirement
+// for ASLR. While release builds are not affected, anyone
+// building with a binutils < 2.36 is subject to this ld bug.
+#define MAIN_FUNCTION __declspec(dllexport) int main(int argc, char* argv[])
+#else
+#define MAIN_FUNCTION int main(int argc, char* argv[])
+#endif
+
 // Note these both should work with the current usage of poll, but best to be safe
 // WIN32 poll is broken https://daniel.haxx.se/blog/2012/10/10/wsapoll-is-broken/
 // __APPLE__ poll is broke https://github.com/bitcoin/bitcoin/pull/14336#issuecomment-437384408
