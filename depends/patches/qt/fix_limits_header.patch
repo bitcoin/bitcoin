@@ -28,3 +28,16 @@ Upstream commits:
 +#include <limits>
 +
  QT_BEGIN_NAMESPACE
+
+
+--- old/qtbase/src/tools/moc/generator.cpp
++++ new/qtbase/src/tools/moc/generator.cpp
+@@ -42,6 +42,7 @@
+
+ #include <math.h>
+ #include <stdio.h>
++#include <limits>
+
+ #include <private/qmetaobject_p.h> //for the flags.
+ #include <private/qplugin_p.h> //for the flags.
+

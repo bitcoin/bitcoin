@@ -7,18 +7,19 @@
 This file is modified from python-bitcoinlib.
 """
 
-import hashlib
 import struct
 
 from .bignum import bn2vch
 from .messages import CTransaction, CTxOut, sha256, hash256
+
+from .ripemd160 import ripemd160
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
 
 OPCODE_NAMES = {}
 
 def hash160(s):
-    return hashlib.new('ripemd160', sha256(s)).digest()
+    return ripemd160(sha256(s))
 
 
 _opcode_instances = []
