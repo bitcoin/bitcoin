@@ -9,7 +9,9 @@
 #include <random.h>
 #include <util/trace.h>
 #include <version.h>
-
+// SYSCOIN
+#include <sync.h>
+Mutex m_most_recent_block_mutex;
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
@@ -66,7 +68,11 @@ bool CCoinsViewCache::GetCoin(const COutPoint &outpoint, Coin &coin) const {
 
 void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possible_overwrite) {
     assert(!coin.IsSpent());
-    if (coin.out.scriptPubKey.IsUnspendable()) return;
+    {
+        // SYSCOIN
+        LOCK(m_most_recent_block_mutex);
+        if (coin.out.scriptPubKey.IsUnspendable()) return;
+    }
     CCoinsMap::iterator it;
     bool inserted;
     std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::tuple<>());
@@ -115,12 +121,7 @@ void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coi
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
-    // SYSCOIN
-    const bool IsNEVMData = tx.IsNEVMData();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
-        // SYSCOIN
-        if(IsNEVMData && tx.vout[i].nValue == 0)
-            continue;
         bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
