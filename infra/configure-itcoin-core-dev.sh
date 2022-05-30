@@ -37,9 +37,9 @@ cd "${MY_DIR}/.."
     --disable-gui-tests \
     --disable-man \
     --with-boost="${MY_DIR}/../../itcoin-pbft/usrlocal" \
-    --with-gui=no \
     --with-incompatible-bdb \
     --with-zmq \
+    --without-gui \
     --without-miniupnpc \
     CXX="g++-10" \
     CC="gcc-10"
