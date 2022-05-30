@@ -18,9 +18,7 @@
 
 #include <functional>
 #include <unordered_map>
-// SYSCOIN
-#include <sync.h>
-extern Mutex m_most_recent_block_mutex;
+
 /**
  * A UTXO entry.
  *

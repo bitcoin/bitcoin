@@ -206,6 +206,7 @@ static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
+
 // Internal stuff
 namespace {
 /** Blocks that are in flight, and that are in the queue to be downloaded. */
@@ -586,7 +587,7 @@ private:
 
 
     // All of the following cache a recent block, and are protected by m_most_recent_block_mutex
-    // Mutex m_most_recent_block_mutex;
+    Mutex m_most_recent_block_mutex;
     std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
     uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
