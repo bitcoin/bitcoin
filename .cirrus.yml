@@ -299,10 +299,10 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
 
 task:
-  name: '[no wallet, libbitcoinkernel] [bionic]'
+  name: '[no wallet, libbitcoinkernel] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:bionic
+    image: ubuntu:jammy
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"

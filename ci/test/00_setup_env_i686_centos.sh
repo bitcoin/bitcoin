@@ -10,7 +10,8 @@ export HOST=i686-pc-linux-gnu
 export CONTAINER_NAME=ci_i686_centos
 export DOCKER_NAME_TAG=quay.io/centos/centos:stream8
 export DOCKER_PACKAGES="gcc-c++ glibc-devel.x86_64 libstdc++-devel.x86_64 glibc-devel.i686 libstdc++-devel.i686 ccache libtool make git python3 python3-zmq which patch lbzip2 xz procps-ng dash rsync coreutils bison"
+export DEP_OPTS="NO_QT=1"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-reduce-exports"
+export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports"
 export CONFIG_SHELL="/bin/dash"
 export TEST_RUNNER_ENV="LC_ALL=en_US.UTF-8"
