@@ -111,7 +111,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
             # 5. valid parameters - supply txid and True for non-verbose
             assert_equal(self.nodes[n].getrawtransaction(txId, True)["hex"], tx['hex'])
-     
+
             # 6. invalid parameters - supply txid and invalid boolean values (strings) for verbose
             for value in ["True", "False"]:
                 assert_raises_rpc_error(-1, "not a boolean", self.nodes[n].getrawtransaction, txid=txId, verbose=value)
