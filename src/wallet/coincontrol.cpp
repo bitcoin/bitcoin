@@ -14,69 +14,104 @@ CCoinControl::CCoinControl()
 
 bool CCoinControl::HasSelected() const
 {
-    return !m_selected_inputs.empty();
+    return !m_selected.empty();
 }
 
-bool CCoinControl::IsSelected(const COutPoint& output) const
+bool CCoinControl::IsSelected(const COutPoint& outpoint) const
 {
-    return m_selected_inputs.count(output) > 0;
+    return m_selected.count(outpoint) > 0;
 }
 
-bool CCoinControl::IsExternalSelected(const COutPoint& output) const
+bool CCoinControl::IsExternalSelected(const COutPoint& outpoint) const
 {
-    return m_external_txouts.count(output) > 0;
+    const auto it = m_selected.find(outpoint);
+    return it != m_selected.end() && it->second.HasTxOut();
 }
 
 std::optional<CTxOut> CCoinControl::GetExternalOutput(const COutPoint& outpoint) const
 {
-    const auto ext_it = m_external_txouts.find(outpoint);
-    if (ext_it == m_external_txouts.end()) {
+    const auto it = m_selected.find(outpoint);
+    if (it == m_selected.end() || !it->second.HasTxOut()) {
         return std::nullopt;
     }
-
-    return std::make_optional(ext_it->second);
+    return it->second.GetTxOut();
 }
 
-void CCoinControl::Select(const COutPoint& output)
+PreselectedInput& CCoinControl::Select(const COutPoint& outpoint)
 {
-    m_selected_inputs.insert(output);
+    return m_selected[outpoint];
 }
 
 void CCoinControl::SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
 {
-    m_selected_inputs.insert(outpoint);
-    m_external_txouts.emplace(outpoint, txout);
+    m_selected[outpoint].SetTxOut(txout);
 }
 
-void CCoinControl::UnSelect(const COutPoint& output)
+void CCoinControl::UnSelect(const COutPoint& outpoint)
 {
-    m_selected_inputs.erase(output);
+    m_selected.erase(outpoint);
 }
 
 void CCoinControl::UnSelectAll()
 {
-    m_selected_inputs.clear();
+    m_selected.clear();
 }
 
 std::vector<COutPoint> CCoinControl::ListSelected() const
 {
-    return {m_selected_inputs.begin(), m_selected_inputs.end()};
+    std::vector<COutPoint> outpoints;
+    std::transform(m_selected.begin(), m_selected.end(), std::back_inserter(outpoints),
+        [](const std::map<COutPoint, PreselectedInput>::value_type& pair) {
+            return pair.first;
+        });
+    return outpoints;
 }
 
 void CCoinControl::SetInputWeight(const COutPoint& outpoint, int64_t weight)
 {
-    m_input_weights[outpoint] = weight;
+    m_selected[outpoint].SetInputWeight(weight);
 }
 
 bool CCoinControl::HasInputWeight(const COutPoint& outpoint) const
 {
-    return m_input_weights.count(outpoint) > 0;
+    const auto it = m_selected.find(outpoint);
+    return it != m_selected.end() && it->second.HasInputWeight();
 }
 
 int64_t CCoinControl::GetInputWeight(const COutPoint& outpoint) const
 {
-    auto it = m_input_weights.find(outpoint);
-    assert(it != m_input_weights.end());
-    return it->second;
+    return m_selected.at(outpoint).GetInputWeight();
+}
+
+void PreselectedInput::SetTxOut(const CTxOut& txout)
+{
+    m_txout = txout;
+}
+
+CTxOut PreselectedInput::GetTxOut() const
+{
+    assert(m_txout.has_value());
+    return m_txout.value();
+}
+
+bool PreselectedInput::HasTxOut() const
+{
+    return m_txout.has_value();
+}
+
+void PreselectedInput::SetInputWeight(int64_t weight)
+{
+    m_weight = weight;
+}
+
+int64_t PreselectedInput::GetInputWeight() const
+{
+    assert(m_weight.has_value());
+    return m_weight.value();
+}
+
+bool PreselectedInput::HasInputWeight() const
+{
+    return m_weight.has_value();
 }
 } // namespace wallet
