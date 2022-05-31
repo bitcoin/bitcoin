@@ -516,6 +516,8 @@ private:
      *  May return an empty shared_ptr if the Peer object can't be found. */
     PeerRef RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
+    void MaybeDisconnect(CNode& node, std::string_view message) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
      *
@@ -1441,6 +1443,25 @@ void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
     vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
 }
 
+void PeerManagerImpl::MaybeDisconnect(CNode& peer, std::string_view message)
+{
+    if (peer.HasPermission(NetPermissionFlags::NoBan)) {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Not disconnecting noban peer %d!\n", peer.GetId());
+        return;
+    }
+
+    // Disconnect the peer otherwise, even if it was a manual connection. Users
+    // are expected to assign the noban permission flag to manual and automatic
+    // connections.
+    //
+    // However, do not disconnect peers with the same address. Disconnecting
+    // peers with the same address may hurt honest users that share the same
+    // network address, and it is easy for malicious peers to circumvent. For
+    // example, IPV6 addresses are cheap and easy to get.
+    LogPrintLevel(BCLog::NET, BCLog::Level::Info, "Disconnecting peer %d. (%s)\n", peer.GetId(), message);
+    peer.fDisconnect = true;
+}
+
 void PeerManagerImpl::Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
 {
     assert(howmuch > 0);
@@ -2177,7 +2198,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, c
     BlockTransactions resp(req);
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
-            Misbehaving(pfrom.GetId(), 100, "getblocktxn with out-of-bounds tx indices");
+            MaybeDisconnect(pfrom, "getblocktxn with out-of-bounds tx indices");
             return;
         }
         resp.txn[i] = block.vtx[req.indexes[i]];
