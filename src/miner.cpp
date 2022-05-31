@@ -162,11 +162,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // ITCOIN_SPECIFIC START
-    // If any_block_subsidy_is_valid is enabled is a signet, the block subsidy value is taken from a command line parameter
     if (chainparams.GetConsensus().allow_any_block_subsidy) {
+        /*
+         * If allow_any_block_subsidy is enabled, the block subsidy value is
+         * taken from a command line parameter
+         */
         CAmount blockSubsidy = gArgs.GetArg("-blocksubsidy", 100 * COIN);
         coinbaseTx.vout[0].nValue = nFees + blockSubsidy;
     } else {
+        // original bitcoin code
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
     // ITCOIN_SPECIFIC END

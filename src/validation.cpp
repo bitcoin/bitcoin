@@ -2213,6 +2213,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     if (chainparams.GetConsensus().allow_any_block_subsidy) {
         // Do not enforce rules on block subsidy value in the coinbase
     } else {
+        // original bitcoin code
         CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
         if (block.vtx[0]->GetValueOut() > blockReward) {
             LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
@@ -3373,13 +3374,17 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // Check the merkle root.
     if (fCheckMerkleRoot) {
         // ITCOIN_SPECIFIC START
-        // if signet_solution_independent_blockchain is enabled in consensus params,
-        // then the merkle root calculation will exclude the signet solution
         bool mutated;
         uint256 hashMerkleRoot2;
         if (consensusParams.signet_blocks && consensusParams.signet_solution_independent_blockchain) {
+            /*
+             * if signet_solution_independent_blockchain is enabled in consensus
+             * params, then the merkle root calculation will exclude the signet
+             * solution
+             */
             hashMerkleRoot2 = BlockSignetMerkleRoot(block, &mutated);
         } else {
+            // original bitcon code (minus the hashMerkleRoot2 declaration)
             hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
         }
         // ITCOIN_SPECIFIC END
