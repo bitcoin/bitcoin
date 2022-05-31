@@ -54,7 +54,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 
     // Add data
     g_time_offsets.input(nOffsetSample);
-    LogPrint(BCLog::NET, "added time data, samples %d, offset %+d (%+d minutes)\n", g_time_offsets.size(), nOffsetSample, nOffsetSample / 60);
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Added time data, samples %d, offset %+d (%+d minutes)\n", g_time_offsets.size(), nOffsetSample, nOffsetSample / 60);
 
     // There is a known issue here (see issue #4521):
     //
@@ -100,12 +100,12 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
         }
 
         if (LogAcceptCategory(BCLog::NET, BCLog::Level::Debug)) {
-            std::string log_message{"time data samples: "};
+            std::string log_message{"Time data samples: "};
             for (const int64_t n : vSorted) {
                 log_message += strprintf("%+d  ", n);
             }
             log_message += strprintf("|  median offset = %+d  (%+d minutes)", nTimeOffset, nTimeOffset / 60);
-            LogPrint(BCLog::NET, "%s\n", log_message);
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s\n", log_message);
         }
     }
 }

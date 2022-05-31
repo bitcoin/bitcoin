@@ -196,7 +196,7 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
         s >> endpoint;
         CAddress addr{endpoint, GetDesirableServiceFlags(NODE_NONE)};
         addr.nTime = GetTime() - rng.randrange(nOneWeek) - nOneWeek;
-        LogPrint(BCLog::NET, "Added hardcoded seed: %s\n", addr.ToString());
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Debug, "Added hardcoded seed: %s\n", addr.ToString());
         vSeedsOut.push_back(addr);
     }
     return vSeedsOut;
@@ -259,7 +259,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
     }
     if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false))
     {
-        LogPrint(BCLog::NET, "Advertising address %s to peer=%d\n", addrLocal.ToString(), node.GetId());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "Advertising address %s to peer=%d\n", addrLocal.ToString(), node.GetId());
         return addrLocal;
     }
     // Address is unroutable. Don't advertise.
@@ -452,7 +452,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     }
 
     /// debug print
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "trying connection %s lastseen=%.1fhrs\n",
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying connection to %s last seen %.1f hours ago\n",
                   pszDest ? pszDest : addrConnect.ToString(),
                   pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime) / 3600.0);
 
@@ -465,7 +465,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             const CService rnd{resolved[GetRand(resolved.size())]};
             addrConnect = CAddress{MaybeFlipIPv6toCJDNS(rnd), NODE_NONE};
             if (!addrConnect.IsValid()) {
-                LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s\n", addrConnect.ToString(), pszDest);
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Resolver returned invalid address %s for %s\n", addrConnect.ToString(), pszDest);
                 return nullptr;
             }
             // It is possible that we already have a connection to the IP/port pszDest resolved to.
@@ -561,7 +561,7 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     LOCK(m_sock_mutex);
     if (m_sock) {
-        LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Disconnecting peer=%d\n", id);
         m_sock.reset();
     }
 }
@@ -703,19 +703,19 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
         hdrbuf >> hdr;
     }
     catch (const std::exception&) {
-        LogPrint(BCLog::NET, "Header error: Unable to deserialize, peer=%d\n", m_node_id);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Header error: Unable to deserialize, peer=%d\n", m_node_id);
         return -1;
     }
 
     // Check start string, network magic
     if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-        LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
     if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-        LogPrint(BCLog::NET, "Header error: Size too large (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetCommand()), hdr.nMessageSize, m_node_id);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Header error: Size too large (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetCommand()), hdr.nMessageSize, m_node_id);
         return -1;
     }
 
@@ -770,14 +770,14 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
 
     // Check checksum and header message type string
     if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
-        LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
                  SanitizeString(msg.m_type), msg.m_message_size,
                  HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
         reject_message = true;
     } else if (!hdr.IsCommandValid()) {
-        LogPrint(BCLog::NET, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
                  SanitizeString(hdr.GetCommand()), msg.m_message_size, m_node_id);
         reject_message = true;
     }
@@ -835,7 +835,7 @@ size_t CConnman::SocketSendData(CNode& node) const
                 // error
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
-                    LogPrint(BCLog::NET, "socket send error for peer=%d: %s\n", node.GetId(), NetworkErrorString(nErr));
+                    LogPrintLevel(BCLog::PROXY, BCLog::Level::Debug, "Socket send error for peer=%d: %s\n", node.GetId(), NetworkErrorString(nErr));
                     node.CloseSocketDisconnect();
                 }
             }
@@ -895,7 +895,7 @@ bool CConnman::AttemptToEvictConnection()
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
         if (pnode->GetId() == *node_id_to_evict) {
-            LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n", pnode->ConnectionTypeAsString(), pnode->GetId());
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Selected %s connection for eviction peer=%d; disconnecting\n", pnode->ConnectionTypeAsString(), pnode->GetId());
             pnode->fDisconnect = true;
             return true;
         }
@@ -956,7 +956,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     }
 
     if (!fNetworkActive) {
-        LogPrint(BCLog::NET, "connection from %s dropped: not accepting new connections\n", addr.ToString());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Connection from %s dropped: not accepting new connections\n", addr.ToString());
         return;
     }
 
@@ -970,15 +970,14 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     // on all platforms.  Set it again here just to be sure.
     const int on{1};
     if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-        LogPrint(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
-                 addr.ToString());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Connection from %s: unable to set TCP_NODELAY, continuing anyway\n", addr.ToString());
     }
 
     // Don't accept connections from banned peers.
     bool banned = m_banman && m_banman->IsBanned(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && banned)
     {
-        LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Connection from %s dropped (banned)\n", addr.ToString());
         return;
     }
 
@@ -986,7 +985,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     bool discouraged = m_banman && m_banman->IsDiscouraged(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
     {
-        LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Connection from %s dropped (discouraged)\n", addr.ToString());
         return;
     }
 
@@ -994,7 +993,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     {
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
-            LogPrint(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Failed to find an eviction candidate - connection dropped (full)\n");
             return;
         }
     }
@@ -1022,7 +1021,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     pnode->m_prefer_evict = discouraged;
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
-    LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Inbound connection from %s accepted\n", addr.ToString());
 
     {
         LOCK(m_nodes_mutex);
@@ -1078,7 +1077,7 @@ void CConnman::DisconnectNodes()
             // Disconnect any connected nodes
             for (CNode* pnode : m_nodes) {
                 if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET, "Network not active, dropping peer=%d\n", pnode->GetId());
+                    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Network not active, dropping peer=%d\n", pnode->GetId());
                     pnode->fDisconnect = true;
                 }
             }
@@ -1150,22 +1149,22 @@ bool CConnman::InactivityCheck(const CNode& node) const
     if (!ShouldRunInactivityChecks(node, now)) return false;
 
     if (last_recv.count() == 0 || last_send.count() == 0) {
-        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", count_seconds(m_peer_connect_timeout), last_recv.count() != 0, last_send.count() != 0, node.GetId());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Socket no message in first %i seconds, %d %d peer=%d\n", count_seconds(m_peer_connect_timeout), last_recv.count() != 0, last_send.count() != 0, node.GetId());
         return true;
     }
 
     if (now > last_send + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket sending timeout: %is peer=%d\n", count_seconds(now - last_send), node.GetId());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Socket sending timeout: %is peer=%d\n", count_seconds(now - last_send), node.GetId());
         return true;
     }
 
     if (now > last_recv + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", count_seconds(now - last_recv), node.GetId());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Socket receive timeout: %is peer=%d\n", count_seconds(now - last_recv), node.GetId());
         return true;
     }
 
     if (!node.fSuccessfullyConnected) {
-        LogPrint(BCLog::NET, "version handshake timeout peer=%d\n", node.GetId());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Version handshake timeout peer=%d\n", node.GetId());
         return true;
     }
 
@@ -1312,7 +1311,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             {
                 // socket closed gracefully
                 if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET, "socket closed for peer=%d\n", pnode->GetId());
+                    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Socket closed for peer=%d\n", pnode->GetId());
                 }
                 pnode->CloseSocketDisconnect();
             }
@@ -1323,7 +1322,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
                 {
                     if (!pnode->fDisconnect) {
-                        LogPrint(BCLog::NET, "socket recv error for peer=%d: %s\n", pnode->GetId(), NetworkErrorString(nErr));
+                        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Socket recv error for peer=%d: %s\n", pnode->GetId(), NetworkErrorString(nErr));
                     }
                     pnode->CloseSocketDisconnect();
                 }
@@ -1521,12 +1520,12 @@ bool CConnman::GetTryNewOutboundPeer() const
 void CConnman::SetTryNewOutboundPeer(bool flag)
 {
     m_try_another_outbound_peer = flag;
-    LogPrint(BCLog::NET, "setting try another outbound peer=%s\n", flag ? "true" : "false");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Setting try another outbound peer=%s\n", flag ? "true" : "false");
 }
 
 void CConnman::StartExtraBlockRelayPeers()
 {
-    LogPrint(BCLog::NET, "enabling extra block-relay-only peers\n");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Enabling extra block-relay-only peers\n");
     m_start_extra_block_relay_peers = true;
 }
 
@@ -1746,7 +1745,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     !HasAllDesirableServiceFlags(addr.nServices) ||
                     setConnected.count(m_netgroupman.GetGroup(addr))) continue;
                 addrConnect = addr;
-                LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToString());
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying to make an anchor connection to %s\n", addrConnect.ToString());
                 break;
             }
 
@@ -1826,7 +1825,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 int randsleep = GetRand<int>(FEELER_SLEEP_WINDOW * 1000);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(randsleep)))
                     return;
-                LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Making feeler connection to %s\n", addrConnect.ToString());
             }
 
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
@@ -2556,7 +2555,7 @@ bool CConnman::DisconnectNode(const std::string& strNode)
 {
     LOCK(m_nodes_mutex);
     if (CNode* pnode = FindNode(strNode)) {
-        LogPrint(BCLog::NET, "disconnect by address%s matched peer=%d; disconnecting\n", (fLogIPs ? strprintf("=%s", strNode) : ""), pnode->GetId());
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Disconnect by address%s matched peer=%d; disconnecting\n", fLogIPs ? strprintf("=%s", strNode) : "", pnode->GetId());
         pnode->fDisconnect = true;
         return true;
     }
@@ -2569,7 +2568,7 @@ bool CConnman::DisconnectNode(const CSubNet& subnet)
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
         if (subnet.Match(pnode->addr)) {
-            LogPrint(BCLog::NET, "disconnect by subnet%s matched peer=%d; disconnecting\n", (fLogIPs ? strprintf("=%s", subnet.ToString()) : ""), pnode->GetId());
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Disconnect by subnet%s matched peer=%d; disconnecting\n", fLogIPs ? strprintf("=%s", subnet.ToString()) : "", pnode->GetId());
             pnode->fDisconnect = true;
             disconnected = true;
         }
@@ -2587,7 +2586,7 @@ bool CConnman::DisconnectNode(NodeId id)
     LOCK(m_nodes_mutex);
     for(CNode* pnode : m_nodes) {
         if (id == pnode->GetId()) {
-            LogPrint(BCLog::NET, "disconnect by id peer=%d; disconnecting\n", pnode->GetId());
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Disconnect by id peer=%d; disconnecting\n", pnode->GetId());
             pnode->fDisconnect = true;
             return true;
         }
@@ -2724,9 +2723,9 @@ CNode::CNode(NodeId idIn, std::shared_ptr<Sock> sock, const CAddress& addrIn,
     mapRecvBytesPerMsgType[NET_MESSAGE_TYPE_OTHER] = 0;
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", m_addr_name, id);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Added connection to %s peer=%d\n", m_addr_name, id);
     } else {
-        LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Added connection peer=%d\n", id);
     }
 
     m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), id, SER_NETWORK, INIT_PROTO_VERSION));
@@ -2742,7 +2741,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
     size_t nMessageSize = msg.data.size();
-    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
+    LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "Sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
     if (gArgs.GetBoolArg("-capturemessages", false)) {
         CaptureMessage(pnode->addr, msg.m_type, msg.data, /*is_incoming=*/false);
     }
