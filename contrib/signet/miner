@@ -27,10 +27,11 @@ if (PATH_BASE_TEST_FUNCTIONAL not in sys.path):
     sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 from test_framework.conftest import ITCOIN_PBFT_ROOT_DIR
+from test_framework.test_node import TestNodeCLI
+
 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
 from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, uint256_from_str # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
-from test_framework.test_node import TestNodeCLI
 
 # ITCOIN_SPECIFIC - START
 #
