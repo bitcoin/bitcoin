@@ -85,7 +85,8 @@ $ find . -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.c" \) -print0  | xa
 
 # Requirements
 - python>=3.8
-- gcc/g++ 11
+- gcc/g++ 10 (alternative)
+- gcc/g++ 11 (alternative)
 - clang NOT supported
 
 # Tests
@@ -379,9 +380,7 @@ def parse_raw_gcc_dict(gcc_dict: Dict[Any, Any], path_prefix: Path) -> RawGccErr
     ...                              'finish': {'column': 46, 'file': 'netbase.cpp', 'line': 34}}],
     ...               'message': 'expected initializer before ‘GUARDED_BY’'}
     >>> print(_remove_path_prefix(parse_raw_gcc_dict(gcc10_dict, path_prefix), path_prefix))
-    Traceback (most recent call last):
-    ...
-    ValueError: caret does not contain the 'display-column' field. Are you running on gcc 10? Only gcc 11 is supported: {'children': [], 'kind': 'error', 'locations': [{'caret': {'column': 37, 'file': 'netbase.cpp', 'line': 34}, 'finish': {'column': 46, 'file': 'netbase.cpp', 'line': 34}}], 'message': 'expected initializer before ‘GUARDED_BY’'}
+    RawGccErrorRanged(kind='error', caret_column=37, file=PosixPath('netbase.cpp'), line=34, message='expected initializer before ‘GUARDED_BY’', raw_line='static proxyType proxyInfo[NET_MAX] TS_ITCOIN_GUARDED_BY(g_proxyinfo_mutex);\\n', other={'children': [], 'locations': [{'caret': {'column': 37, 'file': 'netbase.cpp', 'line': 34}, 'finish': {'column': 46, 'file': 'netbase.cpp', 'line': 34}}]}, finish_column=46)
     """
     kind = gcc_dict['kind']
     message = gcc_dict['message']
@@ -399,7 +398,11 @@ def parse_raw_gcc_dict(gcc_dict: Dict[Any, Any], path_prefix: Path) -> RawGccErr
             #       sia caret che finish, e prendere quello.
             try:
                 caret = locations[1]['caret']
-                finish = locations[1]['finish']
+                if len(locations) == 2 and (set(locations[0]) == {'caret'}) and (locations[0] == locations[1]):
+                    # special case for gcc 10 messages
+                    finish = None
+                else:
+                    finish = locations[1]['finish']
             except KeyError as e:
                 raise ValueError(f"locations has {len(locations)} elements, and I only know how to deal with a very specific case. {gcc_dict}") from e
         assert len(locations) in [1, 2, 3], f"locations should be a list of 1 element, or a list of 2 or 3 elements with a specific structure. {gcc_dict}"
@@ -407,22 +410,20 @@ def parse_raw_gcc_dict(gcc_dict: Dict[Any, Any], path_prefix: Path) -> RawGccErr
         pprint(gcc_dict)
         raise
 
-    # gcc 10 messages do not contain the 'display-column' field.
-    # We do not know how to handle it.
-    if 'display-column' not in caret:
-        raise ValueError(f"caret does not contain the 'display-column' field. Are you running on gcc 10? Only gcc 11 is supported: {gcc_dict}")
-
-    # display-column is not present in gcc 10
-    #
-    # If it is there, let's require that 'column' and 'display-column' have the
-    # same value. This will ensure we are not dealing with a utf-8 encoded
-    # source code, for example, and we do not want to think about how to manage
-    # it.
-    assert caret['column'] == caret['display-column'], f"in 'caret', 'column' should be equal to 'display-column', {gcc_dict}"
+    if 'display-column' in caret:
+        # display-column is not present in gcc 10
+        #
+        # If it is there, let's require that 'column' and 'display-column' have
+        # the same value. This will ensure we are not dealing with a utf-8
+        # encoded source code, for example, and we do not want to think about
+        # how to manage it.
+        assert caret['column'] == caret['display-column'], f"in 'caret', 'column' should be equal to 'display-column', {gcc_dict}"
 
     if finish is not None:
         # if finish is defined, do the same check on it
-        assert finish['column'] == finish['display-column'], f"in 'finish', 'column' should be equal to 'display-column', {gcc_dict}"
+        if 'display-column' in finish:
+            # display-column is not present in gcc 10
+            assert finish['column'] == finish['display-column'], f"in 'finish', 'column' should be equal to 'display-column', {gcc_dict}"
         # ensure the start and end positions pertain to the same line in the
         # same file
         assert caret['file'] == finish['file'], f"caret.file should be equal to finish.file. {gcc_dict}"
@@ -436,7 +437,7 @@ def parse_raw_gcc_dict(gcc_dict: Dict[Any, Any], path_prefix: Path) -> RawGccErr
     if raw_line == '':
         raise FileNotFoundError(f"Can't open line {line} of {f_path}")
 
-    if (caret['column'] != caret['byte-column']) and ('\t' not in raw_line):
+    if ('byte-column' in caret) and (caret['column'] != caret['byte-column']) and ('\t' not in raw_line):
         # NOTE: byte-column is not present in gcc 10.
         #
         # If there is a tab in the source code, column and byte-column will have
@@ -447,7 +448,7 @@ def parse_raw_gcc_dict(gcc_dict: Dict[Any, Any], path_prefix: Path) -> RawGccErr
         #       column and byte-column are differing for additional reasons.
         raise ValueError(f"in 'caret', column can be different from byte-column only if raw_line contains a tab, {gcc_dict}")
 
-    if (finish is not None) and (finish['column'] != finish['byte-column']) and ('\t' not in raw_line):
+    if (finish is not None) and ('byte-column' in finish) and (finish['column'] != finish['byte-column']) and ('\t' not in raw_line):
         # NOTE: byte-column is not present in gcc 10.
         #
         # If there is a tab in the source code, column and byte-column will have
@@ -461,7 +462,7 @@ def parse_raw_gcc_dict(gcc_dict: Dict[Any, Any], path_prefix: Path) -> RawGccErr
     common_data = (
         kind,
         # byte-column is not present in gcc 10
-        caret['byte-column'],
+        caret['byte-column'] if 'byte-column' in caret else caret['column'],
         f_path,
         line,
         message,
@@ -472,7 +473,7 @@ def parse_raw_gcc_dict(gcc_dict: Dict[Any, Any], path_prefix: Path) -> RawGccErr
         return RawGccErrorRanged(
             *common_data,
             # byte-column is not present in gcc 10
-            finish['byte-column'],
+            finish['byte-column'] if 'byte-column' in finish else finish['column']
         )
     return RawGccError(*common_data)
 
