@@ -275,7 +275,7 @@ protected:
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
-    int Check_() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 #endif
 
     //! Select several addresses at once.

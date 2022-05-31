@@ -9,8 +9,8 @@
 #include <mutex>
 
 #ifdef __clang__
-// TL;DR Add TS_ITCOIN_GUARDED_BY(mutex) to member variables. The others are
-// rarely necessary. Ex: int nFoo TS_ITCOIN_GUARDED_BY(cs_foo);
+// TL;DR Add GUARDED_BY(mutex) to member variables. The others are
+// rarely necessary. Ex: int nFoo GUARDED_BY(cs_foo);
 //
 // See https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 // for documentation.  The clang compiler can do advanced static analysis
@@ -59,7 +59,7 @@ class TS_ITCOIN_LOCKABLE StdMutex : public std::mutex
 public:
 #ifdef __clang__
     //! For negative capabilities in the Clang Thread Safety Analysis.
-    //! A negative requirement uses the TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
+    //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
     //! with the ! operator, to indicate that a mutex should not be held.
     const StdMutex& operator!() const { return *this; }
 #endif // __clang__

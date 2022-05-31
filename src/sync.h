@@ -70,9 +70,9 @@ inline void EnterCritical(const char* pszName, const char* pszFile, int nLine, v
 inline void LeaveCritical() {}
 inline void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line) {}
 template <typename MutexType>
-inline void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs) {}
+inline void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs) {}
 template <typename MutexType>
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs) {}
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) {}
 inline void DeleteLock(void* cs) {}
 inline bool LockStackEmpty() { return true; }
 #endif
@@ -109,7 +109,7 @@ public:
     using UniqueLock = std::unique_lock<PARENT>;
 #ifdef __clang__
     //! For negative capabilities in the Clang Thread Safety Analysis.
-    //! A negative requirement uses the TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
+    //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
     //! with the ! operator, to indicate that a mutex should not be held.
     const AnnotatedMixin& operator!() const { return *this; }
 #endif // __clang__

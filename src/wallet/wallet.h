@@ -470,9 +470,9 @@ public:
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache = true) const;
-    // TODO: Remove "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
-    // annotation "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
+    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
+    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
+    // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
     // having to resolve the issue of member access into incomplete type CWallet.
     CAmount GetAvailableCredit(bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) const TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache = true) const;
@@ -503,9 +503,9 @@ public:
     // Pass this transaction to node for mempool insertion and relay to peers if flag set to true
     bool SubmitMemoryPoolAndRelay(std::string& err_string, bool relay);
 
-    // TODO: Remove "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
-    // "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
+    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
+    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
+    // "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
     // resolve the issue of member access into incomplete type CWallet. Note
     // that we still have the runtime check "AssertLockHeld(pwallet->cs_wallet)"
     // in place.
@@ -517,9 +517,9 @@ public:
      *  0  : in memory pool, waiting to be included in a block
      * >=1 : this many blocks deep in the main chain
      */
-    // TODO: Remove "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
-    // "TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
+    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
+    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
+    // "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
     // resolve the issue of member access into incomplete type CWallet. Note
     // that we still have the runtime check "AssertLockHeld(pwallet->cs_wallet)"
     // in place.
