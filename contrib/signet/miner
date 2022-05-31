@@ -18,16 +18,22 @@ import subprocess
 
 from binascii import unhexlify
 from io import BytesIO
-from typing import Tuple
+from typing import Tuple # ITCOIN_SPECIFIC
 
 PATH_BASE_CONTRIB_SIGNET = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNET, "..", "..", "test", "functional"))
+
+# ITCOIN_SPECIFIC - START
+
+# original code left as comment
+# sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 if (PATH_BASE_TEST_FUNCTIONAL not in sys.path):
     sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 from test_framework.conftest import ITCOIN_PBFT_ROOT_DIR
 from test_framework.test_node import TestNodeCLI
+# ITCOIN_SPECIFIC - END
 
 from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
 from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, ToHex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, uint256_from_str # noqa: E402
@@ -167,14 +173,14 @@ def signet_txs(block, challenge):
     # assumes signet solution has not been added yet so does not need
     # to be removed
 
-    # ITCOIN_SPECIFIC START
+    # ITCOIN_SPECIFIC - START
     # assumes SIGNET_HEADER has already been added so does not need to be added here
 
     # In itCoin, the transaction is first pow-ed and then signed
     # the signature covers the whole block header, including the pow part, namely nBits and nNonce
     block_header: CBlockHeader = CBlockHeader(block)
     sd = block_header.serialize()
-    # ITCOIN_SPECIFIC END
+    # ITCOIN_SPECIFIC - END
 
     to_spend = CTransaction()
     to_spend.nVersion = 0
@@ -376,7 +382,9 @@ def next_block_is_mine(last_hash, my_blocks):
     det_rand = int(last_hash[-16:-8], 16)
     return my_blocks[0] <= (det_rand % my_blocks[2]) < my_blocks[1]
 
-# ITCOIN_SPECIFIC START, new methods for solution independent blockchain miner
+# ITCOIN_SPECIFIC - START
+#
+# new methods for solution independent blockchain miner
 class DoGenerateArgs:
     # Util class for passing arguments to signet miner do_generate
     pass
@@ -567,7 +575,7 @@ def do_propagate_block(args, block: CBlock):
     # submit block
     r = args.bcli("-stdin", "submitblock", input=block.serialize().hex())
     return r
-# ITCOIN_SPECIFIC END
+# ITCOIN_SPECIFIC - END
 
 def do_generate(args):
     if args.max_blocks is not None:
@@ -694,7 +702,9 @@ def do_generate(args):
             time.sleep(sleep_for)
             continue
 
-        # ITCOIN_SPECIFIC START generate block using the new methods, leave as comment the other lines to highlight the differences
+        # ITCOIN_SPECIFIC - START
+        #
+        # generate block using the new methods, leave as comment the other lines to highlight the differences
         # gbt
         # tmpl = json.loads(args.bcli("getblocktemplate", '{"rules":["signet","segwit"]}'))
         block, tmpl, reward_addr = do_generate_next_block(args)
@@ -731,7 +741,7 @@ def do_generate(args):
         # submit block
         # r = args.bcli("submitblock", ToHex(block))
         r = do_propagate_block(args, signed_block)
-        # ITCOIN_SPECIFIC END
+        # ITCOIN_SPECIFIC - END
 
         # report
         bstr = "block" if is_mine else "backup block"
@@ -896,7 +906,7 @@ def main():
     logger.setLevel(logger_level)
     for handler in logger.handlers:
         handler.setLevel(logger_level)
-    # ITCOIN_SPECIFIC - end
+    # ITCOIN_SPECIFIC - END
 
     if hasattr(args, "fn"):
         return args.fn(args)
