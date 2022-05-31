@@ -68,11 +68,11 @@ namespace BCLog {
         ALL         = ~(uint32_t)0,
     };
     enum class Level {
-        Debug = 0,
-        None = 1,
-        Info = 2,
-        Warning = 3,
-        Error = 4,
+        Debug = 0, // High-volume or detailed logging for development/debugging
+        Info,      // Default
+        Warning,
+        Error,
+        None, // Internal use only
     };
 
     class Logger

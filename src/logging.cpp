@@ -135,7 +135,7 @@ struct CLogCategoryDesc {
 const CLogCategoryDesc LogCategories[] =
 {
     {BCLog::NONE, "0"},
-    {BCLog::NONE, "none"},
+    {BCLog::NONE, ""},
     {BCLog::NET, "net"},
     {BCLog::TOR, "tor"},
     {BCLog::MEMPOOL, "mempool"},
@@ -187,8 +187,6 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 std::string LogLevelToStr(BCLog::Level level)
 {
     switch (level) {
-    case BCLog::Level::None:
-        return "none";
     case BCLog::Level::Debug:
         return "debug";
     case BCLog::Level::Info:
@@ -197,6 +195,8 @@ std::string LogLevelToStr(BCLog::Level level)
         return "warning";
     case BCLog::Level::Error:
         return "error";
+    case BCLog::Level::None:
+        return "";
     }
     assert(false);
 }
@@ -206,7 +206,7 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
     // Each log category string representation should sync with LogCategories
     switch (category) {
     case BCLog::LogFlags::NONE:
-        return "none";
+        return "";
     case BCLog::LogFlags::NET:
         return "net";
     case BCLog::LogFlags::TOR:
