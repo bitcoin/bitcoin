@@ -2212,8 +2212,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // ITCOIN_SPECIFIC
     if (chainparams.GetConsensus().allow_any_block_subsidy) {
         // Do not enforce rules on block subsidy value in the coinbase
-    }
-    else {
+    } else {
         CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
         if (block.vtx[0]->GetValueOut() > blockReward) {
             LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
@@ -3377,10 +3376,11 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         // then the merkle root calculation will exclude the signet solution
         bool mutated;
         uint256 hashMerkleRoot2;
-        if (consensusParams.signet_blocks && consensusParams.signet_solution_independent_blockchain)
+        if (consensusParams.signet_blocks && consensusParams.signet_solution_independent_blockchain) {
             hashMerkleRoot2 = BlockSignetMerkleRoot(block, &mutated);
-        else
+        } else {
             hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
+        }
         // ITCOIN_SPECIFIC END
         if (block.hashMerkleRoot != hashMerkleRoot2)
             return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txnmrklroot", "hashMerkleRoot mismatch");

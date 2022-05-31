@@ -163,13 +163,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // ITCOIN_SPECIFIC
     // If any_block_subsidy_is_valid is enabled is a signet, the block subsidy value is taken from a command line parameter
-    if (chainparams.GetConsensus().allow_any_block_subsidy)
-    {
+    if (chainparams.GetConsensus().allow_any_block_subsidy) {
         CAmount blockSubsidy = gArgs.GetArg("-blocksubsidy", 100 * COIN);
         coinbaseTx.vout[0].nValue = nFees + blockSubsidy;
-    }
-    else
-    {
+    } else {
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
 
