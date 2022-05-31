@@ -88,5 +88,13 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         self.sync_all()
         self.log.info("Blockcounts: %s", [n.getblockcount() for n in self.nodes])
 
+        self.log.info("Test -minimumchainwork with a non-hex value")
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            ["-minimumchainwork=test"],
+            expected_msg='Error: Invalid non-hex (test) minimum chain work value specified',
+        )
+
+
 if __name__ == '__main__':
     MinimumChainWorkTest().main()
