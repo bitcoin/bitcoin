@@ -2178,11 +2178,12 @@ bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, con
             return false;
         }
     }
+
+    if(nMedianTime > 0 && !pnevmdatadb->FlushData(vecNEVMDataToProcess)) {
+        return false;
+    }
     // upon success write version hashes to db and strip scriptPubKeys
     for (auto &nevmDataEntry : vecNEVMDataToProcess) {
-        if(nMedianTime > 0 && !pnevmdatadb->WriteData(nevmDataEntry.nevmData->vchVersionHash, nevmDataEntry.nevmData->vchData)) {
-            return false;
-        }
         // upon receiving block we prune data and store in separate db
         std::vector<unsigned char> data;
         if(nevmDataEntry.scriptPubKey) {

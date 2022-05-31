@@ -1162,7 +1162,16 @@ CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapp
 
 CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmdata", nCacheSize, fMemory, fWipe) {
 }
-
+bool CNEVMDataDB::FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDataToProcess) {
+    CDBBatch batch(*this);    
+    for (const auto &dataProcess : vecNEVMDataToProcess) {
+        const auto& pair = std::make_pair(dataProcess.nevmData->vchVersionHash, true);
+        batch.Write(pair, dataProcess.nevmData->vchData);
+    }
+    if(!vecNEVMDataToProcess.empty())
+        LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", vecNEVMDataToProcess.size());
+    return WriteBatch(batch);
+}
 // called on connect - put median passed time into index so we can track pruning
 bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime) {
     CDBBatch batch(*this);    

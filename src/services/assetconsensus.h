@@ -12,6 +12,7 @@ class CCoinsViewCache;
 class CTxUndo;
 class CBlock;
 class BlockValidationState;
+class CNEVMDataProcessHelper;
 class CBlockIndexDB;
 class CNEVMTxRootsDB : public CDBWrapper {
 public:
@@ -38,6 +39,7 @@ public:
     explicit CNEVMDataDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool FlushErase(const NEVMDataVec &vecDataKeys);
     bool FlushResetMPTs(const NEVMDataVec &vecDataKeys);
+    bool FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDataToProcess);
     bool FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime);
     bool ExistsData(const std::vector<uint8_t>& nVersionHash) {
         const auto& pair = std::make_pair(nVersionHash, true);
