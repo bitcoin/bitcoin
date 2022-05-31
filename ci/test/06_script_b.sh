@@ -41,6 +41,9 @@ if [ "${RUN_TIDY}" = "true" ]; then
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
           " src/compat"\
           " src/init"\
+          " src/policy/feerate.cpp"\
+          " src/policy/packages.cpp"\
+          " src/policy/settings.cpp"\
           " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
           " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"

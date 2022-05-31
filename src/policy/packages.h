@@ -5,10 +5,12 @@
 #ifndef BITCOIN_POLICY_PACKAGES_H
 #define BITCOIN_POLICY_PACKAGES_H
 
+#include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 
+#include <cstdint>
 #include <vector>
 
 /** Default maximum number of transactions in a package. */

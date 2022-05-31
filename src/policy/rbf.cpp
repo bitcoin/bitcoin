@@ -4,10 +4,18 @@
 
 #include <policy/rbf.h>
 
-#include <policy/settings.h>
+#include <consensus/amount.h>
+#include <policy/feerate.h>
+#include <primitives/transaction.h>
+#include <sync.h>
 #include <tinyformat.h>
+#include <txmempool.h>
+#include <uint256.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+
+#include <limits>
+#include <vector>
 
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 {
