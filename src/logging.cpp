@@ -187,8 +187,6 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 std::string LogLevelToStr(BCLog::Level level)
 {
     switch (level) {
-    case BCLog::Level::None:
-        return "none";
     case BCLog::Level::Debug:
         return "debug";
     case BCLog::Level::Info:
@@ -197,6 +195,8 @@ std::string LogLevelToStr(BCLog::Level level)
         return "warning";
     case BCLog::Level::Error:
         return "error";
+    case BCLog::Level::None:
+        return "";
     }
     assert(false);
 }
