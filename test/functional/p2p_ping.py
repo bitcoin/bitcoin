@@ -62,20 +62,20 @@ class PingPongTest(BitcoinTestFramework):
         self.check_peer_info(pingtime=None, minping=None, pingwait=3)
 
         self.log.info('Reply without nonce cancels ping')
-        with self.nodes[0].assert_debug_log(['pong peer=0: Short payload']):
+        with self.nodes[0].assert_debug_log(['Pong peer=0: Short payload']):
             no_pong_node.send_and_ping(msg_pong_corrupt())
         self.check_peer_info(pingtime=None, minping=None, pingwait=None)
 
         self.log.info('Reply without ping')
         with self.nodes[0].assert_debug_log([
-                'pong peer=0: Unsolicited pong without ping, 0 expected, 0 received, 8 bytes',
+                'Pong peer=0: Unsolicited pong without ping, 0 expected, 0 received, 8 bytes',
         ]):
             no_pong_node.send_and_ping(msg_pong())
         self.check_peer_info(pingtime=None, minping=None, pingwait=None)
 
         self.log.info('Reply with wrong nonce does not cancel ping')
         assert 'ping' not in no_pong_node.last_message
-        with self.nodes[0].assert_debug_log(['pong peer=0: Nonce mismatch']):
+        with self.nodes[0].assert_debug_log(['Pong peer=0: Nonce mismatch']):
             # mock time PING_INTERVAL ahead to trigger node into sending a ping
             self.mock_forward(PING_INTERVAL + 1)
             no_pong_node.wait_until(lambda: 'ping' in no_pong_node.last_message)
@@ -85,7 +85,7 @@ class PingPongTest(BitcoinTestFramework):
         self.check_peer_info(pingtime=None, minping=None, pingwait=9)
 
         self.log.info('Reply with zero nonce does cancel ping')
-        with self.nodes[0].assert_debug_log(['pong peer=0: Nonce zero']):
+        with self.nodes[0].assert_debug_log(['Pong peer=0: Nonce zero']):
             no_pong_node.send_and_ping(msg_pong(0))
         self.check_peer_info(pingtime=None, minping=None, pingwait=None)
 
@@ -114,7 +114,7 @@ class PingPongTest(BitcoinTestFramework):
         assert 'ping' not in no_pong_node.last_message
         self.nodes[0].ping()
         no_pong_node.wait_until(lambda: 'ping' in no_pong_node.last_message)
-        with self.nodes[0].assert_debug_log(['ping timeout: 1201.000000s']):
+        with self.nodes[0].assert_debug_log(['Ping timeout: 1201.000000s']):
             self.mock_forward(TIMEOUT_INTERVAL // 2)
             # Check that sending a ping does not prevent the disconnect
             no_pong_node.sync_with_ping()

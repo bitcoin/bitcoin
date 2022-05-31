@@ -35,7 +35,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
         self.log.info('Check that tx invs also violate the protocol')
         self.nodes[0].add_p2p_connection(P2PInterface())
-        with self.nodes[0].assert_debug_log(['transaction (0000000000000000000000000000000000000000000000000000000000001234) inv sent in violation of protocol, disconnecting peer']):
+        with self.nodes[0].assert_debug_log(['Transaction (0000000000000000000000000000000000000000000000000000000000001234) inv sent in violation of protocol, disconnecting peer']):
             self.nodes[0].p2ps[0].send_message(msg_inv([CInv(t=MSG_WTX, h=0x1234)]))
             self.nodes[0].p2ps[0].wait_for_disconnect()
             del self.nodes[0].p2ps[0]
@@ -45,7 +45,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], True)
 
         assert_equal(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'], True)
-        with self.nodes[0].assert_debug_log(['received getdata for: wtx {} peer'.format(wtxid)]):
+        with self.nodes[0].assert_debug_log(['Received getdata for: wtx {} peer'.format(wtxid)]):
             self.nodes[0].sendrawtransaction(tx_hex)
             tx_relay_peer.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
@@ -62,7 +62,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         assert_equal(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'], True)
 
         self.log.info('Check that the tx from first_peer with relay-permission is relayed to others (ie.second_peer)')
-        with self.nodes[0].assert_debug_log(["received getdata"]):
+        with self.nodes[0].assert_debug_log(["Received getdata"]):
             # Note that normally, first_peer would never send us transactions since we're a blocksonly node.
             # By activating blocksonly, we explicitly tell our peers that they should not send us transactions,
             # and Bitcoin Core respects that choice and will not send transactions.
@@ -116,7 +116,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.log.info('Check that txs from P2P are rejected and result in disconnect')
         spendtx = self.miniwallet.create_self_transfer()
 
-        with self.nodes[0].assert_debug_log(['transaction sent in violation of protocol peer=0']):
+        with self.nodes[0].assert_debug_log(['Transaction sent in violation of protocol peer=0']):
             self.nodes[0].p2ps[0].send_message(msg_tx(spendtx['tx']))
             self.nodes[0].p2ps[0].wait_for_disconnect()
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 0)

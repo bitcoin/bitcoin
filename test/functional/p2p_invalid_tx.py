@@ -153,7 +153,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             orphan_tx_pool[i].vin.append(CTxIn(outpoint=COutPoint(i, 333)))
             orphan_tx_pool[i].vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
 
-        with node.assert_debug_log(['orphanage overflow, removed 1 tx']):
+        with node.assert_debug_log(['Orphanage overflow, removed 1 transaction(s)']):
             node.p2ps[0].send_txs_and_test(orphan_tx_pool, node, success=False)
 
         self.log.info('Test orphan with rejected parents')
@@ -161,7 +161,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
         rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
         rejected_parent.rehash()
-        with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
+        with node.assert_debug_log(['Not keeping orphan transaction with rejected parents {}'.format(rejected_parent.hash)]):
             node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
 
         self.log.info('Test that a peer disconnection causes erase its transactions from the orphan pool')

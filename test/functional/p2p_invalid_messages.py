@@ -97,7 +97,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_duplicate_version_msg(self):
         self.log.info("Test duplicate version message is ignored")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['redundant version message from peer']):
+        with self.nodes[0].assert_debug_log(['Redundant version message from peer']):
             conn.send_and_ping(msg_version())
         self.nodes[0].disconnect_p2ps()
 
@@ -175,7 +175,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_addrv2_empty(self):
         self.test_addrv2('empty',
             [
-                'received: addrv2 (0 bytes)',
+                'Received addrv2 (0 bytes)',
                 'ProcessMessages(addrv2, 0 bytes): Exception',
                 'end of data',
             ],
@@ -184,14 +184,14 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_addrv2_no_addresses(self):
         self.test_addrv2('no addresses',
             [
-                'received: addrv2 (1 bytes)',
+                'Received addrv2 (1 bytes)',
             ],
             bytes.fromhex('00'))
 
     def test_addrv2_too_long_address(self):
         self.test_addrv2('too long address',
             [
-                'received: addrv2 (525 bytes)',
+                'Received addrv2 (525 bytes)',
                 'ProcessMessages(addrv2, 525 bytes): Exception',
                 'Address too long: 513 > 512',
             ],
@@ -208,7 +208,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         now_hex = struct.pack('<I', int(time.time())).hex()
         self.test_addrv2('unrecognized network',
             [
-                'received: addrv2 (25 bytes)',
+                'Received addrv2 (25 bytes)',
                 '9.9.9.9:8333 mapped',
                 'Added 1 addresses',
             ],

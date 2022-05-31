@@ -160,7 +160,7 @@ class AddrTest(BitcoinTestFramework):
         msg = self.setup_addr_msg(num_ipv4_addrs)
         with self.nodes[0].assert_debug_log(
             [
-                'received: addr (301 bytes) peer=1',
+                'Received addr (301 bytes) peer=1',
             ]
         ):
             self.send_addr_msg(addr_source, msg, receivers)
@@ -388,7 +388,7 @@ class AddrTest(BitcoinTestFramework):
             self.mocktime += time_interval_1
             self.msg.addrs[0].time = self.mocktime + TEN_MINUTES
             self.nodes[0].setmocktime(self.mocktime)
-            with self.nodes[0].assert_debug_log(['received: addr (31 bytes) peer=0']):
+            with self.nodes[0].assert_debug_log(['Received addr (31 bytes) peer=0']):
                 peer.send_and_ping(self.msg)
                 self.mocktime += time_interval_2
                 self.nodes[0].setmocktime(self.mocktime)

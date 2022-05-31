@@ -196,7 +196,7 @@ class FilterTest(BitcoinTestFramework):
         self.log.info('Check that request for filtered blocks is ignored if no filter is set')
         filter_peer.merkleblock_received = False
         filter_peer.tx_received = False
-        with self.nodes[0].assert_debug_log(expected_msgs=['received getdata']):
+        with self.nodes[0].assert_debug_log(expected_msgs=['Received getdata']):
             block_hash = self.generatetoscriptpubkey(getnewdestination()[1])
             filter_peer.wait_for_inv([CInv(MSG_BLOCK, int(block_hash, 16))])
             filter_peer.sync_with_ping()
