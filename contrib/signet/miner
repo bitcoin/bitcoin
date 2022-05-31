@@ -696,8 +696,8 @@ def do_generate(args):
 
         # ITCOIN_SPECIFIC START generate block using the new methods, leave as comment the other lines to highlight the differences
         # gbt
+        # tmpl = json.loads(args.bcli("getblocktemplate", '{"rules":["signet","segwit"]}'))
         block, tmpl, reward_addr = do_generate_next_block(args)
-        # tmpl = args.bcli("getblocktemplate", '{"rules":["signet","segwit"]}')
         if tmpl["previousblockhash"] != bci["bestblockhash"]:
             logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
             time.sleep(1)
