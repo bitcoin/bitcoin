@@ -167,7 +167,7 @@ private:
      * @return a connected socket
      * @throws std::runtime_error if an error occurs
      */
-    std::unique_ptr<Sock> Hello() const EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    std::unique_ptr<Sock> Hello() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Check the control socket for errors and possibly disconnect.
@@ -179,7 +179,7 @@ private:
      * @param[in] sock Socket to use for talking to the SAM proxy.
      * @throws std::runtime_error if an error occurs
      */
-    void DestGenerate(const Sock& sock) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    void DestGenerate(const Sock& sock) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Generate a new destination with the SAM proxy, set `m_private_key` to it and save
@@ -187,21 +187,21 @@ private:
      * @param[in] sock Socket to use for talking to the SAM proxy.
      * @throws std::runtime_error if an error occurs
      */
-    void GenerateAndSavePrivateKey(const Sock& sock) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    void GenerateAndSavePrivateKey(const Sock& sock) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Derive own destination from `m_private_key`.
      * @see https://geti2p.net/spec/common-structures#destination
      * @return an I2P destination
      */
-    Binary MyDestination() const EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    Binary MyDestination() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Create the session if not already created. Reads the private key file and connects to the
      * SAM proxy.
      * @throws std::runtime_error if an error occurs
      */
-    void CreateIfNotCreatedAlready() EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    void CreateIfNotCreatedAlready() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Open a new connection to the SAM proxy and issue "STREAM ACCEPT" request using the existing
@@ -209,12 +209,12 @@ private:
      * @return the idle socket that is waiting for a peer to connect to us
      * @throws std::runtime_error if an error occurs
      */
-    std::unique_ptr<Sock> StreamAccept() EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    std::unique_ptr<Sock> StreamAccept() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Destroy the session, closing the internally used sockets.
      */
-    void Disconnect() EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    void Disconnect() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * The name of the file where this peer's private key is stored (in binary).
@@ -240,7 +240,7 @@ private:
      * The private key of this peer.
      * @see The reply to the "DEST GENERATE" command in https://geti2p.net/en/docs/api/samv3
      */
-    Binary m_private_key GUARDED_BY(m_mutex);
+    Binary m_private_key TS_ITCOIN_GUARDED_BY(m_mutex);
 
     /**
      * SAM control socket.
@@ -250,18 +250,18 @@ private:
      * connections and make outgoing ones.
      * See https://geti2p.net/en/docs/api/samv3
      */
-    std::unique_ptr<Sock> m_control_sock GUARDED_BY(m_mutex);
+    std::unique_ptr<Sock> m_control_sock TS_ITCOIN_GUARDED_BY(m_mutex);
 
     /**
      * Our .b32.i2p address.
      * Derived from `m_private_key`.
      */
-    CService m_my_addr GUARDED_BY(m_mutex);
+    CService m_my_addr TS_ITCOIN_GUARDED_BY(m_mutex);
 
     /**
      * SAM session id.
      */
-    std::string m_session_id GUARDED_BY(m_mutex);
+    std::string m_session_id TS_ITCOIN_GUARDED_BY(m_mutex);
 };
 
 } // namespace sam

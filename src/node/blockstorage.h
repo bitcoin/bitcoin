@@ -112,7 +112,7 @@ private:
     std::set<int> m_dirty_fileinfo;
 
 public:
-    BlockMap m_block_index GUARDED_BY(cs_main);
+    BlockMap m_block_index TS_ITCOIN_GUARDED_BY(cs_main);
 
     /**
      * All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
@@ -120,10 +120,10 @@ public:
      */
     std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
 
-    std::unique_ptr<CBlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
+    std::unique_ptr<CBlockTreeDB> m_block_tree_db TS_ITCOIN_GUARDED_BY(::cs_main);
 
-    bool WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool LoadBlockIndexDB(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool WriteBlockIndexDB() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool LoadBlockIndexDB(ChainstateManager& chainman) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Load the blocktree off disk and into memory. Populate certain metadata
@@ -132,25 +132,25 @@ public:
      */
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
-        ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        ChainstateManager& chainman) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Clear all data members. */
-    void Unload() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void Unload() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    CBlockIndex* AddToBlockIndex(const CBlockHeader& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* AddToBlockIndex(const CBlockHeader& block) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Create a new block index entry for a given block hash */
-    CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* InsertBlockIndex(const uint256& hash) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Mark one block file as pruned (modify associated database entries)
-    void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void PruneOneBlockFile(const int fileNumber) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* LookupBlockIndex(const uint256& hash) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
 
     bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
@@ -158,7 +158,7 @@ public:
     uint64_t CalculateCurrentUsage();
 
     //! Returns last CBlockIndex* that is a checkpoint
-    CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     ~BlockManager()
     {
@@ -167,7 +167,7 @@ public:
 };
 
 //! Check whether the block associated with this index entry is pruned or not.
-bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool IsBlockPruned(const CBlockIndex* pblockindex) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 void CleanupBlockRevFiles();
 

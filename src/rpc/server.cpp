@@ -22,13 +22,13 @@
 
 static Mutex g_rpc_warmup_mutex;
 static std::atomic<bool> g_rpc_running{false};
-static bool fRPCInWarmup GUARDED_BY(g_rpc_warmup_mutex) = true;
-static std::string rpcWarmupStatus GUARDED_BY(g_rpc_warmup_mutex) = "RPC server started";
+static bool fRPCInWarmup TS_ITCOIN_GUARDED_BY(g_rpc_warmup_mutex) = true;
+static std::string rpcWarmupStatus TS_ITCOIN_GUARDED_BY(g_rpc_warmup_mutex) = "RPC server started";
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static Mutex g_deadline_timers_mutex;
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers GUARDED_BY(g_deadline_timers_mutex);
+static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers TS_ITCOIN_GUARDED_BY(g_deadline_timers_mutex);
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler);
 
 struct RPCCommandExecutionInfo
@@ -40,7 +40,7 @@ struct RPCCommandExecutionInfo
 struct RPCServerInfo
 {
     Mutex mutex;
-    std::list<RPCCommandExecutionInfo> active_commands GUARDED_BY(mutex);
+    std::list<RPCCommandExecutionInfo> active_commands TS_ITCOIN_GUARDED_BY(mutex);
 };
 
 static RPCServerInfo g_rpc_server_info;

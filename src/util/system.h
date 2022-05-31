@@ -197,16 +197,16 @@ protected:
     };
 
     mutable RecursiveMutex cs_args;
-    util::Settings m_settings GUARDED_BY(cs_args);
-    std::vector<std::string> m_command GUARDED_BY(cs_args);
-    std::string m_network GUARDED_BY(cs_args);
-    std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
-    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
-    bool m_accept_any_command GUARDED_BY(cs_args){true};
-    std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
-    mutable fs::path m_cached_blocks_path GUARDED_BY(cs_args);
-    mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
-    mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
+    util::Settings m_settings TS_ITCOIN_GUARDED_BY(cs_args);
+    std::vector<std::string> m_command TS_ITCOIN_GUARDED_BY(cs_args);
+    std::string m_network TS_ITCOIN_GUARDED_BY(cs_args);
+    std::set<std::string> m_network_only_args TS_ITCOIN_GUARDED_BY(cs_args);
+    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args TS_ITCOIN_GUARDED_BY(cs_args);
+    bool m_accept_any_command TS_ITCOIN_GUARDED_BY(cs_args){true};
+    std::list<SectionInfo> m_config_sections TS_ITCOIN_GUARDED_BY(cs_args);
+    mutable fs::path m_cached_blocks_path TS_ITCOIN_GUARDED_BY(cs_args);
+    mutable fs::path m_cached_datadir_path TS_ITCOIN_GUARDED_BY(cs_args);
+    mutable fs::path m_cached_network_datadir_path TS_ITCOIN_GUARDED_BY(cs_args);
 
     [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
@@ -215,7 +215,7 @@ protected:
      * depending on the current network and whether the setting is
      * network-specific.
      */
-    bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+    bool UseDefaultSection(const std::string& arg) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
  public:
     /**

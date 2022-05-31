@@ -59,9 +59,9 @@ void LeaveCritical();
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line);
 std::string LocksHeld();
 template <typename MutexType>
-void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs);
+void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 template <typename MutexType>
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs);
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) TS_ITCOIN_LOCKS_EXCLUDED(cs);
 void DeleteLock(void* cs);
 bool LockStackEmpty();
 
@@ -91,24 +91,24 @@ inline bool LockStackEmpty() { return true; }
  * checking to a subset of the mutex API.
  */
 template <typename PARENT>
-class LOCKABLE AnnotatedMixin : public PARENT
+class TS_ITCOIN_LOCKABLE AnnotatedMixin : public PARENT
 {
 public:
     ~AnnotatedMixin() {
         DeleteLock((void*)this);
     }
 
-    void lock() EXCLUSIVE_LOCK_FUNCTION()
+    void lock() TS_ITCOIN_EXCLUSIVE_LOCK_FUNCTION()
     {
         PARENT::lock();
     }
 
-    void unlock() UNLOCK_FUNCTION()
+    void unlock() TS_ITCOIN_UNLOCK_FUNCTION()
     {
         PARENT::unlock();
     }
 
-    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
+    bool try_lock() TS_ITCOIN_EXCLUSIVE_TRYLOCK_FUNCTION(true)
     {
         return PARENT::try_lock();
     }
@@ -133,7 +133,7 @@ typedef AnnotatedMixin<std::mutex> Mutex;
 
 /** Wrapper around std::unique_lock style lock for Mutex. */
 template <typename Mutex, typename Base = typename Mutex::UniqueLock>
-class SCOPED_LOCKABLE UniqueLock : public Base
+class TS_ITCOIN_SCOPED_LOCKABLE UniqueLock : public Base
 {
 private:
     void Enter(const char* pszName, const char* pszFile, int nLine)
@@ -157,7 +157,7 @@ private:
     }
 
 public:
-    UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
+    UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) TS_ITCOIN_EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
     {
         if (fTry)
             TryEnter(pszName, pszFile, nLine);
@@ -165,7 +165,7 @@ public:
             Enter(pszName, pszFile, nLine);
     }
 
-    UniqueLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
+    UniqueLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) TS_ITCOIN_EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
     {
         if (!pmutexIn) return;
 
@@ -176,7 +176,7 @@ public:
             Enter(pszName, pszFile, nLine);
     }
 
-    ~UniqueLock() UNLOCK_FUNCTION()
+    ~UniqueLock() TS_ITCOIN_UNLOCK_FUNCTION()
     {
         if (Base::owns_lock())
             LeaveCritical();

@@ -112,7 +112,7 @@ public:
     /// sync once and only needs to process blocks in the ValidationInterface
     /// queue. If the index is catching up from far behind, this method does
     /// not block and immediately returns false.
-    bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main);
+    bool BlockUntilSyncedToCurrentChain() const TS_ITCOIN_LOCKS_EXCLUDED(::cs_main);
 
     void Interrupt();
 

@@ -430,12 +430,12 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 class TxOrphanageTest : public TxOrphanage
 {
 public:
-    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    inline size_t CountOrphans() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
     {
         return m_orphans.size();
     }
 
-    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    CTransactionRef RandomOrphan() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
     {
         std::map<uint256, OrphanTx>::iterator it;
         it = m_orphans.lower_bound(InsecureRand256());

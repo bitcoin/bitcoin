@@ -15,7 +15,7 @@ namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 static void import_descriptor(CWallet& wallet, const std::string& descriptor)
-    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+    TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
     FlatSigningProvider provider;

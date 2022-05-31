@@ -97,11 +97,11 @@ public:
 private:
     mutable Mutex newTaskMutex;
     std::condition_variable newTaskScheduled;
-    std::multimap<std::chrono::system_clock::time_point, Function> taskQueue GUARDED_BY(newTaskMutex);
-    int nThreadsServicingQueue GUARDED_BY(newTaskMutex){0};
-    bool stopRequested GUARDED_BY(newTaskMutex){false};
-    bool stopWhenEmpty GUARDED_BY(newTaskMutex){false};
-    bool shouldStop() const EXCLUSIVE_LOCKS_REQUIRED(newTaskMutex) { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
+    std::multimap<std::chrono::system_clock::time_point, Function> taskQueue TS_ITCOIN_GUARDED_BY(newTaskMutex);
+    int nThreadsServicingQueue TS_ITCOIN_GUARDED_BY(newTaskMutex){0};
+    bool stopRequested TS_ITCOIN_GUARDED_BY(newTaskMutex){false};
+    bool stopWhenEmpty TS_ITCOIN_GUARDED_BY(newTaskMutex){false};
+    bool shouldStop() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(newTaskMutex) { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
 };
 
 /**
@@ -120,8 +120,8 @@ private:
     CScheduler* m_pscheduler;
 
     Mutex m_callbacks_mutex;
-    std::list<std::function<void()>> m_callbacks_pending GUARDED_BY(m_callbacks_mutex);
-    bool m_are_callbacks_running GUARDED_BY(m_callbacks_mutex) = false;
+    std::list<std::function<void()>> m_callbacks_pending TS_ITCOIN_GUARDED_BY(m_callbacks_mutex);
+    bool m_are_callbacks_running TS_ITCOIN_GUARDED_BY(m_callbacks_mutex) = false;
 
     void MaybeScheduleProcessQueue();
     void ProcessQueue();

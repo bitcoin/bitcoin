@@ -81,7 +81,7 @@ class VersionBitsCache
 {
 private:
     Mutex m_mutex;
-    ThresholdConditionCache m_caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] GUARDED_BY(m_mutex);
+    ThresholdConditionCache m_caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] TS_ITCOIN_GUARDED_BY(m_mutex);
 
 public:
     /** Get the numerical statistics for a given deployment for the signalling period that includes pindex.

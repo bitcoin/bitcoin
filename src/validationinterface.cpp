@@ -31,8 +31,8 @@ private:
     //! if it's registered. It cannot be 0 because that would imply it is
     //! unregistered and also not being executed (so shouldn't exist).
     struct ListEntry { std::shared_ptr<CValidationInterface> callbacks; int count = 1; };
-    std::list<ListEntry> m_list GUARDED_BY(m_mutex);
-    std::unordered_map<CValidationInterface*, std::list<ListEntry>::iterator> m_map GUARDED_BY(m_mutex);
+    std::list<ListEntry> m_list TS_ITCOIN_GUARDED_BY(m_mutex);
+    std::unordered_map<CValidationInterface*, std::list<ListEntry>::iterator> m_map TS_ITCOIN_GUARDED_BY(m_mutex);
 
 public:
     // We are not allowed to assume the scheduler only runs in one thread,

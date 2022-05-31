@@ -41,29 +41,29 @@ private:
 
     //! The queue of elements to be processed.
     //! As the order of booleans doesn't matter, it is used as a LIFO (stack)
-    std::vector<T> queue GUARDED_BY(m_mutex);
+    std::vector<T> queue TS_ITCOIN_GUARDED_BY(m_mutex);
 
     //! The number of workers (including the master) that are idle.
-    int nIdle GUARDED_BY(m_mutex){0};
+    int nIdle TS_ITCOIN_GUARDED_BY(m_mutex){0};
 
     //! The total number of workers (including the master).
-    int nTotal GUARDED_BY(m_mutex){0};
+    int nTotal TS_ITCOIN_GUARDED_BY(m_mutex){0};
 
     //! The temporary evaluation result.
-    bool fAllOk GUARDED_BY(m_mutex){true};
+    bool fAllOk TS_ITCOIN_GUARDED_BY(m_mutex){true};
 
     /**
      * Number of verifications that haven't completed yet.
      * This includes elements that are no longer queued, but still in the
      * worker's own batches.
      */
-    unsigned int nTodo GUARDED_BY(m_mutex){0};
+    unsigned int nTodo TS_ITCOIN_GUARDED_BY(m_mutex){0};
 
     //! The maximum number of elements to be processed in one batch
     const unsigned int nBatchSize;
 
     std::vector<std::thread> m_worker_threads;
-    bool m_request_stop GUARDED_BY(m_mutex){false};
+    bool m_request_stop TS_ITCOIN_GUARDED_BY(m_mutex){false};
 
     /** Internal function that does bulk of the verification work. */
     bool Loop(bool fMaster)

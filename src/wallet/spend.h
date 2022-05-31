@@ -80,24 +80,24 @@ struct TxSize {
 * NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 * be AllInputsMine). */
 TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control = nullptr);
-TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const CCoinControl* coin_control = nullptr) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
+TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const CCoinControl* coin_control = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 
 /**
  * populate vCoins with vector of available COutputs.
  */
-void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl = nullptr);
 
 /**
  * Find non-change parent output.
  */
-const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransaction& tx, int output) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransaction& tx, int output) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Return list of available coins and locked coins grouped by non-change output address.
  */
-std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<COutput>& outputs, const CoinSelectionParams& coin_sel_params, const CoinEligibilityFilter& filter, bool positive_only);
 
@@ -129,7 +129,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
  *                                     If failed, a nullopt.
  */
 std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
-                 const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+                 const CoinSelectionParams& coin_selection_params) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Create a new transaction paying the recipients with a set of coins

@@ -242,7 +242,7 @@ struct LocalServiceInfo {
 };
 
 extern Mutex g_maplocalhost_mutex;
-extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
+extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost TS_ITCOIN_GUARDED_BY(g_maplocalhost_mutex);
 
 extern const std::string NET_MESSAGE_COMMAND_OTHER;
 typedef std::map<std::string, uint64_t> mapMsgCmdSize; //command, total bytes
@@ -422,25 +422,25 @@ public:
      * poll(2)-ing it for activity.
      * @see https://github.com/bitcoin/bitcoin/issues/21744 for details.
      */
-    std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
+    std::shared_ptr<Sock> m_sock TS_ITCOIN_GUARDED_BY(m_sock_mutex);
 
     /** Total size of all vSendMsg entries */
-    size_t nSendSize GUARDED_BY(cs_vSend){0};
+    size_t nSendSize TS_ITCOIN_GUARDED_BY(cs_vSend){0};
     /** Offset inside the first vSendMsg already sent */
-    size_t nSendOffset GUARDED_BY(cs_vSend){0};
-    uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
-    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
+    size_t nSendOffset TS_ITCOIN_GUARDED_BY(cs_vSend){0};
+    uint64_t nSendBytes TS_ITCOIN_GUARDED_BY(cs_vSend){0};
+    std::deque<std::vector<unsigned char>> vSendMsg TS_ITCOIN_GUARDED_BY(cs_vSend);
     Mutex cs_vSend;
     Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
     RecursiveMutex cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
+    std::list<CNetMessage> vProcessMsg TS_ITCOIN_GUARDED_BY(cs_vProcessMsg);
     size_t nProcessQueueSize{0};
 
     RecursiveMutex cs_sendProcessing;
 
-    uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
+    uint64_t nRecvBytes TS_ITCOIN_GUARDED_BY(cs_vRecv){0};
 
     std::atomic<std::chrono::seconds> m_last_send{0s};
     std::atomic<std::chrono::seconds> m_last_recv{0s};
@@ -460,7 +460,7 @@ public:
      * cleanSubVer is a sanitized string of the user agent byte array we read
      * from the wire. This cleaned string can safely be logged or displayed.
      */
-    std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
+    std::string cleanSubVer TS_ITCOIN_GUARDED_BY(m_subver_mutex){};
     bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permissionFlags, permission);
@@ -556,16 +556,16 @@ public:
         // a) it allows us to not relay tx invs before receiving the peer's version message
         // b) the peer may tell us in its version message that we should not relay tx invs
         //    unless it loads a bloom filter.
-        bool fRelayTxes GUARDED_BY(cs_filter){false};
-        std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter) GUARDED_BY(cs_filter){nullptr};
+        bool fRelayTxes TS_ITCOIN_GUARDED_BY(cs_filter){false};
+        std::unique_ptr<CBloomFilter> pfilter TS_ITCOIN_PT_GUARDED_BY(cs_filter) TS_ITCOIN_GUARDED_BY(cs_filter){nullptr};
 
         mutable RecursiveMutex cs_tx_inventory;
-        CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_tx_inventory){50000, 0.000001};
+        CRollingBloomFilter filterInventoryKnown TS_ITCOIN_GUARDED_BY(cs_tx_inventory){50000, 0.000001};
         // Set of transaction ids we still have to announce.
         // They are sorted by the mempool before relay, so the order is not important.
         std::set<uint256> setInventoryTxToSend;
         // Used for BIP35 mempool sending
-        bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
+        bool fSendMempool TS_ITCOIN_GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
         std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
         std::chrono::microseconds nNextInvSend{0};
@@ -638,9 +638,9 @@ public:
         return m_greatest_common_version;
     }
 
-    CService GetAddrLocal() const LOCKS_EXCLUDED(m_addr_local_mutex);
+    CService GetAddrLocal() const TS_ITCOIN_LOCKS_EXCLUDED(m_addr_local_mutex);
     //! May not be called more than once
-    void SetAddrLocal(const CService& addrLocalIn) LOCKS_EXCLUDED(m_addr_local_mutex);
+    void SetAddrLocal(const CService& addrLocalIn) TS_ITCOIN_LOCKS_EXCLUDED(m_addr_local_mutex);
 
     CNode* AddRef()
     {
@@ -713,11 +713,11 @@ private:
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
-    CService addrLocal GUARDED_BY(m_addr_local_mutex);
+    CService addrLocal TS_ITCOIN_GUARDED_BY(m_addr_local_mutex);
     mutable Mutex m_addr_local_mutex;
 
-    mapMsgCmdSize mapSendBytesPerMsgCmd GUARDED_BY(cs_vSend);
-    mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
+    mapMsgCmdSize mapSendBytesPerMsgCmd TS_ITCOIN_GUARDED_BY(cs_vSend);
+    mapMsgCmdSize mapRecvBytesPerMsgCmd TS_ITCOIN_GUARDED_BY(cs_vRecv);
 };
 
 /**
@@ -747,7 +747,7 @@ public:
     * @param[in]   pnode           The node which we are sending messages to.
     * @return                      True if there is more work to be done
     */
-    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing) = 0;
+    virtual bool SendMessages(CNode* pnode) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing) = 0;
 
 
 protected:
@@ -1077,7 +1077,7 @@ private:
 
     NodeId GetNewNodeId();
 
-    size_t SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
+    size_t SocketSendData(CNode& node) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
     void DumpAddresses();
 
     // Network stats
@@ -1095,12 +1095,12 @@ private:
     // Network usage totals
     mutable RecursiveMutex cs_totalBytesSent;
     std::atomic<uint64_t> nTotalBytesRecv{0};
-    uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
+    uint64_t nTotalBytesSent TS_ITCOIN_GUARDED_BY(cs_totalBytesSent) {0};
 
     // outbound limit & stats
-    uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent) {0};
-    std::chrono::seconds nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent) {0};
-    uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundTotalBytesSentInCycle TS_ITCOIN_GUARDED_BY(cs_totalBytesSent) {0};
+    std::chrono::seconds nMaxOutboundCycleStartTime TS_ITCOIN_GUARDED_BY(cs_totalBytesSent) {0};
+    uint64_t nMaxOutboundLimit TS_ITCOIN_GUARDED_BY(cs_totalBytesSent);
 
     // P2P timeout in seconds
     std::chrono::seconds m_peer_connect_timeout;
@@ -1116,11 +1116,11 @@ private:
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
     AddrMan& addrman;
-    std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
+    std::deque<std::string> m_addr_fetches TS_ITCOIN_GUARDED_BY(m_addr_fetches_mutex);
     Mutex m_addr_fetches_mutex;
-    std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
+    std::vector<std::string> m_added_nodes TS_ITCOIN_GUARDED_BY(m_added_nodes_mutex);
     mutable Mutex m_added_nodes_mutex;
-    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::vector<CNode*> m_nodes TS_ITCOIN_GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
@@ -1197,7 +1197,7 @@ private:
     const uint64_t nSeed0, nSeed1;
 
     /** flag for waking the message processor. */
-    bool fMsgProcWake GUARDED_BY(mutexMsgProc);
+    bool fMsgProcWake TS_ITCOIN_GUARDED_BY(mutexMsgProc);
 
     std::condition_variable condMsgProc;
     Mutex mutexMsgProc;

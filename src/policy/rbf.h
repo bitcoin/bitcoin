@@ -37,7 +37,7 @@ enum class RBFTransactionState {
  *
  * @return     The rbf state
  */
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 
 /** Get all descendants of iters_conflicting. Also enforce BIP125 Rule #5, "The number of original
@@ -53,14 +53,14 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
                                                   CTxMemPool::setEntries& all_conflicts)
-    EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+    TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** BIP125 Rule #2: "The replacement transaction may only include an unconfirmed input if that input
  * was included in one of the original transactions."
  * @returns error message if Rule #2 is broken, otherwise std::nullopt. */
 std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& pool,
                                                const CTxMemPool::setEntries& iters_conflicting)
-    EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+    TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** Check the intersection between two sets of transactions (a set of mempool entries and a set of
  * txids) to make sure they are disjoint.

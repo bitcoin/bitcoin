@@ -11,7 +11,7 @@
 #include <wallet/wallet.h>
 
 namespace wallet {
-isminetype InputIsMine(const CWallet& wallet, const CTxIn& txin) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+isminetype InputIsMine(const CWallet& wallet, const CTxIn& txin) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /** Returns whether all of the inputs match the filter */
 bool AllInputsMine(const CWallet& wallet, const CTransaction& tx, const isminefilter& filter);
@@ -19,9 +19,9 @@ bool AllInputsMine(const CWallet& wallet, const CTransaction& tx, const isminefi
 CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout, const isminefilter& filter);
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminefilter& filter);
 
-bool ScriptIsChange(const CWallet& wallet, const CScript& script) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-bool OutputIsChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+bool ScriptIsChange(const CWallet& wallet, const CScript& script) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+bool OutputIsChange(const CWallet& wallet, const CTxOut& txout) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx);
 
 CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter);
@@ -34,7 +34,7 @@ CAmount CachedTxGetImmatureWatchOnlyCredit(const CWallet& wallet, const CWalletT
 // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
 // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
 // having to resolve the issue of member access into incomplete type CWallet.
-CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) NO_THREAD_SAFETY_ANALYSIS;
+CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS;
 struct COutputEntry
 {
     CTxDestination destination;
@@ -46,7 +46,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                         std::list<COutputEntry>& listSent,
                         CAmount& nFee, const isminefilter& filter);
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter);
-bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx);
 
 struct Balance {
@@ -60,7 +60,7 @@ struct Balance {
 Balance GetBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = true);
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
-std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_RECEIVE_H

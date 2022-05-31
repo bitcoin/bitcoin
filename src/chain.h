@@ -164,13 +164,13 @@ public:
     int nHeight{0};
 
     //! Which # file this block is stored in (blk?????.dat)
-    int nFile GUARDED_BY(::cs_main){0};
+    int nFile TS_ITCOIN_GUARDED_BY(::cs_main){0};
 
     //! Byte offset within blk?????.dat where this block's data is stored
-    unsigned int nDataPos GUARDED_BY(::cs_main){0};
+    unsigned int nDataPos TS_ITCOIN_GUARDED_BY(::cs_main){0};
 
     //! Byte offset within rev?????.dat where this block's undo data is stored
-    unsigned int nUndoPos GUARDED_BY(::cs_main){0};
+    unsigned int nUndoPos TS_ITCOIN_GUARDED_BY(::cs_main){0};
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
@@ -198,7 +198,7 @@ public:
     //! load to avoid the block index being spuriously rewound.
     //! @sa NeedsRedownload
     //! @sa ActivateSnapshot
-    uint32_t nStatus GUARDED_BY(::cs_main){0};
+    uint32_t nStatus TS_ITCOIN_GUARDED_BY(::cs_main){0};
 
     //! block header
     int32_t nVersion{0};
@@ -226,7 +226,7 @@ public:
     {
     }
 
-    FlatFilePos GetBlockPos() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    FlatFilePos GetBlockPos() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
         FlatFilePos ret;
@@ -237,7 +237,7 @@ public:
         return ret;
     }
 
-    FlatFilePos GetUndoPos() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    FlatFilePos GetUndoPos() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
         FlatFilePos ret;
@@ -311,7 +311,7 @@ public:
 
     //! Check whether this block index entry is valid up to the passed validity level.
     bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
@@ -322,7 +322,7 @@ public:
 
     //! @returns true if the block is assumed-valid; this means it is queued to be
     //!   validated by a background chainstate.
-    bool IsAssumedValid() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    bool IsAssumedValid() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
         return nStatus & BLOCK_ASSUMED_VALID;
@@ -330,7 +330,7 @@ public:
 
     //! Raise the validity level of this block index entry.
     //! Returns true if the validity was changed.
-    bool RaiseValidity(enum BlockStatus nUpTo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    bool RaiseValidity(enum BlockStatus nUpTo) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.

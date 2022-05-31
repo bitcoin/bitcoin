@@ -105,40 +105,40 @@ public:
     ~AddrManImpl();
 
     template <typename Stream>
-    void Serialize(Stream& s_) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Serialize(Stream& s_) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     template <typename Stream>
-    void Unserialize(Stream& s_) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Unserialize(Stream& s_) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    size_t size() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool Good(const CService& addr, int64_t nTime)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void Attempt(const CService& addr, bool fCountFailure, int64_t nTime)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void ResolveCollisions() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void ResolveCollisions() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::pair<CAddress, int64_t> SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::pair<CAddress, int64_t> SelectTriedCollision() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::pair<CAddress, int64_t> Select(bool newOnly) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void Connected(const CService& addr, int64_t nTime)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void SetServices(const CService& addr, ServiceFlags nServices)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::optional<AddressPosition> FindAddressEntry(const CAddress& addr)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+        TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     const std::vector<bool>& GetAsmap() const;
 
@@ -149,7 +149,7 @@ private:
     mutable Mutex cs;
 
     //! Source of random numbers for randomization in inner loops
-    mutable FastRandomContext insecure_rand GUARDED_BY(cs);
+    mutable FastRandomContext insecure_rand TS_ITCOIN_GUARDED_BY(cs);
 
     //! secret key to randomize bucket select with
     uint256 nKey;
@@ -178,33 +178,33 @@ private:
     static constexpr uint8_t INCOMPATIBILITY_BASE = 32;
 
     //! last used nId
-    int nIdCount GUARDED_BY(cs){0};
+    int nIdCount TS_ITCOIN_GUARDED_BY(cs){0};
 
     //! table with information about all nIds
-    std::unordered_map<int, AddrInfo> mapInfo GUARDED_BY(cs);
+    std::unordered_map<int, AddrInfo> mapInfo TS_ITCOIN_GUARDED_BY(cs);
 
     //! find an nId based on its network address and port.
-    std::unordered_map<CService, int, CServiceHash> mapAddr GUARDED_BY(cs);
+    std::unordered_map<CService, int, CServiceHash> mapAddr TS_ITCOIN_GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
     //! This is mutable because it is unobservable outside the class, so any
     //! changes to it (even in const methods) are also unobservable.
-    mutable std::vector<int> vRandom GUARDED_BY(cs);
+    mutable std::vector<int> vRandom TS_ITCOIN_GUARDED_BY(cs);
 
     // number of "tried" entries
-    int nTried GUARDED_BY(cs){0};
+    int nTried TS_ITCOIN_GUARDED_BY(cs){0};
 
     //! list of "tried" buckets
-    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
+    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] TS_ITCOIN_GUARDED_BY(cs);
 
     //! number of (unique) "new" entries
-    int nNew GUARDED_BY(cs){0};
+    int nNew TS_ITCOIN_GUARDED_BY(cs){0};
 
     //! list of "new" buckets
-    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
+    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] TS_ITCOIN_GUARDED_BY(cs);
 
     //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
-    int64_t nLastGood GUARDED_BY(cs){1};
+    int64_t nLastGood TS_ITCOIN_GUARDED_BY(cs){1};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
@@ -229,54 +229,54 @@ private:
     const std::vector<bool> m_asmap;
 
     //! Find an entry.
-    AddrInfo* Find(const CService& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    AddrInfo* Find(const CService& addr, int* pnId = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Create a new entry and add it to the internal data structures mapInfo, mapAddr and vRandom.
-    AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Delete an entry. It must not be in tried, and have refcount 0.
-    void Delete(int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Delete(int nId) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Clear a position in a "new" table. This is the only place where entries are actually deleted.
-    void ClearNew(int nUBucket, int nUBucketPos) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ClearNew(int nUBucket, int nUBucketPos) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Move an entry from the "new" table(s) to the "tried" table
-    void MakeTried(AddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void MakeTried(AddrInfo& info, int nId) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Attempt to add a single address to addrman's new table.
      *  @see AddrMan::Add() for parameters. */
-    bool AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool Good_(const CService& addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Good_(const CService& addr, bool test_before_evict, int64_t time) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::pair<CAddress, int64_t> Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::pair<CAddress, int64_t> Select_(bool newOnly) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Connected_(const CService& addr, int64_t nTime) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void SetServices_(const CService& addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SetServices_(const CService& addr, ServiceFlags nServices) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ResolveCollisions_() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::pair<CAddress, int64_t> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::pair<CAddress, int64_t> SelectTriedCollision_() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::optional<AddressPosition> FindAddressEntry_(const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::optional<AddressPosition> FindAddressEntry_(const CAddress& addr) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check, taking into account m_consistency_check_ratio.
     //! Will std::abort if an inconsistency is detected.
-    void Check() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Check() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Perform consistency check, regardless of m_consistency_check_ratio.
     //! @returns an error code or zero.
-    int CheckAddrman() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int CheckAddrman() const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 #endif // BITCOIN_ADDRMAN_IMPL_H

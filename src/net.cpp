@@ -114,8 +114,8 @@ static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256
 bool fDiscover = true;
 bool fListen = true;
 Mutex g_maplocalhost_mutex;
-std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
-static bool vfLimited[NET_MAX] GUARDED_BY(g_maplocalhost_mutex) = {};
+std::map<CNetAddr, LocalServiceInfo> mapLocalHost TS_ITCOIN_GUARDED_BY(g_maplocalhost_mutex);
+static bool vfLimited[NET_MAX] TS_ITCOIN_GUARDED_BY(g_maplocalhost_mutex) = {};
 std::string strSubVersion;
 
 void CConnman::AddAddrFetch(const std::string& strDest)
@@ -2345,7 +2345,7 @@ void CConnman::ThreadMessageHandler()
 
         WAIT_LOCK(mutexMsgProc, lock);
         if (!fMoreWork) {
-            condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this]() EXCLUSIVE_LOCKS_REQUIRED(mutexMsgProc) { return fMsgProcWake; });
+            condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this]() TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(mutexMsgProc) { return fMsgProcWake; });
         }
         fMsgProcWake = false;
     }

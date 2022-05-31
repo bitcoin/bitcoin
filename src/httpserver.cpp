@@ -69,9 +69,9 @@ class WorkQueue
 {
 private:
     Mutex cs;
-    std::condition_variable cond GUARDED_BY(cs);
-    std::deque<std::unique_ptr<WorkItem>> queue GUARDED_BY(cs);
-    bool running GUARDED_BY(cs);
+    std::condition_variable cond TS_ITCOIN_GUARDED_BY(cs);
+    std::deque<std::unique_ptr<WorkItem>> queue TS_ITCOIN_GUARDED_BY(cs);
+    bool running TS_ITCOIN_GUARDED_BY(cs);
     const size_t maxDepth;
 
 public:

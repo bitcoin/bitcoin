@@ -30,7 +30,7 @@
  * algorithm.
  */
 
-class LOCKABLE Epoch
+class TS_ITCOIN_LOCKABLE Epoch
 {
 private:
     uint64_t m_raw_epoch = 0;
@@ -63,19 +63,19 @@ public:
         ~Marker() = default;
     };
 
-    class SCOPED_LOCKABLE Guard
+    class TS_ITCOIN_SCOPED_LOCKABLE Guard
     {
     private:
         Epoch& m_epoch;
 
     public:
-        explicit Guard(Epoch& epoch) EXCLUSIVE_LOCK_FUNCTION(epoch) : m_epoch(epoch)
+        explicit Guard(Epoch& epoch) TS_ITCOIN_EXCLUSIVE_LOCK_FUNCTION(epoch) : m_epoch(epoch)
         {
             assert(!m_epoch.m_guarded);
             ++m_epoch.m_raw_epoch;
             m_epoch.m_guarded = true;
         }
-        ~Guard() UNLOCK_FUNCTION()
+        ~Guard() TS_ITCOIN_UNLOCK_FUNCTION()
         {
             assert(m_epoch.m_guarded);
             ++m_epoch.m_raw_epoch; // ensure clear separation between epochs
@@ -83,7 +83,7 @@ public:
         }
     };
 
-    bool visited(Marker& marker) const EXCLUSIVE_LOCKS_REQUIRED(*this)
+    bool visited(Marker& marker) const TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(*this)
     {
         assert(m_guarded);
         if (marker.m_marker < m_raw_epoch) {

@@ -64,7 +64,7 @@ void TestDoubleLock(bool should_throw)
 #endif /* DEBUG_LOCKORDER */
 
 template <typename MutexType>
-void TestInconsistentLockOrderDetected(MutexType& mutex1, MutexType& mutex2) NO_THREAD_SAFETY_ANALYSIS
+void TestInconsistentLockOrderDetected(MutexType& mutex1, MutexType& mutex2) TS_ITCOIN_NO_THREAD_SAFETY_ANALYSIS
 {
     ENTER_CRITICAL_SECTION(mutex1);
     ENTER_CRITICAL_SECTION(mutex2);
