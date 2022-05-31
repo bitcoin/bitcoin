@@ -12,7 +12,6 @@ class CCoinsViewCache;
 class CTxUndo;
 class CBlock;
 class BlockValidationState;
-class CNEVMDataProcessHelper;
 class CBlockIndexDB;
 class CNEVMTxRootsDB : public CDBWrapper {
 public:
