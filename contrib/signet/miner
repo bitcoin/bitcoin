@@ -60,7 +60,7 @@ logger.setLevel(logging_the_lib.DEBUG)
 logger.propagate = False
 logger_formatter = logging_the_lib.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 stdout_handler = logging_the_lib.StreamHandler(sys.stdout)
-stdout_handler.setLevel(logging_the_lib.DEBUG)
+stdout_handler.setLevel(logging_the_lib.INFO)
 stdout_handler.setFormatter(logger_formatter)
 logger.addHandler(stdout_handler)
 
