@@ -1441,6 +1441,7 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
         bool fReturningInternal = (purpose == KeyPurpose::INTERNAL);
         fReturningInternal &= (IsHDEnabled() && m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) || m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
         bool fMWEB = (purpose == KeyPurpose::MWEB) && IsHDEnabled() && m_storage.CanSupportFeature(FEATURE_HD_SPLIT);
+        bool use_pre_split = !fMWEB && !set_pre_split_keypool.empty();
 
         auto fn_get_keypool = [this](const bool internal, const bool mweb) -> std::set<int64_t>& {
              if (mweb) {
@@ -1477,7 +1478,7 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
             throw std::runtime_error(std::string(__func__) + ": keypool entry misclassified");
         }
         // If the key was pre-split keypool, we don't care about what type it is
-        if (set_pre_split_keypool.empty() && keypool.fInternal != fReturningInternal) {
+        if (!use_pre_split && keypool.fInternal != fReturningInternal) {
             throw std::runtime_error(std::string(__func__) + ": keypool entry misclassified");
         }
         if (!keypool.vchPubKey.IsValid()) {

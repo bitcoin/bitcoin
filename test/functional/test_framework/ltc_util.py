@@ -4,9 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Random assortment of utility functions"""
 
+import os
+
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, MWEBHeader
-from test_framework.util import satoshi_round
+from test_framework.util import get_datadir_path, initialize_datadir, satoshi_round
 from test_framework.script_util import DUMMY_P2WPKH_SCRIPT, hogaddr_script
+from test_framework.test_node import TestNode
 
 """Create a txout with a given amount and scriptPubKey
 
@@ -91,5 +94,43 @@ def create_hogex(node, mweb_hash):
     tx.vout = [CTxOut(int(hog_addr['value'] * COIN), hogaddr_script(mweb_hash))]
     tx.hogex = True
     tx.rehash()
-
     return tx
+
+""" Create a non-HD wallet from a temporary v15.1.0 node.
+
+Returns the path of the wallet.dat.
+"""
+def create_non_hd_wallet(chain, options):    
+    version = 150100
+    bin_dir = os.path.join(options.previous_releases_path, 'v0.15.1', 'bin')
+    initialize_datadir(options.tmpdir, 10, chain)
+    data_dir = get_datadir_path(options.tmpdir, 10)
+
+    # adjust conf for pre 17
+    conf_file = os.path.join(data_dir, 'litecoin.conf')
+    with open(conf_file, 'r', encoding='utf8') as conf:
+        conf_data = conf.read()
+    with open(conf_file, 'w', encoding='utf8') as conf:
+        conf.write(conf_data.replace('[regtest]', ''))
+
+    v15_node = TestNode(
+        i=10,
+        datadir=data_dir,
+        chain=chain,
+        rpchost=None,
+        timewait=60,
+        timeout_factor=1.0,
+        bitcoind=os.path.join(bin_dir, 'litecoind'),
+        bitcoin_cli=os.path.join(bin_dir, 'litecoin-cli'),
+        version=version,
+        coverage_dir=None,
+        cwd=options.tmpdir,
+        extra_args=["-usehd=0"],
+    )
+    v15_node.start()
+    v15_node.wait_for_cookie_credentials()  # ensure cookie file is available to avoid race condition
+    v15_node.wait_for_rpc_connection()
+    v15_node.stop_node(wait=0)
+    v15_node.wait_until_stopped()
+    
+    return os.path.join(v15_node.datadir, chain, "wallet.dat")
