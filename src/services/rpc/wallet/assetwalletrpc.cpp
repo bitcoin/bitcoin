@@ -1930,7 +1930,13 @@ static RPCHelpMan syscoincreaterawnevmblob()
 
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
-    const std::vector<unsigned char>& vchData = ParseHex(request.params[1].get_str());
+    std::vector<unsigned char> vchData = ParseHex(request.params[1].get_str());
+    int modDataFill = 0;
+    // fill up to factor of 32 with empty spaces
+    if((vchData.size() % 32) != 0)
+        modDataFill = 32 - (vchData.size() % 32);
+    std::vector<unsigned char> vchFill(modDataFill, 0x20);
+    vchData.insert(vchData.end(), std::begin(vchFill), std::end((vchFill)));
     nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
     nevmData.nSize = vchData.size();
     std::vector<unsigned char> data;

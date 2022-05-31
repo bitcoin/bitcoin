@@ -267,8 +267,7 @@ class WalletTaprootTest(SyscoinTestFramework):
                 addr_r = self.make_addr(treefn, keys_pay, i)
                 assert_equal(addr_g, addr_r)
             boring_balance = int(self.boring.getbalance() * 100000000)
-            # SYSCOIN
-            to_amnt = random.randrange(100000, boring_balance)
+            to_amnt = random.randrange(1000000, boring_balance)
             self.boring.sendtoaddress(address=addr_g, amount=Decimal(to_amnt) / 100000000, subtractfeefromamount=True)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(self.rpc_online.getbalance() * 100000000)
@@ -300,8 +299,7 @@ class WalletTaprootTest(SyscoinTestFramework):
                 addr_r = self.make_addr(treefn, keys_pay, i)
                 assert_equal(addr_g, addr_r)
             boring_balance = int(self.boring.getbalance() * 100000000)
-            # SYSCOIN
-            to_amnt = random.randrange(100000, boring_balance)
+            to_amnt = random.randrange(1000000, boring_balance)
             self.boring.sendtoaddress(address=addr_g, amount=Decimal(to_amnt) / 100000000, subtractfeefromamount=True)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(self.psbt_online.getbalance() * 100000000)
