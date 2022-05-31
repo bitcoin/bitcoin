@@ -12,6 +12,7 @@ inout
 invokable
 lief
 mor
+nd
 nin
 ser
 setban

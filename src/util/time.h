@@ -87,8 +87,8 @@ void SetMockTime(std::chrono::seconds mock_time_in);
 std::chrono::seconds GetMockTime();
 
 /**
- * Return the current time point cast to the given precicion. Only use this
- * when an exact precicion is needed, otherwise use T::clock::now() directly.
+ * Return the current time point cast to the given precision. Only use this
+ * when an exact precision is needed, otherwise use T::clock::now() directly.
  */
 template <typename T>
 T Now()
