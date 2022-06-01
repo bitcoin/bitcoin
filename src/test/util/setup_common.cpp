@@ -185,6 +185,7 @@ TestChainSetup::TestChainSetup(int blockCount)
 {
     // Make sure CreateAndProcessBlock() support building <deployment_name> blocks before activating it in these tests.
     //gArgs.ForceSetArg("-vbparams", strprintf("deployment_name:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
+    // Need to recreate chainparams
     SelectParams(CBaseChainParams::REGTEST);
 
     // Generate a 100-block chain:
@@ -209,12 +210,9 @@ TestChainSetup::TestChainSetup(int blockCount)
     }
 }
 
-//
 // Create a new block with just given transactions, coinbase paying to
 // scriptPubKey, and try to add it to the current chain.
-//
-CBlock
-TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
     auto block = CreateBlock(txns, scriptPubKey);

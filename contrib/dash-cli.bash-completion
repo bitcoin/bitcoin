@@ -17,13 +17,6 @@ _dash_rpc() {
     $dash_cli "${rpcargs[@]}" "$@"
 }
 
-# Add wallet accounts to COMPREPLY
-_dash_accounts() {
-    local accounts
-    accounts=$(_dash_rpc listaccounts | awk -F '"' '{ print $2 }')
-    COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
-}
-
 _dash_cli() {
     local cur prev words=() cword
     local dash_cli
@@ -60,10 +53,9 @@ _dash_cli() {
     if ((cword > 3)); then
         case ${words[cword-3]} in
             addmultisigaddress)
-                _dash_accounts
                 return 0
                 ;;
-            getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
+            getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaddress|listsinceblock)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -80,12 +72,8 @@ _dash_cli() {
                 COMPREPLY=( $( compgen -W "add remove" -- "$cur" ) )
                 return 0
                 ;;
-            fundrawtransaction|getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listaccounts|listreceivedbyaccount|listreceivedbyaddress|sendrawtransaction)
+            fundrawtransaction|getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listreceivedbyaddress|sendrawtransaction)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-                return 0
-                ;;
-            move|setaccount)
-                _dash_accounts
                 return 0
                 ;;
         esac
@@ -96,12 +84,11 @@ _dash_cli() {
             _filedir
             return 0
             ;;
-        getaddednodeinfo|getrawmempool|lockunspent|setgenerate)
+        getaddednodeinfo|getrawmempool|lockunspent)
             COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
             return 0
             ;;
-        getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
-            _dash_accounts
+        getbalance|getnewaddress|listtransactions|sendmany)
             return 0
             ;;
     esac
