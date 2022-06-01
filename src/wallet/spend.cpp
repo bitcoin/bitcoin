@@ -1360,7 +1360,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
     return res;
 }
 
-bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
+util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, std::optional<unsigned int> change_pos, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
 {
     std::vector<CRecipient> vecSend;
 
@@ -1396,8 +1396,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
         PreselectedInput& preset_txin = coinControl.Select(outPoint);
         if (!wallet.IsMine(outPoint)) {
             if (coins[outPoint].out.IsNull()) {
-                error = _("Unable to find UTXO for external input");
-                return false;
+                return util::Error{_("Unable to find UTXO for external input")};
             }
 
             // The input was not in the wallet, but is in the UTXO set, so select as external
@@ -1408,38 +1407,17 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
         preset_txin.SetScriptWitness(txin.scriptWitness);
     }
 
-    auto res = CreateTransaction(wallet, vecSend, nChangePosInOut == -1 ? std::nullopt : std::optional<unsigned int>((unsigned int)nChangePosInOut), coinControl, false);
+    auto res = CreateTransaction(wallet, vecSend, change_pos, coinControl, false);
     if (!res) {
-        error = util::ErrorString(res);
-        return false;
-    }
-    const auto& txr = *res;
-    CTransactionRef tx_new = txr.tx;
-    nFeeRet = txr.fee;
-    nChangePosInOut = txr.change_pos ? *txr.change_pos : -1;
-
-    if (nChangePosInOut != -1) {
-        tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
+        return res;
     }
 
-    // Copy output sizes from new transaction; they may have had the fee
-    // subtracted from them.
-    for (unsigned int idx = 0; idx < tx.vout.size(); idx++) {
-        tx.vout[idx].nValue = tx_new->vout[idx].nValue;
-    }
-
-    // Add new txins while keeping original txin scriptSig/order.
-    for (const CTxIn& txin : tx_new->vin) {
-        if (!coinControl.IsSelected(txin.prevout)) {
-            tx.vin.push_back(txin);
-
-        }
-        if (lockUnspents) {
+    if (lockUnspents) {
+        for (const CTxIn& txin : res->tx->vin) {
             wallet.LockCoin(txin.prevout);
         }
-
     }
 
-    return true;
+    return res;
 }
 } // namespace wallet

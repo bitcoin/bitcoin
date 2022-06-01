@@ -156,10 +156,9 @@ struct FuzzedWallet {
         coin_control.fOverrideFeeRate = fuzzed_data_provider.ConsumeBool();
         // Add solving data (m_external_provider and SelectExternal)?
 
-        CAmount fee_out;
         int change_position{fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, tx.vout.size() - 1)};
         bilingual_str error;
-        (void)FundTransaction(*wallet, tx, fee_out, change_position, error, /*lockUnspents=*/false, subtract_fee_from_outputs, coin_control);
+        (void)FundTransaction(*wallet, tx, change_position, /*lockUnspents=*/false, subtract_fee_from_outputs, coin_control);
     }
 };
 
