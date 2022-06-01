@@ -232,7 +232,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_oversized_msg(self, msg, size):
         msg_type = msg.msgtype.decode('ascii')
         self.log.info("Test {} message of size {} is logged as misbehaving".format(msg_type, size))
-        with self.nodes[0].assert_debug_log(['Misbehaving', '{} message size = {}'.format(msg_type, size)]):
+        with self.nodes[0].assert_debug_log([f"Ignoring {msg_type} message size = {size}"]):
             self.nodes[0].add_p2p_connection(P2PInterface()).send_and_ping(msg)
         self.nodes[0].disconnect_p2ps()
 

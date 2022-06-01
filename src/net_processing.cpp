@@ -3003,9 +3003,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (vAddr.size() > MAX_ADDR_TO_SEND)
-        {
-            Misbehaving(*peer, 20, strprintf("%s message size = %u", msg_type, vAddr.size()));
+        if (vAddr.size() > MAX_ADDR_TO_SEND) {
+            LogPrint(BCLog::NET, "Ignoring %s message size = %u from peer=%d\n", msg_type, vAddr.size(), pfrom.GetId());
             return;
         }
 
@@ -3084,9 +3083,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::INV) {
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        if (vInv.size() > MAX_INV_SZ)
-        {
-            Misbehaving(*peer, 20, strprintf("inv message size = %u", vInv.size()));
+        if (vInv.size() > MAX_INV_SZ) {
+            LogPrint(BCLog::NET, "Ignoring %s message size = %u from peer=%d\n", msg_type, vInv.size(), pfrom.GetId());
             return;
         }
 
@@ -3152,9 +3150,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::GETDATA) {
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        if (vInv.size() > MAX_INV_SZ)
-        {
-            Misbehaving(*peer, 20, strprintf("getdata message size = %u", vInv.size()));
+        if (vInv.size() > MAX_INV_SZ) {
+            LogPrint(BCLog::NET, "Ignoring %s message size = %u from peer=%d\n", msg_type, vInv.size(), pfrom.GetId());
             return;
         }
 
@@ -3877,7 +3874,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
         if (nCount > MAX_HEADERS_RESULTS) {
-            Misbehaving(*peer, 20, strprintf("headers message size = %u", nCount));
+            LogPrint(BCLog::NET, "Ignoring %s message size = %u from peer=%d\n", msg_type, nCount, pfrom.GetId());
             return;
         }
         headers.resize(nCount);
