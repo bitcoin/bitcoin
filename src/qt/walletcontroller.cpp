@@ -115,7 +115,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     const bool called = QMetaObject::invokeMethod(wallet_model, "startPollBalance");
     assert(called);
 
-    connect(wallet_model, &WalletModel::unload, [this, wallet_model] {
+    connect(wallet_model, &WalletModel::unload, this, [this, wallet_model] {
         // Defer removeAndDeleteWallet when no modal widget is active.
         // TODO: remove this workaround by removing usage of QDiallog::exec.
         if (QApplication::activeModalWidget()) {
@@ -127,7 +127,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
         } else {
             removeAndDeleteWallet(wallet_model);
         }
-    });
+    }, Qt::QueuedConnection);
 
     // Re-emit coinsSent signal from wallet model.
     connect(wallet_model, &WalletModel::coinsSent, this, &WalletController::coinsSent);

@@ -741,7 +741,7 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet final : public CCryptoKeyStore, private interfaces::Chain::Notifications
+class CWallet final : public CCryptoKeyStore, public interfaces::Chain::Notifications
 {
 private:
     std::atomic<bool> fAbortRescan{false};
@@ -953,9 +953,6 @@ public:
 
     /** Registered interfaces::Chain::Notifications handler. */
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
-
-    /** Register the wallet for chain notifications */
-    void handleNotifications();
 
     /** Interface for accessing chain state. */
     interfaces::Chain& chain() const { assert(m_chain); return *m_chain; }
