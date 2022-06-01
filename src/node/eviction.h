@@ -23,7 +23,8 @@ private:
     const std::unique_ptr<EvictionManagerImpl> m_impl;
 
 public:
-    EvictionManager();
+    EvictionManager(int max_outbound_block_relay,
+                    int max_outbound_full_relay);
     ~EvictionManager();
 
     void AddCandidate(NodeId id, std::chrono::seconds connected,

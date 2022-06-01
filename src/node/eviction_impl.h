@@ -69,9 +69,12 @@ class EvictionManagerImpl
 private:
     mutable Mutex m_candidates_mutex;
     std::map<NodeId, NodeEvictionCandidate> m_candidates GUARDED_BY(m_candidates_mutex);
+    const int m_max_outbound_block_relay;
+    const int m_max_outbound_full_relay;
 
 public:
-    EvictionManagerImpl();
+    EvictionManagerImpl(int max_outbound_block_relay,
+                        int max_outbound_full_relay);
     ~EvictionManagerImpl();
 
     void AddCandidate(NodeId id, std::chrono::seconds connected,

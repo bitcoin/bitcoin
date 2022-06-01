@@ -241,7 +241,10 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     return vEvictionCandidates.front().id;
 }
 
-EvictionManagerImpl::EvictionManagerImpl() {}
+EvictionManagerImpl::EvictionManagerImpl(int max_outbound_block_relay,
+                                         int max_outbound_full_relay)
+    : m_max_outbound_block_relay{max_outbound_block_relay},
+      m_max_outbound_full_relay{max_outbound_full_relay} {}
 EvictionManagerImpl::~EvictionManagerImpl() = default;
 
 void EvictionManagerImpl::AddCandidate(NodeId id, std::chrono::seconds connected,
@@ -436,8 +439,9 @@ void EvictionManagerImpl::UpdateSuccessfullyConnected(NodeId id)
     }
 }
 
-EvictionManager::EvictionManager()
-    : m_impl(std::make_unique<EvictionManagerImpl>()) {}
+EvictionManager::EvictionManager(int max_outbound_block_relay,
+                                 int max_outbound_full_relay)
+    : m_impl(std::make_unique<EvictionManagerImpl>(max_outbound_block_relay, max_outbound_full_relay)) {}
 EvictionManager::~EvictionManager() = default;
 
 void EvictionManager::AddCandidate(NodeId id, std::chrono::seconds connected,

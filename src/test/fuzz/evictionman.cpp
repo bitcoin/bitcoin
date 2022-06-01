@@ -61,6 +61,9 @@ private:
     }
 
 public:
+    Tester(int max_outbound_block_relay, int max_outbound_full_relay)
+        : m_evictionman(EvictionManager{max_outbound_block_relay, max_outbound_full_relay}) {}
+
     void AdvanceTime(uint8_t delay)
     {
         m_now += DELAYS[delay];
@@ -235,7 +238,9 @@ FUZZ_TARGET(evictionman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    Tester tester;
+    Tester tester{
+        fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 512),
+        fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 512)};
 
     LIMITED_WHILE(fuzzed_data_provider.remaining_bytes(), 1000)
     {
