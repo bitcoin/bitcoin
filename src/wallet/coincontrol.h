@@ -33,6 +33,10 @@ private:
     std::optional<int64_t> m_weight;
     //! The sequence number for this input
     std::optional<uint32_t> m_sequence;
+    //! The scriptSig for this input
+    std::optional<CScript> m_script_sig;
+    //! The scriptWitness for this input
+    std::optional<CScriptWitness> m_script_witness;
 
 public:
     /**
@@ -54,6 +58,15 @@ public:
     void SetSequence(uint32_t sequence);
     /** Retrieve the sequence for this input. */
     std::optional<uint32_t> GetSequence() const;
+
+    /** Set the scriptSig for this input. */
+    void SetScriptSig(const CScript& script);
+    /** Set the scriptWitness for this input. */
+    void SetScriptWitness(const CScriptWitness& script_wit);
+    /** Return whether either the scriptSig or scriptWitness are set for this input. */
+    bool HasScripts() const;
+    /** Retrieve both the scriptSig and the scriptWitness. */
+    std::pair<CScript, CScriptWitness> GetScripts() const;
 };
 
 /** Coin Control Features. */
@@ -141,6 +154,10 @@ public:
     std::optional<int64_t> GetInputWeight(const COutPoint& outpoint) const;
     /** Retrieve the sequence for an input */
     std::optional<uint32_t> GetSequence(const COutPoint& outpoint) const;
+    /** Returns whether the input has a scriptSig or scriptWitness. */
+    bool HasScripts(const COutPoint& outpoint) const;
+    /** Retrieves the scriptSig and scriptWitness for an input. */
+    std::pair<CScript, CScriptWitness> GetScripts(const COutPoint& outpoint) const;
 
 private:
     //! Selected inputs (inputs that will be used, regardless of whether they're optimal or not)
