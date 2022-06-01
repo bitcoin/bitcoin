@@ -277,8 +277,8 @@ class MiniWallet:
 
         return {'txid': tx.rehash(), 'wtxid': tx.getwtxid(), 'hex': tx_hex, 'tx': tx}
 
-    def sendrawtransaction(self, *, from_node, tx_hex, **kwargs):
-        txid = from_node.sendrawtransaction(hexstring=tx_hex, **kwargs)
+    def sendrawtransaction(self, *, from_node, tx_hex, maxfeerate=0, **kwargs):
+        txid = from_node.sendrawtransaction(hexstring=tx_hex, maxfeerate=maxfeerate, **kwargs)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
 
