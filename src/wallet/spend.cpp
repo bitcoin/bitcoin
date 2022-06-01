@@ -965,14 +965,11 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
-        int change_pos,
+        std::optional<unsigned int> change_pos,
         const CCoinControl& coin_control,
         bool sign) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
-
-    // out variables, to be packed into returned result structure
-    int nChangePosInOut = change_pos;
 
     FastRandomContext rng_fast;
     CMutableTransaction txNew; // The resulting transaction that we make
@@ -1132,15 +1129,15 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         CTxOut newTxOut(change_amount, scriptChange);
-        if (nChangePosInOut == -1) {
+        if (!change_pos) {
             // Insert change txn at random position:
-            nChangePosInOut = rng_fast.randrange(txNew.vout.size() + 1);
-        } else if ((unsigned int)nChangePosInOut > txNew.vout.size()) {
+            change_pos = rng_fast.randrange(txNew.vout.size() + 1);
+        } else if ((unsigned int)*change_pos > txNew.vout.size()) {
             return util::Error{_("Transaction change output index out of range")};
         }
-        txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
+        txNew.vout.insert(txNew.vout.begin() + *change_pos, newTxOut);
     } else {
-        nChangePosInOut = -1;
+        change_pos = std::nullopt;
     }
 
     // Shuffle selected coins and fill in final vin
@@ -1217,8 +1214,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     // If there is a change output and we overpay the fees then increase the change to match the fee needed
-    if (nChangePosInOut != -1 && fee_needed < current_fee) {
-        auto& change = txNew.vout.at(nChangePosInOut);
+    if (change_pos && fee_needed < current_fee) {
+        auto& change = txNew.vout.at(*change_pos);
         change.nValue += current_fee - fee_needed;
         current_fee = result.GetSelectedValue() - CalculateOutputValue(txNew);
         if (fee_needed != current_fee) {
@@ -1229,11 +1226,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Reduce output values for subtractFeeFromAmount
     if (coin_selection_params.m_subtract_fee_outputs) {
         CAmount to_reduce = fee_needed - current_fee;
-        int i = 0;
+        unsigned int i = 0;
         bool fFirst = true;
         for (const auto& recipient : vecSend)
         {
-            if (i == nChangePosInOut) {
+            if (change_pos && i == *change_pos) {
                 ++i;
             }
             CTxOut& txout = txNew.vout[i];
@@ -1272,7 +1269,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     // Give up if change keypool ran out and change is required
-    if (scriptChange.empty() && nChangePosInOut != -1) {
+    if (scriptChange.empty() && change_pos) {
         return util::Error{error};
     }
 
@@ -1313,13 +1310,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
               feeCalc.est.fail.start, feeCalc.est.fail.end,
               (feeCalc.est.fail.totalConfirmed + feeCalc.est.fail.inMempool + feeCalc.est.fail.leftMempool) > 0.0 ? 100 * feeCalc.est.fail.withinTarget / (feeCalc.est.fail.totalConfirmed + feeCalc.est.fail.inMempool + feeCalc.est.fail.leftMempool) : 0.0,
               feeCalc.est.fail.withinTarget, feeCalc.est.fail.totalConfirmed, feeCalc.est.fail.inMempool, feeCalc.est.fail.leftMempool);
-    return CreatedTransactionResult(tx, current_fee, nChangePosInOut, feeCalc);
+    return CreatedTransactionResult(tx, current_fee, change_pos, feeCalc);
 }
 
 util::Result<CreatedTransactionResult> CreateTransaction(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
-        int change_pos,
+        std::optional<unsigned int> change_pos,
         const CCoinControl& coin_control,
         bool sign)
 {
@@ -1335,7 +1332,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 
     auto res = CreateTransactionInternal(wallet, vecSend, change_pos, coin_control, sign);
     TRACE4(coin_selection, normal_create_tx_internal, wallet.GetName().c_str(), bool(res),
-           res ? res->fee : 0, res ? res->change_pos : 0);
+           res ? res->fee : 0, res && res->change_pos.has_value() ? *res->change_pos : 0);
     if (!res) return res;
     const auto& txr_ungrouped = *res;
     // try with avoidpartialspends unless it's enabled already
@@ -1345,16 +1342,15 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         tmp_cc.m_avoid_partial_spends = true;
 
         // Reuse the change destination from the first creation attempt to avoid skipping BIP44 indexes
-        const int ungrouped_change_pos = txr_ungrouped.change_pos;
-        if (ungrouped_change_pos != -1) {
-            ExtractDestination(txr_ungrouped.tx->vout[ungrouped_change_pos].scriptPubKey, tmp_cc.destChange);
+        if (txr_ungrouped.change_pos) {
+            ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, tmp_cc.destChange);
         }
 
         auto txr_grouped = CreateTransactionInternal(wallet, vecSend, change_pos, tmp_cc, sign);
         // if fee of this alternative one is within the range of the max fee, we use this one
         const bool use_aps{txr_grouped.has_value() ? (txr_grouped->fee <= txr_ungrouped.fee + wallet.m_max_aps_fee) : false};
         TRACE5(coin_selection, aps_create_tx_internal, wallet.GetName().c_str(), use_aps, txr_grouped.has_value(),
-               txr_grouped.has_value() ? txr_grouped->fee : 0, txr_grouped.has_value() ? txr_grouped->change_pos : 0);
+               txr_grouped.has_value() ? txr_grouped->fee : 0, txr_grouped.has_value() && txr_grouped->change_pos.has_value() ? *txr_grouped->change_pos : 0);
         if (txr_grouped) {
             wallet.WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n",
                 txr_ungrouped.fee, txr_grouped->fee, use_aps ? "grouped" : "non-grouped");
@@ -1412,7 +1408,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
         preset_txin.SetScriptWitness(txin.scriptWitness);
     }
 
-    auto res = CreateTransaction(wallet, vecSend, nChangePosInOut, coinControl, false);
+    auto res = CreateTransaction(wallet, vecSend, nChangePosInOut == -1 ? std::nullopt : std::optional<unsigned int>((unsigned int)nChangePosInOut), coinControl, false);
     if (!res) {
         error = util::ErrorString(res);
         return false;
@@ -1420,7 +1416,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     const auto& txr = *res;
     CTransactionRef tx_new = txr.tx;
     nFeeRet = txr.fee;
-    nChangePosInOut = txr.change_pos;
+    nChangePosInOut = txr.change_pos ? *txr.change_pos : -1;
 
     if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
