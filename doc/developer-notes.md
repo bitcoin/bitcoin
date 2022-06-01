@@ -110,6 +110,28 @@ code.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
 
+For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
+Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
+triggered that makes code harder to maintain and reason about:
+```c++
+#include <filesystem>
+
+namespace fs {
+class path : public std::filesystem::path
+{
+};
+// The intention is to disallow this function.
+bool exists(const fs::path& p) = delete;
+} // namespace fs
+
+int main()
+{
+    //fs::path p; // error
+    std::filesystem::path p; // compiled
+    exists(p); // ADL being used for unqualified name lookup
+}
+```
+
 Block style example:
 ```c++
 int g_count = 0;
