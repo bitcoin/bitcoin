@@ -231,6 +231,7 @@ GIT_ARCHIVE="${DIST_ARCHIVE_BASE}/${DISTNAME}.tar.gz"
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
     CONFIG_SITE="${BASEPREFIX}/${HOST}/share/config.site" \
+    REFERENCE_DATETIME="@${SOURCE_DATE_EPOCH}" \
     contrib/guix/libexec/make_release_tarball.sh "${GIT_ARCHIVE}" "${DISTNAME}"
 fi
 

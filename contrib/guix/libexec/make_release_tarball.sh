@@ -9,6 +9,7 @@ export LC_ALL=C
 set -ex
 
 [ "$#" -ge 2 ]
+[ -n "${REFERENCE_DATETIME}" ]
 
 GIT_ARCHIVE="$1"
 DISTNAME="$2"
