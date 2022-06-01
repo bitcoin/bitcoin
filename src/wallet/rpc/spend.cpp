@@ -488,13 +488,13 @@ static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
     return args;
 }
 
-void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, const UniValue& options, CCoinControl& coinControl, bool override_min_fee)
+CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const UniValue& options, CCoinControl& coinControl, bool override_min_fee)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
-    change_position = -1;
+    std::optional<unsigned int> change_position;
     bool lockUnspents = false;
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
@@ -552,7 +552,11 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         }
 
         if (options.exists("changePosition") || options.exists("change_position")) {
-            change_position = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).getInt<int>();
+            int pos = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).getInt<int>();
+            if (pos < 0 || (unsigned int)pos > tx.vout.size()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
+            }
+            change_position = (unsigned int)pos;
         }
 
         if (options.exists("change_type")) {
@@ -702,9 +706,6 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
     if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
-    if (change_position != -1 && (change_position < 0 || (unsigned int)change_position > tx.vout.size()))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
-
     for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
         int pos = subtractFeeFromOutputs[idx].getInt<int>();
         if (setSubtractFeeFromOutputs.count(pos))
@@ -716,11 +717,11 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         setSubtractFeeFromOutputs.insert(pos);
     }
 
-    bilingual_str error;
-
-    if (!FundTransaction(wallet, tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+    auto txr = FundTransaction(wallet, tx, change_position, lockUnspents, setSubtractFeeFromOutputs, coinControl);
+    if (!txr) {
+        throw JSONRPCError(RPC_WALLET_ERROR, ErrorString(txr).original);
     }
+    return *txr;
 }
 
 static void SetOptionsInputWeights(const UniValue& inputs, UniValue& options)
@@ -843,17 +844,15 @@ RPCHelpMan fundrawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
 
-    CAmount fee;
-    int change_position;
     CCoinControl coin_control;
     // Automatically select (additional) coins. Can be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = true;
-    FundTransaction(*pwallet, tx, fee, change_position, request.params[1], coin_control, /*override_min_fee=*/true);
+    auto txr = FundTransaction(*pwallet, tx, request.params[1], coin_control, /*override_min_fee=*/true);
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("hex", EncodeHexTx(CTransaction(tx)));
-    result.pushKV("fee", ValueFromAmount(fee));
-    result.pushKV("changepos", change_position);
+    result.pushKV("hex", EncodeHexTx(*txr.tx));
+    result.pushKV("fee", ValueFromAmount(txr.fee));
+    result.pushKV("changepos", txr.change_pos ? (int)*txr.change_pos : -1);
 
     return result;
 },
@@ -1275,8 +1274,6 @@ RPCHelpMan send()
             PreventOutdatedOptions(options);
 
 
-            CAmount fee;
-            int change_position;
             bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
             CCoinControl coin_control;
@@ -1284,9 +1281,9 @@ RPCHelpMan send()
             // be overridden by options.add_inputs.
             coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
             SetOptionsInputWeights(options["inputs"], options);
-            FundTransaction(*pwallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/false);
+            auto txr = FundTransaction(*pwallet, rawTx, options, coin_control, /*override_min_fee=*/false);
 
-            return FinishTransaction(pwallet, options, rawTx);
+            return FinishTransaction(pwallet, options, CMutableTransaction(*txr.tx));
         }
     };
 }
@@ -1711,8 +1708,6 @@ RPCHelpMan walletcreatefundedpsbt()
 
     UniValue options{request.params[3].isNull() ? UniValue::VOBJ : request.params[3]};
 
-    CAmount fee;
-    int change_position;
     const UniValue &replaceable_arg = options["replaceable"];
     const bool rbf{replaceable_arg.isNull() ? wallet.m_signal_rbf : replaceable_arg.get_bool()};
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
@@ -1721,10 +1716,10 @@ RPCHelpMan walletcreatefundedpsbt()
     // be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
     SetOptionsInputWeights(request.params[0], options);
-    FundTransaction(wallet, rawTx, fee, change_position, options, coin_control, /*override_min_fee=*/true);
+    auto txr = FundTransaction(wallet, rawTx, options, coin_control, /*override_min_fee=*/true);
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx(rawTx);
+    PartiallySignedTransaction psbtx(CMutableTransaction(*txr.tx));
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
@@ -1740,8 +1735,8 @@ RPCHelpMan walletcreatefundedpsbt()
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("psbt", EncodeBase64(ssTx.str()));
-    result.pushKV("fee", ValueFromAmount(fee));
-    result.pushKV("changepos", change_position);
+    result.pushKV("fee", ValueFromAmount(txr.fee));
+    result.pushKV("changepos", txr.change_pos ? (int)*txr.change_pos : -1);
     return result;
 },
     };
