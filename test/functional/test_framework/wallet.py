@@ -167,6 +167,13 @@ class MiniWallet:
         else:
             return self._utxos[index]
 
+    def get_utxos(self, *, mark_as_spent=True):
+        """Returns the list of all utxos and optionally mark them as spent"""
+        utxos = deepcopy(self._utxos)
+        if mark_as_spent:
+            self._utxos = []
+        return utxos
+
     def send_self_transfer(self, **kwargs):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         tx = self.create_self_transfer(**kwargs)
