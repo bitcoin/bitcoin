@@ -21,7 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(i2p_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(unlimited_recv)
 {
     const auto prev_log_level{LogInstance().LogLevel()};
-    LogInstance().SetLogLevel(BCLog::Level::Debug);
+    LogInstance().SetLogLevel(BCLog::Level::Trace);
     auto CreateSockOrig = CreateSock;
 
     // Mock CreateSock() to create MockSock.

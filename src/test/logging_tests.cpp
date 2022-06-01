@@ -172,18 +172,18 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
 {
     LogInstance().EnableCategory(BCLog::LogFlags::ALL);
 
-    LogInstance().SetLogLevel(BCLog::Level::Info);
+    LogInstance().SetLogLevel(BCLog::Level::Debug);
     LogInstance().SetCategoryLogLevel(/*category_str=*/"net", /*level_str=*/"info");
 
     // Global log level
     LogPrintLevel(BCLog::HTTP, BCLog::Level::Info, "foo1: %s\n", "bar1");
-    LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "foo2: %s. This log level is lower than the global one.\n", "bar2");
+    LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Trace, "foo2: %s. This log level is lower than the global one.\n", "bar2");
     LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Warning, "foo3: %s\n", "bar3");
     LogPrintLevel(BCLog::RPC, BCLog::Level::Error, "foo4: %s\n", "bar4");
 
     // Category-specific log level
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo5: %s\n", "bar5");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo6: %s. This log level is lower than the category-specific one.\n", "bar6");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo6: %s. This log level is the same as the global one but lower than the category-specific one, which takes precedence. \n", "bar6");
     LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo7: %s\n", "bar7");
 
     std::vector<std::string> expected = {
@@ -220,7 +220,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         ResetLogger();
         ArgsManager args;
         args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=net:debug"};
+        const char* argv_test[] = {"bitcoind", "-loglevel=net:trace"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
         init::SetLoggingLevel(args);
@@ -229,7 +229,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         const auto& category_levels{LogInstance().CategoryLevels()};
         const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
         BOOST_REQUIRE(net_it != category_levels.end());
-        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Debug);
+        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Trace);
     }
 
     // Set both global log level and category-specific log level
@@ -237,7 +237,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         ResetLogger();
         ArgsManager args;
         args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=debug", "-loglevel=net:debug", "-loglevel=http:info"};
+        const char* argv_test[] = {"bitcoind", "-loglevel=debug", "-loglevel=net:trace", "-loglevel=http:info"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(4, argv_test, err));
         init::SetLoggingLevel(args);
@@ -248,7 +248,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 
         const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
         BOOST_CHECK(net_it != category_levels.end());
-        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Debug);
+        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Trace);
 
         const auto http_it{category_levels.find(BCLog::LogFlags::HTTP)};
         BOOST_CHECK(http_it != category_levels.end());
