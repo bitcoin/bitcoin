@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,15 +9,13 @@
 
 #include <cassert>
 #include <cstdint>
-#include <netinet/in.h>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(netaddress)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CNetAddr net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    (void)net_addr.GetHash();
     (void)net_addr.GetNetClass();
     if (net_addr.GetNetwork() == Network::NET_IPV4) {
         assert(net_addr.IsIPv4());
@@ -55,7 +53,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)net_addr.IsRFC3927();
     (void)net_addr.IsRFC3964();
     if (net_addr.IsRFC4193()) {
-        assert(net_addr.GetNetwork() == Network::NET_ONION || net_addr.GetNetwork() == Network::NET_INTERNAL || net_addr.GetNetwork() == Network::NET_UNROUTABLE);
+        assert(net_addr.GetNetwork() == Network::NET_INTERNAL || net_addr.GetNetwork() == Network::NET_UNROUTABLE);
     }
     (void)net_addr.IsRFC4380();
     (void)net_addr.IsRFC4843();
@@ -85,6 +83,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)service.ToString();
     (void)service.ToStringIPPort();
     (void)service.ToStringPort();
+    (void)CServiceHash()(service);
+    (void)CServiceHash(0, 0)(service);
 
     const CNetAddr other_net_addr = ConsumeNetAddr(fuzzed_data_provider);
     (void)net_addr.GetReachabilityFrom(&other_net_addr);

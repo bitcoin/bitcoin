@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,7 +29,7 @@
 
 /** "Help message" or "About" dialog box */
 HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::HelpMessageDialog)
 {
     ui->setupUi(this);
@@ -142,7 +142,7 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
 {
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
-        tr("%1 is shutting down...").arg(PACKAGE_NAME) + "<br /><br />" +
+        tr("%1 is shutting down…").arg(PACKAGE_NAME) + "<br /><br />" +
         tr("Do not shut down the computer until this window disappears.")));
     setLayout(layout);
 

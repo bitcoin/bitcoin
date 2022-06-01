@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -98,29 +98,38 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     return state;
 }
 
-BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const
+BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params, std::vector<bool>* signalling_blocks) const
 {
     BIP9Stats stats = {};
 
     stats.period = Period(params);
     stats.threshold = Threshold(params);
 
-    if (pindex == nullptr)
-        return stats;
+    if (pindex == nullptr) return stats;
 
-    // Find beginning of period
-    const CBlockIndex* pindexEndOfPrevPeriod = pindex->GetAncestor(pindex->nHeight - ((pindex->nHeight + 1) % stats.period));
-    stats.elapsed = pindex->nHeight - pindexEndOfPrevPeriod->nHeight;
+    // Find how many blocks are in the current period
+    int blocks_in_period = 1 + (pindex->nHeight % stats.period);
 
-    // Count from current block to beginning of period
-    int count = 0;
-    const CBlockIndex* currentIndex = pindex;
-    while (pindexEndOfPrevPeriod->nHeight != currentIndex->nHeight){
-        if (Condition(currentIndex, params))
-            count++;
-        currentIndex = currentIndex->pprev;
+    // Reset signalling_blocks
+    if (signalling_blocks) {
+        signalling_blocks->assign(blocks_in_period, false);
     }
 
+    // Count from current block to beginning of period
+    int elapsed = 0;
+    int count = 0;
+    const CBlockIndex* currentIndex = pindex;
+    do {
+        ++elapsed;
+        --blocks_in_period;
+        if (Condition(currentIndex, params)) {
+            ++count;
+            if (signalling_blocks) signalling_blocks->at(blocks_in_period) = true;
+        }
+        currentIndex = currentIndex->pprev;
+    } while(blocks_in_period > 0);
+
+    stats.elapsed = elapsed;
     stats.count = count;
     stats.possible = (stats.period - stats.threshold ) >= (stats.elapsed - count);
 
@@ -190,29 +199,48 @@ public:
 
 } // namespace
 
-ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
+ThresholdState VersionBitsCache::State(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
-    return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, cache.caches[pos]);
+    LOCK(m_mutex);
+    return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, m_caches[pos]);
 }
 
-BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
+BIP9Stats VersionBitsCache::Statistics(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos, std::vector<bool>* signalling_blocks)
 {
-    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindexPrev, params);
+    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindex, params, signalling_blocks);
 }
 
-int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache)
+int VersionBitsCache::StateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
-    return VersionBitsConditionChecker(pos).GetStateSinceHeightFor(pindexPrev, params, cache.caches[pos]);
+    LOCK(m_mutex);
+    return VersionBitsConditionChecker(pos).GetStateSinceHeightFor(pindexPrev, params, m_caches[pos]);
 }
 
-uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos)
+uint32_t VersionBitsCache::Mask(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     return VersionBitsConditionChecker(pos).Mask(params);
 }
 
+int32_t VersionBitsCache::ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    LOCK(m_mutex);
+    int32_t nVersion = VERSIONBITS_TOP_BITS;
+
+    for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
+        Consensus::DeploymentPos pos = static_cast<Consensus::DeploymentPos>(i);
+        ThresholdState state = VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, m_caches[pos]);
+        if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
+            nVersion |= Mask(params, pos);
+        }
+    }
+
+    return nVersion;
+}
+
 void VersionBitsCache::Clear()
 {
+    LOCK(m_mutex);
     for (unsigned int d = 0; d < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; d++) {
-        caches[d].clear();
+        m_caches[d].clear();
     }
 }

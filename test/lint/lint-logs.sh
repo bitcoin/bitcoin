@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Check that all logs are terminated with '\n'
 #
 # Some logs are continued over multiple lines. They should be explicitly
-# commented with \* Continued *\
+# commented with /* Continued */
 #
 # There are some instances of LogPrintf() in comments. Those can be
 # ignored

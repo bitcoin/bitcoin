@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,7 +41,7 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, Scri
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
 
-    return VerifyScript(scriptSig, scriptPubKey, nullptr, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue), &err);
+    return VerifyScript(scriptSig, scriptPubKey, nullptr, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err);
 }
 
 
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[3].scriptSig << OP_11 << OP_11 << std::vector<unsigned char>(oneAndTwo.begin(), oneAndTwo.end());
     txTo.vin[4].scriptSig << std::vector<unsigned char>(fifteenSigops.begin(), fifteenSigops.end());
 
-    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins, false));
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins));
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txTo), coins), 22U);
 
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd1.vin[0].scriptSig << std::vector<unsigned char>(sixteenSigops.begin(), sixteenSigops.end());
 
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd1), coins, false));
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd1), coins));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd1), coins), 16U);
 
     CMutableTransaction txToNonStd2;
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd2.vin[0].scriptSig << std::vector<unsigned char>(twentySigops.begin(), twentySigops.end());
 
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd2), coins, false));
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd2), coins));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2), coins), 20U);
 }
 

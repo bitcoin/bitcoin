@@ -2,7 +2,7 @@
 #
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #
-# Copyright (c) 2013-2020 The Bitcoin Core developers
+# Copyright (c) 2013-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -17,7 +17,6 @@ import datetime
 import time
 import glob
 from collections import namedtuple
-from binascii import unhexlify
 
 settings = {}
 
@@ -332,7 +331,7 @@ if __name__ == '__main__':
     settings['max_out_sz'] = int(settings['max_out_sz'])
     settings['split_timestamp'] = int(settings['split_timestamp'])
     settings['file_timestamp'] = int(settings['file_timestamp'])
-    settings['netmagic'] = unhexlify(settings['netmagic'].encode('utf-8'))
+    settings['netmagic'] = bytes.fromhex(settings['netmagic'])
     settings['out_of_order_cache_sz'] = int(settings['out_of_order_cache_sz'])
     settings['debug_output'] = settings['debug_output'].lower()
 

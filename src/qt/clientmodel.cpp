@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
+#include <qt/peertablesortproxy.h>
 
 #include <clientversion.h>
 #include <interfaces/handler.h>
@@ -16,9 +17,11 @@
 #include <netbase.h>
 #include <util/system.h>
 #include <util/threadnames.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <stdint.h>
+#include <functional>
 
 #include <QDebug>
 #include <QThread>
@@ -37,7 +40,11 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
 {
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;
+
     peerTableModel = new PeerTableModel(m_node, this);
+    m_peer_table_sort_proxy = new PeerTableSortProxy(this);
+    m_peer_table_sort_proxy->setSourceModel(peerTableModel);
+
     banTableModel = new BanTableModel(m_node, this);
 
     QTimer* timer = new QTimer;
@@ -70,14 +77,14 @@ ClientModel::~ClientModel()
 
 int ClientModel::getNumConnections(unsigned int flags) const
 {
-    CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
+    ConnectionDirection connections = ConnectionDirection::None;
 
     if(flags == CONNECTIONS_IN)
-        connections = CConnman::CONNECTIONS_IN;
+        connections = ConnectionDirection::In;
     else if (flags == CONNECTIONS_OUT)
-        connections = CConnman::CONNECTIONS_OUT;
+        connections = ConnectionDirection::Out;
     else if (flags == CONNECTIONS_ALL)
-        connections = CConnman::CONNECTIONS_ALL;
+        connections = ConnectionDirection::Both;
 
     return m_node.getNodeCount(connections);
 }
@@ -183,6 +190,11 @@ PeerTableModel *ClientModel::getPeerTableModel()
     return peerTableModel;
 }
 
+PeerTableSortProxy* ClientModel::peerTableSortProxy()
+{
+    return m_peer_table_sort_proxy;
+}
+
 BanTableModel *ClientModel::getBanTableModel()
 {
     return banTableModel;
@@ -205,17 +217,17 @@ bool ClientModel::isReleaseVersion() const
 
 QString ClientModel::formatClientStartupTime() const
 {
-    return QDateTime::fromTime_t(GetStartupTime()).toString();
+    return QDateTime::fromSecsSinceEpoch(GetStartupTime()).toString();
 }
 
 QString ClientModel::dataDir() const
 {
-    return GUIUtil::boostPathToQString(GetDataDir());
+    return GUIUtil::PathToQString(gArgs.GetDataDirNet());
 }
 
 QString ClientModel::blocksDir() const
 {
-    return GUIUtil::boostPathToQString(GetBlocksDir());
+    return GUIUtil::PathToQString(gArgs.GetBlocksDirPath());
 }
 
 void ClientModel::updateBanlist()
@@ -277,13 +289,13 @@ static void BlockTipChanged(ClientModel* clientmodel, SynchronizationState sync_
     const bool throttle = (sync_state != SynchronizationState::POST_INIT && !fHeader) || sync_state == SynchronizationState::INIT_REINDEX;
     const int64_t now = throttle ? GetTimeMillis() : 0;
     int64_t& nLastUpdateNotification = fHeader ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
-    if (throttle && now < nLastUpdateNotification + MODEL_UPDATE_DELAY) {
+    if (throttle && now < nLastUpdateNotification + count_milliseconds(MODEL_UPDATE_DELAY)) {
         return;
     }
 
     bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
         Q_ARG(int, tip.block_height),
-        Q_ARG(QDateTime, QDateTime::fromTime_t(tip.block_time)),
+        Q_ARG(QDateTime, QDateTime::fromSecsSinceEpoch(tip.block_time)),
         Q_ARG(double, verificationProgress),
         Q_ARG(bool, fHeader),
         Q_ARG(SynchronizationState, sync_state));
@@ -317,7 +329,7 @@ void ClientModel::unsubscribeFromCoreSignals()
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const
 {
-    proxyType ipv4, ipv6;
+    Proxy ipv4, ipv6;
     if (m_node.getProxy((Network) 1, ipv4) && m_node.getProxy((Network) 2, ipv6)) {
       ip_port = ipv4.proxy.ToStringIPPort();
       return true;

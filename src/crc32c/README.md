@@ -65,7 +65,7 @@ apm install autocomplete-clang build build-cmake clang-format language-cmake \
 
 If you don't mind more setup in return for more speed, replace
 `autocomplete-clang` and `linter-clang` with `you-complete-me`. This requires
-[setting up ycmd](https://github.com/Valloric/ycmd#building).
+[setting up ycmd](https://github.com/ycm-core/ycmd#building).
 
 ```bash
 apm install autocomplete-plus build build-cmake clang-format language-cmake \

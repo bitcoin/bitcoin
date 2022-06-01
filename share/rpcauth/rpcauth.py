@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from argparse import ArgumentParser
 from base64 import urlsafe_b64encode
-from binascii import hexlify
 from getpass import getpass
 from os import urandom
 
@@ -13,7 +12,7 @@ import hmac
 
 def generate_salt(size):
     """Create size byte hex salt"""
-    return hexlify(urandom(size)).decode()
+    return urandom(size).hex()
 
 def generate_password():
     """Create 32 byte b64 password"""

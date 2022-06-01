@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 The Bitcoin Core developers
+// Copyright (c) 2014-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,16 +8,15 @@
 #include <bech32.h>
 #include <util/strencodings.h>
 
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
-
+#include <algorithm>
 #include <assert.h>
 #include <string.h>
-#include <algorithm>
 
-namespace
-{
-class DestinationEncoder : public boost::static_visitor<std::string>
+/// Maximum witness length for Bech32 addresses.
+static constexpr std::size_t BECH32_WITNESS_PROG_MAX_LEN = 40;
+
+namespace {
+class DestinationEncoder
 {
 private:
     const CChainParams& m_params;
@@ -55,6 +54,14 @@ public:
         return bech32::Encode(bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
     }
 
+    std::string operator()(const WitnessV1Taproot& tap) const
+    {
+        std::vector<unsigned char> data = {1};
+        data.reserve(53);
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, tap.begin(), tap.end());
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+    }
+
     std::string operator()(const WitnessUnknown& id) const
     {
         if (id.version < 1 || id.version > 16 || id.length < 2 || id.length > 40) {
@@ -69,11 +76,16 @@ public:
     std::string operator()(const CNoDestination& no) const { return {}; }
 };
 
-CTxDestination DecodeDestination(const std::string& str, const CChainParams& params)
+CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
     std::vector<unsigned char> data;
     uint160 hash;
-    if (DecodeBase58Check(str, data, 21)) {
+    error_str = "";
+
+    // Note this will be false if it is a valid Bech32 address for a different network
+    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
+
+    if (!is_bech32 && DecodeBase58Check(str, data, 21)) {
         // base58-encoded Bitcoin addresses.
         // Public-key-hash-addresses have version 0 (or 111 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
@@ -89,16 +101,42 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             std::copy(data.begin() + script_prefix.size(), data.end(), hash.begin());
             return ScriptHash(hash);
         }
+
+        // If the prefix of data matches either the script or pubkey prefix, the length must have been wrong
+        if ((data.size() >= script_prefix.size() &&
+                std::equal(script_prefix.begin(), script_prefix.end(), data.begin())) ||
+            (data.size() >= pubkey_prefix.size() &&
+                std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin()))) {
+            error_str = "Invalid length for Base58 address";
+        } else {
+            error_str = "Invalid prefix for Base58-encoded address";
+        }
+        return CNoDestination();
+    } else if (!is_bech32) {
+        // Try Base58 decoding without the checksum, using a much larger max length
+        if (!DecodeBase58(str, data, 100)) {
+            error_str = "Not a valid Bech32 or Base58 encoding";
+        } else {
+            error_str = "Invalid checksum or length of Base58 address";
+        }
+        return CNoDestination();
     }
+
     data.clear();
     const auto dec = bech32::Decode(str);
-    if ((dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) && dec.data.size() > 0 && dec.hrp == params.Bech32HRP()) {
+    if ((dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) && dec.data.size() > 0) {
         // Bech32 decoding
+        if (dec.hrp != params.Bech32HRP()) {
+            error_str = "Invalid prefix for Bech32 address";
+            return CNoDestination();
+        }
         int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
         if (version == 0 && dec.encoding != bech32::Encoding::BECH32) {
+            error_str = "Version 0 witness address must use Bech32 checksum";
             return CNoDestination();
         }
         if (version != 0 && dec.encoding != bech32::Encoding::BECH32M) {
+            error_str = "Version 1+ witness address must use Bech32m checksum";
             return CNoDestination();
         }
         // The rest of the symbols are converted witness program bytes.
@@ -119,11 +157,28 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                         return scriptid;
                     }
                 }
+
+                error_str = "Invalid Bech32 v0 address data size";
                 return CNoDestination();
             }
-            if (version > 16 || data.size() < 2 || data.size() > 40) {
+
+            if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
+                static_assert(WITNESS_V1_TAPROOT_SIZE == WitnessV1Taproot::size());
+                WitnessV1Taproot tap;
+                std::copy(data.begin(), data.end(), tap.begin());
+                return tap;
+            }
+
+            if (version > 16) {
+                error_str = "Invalid Bech32 address witness version";
                 return CNoDestination();
             }
+
+            if (data.size() < 2 || data.size() > BECH32_WITNESS_PROG_MAX_LEN) {
+                error_str = "Invalid Bech32 address data size";
+                return CNoDestination();
+            }
+
             WitnessUnknown unk;
             unk.version = version;
             std::copy(data.begin(), data.end(), unk.program);
@@ -131,6 +186,11 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             return unk;
         }
     }
+
+    // Perform Bech32 error location
+    auto res = bech32::LocateErrors(str);
+    error_str = res.first;
+    if (error_locations) *error_locations = std::move(res.second);
     return CNoDestination();
 }
 } // namespace
@@ -215,17 +275,24 @@ std::string EncodeExtKey(const CExtKey& key)
 
 std::string EncodeDestination(const CTxDestination& dest)
 {
-    return boost::apply_visitor(DestinationEncoder(Params()), dest);
+    return std::visit(DestinationEncoder(Params()), dest);
+}
+
+CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations)
+{
+    return DecodeDestination(str, Params(), error_msg, error_locations);
 }
 
 CTxDestination DecodeDestination(const std::string& str)
 {
-    return DecodeDestination(str, Params());
+    std::string error_msg;
+    return DecodeDestination(str, error_msg);
 }
 
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
-    return IsValidDestination(DecodeDestination(str, params));
+    std::string error_msg;
+    return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr));
 }
 
 bool IsValidDestinationString(const std::string& str)

@@ -1,0 +1,21 @@
+From dece6f5840463ae2ddf927d65eb1b3680e34a547
+From: Øystein Heskestad <oystein.heskestad@qt.io>
+Date: Wed, 27 Oct 2021 13:07:46 +0200
+Subject: [PATCH] Add missing macOS header file that was indirectly included before
+
+See: https://bugreports.qt.io/browse/QTBUG-97855
+
+Upstream Commits:
+ - Qt 6.2: c884bf138a21dd7320e35cef34d24e22e74d7ce0
+
+diff --git a/qtbase/src/plugins/platforms/cocoa/qiosurfacegraphicsbuffer.h b/qtbase/src/plugins/platforms/cocoa/qiosurfacegraphicsbuffer.h
+index e070ba97..07c75b04 100644
+--- a/qtbase/src/plugins/platforms/cocoa/qiosurfacegraphicsbuffer.h
++++ b/qtbase/src/plugins/platforms/cocoa/qiosurfacegraphicsbuffer.h
+@@ -40,6 +40,7 @@
+ #ifndef QIOSURFACEGRAPHICSBUFFER_H
+ #define QIOSURFACEGRAPHICSBUFFER_H
+
++#include <CoreGraphics/CGColorSpace.h>
+ #include <qpa/qplatformgraphicsbuffer.h>
+ #include <private/qcore_mac_p.h>

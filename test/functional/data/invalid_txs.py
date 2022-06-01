@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -28,28 +28,34 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     MAX_MONEY,
+    SEQUENCE_FINAL,
 )
-from test_framework import script as sc
 from test_framework.blocktools import create_tx_with_script, MAX_BLOCK_SIGOPS
 from test_framework.script import (
     CScript,
-    OP_CAT,
-    OP_SUBSTR,
-    OP_LEFT,
-    OP_RIGHT,
-    OP_INVERT,
-    OP_AND,
-    OP_OR,
-    OP_XOR,
-    OP_2MUL,
+    OP_0,
     OP_2DIV,
-    OP_MUL,
+    OP_2MUL,
+    OP_AND,
+    OP_CAT,
+    OP_CHECKSIG,
     OP_DIV,
-    OP_MOD,
+    OP_INVERT,
+    OP_LEFT,
     OP_LSHIFT,
-    OP_RSHIFT
+    OP_MOD,
+    OP_MUL,
+    OP_OR,
+    OP_RIGHT,
+    OP_RSHIFT,
+    OP_SUBSTR,
+    OP_TRUE,
+    OP_XOR,
 )
-basic_p2sh = sc.CScript([sc.OP_HASH160, sc.hash160(sc.CScript([sc.OP_0])), sc.OP_EQUAL])
+from test_framework.script_util import (
+    script_to_p2sh_script,
+)
+basic_p2sh = script_to_p2sh_script(CScript([OP_0]))
 
 
 class BadTxTemplate:
@@ -57,7 +63,7 @@ class BadTxTemplate:
     __metaclass__ = abc.ABCMeta
 
     # The expected error code given by bitcoind upon submission of the tx.
-    reject_reason = ""  # type: Optional[str]
+    reject_reason: Optional[str] = ""
 
     # Only specified if it differs from mempool acceptance error.
     block_reject_reason = ""
@@ -72,7 +78,7 @@ class BadTxTemplate:
     def __init__(self, *, spend_tx=None, spend_block=None):
         self.spend_tx = spend_block.vtx[0] if spend_block else spend_tx
         self.spend_avail = sum(o.nValue for o in self.spend_tx.vout)
-        self.valid_txin = CTxIn(COutPoint(self.spend_tx.sha256, 0), b"", 0xffffffff)
+        self.valid_txin = CTxIn(COutPoint(self.spend_tx.sha256, 0), b"", SEQUENCE_FINAL)
 
     @abc.abstractmethod
     def get_tx(self, *args, **kwargs):
@@ -116,7 +122,7 @@ class SizeTooSmall(BadTxTemplate):
     def get_tx(self):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
-        tx.vout.append(CTxOut(0, sc.CScript([sc.OP_TRUE])))
+        tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx.calc_sha256()
         return tx
 
@@ -132,7 +138,7 @@ class BadInputOutpointIndex(BadTxTemplate):
         bad_idx = num_indices + 100
 
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256, bad_idx), b"", 0xffffffff))
+        tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256, bad_idx), b"", SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, basic_p2sh))
         tx.calc_sha256()
         return tx
@@ -151,13 +157,26 @@ class DuplicateInput(BadTxTemplate):
         return tx
 
 
+class PrevoutNullInput(BadTxTemplate):
+    reject_reason = 'bad-txns-prevout-null'
+    expect_disconnect = True
+
+    def get_tx(self):
+        tx = CTransaction()
+        tx.vin.append(self.valid_txin)
+        tx.vin.append(CTxIn(COutPoint(hash=0, n=0xffffffff)))
+        tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.calc_sha256()
+        return tx
+
+
 class NonexistentInput(BadTxTemplate):
     reject_reason = None  # Added as an orphan tx.
     expect_disconnect = False
 
     def get_tx(self):
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256 + 1, 0), b"", 0xffffffff))
+        tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256 + 1, 0), b"", SEQUENCE_FINAL))
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(1, basic_p2sh))
         tx.calc_sha256()
@@ -217,7 +236,7 @@ class TooManySigops(BadTxTemplate):
     expect_disconnect = False
 
     def get_tx(self):
-        lotsa_checksigs = sc.CScript([sc.OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
+        lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
         return create_tx_with_script(
             self.spend_tx, 0,
             script_pub_key=lotsa_checksigs,

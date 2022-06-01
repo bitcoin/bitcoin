@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -24,7 +24,6 @@ transactions.
 `db_dump -da wallet.dat` is useful to see the data in a wallet.dat BDB file
 """
 
-import binascii
 import struct
 
 # Important constants
@@ -51,7 +50,6 @@ def dump_leaf_page(data):
     page_info['pgno'] = pgno
     page_info['prev_pgno'] = prev_pgno
     page_info['next_pgno'] = next_pgno
-    page_info['entries'] = entries
     page_info['hf_offset'] = hf_offset
     page_info['level'] = level
     page_info['pg_type'] = pg_type
@@ -97,7 +95,7 @@ def dump_meta_page(page):
     metadata['key_count'] = key_count
     metadata['record_count'] = record_count
     metadata['flags'] = flags
-    metadata['uid'] = binascii.hexlify(uid)
+    metadata['uid'] = uid.hex().encode()
 
     assert magic == BTREE_MAGIC, 'bdb magic does not match bdb btree magic'
     assert pg_type == BTREE_META, 'Metadata page is not a btree metadata page'
@@ -111,8 +109,9 @@ def dump_meta_page(page):
     metadata['re_pad'] = re_pad
     metadata['root'] = root
     metadata['crypto_magic'] = crypto_magic
-    metadata['iv'] = binascii.hexlify(iv)
-    metadata['chksum'] = binascii.hexlify(chksum)
+    metadata['iv'] = iv.hex().encode()
+    metadata['chksum'] = chksum.hex().encode()
+
     return metadata
 
 # Given the dict from dump_leaf_page, get the key-value pairs and put them into a dict

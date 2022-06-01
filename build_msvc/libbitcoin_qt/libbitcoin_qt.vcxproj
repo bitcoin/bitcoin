@@ -24,6 +24,7 @@
     <ClCompile Include="..\..\src\qt\csvmodelwriter.cpp" />
     <ClCompile Include="..\..\src\qt\editaddressdialog.cpp" />
     <ClCompile Include="..\..\src\qt\guiutil.cpp" />
+    <ClCompile Include="..\..\src\qt\initexecutor.cpp" />
     <ClCompile Include="..\..\src\qt\intro.cpp" />
     <ClCompile Include="..\..\src\qt\modaloverlay.cpp" />
     <ClCompile Include="..\..\src\qt\networkstyle.cpp" />
@@ -34,6 +35,7 @@
     <ClCompile Include="..\..\src\qt\overviewpage.cpp" />
     <ClCompile Include="..\..\src\qt\paymentserver.cpp" />
     <ClCompile Include="..\..\src\qt\peertablemodel.cpp" />
+    <ClCompile Include="..\..\src\qt\peertablesortproxy.cpp" />
     <ClCompile Include="..\..\src\qt\platformstyle.cpp" />
     <ClCompile Include="..\..\src\qt\psbtoperationsdialog.cpp" />
     <ClCompile Include="..\..\src\qt\qrimagewidget.cpp" />
@@ -77,6 +79,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_csvmodelwriter.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_editaddressdialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_guiutil.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_initexecutor.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_intro.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_modaloverlay.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_networkstyle.cpp" />
@@ -87,6 +90,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_overviewpage.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_paymentserver.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_peertablemodel.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_peertablesortproxy.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_platformstyle.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_psbtoperationsdialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_qrimagewidget.cpp" />
@@ -132,20 +136,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>_AMD64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QtIncludes);$(GeneratedFilesOutDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>_X86_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QtIncludes);$(GeneratedFilesOutDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>_X86_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(QtIncludes);$(GeneratedFilesOutDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>

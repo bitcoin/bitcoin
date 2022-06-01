@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,6 +33,7 @@ EXCLUDE_DIRS = [
     # git subtrees
     "src/crypto/ctaes/",
     "src/leveldb/",
+    "src/minisketch",
     "src/secp256k1/",
     "src/univalue/",
     "src/crc32c/",
@@ -370,7 +371,7 @@ def create_updated_copyright_line(line, last_git_change_year):
     space_split = after_copyright.split(' ')
     year_range = space_split[0]
     start_year, end_year = parse_year_range(year_range)
-    if end_year == last_git_change_year:
+    if end_year >= last_git_change_year:
         return line
     return (before_copyright + copyright_splitter +
             year_range_to_str(start_year, last_git_change_year) + ' ' +

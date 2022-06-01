@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test coinbase transactions return the correct categories.
@@ -33,7 +33,7 @@ class CoinbaseCategoryTest(BitcoinTestFramework):
     def run_test(self):
         # Generate one block to an address
         address = self.nodes[0].getnewaddress()
-        self.nodes[0].generatetoaddress(1, address)
+        self.generatetoaddress(self.nodes[0], 1, address)
         hash = self.nodes[0].getbestblockhash()
         txid = self.nodes[0].getblock(hash)["tx"][0]
 
@@ -41,12 +41,12 @@ class CoinbaseCategoryTest(BitcoinTestFramework):
         self.assert_category("immature", address, txid, 0)
 
         # Mine another 99 blocks on top
-        self.nodes[0].generate(99)
+        self.generate(self.nodes[0], 99)
         # Coinbase transaction is still immature after 100 confirmations
         self.assert_category("immature", address, txid, 99)
 
         # Mine one more block
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         # Coinbase transaction is now matured, so category is "generate"
         self.assert_category("generate", address, txid, 100)
 

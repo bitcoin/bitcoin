@@ -40,7 +40,7 @@ Import trusted keys
 In order to check the commit signatures, you must add the trusted PGP keys to your machine. [GnuPG](https://gnupg.org/) may be used to import the trusted keys by running the following command:
 
 ```sh
-gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys $(<contrib/verify-commits/trusted-keys)
+gpg --keyserver hkps://keys.openpgp.org --recv-keys $(<contrib/verify-commits/trusted-keys)
 ```
 
 Key expiry/revocation

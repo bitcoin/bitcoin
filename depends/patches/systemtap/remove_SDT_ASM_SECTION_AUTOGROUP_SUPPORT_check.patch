@@ -1,0 +1,31 @@
+commit b92d4c121486f3c6e8a2cea537c53eb09894479a
+Author: 0xb10c <0xb10c@gmail.com>
+Date:   Tue Dec 7 11:02:07 2021 +0100
+
+    Remove _SDT_ASM_SECTION_AUTOGROUP_SUPPORT check
+    
+    We assume that the assembler supports "?" in .pushsection directives.
+    This enables us to skip configure and make.
+    
+    See https://github.com/bitcoin/bitcoin/issues/23297.
+
+diff --git a/includes/sys/sdt.h b/includes/sys/sdt.h
+index 97766e710..352b4ee25 100644
+--- a/includes/sys/sdt.h
++++ b/includes/sys/sdt.h
+@@ -230,12 +230,10 @@ __extension__ extern unsigned long long __sdt_unsp;
+    nice with code in COMDAT sections, which comes up in C++ code.
+    Without that assembler support, some combinations of probe placements
+    in certain kinds of C++ code may produce link-time errors.  */
+-#include "sdt-config.h"
+-#if _SDT_ASM_SECTION_AUTOGROUP_SUPPORT
++/* PATCH: We assume that the assembler supports the feature. This
++   enables us to skip configure and make. In turn, this means we
++   require fewer dependencies and have shorter depend build times. */
+ # define _SDT_ASM_AUTOGROUP "?"
+-#else
+-# define _SDT_ASM_AUTOGROUP ""
+-#endif
+ 
+ #define _SDT_ASM_BODY(provider, name, pack_args, args)			      \
+   _SDT_ASM_1(990:	_SDT_NOP)					      \

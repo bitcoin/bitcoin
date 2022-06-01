@@ -39,7 +39,7 @@ extern "C" int evhttp_parse_headers_(struct evhttp_request*, struct evbuffer*);
 
 std::string RequestMethodString(HTTPRequest::RequestMethod m);
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(http_request)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     evhttp_request* evreq = evhttp_request_new(nullptr, nullptr);

@@ -1,0 +1,156 @@
+#!/usr/bin/env bpftrace
+
+/*
+
+  USAGE:
+
+  bpftrace contrib/tracing/connectblock_benchmark.bt <start height> <end height> <logging threshold in ms>
+
+  - <start height> sets the height at which the benchmark should start. Setting
+    the start height to 0 starts the benchmark immediately, even before the
+    first block is connected.
+  - <end height> sets the height after which the benchmark should end. Setting
+    the end height to 0 disables the benchmark. The script only logs blocks
+    over <logging threshold in ms>.
+  - Threshold <logging threshold in ms>
+
+  This script requires a 'bitcoind' binary compiled with eBPF support and the
+  'validation:block_connected' USDT. By default, it's assumed that 'bitcoind' is
+  located in './src/bitcoind'. This can be modified in the script below.
+
+  EXAMPLES:
+
+  bpftrace contrib/tracing/connectblock_benchmark.bt 300000 680000 1000
+
+  When run together 'bitcoind -reindex', this benchmarks the time it takes to
+  connect the blocks between height 300.000 and 680.000 (inclusive) and prints
+  details about all blocks that take longer than 1000ms to connect. Prints a
+  histogram with block connection times when the benchmark is finished.
+
+
+  bpftrace contrib/tracing/connectblock_benchmark.bt 0 0 500
+
+  When running together 'bitcoind', all newly connected blocks that
+  take longer than 500ms to connect are logged. A histogram with block
+  connection times is shown when the script is terminated.
+
+*/
+
+BEGIN
+{
+  $start_height = $1;
+  $end_height = $2;
+  $logging_threshold_ms = $3;
+
+  if ($end_height < $start_height) {
+    printf("Error: start height (%d) larger than end height (%d)!\n", $start_height, $end_height);
+    exit();
+  }
+
+  if ($end_height > 0) {
+    printf("ConnectBlock benchmark between height %d and %d inclusive\n", $start_height, $end_height);
+  } else {
+    printf("ConnectBlock logging starting at height %d\n", $start_height);
+  }
+
+  if ($logging_threshold_ms > 0) {
+    printf("Logging blocks taking longer than %d ms to connect.\n", $3);
+  }
+
+  if ($start_height == 0) {
+    @start = nsecs;
+  }
+}
+
+/*
+  Attaches to the 'validation:block_connected' USDT and collects stats when the
+  connected block is between the start and end height (or the end height is
+  unset).
+*/
+usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 == 0 )/
+{
+  $height = arg1;
+  $transactions = arg2;
+  $inputs = arg3;
+  $sigops =  arg4;
+  $duration = (uint64) arg5;
+
+  @height = $height;
+
+  @blocks = @blocks + 1;
+  @transactions = @transactions + $transactions;
+  @inputs = @inputs + $inputs;
+  @sigops = @sigops + $sigops;
+
+  @durations = hist($duration / 1000);
+
+  if ($height == $1 && $height != 0) {
+    @start = nsecs;
+    printf("Starting Connect Block Benchmark between height %d and %d.\n", $1, $2);
+  }
+
+  if ($2 > 0 && $height >= $2) {
+    @end = nsecs;
+    $duration = @end - @start;
+    printf("\nTook %d ms to connect the blocks between height %d and %d.\n", $duration / 1000000, $1, $2);
+    exit();
+  }
+}
+
+/*
+  Attaches to the 'validation:block_connected' USDT and logs information about
+  blocks where the time it took to connect the block is above the
+  <logging threshold in ms>.
+*/
+usdt:./src/bitcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
+{
+  $hash = arg0;
+  $height = (int32) arg1;
+  $transactions = (uint64) arg2;
+  $inputs = (int32) arg3;
+  $sigops = (int64) arg4;
+  $duration = (int64) arg5;
+
+
+  printf("Block %d (", $height);
+  /* Prints each byte of the block hash as hex in big-endian (the block-explorer format) */
+  $p = $hash + 31;
+  unroll(32) {
+      $b = *(uint8*)$p;
+      printf("%02x", $b);
+      $p -= 1;
+  }
+  printf(")  %4d tx  %5d ins  %5d sigops  took %4d ms\n", $transactions, $inputs, $sigops, (uint64) $duration / 1000);
+}
+
+
+/*
+  Prints stats about the blocks, transactions, inputs, and sigops processed in
+  the last second (if any).
+*/
+interval:s:1 {
+  if (@blocks > 0) {
+    printf("BENCH %4d blk/s %6d tx/s %7d inputs/s %8d sigops/s (height %d)\n", @blocks, @transactions, @inputs, @sigops, @height);
+
+    zero(@blocks);
+    zero(@transactions);
+    zero(@inputs);
+    zero(@sigops);
+  }
+}
+
+END
+{
+  printf("\nHistogram of block connection times in milliseconds (ms).\n");
+  print(@durations);
+
+  clear(@durations);
+  clear(@blocks);
+  clear(@transactions);
+  clear(@inputs);
+  clear(@sigops);
+  clear(@height);
+  clear(@start);
+  clear(@end);
+}
+

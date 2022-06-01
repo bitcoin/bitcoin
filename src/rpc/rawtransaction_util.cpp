@@ -1,11 +1,12 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/rawtransaction_util.h>
 
 #include <coins.h>
+#include <consensus/amount.h>
 #include <core_io.h>
 #include <key_io.h>
 #include <policy/policy.h>
@@ -18,6 +19,7 @@
 #include <univalue.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, bool rbf)
 {
@@ -61,7 +63,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (rbf) {
             nSequence = MAX_BIP125_RBF_SEQUENCE; /* CTxIn::SEQUENCE_FINAL - 2 */
         } else if (rawTx.nLockTime) {
-            nSequence = CTxIn::SEQUENCE_FINAL - 1;
+            nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; /* CTxIn::SEQUENCE_FINAL - 1 */
         } else {
             nSequence = CTxIn::SEQUENCE_FINAL;
         }
@@ -280,22 +282,22 @@ void SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
     int nHashType = ParseSighashString(hashType);
 
     // Script verification errors
-    std::map<int, std::string> input_errors;
+    std::map<int, bilingual_str> input_errors;
 
     bool complete = SignTransaction(mtx, keystore, coins, nHashType, input_errors);
     SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
 }
 
-void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, std::map<int, std::string>& input_errors, UniValue& result)
+void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, const std::map<int, bilingual_str>& input_errors, UniValue& result)
 {
     // Make errors UniValue
     UniValue vErrors(UniValue::VARR);
     for (const auto& err_pair : input_errors) {
-        if (err_pair.second == "Missing amount") {
+        if (err_pair.second.original == "Missing amount") {
             // This particular error needs to be an exception for some reason
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing amount for %s", coins.at(mtx.vin.at(err_pair.first).prevout).out.ToString()));
         }
-        TxInErrorToJSON(mtx.vin.at(err_pair.first), vErrors, err_pair.second);
+        TxInErrorToJSON(mtx.vin.at(err_pair.first), vErrors, err_pair.second.original);
     }
 
     result.pushKV("hex", EncodeHexTx(CTransaction(mtx)));

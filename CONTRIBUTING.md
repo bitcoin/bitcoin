@@ -12,8 +12,8 @@ revolves around a meritocracy where contributors earn trust from the developer
 community over time. Nevertheless, some hierarchy is necessary for practical
 purposes. As such, there are repository "maintainers" who are responsible for
 merging pull requests, as well as a "lead maintainer" who is responsible for the
-release cycle as well as overall merging, moderation and appointment of
-maintainers.
+[release cycle](/doc/release-process.md) as well as overall merging, moderation
+and appointment of maintainers.
 
 Getting Started
 ---------------
@@ -57,11 +57,11 @@ Communication Channels
 ----------------------
 
 Most communication about Bitcoin Core development happens on IRC, in the
-`#bitcoin-core-dev` channel on Freenode. The easiest way to participate on IRC is
-with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
+`#bitcoin-core-dev` channel on Libera Chat. The easiest way to participate on IRC is
+with the web client, [web.libera.chat](https://web.libera.chat/#bitcoin-core-dev). Chat
 history logs can be found
-on [http://www.erisian.com.au/bitcoin-core-dev/](http://www.erisian.com.au/bitcoin-core-dev/)
-and [http://gnusha.org/bitcoin-core-dev/](http://gnusha.org/bitcoin-core-dev/).
+on [https://www.erisian.com.au/bitcoin-core-dev/](https://www.erisian.com.au/bitcoin-core-dev/)
+and [https://gnusha.org/bitcoin-core-dev/](https://gnusha.org/bitcoin-core-dev/).
 
 Discussion about codebase improvements happens in GitHub issues and pull
 requests.
@@ -81,7 +81,7 @@ facilitates social contribution, easy testing and peer review.
 
 To contribute a patch, the workflow is as follows:
 
-  1. Fork repository ([only for the first time](https://help.github.com/en/articles/fork-a-repo))
+  1. Fork repository ([only for the first time](https://docs.github.com/en/get-started/quickstart/fork-a-repo))
   1. Create topic branch
   1. Commit patches
 
@@ -119,7 +119,7 @@ own without warnings, errors, regressions, or test failures.
 
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
-paragraph(s), unless the title alone is self-explanatory (like "Corrected typo
+paragraph(s), unless the title alone is self-explanatory (like "Correct typo
 in init.cpp") in which case a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](https://chris.beams.io/posts/git-commit/).
@@ -182,22 +182,27 @@ for more information on helping with translations.
 ### Work in Progress Changes and Requests for Comments
 
 If a pull request is not to be considered for merging (yet), please
-prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
+prefix the title with [WIP] or use [Tasks Lists](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#task-lists)
 in the body of the pull request to indicate tasks are pending.
 
 ### Address Feedback
 
 At this stage, one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
-to your fork until you have satisfied all feedback.
+to your fork.
 
-Note: Code review is a burdensome but important part of the development process, and as such, certain types of pull requests are rejected. In general, if the **improvements** do not warrant the **review effort** required, the PR has a high chance of being rejected. It is up to the PR author to convince the reviewers that the changes warrant the review effort, and if reviewers are "Concept NACK'ing" the PR, the author may need to present arguments and/or do research backing their suggested changes.
+You are expected to reply to any review comments before your pull request is
+merged. You may update the code or reject the feedback if you do not agree with
+it, but you should express so in a reply. If there is outstanding feedback and
+you are not actively working on it, your pull request may be closed.
+
+Please refer to the [peer review](#peer-review) section below for more details.
 
 ### Squashing Commits
 
 If your pull request contains fixup commits (commits that change the same line of code repeatedly) or too fine-grained
 commits, you may be asked to [squash](https://git-scm.com/docs/git-rebase#_interactive_mode) your commits
-before it will be merged. The basic squashing workflow is shown below.
+before it will be reviewed. The basic squashing workflow is shown below.
 
     git checkout your_branch_name
     git rebase -i HEAD~n
@@ -322,6 +327,14 @@ maintainers take into account the peer review when determining if there is
 consensus to merge a pull request (remember that discussions may have been
 spread out over GitHub, mailing list and IRC discussions).
 
+Code review is a burdensome but important part of the development process, and
+as such, certain types of pull requests are rejected. In general, if the
+**improvements** do not warrant the **review effort** required, the PR has a
+high chance of being rejected. It is up to the PR author to convince the
+reviewers that the changes warrant the review effort, and if reviewers are
+"Concept NACK'ing" the PR, the author may need to present arguments and/or do
+research backing their suggested changes.
+
 #### Conceptual Review
 
 A review can be a conceptual review, where the reviewer leaves a comment
@@ -386,7 +399,7 @@ about:
   - It may be because your code is too complex for all but a few people, and those people
     may not have realized your pull request even exists. A great way to find people who
     are qualified and care about the code you are touching is the
-    [Git Blame feature](https://help.github.com/articles/tracing-changes-in-a-file/). Simply
+    [Git Blame feature](https://docs.github.com/en/github/managing-files-in-a-repository/managing-files-on-github/tracking-changes-in-a-file). Simply
     look up who last modified the code you are changing and see if you can find
     them and give them a nudge. Don't be incessant about the nudging, though.
   - Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
@@ -421,11 +434,6 @@ https://github.com/bitcoin/bitcoin/pull/16189).
 
 Also see the [backport.py script](
 https://github.com/bitcoin-core/bitcoin-maintainer-tools#backport).
-
-Release Policy
---------------
-
-The project leader is the release manager for each Bitcoin Core release.
 
 Copyright
 ---------

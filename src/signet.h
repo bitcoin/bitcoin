@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
-#include <optional.h>
+#include <optional>
 
 constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 
@@ -34,7 +34,7 @@ class SignetTxs {
     SignetTxs(const T1& to_spend, const T2& to_sign) : m_to_spend{to_spend}, m_to_sign{to_sign} { }
 
 public:
-    static Optional<SignetTxs> Create(const CBlock& block, const CScript& challenge);
+    static std::optional<SignetTxs> Create(const CBlock& block, const CScript& challenge);
 
     const CTransaction m_to_spend;
     const CTransaction m_to_sign;

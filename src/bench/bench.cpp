@@ -1,33 +1,42 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 
-#include <chainparams.h>
+#include <fs.h>
 #include <test/util/setup_common.h>
-#include <validation.h>
 
+#include <chrono>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
 #include <regex>
+#include <string>
+#include <vector>
+
+using namespace std::chrono_literals;
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
+
 namespace {
 
-void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const std::string& filename, const char* tpl)
+void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const fs::path& file, const char* tpl)
 {
-    if (benchmarkResults.empty() || filename.empty()) {
+    if (benchmarkResults.empty() || file.empty()) {
         // nothing to write, bail out
         return;
     }
-    std::ofstream fout(filename);
+    std::ofstream fout{file};
     if (fout.is_open()) {
         ankerl::nanobench::render(tpl, benchmarkResults, fout);
+        std::cout << "Created " << file << std::endl;
     } else {
-        std::cout << "Could write to file '" << filename << "'" << std::endl;
+        std::cout << "Could not write to file " << file << std::endl;
     }
-
-    std::cout << "Created '" << filename << "'" << std::endl;
 }
 
 } // namespace
@@ -61,6 +70,12 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
         Bench bench;
         bench.name(p.first);
+        if (args.min_time > 0ms) {
+            // convert to nanos before dividing to reduce rounding errors
+            std::chrono::nanoseconds min_time_ns = args.min_time;
+            bench.minEpochTime(min_time_ns / bench.epochs());
+        }
+
         if (args.asymptote.empty()) {
             p.second(bench);
         } else {

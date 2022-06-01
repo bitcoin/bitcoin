@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid locators.
@@ -13,11 +13,10 @@ from test_framework.test_framework import BitcoinTestFramework
 class InvalidLocatorTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = False
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
-        node.generatetoaddress(1, node.get_deterministic_priv_key().address)  # Get node out of IBD
+        self.generatetoaddress(node, 1, node.get_deterministic_priv_key().address)  # Get node out of IBD
 
         self.log.info('Test max locator size')
         block_count = node.getblockcount()

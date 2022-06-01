@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,17 +8,17 @@
 
 #include <clientversion.h>
 #include <fs.h>
-#include <optional.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
-#include <util/memory.h>
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <string>
 
 struct bilingual_str;
 
+namespace wallet {
 void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
 
 /** RAII class that provides access to a WalletDatabase */
@@ -193,7 +193,7 @@ public:
     void ReloadDbEnv() override {}
     std::string Filename() override { return "dummy"; }
     std::string Format() override { return "dummy"; }
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return MakeUnique<DummyBatch>(); }
+    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };
 
 enum class DatabaseFormat {
@@ -204,7 +204,7 @@ enum class DatabaseFormat {
 struct DatabaseOptions {
     bool require_existing = false;
     bool require_create = false;
-    Optional<DatabaseFormat> require_format;
+    std::optional<DatabaseFormat> require_format;
     uint64_t create_flags = 0;
     SecureString create_passphrase;
     bool verify = true;
@@ -221,8 +221,18 @@ enum class DatabaseStatus {
     FAILED_LOAD,
     FAILED_VERIFY,
     FAILED_ENCRYPT,
+    FAILED_INVALID_BACKUP_FILE,
 };
 
+/** Recursively list database paths in directory. */
+std::vector<fs::path> ListDatabases(const fs::path& path);
+
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+
+fs::path BDBDataFile(const fs::path& path);
+fs::path SQLiteDataFile(const fs::path& path);
+bool IsBDBFile(const fs::path& path);
+bool IsSQLiteFile(const fs::path& path);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_DB_H

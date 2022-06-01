@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,11 +34,11 @@ Span<const char> Expr(Span<const char>& sp)
     int level = 0;
     auto it = sp.begin();
     while (it != sp.end()) {
-        if (*it == '(') {
+        if (*it == '(' || *it == '{') {
             ++level;
-        } else if (level && *it == ')') {
+        } else if (level && (*it == ')' || *it == '}')) {
             --level;
-        } else if (level == 0 && (*it == ')' || *it == ',')) {
+        } else if (level == 0 && (*it == ')' || *it == '}' || *it == ',')) {
             break;
         }
         ++it;

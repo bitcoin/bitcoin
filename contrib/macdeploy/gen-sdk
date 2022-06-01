@@ -81,7 +81,7 @@ def run():
 
     print("Creating output .tar.gz file...")
     with out_sdktgz_path.open("wb") as fp:
-        with gzip.GzipFile(fileobj=fp, compresslevel=9, mtime=0) as gzf:
+        with gzip.GzipFile(fileobj=fp, mode='wb', compresslevel=9, mtime=0) as gzf:
             with tarfile.open(mode="w", fileobj=gzf) as tarfp:
                 print("Adding MacOSX SDK {} files...".format(sdk_version))
                 tarfp_add_with_base_change(tarfp, sdk_dir, out_name)

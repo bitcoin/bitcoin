@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,27 +7,19 @@
 #endif
 
 #include <arith_uint256.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <chainparamsbase.h>
 #include <clientversion.h>
-#include <coins.h>
-#include <consensus/consensus.h>
 #include <core_io.h>
-#include <key_io.h>
-#include <policy/rbf.h>
-#include <primitives/transaction.h>
-#include <script/script.h>
-#include <script/sign.h>
-#include <script/signingprovider.h>
-#include <univalue.h>
-#include <util/moneystr.h>
-#include <util/rbf.h>
-#include <util/strencodings.h>
-#include <util/string.h>
+#include <streams.h>
 #include <util/system.h>
 #include <util/translation.h>
 
+#include <atomic>
+#include <cstdio>
 #include <functional>
 #include <memory>
-#include <stdio.h>
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
@@ -40,34 +32,35 @@ static void SetupBitcoinUtilArgs(ArgsManager &argsman)
 {
     SetupHelpOptions(argsman);
 
+    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+
+    argsman.AddCommand("grind", "Perform proof of work on hex header string");
+
     SetupChainParamsBaseOptions(argsman);
 }
 
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
-static int AppInitUtil(int argc, char* argv[])
+static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
 {
-    SetupBitcoinUtilArgs(gArgs);
+    SetupBitcoinUtilArgs(args);
     std::string error;
-    if (!gArgs.ParseParameters(argc, argv, error)) {
+    if (!args.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
 
-    // Check for chain settings (Params() calls are only valid after this clause)
-    try {
-        SelectParams(gArgs.GetChainName());
-    } catch (const std::exception& e) {
-        tfm::format(std::cerr, "Error: %s\n", e.what());
-        return EXIT_FAILURE;
-    }
-
-    if (argc < 2 || HelpRequested(gArgs)) {
+    if (HelpRequested(args) || args.IsArgSet("-version")) {
         // First part of help message is specific to this utility
-        std::string strUsage = PACKAGE_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n\n" +
-            "Usage:  bitcoin-util [options] [commands]  Do stuff\n" +
-            "\n";
-        strUsage += gArgs.GetHelpMessage();
+        std::string strUsage = PACKAGE_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n";
+
+        if (args.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
+            strUsage += "\n"
+                "Usage:  bitcoin-util [options] [commands]  Do stuff\n";
+            strUsage += "\n" + args.GetHelpMessage();
+        }
 
         tfm::format(std::cout, "%s", strUsage);
 
@@ -77,6 +70,15 @@ static int AppInitUtil(int argc, char* argv[])
         }
         return EXIT_SUCCESS;
     }
+
+    // Check for chain settings (Params() calls are only valid after this clause)
+    try {
+        SelectParams(args.GetChainName());
+    } catch (const std::exception& e) {
+        tfm::format(std::cerr, "Error: %s\n", e.what());
+        return EXIT_FAILURE;
+    }
+
     return CONTINUE_EXECUTION;
 }
 
@@ -106,17 +108,17 @@ static void grind_task(uint32_t nBits, CBlockHeader& header_orig, uint32_t offse
     }
 }
 
-static int Grind(int argc, char* argv[], std::string& strPrint)
+static int Grind(const std::vector<std::string>& args, std::string& strPrint)
 {
-    if (argc != 1) {
+    if (args.size() != 1) {
         strPrint = "Must specify block header to grind";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     CBlockHeader header;
-    if (!DecodeHexBlockHeader(header, argv[0])) {
+    if (!DecodeHexBlockHeader(header, args[0])) {
         strPrint = "Could not decode block header";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     uint32_t nBits = header.nBits;
@@ -132,71 +134,35 @@ static int Grind(int argc, char* argv[], std::string& strPrint)
     }
     if (!found) {
         strPrint = "Could not satisfy difficulty target";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << header;
     strPrint = HexStr(ss);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
-static int CommandLineUtil(int argc, char* argv[])
-{
-    if (argc <= 1) return 1;
-
-    std::string strPrint;
-    int nRet = 0;
-
-    try {
-        while (argc > 1 && IsSwitchChar(argv[1][0]) && (argv[1][1] != 0)) {
-            --argc;
-            ++argv;
-        }
-
-        char* command = argv[1];
-        if (strcmp(command, "grind") == 0) {
-            nRet = Grind(argc-2, argv+2, strPrint);
-        } else {
-            strPrint = strprintf("Unknown command %s", command);
-            nRet = 1;
-        }
-    }
-    catch (const std::exception& e) {
-        strPrint = std::string("error: ") + e.what();
-        nRet = EXIT_FAILURE;
-    }
-    catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineUtil()");
-        throw;
-    }
-
-    if (strPrint != "") {
-        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint);
-    }
-    return nRet;
-}
-
+#ifdef WIN32
+// Export main() and ensure working ASLR on Windows.
+// Exporting a symbol will prevent the linker from stripping
+// the .reloc section from the binary, which is a requirement
+// for ASLR. This is a temporary workaround until a fixed
+// version of binutils is used for releases.
+__declspec(dllexport) int main(int argc, char* argv[])
+#else
 int main(int argc, char* argv[])
+#endif
 {
-    if (argc < 0) {
-        /* this nonsense is needed or you get linker errors because
-         * ArgsManager does these ops but for some reason they're not
-         * available.
-         * "argc < 0" should be enough to be unreachable, but not
-         * so unreachable that it's optimised away entirely
-         */
-        try { UniValue uv; uv["txid"]; uv.get_str(); uv.write(4); } catch (...) { }
-    }
-
+    ArgsManager& args = gArgs;
     SetupEnvironment();
 
     try {
-        int ret = AppInitUtil(argc, argv);
-        if (ret != CONTINUE_EXECUTION)
+        int ret = AppInitUtil(args, argc, argv);
+        if (ret != CONTINUE_EXECUTION) {
             return ret;
-    }
-    catch (const std::exception& e) {
+        }
+    } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInitUtil()");
         return EXIT_FAILURE;
     } catch (...) {
@@ -204,14 +170,29 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    const auto cmd = args.GetCommand();
+    if (!cmd) {
+        tfm::format(std::cerr, "Error: must specify a command\n");
+        return EXIT_FAILURE;
+    }
+
     int ret = EXIT_FAILURE;
+    std::string strPrint;
     try {
-        ret = CommandLineUtil(argc, argv);
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "CommandLineUtil()");
+        if (cmd->command == "grind") {
+            ret = Grind(cmd->args, strPrint);
+        } else {
+            assert(false); // unknown command should be caught earlier
+        }
+    } catch (const std::exception& e) {
+        strPrint = std::string("error: ") + e.what();
     } catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineUtil()");
+        strPrint = "unknown error";
     }
+
+    if (strPrint != "") {
+        tfm::format(ret == 0 ? std::cout : std::cerr, "%s\n", strPrint);
+    }
+
     return ret;
 }

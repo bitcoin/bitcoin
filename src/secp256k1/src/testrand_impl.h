@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2013-2015 Pieter Wuille                              *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2013-2015 Pieter Wuille                               *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_TESTRAND_IMPL_H
 #define SECP256K1_TESTRAND_IMPL_H
@@ -127,7 +127,7 @@ static void secp256k1_testrand_init(const char* hexseed) {
             pos++;
         }
     } else {
-        FILE *frand = fopen("/dev/urandom", "r");
+        FILE *frand = fopen("/dev/urandom", "rb");
         if ((frand == NULL) || fread(&seed16, 1, sizeof(seed16), frand) != sizeof(seed16)) {
             uint64_t t = time(NULL) * (uint64_t)1337;
             fprintf(stderr, "WARNING: could not read 16 bytes from /dev/urandom; falling back to insecure PRNG\n");

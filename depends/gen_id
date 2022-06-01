@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# Usage: env [ CC=... ] [ CXX=... ] [ AR=... ] [ RANLIB=... ] [ STRIP=... ] \
+#            [ DEBUG=... ] ./build-id [ID_SALT]...
+#
+# Prints to stdout a SHA256 hash representing the current toolset, used by
+# depends/Makefile as a build id for caching purposes (detecting when the
+# toolset has changed and the cache needs to be invalidated).
+#
+# If the DEBUG environment variable is non-empty and the system has `tee`
+# available in its $PATH, the pre-image to the SHA256 hash will be printed to
+# stderr. This is to help developers debug caching issues in depends.
+
+# This script explicitly does not `set -e` because id determination is mostly
+# opportunistic: it is fine that things fail, as long as they fail consistently.
+
+# Command variables (CC/CXX/AR) which can be blank are invoked with `bash -c`,
+# because the "command not found" error message printed by shells often include
+# the line number, like so:
+#
+#     ./depends/gen_id: line 43: --version: command not found
+#
+# By invoking with `bash -c`, we ensure that the line number is always 1
+
+(
+    # Redirect stderr to stdout
+    exec 2>&1
+
+    echo "BEGIN ALL"
+
+    # Include any ID salts supplied via command line
+    echo "BEGIN ID SALT"
+    echo "$@"
+    echo "END ID SALT"
+
+    # GCC only prints COLLECT_LTO_WRAPPER when invoked with just "-v", but we want
+    # the information from "-v -E -" as well, so just include both.
+    echo "BEGIN CC"
+    bash -c "${CC} -v"
+    bash -c "${CC} -v -E -xc -o /dev/null - < /dev/null"
+    bash -c "${CC} -v -E -xobjective-c -o /dev/null - < /dev/null"
+    echo "END CC"
+
+    echo "BEGIN CXX"
+    bash -c "${CXX} -v"
+    bash -c "${CXX} -v -E -xc++ -o /dev/null - < /dev/null"
+    bash -c "${CXX} -v -E -xobjective-c++ -o /dev/null - < /dev/null"
+    echo "END CXX"
+
+    echo "BEGIN AR"
+    bash -c "${AR} --version"
+    env | grep '^AR_'
+    echo "ZERO_AR_DATE=${ZERO_AR_DATE}"
+    echo "END AR"
+
+    echo "BEGIN RANLIB"
+    bash -c "${RANLIB} --version"
+    env | grep '^RANLIB_'
+    echo "END RANLIB"
+
+    echo "BEGIN STRIP"
+    bash -c "${STRIP} --version"
+    env | grep '^STRIP_'
+    echo "END STRIP"
+
+    echo "END ALL"
+) | if [ -n "$DEBUG" ] && command -v tee > /dev/null 2>&1; then
+        # When debugging and `tee` is available, output the preimage to stderr
+        # in addition to passing through stdin to stdout
+        tee >(cat 1>&2)
+    else
+        # Otherwise, passthrough stdin to stdout
+        cat
+    fi | ${SHA256SUM} - | cut -d' ' -f1

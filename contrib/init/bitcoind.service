@@ -11,10 +11,14 @@
 
 [Unit]
 Description=Bitcoin daemon
-After=network.target
+Documentation=https://github.com/bitcoin/bitcoin/blob/master/doc/init.md
+
+# https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-ExecStart=/usr/bin/bitcoind -daemon \
+ExecStart=/usr/bin/bitcoind -daemonwait \
                             -pid=/run/bitcoind/bitcoind.pid \
                             -conf=/etc/bitcoin/bitcoin.conf \
                             -datadir=/var/lib/bitcoind
@@ -29,6 +33,7 @@ ExecStartPre=/bin/chgrp bitcoin /etc/bitcoin
 Type=forking
 PIDFile=/run/bitcoind/bitcoind.pid
 Restart=on-failure
+TimeoutStartSec=infinity
 TimeoutStopSec=600
 
 # Directory creation and permissions

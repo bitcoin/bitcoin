@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_overflow_target)
 {
     const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
     uint256 hash;
-    unsigned int nBits = ~0x00800000;
+    unsigned int nBits{~0x00800000U};
     hash.SetHex("0x1");
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }

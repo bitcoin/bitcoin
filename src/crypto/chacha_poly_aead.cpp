@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,8 +31,9 @@ ChaCha20Poly1305AEAD::ChaCha20Poly1305AEAD(const unsigned char* K_1, size_t K_1_
 {
     assert(K_1_len == CHACHA20_POLY1305_AEAD_KEY_LEN);
     assert(K_2_len == CHACHA20_POLY1305_AEAD_KEY_LEN);
-    m_chacha_main.SetKey(K_1, CHACHA20_POLY1305_AEAD_KEY_LEN);
-    m_chacha_header.SetKey(K_2, CHACHA20_POLY1305_AEAD_KEY_LEN);
+
+    m_chacha_header.SetKey(K_1, CHACHA20_POLY1305_AEAD_KEY_LEN);
+    m_chacha_main.SetKey(K_2, CHACHA20_POLY1305_AEAD_KEY_LEN);
 
     // set the cached sequence number to uint64 max which hints for an unset cache.
     // we can't hit uint64 max since the rekey rule (which resets the sequence number) is 1GB
@@ -72,7 +73,7 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
             return false;
         }
         memory_cleanse(expected_tag, sizeof(expected_tag));
-        // MAC has been successfully verified, make sure we don't covert it in decryption
+        // MAC has been successfully verified, make sure we don't convert it in decryption
         src_len -= POLY1305_TAGLEN;
     }
 

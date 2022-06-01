@@ -1,467 +1,451 @@
-<TS language="az" version="2.1">
+<TS version="2.1" language="az">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Ünvana və ya etiketə düzəliş etmək üçün sağ düyməsi ilə klikləyin</translation>
+        <translation type="unfinished">Ünvana və ya etiketə düzəliş etmək üçün sağ klikləyin</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Yeni bir ünvan yaradın</translation>
+        <translation type="unfinished">Yeni bir ünvan yaradın</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Yeni</translation>
+        <translation type="unfinished">&amp;Yeni</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Hazırki seçilmiş ünvanı sistem lövhəsinə kopyalayın</translation>
+        <translation type="unfinished">Hazırki seçilmiş ünvanı sistem lövhəsinə kopyalayın</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Kopyala</translation>
+        <translation type="unfinished">&amp;Kopyala</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>Bağla</translation>
+        <translation type="unfinished">Bağla</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Hazırki seçilmiş ünvanı siyahıdan silin</translation>
+        <translation type="unfinished">Hazırki seçilmiş ünvanı siyahıdan sil</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Axtarmaq üçün ünvan və ya etiket daxil edin</translation>
+        <translation type="unfinished">Axtarmaq üçün ünvan və ya etiket daxil edin</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Hazırki vərəqdəki verilənləri fayla ixrac edin</translation>
+        <translation type="unfinished">Hazırki vərəqdəki verilənləri fayla ixrac edin</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;İxrac</translation>
+        <translation type="unfinished">&amp;İxrac</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Sil</translation>
+        <translation type="unfinished">&amp;Sil</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Pul göndəriləcək ünvanı seçin</translation>
+        <translation type="unfinished">Pul göndəriləcək ünvanı seçin</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Pul alınacaq ünvanı seçin</translation>
+        <translation type="unfinished">Pul alınacaq ünvanı seçin</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>Seç</translation>
+        <translation type="unfinished">Seç</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Göndərilən ünvanlar</translation>
+        <translation type="unfinished">Göndərilən ünvanlar</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Alınan ünvanlar</translation>
+        <translation type="unfinished">Alınan ünvanlar</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Bunlar ödənişləri göndərmək üçün Bitcoin ünvanlarınızdır. Pul göndərməkdən əvvəl həmişə miqdarı və göndəriləcək ünvanı yoxlayın.</translation>
+        <translation type="unfinished">Bunlar ödənişləri göndərmək üçün Bitcoin ünvanlarınızdır. pul göndərməzdən əvvəl həmişə miqdarı və göndəriləcək ünvanı yoxlayın.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation>Bunlar ödəniş almaq üçün Bitcoin ünvanlarınızdır. Yeni ünvan yaratmaq üçün alacaqlar vərəqində 'Yeni alacaq ünvan yarat' düyməsini istifadə edin.
+        <translation type="unfinished">Bunlar ödəniş almaq üçün Bitcoin ünvanlarınızdır. Yeni ünvan yaratmaq üçün alacaqlar vərəqində 'Yeni alacaq ünvan yarat' düyməsini istifadə edin.
 Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Ünvanı kopyala</translation>
+        <translation type="unfinished">&amp;Ünvanı kopyala</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Etiketi kopyala</translation>
+        <translation type="unfinished">Etiketi kopyala</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Düzəliş et</translation>
+        <translation type="unfinished">&amp;Düzəliş et</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Ünvan siyahısını ixrac et</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Vergüllə ayrılmış fayl (*.csv)</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>İxrac edilmədi</translation>
+        <translation type="unfinished">Ünvan siyahısını ixrac et</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Ünvan siyahısını %1 daxilində saxlamağı sınayarkən xəta baş verdi. Zəhmət olmasa yenidən sınayın.</translation>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">Ünvan siyahısını %1 daxilində saxlamağı sınayarkən xəta baş verdi. Zəhmət olmasa yenidən sınayın.</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">İxrac edilmədi</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation type="unfinished">Etiket</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Ünvan</translation>
+        <translation type="unfinished">Ünvan</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yoxdur)</translation>
+        <translation type="unfinished">(etiket yoxdur)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Şifrə İfadə Dialoqu</translation>
+        <translation type="unfinished">Şifrə İfadə Dialoqu</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Şifrə ifadəsini daxil edin</translation>
+        <translation type="unfinished">Şifrə ifadəsini daxil edin</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Yeni şifrə ifadəsi</translation>
+        <translation type="unfinished">Yeni şifrə ifadəsi</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Şifrə ifadəsini təkrarlayın</translation>
+        <translation type="unfinished">Şifrə ifadəsini təkrarlayın</translation>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation>Şifrə ifadəsini göstər</translation>
+        <translation type="unfinished">Şifrə ifadəsini göstər</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Cüzdanı şifrələyin</translation>
+        <translation type="unfinished">Şifrəli pulqabı</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Bu əməliyyat, cüzdanın kilidini açmaq üçün cüzdan şifrə ifadəsinə ehtiyac duyur.</translation>
+        <translation type="unfinished">Bu əməliyyatın pulqabı kilidini açılması üçün pul qabınızın şifrə ifadəsinə ehtiyacı var.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Cüzdanın kilidini açın</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Bu əməliyyat, cüzdanın şifrəsini açmaq üçün cüzdan şifrə ifadəsinə ehtiyac duyur.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Cüzdanın şifrəsini açın</translation>
+        <translation type="unfinished">Pulqabı kilidini aç</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Şifrə ifadəsini dəyişdir</translation>
+        <translation type="unfinished">Şifrə ifadəsini dəyişdir</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Cüzdan şifrələməsini təsdiqləyin</translation>
+        <translation type="unfinished">Pulqabı şifrələməsini təsdiqlə</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Unutmayın ki, cüzdanınızın şifrələməsi bitcoinlərinizi kompüterinizə zərərli proqram tərəfindən oğurlanmaqdan tamamilə qoruya bilməz.</translation>
+        <translation type="unfinished">Unutmayın ki, cüzdanınızın şifrələməsi bitcoinlərinizi kompüterinizə zərərli proqram tərəfindən oğurlanmaqdan tamamilə qoruya bilməz.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation>Cüzdan şifrələnəcək</translation>
+        <translation type="unfinished">Cüzdan şifrələnəcək</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation>Cüzdanınız şifrələnmək üzrədir.</translation>
+        <translation type="unfinished">Cüzdanınız şifrələnmək üzrədir.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation>Cüzdanınız artıq şifrələnib.</translation>
+        <translation type="unfinished">Cüzdanınız artıq şifrələnib.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation type="unfinished">Xəbərdarlıq: Caps Lock düyməsi yanılıdır!</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
-    <name>BanTableModel</name>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation type="unfinished">Ödəniş təxmin edilmədi. Fallbackfee sıradan çıxarıldı. Bir neçə blok gözləyin və ya Fallbackfee-ni fəallaşdırın.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Xəbərdarlıq: Gizli açarlar, sıradan çıxarılmış gizli açarlar ilə {%s} pulqabısında aşkarlandı.</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation type="unfinished">'%s' verilənlər kateqoriyasına yazıla bilmir; icazələri yoxlayın.</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Yükləmə tamamlandı</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Yetərsiz balans</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">Mənbə kodu %s-dən əldə edilə bilər.</translation>
+    </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Tənzimləmələr</translation>
+        <translation type="unfinished">&amp;Tənzimləmələr</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Xəta</translation>
+        <translation type="unfinished">Xəta</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Xəbərdarlıq</translation>
+        <translation type="unfinished">Xəbərdarlıq</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Məlumat</translation>
+        <translation type="unfinished">Məlumat</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation>Bir pulqabı aç</translation>
+        <translation type="unfinished">Bir pulqabı aç</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Copy quantity</source>
-        <translation>Miqdarı kopyalayın</translation>
+        <translation type="unfinished">Miqdarı kopyalayın</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Dəyişikliyi kopyalayın</translation>
+        <translation type="unfinished">Dəyişikliyi kopyalayın</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yoxdur)</translation>
+        <translation type="unfinished">(etiket yoxdur)</translation>
     </message>
-    </context>
-<context>
-    <name>CreateWalletActivity</name>
-    </context>
-<context>
-    <name>CreateWalletDialog</name>
-    </context>
-<context>
-    <name>EditAddressDialog</name>
-    </context>
-<context>
-    <name>FreespaceChecker</name>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation>Bu tənzimləməni geri almaq bütün blok zəncirinin yenidən endirilməsini tələb edəcək. Əvvəlcə tam zənciri endirmək və sonra budamaq daha sürətlidir. Bəzi qabaqcıl özəllikləri sıradan çıxarar.</translation>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Xəta</translation>
+        <translation type="unfinished">Xəta</translation>
     </message>
-    </context>
-<context>
-    <name>ModalOverlay</name>
-    </context>
-<context>
-    <name>OpenURIDialog</name>
-    </context>
-<context>
-    <name>OpenWalletActivity</name>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Bu tənzimləməni geri almaq bütün blok zəncirinin yenidən endirilməsini tələb edəcək. Əvvəlcə tam zənciri endirmək və sonra budamaq daha sürətlidir. Bəzi qabaqcıl özəllikləri sıradan çıxarar.</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
-        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
-        <translation>Bəzi qabaqcıl özəllikləri sıradan çıxardar, ancaq bütün bloklar tamamilə təsdiqlənmiş qalacaq. Bu tənzimləməni geri almaq bütün blok zəncirinin yenidən endirilməsini tələb edəcək. Aktual disk istifadəsi biraz daha yüksək ola bilər.</translation>
-    </message>
-    <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation>Bu tənzimləməni geri almaq bütün blok zəncirinin yenidən endirilməsini tələb edəcək. </translation>
+        <translation type="unfinished">Bu tənzimləməni geri almaq bütün blok zəncirinin yenidən endirilməsini tələb edəcək. </translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>&amp;UPnP istifadə edən xəritə portu</translation>
+        <translation type="unfinished">&amp;UPnP istifadə edən xəritə portu</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation>İstifadəçi interfeys dili burada tənzimlənə bilər. Bu tənzimləmə %1 yenidən başladıldıqdan sonra təsirli olacaq.</translation>
+        <translation type="unfinished">İstifadəçi interfeys dili burada tənzimlənə bilər. Bu tənzimləmə %1 yenidən başladıldıqdan sonra təsirli olacaq.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Xəta</translation>
+        <translation type="unfinished">Xəta</translation>
     </message>
     </context>
 <context>
-    <name>OverviewPage</name>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
-    </context>
-<context>
-    <name>QObject</name>
-    </context>
-<context>
-    <name>QRImageWidget</name>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Ünvan</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
     <message>
         <source>&amp;Reset</source>
-        <translation>&amp;Sıfırla</translation>
+        <translation type="unfinished">&amp;Sıfırla</translation>
     </message>
-    </context>
-<context>
-    <name>ReceiveCoinsDialog</name>
-    </context>
-<context>
-    <name>ReceiveRequestDialog</name>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation type="unfinished">Etiket</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yoxdur)</translation>
+        <translation type="unfinished">(etiket yoxdur)</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Copy quantity</source>
-        <translation>Miqdarı kopyalayın</translation>
+        <translation type="unfinished">Miqdarı kopyalayın</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Dəyişikliyi kopyalayın</translation>
+        <translation type="unfinished">Dəyişikliyi kopyalayın</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yoxdur)</translation>
+        <translation type="unfinished">(etiket yoxdur)</translation>
     </message>
 </context>
 <context>
-    <name>SendCoinsEntry</name>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    </context>
-<context>
-    <name>SignVerifyMessageDialog</name>
-    </context>
-<context>
-    <name>TrafficGraphWidget</name>
-    </context>
-<context>
     <name>TransactionDesc</name>
-    </context>
-<context>
-    <name>TransactionDescDialog</name>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation type="unfinished">Etiket</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yoxdur)</translation>
+        <translation type="unfinished">(etiket yoxdur)</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>Other</source>
-        <translation>Başqa</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Vergüllə ayrılmış fayl (*.csv)</translation>
+        <translation type="unfinished">Başqa</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation type="unfinished">Etiket</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Ünvan</translation>
+        <translation type="unfinished">Ünvan</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>İxrac edilmədi</translation>
+        <translation type="unfinished">İxrac edilmədi</translation>
     </message>
     </context>
 <context>
-    <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletController</name>
-    </context>
-<context>
     <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Xəta</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;İxrac</translation>
+        <translation type="unfinished">&amp;İxrac</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Hazırki vərəqdəki verilənləri fayla ixrac edin</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Xəta</translation>
+        <translation type="unfinished">Hazırki vərəqdəki verilənləri fayla ixrac edin</translation>
     </message>
     </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>Bloklar yenidən səsləndirilir...</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation>Mənbə kodu %s-dən əldə edilə bilər.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation>Yetərsiz balans</translation>
-    </message>
-    <message>
-        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation>Ödəniş təxmin edilmədi. Fallbackfee sıradan çıxarıldı. Bir neçə blok gözləyin və ya Fallbackfee-ni fəallaşdırın.</translation>
-    </message>
-    <message>
-        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation>Xəbərdarlıq: Gizli açarlar, sıradan çıxarılmış gizli açarlar ilə {%s} pulqabısında aşkarlandı.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation>'%s' verilənlər kateqoriyasına yazıla bilmir; icazələri yoxlayın.</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Pulqabı yüklənir...</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Pulqabı əvvəlki versiyaya keçirilə bilmir</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Yenidən tədqiq edilir...</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Yükləmə tamamlandı</translation>
-    </message>
-</context>
 </TS>

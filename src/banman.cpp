@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <netaddress.h>
 #include <node/ui_interface.h>
+#include <sync.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -15,23 +16,21 @@
 BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time)
     : m_client_interface(client_interface), m_ban_db(std::move(ban_file)), m_default_ban_time(default_ban_time)
 {
-    if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist...").translated);
+    if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist…").translated);
 
     int64_t n_start = GetTimeMillis();
-    m_is_dirty = false;
-    banmap_t banmap;
-    if (m_ban_db.Read(banmap)) {
-        SetBanned(banmap);        // thread save setter
-        SetBannedSetDirty(false); // no need to write down, just read data
-        SweepBanned();            // sweep out unused entries
+    if (m_ban_db.Read(m_banned)) {
+        SweepBanned(); // sweep out unused entries
 
-        LogPrint(BCLog::NET, "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
-            m_banned.size(), GetTimeMillis() - n_start);
+        LogPrint(BCLog::NET, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),
+                 GetTimeMillis() - n_start);
     } else {
-        LogPrintf("Invalid or missing banlist.dat; recreating\n");
-        SetBannedSetDirty(true); // force write
-        DumpBanlist();
+        LogPrintf("Recreating the banlist database\n");
+        m_banned = {};
+        m_is_dirty = true;
     }
+
+    DumpBanlist();
 }
 
 BanMan::~BanMan()
@@ -41,20 +40,25 @@ BanMan::~BanMan()
 
 void BanMan::DumpBanlist()
 {
-    SweepBanned(); // clean unused entries (if bantime has expired)
-
-    if (!BannedSetIsDirty()) return;
-
-    int64_t n_start = GetTimeMillis();
+    static Mutex dump_mutex;
+    LOCK(dump_mutex);
 
     banmap_t banmap;
-    GetBanned(banmap);
-    if (m_ban_db.Write(banmap)) {
+    {
+        LOCK(m_cs_banned);
+        SweepBanned();
+        if (!BannedSetIsDirty()) return;
+        banmap = m_banned;
         SetBannedSetDirty(false);
     }
 
-    LogPrint(BCLog::NET, "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
-        banmap.size(), GetTimeMillis() - n_start);
+    int64_t n_start = GetTimeMillis();
+    if (!m_ban_db.Write(banmap)) {
+        SetBannedSetDirty(true);
+    }
+
+    LogPrint(BCLog::NET, "Flushed %d banned node addresses/subnets to disk  %dms\n", banmap.size(),
+             GetTimeMillis() - n_start);
 }
 
 void BanMan::ClearBanned()
@@ -167,13 +171,6 @@ void BanMan::GetBanned(banmap_t& banmap)
     banmap = m_banned; //create a thread safe copy
 }
 
-void BanMan::SetBanned(const banmap_t& banmap)
-{
-    LOCK(m_cs_banned);
-    m_banned = banmap;
-    m_is_dirty = true;
-}
-
 void BanMan::SweepBanned()
 {
     int64_t now = GetTime();
@@ -188,7 +185,7 @@ void BanMan::SweepBanned()
                 m_banned.erase(it++);
                 m_is_dirty = true;
                 notify_ui = true;
-                LogPrint(BCLog::NET, "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, sub_net.ToString());
+                LogPrint(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
             } else
                 ++it;
         }

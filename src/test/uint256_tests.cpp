@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,8 +13,9 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <vector>
 
-BOOST_FIXTURE_TEST_SUITE(uint256_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(uint256_tests)
 
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"

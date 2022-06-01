@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2020 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that we reject low difficulty headers to prevent our block tree from filling up with useless bloat"""
 
 from test_framework.messages import (
     CBlockHeader,
-    FromHex,
+    from_hex,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -42,8 +42,8 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.headers = [l for l in h_lines if not l.startswith(FORK_PREFIX)]
         self.headers_fork = [l[len(FORK_PREFIX):] for l in h_lines if l.startswith(FORK_PREFIX)]
 
-        self.headers = [FromHex(CBlockHeader(), h) for h in self.headers]
-        self.headers_fork = [FromHex(CBlockHeader(), h) for h in self.headers_fork]
+        self.headers = [from_hex(CBlockHeader(), h) for h in self.headers]
+        self.headers_fork = [from_hex(CBlockHeader(), h) for h in self.headers_fork]
 
         self.log.info("Feed all non-fork headers, including and up to the first checkpoint")
         peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())

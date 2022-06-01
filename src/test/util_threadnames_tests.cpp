@@ -1,13 +1,13 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/util/setup_common.h>
 #include <util/string.h>
 #include <util/threadnames.h>
 
 #include <mutex>
 #include <set>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -17,7 +17,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(util_threadnames_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(util_threadnames_tests)
 
 const std::string TEST_THREAD_NAME_BASE = "test_thread.";
 

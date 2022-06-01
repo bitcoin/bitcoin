@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,12 +29,16 @@
 #include <wallet/wallet.h> // for CRecipient
 
 #include <stdint.h>
+#include <functional>
 
 #include <QDebug>
 #include <QMessageBox>
 #include <QSet>
 #include <QTimer>
 
+using wallet::CCoinControl;
+using wallet::CRecipient;
+using wallet::DEFAULT_DISABLE_WALLET;
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel& client_model, const PlatformStyle *platformStyle, QObject *parent) :
     QObject(parent),
@@ -64,7 +68,10 @@ WalletModel::~WalletModel()
 void WalletModel::startPollBalance()
 {
     // This timer will be fired repeatedly to update the balance
-    connect(timer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
+    // Since the QTimer::timeout is a private signal, it cannot be used
+    // in the GUIUtil::ExceptionSafeConnect directly.
+    connect(timer, &QTimer::timeout, this, &WalletModel::timerTimeout);
+    GUIUtil::ExceptionSafeConnect(this, &WalletModel::timerTimeout, this, &WalletModel::pollBalanceChanged);
     timer->start(MODEL_UPDATE_DELAY);
 }
 
@@ -244,7 +251,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << *newTx;
-        transaction_array.append(&(ssTx[0]), ssTx.size());
+        transaction_array.append((const char*)ssTx.data(), ssTx.size());
     }
 
     // Add addresses / update labels that we've sent to the address book,
@@ -313,12 +320,9 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     }
 }
 
-bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphrase)
+bool WalletModel::setWalletEncrypted(const SecureString& passphrase)
 {
-    if (encrypted) {
-        return m_wallet->encryptWallet(passphrase);
-    }
-    return false;
+    return m_wallet->encryptWallet(passphrase);
 }
 
 bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
@@ -465,25 +469,6 @@ void WalletModel::UnlockContext::CopyFrom(UnlockContext&& rhs)
     rhs.relock = false;
 }
 
-void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
-{
-    vReceiveRequests = m_wallet->getDestValues("rr"); // receive request
-}
-
-bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest)
-{
-    CTxDestination dest = DecodeDestination(sAddress);
-
-    std::stringstream ss;
-    ss << nId;
-    std::string key = "rr" + ss.str(); // "rr" prefix = "receive request" in destdata
-
-    if (sRequest.empty())
-        return m_wallet->eraseDestData(dest, key);
-    else
-        return m_wallet->addDestData(dest, key, sRequest);
-}
-
 bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
 {
     CCoinControl coin_control;
@@ -498,10 +483,9 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
 
-    const bool create_psbt = m_wallet->privateKeysDisabled();
-
     // allow a user based fee verification
-    QString questionString = create_psbt ? tr("Do you want to draft a transaction with fee increase?") : tr("Do you want to increase the fee?");
+    /*: Asks a user if they would like to manually increase the fee of a transaction that has already been created. */
+    QString questionString = tr("Do you want to increase the fee?");
     questionString.append("<br />");
     questionString.append("<table style=\"text-align: left;\">");
     questionString.append("<tr><td>");
@@ -517,12 +501,20 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     questionString.append("</td><td>");
     questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee));
     questionString.append("</td></tr></table>");
-    SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
-    confirmationDialog.exec();
-    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
+
+    // Display warning in the "Confirm fee bump" window if the "Coin Control Features" option is enabled
+    if (getOptionsModel()->getCoinControlFeatures()) {
+        questionString.append("<br><br>");
+        questionString.append(tr("Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy."));
+    }
+
+    auto confirmationDialog = new SendConfirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, !m_wallet->privateKeysDisabled(), getOptionsModel()->getEnablePSBTControls(), nullptr);
+    confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
+    // TODO: Replace QDialog::exec() with safer QDialog::show().
+    const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
 
     // cancel sign&broadcast if user doesn't want to bump the fee
-    if (retval != QMessageBox::Yes) {
+    if (retval != QMessageBox::Yes && retval != QMessageBox::Save) {
         return false;
     }
 
@@ -533,10 +525,10 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     }
 
     // Short-circuit if we are returning a bumped transaction PSBT to clipboard
-    if (create_psbt) {
+    if (retval == QMessageBox::Save) {
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, psbtx, complete, nullptr);
+        const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
         if (err != TransactionError::OK || complete) {
             QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
             return false;
@@ -548,6 +540,8 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         Q_EMIT message(tr("PSBT copied"), "Copied to clipboard", CClientUIInterface::MSG_INFORMATION);
         return true;
     }
+
+    assert(!m_wallet->privateKeysDisabled());
 
     // sign bumped transaction
     if (!m_wallet->signBumpTransaction(mtx)) {
@@ -561,6 +555,18 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
     return true;
+}
+
+bool WalletModel::displayAddress(std::string sAddress)
+{
+    CTxDestination dest = DecodeDestination(sAddress);
+    bool res = false;
+    try {
+        res = m_wallet->displayAddress(dest);
+    } catch (const std::runtime_error& e) {
+        QMessageBox::critical(nullptr, tr("Can't display address"), e.what());
+    }
+    return res;
 }
 
 bool WalletModel::isWalletEnabled()
@@ -581,7 +587,7 @@ QString WalletModel::getDisplayName() const
 
 bool WalletModel::isMultiwallet()
 {
-    return m_node.walletClient().getWallets().size() > 1;
+    return m_node.walletLoader().getWallets().size() > 1;
 }
 
 void WalletModel::refresh(bool pk_hash_only)

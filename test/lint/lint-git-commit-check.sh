@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -23,13 +23,6 @@ while getopts "?" opt; do
   esac
 done
 
-# TRAVIS_BRANCH will be present in a Travis environment. For builds triggered
-# by a pull request this is the name of the branch targeted by the pull request.
-# https://docs.travis-ci.com/user/environment-variables/
-if [ -n "${TRAVIS_BRANCH}" ]; then
-  COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
-fi
-
 if [ -z "${COMMIT_RANGE}" ]; then
     if [ -n "$1" ]; then
       COMMIT_RANGE="HEAD~$1...HEAD"
@@ -45,7 +38,7 @@ while IFS= read -r commit_hash  || [[ -n "$commit_hash" ]]; do
     while IFS= read -r line || [[ -n "$line" ]]; do
         n_line=$((n_line+1))
         length=${#line}
-        if [ $n_line -eq 2 ] && [ $length -ne 0 ]; then
+        if [ $n_line -eq 2 ] && [ "$length" -ne 0 ]; then
             echo "The subject line of commit hash ${commit_hash} is followed by a non-empty line. Subject lines should always be followed by a blank line."
             EXIT_CODE=1
         fi

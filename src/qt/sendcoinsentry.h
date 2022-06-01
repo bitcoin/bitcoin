@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -68,6 +68,9 @@ private Q_SLOTS:
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
+
+protected:
+    void changeEvent(QEvent* e) override;
 
 private:
     SendCoinsRecipient recipient;

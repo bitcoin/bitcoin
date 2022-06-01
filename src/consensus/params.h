@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,13 +11,27 @@
 
 namespace Consensus {
 
-enum DeploymentPos
-{
+/**
+ * A buried deployment is one where the height of the activation has been hardcoded into
+ * the client implementation long after the consensus change has activated. See BIP 90.
+ */
+enum BuriedDeployment : int16_t {
+    // buried deployments get negative values to avoid overlap with DeploymentPos
+    DEPLOYMENT_HEIGHTINCB = std::numeric_limits<int16_t>::min(),
+    DEPLOYMENT_CLTV,
+    DEPLOYMENT_DERSIG,
+    DEPLOYMENT_CSV,
+    DEPLOYMENT_SEGWIT,
+};
+constexpr bool ValidDeployment(BuriedDeployment dep) { return dep <= DEPLOYMENT_SEGWIT; }
+
+enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
-    // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
+    // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
+constexpr bool ValidDeployment(DeploymentPos dep) { return dep < MAX_VERSION_BITS_DEPLOYMENTS; }
 
 /**
  * Struct for each individual consensus rule change using BIP9.
@@ -101,6 +115,23 @@ struct Params {
     bool signet_blocks{false};
     std::vector<uint8_t> signet_challenge;
 
+    int DeploymentHeight(BuriedDeployment dep) const
+    {
+        switch (dep) {
+        case DEPLOYMENT_HEIGHTINCB:
+            return BIP34Height;
+        case DEPLOYMENT_CLTV:
+            return BIP65Height;
+        case DEPLOYMENT_DERSIG:
+            return BIP66Height;
+        case DEPLOYMENT_CSV:
+            return CSVHeight;
+        case DEPLOYMENT_SEGWIT:
+            return SegwitHeight;
+        } // no default case, so the compiler can warn about missing cases
+        return std::numeric_limits<int>::max();
+    }
+
     /**
      * ITCOIN_SPECIFIC
      * If true, validation check on block subsidy is skipped
@@ -115,6 +146,7 @@ struct Params {
      */
     bool signet_solution_independent_blockchain{false};
 };
+
 } // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_PARAMS_H

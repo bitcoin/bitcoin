@@ -15,7 +15,7 @@
 
 bool CastToBool(const std::vector<unsigned char>& vch);
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(script_interpreter)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     {

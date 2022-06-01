@@ -1,106 +1,159 @@
-<TS language="kl" version="2.1">
+<TS version="2.1" language="kl">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Nutaamik sanagit</translation>
+        <translation type="unfinished">&amp;Nutaamik sanagit</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Kopeeruk</translation>
+        <translation type="unfinished">&amp;Kopeeruk</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>M&amp;atuguk</translation>
+        <translation type="unfinished">M&amp;atuguk</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Allattorsimaffimminngaanniit toqqakkat peeruk</translation>
+        <translation type="unfinished">Allattorsimaffimminngaanniit toqqakkat peeruk</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Peeruk</translation>
+        <translation type="unfinished">&amp;Peeruk</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Taaguut</translation>
+        <translation type="unfinished">Taaguut</translation>
     </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Enter passphrase</source>
-        <translation>Isissutissaq allaguk</translation>
+        <translation type="unfinished">Isissutissaq allaguk</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Isissutissaq nutaaq sanajuk</translation>
+        <translation type="unfinished">Isissutissaq nutaaq sanajuk</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Isissutissaq ilaaqqiguk</translation>
+        <translation type="unfinished">Isissutissaq ilaaqqiguk</translation>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation>Isissutissaq nuisiguk</translation>
+        <translation type="unfinished">Isissutissaq nuisiguk</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Aningaasiviit kode-leruk</translation>
+        <translation type="unfinished">Aningaasiviit kode-leruk</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Aningaasiviit parnaarunnaaruk</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Aningaasivik kodea peeruk</translation>
+        <translation type="unfinished">Aningaasiviit parnaarunnaaruk</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Isertaatik allanngortiguk</translation>
+        <translation type="unfinished">Isertaatik allanngortiguk</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Aningaasivippit matuersaataa uppernarsaruk</translation>
+        <translation type="unfinished">Aningaasivippit matuersaataa uppernarsaruk</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Angingaasivik paasipuminaappoq</translation>
+        <translation type="unfinished">Angingaasivik paasipuminaappoq</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Aningaasiviup isissutissaa taarserpoq</translation>
+        <translation type="unfinished">Aningaasiviup isissutissaa taarserpoq</translation>
     </message>
     </context>
 <context>
-    <name>BanTableModel</name>
+    <name>QObject</name>
     <message>
-        <source>IP/Netmask</source>
-        <translation>IP/Netmask</translation>
+        <source>Amount</source>
+        <translation type="unfinished">Aningaasat amerlassusaa</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation type="unfinished">%1 t</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
         <source>Wallet:</source>
-        <translation>Aningaasivik:</translation>
+        <translation type="unfinished">Aningaasivik:</translation>
     </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Nuisiguk / Tarrisiguk</translation>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation>Ammaruk aningaasivik</translation>
+        <translation type="unfinished">Ammaruk aningaasivik</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation>Bitcoin amerlassusaa: %1
+        <translation type="unfinished">Bitcoin amerlassusaa: %1
 </translation>
     </message>
     </context>
@@ -108,240 +161,170 @@
     <name>CoinControlDialog</name>
     <message>
         <source>Fee:</source>
-        <translation>Akileraarut:</translation>
+        <translation type="unfinished">Akileraarut</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Akileraarut peereerlugu:</translation>
+        <translation type="unfinished">Akileraarut peereerlugu:</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Bitcoin amerlassusaa</translation>
+        <translation type="unfinished">Aningaasat amerlassusaa</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Ulloq</translation>
+        <translation type="unfinished">Ulloq</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Akuersissutit</translation>
+        <translation type="unfinished">Akuersissutit</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Akuerineqarpoq</translation>
+        <translation type="unfinished">Akuerineqarpoq</translation>
     </message>
     </context>
 <context>
-    <name>CreateWalletActivity</name>
-    </context>
-<context>
-    <name>CreateWalletDialog</name>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Ammaruk aningaasivik</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Taajuut</translation>
+        <translation type="unfinished">&amp;Taajuut</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Aningaasivik ammarneqanngilaq</translation>
+        <translation type="unfinished">Aningaasivik ammarneqanngilaq</translation>
     </message>
-    </context>
-<context>
-    <name>FreespaceChecker</name>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
     </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Welcome</source>
-        <translation>Tikilluarit</translation>
+        <translation type="unfinished">Tikilluarit</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation>Tikilluarit uunga %1</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <translation type="unfinished">Tikilluarit uunga %1</translation>
     </message>
     </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Hide</source>
-        <translation>Tarrisiguk</translation>
+        <translation type="unfinished">Tarrisiguk</translation>
     </message>
-    <message>
-        <source>Esc</source>
-        <translation>Esc</translation>
-    </message>
-    </context>
-<context>
-    <name>OpenURIDialog</name>
-    </context>
-<context>
-    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Toqqagassat</translation>
+        <translation type="unfinished">Toqqagassat</translation>
     </message>
-    </context>
-<context>
-    <name>OverviewPage</name>
-    </context>
-<context>
-    <name>PSBTOperationsDialog</name>
-    </context>
-<context>
-    <name>PaymentServer</name>
-    </context>
-<context>
-    <name>PeerTableModel</name>
-    </context>
-<context>
-    <name>QObject</name>
-    <message>
-        <source>Amount</source>
-        <translation>Aningaasat amerlassusaa</translation>
-    </message>
-    <message>
-        <source>%1 d</source>
-        <translation>%1 d</translation>
-    </message>
-    <message>
-        <source>%1 h</source>
-        <translation>%1 t</translation>
-    </message>
-    <message>
-        <source>%1 m</source>
-        <translation>%1 m</translation>
-    </message>
-    <message>
-        <source>%1 s</source>
-        <translation>%1 s</translation>
-    </message>
-    </context>
-<context>
-    <name>QRImageWidget</name>
-    </context>
-<context>
-    <name>RPCConsole</name>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Aningaasivik ammarneqanngilaq</translation>
+        <translation type="unfinished">Aningaasivik ammarneqanngilaq</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Wallet:</source>
-        <translation>Aningaasivik:</translation>
+        <translation type="unfinished">Aningaasivik:</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Ulloq</translation>
+        <translation type="unfinished">Ulloq</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Taaguut</translation>
+        <translation type="unfinished">Taaguut</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Fee:</source>
-        <translation>Akileraarut</translation>
+        <translation type="unfinished">Akileraarut</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Akileraarut peereerlugu:</translation>
+        <translation type="unfinished">Akileraarut peereerlugu:</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation>Tarrisiguk</translation>
+        <translation type="unfinished">Tarrisiguk</translation>
     </message>
-    </context>
-<context>
-    <name>SendCoinsEntry</name>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    </context>
-<context>
-    <name>SignVerifyMessageDialog</name>
-    </context>
-<context>
-    <name>TrafficGraphWidget</name>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>TransactionDesc</name>
     <message>
         <source>Date</source>
-        <translation>Ulloq</translation>
+        <translation type="unfinished">Ulloq</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Aningaasat amerlassusaa</translation>
+        <translation type="unfinished">Aningaasat amerlassusaa</translation>
     </message>
-    </context>
-<context>
-    <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Ulloq</translation>
+        <translation type="unfinished">Ulloq</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Taaguut</translation>
+        <translation type="unfinished">Taaguut</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>Confirmed</source>
-        <translation>Akuerineqarpoq</translation>
+        <translation type="unfinished">Akuerineqarpoq</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Ulloq</translation>
+        <translation type="unfinished">Ulloq</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Taaguut</translation>
+        <translation type="unfinished">Taaguut</translation>
     </message>
-    </context>
-<context>
-    <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletController</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
-    </context>
-<context>
-    <name>WalletView</name>
-    </context>
-<context>
-    <name>bitcoin-core</name>
     </context>
 </TS>

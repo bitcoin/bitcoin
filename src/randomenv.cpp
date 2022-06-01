@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,7 +53,7 @@
 #include <sys/vmmeter.h>
 #endif
 #endif
-#ifdef __linux__
+#if defined(HAVE_STRONG_GETAUXVAL)
 #include <sys/auxv.h>
 #endif
 
@@ -69,7 +69,7 @@ void RandAddSeedPerfmon(CSHA512& hasher)
 
     // This can take up to 2 seconds, so only do it every 10 minutes.
     // Initialize last_perfmon to 0 seconds, we don't skip the first call.
-    static std::atomic<std::chrono::seconds> last_perfmon{std::chrono::seconds{0}};
+    static std::atomic<std::chrono::seconds> last_perfmon{0s};
     auto last_time = last_perfmon.load();
     auto current_time = GetTime<std::chrono::seconds>();
     if (current_time < last_time + std::chrono::minutes{10}) return;
@@ -326,7 +326,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     // Bitcoin client version
     hasher << CLIENT_VERSION;
 
-#ifdef __linux__
+#if defined(HAVE_STRONG_GETAUXVAL)
     // Information available through getauxval()
 #  ifdef AT_HWCAP
     hasher << getauxval(AT_HWCAP);
@@ -346,7 +346,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     const char* exec_str = (const char*)getauxval(AT_EXECFN);
     if (exec_str) hasher.Write((const unsigned char*)exec_str, strlen(exec_str) + 1);
 #  endif
-#endif // __linux__
+#endif // HAVE_STRONG_GETAUXVAL
 
 #ifdef HAVE_GETCPUID
     AddAllCPUID(hasher);

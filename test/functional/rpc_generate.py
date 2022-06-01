@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test generate RPC."""
@@ -17,9 +17,9 @@ class RPCGenerateTest(BitcoinTestFramework):
 
     def run_test(self):
         message = (
-            "generate\n"
+            "generate\n\n"
             "has been replaced by the -generate "
-            "cli option. Refer to -help for more information."
+            "cli option. Refer to -help for more information.\n"
         )
 
         self.log.info("Test rpc generate raises with message to use cli option")

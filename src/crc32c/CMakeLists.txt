@@ -5,15 +5,21 @@
 cmake_minimum_required(VERSION 3.1)
 project(Crc32c VERSION 1.1.0 LANGUAGES C CXX)
 
-# This project can use C11, but will gracefully decay down to C89.
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED OFF)
-set(CMAKE_C_EXTENSIONS OFF)
+# C standard can be overridden when this is used as a sub-project.
+if(NOT CMAKE_C_STANDARD)
+  # This project can use C11, but will gracefully decay down to C89.
+  set(CMAKE_C_STANDARD 11)
+  set(CMAKE_C_STANDARD_REQUIRED OFF)
+  set(CMAKE_C_EXTENSIONS OFF)
+endif(NOT CMAKE_C_STANDARD)
 
-# This project requires C++11.
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# C++ standard can be overridden when this is used as a sub-project.
+if(NOT CMAKE_CXX_STANDARD)
+  # This project requires C++11.
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+endif(NOT CMAKE_CXX_STANDARD)
 
 # https://github.com/izenecloud/cmake/blob/master/SetCompilerWarningAll.cmake
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -269,7 +275,7 @@ target_sources(crc32c
   PRIVATE
     "${PROJECT_BINARY_DIR}/include/crc32c/crc32c_config.h"
     "src/crc32c_arm64.h"
-    "src/crc32c_arm64_linux_check.h"
+    "src/crc32c_arm64_check.h"
     "src/crc32c_internal.h"
     "src/crc32c_portable.cc"
     "src/crc32c_prefetch.h"
@@ -405,19 +411,24 @@ if(CRC32C_INSTALL)
   )
 
   include(CMakePackageConfigHelpers)
+  configure_package_config_file(
+    "${PROJECT_NAME}Config.cmake.in"
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+  )
   write_basic_package_version_file(
-      "${PROJECT_BINARY_DIR}/Crc32cConfigVersion.cmake"
-      COMPATIBILITY SameMajorVersion
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    COMPATIBILITY SameMajorVersion
   )
   install(
     EXPORT Crc32cTargets
     NAMESPACE Crc32c::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Crc32c"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   )
   install(
     FILES
-      "Crc32cConfig.cmake"
-      "${PROJECT_BINARY_DIR}/Crc32cConfigVersion.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Crc32c"
+      "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+      "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   )
 endif(CRC32C_INSTALL)

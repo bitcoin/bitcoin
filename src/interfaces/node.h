@@ -1,14 +1,15 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <amount.h>     // For CAmount
-#include <net.h>        // For CConnman::NumConnections
+#include <consensus/amount.h>
+#include <net.h>        // For NodeId
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
+#include <netbase.h>    // For ConnectionDirection
 #include <support/allocators/secure.h> // For SecureString
 #include <util/translation.h>
 
@@ -21,21 +22,26 @@
 #include <vector>
 
 class BanMan;
-class CCoinControl;
 class CFeeRate;
 class CNodeStats;
 class Coin;
 class RPCTimerInterface;
 class UniValue;
-class proxyType;
+class Proxy;
 enum class SynchronizationState;
+enum class TransactionError;
 struct CNodeStateStats;
-struct NodeContext;
 struct bilingual_str;
+namespace node {
+struct NodeContext;
+} // namespace node
+namespace wallet {
+class CCoinControl;
+} // namespace wallet
 
 namespace interfaces {
 class Handler;
-class WalletClient;
+class WalletLoader;
 struct BlockTip;
 
 //! Block and header tip information
@@ -46,6 +52,16 @@ struct BlockAndHeaderTipInfo
     int header_height;
     int64_t header_time;
     double verification_progress;
+};
+
+//! External signer interface used by the GUI.
+class ExternalSigner
+{
+public:
+    virtual ~ExternalSigner() {};
+
+    //! Get signer display name
+    virtual std::string getName() = 0;
 };
 
 //! Top-level interface for a bitcoin node (bitcoind process).
@@ -82,13 +98,13 @@ public:
     virtual bool shutdownRequested() = 0;
 
     //! Map port.
-    virtual void mapPort(bool use_upnp) = 0;
+    virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
 
     //! Get proxy.
-    virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
+    virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
 
     //! Get number of connections.
-    virtual size_t getNodeCount(CConnman::NumConnections flags) = 0;
+    virtual size_t getNodeCount(ConnectionDirection flags) = 0;
 
     //! Get stats for connected nodes.
     using NodesStats = std::vector<std::tuple<CNodeStats, bool, CNodeStateStats>>;
@@ -108,6 +124,9 @@ public:
 
     //! Disconnect node by id.
     virtual bool disconnectById(NodeId id) = 0;
+
+    //! Return list of external signers (attached devices which can sign transactions).
+    virtual std::vector<std::unique_ptr<ExternalSigner>> listExternalSigners() = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
@@ -151,9 +170,6 @@ public:
     //! Get network active.
     virtual bool getNetworkActive() = 0;
 
-    //! Estimate smart fee.
-    virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) = 0;
-
     //! Get dust relay fee.
     virtual CFeeRate getDustRelayFee() = 0;
 
@@ -172,8 +188,11 @@ public:
     //! Get unspent outputs associated with a transaction.
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
 
-    //! Get wallet client.
-    virtual WalletClient& walletClient() = 0;
+    //! Broadcast transaction.
+    virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
+
+    //! Get wallet loader.
+    virtual WalletLoader& walletLoader() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
@@ -194,6 +213,10 @@ public:
     //! Register handler for progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
+
+    //! Register handler for wallet loader constructed messages.
+    using InitWalletFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) = 0;
 
     //! Register handler for number of connections changed messages.
     using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;
@@ -223,12 +246,12 @@ public:
 
     //! Get and set internal node context. Useful for testing, but not
     //! accessible across processes.
-    virtual NodeContext* context() { return nullptr; }
-    virtual void setContext(NodeContext* context) { }
+    virtual node::NodeContext* context() { return nullptr; }
+    virtual void setContext(node::NodeContext* context) { }
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode(NodeContext* context = nullptr);
+std::unique_ptr<Node> MakeNode(node::NodeContext& context);
 
 //! Block tip (could be a header or not, depends on the subscribed signal).
 struct BlockTip {

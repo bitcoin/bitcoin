@@ -1,0 +1,86 @@
+#!/usr/bin/env bpftrace
+
+/*
+
+  USAGE:
+
+  bpftrace contrib/tracing/log_utxos.bt
+
+  This script requires a 'bitcoind' binary compiled with eBPF support and the
+  'utxocache' tracepoints. By default, it's assumed that 'bitcoind' is
+  located in './src/bitcoind'. This can be modified in the script below.
+
+  NOTE: requires bpftrace v0.12.0 or above.
+*/
+
+BEGIN
+{
+    printf("%-7s %-71s %16s %7s %8s\n",
+          "OP", "Outpoint", "Value", "Height", "Coinbase");
+}
+
+/*
+  Attaches to the 'utxocache:add' tracepoint and prints additions to the UTXO set cache.
+*/
+usdt:./src/bitcoind:utxocache:add
+{
+  $txid = arg0;
+  $index = (uint32)arg1;
+  $height = (uint32)arg2;
+  $value = (int64)arg3;
+  $isCoinbase = arg4;
+
+  printf("Added   ");
+  $p = $txid + 31;
+  unroll(32) {
+    $b = *(uint8*)$p;
+    printf("%02x", $b);
+    $p-=1;
+  }
+
+  printf(":%-6d %16ld %7d %s\n", $index, $value, $height, ($isCoinbase ? "Yes" : "No" ));
+}
+
+/*
+  Attaches to the 'utxocache:spent' tracepoint and prints spents from the UTXO set cache.
+*/
+usdt:./src/bitcoind:utxocache:spent
+{
+  $txid = arg0;
+  $index = (uint32)arg1;
+  $height = (uint32)arg2;
+  $value = (int64)arg3;
+  $isCoinbase = arg4;
+
+  printf("Spent   ");
+  $p = $txid + 31;
+  unroll(32) {
+    $b = *(uint8*)$p;
+    printf("%02x", $b);
+    $p-=1;
+  }
+
+  printf(":%-6d %16ld %7d %s\n", $index, $value, $height, ($isCoinbase ? "Yes" : "No" ));
+}
+
+/*
+  Attaches to the 'utxocache:uncache' tracepoint and uncache UTXOs from the UTXO set cache.
+*/
+usdt:./src/bitcoind:utxocache:uncache
+{
+  $txid = arg0;
+  $index = (uint32)arg1;
+  $height = (uint32)arg2;
+  $value = (int64)arg3;
+  $isCoinbase = arg4;
+
+  printf("Uncache ");
+  $p = $txid + 31;
+  unroll(32) {
+    $b = *(uint8*)$p;
+    printf("%02x", $b);
+    $p-=1;
+  }
+
+  printf(":%-6d %16ld %7d %s\n", $index, $value, $height, ($isCoinbase ? "Yes" : "No" ));
+}

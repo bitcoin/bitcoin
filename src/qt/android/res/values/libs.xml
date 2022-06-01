@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="load_local_libs">
+        <item>
+            arm64-v8a;libbitcoin-qt_arm64-v8a.so
+        </item>
+        <item>
+            armeabi-v7a;libbitcoin-qt_armeabi-v7a.so
+        </item>
+        <item>
+            x86_64;libbitcoin-qt_x86_64.so
+        </item>
+        <item>
+            x86;libbitcoin-qt_x86.so
+        </item>
+    </array>
+</resources>
