@@ -39,7 +39,10 @@ std::optional<CTxOut> CCoinControl::GetExternalOutput(const COutPoint& outpoint)
 
 PreselectedInput& CCoinControl::Select(const COutPoint& outpoint)
 {
-    return m_selected[outpoint];
+    auto& input = m_selected[outpoint];
+    input.SetPosition(m_selection_pos);
+    ++m_selection_pos;
+    return input;
 }
 void CCoinControl::UnSelect(const COutPoint& outpoint)
 {
@@ -78,6 +81,12 @@ std::optional<uint32_t> CCoinControl::GetSequence(const COutPoint& outpoint) con
     return it != m_selected.end() ? it->second.GetSequence() : std::nullopt;
 }
 
+std::pair<std::optional<CScript>, std::optional<CScriptWitness>> CCoinControl::GetScripts(const COutPoint& outpoint) const
+{
+    const auto it = m_selected.find(outpoint);
+    return it != m_selected.end() ? m_selected.at(outpoint).GetScripts() : std::make_pair(std::nullopt, std::nullopt);
+}
+
 void PreselectedInput::SetTxOut(const CTxOut& txout)
 {
     m_txout = txout;
@@ -112,5 +121,35 @@ void PreselectedInput::SetSequence(uint32_t sequence)
 std::optional<uint32_t> PreselectedInput::GetSequence() const
 {
     return m_sequence;
+}
+
+void PreselectedInput::SetScriptSig(const CScript& script)
+{
+    m_script_sig = script;
+}
+
+void PreselectedInput::SetScriptWitness(const CScriptWitness& script_wit)
+{
+    m_script_witness = script_wit;
+}
+
+bool PreselectedInput::HasScripts() const
+{
+    return m_script_sig.has_value() || m_script_witness.has_value();
+}
+
+std::pair<std::optional<CScript>, std::optional<CScriptWitness>> PreselectedInput::GetScripts() const
+{
+    return {m_script_sig, m_script_witness};
+}
+
+void PreselectedInput::SetPosition(unsigned int pos)
+{
+    m_pos = pos;
+}
+
+std::optional<unsigned int> PreselectedInput::GetPosition() const
+{
+    return m_pos;
 }
 } // namespace wallet

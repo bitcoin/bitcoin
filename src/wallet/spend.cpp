@@ -1146,6 +1146,25 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Shuffle selected coins and fill in final vin
     std::vector<std::shared_ptr<COutput>> selected_coins = result.GetShuffledInputVector();
 
+    if (coin_control.HasSelected() && coin_control.HasSelectedOrder()) {
+        // When there are preselected inputs, we need to move them to be the first UTXOs
+        // and have them be in the order selected. We can use stable_sort for this, where we
+        // compare with the positions stored in coin_control. The COutputs that have positions
+        // will be placed before those that don't, and those positions will be in order.
+        std::stable_sort(selected_coins.begin(), selected_coins.end(),
+            [&coin_control](const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) {
+                auto a_pos = coin_control.GetSelectionPos(a->outpoint);
+                auto b_pos = coin_control.GetSelectionPos(b->outpoint);
+                if (a_pos.has_value() && b_pos.has_value()) {
+                    return a_pos.value() < b_pos.value();
+                } else if (a_pos.has_value() && !b_pos.has_value()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+    }
+
     // The sequence number is set to non-maxint so that DiscourageFeeSniping
     // works.
     //
@@ -1162,7 +1181,15 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             // If an input has a preset sequence, we can't do anti-fee-sniping
             use_anti_fee_sniping = false;
         }
-        txNew.vin.emplace_back(coin->outpoint, CScript(), sequence.value_or(default_sequence));
+        txNew.vin.emplace_back(coin->outpoint, CScript{}, sequence.value_or(default_sequence));
+
+        auto scripts = coin_control.GetScripts(coin->outpoint);
+        if (scripts.first) {
+            txNew.vin.back().scriptSig = *scripts.first;
+        }
+        if (scripts.second) {
+            txNew.vin.back().scriptWitness = *scripts.second;
+        }
     }
     if (coin_control.m_locktime) {
         txNew.nLockTime = coin_control.m_locktime.value();
@@ -1381,6 +1408,8 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
             preset_txin.SetTxOut(coins[outPoint].out);
         }
         preset_txin.SetSequence(txin.nSequence);
+        preset_txin.SetScriptSig(txin.scriptSig);
+        preset_txin.SetScriptWitness(txin.scriptWitness);
     }
 
     auto res = CreateTransaction(wallet, vecSend, nChangePosInOut, coinControl, false);

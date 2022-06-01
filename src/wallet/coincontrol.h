@@ -33,6 +33,12 @@ private:
     std::optional<int64_t> m_weight;
     //! The sequence number for this input
     std::optional<uint32_t> m_sequence;
+    //! The scriptSig for this input
+    std::optional<CScript> m_script_sig;
+    //! The scriptWitness for this input
+    std::optional<CScriptWitness> m_script_witness;
+    //! The position in the inputs vector for this input
+    std::optional<unsigned int> m_pos;
 
 public:
     /**
@@ -54,6 +60,20 @@ public:
     void SetSequence(uint32_t sequence);
     /** Retrieve the sequence for this input. */
     std::optional<uint32_t> GetSequence() const;
+
+    /** Set the scriptSig for this input. */
+    void SetScriptSig(const CScript& script);
+    /** Set the scriptWitness for this input. */
+    void SetScriptWitness(const CScriptWitness& script_wit);
+    /** Return whether either the scriptSig or scriptWitness are set for this input. */
+    bool HasScripts() const;
+    /** Retrieve both the scriptSig and the scriptWitness. */
+    std::pair<std::optional<CScript>, std::optional<CScriptWitness>> GetScripts() const;
+
+    /** Store the position of this input. */
+    void SetPosition(unsigned int pos);
+    /** Retrieve the position of this input. */
+    std::optional<unsigned int> GetPosition() const;
 };
 
 /** Coin Control Features. */
@@ -141,10 +161,27 @@ public:
     std::optional<int64_t> GetInputWeight(const COutPoint& outpoint) const;
     /** Retrieve the sequence for an input */
     std::optional<uint32_t> GetSequence(const COutPoint& outpoint) const;
+    /** Retrieves the scriptSig and scriptWitness for an input. */
+    std::pair<std::optional<CScript>, std::optional<CScriptWitness>> GetScripts(const COutPoint& outpoint) const;
+
+    bool HasSelectedOrder() const
+    {
+        return m_selection_pos > 0;
+    }
+
+    std::optional<unsigned int> GetSelectionPos(const COutPoint& outpoint) const
+    {
+        const auto it = m_selected.find(outpoint);
+        if (it == m_selected.end()) {
+            return std::nullopt;
+        }
+        return it->second.GetPosition();
+    }
 
 private:
     //! Selected inputs (inputs that will be used, regardless of whether they're optimal or not)
     std::map<COutPoint, PreselectedInput> m_selected;
+    unsigned int m_selection_pos{0};
 };
 } // namespace wallet
 
