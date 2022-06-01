@@ -575,8 +575,11 @@ bool CZMQPublishNEVMCreateBlobNotifier::NotifyCreateNEVMBlob(const std::vector<u
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
         }
     }
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << vchData;
+    
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm data commitment request to %s, subscriber %s\n", this->address, this->addresssub);
-    if(!SendZmqMessageNEVM(MSG_NEVMCREATEBLOB, MSG_NEVMCREATEBLOB, strlen(MSG_NEVMCREATEBLOB))) {
+    if(!SendZmqMessageNEVM(MSG_NEVMCREATEBLOB, &(*ss.begin()), ss.size())) {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-createblob-not-sent");
     }
     std::vector<std::string> parts;
