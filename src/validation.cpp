@@ -4158,7 +4158,7 @@ bool ChainstateManager::LoadBlockIndex()
     // Load block index from databases
     bool needs_init = fReindex;
     if (!fReindex) {
-        bool ret = m_blockman.LoadBlockIndexDB();
+        bool ret = m_blockman.LoadBlockIndexDB(GetConsensus());
         if (!ret) return false;
 
         std::vector<CBlockIndex*> vSortedByHeight{m_blockman.GetAllBlockIndices()};
