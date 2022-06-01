@@ -101,6 +101,7 @@ public:
                 .m_blocks_in_flight = 0,
                 .m_last_block_announcement = 0s,
                 .m_slow_chain_protected = false,
+                .m_successfully_connected = false,
             });
 
         assert(inserted != already_added);
@@ -223,6 +224,11 @@ public:
     {
         m_evictionman.UpdateSlowChainProtected(id);
     }
+
+    void UpdateSuccessfullyConnected(NodeId id)
+    {
+        m_evictionman.UpdateSuccessfullyConnected(id);
+    }
 };
 
 FUZZ_TARGET(evictionman)
@@ -285,6 +291,9 @@ FUZZ_TARGET(evictionman)
             },
             [&] {
                 tester.UpdateSlowChainProtected(fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS));
+            },
+            [&] {
+                tester.UpdateSuccessfullyConnected(fuzzed_data_provider.ConsumeIntegralInRange(0, MAX_PEERS));
             });
     }
 }

@@ -74,6 +74,9 @@ public:
 
     /** Set the candidate's slow chain protection status to true. */
     void UpdateSlowChainProtected(NodeId id);
+
+    /** Set the candidate's successfully connected status to true. */
+    void UpdateSuccessfullyConnected(NodeId id);
 };
 
 #endif // BITCOIN_NODE_EVICTION_H

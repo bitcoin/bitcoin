@@ -3573,6 +3573,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         pfrom.fSuccessfullyConnected = true;
+        m_evictionman.UpdateSuccessfullyConnected(pfrom.GetId());
         return;
     }
 

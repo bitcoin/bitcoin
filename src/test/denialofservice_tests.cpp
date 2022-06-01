@@ -142,6 +142,8 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
         /*noban=*/node.HasPermission(NetPermissionFlags::NoBan),
         /*conn_type=*/connType);
 
+    evictionman.UpdateSuccessfullyConnected(node.GetId());
+
     connman.AddTestNode(node);
 }
 
