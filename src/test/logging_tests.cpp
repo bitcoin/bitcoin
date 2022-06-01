@@ -172,7 +172,7 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
     LogInstance().EnableCategory(BCLog::LogFlags::ALL);
 
     LogInstance().SetLogLevel(BCLog::Level::Info);
-    LogInstance().SetCategoryLogLevel("net", "warning");
+    LogInstance().SetCategoryLogLevel(/*category_str=*/"net", /*level_str=*/"debug");
 
     // Global log level
     LogPrintLevel(BCLog::HTTP, BCLog::Level::Info, "foo1: %s\n", "bar1");
@@ -182,7 +182,7 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
 
     // Category-specific log level
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo5: %s\n", "bar5");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo6: %s. This log level is lower than the category-specific one but higher than the global one. \n", "bar6");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo6: %s. This log level is lower than the category-specific one but higher than the global one. \n", "bar6");
     LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo7: %s\n", "bar7");
 
     std::vector<std::string> expected = {

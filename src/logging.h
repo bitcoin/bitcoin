@@ -69,7 +69,8 @@ namespace BCLog {
         ALL         = ~(uint32_t)0,
     };
     enum class Level {
-        Debug = 0, // High-volume or detailed logging for development/debugging
+        Trace = 0, // High-volume or detailed logging for development/debugging
+        Debug,     // Reasonably noisy logging, but still usable in production
         Info,      // Default
         Warning,
         Error,

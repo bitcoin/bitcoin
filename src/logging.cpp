@@ -200,6 +200,8 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
 {
     switch (level) {
+    case BCLog::Level::Trace:
+        return "trace";
     case BCLog::Level::Debug:
         return "debug";
     case BCLog::Level::Info:
@@ -284,7 +286,9 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
 
 static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
 {
-    if (level_str == "debug") {
+    if (level_str == "trace") {
+        return BCLog::Level::Trace;
+    } else if (level_str == "debug") {
         return BCLog::Level::Debug;
     } else if (level_str == "info") {
         return BCLog::Level::Info;
@@ -319,7 +323,7 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
 
 static constexpr std::array<BCLog::Level, static_cast<size_t>(BCLog::Level::None)> LogLevelsList()
 {
-    return {BCLog::Level::Debug, BCLog::Level::Info, BCLog::Level::Warning, BCLog::Level::Error};
+    return {BCLog::Level::Trace, BCLog::Level::Debug, BCLog::Level::Info, BCLog::Level::Warning, BCLog::Level::Error};
 }
 
 std::string BCLog::Logger::LogLevelsString() const
