@@ -17,9 +17,9 @@ UniValue CMasternodeMetaInfo::ToJson() const
 
     auto now = GetAdjustedTime();
 
-    ret.pushKV("lastOutboundAttempt", lastOutboundAttempt);
+    ret.pushKV("lastOutboundAttempt", lastOutboundAttempt.load());
     ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt);
-    ret.pushKV("lastOutboundSuccess", lastOutboundSuccess);
+    ret.pushKV("lastOutboundSuccess", lastOutboundSuccess.load());
     ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess);
 
     return ret;

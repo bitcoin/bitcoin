@@ -673,13 +673,13 @@ static RPCHelpMan listassets()
     uint32_t count = 10;
     uint32_t from = 0;
     if (params.size() > 0) {
-        count = params[0].get_uint();
+        count = params[0].getInt<int>();
         if (count == 0) {
             count = 10;
         }
     }
     if (params.size() > 1) {
-        from = params[1].get_uint();
+        from = params[1].getInt<int>();
     }
     if (params.size() > 2) {
         options = params[2];

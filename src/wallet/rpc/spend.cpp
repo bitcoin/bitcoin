@@ -1238,7 +1238,7 @@ RPCHelpMan send()
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
             // SYSCOIN
             if(options.exists("version")) {
-                rawTx.nVersion = options["version"].get_int();
+                rawTx.nVersion = options["version"].getInt<int>();
             }
             CCoinControl coin_control;
             // Automatically select coins, unless at least one is manually selected. Can

@@ -116,7 +116,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             rawTx.vout.push_back(out);
         // SYSCOIN
         } else if (name_ == "version") {
-            rawTx.nVersion = outputs[name_].get_int();
+            rawTx.nVersion = outputs[name_].getInt<int>();
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {

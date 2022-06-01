@@ -543,7 +543,7 @@ RPCHelpMan assetnew()
     if(!strContract.empty())
         strContract = RemovePrefix(strContract, "0x");  // strip 0x in hex str if exist
 
-    uint32_t precision = params[4].get_uint();
+    uint32_t precision = params[4].getInt<int>();
     UniValue param0 = params[0];
     try{
         nGas = AmountFromValue(param0);
@@ -560,7 +560,7 @@ RPCHelpMan assetnew()
     }
     uint32_t nUpdateCapabilityFlags = ASSET_CAPABILITY_ALL;
     if(!params[6].isNull()) {
-        nUpdateCapabilityFlags = params[6].get_uint();
+        nUpdateCapabilityFlags = params[6].getInt<int>();
     }
     
     std::vector<unsigned char> vchNotaryKeyID;
@@ -1015,7 +1015,7 @@ static RPCHelpMan assetupdate()
     const uint8_t nOldUpdateCapabilityFlags = theAsset.nUpdateCapabilityFlags;
     uint8_t nUpdateCapabilityFlags = nOldUpdateCapabilityFlags;
     if(!params[3].isNull())
-        nUpdateCapabilityFlags = (uint8_t)params[3].get_uint();
+        nUpdateCapabilityFlags = (uint8_t)params[3].getInt<int>();
     theAsset.ClearAsset();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("desc", EncodeBase64(strPubData));
