@@ -977,6 +977,10 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     FastRandomContext rng_fast;
     CMutableTransaction txNew; // The resulting transaction that we make
 
+    if (coin_control.m_version) {
+        txNew.nVersion = coin_control.m_version.value();
+    }
+
     CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
     coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
@@ -1348,6 +1352,9 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
 
     // Set the user desired locktime
     coinControl.m_locktime = tx.nLockTime;
+
+    // Set the user desired version
+    coinControl.m_version = tx.nVersion;
 
     // Acquire the locks to prevent races to the new locked unspents between the
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).

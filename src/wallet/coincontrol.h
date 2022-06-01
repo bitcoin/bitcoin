@@ -93,6 +93,8 @@ public:
     FlatSigningProvider m_external_provider;
     //! Locktime
     std::optional<uint32_t> m_locktime;
+    //! Version
+    std::optional<uint32_t> m_version;
 
     CCoinControl();
 
