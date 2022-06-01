@@ -1160,6 +1160,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         }
         txNew.vin.emplace_back(coin->outpoint, CScript(), sequence.value_or(default_sequence));
     }
+    if (coin_control.m_locktime) {
+        txNew.nLockTime = coin_control.m_locktime.value();
+        // If we have a locktime set, we can't use anti-fee-sniping
+        use_anti_fee_sniping = false;
+    }
     if (use_anti_fee_sniping) {
         DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
     }
@@ -1340,6 +1345,9 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
         CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
+
+    // Set the user desired locktime
+    coinControl.m_locktime = tx.nLockTime;
 
     // Acquire the locks to prevent races to the new locked unspents between the
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).
