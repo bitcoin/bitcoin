@@ -861,6 +861,11 @@ public:
         return m_blockman.m_block_index;
     }
 
+    PrevBlockMap& PrevBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        return m_blockman.m_prev_block_index;
+    }
+
     bool IsSnapshotActive() const;
 
     Optional<uint256> SnapshotBlockhash() const;
@@ -942,12 +947,6 @@ CChainState& ChainstateActive();
 
 /** Please prefer the identical ChainstateManager::ActiveChain */
 CChain& ChainActive();
-
-/** Please prefer the identical ChainstateManager::BlockIndex */
-BlockMap& BlockIndex();
-
-/** @returns the global previous block index map. */
-PrevBlockMap& PrevBlockIndex();
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;

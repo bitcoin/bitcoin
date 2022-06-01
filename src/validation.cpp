@@ -1187,18 +1187,6 @@ bool CChainState::IsInitialBlockDownload() const
 
 static CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
 
-BlockMap& BlockIndex()
-{
-    LOCK(::cs_main);
-    return g_chainman.m_blockman.m_block_index;
-}
-
-PrevBlockMap& PrevBlockIndex()
-{
-    LOCK(::cs_main);
-    return g_chainman.m_blockman.m_prev_block_index;
-}
-
 static void AlertNotify(const std::string& strMessage)
 {
     uiInterface.NotifyAlertChanged();
@@ -3365,7 +3353,7 @@ void CChainState::EnforceBlock(CValidationState& state, const CChainParams& chai
 
     while (pindex_walk && !::ChainActive().Contains(pindex_walk)) {
         // Mark all blocks that have the same prevBlockHash but are not equal to blockHash as conflicting
-        auto itp = ::PrevBlockIndex().equal_range(pindex_walk->pprev->GetBlockHash());
+        auto itp = g_chainman.PrevBlockIndex().equal_range(pindex_walk->pprev->GetBlockHash());
         for (auto jt = itp.first; jt != itp.second; ++jt) {
             if (jt->second == pindex_walk) {
                 continue;
