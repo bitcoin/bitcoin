@@ -5,10 +5,10 @@
 #include <coins.h>
 
 #include <consensus/consensus.h>
+#include <consensus/version.h>
 #include <logging.h>
 #include <random.h>
 #include <util/trace.h>
-#include <version.h>
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }

@@ -28,7 +28,6 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
-#include <version.h>
 
 #include <cstdint>
 #include <cstdlib>

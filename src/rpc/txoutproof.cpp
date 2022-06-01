@@ -6,6 +6,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
+#include <consensus/version.h>
 #include <index/txindex.h>
 #include <merkleblock.h>
 #include <node/blockstorage.h>

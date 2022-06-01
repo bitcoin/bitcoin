@@ -6,6 +6,7 @@
 #include <primitives/transaction.h>
 
 #include <consensus/amount.h>
+#include <consensus/version.h>
 #include <hash.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>

@@ -11,6 +11,7 @@
 #include <coins.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
+#include <consensus/version.h>
 #include <key.h>
 #include <merkleblock.h>
 #include <net.h>
@@ -26,7 +27,6 @@
 #include <test/util/setup_common.h>
 #include <undo.h>
 #include <util/system.h>
-#include <version.h>
 
 #include <exception>
 #include <optional>

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/version.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -12,7 +13,6 @@
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
-#include <version.h>
 
 #include <string>
 

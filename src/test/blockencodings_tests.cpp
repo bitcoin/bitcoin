@@ -5,6 +5,7 @@
 #include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
+#include <consensus/version.h>
 #include <pow.h>
 #include <streams.h>
 

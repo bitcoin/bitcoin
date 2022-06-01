@@ -7,6 +7,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <key_io.h>
 #include <script/descriptor.h>
 #include <script/script.h>

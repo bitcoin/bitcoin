@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
+#include <consensus/version.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <pubkey.h>
@@ -11,7 +12,6 @@
 #include <util/overflow.h>
 #include <util/rbf.h>
 #include <util/time.h>
-#include <version.h>
 
 #include <memory>
 

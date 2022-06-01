@@ -4,6 +4,7 @@
 
 #include <consensus/amount.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <interfaces/chain.h>
 #include <policy/policy.h>
 #include <script/signingprovider.h>

@@ -11,6 +11,7 @@
 #include <compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/version.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <netaddress.h>
@@ -25,7 +26,6 @@
 #include <test/util/net.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <version.h>
 
 #include <algorithm>
 #include <array>

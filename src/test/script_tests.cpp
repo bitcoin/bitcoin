@@ -5,6 +5,7 @@
 #include <test/data/script_tests.json.h>
 #include <test/data/bip341_wallet_vectors.json.h>
 
+#include <consensus/version.h>
 #include <core_io.h>
 #include <fs.h>
 #include <key.h>

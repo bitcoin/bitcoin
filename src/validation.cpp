@@ -15,6 +15,7 @@
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <cuckoocache.h>
 #include <flatfile.h>
 #include <hash.h>

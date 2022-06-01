@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <key_io.h>
 #include <policy/policy.h>

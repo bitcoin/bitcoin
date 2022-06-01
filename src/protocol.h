@@ -15,7 +15,6 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <version.h>
 
 #include <limits>
 #include <stdint.h>

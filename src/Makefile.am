@@ -564,6 +564,7 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/params.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
+  consensus/version.h \
   hash.cpp \
   hash.h \
   prevector.h \
@@ -586,8 +587,7 @@ libbitcoin_consensus_a_SOURCES = \
   uint256.cpp \
   uint256.h \
   util/strencodings.cpp \
-  util/strencodings.h \
-  version.h
+  util/strencodings.h
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)

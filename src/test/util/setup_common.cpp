@@ -10,6 +10,7 @@
 #include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <crypto/sha256.h>
 #include <init.h>
 #include <interfaces/chain.h>

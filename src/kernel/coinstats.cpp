@@ -5,6 +5,7 @@
 #include <kernel/coinstats.h>
 
 #include <coins.h>
+#include <consensus/version.h>
 #include <crypto/muhash.h>
 #include <hash.h>
 #include <serialize.h>

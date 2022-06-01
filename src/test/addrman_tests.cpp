@@ -7,6 +7,7 @@
 #include <addrman_impl.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <consensus/version.h>
 #include <hash.h>
 #include <netbase.h>
 #include <random.h>

@@ -8,6 +8,7 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <index/txindex.h>
 #include <key_io.h>

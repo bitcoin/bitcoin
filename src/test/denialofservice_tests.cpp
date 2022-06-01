@@ -6,6 +6,7 @@
 
 #include <banman.h>
 #include <chainparams.h>
+#include <consensus/version.h>
 #include <net.h>
 #include <net_processing.h>
 #include <pubkey.h>

@@ -12,7 +12,6 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <validation.h>
-#include <version.h>
 
 #include <cassert>
 #include <string>

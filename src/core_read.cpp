@@ -4,6 +4,7 @@
 
 #include <core_io.h>
 
+#include <consensus/version.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -12,7 +13,6 @@
 #include <streams.h>
 #include <univalue.h>
 #include <util/strencodings.h>
-#include <version.h>
 
 #include <algorithm>
 #include <string>

@@ -11,6 +11,7 @@
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <key.h>
 #include <policy/policy.h>

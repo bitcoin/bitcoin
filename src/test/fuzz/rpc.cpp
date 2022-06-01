@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <base58.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <key.h>
 #include <key_io.h>

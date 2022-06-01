@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <consensus/version.h>
 #include <key.h>
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>

@@ -4,6 +4,7 @@
 
 #include <psbt.h>
 
+#include <consensus/version.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 

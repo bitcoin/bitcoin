@@ -4,6 +4,7 @@
 
 #include <qt/psbtoperationsdialog.h>
 
+#include <consensus/version.h>
 #include <core_io.h>
 #include <fs.h>
 #include <interfaces/node.h>

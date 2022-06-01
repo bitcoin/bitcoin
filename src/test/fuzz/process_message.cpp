@@ -5,6 +5,7 @@
 #include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <consensus/version.h>
 #include <net.h>
 #include <net_processing.h>
 #include <protocol.h>
@@ -20,7 +21,6 @@
 #include <test/util/validation.h>
 #include <txorphanage.h>
 #include <validationinterface.h>
-#include <version.h>
 
 #include <atomic>
 #include <cassert>

@@ -4,6 +4,7 @@
 
 #include <chain.h>
 #include <clientversion.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <fs.h>
 #include <interfaces/chain.h>

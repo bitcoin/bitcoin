@@ -19,6 +19,7 @@
 #include <qt/sendcoinsentry.h>
 
 #include <chainparams.h>
+#include <consensus/version.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/ui_interface.h>

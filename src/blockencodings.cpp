@@ -5,6 +5,7 @@
 #include <blockencodings.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <chainparams.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>

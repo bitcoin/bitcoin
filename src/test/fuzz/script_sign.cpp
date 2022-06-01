@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <consensus/version.h>
 #include <key.h>
 #include <psbt.h>
 #include <pubkey.h>

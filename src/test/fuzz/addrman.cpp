@@ -6,6 +6,7 @@
 #include <addrman.h>
 #include <addrman_impl.h>
 #include <chainparams.h>
+#include <consensus/version.h>
 #include <merkleblock.h>
 #include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>

@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
+#include <consensus/version.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <streams.h>
 #include <test/util/script.h>
-#include <version.h>
 
 #include <test/fuzz/fuzz.h>
 

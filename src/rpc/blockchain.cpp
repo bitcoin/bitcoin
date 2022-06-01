@@ -12,6 +12,7 @@
 #include <consensus/amount.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <deploymentinfo.h>
 #include <deploymentstatus.h>

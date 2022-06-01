@@ -8,6 +8,7 @@
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <net_permissions.h>
 #include <net_processing.h>
@@ -25,7 +26,6 @@
 #include <util/string.h>
 #include <util/translation.h>
 #include <validation.h>
-#include <version.h>
 #include <warnings.h>
 
 #include <optional>

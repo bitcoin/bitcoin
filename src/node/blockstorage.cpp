@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <consensus/validation.h>
+#include <consensus/version.h>
 #include <flatfile.h>
 #include <fs.h>
 #include <hash.h>

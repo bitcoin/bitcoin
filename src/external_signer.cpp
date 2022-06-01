@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <psbt.h>
 #include <util/strencodings.h>

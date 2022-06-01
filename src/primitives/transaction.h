@@ -17,7 +17,7 @@
 /**
  * A flag that is ORed into the protocol version to designate that a transaction
  * should be (un)serialized without witness data.
- * Make sure that this does not collide with any of the values in `version.h`
+ * Make sure that this does not collide with any of the values in `consensus/version.h`
  * or with `ADDRV2_FORMAT`.
  */
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;

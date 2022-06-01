@@ -4,6 +4,7 @@
 
 #include <common/bloom.h>
 
+#include <consensus/version.h>
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <random.h>

@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <compat.h>
+#include <consensus/version.h>
 #include <cstdint>
 #include <net.h>
 #include <net_processing.h>
@@ -21,7 +22,6 @@
 #include <util/string.h>
 #include <util/system.h>
 #include <validation.h>
-#include <version.h>
 
 #include <boost/test/unit_test.hpp>
 

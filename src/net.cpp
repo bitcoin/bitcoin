@@ -15,6 +15,7 @@
 #include <clientversion.h>
 #include <compat.h>
 #include <consensus/consensus.h>
+#include <consensus/version.h>
 #include <crypto/sha256.h>
 #include <fs.h>
 #include <i2p.h>

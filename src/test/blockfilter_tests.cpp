@@ -6,6 +6,7 @@
 #include <test/util/setup_common.h>
 
 #include <blockfilter.h>
+#include <consensus/version.h>
 #include <core_io.h>
 #include <serialize.h>
 #include <streams.h>
