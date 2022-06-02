@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
+    BIP125_SEQUENCE_NUMBER,
     CTransaction,
     tx_from_hex,
 )
@@ -219,6 +220,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data", self.nodes[0].createrawtransaction, [], multidict([("data", 'aa'), ("data", "bb")]))
         assert_raises_rpc_error(-8, "Invalid parameter, key-value pair must contain exactly one key", self.nodes[0].createrawtransaction, [], [{'a': 1, 'b': 2}])
         assert_raises_rpc_error(-8, "Invalid parameter, key-value pair not an object as expected", self.nodes[0].createrawtransaction, [], [['key-value pair1'], ['2']])
+
+        # Test `createrawtransaction` mismatch between sequence number(s) and `replaceable` option
+        assert_raises_rpc_error(-8, "Invalid parameter combination: Sequence number(s) contradict replaceable option",
+                                self.nodes[0].createrawtransaction, [{'txid': TXID, 'vout': 0, 'sequence': BIP125_SEQUENCE_NUMBER+1}], {}, 0, True)
 
         # Test `createrawtransaction` invalid `locktime`
         assert_raises_rpc_error(-3, "Expected type number", self.nodes[0].createrawtransaction, [], {}, 'foo')
