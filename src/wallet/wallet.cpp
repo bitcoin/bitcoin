@@ -5081,9 +5081,9 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
                 walletInstance->SetMinVersion(FEATURE_HD);
 
                 // clean up
-                gArgs.ForceRemoveArg("-hdseed");
-                gArgs.ForceRemoveArg("-mnemonic");
-                gArgs.ForceRemoveArg("-mnemonicpassphrase");
+                gArgs.ForceRemoveArg("hdseed");
+                gArgs.ForceRemoveArg("mnemonic");
+                gArgs.ForceRemoveArg("mnemonicpassphrase");
             }
         } // Otherwise, do not create a new HD chain
 

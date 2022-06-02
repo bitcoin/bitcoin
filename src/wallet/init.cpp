@@ -120,7 +120,7 @@ bool WalletInit::ParameterInteraction() const
     if (rescan_mode < 0 || rescan_mode > 2) {
         LogPrintf("%s: Warning: incorrect -rescan mode, falling back to default value.\n", __func__);
         InitWarning(_("Incorrect -rescan mode, falling back to default value"));
-        gArgs.ForceRemoveArg("-rescan");
+        gArgs.ForceRemoveArg("rescan");
     }
 
     if (is_multiwallet) {
@@ -137,14 +137,14 @@ bool WalletInit::ParameterInteraction() const
     if (gArgs.IsArgSet("-walletbackupsdir")) {
         if (!fs::is_directory(gArgs.GetArg("-walletbackupsdir", ""))) {
             InitWarning(strprintf(_("Warning: incorrect parameter %s, path must exist! Using default path."), "-walletbackupsdir"));
-            gArgs.ForceRemoveArg("-walletbackupsdir");
+            gArgs.ForceRemoveArg("walletbackupsdir");
         }
     }
 
     if (gArgs.IsArgSet("-hdseed") && IsHex(gArgs.GetArg("-hdseed", "not hex")) && (gArgs.IsArgSet("-mnemonic") || gArgs.IsArgSet("-mnemonicpassphrase"))) {
         InitWarning(strprintf(_("Warning: can't use %s and %s together, will prefer %s"), "-hdseed", "-mnemonic/-mnemonicpassphrase", "-hdseed"));
-        gArgs.ForceRemoveArg("-mnemonic");
-        gArgs.ForceRemoveArg("-mnemonicpassphrase");
+        gArgs.ForceRemoveArg("mnemonic");
+        gArgs.ForceRemoveArg("mnemonicpassphrase");
     }
 
     if (gArgs.GetArg("-coinjoindenomshardcap", DEFAULT_COINJOIN_DENOMS_HARDCAP) < gArgs.GetArg("-coinjoindenomsgoal", DEFAULT_COINJOIN_DENOMS_GOAL)) {
