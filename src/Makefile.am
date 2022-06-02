@@ -254,6 +254,7 @@ BITCOIN_CORE_H = \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
+  util/designator.h \
   util/epochguard.h \
   util/error.h \
   util/fastrange.h \
