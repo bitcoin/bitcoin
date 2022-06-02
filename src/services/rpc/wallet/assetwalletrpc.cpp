@@ -1930,17 +1930,12 @@ static RPCHelpMan syscoincreaterawnevmblob()
 
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
-    std::vector<unsigned char> vchData = ParseHex(request.params[1].get_str());
-    int modDataFill = 0;
-    // fill up to factor of 32 with empty spaces
-    if((vchData.size() % 32) != 0)
-        modDataFill = 32 - (vchData.size() % 32);
-    std::vector<unsigned char> vchFill(modDataFill, 0x20);
-    vchData.insert(vchData.end(), std::begin(vchFill), std::end((vchFill)));
+    const std::vector<unsigned char> &vchData = ParseHex(request.params[1].get_str());
     nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
     nevmData.nSize = vchData.size();
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
+    nevmData.vchData = vchData;
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     UniValue optionsObj(UniValue::VOBJ);
@@ -1975,7 +1970,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
         throw JSONRPCError(RPC_DATABASE_ERROR, "NEVM data already exists in DB");
     }
     // FillNEVMData should fill in this data prior to relay
-    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, vchData)) {
+    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not commit NEVM data to DB");
     }
     const UniValue& res = send().HandleRequest(requestSend);
@@ -2022,26 +2017,24 @@ static RPCHelpMan syscoincreatenevmblob()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     EnsureWalletIsUnlocked(*pwallet);
-    const std::vector<uint8_t> &vchData = ParseHex(request.params[0].get_str());
+    std::vector<uint8_t> vchData = ParseHex(request.params[0].get_str());
+    int modDataFill = 0;
+    // fill up to factor of 32 with empty spaces
+    if((vchData.size() % 32) != 0)
+        modDataFill = 32 - (vchData.size() % 32);
+    std::vector<unsigned char> vchFill(modDataFill, 0x20);
+    vchData.insert(vchData.end(), std::begin(vchFill), std::end((vchFill)));
     // process new vector in batch checking the blobs
     BlockValidationState state;
     CNEVMData nevmData;
     // if not in DB then we need to verify it via Geth KZG blob verification
     GetMainSignals().NotifyCreateNEVMBlob(vchData, nevmData, state);
     if(state.IsInvalid()) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not create NEVM blob data");   
+        throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
     }
-    UniValue output(UniValue::VARR);
-    UniValue outputObj(UniValue::VOBJ);
-    outputObj.__pushKV("rawdata", HexStr(nevmData.vchData));
-    output.push_back(outputObj);
-    UniValue vh(UniValue::VARR);
-    UniValue vhObj(UniValue::VOBJ);
-    vhObj.__pushKV("versionhash", HexStr(nevmData.vchVersionHash));
-    vh.push_back(vhObj);
     UniValue paramsSend(UniValue::VARR);
-    paramsSend.push_back(vh);
-    paramsSend.push_back(output);
+    paramsSend.push_back(HexStr(nevmData.vchVersionHash));
+    paramsSend.push_back(HexStr(nevmData.vchData));
     paramsSend.push_back(request.params[1]);
     paramsSend.push_back(request.params[2]);
     paramsSend.push_back(request.params[3]);
