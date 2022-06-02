@@ -1146,6 +1146,25 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Shuffle selected coins and fill in final vin
     std::vector<std::shared_ptr<COutput>> selected_coins = result.GetShuffledInputVector();
 
+    if (coin_control.HasSelected() && coin_control.HasSelectedOrder()) {
+        // When there are preselected inputs, we need to move them to be the first UTXOs
+        // and have them be in the order selected. We can use stable_sort for this, where we
+        // compare with the positions stored in coin_control. The COutputs that have positions
+        // will be placed before those that don't, and those positions will be in order.
+        std::stable_sort(selected_coins.begin(), selected_coins.end(),
+            [&coin_control](const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) {
+                auto a_pos = coin_control.GetSelectionPos(a->outpoint);
+                auto b_pos = coin_control.GetSelectionPos(b->outpoint);
+                if (a_pos.has_value() && b_pos.has_value()) {
+                    return a_pos.value() < b_pos.value();
+                } else if (a_pos.has_value() && !b_pos.has_value()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+    }
+
     // The sequence number is set to non-maxint so that DiscourageFeeSniping
     // works.
     //

@@ -39,7 +39,9 @@ std::optional<CTxOut> CCoinControl::GetExternalOutput(const COutPoint& outpoint)
 
 PreselectedInput& CCoinControl::Select(const COutPoint& output)
 {
-    return m_selected[output];
+    auto& input = m_selected[output];
+    input.SetPosition(m_selection_pos++);
+    return input;
 }
 
 void CCoinControl::UnSelect(const COutPoint& output)
@@ -144,5 +146,15 @@ bool PreselectedInput::HasScripts() const
 std::pair<CScript, CScriptWitness> PreselectedInput::GetScripts() const
 {
     return {m_script_sig.value_or(CScript{}), m_script_witness.value_or(CScriptWitness{})};
+}
+
+void PreselectedInput::SetPosition(unsigned int pos)
+{
+    m_pos = pos;
+}
+
+std::optional<unsigned int> PreselectedInput::GetPosition() const
+{
+    return m_pos;
 }
 } // namespace wallet

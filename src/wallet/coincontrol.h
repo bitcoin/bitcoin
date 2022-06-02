@@ -37,6 +37,8 @@ private:
     std::optional<CScript> m_script_sig;
     //! The scriptWitness for this input
     std::optional<CScriptWitness> m_script_witness;
+    //! The position in the inputs vector for this input
+    std::optional<unsigned int> m_pos;
 
 public:
     /**
@@ -67,6 +69,11 @@ public:
     bool HasScripts() const;
     /** Retrieve both the scriptSig and the scriptWitness. */
     std::pair<CScript, CScriptWitness> GetScripts() const;
+
+    /** Store the position of this input. */
+    void SetPosition(unsigned int pos);
+    /** Retrieve the position of this input. */
+    std::optional<unsigned int> GetPosition() const;
 };
 
 /** Coin Control Features. */
@@ -159,9 +166,24 @@ public:
     /** Retrieves the scriptSig and scriptWitness for an input. */
     std::pair<CScript, CScriptWitness> GetScripts(const COutPoint& outpoint) const;
 
+    bool HasSelectedOrder() const
+    {
+        return m_selection_pos > 0;
+    }
+
+    std::optional<unsigned int> GetSelectionPos(const COutPoint& outpoint) const
+    {
+        const auto it = m_selected.find(outpoint);
+        if (it == m_selected.end()) {
+            return std::nullopt;
+        }
+        return it->second.GetPosition();
+    }
+
 private:
     //! Selected inputs (inputs that will be used, regardless of whether they're optimal or not)
     std::map<COutPoint, PreselectedInput> m_selected;
+    unsigned int m_selection_pos{0};
 };
 } // namespace wallet
 
