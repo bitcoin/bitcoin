@@ -1823,10 +1823,13 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
         BlockValidationState state;
         GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, state);
         if(state.IsValid()) {
-            uint64_t nHeightLocalGeth;
+            int64_t nHeightLocalGeth;
             {
                 LOCK(cs_main);
                 nHeightLocalGeth = (chainman.ActiveChain().Height() - Params().GetConsensus().nNEVMStartBlock) + 1;
+                if(nHeightLocalGeth < 0) {
+                    nHeightLocalGeth = 0;
+                }
             }
             // local height is higher so we need to rollback to geth height
             if(nHeightFromGeth > 0) {
