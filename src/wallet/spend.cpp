@@ -90,7 +90,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                            const CAmount& nMinimumAmount,
                            const CAmount& nMaximumAmount,
                            const CAmount& nMinimumSumAmount,
-                           const uint64_t nMaximumCount)
+                           const uint64_t nMaximumCount,
+                           bool only_spendable)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -199,6 +200,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
             bool solvable = provider ? IsSolvable(*provider, output.scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
+
+            // Filter by spendable outputs only
+            if (!spendable && only_spendable) continue;
+
             int input_bytes = GetTxSpendSize(wallet, wtx, i, (coinControl && coinControl->fAllowWatchOnly));
             result.coins.emplace_back(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
 
@@ -223,7 +228,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
 CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount)
 {
-    return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+    return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, /*only_spendable=*/false);
 }
 
 CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl)
@@ -796,7 +801,13 @@ static std::optional<CreatedTransactionResult> CreateTransactionInternal(
     CAmount selection_target = recipients_sum + not_input_fees;
 
     // Get available coins
-    auto res_available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate, 1, MAX_MONEY, MAX_MONEY, 0);
+    auto res_available_coins = AvailableCoins(wallet,
+                                              &coin_control,
+                                              coin_selection_params.m_effective_feerate,
+                                              1,            /*nMinimumAmount*/
+                                              MAX_MONEY,    /*nMaximumAmount*/
+                                              MAX_MONEY,    /*nMinimumSumAmount*/
+                                              0);           /*nMaximumCount*/
 
     // Choose coins to use
     std::optional<SelectionResult> result = SelectCoins(wallet, res_available_coins.coins, /*nTargetValue=*/selection_target, coin_control, coin_selection_params);
