@@ -13,6 +13,7 @@
 #include <array>
 #include <mutex>
 #include <optional>
+#include <unordered_map>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
@@ -143,11 +144,14 @@ bool BCLog::Logger::DefaultShrinkDebugFile() const
 struct CLogCategoryDesc {
     BCLog::LogFlags flag;
     std::string category;
+    // Allow CLogCategoryDesc to be converted to a key value pair in a map.
+    operator std::pair<const BCLog::LogFlags, std::string>() const
+    {
+        return {flag, category};
+    }
 };
 
-const CLogCategoryDesc LogCategories[] =
-{
-    {BCLog::NONE, "0"},
+static const CLogCategoryDesc LogCategories[]{
     {BCLog::NONE, "none"},
     {BCLog::NET, "net"},
     {BCLog::TOR, "tor"},
@@ -178,8 +182,14 @@ const CLogCategoryDesc LogCategories[] =
 #endif
     {BCLog::UTIL, "util"},
     {BCLog::BLOCKSTORE, "blockstorage"},
-    {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
+    {BCLog::NONE, "0"},
+    {BCLog::ALL, "1"},
+};
+
+static const std::unordered_map<BCLog::LogFlags, std::string> LogCategoryToStr{
+    LogCategories,
+    LogCategories + std::size(LogCategories) - 2, // ignore last 2 extra mappings of NONE and ALL
 };
 
 std::optional<BCLog::LogFlags> GetLogCategory(const std::string& str)
@@ -208,74 +218,6 @@ std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
         return "error";
     case BCLog::Level::None:
         return "";
-    }
-    assert(false);
-}
-
-std::string LogCategoryToStr(BCLog::LogFlags category)
-{
-    // Each log category string representation should sync with LogCategories
-    switch (category) {
-    case BCLog::LogFlags::NONE:
-        return "none";
-    case BCLog::LogFlags::NET:
-        return "net";
-    case BCLog::LogFlags::TOR:
-        return "tor";
-    case BCLog::LogFlags::MEMPOOL:
-        return "mempool";
-    case BCLog::LogFlags::HTTP:
-        return "http";
-    case BCLog::LogFlags::BENCH:
-        return "bench";
-    case BCLog::LogFlags::ZMQ:
-        return "zmq";
-    case BCLog::LogFlags::WALLETDB:
-        return "walletdb";
-    case BCLog::LogFlags::RPC:
-        return "rpc";
-    case BCLog::LogFlags::ESTIMATEFEE:
-        return "estimatefee";
-    case BCLog::LogFlags::ADDRMAN:
-        return "addrman";
-    case BCLog::LogFlags::SELECTCOINS:
-        return "selectcoins";
-    case BCLog::LogFlags::REINDEX:
-        return "reindex";
-    case BCLog::LogFlags::CMPCTBLOCK:
-        return "cmpctblock";
-    case BCLog::LogFlags::RAND:
-        return "rand";
-    case BCLog::LogFlags::PRUNE:
-        return "prune";
-    case BCLog::LogFlags::PROXY:
-        return "proxy";
-    case BCLog::LogFlags::MEMPOOLREJ:
-        return "mempoolrej";
-    case BCLog::LogFlags::LIBEVENT:
-        return "libevent";
-    case BCLog::LogFlags::COINDB:
-        return "coindb";
-    case BCLog::LogFlags::QT:
-        return "qt";
-    case BCLog::LogFlags::LEVELDB:
-        return "leveldb";
-    case BCLog::LogFlags::VALIDATION:
-        return "validation";
-    case BCLog::LogFlags::I2P:
-        return "i2p";
-    case BCLog::LogFlags::IPC:
-        return "ipc";
-#ifdef DEBUG_LOCKCONTENTION
-    case BCLog::LogFlags::LOCK:
-        return "lock";
-#endif
-    case BCLog::LogFlags::UTIL:
-        return "util";
-    case BCLog::LogFlags::BLOCKSTORE:
-        return "blockstorage";
-    case BCLog::LogFlags::ALL:
-        return "all";
     }
     assert(false);
 }
@@ -387,7 +329,8 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
         std::string s{"["};
 
         if (category != LogFlags::NONE) {
-            s += LogCategoryToStr(category);
+            auto it = LogCategoryToStr.find(category);
+            s += it == LogCategoryToStr.end() ? "unknown" : it->second;
         }
 
         if (category != LogFlags::NONE && level != Level::None) {
