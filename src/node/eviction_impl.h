@@ -43,6 +43,14 @@ static constexpr std::chrono::seconds MINIMUM_CONNECT_TIME{30};
 
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
 
+[[nodiscard]] std::optional<NodeId> SelectOutboundBlockRelayNodeToEvict(const std::vector<NodeEvictionCandidate>& vEvictionCandidates,
+                                                                        int max_block_relay_conns,
+                                                                        std::chrono::seconds now);
+[[nodiscard]] std::optional<NodeId> SelectOutboundFullRelayNodeToEvict(const std::vector<NodeEvictionCandidate>& vEvictionCandidates,
+                                                                       int max_full_relay_conns,
+                                                                       std::chrono::seconds now);
+
+
 /** Protect desirable or disadvantaged inbound peers from eviction by ratio.
  *
  * This function protects half of the peers which have been connected the

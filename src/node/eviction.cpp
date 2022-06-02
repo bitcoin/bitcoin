@@ -243,6 +243,110 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     return vEvictionCandidates.front().id;
 }
 
+[[nodiscard]] std::optional<NodeId> SelectOutboundBlockRelayNodeToEvict(const std::vector<NodeEvictionCandidate>& eviction_candidates,
+                                                                        int max_block_relay_conns,
+                                                                        std::chrono::seconds now)
+{
+    int num_block_relay_only_peers{0};
+    auto youngest_peer{eviction_candidates.cend()}, next_youngest_peer{eviction_candidates.cend()};
+    for (auto it = eviction_candidates.cbegin(); it != eviction_candidates.cend(); ++it) {
+        const NodeEvictionCandidate& candidate{*it};
+
+        if (!candidate.m_successfully_connected) continue;
+        if (candidate.m_conn_type != ConnectionType::BLOCK_RELAY) continue;
+
+        ++num_block_relay_only_peers;
+
+        if (youngest_peer == eviction_candidates.cend() || candidate.id > youngest_peer->id) {
+            next_youngest_peer = youngest_peer;
+            youngest_peer = it;
+        }
+    }
+
+    // If we have any extra block-relay-only peers, disconnect the youngest unless
+    // it's given us a block -- in which case, compare with the second-youngest, and
+    // out of those two, disconnect the peer who least recently gave us a block.
+    // The youngest block-relay-only peer would be the extra peer we connected
+    // to temporarily in order to sync our tip; see net.cpp.
+    // Note that we use higher nodeid as a measure for most recent connection.
+    if (num_block_relay_only_peers - max_block_relay_conns > 0) {
+        assert(youngest_peer != eviction_candidates.cend());
+
+        auto to_disconnect = youngest_peer;
+        if (next_youngest_peer != eviction_candidates.cend() &&
+            youngest_peer->m_last_block_time > next_youngest_peer->m_last_block_time) {
+            to_disconnect = next_youngest_peer;
+        }
+
+        const NodeEvictionCandidate& candidate{*to_disconnect};
+        // Make sure we're not getting a block right now, and that
+        // we've been connected long enough for this eviction to happen
+        // at all.
+        // Note that we only request blocks from a peer if we learn of a
+        // valid headers chain with at least as much work as our tip.
+        if (now - candidate.m_connected >= MINIMUM_CONNECT_TIME && candidate.m_blocks_in_flight == 0) {
+            LogPrint(BCLog::NET, "disconnecting extra block-relay-only peer=%d (last block received at time %d)\n",
+                     candidate.id, count_seconds(candidate.m_last_block_time));
+            return {candidate.id};
+        } else {
+            LogPrint(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
+                     candidate.id, count_seconds(candidate.m_connected), candidate.m_blocks_in_flight);
+        }
+    }
+
+    return {};
+}
+
+[[nodiscard]] std::optional<NodeId> SelectOutboundFullRelayNodeToEvict(const std::vector<NodeEvictionCandidate>& eviction_candidates,
+                                                                       int max_full_relay_conns,
+                                                                       std::chrono::seconds now)
+{
+    int num_full_relay_peers{0};
+    auto worst_peer{eviction_candidates.cend()};
+    for (auto it = eviction_candidates.cbegin(); it != eviction_candidates.cend(); ++it) {
+        const NodeEvictionCandidate& candidate{*it};
+
+        if (!candidate.m_successfully_connected) continue;
+        if (candidate.m_conn_type != ConnectionType::OUTBOUND_FULL_RELAY) continue;
+        ++num_full_relay_peers;
+
+        if (candidate.m_slow_chain_protected) continue;
+
+        // Pick the outbound-full-relay peer that least recently announced
+        // us a new block, with ties broken by choosing the more recent
+        // connection (higher node id)
+        std::chrono::seconds oldest_block_announcement{worst_peer == eviction_candidates.cend() ?
+                                                           std::chrono::seconds::max() :
+                                                           worst_peer->m_last_block_announcement};
+        if (candidate.m_last_block_announcement < oldest_block_announcement ||
+            (candidate.m_last_block_announcement == oldest_block_announcement && candidate.id > worst_peer->id)) {
+            worst_peer = it;
+        }
+    }
+
+    // Check whether we have too many outbound-full-relay peers
+    if (num_full_relay_peers - max_full_relay_conns > 0 &&
+        worst_peer != eviction_candidates.cend()) {
+        // If we have more outbound-full-relay peers than we target, disconnect one.
+        const NodeEvictionCandidate& candidate{*worst_peer};
+        // Only disconnect a peer that has been connected to us for
+        // some reasonable fraction of our check-frequency, to give
+        // it time for new information to have arrived.
+        // Also don't disconnect any peer we're trying to download a
+        // block from.
+        if (now - candidate.m_connected > MINIMUM_CONNECT_TIME &&
+            candidate.m_blocks_in_flight == 0) {
+            LogPrint(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", candidate.id, count_seconds(candidate.m_last_block_announcement));
+            return {candidate.id};
+        } else {
+            LogPrint(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
+                     candidate.id, count_seconds(candidate.m_connected), candidate.m_blocks_in_flight);
+        }
+    }
+
+    return {};
+}
+
 EvictionManagerImpl::EvictionManagerImpl(int max_outbound_block_relay,
                                          int max_outbound_full_relay)
     : m_max_outbound_block_relay{max_outbound_block_relay},
@@ -434,101 +538,18 @@ void EvictionManagerImpl::UpdateSuccessfullyConnected(NodeId id)
 
 std::tuple<std::optional<NodeId>, std::optional<NodeId>> EvictionManagerImpl::SelectOutboundNodesToEvict(std::chrono::seconds now) const
 {
-    LOCK(m_candidates_mutex);
-
-    std::optional<NodeId> block_relay_peer_to_evict, full_relay_peer_to_evict;
-
-    int num_block_relay_only_peers{0};
-    auto youngest_peer{m_candidates.cend()}, next_youngest_peer{m_candidates.cend()};
-    for (auto it = m_candidates.cbegin(); it != m_candidates.cend(); ++it) {
-        const auto& [id, candidate] = *it;
-
-        if (!candidate.m_successfully_connected) continue;
-        if (candidate.m_conn_type != ConnectionType::BLOCK_RELAY) continue;
-
-        ++num_block_relay_only_peers;
-
-        if (youngest_peer == m_candidates.cend() || id > youngest_peer->first) {
-            next_youngest_peer = youngest_peer;
-            youngest_peer = it;
+    std::vector<NodeEvictionCandidate> candidates;
+    {
+        LOCK(m_candidates_mutex);
+        for (const auto& [id, candidate] : m_candidates) {
+            candidates.push_back(candidate);
         }
     }
 
-    // If we have any extra block-relay-only peers, disconnect the youngest unless
-    // it's given us a block -- in which case, compare with the second-youngest, and
-    // out of those two, disconnect the peer who least recently gave us a block.
-    // The youngest block-relay-only peer would be the extra peer we connected
-    // to temporarily in order to sync our tip; see net.cpp.
-    // Note that we use higher nodeid as a measure for most recent connection.
-    if (num_block_relay_only_peers - m_max_outbound_block_relay > 0) {
-        assert(youngest_peer != m_candidates.cend());
-
-        auto to_disconnect = youngest_peer;
-        if (next_youngest_peer != m_candidates.cend() &&
-            youngest_peer->second.m_last_block_time > next_youngest_peer->second.m_last_block_time) {
-            to_disconnect = next_youngest_peer;
-        }
-
-        const auto& [id, candidate] = *to_disconnect;
-        // Make sure we're not getting a block right now, and that
-        // we've been connected long enough for this eviction to happen
-        // at all.
-        // Note that we only request blocks from a peer if we learn of a
-        // valid headers chain with at least as much work as our tip.
-        if (now - candidate.m_connected >= MINIMUM_CONNECT_TIME && candidate.m_blocks_in_flight == 0) {
-            LogPrint(BCLog::NET, "disconnecting extra block-relay-only peer=%d (last block received at time %d)\n",
-                     id, count_seconds(candidate.m_last_block_time));
-            block_relay_peer_to_evict = id;
-        } else {
-            LogPrint(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                     id, count_seconds(candidate.m_connected), candidate.m_blocks_in_flight);
-        }
-    }
-
-    int num_full_relay_peers{0};
-    auto worst_peer{m_candidates.cend()};
-    for (auto it = m_candidates.cbegin(); it != m_candidates.cend(); ++it) {
-        const auto& [id, candidate] = *it;
-
-        if (!candidate.m_successfully_connected) continue;
-        if (candidate.m_conn_type != ConnectionType::OUTBOUND_FULL_RELAY) continue;
-        ++num_full_relay_peers;
-
-        if (candidate.m_slow_chain_protected) continue;
-
-        // Pick the outbound-full-relay peer that least recently announced
-        // us a new block, with ties broken by choosing the more recent
-        // connection (higher node id)
-        std::chrono::seconds oldest_block_announcement{worst_peer == m_candidates.cend() ?
-                                                           std::chrono::seconds::max() :
-                                                           worst_peer->second.m_last_block_announcement};
-        if (candidate.m_last_block_announcement < oldest_block_announcement ||
-            (candidate.m_last_block_announcement == oldest_block_announcement && id > worst_peer->second.id)) {
-            worst_peer = it;
-        }
-    }
-
-    // Check whether we have too many outbound-full-relay peers
-    if (num_full_relay_peers - m_max_outbound_full_relay > 0 &&
-        worst_peer != m_candidates.cend()) {
-        // If we have more outbound-full-relay peers than we target, disconnect one. 
-        const auto& [id, candidate] = *worst_peer;
-        // Only disconnect a peer that has been connected to us for
-        // some reasonable fraction of our check-frequency, to give
-        // it time for new information to have arrived.
-        // Also don't disconnect any peer we're trying to download a
-        // block from.
-        if (now - candidate.m_connected > MINIMUM_CONNECT_TIME &&
-            candidate.m_blocks_in_flight == 0) {
-            LogPrint(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", id, count_seconds(candidate.m_last_block_announcement));
-            full_relay_peer_to_evict = id;
-        } else {
-            LogPrint(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                     id, count_seconds(candidate.m_connected), candidate.m_blocks_in_flight);
-        }
-    }
-
-    return {block_relay_peer_to_evict, full_relay_peer_to_evict};
+    return {
+        ::SelectOutboundBlockRelayNodeToEvict(candidates, m_max_outbound_block_relay, now),
+        ::SelectOutboundFullRelayNodeToEvict(candidates, m_max_outbound_full_relay, now),
+    };
 }
 
 EvictionManager::EvictionManager(int max_outbound_block_relay,
