@@ -41,7 +41,7 @@ struct NodeEvictionCandidate {
 /** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict */
 static constexpr std::chrono::seconds MINIMUM_CONNECT_TIME{30};
 
-[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
+[[nodiscard]] std::optional<NodeId> SelectInboundNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
 
 [[nodiscard]] std::optional<NodeId> SelectOutboundBlockRelayNodeToEvict(const std::vector<NodeEvictionCandidate>& vEvictionCandidates,
                                                                         int max_block_relay_conns,
@@ -96,7 +96,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
     bool RemoveCandidate(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 
-    std::optional<NodeId> SelectNodeToEvict() const
+    std::optional<NodeId> SelectInboundNodeToEvict() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 
     std::tuple<std::optional<NodeId>, std::optional<NodeId>> SelectOutboundNodesToEvict(std::chrono::seconds now) const

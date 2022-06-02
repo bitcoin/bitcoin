@@ -128,9 +128,9 @@ public:
                 candidate->m_noban || candidate->m_conn_type != ConnectionType::INBOUND;
         }
     }
-    void SelectNodeToEvict(bool remove)
+    void SelectInboundNodeToEvict(bool remove)
     {
-        auto evicted{m_evictionman.SelectNodeToEvict()};
+        auto evicted{m_evictionman.SelectInboundNodeToEvict()};
         assert(!evicted || m_candidates.count(*evicted) > 0);
 
         if (evicted) {
@@ -271,7 +271,7 @@ FUZZ_TARGET(evictionman)
                 tester.AdvanceTime(fuzzed_data_provider.ConsumeIntegral<uint8_t>());
             },
             [&] {
-                tester.SelectNodeToEvict(fuzzed_data_provider.ConsumeBool());
+                tester.SelectInboundNodeToEvict(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 tester.SelectOutboundNodesToEvict(fuzzed_data_provider.ConsumeBool());

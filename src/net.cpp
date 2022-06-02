@@ -894,7 +894,7 @@ size_t CConnman::SocketSendData(CNode& node) const
  */
 bool CConnman::AttemptToEvictConnection()
 {
-    const std::optional<NodeId> node_id_to_evict = m_evictionman.SelectNodeToEvict();
+    const std::optional<NodeId> node_id_to_evict = m_evictionman.SelectInboundNodeToEvict();
     if (!node_id_to_evict) {
         return false;
     }

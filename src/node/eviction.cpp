@@ -179,7 +179,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     EraseLastKElements(eviction_candidates, ReverseCompareNodeTimeConnected, remaining_to_protect);
 }
 
-[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
+[[nodiscard]] std::optional<NodeId> SelectInboundNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
 {
     // Protect connections with certain characteristics
 
@@ -399,7 +399,7 @@ bool EvictionManagerImpl::RemoveCandidate(NodeId id)
     return m_candidates.erase(id) != 0;
 }
 
-std::optional<NodeId> EvictionManagerImpl::SelectNodeToEvict() const
+std::optional<NodeId> EvictionManagerImpl::SelectInboundNodeToEvict() const
 {
     std::vector<NodeEvictionCandidate> candidates;
     {
@@ -408,7 +408,7 @@ std::optional<NodeId> EvictionManagerImpl::SelectNodeToEvict() const
             candidates.push_back(candidate);
         }
     }
-    return ::SelectNodeToEvict(std::move(candidates));
+    return ::SelectInboundNodeToEvict(std::move(candidates));
 }
 
 void EvictionManagerImpl::UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)
@@ -571,9 +571,9 @@ bool EvictionManager::RemoveCandidate(NodeId id)
     return m_impl->RemoveCandidate(id);
 }
 
-std::optional<NodeId> EvictionManager::SelectNodeToEvict() const
+std::optional<NodeId> EvictionManager::SelectInboundNodeToEvict() const
 {
-    return m_impl->SelectNodeToEvict();
+    return m_impl->SelectInboundNodeToEvict();
 }
 
 void EvictionManager::UpdateMinPingTime(NodeId id, std::chrono::microseconds ping_time)

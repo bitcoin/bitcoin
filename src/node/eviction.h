@@ -40,7 +40,7 @@ public:
      * ratios of desirable or disadvantaged peers. If any eviction candidates
      * remain, the selection logic chooses a peer to evict.
      */
-    [[nodiscard]] std::optional<NodeId> SelectNodeToEvict() const;
+    [[nodiscard]] std::optional<NodeId> SelectInboundNodeToEvict() const;
 
     [[nodiscard]] std::tuple<std::optional<NodeId>, std::optional<NodeId>> SelectOutboundNodesToEvict(std::chrono::seconds now) const;
 
