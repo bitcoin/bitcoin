@@ -1819,7 +1819,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     if(fNEVMConnection) {
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
-        int64_t nHeightFromGeth;
+        uint64_t nHeightFromGeth;
         BlockValidationState state;
         GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, state);
         if(state.IsValid()) {
@@ -1833,7 +1833,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
             }
             // local height is higher so we need to rollback to geth height
             if(nHeightFromGeth > 0) {
-                if(nHeightFromGeth < nHeightLocalGeth) {
+                if((int64_t)nHeightFromGeth < nHeightLocalGeth) {
                     LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d, rolling back...\n",nHeightFromGeth, nHeightLocalGeth);
                     nHeightFromGeth += Params().GetConsensus().nNEVMStartBlock;
                     CBlockIndex *pblockindex;
@@ -1846,7 +1846,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
                         LOCK(cs_main);
                         chainman.ActiveChainstate().ResetBlockFailureFlags(pblockindex);
                     }
-                } else if(nHeightFromGeth > nHeightLocalGeth) {
+                } else if((int64_t)nHeightFromGeth > nHeightLocalGeth) {
                     LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d vs nLastKnownHeightOnStart %d, catching up...\n",nHeightFromGeth, nHeightLocalGeth, nHeightFromGeth + Params().GetConsensus().nNEVMStartBlock);
                     nHeightFromGeth += Params().GetConsensus().nNEVMStartBlock;
                     // otherwise local height is below so catch up to geth without strict enforcement on geth
