@@ -15,8 +15,7 @@
 
 struct Dersig100Setup : public TestChain100Setup {
     Dersig100Setup()
-        // SYSCOIN
-        : TestChain100Setup{COINBASE_MATURITY, {"-testactivationheight=dersig@102"}} {}
+        : TestChain100Setup{CBaseChainParams::REGTEST, {"-testactivationheight=dersig@102"}} {}
 };
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,

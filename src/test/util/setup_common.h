@@ -125,7 +125,9 @@ class CScript;
  */
 struct TestChain100Setup : public TestingSetup {
     // SYSCOIN
-    TestChain100Setup(int count = COINBASE_MATURITY, const std::vector<const char*>& extra_args = {});
+    TestChain100Setup(const std::string& chain_name = CBaseChainParams::REGTEST,
+                      const std::vector<const char*>& extra_args = {},
+                      int count = COINBASE_MATURITY);
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -167,6 +169,19 @@ struct TestChain100Setup : public TestingSetup {
                                                       CAmount output_amount = CAmount(1 * COIN),
                                                       bool submit = true);
 
+    /** Create transactions spending from m_coinbase_txns. These transactions will only spend coins
+     * that exist in the current chain, but may be premature coinbase spends, have missing
+     * signatures, or violate some other consensus rules. They should only be used for testing
+     * mempool consistency. All transactions will have some random number of inputs and outputs
+     * (between 1 and 24). Transactions may or may not be dependent upon each other; if dependencies
+     * exit, every parent will always be somewhere in the list before the child so each transaction
+     * can be submitted in the same order they appear in the list.
+     * @param[in]   submit      When true, submit transactions to the mempool.
+     *                          When false, return them but don't submit them.
+     * @returns A vector of transactions that can be submitted to the mempool.
+     */
+    std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
+
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
@@ -177,11 +192,11 @@ struct TestChain100Setup : public TestingSetup {
 //
 struct TestChainDIP3Setup : public TestChain100Setup
 {
-    TestChainDIP3Setup() : TestChain100Setup(549) {}
+    TestChainDIP3Setup() : TestChain100Setup(CBaseChainParams::REGTEST, {}, 549) {}
 };
 struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
 {
-    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(548) {}
+    TestChainDIP3BeforeActivationSetup() : TestChain100Setup(CBaseChainParams::REGTEST, {}, 548) {}
 };
 
 /**
