@@ -41,7 +41,7 @@ class MWEBWalletUpgradeTest(BitcoinTestFramework):
         #
         # Replace node1's wallet with the non-HD wallet.dat
         #
-        #self.log.info("Replacing wallet with non-hd wallet.dat")
+        self.log.info("Replacing wallet with non-hd wallet.dat")
         node1.get_wallet_rpc(self.default_wallet_name).unloadwallet()
         upgrade_wallet_dir = os.path.join(node1.datadir, "regtest", "wallets", self.default_wallet_name)
         shutil.rmtree(upgrade_wallet_dir)
