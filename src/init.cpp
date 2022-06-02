@@ -1819,7 +1819,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
     if(fNEVMConnection) {
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
-        uint64_t nHeightFromGeth;
+        int64_t nHeightFromGeth;
         BlockValidationState state;
         GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, state);
         if(state.IsValid()) {
