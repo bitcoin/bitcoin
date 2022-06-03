@@ -84,7 +84,7 @@ $ find . -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.c" \) -print0  | xa
 ```
 
 # Requirements
-- python>=3.8
+- python>=3.9
 - gcc/g++ 10 (alternative)
 - gcc/g++ 11 (alternative)
 - clang NOT supported
@@ -99,7 +99,7 @@ python -m doctest rename_threadsafety.py
 ```
 
 Python 3.10 improved pprint() support for dataclasses, but this broke doctests
-on that python version. Please laungh doctests with python 3.8 or 3.9.
+on that python version. Please launch doctests with python 3.9.
 
 ## MyPy
 
