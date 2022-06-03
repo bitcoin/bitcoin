@@ -1487,5 +1487,111 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     BOOST_CHECK_EQUAL(GetAvailableBalance(*wallet), (500 + 499) * COIN);
 }
 
+/** RAII class that provides access to a FailDatabase. Which fails if needed. */
+class FailBatch : public DatabaseBatch
+{
+private:
+    bool m_pass{true};
+    bool ReadKey(CDataStream&& key, CDataStream& value) override { return m_pass; }
+    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) override { return m_pass; }
+    bool EraseKey(CDataStream&& key) override { return m_pass; }
+    bool HasKey(CDataStream&& key) override { return m_pass; }
+
+public:
+    explicit FailBatch(bool pass) : m_pass(pass) {}
+    void Flush() override {}
+    void Close() override {}
+
+    bool StartCursor() override { return true; }
+    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override { return false; }
+    void CloseCursor() override {}
+    bool TxnBegin() override { return false; }
+    bool TxnCommit() override { return false; }
+    bool TxnAbort() override { return false; }
+};
+
+/** A dummy WalletDatabase that does nothing, only fails if needed.**/
+class FailDatabase : public WalletDatabase
+{
+public:
+    bool m_pass{true}; // false when this db should fail
+
+    void Open() override {};
+    void AddRef() override {}
+    void RemoveRef() override {}
+    bool Rewrite(const char* pszSkip=nullptr) override { return true; }
+    bool Backup(const std::string& strDest) const override { return true; }
+    void Close() override {}
+    void Flush() override {}
+    bool PeriodicFlush() override { return true; }
+    void IncrementUpdateCounter() override { ++nUpdateCounter; }
+    void ReloadDbEnv() override {}
+    std::string Filename() override { return "faildb"; }
+    std::string Format() override { return "faildb"; }
+    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<FailBatch>(m_pass); }
+};
+
+/**
+ * Checks a wallet invalid state where the inputs (prev-txs) of a new arriving transaction are not marked dirty,
+ * while the transaction that spends them exist inside the in-memory wallet tx map (not stored on db due a db write failure).
+ */
+BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestChain100Setup)
+{
+    CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", m_args, std::make_unique<FailDatabase>());
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        wallet.SetupDescriptorScriptPubKeyMans("", "");
+    }
+
+    // Add tx to wallet
+    CTxDestination dest;
+    bilingual_str error;
+    BOOST_ASSERT(wallet.GetNewDestination("", dest, error));
+
+    CMutableTransaction mtx;
+    mtx.vout.push_back({COIN, GetScriptForDestination(dest)});
+    mtx.vin.push_back(CTxIn(g_insecure_rand_ctx.rand256(), 0));
+    const auto& tx_id_to_spend = wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInMempool{})->GetHash();
+
+    {
+        // Cache and verify available balance for the wtx
+        LOCK(wallet.cs_wallet);
+        const CWalletTx* wtx_to_spend = wallet.GetWalletTx(tx_id_to_spend);
+        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *wtx_to_spend), 1 * COIN);
+    }
+
+    // Now the good case:
+    // 1) Add a transaction that spends the previously created transaction
+    // 2) Verify that the available balance of this new tx and the old one is updated (prev tx is marked dirty)
+
+    mtx.vin.clear();
+    mtx.vin.push_back(CTxIn(tx_id_to_spend, 0));
+    wallet.transactionAddedToMempool(MakeTransactionRef(mtx), 0, 0);
+    const uint256& good_tx_id = mtx.GetHash();
+
+    {
+        // Verify balance update for the new tx and the old one
+        LOCK(wallet.cs_wallet);
+        const CWalletTx* new_wtx = wallet.GetWalletTx(good_tx_id);
+        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *new_wtx), 1 * COIN);
+
+        // Now the old wtx
+        const CWalletTx* wtx_to_spend = wallet.GetWalletTx(tx_id_to_spend);
+        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *wtx_to_spend), 0 * COIN);
+    }
+
+    // Now the bad case:
+    // 1) Make db always fail
+    // 2) Try to add a transaction that spends the previously created transaction and
+    //    verify that we are not moving forward if the wallet cannot store it
+    static_cast<FailDatabase&>(wallet.GetDatabase()).m_pass = false;
+    mtx.vin.clear();
+    mtx.vin.push_back(CTxIn(good_tx_id, 0));
+    BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx), 0, 0),
+                          std::runtime_error,
+                          HasReason("DB error adding transaction to wallet, write failed"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
