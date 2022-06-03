@@ -41,7 +41,7 @@ static void AssembleBlock(benchmark::Bench& bench)
 
         for (const auto& txr : txs) {
             CValidationState state;
-            bool ret{::AcceptToMemoryPool(::mempool, state, txr, nullptr /* pfMissingInputs */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
+            bool ret{::AcceptToMemoryPool(*test_setup.m_node.mempool, state, txr, nullptr /* pfMissingInputs */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
             assert(ret);
         }
     }

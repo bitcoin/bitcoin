@@ -53,11 +53,6 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& p : benchmarks()) {
-        RegTestingSetup test{};
-        {
-            assert(::ChainActive().Height() == 0);
-        }
-
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
             continue;
         }
