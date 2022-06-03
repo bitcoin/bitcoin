@@ -18,6 +18,7 @@
 #include <crypto/sha256.h>
 #include <net_permissions.h>
 #include <netbase.h>
+#include <random.h>
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
@@ -482,6 +483,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     pnode->AddRef();
     statsClient.inc("peers.connect", 1.0f);
 
+    // We're making a new connection, harvest entropy from the time (and our peer count)
+    RandAddEvent((uint32_t)id);
+
     return pnode;
 }
 
@@ -755,6 +759,9 @@ CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageSta
     msg.m_command = hdr.GetCommand();
     msg.m_message_size = hdr.nMessageSize;
     msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+
+    // We just received a message off the wire, harvest entropy from the time (and the message checksum)
+    RandAddEvent(ReadLE32(hash.begin()));
 
     msg.m_valid_checksum = (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) == 0);
     if (!msg.m_valid_checksum) {
@@ -1143,6 +1150,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         RegisterEvents(pnode);
         WakeSelect();
     }
+
+    // We received a new connection, harvest entropy from the time (and our peer count)
+    RandAddEvent((uint32_t)id);
 }
 
 void CConnman::DisconnectNodes()

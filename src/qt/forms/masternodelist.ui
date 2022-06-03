@@ -63,6 +63,9 @@
            <property name="toolTip">
             <string>Filter masternode list</string>
            </property>
+           <property name="placeholderText">
+            <string>Filter by any property (e.g. address or protx hash)</string>
+           </property>
           </widget>
          </item>
          <item>

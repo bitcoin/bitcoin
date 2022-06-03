@@ -312,7 +312,6 @@ GovernanceList::GovernanceList(QWidget* parent) :
 
     // Set up filtering.
     proposalModelProxy->setFilterKeyColumn(ProposalModel::Column::TITLE); // filter by title column...
-    ui->filterLineEdit->setPlaceholderText(tr("Filter by Title"));
     connect(ui->filterLineEdit, &QLineEdit::textChanged, proposalModelProxy, &QSortFilterProxyModel::setFilterFixedString);
 
     // Changes to number of rows should update proposal count display.

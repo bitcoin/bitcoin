@@ -119,7 +119,7 @@
           <string>Enter the message you want to sign here</string>
          </property>
          <property name="placeholderText">
-          <string>Enter the message you want to sign here</string>
+          <string>Enter a message to be signed</string>
          </property>
         </widget>
        </item>
@@ -140,6 +140,9 @@
          </property>
          <item>
           <widget class="QLineEdit" name="signatureOut_SM">
+           <property name="placeholderText">
+            <string>Click "Sign Message" to generate signature</string>
+           </property>
            <property name="readOnly">
             <bool>true</bool>
            </property>
@@ -276,7 +279,7 @@
             <string>The signed message to verify</string>
           </property>
           <property name="placeholderText">
-            <string>The signed message to verify</string>
+            <string>Enter a message to be verified</string>
           </property>
         </widget>
        </item>
@@ -286,7 +289,7 @@
             <string>The signature given when the message was signed</string>
           </property>
           <property name="placeholderText">
-            <string>The signature given when the message was signed</string>
+            <string>Enter a signature for the message to be verified</string>
           </property>
         </widget>
        </item>

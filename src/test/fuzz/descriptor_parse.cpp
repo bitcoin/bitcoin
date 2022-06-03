@@ -4,12 +4,15 @@
 
 #include <chainparams.h>
 #include <key.h>
+#include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/standard.h>
 #include <test/fuzz/fuzz.h>
+#include <util/memory.h>
 
 void initialize()
 {
+    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
     SelectParams(CBaseChainParams::REGTEST);
 }
 

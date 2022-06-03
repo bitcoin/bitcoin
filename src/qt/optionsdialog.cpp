@@ -106,12 +106,14 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     pageButtons = new QButtonGroup(this);
     pageButtons->addButton(ui->btnMain, pageButtons->buttons().size());
-    /* Remove Wallet/CoinJoin tabs in case of -disablewallet */
+    /* Remove Wallet/CoinJoin tabs and 3rd party-URL textbox in case of -disablewallet */
     if (!enableWallet) {
         ui->stackedWidgetOptions->removeWidget(ui->pageWallet);
         ui->btnWallet->hide();
         ui->stackedWidgetOptions->removeWidget(ui->pageCoinJoin);
         ui->btnCoinJoin->hide();
+        ui->thirdPartyTxUrlsLabel->setVisible(false);
+        ui->thirdPartyTxUrls->setVisible(false);
     } else {
         ui->btnCoinJoin->setText(QString::fromStdString(gCoinJoinName));
         pageButtons->addButton(ui->btnWallet, pageButtons->buttons().size());
@@ -158,8 +160,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
             ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
         }
     }
-    ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
-
     ui->unit->setModel(new BitcoinUnits(this));
 
     /* Widget-to-option mapper */
