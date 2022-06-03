@@ -131,7 +131,16 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
 };
 
+
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
+typedef CCoinsMap::node_type OutPointFreeListNodeHandle;
+
+struct NT {
+    CCoinsMap::node_type nh;
+    NT* next;
+};
+
+static_assert(sizeof(NT) <= sizeof(CCoinsMap::key_type));
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor
@@ -219,6 +228,42 @@ protected:
      */
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
+    mutable NT* cache_coins_free_list{};
+
+    std::pair<CCoinsMap::iterator, bool> create_new_cache_coin(COutPoint k) const {
+        if (cache_coins_free_list) {
+            NT& current = *cache_coins_free_list;
+            cache_coins_free_list = current.next;
+            CCoinsMap::node_type node_handle = std::move(current.nh);
+            node_handle.key() = k;
+            auto insert_result = cacheCoins.insert(std::move(node_handle));
+            if (insert_result.inserted) {
+                return std::make_pair(insert_result.position, false);
+            } else {
+                insert_result.node.key() = COutPoint();
+                NT* nt = (NT*) &insert_result.node.key();
+                *nt = NT{};
+                nt->nh = std::move(insert_result.node);
+                nt->next = cache_coins_free_list;
+                cache_coins_free_list = nt;
+                return std::make_pair(insert_result.position, true);
+            }
+        } else {
+            return cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(k), std::tuple<>());
+        }
+    }
+    CCoinsMap::iterator erase_cached_coin(CCoinsMap::iterator it) const {
+        auto ret = std::next(it);
+        auto node_handle = cacheCoins.extract(it);
+        node_handle.key() = COutPoint();
+        node_handle.mapped() = CCoinsCacheEntry();
+        NT* nt = (NT*) &node_handle.key();
+        *nt = NT{};
+        nt->nh = std::move(node_handle);
+        nt->next = cache_coins_free_list;
+        cache_coins_free_list = nt;
+        return ret;
+    }
 
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage;
