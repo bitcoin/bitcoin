@@ -146,6 +146,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
+    if (!settings.contains("fKeepChangeAddress"))
+        settings.setValue("fKeepChangeAddress", false);
+    fKeepChangeAddress = settings.value("fKeepChangeAddress", false).toBool();
+
     if (!settings.contains("digits"))
         settings.setValue("digits", "2");
 
@@ -472,6 +476,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case CoinControlFeatures:
             return fCoinControlFeatures;
+        case KeepChangeAddress:
+            return fKeepChangeAddress;
 #endif // ENABLE_WALLET
         case Prune:
             return settings.value("bPrune");
@@ -693,6 +699,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
+            break;
+        case KeepChangeAddress:
+            fKeepChangeAddress = value.toBool();
+            settings.setValue("fKeepChangeAddress", fKeepChangeAddress);
+            Q_EMIT keepChangeAddressChanged(fKeepChangeAddress);
             break;
         case Prune:
             if (settings.value("bPrune") != value) {

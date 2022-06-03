@@ -52,6 +52,7 @@ public:
         FontWeightBold,       // int
         Language,             // QString
         CoinControlFeatures,  // bool
+        KeepChangeAddress,    // bool
         ThreadsScriptVerif,   // int
         Prune,                // bool
         PruneSize,            // int
@@ -86,6 +87,7 @@ public:
     int getDisplayUnit() const { return nDisplayUnit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getKeepChangeAddress() const { return fKeepChangeAddress; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     void emitCoinJoinEnabledChanged();
@@ -107,6 +109,7 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
+    bool fKeepChangeAddress;
     bool fShowAdvancedCJUI;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
@@ -123,6 +126,7 @@ Q_SIGNALS:
     void coinJoinAmountChanged();
     void AdvancedCJUIChanged(bool);
     void coinControlFeaturesChanged(bool);
+    void keepChangeAddressChanged(bool);
     void hideTrayIconChanged(bool);
 };
 

@@ -67,6 +67,7 @@ private:
     bool fNewRecipientAllowed;
     void send(QList<SendCoinsRecipient> recipients);
     bool fFeeMinimized;
+    bool fKeepChangeAddress;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
@@ -98,6 +99,7 @@ private Q_SLOTS:
     void coinControlClipboardChange();
     void updateFeeSectionControls();
     void updateSmartFeeLabel();
+    void keepChangeAddressChanged(bool);
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user

@@ -188,6 +188,16 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         coinControlUpdateLabels();
 
+        connect(_model->getOptionsModel(), &OptionsModel::keepChangeAddressChanged, this, &SendCoinsDialog::keepChangeAddressChanged);
+        fKeepChangeAddress = _model->getOptionsModel()->getKeepChangeAddress();
+
+        QSettings settings;
+        if (fKeepChangeAddress && settings.contains("sCustomChangeAddress")) {
+            ui->checkBoxCoinControlChange->setChecked(true);
+            ui->lineEditCoinControlChange->setText(settings.value("sCustomChangeAddress").toString());
+            coinControlChangeEdited(ui->lineEditCoinControlChange->text());
+        }
+
         // fee section
         for (const int n : confTargets) {
             ui->confTargetSelector->addItem(tr("%1 (%2 blocks)").arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing)).arg(n));
@@ -206,7 +216,6 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         updateSmartFeeLabel();
 
         // set the smartfee-sliders default value (wallets default conf.target or last stored value)
-        QSettings settings;
         if (settings.value("nSmartFeeSliderPosition").toInt() != 0) {
             // migrate nSmartFeeSliderPosition to nConfTarget
             // nConfTarget is available since 0.15 (replaced nSmartFeeSliderPosition)
@@ -224,6 +233,9 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 SendCoinsDialog::~SendCoinsDialog()
 {
     QSettings settings;
+    if (fKeepChangeAddress) {
+        settings.setValue("sCustomChangeAddress", ui->lineEditCoinControlChange->text());
+    }
     settings.setValue("fFeeSectionMinimized", fFeeMinimized);
     settings.setValue("nFeeRadio", ui->groupFee->checkedId());
     settings.setValue("nConfTarget", getConfTargetForIndex(ui->confTargetSelector->currentIndex()));
@@ -456,8 +468,10 @@ void SendCoinsDialog::clear()
 {
     // Clear coin control settings
     m_coin_control->UnSelectAll();
-    ui->checkBoxCoinControlChange->setChecked(false);
-    ui->lineEditCoinControlChange->clear();
+    if (!fKeepChangeAddress) {
+        ui->checkBoxCoinControlChange->setChecked(false);
+        ui->lineEditCoinControlChange->clear();
+    }
     coinControlUpdateLabels();
 
     // Remove entries until only one left
@@ -826,7 +840,7 @@ void SendCoinsDialog::coinControlButtonClicked()
 // Coin Control: checkbox custom change address
 void SendCoinsDialog::coinControlChangeChecked(int state)
 {
-    if (state == Qt::Unchecked)
+    if (state == Qt::Unchecked && !fKeepChangeAddress)
     {
         m_coin_control->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->clear();
@@ -835,7 +849,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
         // use this to re-validate an already entered address
         coinControlChangeEdited(ui->lineEditCoinControlChange->text());
 
-    ui->lineEditCoinControlChange->setEnabled((state == Qt::Checked));
+    ui->lineEditCoinControlChange->setEnabled(state == Qt::Checked || fKeepChangeAddress);
 }
 
 // Coin Control: custom change address changed
@@ -932,6 +946,12 @@ void SendCoinsDialog::coinControlUpdateLabels()
         ui->widgetCoinControl->hide();
         ui->labelCoinControlInsuffFunds->hide();
     }
+}
+
+// Settings menu - keep change address enabled/disabled by user
+void SendCoinsDialog::keepChangeAddressChanged(bool checked)
+{
+    fKeepChangeAddress = checked;
 }
 
 SendConfirmationDialog::SendConfirmationDialog(const QString &title, const QString &text, int _secDelay,

@@ -319,6 +319,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="keepChangeAddress">
+            <property name="toolTip">
+             <string>Whether to keep the specified custom change address or not.</string>
+            </property>
+            <property name="text">
+             <string>Keep custom change &amp;address</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="showMasternodesTab">
             <property name="toolTip">
              <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
