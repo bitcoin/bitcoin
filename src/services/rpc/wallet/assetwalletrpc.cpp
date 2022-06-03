@@ -2042,7 +2042,7 @@ static RPCHelpMan syscoincreatenevmblob()
     requestSend.context = request.context;
     requestSend.params = paramsSend;
     requestSend.URI = request.URI;
-    const UniValue &res = syscoincreaterawnevmblob().HandleRequest(requestSend);
+    UniValue res = syscoincreaterawnevmblob().HandleRequest(requestSend);
     UniValue resObj = res.get_obj();
     if(!resObj.isNull()) {
         if(!find_value(resObj, "txid").isNull()) {
@@ -2050,8 +2050,7 @@ static RPCHelpMan syscoincreatenevmblob()
             resObj.__pushKV("versionhash", HexStr(nevmData.vchVersionHash));
             resObj.__pushKV("datasize", nevmData.nSize);
             resObj.__pushKV("data", HexStr(nevmData.vchData));
-            resRet.push_back(resObj);
-            return resRet;
+            return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   
         }  
