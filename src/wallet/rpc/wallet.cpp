@@ -610,6 +610,27 @@ RPCHelpMan simulaterawtransaction()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR_AMOUNT, "balance_change", "The wallet balance change (negative means decrease)."},
+                {RPCResult::Type::ARR, "details", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "txid", "the transaction hex of transaction provided by the user"},
+                            {RPCResult::Type::ARR, "wallet_conflicts", "list of txids of transactions in the wallet that conflict with this transaction",
+                            {
+                                {RPCResult::Type::STR_HEX, "txid", "the txid of conflicting transactions in wallet"},
+                            }},
+                            {RPCResult::Type::ARR, "simulated_tx_conflicts", "indices of transactions provided by the user that conflict with this transaction",
+                            {
+                                {RPCResult::Type::NUM, "index", "index of conflicting transactions in list provided by user"},
+                            }},
+                        }
+                    },
+                }},
+                {RPCResult::Type::ARR, "duplicates", "indices of transactions provided by the user more than once and hence ignored",
+                {
+                    {RPCResult::Type::NUM, "index", "index of transactions provided by the user more than once"},
+                }},
+
             }
         },
         RPCExamples{
@@ -642,60 +663,132 @@ RPCHelpMan simulaterawtransaction()
     if (ParseIncludeWatchonly(include_watchonly, wallet)) {
         filter |= ISMINE_WATCH_ONLY;
     }
-
+    // fetch transactions
     const auto& txs = request.params[0].get_array();
     CAmount changes{0};
-    std::map<COutPoint, CAmount> new_utxos; // UTXO:s that were made available in transaction array
-    std::set<COutPoint> spent;
-
+    // UTXOs that were made available in transaction array
+    std::map<COutPoint, CAmount> new_utxos;
+    // Tracks the indices of the txs spending an outpoint
+    std::map<COutPoint, std::set<int>> outpoint_to_tx;
+    // Tracks conflicting transactions(provided by the user) given a txid
+    std::map<uint256, std::set<int>> internal_conflicts;
+    // Tracks set of txids in the wallet that are conflicting with the provided transaction given txid of tx provided by the user
+    std::map<uint256, std::set<std::string>> txids;
+    // indices of duplicate transactions
+    std::set<int> duplicates;
+    //Tracks txid given index for the tx provided by the user
+    std::map<int, uint256> txhash;
+    // used for dealing with duplicates
+    std::map<uint256, bool> done;
     for (size_t i = 0; i < txs.size(); ++i) {
         CMutableTransaction mtx;
+        // decoding ith transaction hex
         if (!DecodeHexTx(mtx, txs[i].get_str(), /* try_no_witness */ true, /* try_witness */ true)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Transaction hex string decoding failure.");
         }
-
+        const auto& hash = mtx.GetHash();
+        done[hash] = false;
+        // if the tx is a duplicate one then just add it to duplicates
+        if (txids.count(hash)) {
+            duplicates.insert(i);
+            txhash[i] = hash;
+            continue;
+        }
         // Fetch previous transactions (inputs)
         std::map<COutPoint, Coin> coins;
         for (const CTxIn& txin : mtx.vin) {
             coins[txin.prevout]; // Create empty map entry keyed by prevout.
         }
         wallet.chain().findCoins(coins);
-
         // Fetch debit; we are *spending* these; if the transaction is signed and
         // broadcast, we will lose everything in these
         for (const auto& txin : mtx.vin) {
-            const auto& outpoint = txin.prevout;
-            if (spent.count(outpoint)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Transaction(s) are spending the same output more than once");
-            }
-            if (new_utxos.count(outpoint)) {
-                changes -= new_utxos.at(outpoint);
-                new_utxos.erase(outpoint);
-            } else {
-                if (coins.at(outpoint).IsSpent()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already");
+            auto& op = txin.prevout;
+            // Only apply changes the first time a transaction is seen. Otherwise duplicate transactions will give incorrect errors.
+            if (outpoint_to_tx[op].size() < 1) {
+                if (new_utxos.count(op)) {
+                    changes -= new_utxos.at(op);
+                    new_utxos.erase(op);
+                } else {
+                    if (!coins.count(op)) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing");
+                    }
+                    if (coins.at(op).IsSpent()) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "One or more transaction inputs have been spent already");
+                    }
+                    changes -= wallet.GetDebit(txin, filter);
                 }
-                changes -= wallet.GetDebit(txin, filter);
             }
-            spent.insert(outpoint);
+            outpoint_to_tx[op].insert(i);
         }
-
         // Iterate over outputs; we are *receiving* these, if the wallet considers
         // them "mine"; if the transaction is signed and broadcast, we will receive
         // everything in these
         // Also populate new_utxos in case these are spent in later transactions
-
-        const auto& hash = mtx.GetHash();
         for (size_t i = 0; i < mtx.vout.size(); ++i) {
             const auto& txout = mtx.vout[i];
             bool is_mine = 0 < (wallet.IsMine(txout) & filter);
             changes += new_utxos[COutPoint(hash, i)] = is_mine ? txout.nValue : 0;
         }
+        // used to keep track of wallet conflicts
+        txids[hash];
+        txhash[i] = hash;
+        // fetching txids of all those tx in the wallet which conflicts with this tx(provided by the user)
+        // Passing false means transaction passed to GetConflicts in not in wallet
+        std::set<uint256> conflicting_tx = wallet.GetConflicts(CTransaction(mtx), false);
+        for(auto tx : conflicting_tx) {
+            txids[hash].insert(tx.GetHex());
+        }
     }
+    // Determine the internal conflicts by checking the indices of the txs that spend each outpoint.
+    // Internal_conflicts is filled out for each txid spending the outpoint with the set of the other indices also spending the outpoint
+    for (auto outpoint_indices : outpoint_to_tx) {
+        for (auto tx1 : outpoint_indices.second) {
+            for (auto tx2 : outpoint_indices.second) {
+                if (tx1 != tx2) {
+                    internal_conflicts[txhash[tx1]].insert(tx2);
+                }
 
+            }
+        }
+    }
     UniValue result(UniValue::VOBJ);
     result.pushKV("balance_change", ValueFromAmount(changes));
-
+    UniValue details(UniValue::VARR);
+    // filling details for each transaction provided by the user one by one in an array
+    // In the order they are provided
+    for (size_t i = 0; i < txs.size(); ++i) {
+        uint256 txid_hash = txhash[i];
+        // ignore if this transaction is a duplicate
+        if (done[txid_hash]) {
+            continue;
+        }
+        // mark as processed
+        done[txid_hash] = true;
+        // fetching transactions in the wallet that conflict with this transaction
+        std::set<std::string> txid_entry = txids[txid_hash];
+        UniValue tx_details(UniValue::VOBJ);
+        // Tracks wallet conflicts
+        UniValue conflicts(UniValue::VARR);
+        // Tracks conflicts among provided transactions themselves
+        UniValue sim_conflicts(UniValue::VARR);
+        for (auto conflicting_tx_in_wallet : txid_entry) {
+            conflicts.push_back(conflicting_tx_in_wallet);
+        }
+        for (auto conflicting_tx_by_user : internal_conflicts[txid_hash]) {
+            sim_conflicts.push_back(conflicting_tx_by_user);
+        }
+        tx_details.pushKV("txid", txid_hash.GetHex());
+        tx_details.pushKV("wallet_conflicts", conflicts);
+        tx_details.pushKV("simulated_tx_conflicts", sim_conflicts);
+        details.push_back(tx_details);
+    }
+    result.pushKV("details", details);
+    UniValue duplicate(UniValue::VARR);
+    for (auto duplicate_tx : duplicates) {
+        duplicate.push_back(duplicate_tx);
+    }
+    result.pushKV("duplicates", duplicate);
     return result;
 }
     };
