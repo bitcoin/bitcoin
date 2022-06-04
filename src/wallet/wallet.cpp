@@ -720,16 +720,11 @@ bool CWallet::IsSpent(const COutPoint& outpoint) const
     return false;
 }
 
-void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid, WalletBatch* batch)
+void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid, WalletBatch& batch)
 {
     mapTxSpends.insert(std::make_pair(outpoint, wtxid));
 
-    if (batch) {
-        UnlockCoin(outpoint, batch);
-    } else {
-        WalletBatch temp_batch(GetDatabase());
-        UnlockCoin(outpoint, &temp_batch);
-    }
+    UnlockCoin(outpoint, &batch);
 
     std::pair<TxSpends::iterator, TxSpends::iterator> range;
     range = mapTxSpends.equal_range(outpoint);
@@ -737,7 +732,7 @@ void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid, Walle
 }
 
 
-void CWallet::AddToSpends(const CWalletTx& wtx, WalletBatch* batch)
+void CWallet::AddToSpends(const CWalletTx& wtx, WalletBatch& batch)
 {
     if (wtx.IsCoinBase()) // Coinbases don't spend anything!
         return;
@@ -1043,7 +1038,7 @@ CWalletTx* CWallet::AddToWallet(WalletBatch& batch, CTransactionRef tx, const Tx
         wtx.nOrderPos = IncOrderPosNext(&batch);
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
-        AddToSpends(wtx, &batch);
+        AddToSpends(wtx, batch);
     }
 
     if (!fInsertedNew)
@@ -1171,7 +1166,7 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     }
     // Do not flush the wallet here for performance reasons
     WalletBatch batch(GetDatabase(), false);
-    AddToSpends(wtx, &batch);
+    AddToSpends(wtx, batch);
     for (const CTxIn& txin : wtx.tx->vin) {
         auto it = mapWallet.find(txin.prevout.hash);
         if (it != mapWallet.end()) {
