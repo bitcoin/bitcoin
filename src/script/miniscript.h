@@ -6,6 +6,7 @@
 #define BITCOIN_SCRIPT_MINISCRIPT_H
 
 #include <algorithm>
+#include <functional>
 #include <numeric>
 #include <memory>
 #include <optional>
@@ -40,7 +41,7 @@ namespace miniscript {
  *   - For example: older(n) = <n> OP_CHECKSEQUENCEVERIFY.
  * - "V" Verify:
  *   - Takes its inputs from the top of the stack.
- *   - When satisfactied, pushes nothing.
+ *   - When satisfied, pushes nothing.
  *   - Cannot be dissatisfied.
  *   - This can be obtained by adding an OP_VERIFY to a B, modifying the last opcode
  *     of a B to its -VERIFY version (only for OP_CHECKSIG, OP_CHECKSIGVERIFY
@@ -179,6 +180,8 @@ inline constexpr Type operator"" _mst(const char* c, size_t l) {
     return typ;
 }
 
+using Opcode = std::pair<opcodetype, std::vector<unsigned char>>;
+
 template<typename Key> struct Node;
 template<typename Key> using NodeRef = std::shared_ptr<const Node<Key>>;
 
@@ -224,10 +227,10 @@ enum class Fragment {
 namespace internal {
 
 //! Helper function for Node::CalcType.
-Type ComputeType(Fragment nodetype, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k, size_t data_size, size_t n_subs, size_t n_keys);
+Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k, size_t data_size, size_t n_subs, size_t n_keys);
 
 //! Helper function for Node::CalcScriptLen.
-size_t ComputeScriptLen(Fragment nodetype, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys);
+size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys);
 
 //! A helper sanitizer/checker for the output of CalcType.
 Type SanitizeType(Type x);
@@ -279,7 +282,7 @@ struct StackSize {
 template<typename Key>
 struct Node {
     //! What node type this node is.
-    const Fragment nodetype;
+    const Fragment fragment;
     //! The k parameter (time for OLDER/AFTER, threshold for THRESH(_M))
     const uint32_t k = 0;
     //! The keys used by this expression (only for PK_K/PK_H/MULTI)
@@ -298,6 +301,8 @@ private:
     const Type typ;
     //! Cached script length (computed by CalcScriptLen).
     const size_t scriptlen;
+    //! Whether a public key appears more than once in this node.
+    const bool duplicate_key;
 
     //! Compute the length of the script for this miniscript (including children).
     size_t CalcScriptLen() const {
@@ -306,7 +311,7 @@ private:
             subsize += sub->ScriptSize();
         }
         Type sub0type = subs.size() > 0 ? subs[0]->GetType() : ""_mst;
-        return internal::ComputeScriptLen(nodetype, sub0type, subsize, k, subs.size(), keys.size());
+        return internal::ComputeScriptLen(fragment, sub0type, subsize, k, subs.size(), keys.size());
     }
 
     /* Apply a recursive algorithm to a Miniscript tree, without actual recursive calls.
@@ -329,6 +334,8 @@ private:
      *   computes the result of the node. If std::nullopt is returned by upfn,
      *   TreeEvalMaybe() immediately returns std::nullopt.
      * The return value of TreeEvalMaybe is the result of the root node.
+     *
+     * Result type cannot be bool due to the std::vector<bool> specialization.
      */
     template<typename Result, typename State, typename DownFn, typename UpFn>
     std::optional<Result> TreeEvalMaybe(State root_state, DownFn downfn, UpFn upfn) const
@@ -393,6 +400,20 @@ private:
         return std::move(results[0]);
     }
 
+    /** Like TreeEvalMaybe, but without downfn or State type.
+     * upfn takes (const Node&, Span<Result>) and returns std::optional<Result>. */
+    template<typename Result, typename UpFn>
+    std::optional<Result> TreeEvalMaybe(UpFn upfn) const
+    {
+        struct DummyState {};
+        return TreeEvalMaybe<Result>(DummyState{},
+            [](DummyState, const Node&, size_t) { return DummyState{}; },
+            [&upfn](DummyState, const Node& node, Span<Result> subs) {
+                return upfn(node, subs);
+            }
+        );
+    }
+
     /** Like TreeEvalMaybe, but always produces a result. upfn must return Result. */
     template<typename Result, typename State, typename DownFn, typename UpFn>
     Result TreeEval(State root_state, DownFn&& downfn, UpFn upfn) const
@@ -408,13 +429,33 @@ private:
         ));
     }
 
+    /** Compare two miniscript subtrees, using a non-recursive algorithm. */
+    friend int Compare(const Node<Key>& node1, const Node<Key>& node2)
+    {
+        std::vector<std::pair<const Node<Key>&, const Node<Key>&>> queue;
+        queue.emplace_back(node1, node2);
+        while (!queue.empty()) {
+            const auto& [a, b] = queue.back();
+            queue.pop_back();
+            if (std::tie(a.fragment, a.k, a.keys, a.data) < std::tie(b.fragment, b.k, b.keys, b.data)) return -1;
+            if (std::tie(b.fragment, b.k, b.keys, b.data) < std::tie(a.fragment, a.k, a.keys, a.data)) return 1;
+            if (a.subs.size() < b.subs.size()) return -1;
+            if (b.subs.size() < a.subs.size()) return 1;
+            size_t n = a.subs.size();
+            for (size_t i = 0; i < n; ++i) {
+                queue.emplace_back(*a.subs[n - 1 - i], *b.subs[n - 1 - i]);
+            }
+        }
+        return 0;
+    }
+
     //! Compute the type for this miniscript.
     Type CalcType() const {
         using namespace internal;
 
         // THRESH has a variable number of subexpressions
         std::vector<Type> sub_types;
-        if (nodetype == Fragment::THRESH) {
+        if (fragment == Fragment::THRESH) {
             for (const auto& sub : subs) sub_types.push_back(sub->GetType());
         }
         // All other nodes than THRESH can be computed just from the types of the 0-3 subexpressions.
@@ -422,7 +463,7 @@ private:
         Type y = subs.size() > 1 ? subs[1]->GetType() : ""_mst;
         Type z = subs.size() > 2 ? subs[2]->GetType() : ""_mst;
 
-        return SanitizeType(ComputeType(nodetype, x, y, z, sub_types, k, data.size(), subs.size(), keys.size()));
+        return SanitizeType(ComputeType(fragment, x, y, z, sub_types, k, data.size(), subs.size(), keys.size()));
     }
 
 public:
@@ -434,17 +475,17 @@ public:
         // by an OP_VERIFY (which may need to be combined with the last script opcode).
         auto downfn = [](bool verify, const Node& node, size_t index) {
             // For WRAP_V, the subexpression is certainly followed by OP_VERIFY.
-            if (node.nodetype == Fragment::WRAP_V) return true;
+            if (node.fragment == Fragment::WRAP_V) return true;
             // The subexpression of WRAP_S, and the last subexpression of AND_V
             // inherit the followed-by-OP_VERIFY property from the parent.
-            if (node.nodetype == Fragment::WRAP_S ||
-                (node.nodetype == Fragment::AND_V && index == 1)) return verify;
+            if (node.fragment == Fragment::WRAP_S ||
+                (node.fragment == Fragment::AND_V && index == 1)) return verify;
             return false;
         };
         // The upward function computes for a node, given its followed-by-OP_VERIFY status
         // and the CScripts of its child nodes, the CScript of the node.
         auto upfn = [&ctx](bool verify, const Node& node, Span<CScript> subs) -> CScript {
-            switch (node.nodetype) {
+            switch (node.fragment) {
                 case Fragment::PK_K: return BuildScript(ctx.ToPKBytes(node.keys[0]));
                 case Fragment::PK_H: return BuildScript(OP_DUP, OP_HASH160, ctx.ToPKHBytes(node.keys[0]), OP_EQUALVERIFY);
                 case Fragment::OLDER: return BuildScript(node.k, OP_CHECKSEQUENCEVERIFY);
@@ -491,45 +532,44 @@ public:
                 }
             }
             assert(false);
-            return {};
         };
         return TreeEval<CScript>(false, downfn, upfn);
     }
 
     template<typename CTx>
-    bool ToString(const CTx& ctx, std::string& ret) const {
+    std::optional<std::string> ToString(const CTx& ctx) const {
         // To construct the std::string representation for a Miniscript object, we use
         // the TreeEvalMaybe algorithm. The State is a boolean: whether the parent node is a
         // wrapper. If so, non-wrapper expressions must be prefixed with a ":".
         auto downfn = [](bool, const Node& node, size_t) {
-            return (node.nodetype == Fragment::WRAP_A || node.nodetype == Fragment::WRAP_S ||
-                    node.nodetype == Fragment::WRAP_D || node.nodetype == Fragment::WRAP_V ||
-                    node.nodetype == Fragment::WRAP_J || node.nodetype == Fragment::WRAP_N ||
-                    node.nodetype == Fragment::WRAP_C ||
-                    (node.nodetype == Fragment::AND_V && node.subs[1]->nodetype == Fragment::JUST_1) ||
-                    (node.nodetype == Fragment::OR_I && node.subs[0]->nodetype == Fragment::JUST_0) ||
-                    (node.nodetype == Fragment::OR_I && node.subs[1]->nodetype == Fragment::JUST_0));
+            return (node.fragment == Fragment::WRAP_A || node.fragment == Fragment::WRAP_S ||
+                    node.fragment == Fragment::WRAP_D || node.fragment == Fragment::WRAP_V ||
+                    node.fragment == Fragment::WRAP_J || node.fragment == Fragment::WRAP_N ||
+                    node.fragment == Fragment::WRAP_C ||
+                    (node.fragment == Fragment::AND_V && node.subs[1]->fragment == Fragment::JUST_1) ||
+                    (node.fragment == Fragment::OR_I && node.subs[0]->fragment == Fragment::JUST_0) ||
+                    (node.fragment == Fragment::OR_I && node.subs[1]->fragment == Fragment::JUST_0));
         };
         // The upward function computes for a node, given whether its parent is a wrapper,
         // and the string representations of its child nodes, the string representation of the node.
         auto upfn = [&ctx](bool wrapped, const Node& node, Span<std::string> subs) -> std::optional<std::string> {
             std::string ret = wrapped ? ":" : "";
 
-            switch (node.nodetype) {
+            switch (node.fragment) {
                 case Fragment::WRAP_A: return "a" + std::move(subs[0]);
                 case Fragment::WRAP_S: return "s" + std::move(subs[0]);
                 case Fragment::WRAP_C:
-                    if (node.subs[0]->nodetype == Fragment::PK_K) {
+                    if (node.subs[0]->fragment == Fragment::PK_K) {
                         // pk(K) is syntactic sugar for c:pk_k(K)
-                        std::string key_str;
-                        if (!ctx.ToString(node.subs[0]->keys[0], key_str)) return {};
-                        return std::move(ret) + "pk(" + std::move(key_str) + ")";
+                        auto key_str = ctx.ToString(node.subs[0]->keys[0]);
+                        if (!key_str) return {};
+                        return std::move(ret) + "pk(" + std::move(*key_str) + ")";
                     }
-                    if (node.subs[0]->nodetype == Fragment::PK_H) {
+                    if (node.subs[0]->fragment == Fragment::PK_H) {
                         // pkh(K) is syntactic sugar for c:pk_h(K)
-                        std::string key_str;
-                        if (!ctx.ToString(node.subs[0]->keys[0], key_str)) return {};
-                        return std::move(ret) + "pkh(" + std::move(key_str) + ")";
+                        auto key_str = ctx.ToString(node.subs[0]->keys[0]);
+                        if (!key_str) return {};
+                        return std::move(ret) + "pkh(" + std::move(*key_str) + ")";
                     }
                     return "c" + std::move(subs[0]);
                 case Fragment::WRAP_D: return "d" + std::move(subs[0]);
@@ -538,24 +578,24 @@ public:
                 case Fragment::WRAP_N: return "n" + std::move(subs[0]);
                 case Fragment::AND_V:
                     // t:X is syntactic sugar for and_v(X,1).
-                    if (node.subs[1]->nodetype == Fragment::JUST_1) return "t" + std::move(subs[0]);
+                    if (node.subs[1]->fragment == Fragment::JUST_1) return "t" + std::move(subs[0]);
                     break;
                 case Fragment::OR_I:
-                    if (node.subs[0]->nodetype == Fragment::JUST_0) return "l" + std::move(subs[1]);
-                    if (node.subs[1]->nodetype == Fragment::JUST_0) return "u" + std::move(subs[0]);
+                    if (node.subs[0]->fragment == Fragment::JUST_0) return "l" + std::move(subs[1]);
+                    if (node.subs[1]->fragment == Fragment::JUST_0) return "u" + std::move(subs[0]);
                     break;
                 default: break;
             }
-            switch (node.nodetype) {
+            switch (node.fragment) {
                 case Fragment::PK_K: {
-                    std::string key_str;
-                    if (!ctx.ToString(node.keys[0], key_str)) return {};
-                    return std::move(ret) + "pk_k(" + std::move(key_str) + ")";
+                    auto key_str = ctx.ToString(node.keys[0]);
+                    if (!key_str) return {};
+                    return std::move(ret) + "pk_k(" + std::move(*key_str) + ")";
                 }
                 case Fragment::PK_H: {
-                    std::string key_str;
-                    if (!ctx.ToString(node.keys[0], key_str)) return {};
-                    return std::move(ret) + "pk_h(" + std::move(key_str) + ")";
+                    auto key_str = ctx.ToString(node.keys[0]);
+                    if (!key_str) return {};
+                    return std::move(ret) + "pk_h(" + std::move(*key_str) + ")";
                 }
                 case Fragment::AFTER: return std::move(ret) + "after(" + ::ToString(node.k) + ")";
                 case Fragment::OLDER: return std::move(ret) + "older(" + ::ToString(node.k) + ")";
@@ -573,14 +613,14 @@ public:
                 case Fragment::OR_I: return std::move(ret) + "or_i(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
                 case Fragment::ANDOR:
                     // and_n(X,Y) is syntactic sugar for andor(X,Y,0).
-                    if (node.subs[2]->nodetype == Fragment::JUST_0) return std::move(ret) + "and_n(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
+                    if (node.subs[2]->fragment == Fragment::JUST_0) return std::move(ret) + "and_n(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
                     return std::move(ret) + "andor(" + std::move(subs[0]) + "," + std::move(subs[1]) + "," + std::move(subs[2]) + ")";
                 case Fragment::MULTI: {
                     auto str = std::move(ret) + "multi(" + ::ToString(node.k);
                     for (const auto& key : node.keys) {
-                        std::string key_str;
-                        if (!ctx.ToString(key, key_str)) return {};
-                        str += "," + std::move(key_str);
+                        auto key_str = ctx.ToString(key);
+                        if (!key_str) return {};
+                        str += "," + std::move(*key_str);
                     }
                     return std::move(str) + ")";
                 }
@@ -591,18 +631,16 @@ public:
                     }
                     return std::move(str) + ")";
                 }
-                default: assert(false);
+                default: break;
             }
-            return ""; // Should never be reached.
+            assert(false);
         };
 
-        auto res = TreeEvalMaybe<std::string>(false, downfn, upfn);
-        if (res.has_value()) ret = std::move(*res);
-        return res.has_value();
+        return TreeEvalMaybe<std::string>(false, downfn, upfn);
     }
 
     internal::Ops CalcOps() const {
-        switch (nodetype) {
+        switch (fragment) {
             case Fragment::JUST_1: return {0, 0, {}};
             case Fragment::JUST_0: return {0, {}, 0};
             case Fragment::PK_K: return {0, 0, 0};
@@ -672,11 +710,10 @@ public:
             }
         }
         assert(false);
-        return {0, {}, {}};
     }
 
     internal::StackSize CalcStackSize() const {
-        switch (nodetype) {
+        switch (fragment) {
             case Fragment::JUST_0: return {{}, 0};
             case Fragment::JUST_1:
             case Fragment::OLDER:
@@ -723,7 +760,42 @@ public:
             }
         }
         assert(false);
-        return {{}, {}};
+    }
+
+    /** Check whether any key is repeated.
+     * This uses a custom key comparator provided by the context in order to still detect duplicates
+     * for more complicated types.
+     */
+    template<typename Ctx> bool ContainsDuplicateKey(const Ctx& ctx) const {
+        // We cannot use a lambda here, as lambdas are non assignable, and the set operations
+        // below require moving the comparators around.
+        struct Comp {
+            const Ctx* ctx_ptr;
+            Comp(const Ctx& ctx) : ctx_ptr(&ctx) {}
+            bool operator()(const Key& a, const Key& b) const { return ctx_ptr->KeyCompare(a, b); }
+        };
+        using set = std::set<Key, Comp>;
+
+        auto upfn = [this, &ctx](const Node& node, Span<set> subs) -> std::optional<set> {
+            if (&node != this && node.duplicate_key) return {};
+
+            size_t keys_count = node.keys.size();
+            set key_set{node.keys.begin(), node.keys.end(), Comp(ctx)};
+            if (key_set.size() != keys_count) return {};
+
+            for (auto& sub: subs) {
+                keys_count += sub.size();
+                // Small optimization: std::set::merge is linear in the size of the second arg but
+                // logarithmic in the size of the first.
+                if (key_set.size() < sub.size()) std::swap(key_set, sub);
+                key_set.merge(sub);
+                if (key_set.size() != keys_count) return {};
+            }
+
+            return key_set;
+        };
+
+        return !TreeEvalMaybe<set>(upfn);
     }
 
 public:
@@ -758,35 +830,31 @@ public:
     //! Check whether this script always needs a signature.
     bool NeedsSignature() const { return GetType() << "s"_mst; }
 
-    //! Do all sanity checks.
-    bool IsSane() const { return IsValid() && GetType() << "mk"_mst && CheckOpsLimit() && CheckStackSize(); }
+    //! Check whether there is no satisfaction path that contains both timelocks and heightlocks
+    bool CheckTimeLocksMix() const { return GetType() << "k"_mst; }
+
+    //! Check whether there is no duplicate key across this fragment and all its sub-fragments.
+    bool CheckDuplicateKey() const { return !duplicate_key; }
+
+    //! Whether successful non-malleable satisfactions are guaranteed to be valid.
+    bool ValidSatisfactions() const { return IsValid() && CheckOpsLimit() && CheckStackSize(); }
+
+    //! Whether the apparent policy of this node matches its script semantics. Doesn't guarantee it is a safe script on its own.
+    bool IsSaneSubexpression() const { return ValidSatisfactions() && IsNonMalleable() && CheckTimeLocksMix() && CheckDuplicateKey(); }
 
     //! Check whether this node is safe as a script on its own.
-    bool IsSaneTopLevel() const { return IsValidTopLevel() && IsSane() && NeedsSignature(); }
+    bool IsSane() const { return IsValidTopLevel() && IsSaneSubexpression() && NeedsSignature(); }
 
     //! Equality testing.
-    bool operator==(const Node<Key>& arg) const
-    {
-        if (nodetype != arg.nodetype) return false;
-        if (k != arg.k) return false;
-        if (data != arg.data) return false;
-        if (keys != arg.keys) return false;
-        if (subs.size() != arg.subs.size()) return false;
-        for (size_t i = 0; i < subs.size(); ++i) {
-            if (!(*subs[i] == *arg.subs[i])) return false;
-        }
-        assert(scriptlen == arg.scriptlen);
-        assert(typ == arg.typ);
-        return true;
-    }
+    bool operator==(const Node<Key>& arg) const { return Compare(*this, arg) == 0; }
 
     // Constructors with various argument combinations.
-    Node(Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : nodetype(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, uint32_t val = 0) : nodetype(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : fragment(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, uint32_t val = 0) : fragment(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
 };
 
 namespace internal {
@@ -847,15 +915,15 @@ enum class ParseContext {
 
 int FindNextChar(Span<const char> in, const char m);
 
-/** Parse a key string ending with a ')' or ','. */
+/** Parse a key string ending at the end of the fragment's text representation. */
 template<typename Key, typename Ctx>
 std::optional<std::pair<Key, int>> ParseKeyEnd(Span<const char> in, const Ctx& ctx)
 {
-    Key key;
     int key_size = FindNextChar(in, ')');
     if (key_size < 1) return {};
-    if (!ctx.FromString(in.begin(), in.begin() + key_size, key)) return {};
-    return {{std::move(key), key_size}};
+    auto key = ctx.FromString(in.begin(), in.begin() + key_size);
+    if (!key) return {};
+    return {{std::move(*key), key_size}};
 }
 
 /** Parse a hex string ending at the end of the fragment's text representation. */
@@ -873,15 +941,15 @@ std::optional<std::pair<std::vector<unsigned char>, int>> ParseHexStrEnd(Span<co
 }
 
 /** BuildBack pops the last two elements off `constructed` and wraps them in the specified Fragment */
-template<typename Key>
-void BuildBack(Fragment nt, std::vector<NodeRef<Key>>& constructed, const bool reverse = false)
+template<typename Key, typename Ctx>
+void BuildBack(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>>& constructed, const bool reverse = false)
 {
     NodeRef<Key> child = std::move(constructed.back());
     constructed.pop_back();
     if (reverse) {
-        constructed.back() = MakeNodeRef<Key>(nt, Vector(std::move(child), std::move(constructed.back())));
+        constructed.back() = MakeNodeRef<Key>(ctx, nt, Vector(std::move(child), std::move(constructed.back())));
     } else {
-        constructed.back() = MakeNodeRef<Key>(nt, Vector(std::move(constructed.back()), std::move(child)));
+        constructed.back() = MakeNodeRef<Key>(ctx, nt, Vector(std::move(constructed.back()), std::move(child)));
     }
 }
 
@@ -934,7 +1002,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                     to_parse.emplace_back(ParseContext::WRAP_T, -1, -1);
                 } else if (in[j] == 'l') {
                     // The l: wrapper is equivalent to or_i(0,X)
-                    constructed.push_back(MakeNodeRef<Key>(Fragment::JUST_0));
+                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_0));
                     to_parse.emplace_back(ParseContext::OR_I, -1, -1);
                 } else {
                     return {};
@@ -946,56 +1014,56 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
         }
         case ParseContext::EXPR: {
             if (Const("0", in)) {
-                constructed.push_back(MakeNodeRef<Key>(Fragment::JUST_0));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_0));
             } else if (Const("1", in)) {
-                constructed.push_back(MakeNodeRef<Key>(Fragment::JUST_1));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_1));
             } else if (Const("pk(", in)) {
                 auto res = ParseKeyEnd<Key, Ctx>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::WRAP_C, Vector(MakeNodeRef<Key>(Fragment::PK_K, Vector(std::move(key))))));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(ctx, Fragment::PK_K, Vector(std::move(key))))));
                 in = in.subspan(key_size + 1);
             } else if (Const("pkh(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::WRAP_C, Vector(MakeNodeRef<Key>(Fragment::PK_H, Vector(std::move(key))))));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(ctx, Fragment::PK_H, Vector(std::move(key))))));
                 in = in.subspan(key_size + 1);
             } else if (Const("pk_k(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::PK_K, Vector(std::move(key))));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_K, Vector(std::move(key))));
                 in = in.subspan(key_size + 1);
             } else if (Const("pk_h(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::PK_H, Vector(std::move(key))));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_H, Vector(std::move(key))));
                 in = in.subspan(key_size + 1);
             } else if (Const("sha256(", in)) {
                 auto res = ParseHexStrEnd(in, 32, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::SHA256, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::SHA256, std::move(hash)));
                 in = in.subspan(hash_size + 1);
             } else if (Const("ripemd160(", in)) {
                 auto res = ParseHexStrEnd(in, 20, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::RIPEMD160, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::RIPEMD160, std::move(hash)));
                 in = in.subspan(hash_size + 1);
             } else if (Const("hash256(", in)) {
                 auto res = ParseHexStrEnd(in, 32, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::HASH256, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH256, std::move(hash)));
                 in = in.subspan(hash_size + 1);
             } else if (Const("hash160(", in)) {
                 auto res = ParseHexStrEnd(in, 20, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::HASH160, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH160, std::move(hash)));
                 in = in.subspan(hash_size + 1);
             } else if (Const("after(", in)) {
                 int arg_size = FindNextChar(in, ')');
@@ -1003,7 +1071,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 int64_t num;
                 if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
                 if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(Fragment::AFTER, num));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::AFTER, num));
                 in = in.subspan(arg_size + 1);
             } else if (Const("older(", in)) {
                 int arg_size = FindNextChar(in, ')');
@@ -1011,7 +1079,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 int64_t num;
                 if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
                 if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(Fragment::OLDER, num));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::OLDER, num));
                 in = in.subspan(arg_size + 1);
             } else if (Const("multi(", in)) {
                 // Get threshold
@@ -1022,17 +1090,17 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 // Get keys
                 std::vector<Key> keys;
                 while (next_comma != -1) {
-                    Key key;
                     next_comma = FindNextChar(in, ',');
                     int key_length = (next_comma == -1) ? FindNextChar(in, ')') : next_comma;
                     if (key_length < 1) return {};
-                    if (!ctx.FromString(in.begin(), in.begin() + key_length, key)) return {};
-                    keys.push_back(std::move(key));
+                    auto key = ctx.FromString(in.begin(), in.begin() + key_length);
+                    if (!key) return {};
+                    keys.push_back(std::move(*key));
                     in = in.subspan(key_length + 1);
                 }
                 if (keys.size() < 1 || keys.size() > 20) return {};
                 if (k < 1 || k > (int64_t)keys.size()) return {};
-                constructed.push_back(MakeNodeRef<Key>(Fragment::MULTI, std::move(keys), k));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::MULTI, std::move(keys), k));
             } else if (Const("thresh(", in)) {
                 int next_comma = FindNextChar(in, ',');
                 if (next_comma < 1) return {};
@@ -1076,69 +1144,69 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             break;
         }
         case ParseContext::ALT: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_A, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_A, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::SWAP: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_S, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_S, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::CHECK: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_C, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::DUP_IF: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_D, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_D, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::NON_ZERO: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_J, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_J, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::ZERO_NOTEQUAL: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_N, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_N, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::VERIFY: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_V, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_V, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::WRAP_U: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::OR_I, Vector(std::move(constructed.back()), MakeNodeRef<Key>(Fragment::JUST_0)));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::OR_I, Vector(std::move(constructed.back()), MakeNodeRef<Key>(ctx, Fragment::JUST_0)));
             break;
         }
         case ParseContext::WRAP_T: {
-            constructed.back() = MakeNodeRef<Key>(Fragment::AND_V, Vector(std::move(constructed.back()), MakeNodeRef<Key>(Fragment::JUST_1)));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::AND_V, Vector(std::move(constructed.back()), MakeNodeRef<Key>(ctx, Fragment::JUST_1)));
             break;
         }
         case ParseContext::AND_B: {
-            BuildBack(Fragment::AND_B, constructed);
+            BuildBack(ctx, Fragment::AND_B, constructed);
             break;
         }
         case ParseContext::AND_N: {
             auto mid = std::move(constructed.back());
             constructed.pop_back();
-            constructed.back() = MakeNodeRef<Key>(Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), MakeNodeRef<Key>(Fragment::JUST_0)));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), MakeNodeRef<Key>(ctx, Fragment::JUST_0)));
             break;
         }
         case ParseContext::AND_V: {
-            BuildBack(Fragment::AND_V, constructed);
+            BuildBack(ctx, Fragment::AND_V, constructed);
             break;
         }
         case ParseContext::OR_B: {
-            BuildBack(Fragment::OR_B, constructed);
+            BuildBack(ctx, Fragment::OR_B, constructed);
             break;
         }
         case ParseContext::OR_C: {
-            BuildBack(Fragment::OR_C, constructed);
+            BuildBack(ctx, Fragment::OR_C, constructed);
             break;
         }
         case ParseContext::OR_D: {
-            BuildBack(Fragment::OR_D, constructed);
+            BuildBack(ctx, Fragment::OR_D, constructed);
             break;
         }
         case ParseContext::OR_I: {
-            BuildBack(Fragment::OR_I, constructed);
+            BuildBack(ctx, Fragment::OR_I, constructed);
             break;
         }
         case ParseContext::ANDOR: {
@@ -1146,7 +1214,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             constructed.pop_back();
             auto mid = std::move(constructed.back());
             constructed.pop_back();
-            constructed.back() = MakeNodeRef<Key>(Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), std::move(right)));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), std::move(right)));
             break;
         }
         case ParseContext::THRESH: {
@@ -1165,7 +1233,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                     constructed.pop_back();
                 }
                 std::reverse(subs.begin(), subs.end());
-                constructed.push_back(MakeNodeRef<Key>(Fragment::THRESH, std::move(subs), k));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::THRESH, std::move(subs), k));
             } else {
                 return {};
             }
@@ -1200,10 +1268,10 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
  * and OP_EQUALVERIFY are decomposed into OP_CHECKSIG, OP_CHECKMULTISIG, OP_EQUAL
  * respectively, plus OP_VERIFY.
  */
-bool DecomposeScript(const CScript& script, std::vector<std::pair<opcodetype, std::vector<unsigned char>>>& out);
+std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script);
 
 /** Determine whether the passed pair (created by DecomposeScript) is pushing a number. */
-bool ParseScriptNumber(const std::pair<opcodetype, std::vector<unsigned char>>& in, int64_t& k);
+std::optional<int64_t> ParseScriptNumber(const Opcode& in);
 
 enum class DecodeContext {
     /** A single expression of type B, K, or V. Specifically, this can't be an
@@ -1300,58 +1368,59 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             // Constants
             if (in[0].first == OP_1) {
                 ++in;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::JUST_1));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_1));
                 break;
             }
             if (in[0].first == OP_0) {
                 ++in;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::JUST_0));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_0));
                 break;
             }
             // Public keys
             if (in[0].second.size() == 33) {
-                Key key;
-                if (!ctx.FromPKBytes(in[0].second.begin(), in[0].second.end(), key)) return {};
+                auto key = ctx.FromPKBytes(in[0].second.begin(), in[0].second.end());
+                if (!key) return {};
                 ++in;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::PK_K, Vector(std::move(key))));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_K, Vector(std::move(*key))));
                 break;
             }
             if (last - in >= 5 && in[0].first == OP_VERIFY && in[1].first == OP_EQUAL && in[3].first == OP_HASH160 && in[4].first == OP_DUP && in[2].second.size() == 20) {
-                Key key;
-                if (!ctx.FromPKHBytes(in[2].second.begin(), in[2].second.end(), key)) return {};
+                auto key = ctx.FromPKHBytes(in[2].second.begin(), in[2].second.end());
+                if (!key) return {};
                 in += 5;
-                constructed.push_back(MakeNodeRef<Key>(Fragment::PK_H, Vector(std::move(key))));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_H, Vector(std::move(*key))));
                 break;
             }
             // Time locks
-            if (last - in >= 2 && in[0].first == OP_CHECKSEQUENCEVERIFY && ParseScriptNumber(in[1], k)) {
+            std::optional<int64_t> num;
+            if (last - in >= 2 && in[0].first == OP_CHECKSEQUENCEVERIFY && (num = ParseScriptNumber(in[1]))) {
                 in += 2;
-                if (k < 1 || k > 0x7FFFFFFFL) return {};
-                constructed.push_back(MakeNodeRef<Key>(Fragment::OLDER, k));
+                if (*num < 1 || *num > 0x7FFFFFFFL) return {};
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::OLDER, *num));
                 break;
             }
-            if (last - in >= 2 && in[0].first == OP_CHECKLOCKTIMEVERIFY && ParseScriptNumber(in[1], k)) {
+            if (last - in >= 2 && in[0].first == OP_CHECKLOCKTIMEVERIFY && (num = ParseScriptNumber(in[1]))) {
                 in += 2;
-                if (k < 1 || k > 0x7FFFFFFFL) return {};
-                constructed.push_back(MakeNodeRef<Key>(Fragment::AFTER, k));
+                if (num < 1 || num > 0x7FFFFFFFL) return {};
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::AFTER, *num));
                 break;
             }
             // Hashes
-            if (last - in >= 7 && in[0].first == OP_EQUAL && in[3].first == OP_VERIFY && in[4].first == OP_EQUAL && ParseScriptNumber(in[5], k) && k == 32 && in[6].first == OP_SIZE) {
+            if (last - in >= 7 && in[0].first == OP_EQUAL && in[3].first == OP_VERIFY && in[4].first == OP_EQUAL && (num = ParseScriptNumber(in[5])) && num == 32 && in[6].first == OP_SIZE) {
                 if (in[2].first == OP_SHA256 && in[1].second.size() == 32) {
-                    constructed.push_back(MakeNodeRef<Key>(Fragment::SHA256, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::SHA256, in[1].second));
                     in += 7;
                     break;
                 } else if (in[2].first == OP_RIPEMD160 && in[1].second.size() == 20) {
-                    constructed.push_back(MakeNodeRef<Key>(Fragment::RIPEMD160, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::RIPEMD160, in[1].second));
                     in += 7;
                     break;
                 } else if (in[2].first == OP_HASH256 && in[1].second.size() == 32) {
-                    constructed.push_back(MakeNodeRef<Key>(Fragment::HASH256, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH256, in[1].second));
                     in += 7;
                     break;
                 } else if (in[2].first == OP_HASH160 && in[1].second.size() == 20) {
-                    constructed.push_back(MakeNodeRef<Key>(Fragment::HASH160, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH160, in[1].second));
                     in += 7;
                     break;
                 }
@@ -1359,20 +1428,20 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             // Multi
             if (last - in >= 3 && in[0].first == OP_CHECKMULTISIG) {
                 std::vector<Key> keys;
-                if (!ParseScriptNumber(in[1], n)) return {};
-                if (last - in < 3 + n) return {};
-                if (n < 1 || n > 20) return {};
-                for (int i = 0; i < n; ++i) {
-                    Key key;
+                const auto n = ParseScriptNumber(in[1]);
+                if (!n || last - in < 3 + *n) return {};
+                if (*n < 1 || *n > 20) return {};
+                for (int i = 0; i < *n; ++i) {
                     if (in[2 + i].second.size() != 33) return {};
-                    if (!ctx.FromPKBytes(in[2 + i].second.begin(), in[2 + i].second.end(), key)) return {};
-                    keys.push_back(std::move(key));
+                    auto key = ctx.FromPKBytes(in[2 + i].second.begin(), in[2 + i].second.end());
+                    if (!key) return {};
+                    keys.push_back(std::move(*key));
                 }
-                if (!ParseScriptNumber(in[2 + n], k)) return {};
-                if (k < 1 || k > n) return {};
-                in += 3 + n;
+                const auto k = ParseScriptNumber(in[2 + *n]);
+                if (!k || *k < 1 || *k > *n) return {};
+                in += 3 + *n;
                 std::reverse(keys.begin(), keys.end());
-                constructed.push_back(MakeNodeRef<Key>(Fragment::MULTI, std::move(keys), k));
+                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::MULTI, std::move(keys), *k));
                 break;
             }
             /** In the following wrappers, we only need to push SINGLE_BKV_EXPR rather
@@ -1400,10 +1469,10 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                 break;
             }
             // Thresh
-            if (last - in >= 3 && in[0].first == OP_EQUAL && ParseScriptNumber(in[1], k)) {
-                if (k < 1) return {};
+            if (last - in >= 3 && in[0].first == OP_EQUAL && (num = ParseScriptNumber(in[1]))) {
+                if (*num < 1) return {};
                 in += 2;
-                to_parse.emplace_back(DecodeContext::THRESH_W, 0, k);
+                to_parse.emplace_back(DecodeContext::THRESH_W, 0, *num);
                 break;
             }
             // OP_ENDIF can be WRAP_J, WRAP_D, ANDOR, OR_C, OR_D, or OR_I
@@ -1467,63 +1536,63 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
         case DecodeContext::SWAP: {
             if (in >= last || in[0].first != OP_SWAP || constructed.empty()) return {};
             ++in;
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_S, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_S, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::ALT: {
             if (in >= last || in[0].first != OP_TOALTSTACK || constructed.empty()) return {};
             ++in;
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_A, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_A, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::CHECK: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_C, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::DUP_IF: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_D, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_D, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::VERIFY: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_V, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_V, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::NON_ZERO: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_J, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_J, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::ZERO_NOTEQUAL: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(Fragment::WRAP_N, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_N, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::AND_V: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::AND_V, constructed, /*reverse=*/true);
+            BuildBack(ctx, Fragment::AND_V, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::AND_B: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::AND_B, constructed, /*reverse=*/true);
+            BuildBack(ctx, Fragment::AND_B, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_B: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::OR_B, constructed, /*reverse=*/true);
+            BuildBack(ctx, Fragment::OR_B, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_C: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::OR_C, constructed, /*reverse=*/true);
+            BuildBack(ctx, Fragment::OR_C, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_D: {
             if (constructed.size() < 2) return {};
-            BuildBack(Fragment::OR_D, constructed, /*reverse=*/true);
+            BuildBack(ctx, Fragment::OR_D, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::ANDOR: {
@@ -1533,7 +1602,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             NodeRef<Key> right = std::move(constructed.back());
             constructed.pop_back();
             NodeRef<Key> mid = std::move(constructed.back());
-            constructed.back() = MakeNodeRef<Key>(Fragment::ANDOR, Vector(std::move(left), std::move(mid), std::move(right)));
+            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::ANDOR, Vector(std::move(left), std::move(mid), std::move(right)));
             break;
         }
         case DecodeContext::THRESH_W: {
@@ -1557,7 +1626,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                 constructed.pop_back();
                 subs.push_back(std::move(sub));
             }
-            constructed.push_back(MakeNodeRef<Key>(Fragment::THRESH, std::move(subs), k));
+            constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::THRESH, std::move(subs), k));
             break;
         }
         case DecodeContext::ENDIF: {
@@ -1607,7 +1676,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             if (in >= last) return {};
             if (in[0].first == OP_IF) {
                 ++in;
-                BuildBack(Fragment::OR_I, constructed, /*reverse=*/true);
+                BuildBack(ctx, Fragment::OR_I, constructed, /*reverse=*/true);
             } else if (in[0].first == OP_NOTIF) {
                 ++in;
                 to_parse.emplace_back(DecodeContext::ANDOR, -1, -1);
@@ -1638,12 +1707,12 @@ inline NodeRef<typename Ctx::Key> FromString(const std::string& str, const Ctx& 
 template<typename Ctx>
 inline NodeRef<typename Ctx::Key> FromScript(const CScript& script, const Ctx& ctx) {
     using namespace internal;
-    std::vector<std::pair<opcodetype, std::vector<unsigned char>>> decomposed;
-    if (!DecomposeScript(script, decomposed)) return {};
-    auto it = decomposed.begin();
-    auto ret = DecodeScript<typename Ctx::Key>(it, decomposed.end(), ctx);
+    auto decomposed = DecomposeScript(script);
+    if (!decomposed) return {};
+    auto it = decomposed->begin();
+    auto ret = DecodeScript<typename Ctx::Key>(it, decomposed->end(), ctx);
     if (!ret) return {};
-    if (it != decomposed.end()) return {};
+    if (it != decomposed->end()) return {};
     return ret;
 }
 

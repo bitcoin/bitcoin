@@ -71,6 +71,10 @@ std::unique_ptr<const TestData> g_testdata;
 struct KeyConverter {
     typedef CPubKey Key;
 
+    bool KeyCompare(const Key& a, const Key& b) const {
+        return a < b;
+    }
+
     //! Convert a public key to bytes.
     std::vector<unsigned char> ToPKBytes(const CPubKey& key) const { return {key.begin(), key.end()}; }
 
@@ -84,27 +88,28 @@ struct KeyConverter {
 
     //! Parse a public key from a range of hex characters.
     template<typename I>
-    bool FromString(I first, I last, CPubKey& key) const {
+    std::optional<Key> FromString(I first, I last) const {
         auto bytes = ParseHex(std::string(first, last));
-        key.Set(bytes.begin(), bytes.end());
-        return key.IsValid();
+        Key key{bytes.begin(), bytes.end()};
+        if (key.IsValid()) return key;
+        return {};
     }
 
     template<typename I>
-    bool FromPKBytes(I first, I last, CPubKey& key) const {
-        key.Set(first, last);
-        return key.IsValid();
+    std::optional<Key> FromPKBytes(I first, I last) const {
+        Key key{first, last};
+        if (key.IsValid()) return key;
+        return {};
     }
 
     template<typename I>
-    bool FromPKHBytes(I first, I last, CPubKey& key) const {
+    std::optional<Key> FromPKHBytes(I first, I last) const {
         assert(last - first == 20);
         CKeyID keyid;
         std::copy(first, last, keyid.begin());
         auto it = g_testdata->pkmap.find(keyid);
         assert(it != g_testdata->pkmap.end());
-        key = it->second;
-        return true;
+        return it->second;
     }
 };
 
@@ -272,6 +277,19 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // its subs to all be 'u' (taken from https://github.com/rust-bitcoin/rust-miniscript/discussions/341).
     const auto ms_minimalif = miniscript::FromString("thresh(3,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),sc:pk_k(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798),sdv:older(32))", CONVERTER);
     BOOST_CHECK(!ms_minimalif);
+    // A Miniscript with duplicate keys is not sane
+    const auto ms_dup1 = miniscript::FromString("and_v(v:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", CONVERTER);
+    BOOST_CHECK(ms_dup1);
+    BOOST_CHECK(!ms_dup1->IsSane() && !ms_dup1->CheckDuplicateKey());
+    // Same with a disjunction, and different key nodes (pk and pkh)
+    const auto ms_dup2 = miniscript::FromString("or_b(c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),ac:pk_h(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", CONVERTER);
+    BOOST_CHECK(ms_dup2 && !ms_dup2->IsSane() && !ms_dup2->CheckDuplicateKey());
+    // Same when the duplicates are leaves or a larger tree
+    const auto ms_dup3 = miniscript::FromString("or_i(and_b(pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),s:pk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556)),and_b(older(1),s:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)))", CONVERTER);
+    BOOST_CHECK(ms_dup3 && !ms_dup3->IsSane() && !ms_dup3->CheckDuplicateKey());
+    // Same when the duplicates are on different levels in the tree
+    const auto ms_dup4 = miniscript::FromString("thresh(2,pkh(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),s:pk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),a:and_b(dv:older(1),s:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)))", CONVERTER);
+    BOOST_CHECK(ms_dup4 && !ms_dup4->IsSane() && !ms_dup4->CheckDuplicateKey());
 
     // Timelock tests
     Test("after(100)", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock
