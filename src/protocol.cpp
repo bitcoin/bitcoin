@@ -9,82 +9,61 @@
 
 static std::atomic<bool> g_initial_block_download_completed(false);
 
+// clang-format off
+#define MSG_ITEMS \
+    item(VERSION, version) \
+    item(VERACK, verack) \
+    item(ADDR, addr) \
+    item(ADDRV2, addrv2) \
+    item(SENDADDRV2, sendaddrv2) \
+    item(INV, inv) \
+    item(GETDATA, getdata) \
+    item(MERKLEBLOCK, merkleblock) \
+    item(GETBLOCKS, getblocks) \
+    item(GETHEADERS, getheaders) \
+    item(TX, tx) \
+    item(HEADERS, headers) \
+    item(BLOCK, block) \
+    item(GETADDR, getaddr) \
+    item(MEMPOOL, mempool) \
+    item(PING, ping) \
+    item(PONG, pong) \
+    item(NOTFOUND, notfound) \
+    item(FILTERLOAD, filterload) \
+    item(FILTERADD, filteradd) \
+    item(FILTERCLEAR, filterclear) \
+    item(SENDHEADERS, sendheaders) \
+    item(FEEFILTER, feefilter) \
+    item(SENDCMPCT, sendcmpct) \
+    item(CMPCTBLOCK, cmpctblock) \
+    item(GETBLOCKTXN, getblocktxn) \
+    item(BLOCKTXN, blocktxn) \
+    item(GETCFILTERS, getcfilters) \
+    item(CFILTER, cfilter) \
+    item(GETCFHEADERS, getcfheaders) \
+    item(CFHEADERS, cfheaders) \
+    item(GETCFCHECKPT, getcfcheckpt) \
+    item(CFCHECKPT, cfcheckpt) \
+    item(WTXIDRELAY, wtxidrelay) \
+
+// clang-format on
+
+#define item(a, b) const char *a{#b};
 namespace NetMsgType {
-const char *VERSION="version";
-const char *VERACK="verack";
-const char *ADDR="addr";
-const char *ADDRV2="addrv2";
-const char *SENDADDRV2="sendaddrv2";
-const char *INV="inv";
-const char *GETDATA="getdata";
-const char *MERKLEBLOCK="merkleblock";
-const char *GETBLOCKS="getblocks";
-const char *GETHEADERS="getheaders";
-const char *TX="tx";
-const char *HEADERS="headers";
-const char *BLOCK="block";
-const char *GETADDR="getaddr";
-const char *MEMPOOL="mempool";
-const char *PING="ping";
-const char *PONG="pong";
-const char *NOTFOUND="notfound";
-const char *FILTERLOAD="filterload";
-const char *FILTERADD="filteradd";
-const char *FILTERCLEAR="filterclear";
-const char *SENDHEADERS="sendheaders";
-const char *FEEFILTER="feefilter";
-const char *SENDCMPCT="sendcmpct";
-const char *CMPCTBLOCK="cmpctblock";
-const char *GETBLOCKTXN="getblocktxn";
-const char *BLOCKTXN="blocktxn";
-const char *GETCFILTERS="getcfilters";
-const char *CFILTER="cfilter";
-const char *GETCFHEADERS="getcfheaders";
-const char *CFHEADERS="cfheaders";
-const char *GETCFCHECKPT="getcfcheckpt";
-const char *CFCHECKPT="cfcheckpt";
-const char *WTXIDRELAY="wtxidrelay";
+    MSG_ITEMS
 } // namespace NetMsgType
+#undef item
 
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
+#define item(a, b) NetMsgType::a,
 const static std::string allNetMessageTypes[] = {
-    NetMsgType::VERSION,
-    NetMsgType::VERACK,
-    NetMsgType::ADDR,
-    NetMsgType::ADDRV2,
-    NetMsgType::SENDADDRV2,
-    NetMsgType::INV,
-    NetMsgType::GETDATA,
-    NetMsgType::MERKLEBLOCK,
-    NetMsgType::GETBLOCKS,
-    NetMsgType::GETHEADERS,
-    NetMsgType::TX,
-    NetMsgType::HEADERS,
-    NetMsgType::BLOCK,
-    NetMsgType::GETADDR,
-    NetMsgType::MEMPOOL,
-    NetMsgType::PING,
-    NetMsgType::PONG,
-    NetMsgType::NOTFOUND,
-    NetMsgType::FILTERLOAD,
-    NetMsgType::FILTERADD,
-    NetMsgType::FILTERCLEAR,
-    NetMsgType::SENDHEADERS,
-    NetMsgType::FEEFILTER,
-    NetMsgType::SENDCMPCT,
-    NetMsgType::CMPCTBLOCK,
-    NetMsgType::GETBLOCKTXN,
-    NetMsgType::BLOCKTXN,
-    NetMsgType::GETCFILTERS,
-    NetMsgType::CFILTER,
-    NetMsgType::GETCFHEADERS,
-    NetMsgType::CFHEADERS,
-    NetMsgType::GETCFCHECKPT,
-    NetMsgType::CFCHECKPT,
-    NetMsgType::WTXIDRELAY,
+    MSG_ITEMS
 };
+#undef item
+#undef MSG_ITEMS
+
 const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
