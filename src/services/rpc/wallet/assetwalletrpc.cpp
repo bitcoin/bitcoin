@@ -1909,7 +1909,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
         "\nCreate NEVM blob data used by rollups via a custom raw parameters\n",
         {
             {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the KZG commitment"},
-            {"rawdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "raw blob"},
+            {"rawdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "raw blob (hex encoded ascii)"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
@@ -1994,7 +1994,7 @@ static RPCHelpMan syscoincreatenevmblob()
     return RPCHelpMan{"syscoincreatenevmblob",
         "\nCreate NEVM blob data used by rollups\n",
         {
-            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data"},
+            {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "data (ascii)"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
@@ -2017,7 +2017,10 @@ static RPCHelpMan syscoincreatenevmblob()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     EnsureWalletIsUnlocked(*pwallet);
-    std::vector<uint8_t> vchData = ParseHex(request.params[0].get_str());
+    std::string strData(ToUpper(request.params[0].get_str()));
+    CDataStream ssData(SER_NETWORK, PROTOCOL_VERSION);
+    ssData << strData;
+    auto vchData = ParseHex(HexStr(ssData));
     int modDataFill = 0;
     // fill up to factor of 32 with empty spaces
     if((vchData.size() % 32) != 0)
