@@ -1008,11 +1008,16 @@ bool CWallet::IsSpentKey(const CScript& scriptPubKey) const
     return false;
 }
 
-CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx, bool fFlushOnClose, bool rescanning_old_block)
+CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx, bool rescanning_old_block)
+{
+    WalletBatch batch(GetDatabase(), true);
+    return AddToWallet(batch, tx, state, update_wtx, rescanning_old_block);
+}
+
+CWalletTx* CWallet::AddToWallet(WalletBatch& batch, CTransactionRef tx, const TxState& state,
+                                const UpdateWalletTxFn& update_wtx, bool rescanning_old_block)
 {
     LOCK(cs_wallet);
-
-    WalletBatch batch(GetDatabase(), fFlushOnClose);
 
     uint256 hash = tx->GetHash();
 
@@ -1231,7 +1236,8 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             // Block disconnection override an abandoned tx as unconfirmed
             // which means user may have to call abandontransaction again
             TxState tx_state = std::visit([](auto&& s) -> TxState { return s; }, state);
-            CWalletTx* wtx = AddToWallet(MakeTransactionRef(tx), tx_state, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, rescanning_old_block);
+            WalletBatch batch(GetDatabase(), false /*fFlushOnClose*/);
+            CWalletTx* wtx = AddToWallet(batch, MakeTransactionRef(tx), tx_state, /*update_wtx=*/nullptr, rescanning_old_block);
             if (!wtx) {
                 // Can only be nullptr if there was a db write error (missing db, read-only db or a db engine internal writing error).
                 // As we only store arriving transaction in this process, and we don't want an inconsistent state, let's throw an error.
