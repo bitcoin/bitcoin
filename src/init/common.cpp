@@ -7,58 +7,19 @@
 #endif
 
 #include <clientversion.h>
-#include <crypto/sha256.h>
 #include <fs.h>
-#include <key.h>
 #include <logging.h>
 #include <node/ui_interface.h>
-#include <pubkey.h>
-#include <random.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 
 #include <algorithm>
-#include <memory>
 #include <string>
 #include <vector>
 
-static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
-
 namespace init {
-void SetGlobals()
-{
-    std::string sha256_algo = SHA256AutoDetect();
-    LogPrintf("Using the '%s' SHA256 implementation\n", sha256_algo);
-    RandomInit();
-    ECC_Start();
-    globalVerifyHandle.reset(new ECCVerifyHandle());
-}
-
-void UnsetGlobals()
-{
-    globalVerifyHandle.reset();
-    ECC_Stop();
-}
-
-bool SanityChecks()
-{
-    if (!ECC_InitSanityCheck()) {
-        return InitError(Untranslated("Elliptic curve cryptography sanity check failure. Aborting."));
-    }
-
-    if (!Random_SanityCheck()) {
-        return InitError(Untranslated("OS cryptographic RNG sanity check failure. Aborting."));
-    }
-
-    if (!ChronoSanityCheck()) {
-        return InitError(Untranslated("Clock epoch mismatch. Aborting."));
-    }
-
-    return true;
-}
-
 void AddLoggingArgs(ArgsManager& argsman)
 {
     argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (-nodebuglogfile to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);

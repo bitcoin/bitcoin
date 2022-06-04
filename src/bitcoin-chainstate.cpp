@@ -11,10 +11,12 @@
 //
 // It is part of the libbitcoinkernel project.
 
+#include <kernel/checks.h>
+#include <kernel/context.h>
+
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init/common.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <scheduler.h>
@@ -24,6 +26,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <cassert>
 #include <filesystem>
 #include <functional>
 #include <iosfwd>
@@ -49,7 +52,11 @@ int main(int argc, char* argv[])
     SelectParams(CBaseChainParams::MAIN);
     const CChainParams& chainparams = Params();
 
-    init::SetGlobals(); // ECC_Start, etc.
+    kernel::Context kernel_context{};
+    // We can't use a goto here, but we can use an assert since none of the
+    // things instantiated so far requires running the epilogue to be torn down
+    // properly
+    assert(!kernel::SanityChecks(kernel_context).has_value());
 
     // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
     // which will try the script cache first and fall back to actually
@@ -254,6 +261,4 @@ epilogue:
         }
     }
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-
-    init::UnsetGlobals();
 }
