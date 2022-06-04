@@ -1,23 +1,10 @@
-name: C/C++ CI
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+CBlock(hash=0000000000790ab3, ver=1, hashPrevBlock=0000000000606865, hashMerkleR
+oot=618eba, nTime=1281891957, nBits=1c00800e, nNonce=28192719, vtx=2)
+  CTransaction(hash=012cd8, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+    CTxIn(COutPoint(000000, -1), coinbase 040e80001c028f00)
+    CTxOut(nValue=50.51000000, scriptPubKey=0x4F4BA55D1580F8C3A8A2C7)
+  CTransaction(hash=1d5e51, ver=1, vin.size=1, vout.size=2, nLockTime=0)
+    CTxIn(COutPoint(237fe8, 0), scriptSig=0xA87C02384E1F184B79C6AC)
+    CTxOut(nValue=92233720368.54275808, scriptPubKey=OP_DUP OP_HASH160 0xB7A7)
+    CTxOut(nValue=92233720368.54275808, scriptPubKey=OP_DUP OP_HASH160 0x1512)
+  vMerkleTree: 012cd8 1d5e51 618eba
