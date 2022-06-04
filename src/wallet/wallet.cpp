@@ -1169,14 +1169,14 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     if (/* insertion took place */ ins.second) {
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
     }
-    AddToSpends(wtx);
+    // Do not flush the wallet here for performance reasons
+    WalletBatch batch(GetDatabase(), false);
+    AddToSpends(wtx, &batch);
     for (const CTxIn& txin : wtx.tx->vin) {
         auto it = mapWallet.find(txin.prevout.hash);
         if (it != mapWallet.end()) {
             CWalletTx& prevtx = it->second;
             if (auto* prev = prevtx.state<TxStateConflicted>()) {
-                // Do not flush the wallet here for performance reasons
-                WalletBatch batch(GetDatabase(), false);
                 MarkConflicted(batch, prev->conflicting_block_hash, prev->conflicting_block_height, wtx.GetHash());
             }
         }
