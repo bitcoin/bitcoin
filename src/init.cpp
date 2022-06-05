@@ -1281,6 +1281,9 @@ bool AppInitSanityChecks(const kernel::Context& kernel)
         case kernel::SanityCheckError::ERROR_CHRONO:
             InitError(Untranslated("Clock epoch mismatch. Aborting."));
             break;
+        case kernel::SanityCheckError::ERROR_BLS:
+            InitError(Untranslated("BLS Init failed. Aborting."));
+            break;
         } // no default case, so the compiler can warn about missing cases
 
         return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), PACKAGE_NAME));
